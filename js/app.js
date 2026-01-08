@@ -115,6 +115,97 @@ let testRunning = false;
 let replyResolver = null;
 
 // =====================================================
+// SESSION MANAGEMENT
+// =====================================================
+const SESSION_KEY = 'orderflow_session';
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dage
+
+function persistSession(user) {
+  const sessionData = {
+    user: user,
+    expiresAt: Date.now() + SESSION_DURATION
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+  console.log('💾 Session saved, expires:', new Date(sessionData.expiresAt).toLocaleString());
+}
+
+function restoreSession() {
+  try {
+    const stored = localStorage.getItem(SESSION_KEY);
+    if (!stored) return null;
+
+    const session = JSON.parse(stored);
+    if (Date.now() > session.expiresAt) {
+      console.log('⏰ Session expired, clearing...');
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+
+    console.log('🔄 Restoring session for:', session.user.email);
+    return session.user;
+  } catch (err) {
+    console.warn('⚠️ Could not restore session:', err);
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+  console.log('🗑️ Session cleared');
+}
+
+// =====================================================
+// MODULE SYSTEM - Baseret på abonnement og branche
+// =====================================================
+const USER_MODULES = {
+  subscription: 'professional', // basic, professional, enterprise
+  industry: 'restaurant',
+  enabledModules: ['core', 'crm', 'workflow', 'pos', 'reports', 'inventory', 'accounting']
+};
+
+// Module definitions
+const MODULE_DEFINITIONS = {
+  core: { name: 'Core', features: ['dashboard', 'settings'] },
+  crm: { name: 'CRM', features: ['kunder', 'leads'] },
+  workflow: { name: 'Workflow', features: ['workflow', 'workflow-kontrol'] },
+  pos: { name: 'Salg', features: ['salg', 'korttransaktioner'] },
+  reports: { name: 'Rapporter', features: ['rapporter'] },
+  inventory: { name: 'Produkter', features: ['produktbibliotek'] },
+  accounting: { name: 'Bogholderi', features: ['bogholderi', 'betaling'] }
+};
+
+function applyModuleBasedUI() {
+  const modules = USER_MODULES.enabledModules;
+
+  // Skjul/vis sidebar elementer baseret på moduler
+  document.querySelectorAll('[data-module]').forEach(el => {
+    const requiredModule = el.dataset.module;
+    el.style.display = modules.includes(requiredModule) ? '' : 'none';
+  });
+
+  console.log('📦 Module-based UI applied. Enabled modules:', modules.join(', '));
+}
+
+function setUserModules(subscription, industry, modules) {
+  USER_MODULES.subscription = subscription;
+  USER_MODULES.industry = industry;
+  USER_MODULES.enabledModules = modules;
+  localStorage.setItem('orderflow_modules', JSON.stringify(USER_MODULES));
+  applyModuleBasedUI();
+}
+
+function loadUserModules() {
+  const stored = localStorage.getItem('orderflow_modules');
+  if (stored) {
+    const data = JSON.parse(stored);
+    USER_MODULES.subscription = data.subscription || 'professional';
+    USER_MODULES.industry = data.industry || 'restaurant';
+    USER_MODULES.enabledModules = data.enabledModules || ['core', 'crm', 'workflow', 'pos', 'reports', 'inventory', 'accounting'];
+  }
+}
+
+// =====================================================
 // ROLE MANAGEMENT
 // =====================================================
 const ROLES = {
@@ -2093,6 +2184,9 @@ function playLoginTransition() {
 async function finishLogin(user, isAdmin) {
   currentUser = user;
 
+  // Persist session for "remember me" functionality
+  persistSession(user);
+
   // Load restaurants from Supabase
   if (typeof SupabaseDB !== 'undefined') {
     try {
@@ -2740,11 +2834,13 @@ function showAuthError(msg) {
 
 function logout() {
   if (supabase) supabase.auth.signOut();
+  clearSession(); // Clear persisted session
   resetAuthUI();
 }
 
 function resetAuthUI() {
   currentUser = null;
+  clearSession(); // Also clear session on reset
   pending2FAUser = null;
   pending2FASettings = null;
   window._pending2FALogin = null;
@@ -2794,6 +2890,39 @@ async function initAuthStateListener() {
 
 document.addEventListener('DOMContentLoaded', () => {
   initAuthStateListener();
+
+  // Try to restore previous session on page load
+  const savedUser = restoreSession();
+  if (savedUser) {
+    currentUser = savedUser;
+    console.log('🔄 Session restored, showing app...');
+
+    // Load restaurants and show app
+    (async () => {
+      if (typeof SupabaseDB !== 'undefined') {
+        try {
+          const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
+          restaurants = dbRestaurants || [];
+          loadPersistedRestaurants();
+          console.log('✅ Restaurants loaded from restored session:', restaurants.length);
+
+          // Initialize real-time sync
+          if (typeof RealtimeSync !== 'undefined') {
+            await RealtimeSync.init(currentUser.id);
+          }
+        } catch (err) {
+          console.warn('⚠️ Could not load restaurants:', err);
+          loadPersistedRestaurants();
+        }
+      } else {
+        loadPersistedRestaurants();
+      }
+
+      showApp();
+      applyRoleBasedSidebar();
+      console.log('✅ App restored from saved session');
+    })();
+  }
 });
 
 // =====================================================
@@ -2965,6 +3094,54 @@ function initSidebarState() {
 // Call on page load
 document.addEventListener('DOMContentLoaded', initSidebarState);
 
+// =====================================================
+// MOBILE MENU FUNCTIONS
+// =====================================================
+
+function toggleMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  if (sidebar.classList.contains('mobile-open')) {
+    closeMobileMenu();
+  } else {
+    sidebar.classList.add('mobile-open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scroll when menu open
+  }
+}
+
+function closeMobileMenu() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  sidebar.classList.remove('mobile-open');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Close mobile menu when clicking a nav item
+function handleMobileNavClick() {
+  if (window.innerWidth <= 640) {
+    closeMobileMenu();
+  }
+}
+
+// Add click handlers to all nav buttons for mobile
+document.addEventListener('DOMContentLoaded', function() {
+  // Close mobile menu when navigating
+  document.querySelectorAll('.sidebar .nav-btn, .sidebar .nav-dropdown-menu button').forEach(btn => {
+    btn.addEventListener('click', handleMobileNavClick);
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 640) {
+      closeMobileMenu();
+    }
+  });
+});
+
 // Browser history navigation flag
 let isNavigatingFromHistory = false;
 
@@ -3048,7 +3225,15 @@ function showPage(page) {
   if (page === 'orders') {
     loadOrdersPage();
   }
-  
+
+  // Load leads når lead-siderne vises
+  if (page === 'leads') {
+    loadLeadsPage();
+  }
+  if (page === 'leads-pipeline') {
+    loadPipelinePage();
+  }
+
   // Set dagsrapport dato til i dag
   if (page === 'dagsrapport') {
     const today = new Date().toISOString().split('T')[0];
@@ -16946,6 +17131,200 @@ function updateApiStatus() {
 
   if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (gatewayApiOk ? 'ok' : 'missing');
   if (openaiStatusEl) openaiStatusEl.className = 'api-key-status ' + (openaiOk ? 'ok' : 'missing');
+}
+
+// =====================================================
+// LEAD MANAGEMENT
+// =====================================================
+let leads = [];
+
+function showAddLeadModal() {
+  const name = prompt('Navn på lead:');
+  if (!name) return;
+
+  const company = prompt('Firma (valgfrit):') || '';
+  const phone = prompt('Telefon:') || '';
+  const email = prompt('Email:') || '';
+  const source = prompt('Kilde (website, referral, cold-call):') || 'website';
+  const value = parseFloat(prompt('Forventet værdi (DKK):') || '0');
+
+  const lead = {
+    id: 'lead-' + Date.now(),
+    name,
+    company,
+    phone,
+    email,
+    source,
+    value,
+    stage: 'new',
+    notes: '',
+    created_at: new Date().toISOString()
+  };
+
+  leads.push(lead);
+  saveLeads();
+  loadLeadsPage();
+  toast('Lead tilføjet', 'success');
+}
+
+function saveLeads() {
+  localStorage.setItem('orderflow_leads', JSON.stringify(leads));
+}
+
+function loadLeads() {
+  const stored = localStorage.getItem('orderflow_leads');
+  if (stored) {
+    leads = JSON.parse(stored);
+  }
+}
+
+function loadLeadsPage() {
+  loadLeads();
+
+  // Update stats
+  const totalEl = document.getElementById('leads-total');
+  const newEl = document.getElementById('leads-new');
+  const qualifiedEl = document.getElementById('leads-qualified');
+  const conversionEl = document.getElementById('leads-conversion');
+
+  if (totalEl) totalEl.textContent = leads.length;
+  if (newEl) newEl.textContent = leads.filter(l => l.stage === 'new').length;
+  if (qualifiedEl) qualifiedEl.textContent = leads.filter(l => l.stage === 'qualified').length;
+
+  const won = leads.filter(l => l.stage === 'won').length;
+  const convRate = leads.length > 0 ? Math.round((won / leads.length) * 100) : 0;
+  if (conversionEl) conversionEl.textContent = convRate + '%';
+
+  // Update table
+  const tbody = document.getElementById('leads-tbody');
+  if (!tbody) return;
+
+  if (leads.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Ingen leads endnu. Klik "Tilføj Lead" for at oprette det første.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = leads.map(lead => `
+    <tr onclick="editLead('${lead.id}')" style="cursor:pointer">
+      <td>${lead.name}</td>
+      <td>${lead.company || '-'}</td>
+      <td>${lead.phone || '-'}</td>
+      <td>${lead.source}</td>
+      <td>${lead.value ? formatCurrency(lead.value) : '-'}</td>
+      <td><span class="lead-stage lead-stage-${lead.stage}">${getStageLabel(lead.stage)}</span></td>
+      <td>${new Date(lead.created_at).toLocaleDateString('da-DK')}</td>
+    </tr>
+  `).join('');
+}
+
+function getStageLabel(stage) {
+  const labels = {
+    'new': 'Ny',
+    'contacted': 'Kontaktet',
+    'qualified': 'Kvalificeret',
+    'proposal': 'Tilbud',
+    'won': 'Vundet',
+    'lost': 'Tabt'
+  };
+  return labels[stage] || stage;
+}
+
+function editLead(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+
+  const newStage = prompt(`Ændr stadie for ${lead.name}:\n(new, contacted, qualified, proposal, won, lost)`, lead.stage);
+  if (newStage && ['new', 'contacted', 'qualified', 'proposal', 'won', 'lost'].includes(newStage)) {
+    lead.stage = newStage;
+    saveLeads();
+    loadLeadsPage();
+    loadPipelinePage();
+    toast('Lead opdateret', 'success');
+  }
+}
+
+function loadPipelinePage() {
+  loadLeads();
+
+  const stages = ['new', 'contacted', 'qualified', 'proposal', 'won'];
+
+  stages.forEach(stage => {
+    const container = document.getElementById('pipeline-' + stage);
+    const countEl = document.getElementById('pipeline-count-' + stage);
+    const stageLeads = leads.filter(l => l.stage === stage);
+
+    if (countEl) countEl.textContent = stageLeads.length;
+
+    if (container) {
+      if (stageLeads.length === 0) {
+        container.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">Ingen leads</div>';
+      } else {
+        container.innerHTML = stageLeads.map(lead => `
+          <div class="pipeline-card" onclick="editLead('${lead.id}')" style="background:var(--bg3);padding:12px;border-radius:var(--radius-md);cursor:pointer;border:1px solid var(--border)">
+            <div style="font-weight:var(--font-weight-medium);margin-bottom:4px">${lead.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${lead.company || 'Ingen firma'}</div>
+            ${lead.value ? `<div style="font-size:12px;color:var(--accent);margin-top:4px">${formatCurrency(lead.value)}</div>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+  });
+}
+
+function filterLeadsList() {
+  const search = document.getElementById('leads-search')?.value.toLowerCase() || '';
+  loadLeads();
+
+  const filtered = leads.filter(lead =>
+    lead.name.toLowerCase().includes(search) ||
+    (lead.company && lead.company.toLowerCase().includes(search)) ||
+    (lead.phone && lead.phone.includes(search))
+  );
+
+  const tbody = document.getElementById('leads-tbody');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Ingen leads matcher søgningen</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(lead => `
+    <tr onclick="editLead('${lead.id}')" style="cursor:pointer">
+      <td>${lead.name}</td>
+      <td>${lead.company || '-'}</td>
+      <td>${lead.phone || '-'}</td>
+      <td>${lead.source}</td>
+      <td>${lead.value ? formatCurrency(lead.value) : '-'}</td>
+      <td><span class="lead-stage lead-stage-${lead.stage}">${getStageLabel(lead.stage)}</span></td>
+      <td>${new Date(lead.created_at).toLocaleDateString('da-DK')}</td>
+    </tr>
+  `).join('');
+}
+
+function filterLeadsByStage(stage) {
+  loadLeads();
+  const filtered = stage === 'all' ? leads : leads.filter(l => l.stage === stage);
+
+  const tbody = document.getElementById('leads-tbody');
+  if (!tbody) return;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Ingen leads i dette stadie</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(lead => `
+    <tr onclick="editLead('${lead.id}')" style="cursor:pointer">
+      <td>${lead.name}</td>
+      <td>${lead.company || '-'}</td>
+      <td>${lead.phone || '-'}</td>
+      <td>${lead.source}</td>
+      <td>${lead.value ? formatCurrency(lead.value) : '-'}</td>
+      <td><span class="lead-stage lead-stage-${lead.stage}">${getStageLabel(lead.stage)}</span></td>
+      <td>${new Date(lead.created_at).toLocaleDateString('da-DK')}</td>
+    </tr>
+  `).join('');
 }
 
 // =====================================================
