@@ -115,10 +115,11 @@ let testRunning = false;
 let replyResolver = null;
 
 // =====================================================
-// SESSION MANAGEMENT
+// SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dage
+const SESSION_DURATION = 5 * 60 * 1000; // 5 minutter
+let sessionTimeoutId = null;
 
 function persistSession(user) {
   const sessionData = {
@@ -127,6 +128,7 @@ function persistSession(user) {
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
   console.log('💾 Session saved, expires:', new Date(sessionData.expiresAt).toLocaleString());
+  startSessionTimeout();
 }
 
 function restoreSession() {
@@ -142,6 +144,7 @@ function restoreSession() {
     }
 
     console.log('🔄 Restoring session for:', session.user.email);
+    startSessionTimeout();
     return session.user;
   } catch (err) {
     console.warn('⚠️ Could not restore session:', err);
@@ -152,8 +155,59 @@ function restoreSession() {
 
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+  if (sessionTimeoutId) {
+    clearTimeout(sessionTimeoutId);
+    sessionTimeoutId = null;
+  }
   console.log('🗑️ Session cleared');
 }
+
+function startSessionTimeout() {
+  // Clear any existing timeout
+  if (sessionTimeoutId) {
+    clearTimeout(sessionTimeoutId);
+  }
+
+  // Set new timeout
+  sessionTimeoutId = setTimeout(() => {
+    console.log('⏰ Session timeout - logging out due to inactivity');
+    showToast('Session udløbet - log venligst ind igen', 'warning');
+    handleLogout();
+  }, SESSION_DURATION);
+}
+
+function resetSessionTimeout() {
+  const stored = localStorage.getItem(SESSION_KEY);
+  if (stored) {
+    try {
+      const session = JSON.parse(stored);
+      session.expiresAt = Date.now() + SESSION_DURATION;
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      startSessionTimeout();
+    } catch (err) {
+      console.warn('⚠️ Could not reset session:', err);
+    }
+  }
+}
+
+// Track user activity to reset session timeout
+function initActivityTracking() {
+  const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+  let lastActivity = Date.now();
+
+  activityEvents.forEach(event => {
+    document.addEventListener(event, () => {
+      // Throttle: only reset if more than 30 seconds since last reset
+      if (Date.now() - lastActivity > 30000) {
+        lastActivity = Date.now();
+        resetSessionTimeout();
+      }
+    }, { passive: true });
+  });
+}
+
+// Initialize activity tracking when DOM is ready
+document.addEventListener('DOMContentLoaded', initActivityTracking);
 
 // =====================================================
 // MODULE SYSTEM - Baseret på abonnement og branche
