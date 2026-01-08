@@ -201,6 +201,12 @@ const RealtimeSync = {
         });
       }
 
+      // 7. KRITISK: Resolve workflow hvis den venter på svar
+      if (typeof window.resolveWorkflowReply === 'function') {
+        console.log('✅ Resolving workflow with message:', message.content);
+        window.resolveWorkflowReply(message.content);
+      }
+
       console.log('✅ Inbound SMS displayed:', message.phone);
     }
   },

@@ -114,6 +114,9 @@ let liveMode = false;
 let testRunning = false;
 let replyResolver = null;
 
+// Global resolver for workflow replies - bruges af RealtimeSync
+window.resolveWorkflowReply = null;
+
 // =====================================================
 // SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
 // =====================================================
@@ -172,7 +175,7 @@ function startSessionTimeout() {
   sessionTimeoutId = setTimeout(() => {
     console.log('⏰ Session timeout - logging out due to inactivity');
     showToast('Session udløbet - log venligst ind igen', 'warning');
-    handleLogout();
+    logout();
   }, SESSION_DURATION);
 }
 
@@ -2943,10 +2946,10 @@ async function initAuthStateListener() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initAuthStateListener();
-
-  // Try to restore previous session on page load
+  // KRITISK: Restore session FØRST, FØR Supabase auth listener
+  // Ellers vil Supabase's SIGNED_OUT event slette vores lokale session
   const savedUser = restoreSession();
+
   if (savedUser) {
     currentUser = savedUser;
     console.log('🔄 Session restored, showing app...');
@@ -2982,6 +2985,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       console.log('✅ App restored from saved session');
     })();
+  } else {
+    // Kun init Supabase auth listener hvis INGEN lokal session
+    // Dette forhindrer at Supabase sletter vores session
+    initAuthStateListener();
   }
 });
 
@@ -16829,7 +16836,17 @@ async function waitForReply() {
       if (replyResolver === thisResolve) {
         replyResolver = null;
       }
+      // Clear global resolver
+      window.resolveWorkflowReply = null;
       resolve(value);
+    };
+
+    // KRITISK: Sæt global resolver så RealtimeSync kan resolve
+    window.resolveWorkflowReply = (content) => {
+      if (!isResolved) {
+        addLog(`📨 Indgående SMS (realtime): "${content}"`, 'success');
+        safeResolve(content);
+      }
     };
 
     if (liveMode) {
