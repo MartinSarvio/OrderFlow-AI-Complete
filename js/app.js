@@ -2951,7 +2951,11 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = savedUser;
     console.log('🔄 Session restored, showing app...');
 
-    // Load restaurants and show app
+    // Immediately show app to prevent flash of login screen
+    showApp();
+    applyRoleBasedSidebar();
+
+    // Load restaurants in background
     (async () => {
       if (typeof SupabaseDB !== 'undefined') {
         try {
@@ -2964,6 +2968,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (typeof RealtimeSync !== 'undefined') {
             await RealtimeSync.init(currentUser.id);
           }
+
+          // Refresh dashboard if visible
+          if (typeof loadDashboard === 'function') {
+            loadDashboard();
+          }
         } catch (err) {
           console.warn('⚠️ Could not load restaurants:', err);
           loadPersistedRestaurants();
@@ -2971,9 +2980,6 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         loadPersistedRestaurants();
       }
-
-      showApp();
-      applyRoleBasedSidebar();
       console.log('✅ App restored from saved session');
     })();
   }
