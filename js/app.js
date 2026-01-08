@@ -16904,8 +16904,37 @@ function saveOpenAIConfig() {
   const key = document.getElementById('openai-key').value.trim();
   if (key) localStorage.setItem('openai_key', key);
   closeModal('openai-config');
-  // toast('OpenAI API key gemt', 'success'); // Removed - unnecessary
   updateApiStatus();
+}
+
+function saveOpenAIKey() {
+  const input = document.getElementById('openai-api-key-input');
+  const status = document.getElementById('openai-status');
+  const key = input ? input.value.trim() : '';
+
+  if (!key) {
+    if (status) status.textContent = 'Indtast en API key';
+    return;
+  }
+
+  if (!key.startsWith('sk-')) {
+    if (status) status.textContent = 'Ugyldig key - skal starte med sk-';
+    return;
+  }
+
+  localStorage.setItem('openai_key', key);
+  if (status) {
+    status.style.color = 'var(--success)';
+    status.textContent = 'API key gemt!';
+  }
+  toast('OpenAI API key gemt', 'success');
+  updateApiStatus();
+
+  // Mask the input
+  setTimeout(() => {
+    input.value = key.substring(0, 7) + '...' + key.substring(key.length - 4);
+    input.type = 'text';
+  }, 1000);
 }
 
 function updateApiStatus() {
