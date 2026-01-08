@@ -1,0 +1,622 @@
+Kunder
++ TilfÃ¸j kunde
+
+UserID
+Firmanavn
+Telefonnummer
+CVR
+Land
+Status
+Indtast sÃ¸gekriterier ovenfor
+SÃ¸g pÃ¥ navn, CVR, telefonnummer eller UserID
+Â« FÃ¸rste â€¹ Forrige 1 af 1 NÃ¦ste â€º Sidste Â»
+Ordrer
+0 ordrer
+Ryd alle
+
+Ingen ordrer endnu
+Ordrer vises her nÃ¥r kunder bestiller via SMS
+Salgsoversigt
+Fra dato
+Til dato
+Vis rapport
+
+VÃ¦lg datointerval for at se salgsoversigt
+Korttransaktioner
+Fra dato
+Til dato
+Vis transaktioner
+
+VÃ¦lg datointerval for at se korttransaktioner
+Dagsrapport
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+VÃ¦lg dag
+Generer rapport
+
+VÃ¦lg en dato for at generere dagsrapport
+Rapporten viser salgsdata, betalinger og momsspecifikation
+Produktrapport
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+Fra dato
+Til dato
+Vis rapport
+
+Produktoversigt kommer snart
+Se hvilke produkter der sÃ¦lger bedst
+Z-rapport
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+
+Z-rapport kommer snart
+Daglig kasserapport med afstemning
+Konverteringsrapport
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+
+Konverteringsrapport kommer snart
+Se hvor mange kunder SAAS-systemet konverterer
+Genbestillingsrapport
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+
+Genbestillingsrapport kommer snart
+Se genbestillingsprocenter
+Anmeldelseskonvertering
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+
+Anmeldelsesrapport kommer snart
+Se konvertering fra anmeldelser
+Heatmap - TidsmÃ¦ssig Belastning
+EksportÃ©r
+Eksporter PDF Eksporter XLS Eksporter CSV
+
+Heatmap kommer snart
+Oversigt over hvornÃ¥r ordretrykket er stÃ¸rst - til bemandingsplanlÃ¦gning
+Tilbage til Dashboard
+
+TilfÃ¸j Demo-kunde
+Opret en ny kunde med 14 dages gratis prÃ¸veperiode
+1
+Kundeinfo
+
+2
+Restaurant
+
+3
+BekrÃ¦ft
+
+Kontaktperson
+Fornavn *
+Efternavn *
+E-mail *
+Telefon *
+
+Demo-licens indstillinger
+PrÃ¸veperiode *
+                        7 dage
+                        14 dage
+                        21 dage
+                        30 dage
+                        45 dage
+                        60 dage
+                        90 dage
+                      
+Antal test-beskeder
+                        25 beskeder
+                        50 beskeder
+                        100 beskeder
+                        200 beskeder
+                        500 beskeder (udvidet)
+                      
+Demo-licens inkluderer
+	•	Valgfri prÃ¸veperiode (7-90 dage)
+	•	Fuld adgang til workflows og automatisering
+	•	Valgfrit antal test-beskeder
+	•	Dashboard og rapporter
+
+Restaurant Information
+Restaurantnavn *
+CVR-nummer
+Restauranttype
+                      Pizzeria
+                      Burgerbar
+                      Sushi
+                      CafÃ©
+                      Restaurant
+                      Takeaway
+                      Andet
+                    
+Adresse
+Postnummer
+By
+
+BekrÃ¦ft oprettelse
+Kontaktperson -
+E-mail -
+Telefon -
+Restaurant -
+CVR -
+Adresse -
+Licens Demo 14 dage
+Beskeder 50 beskeder
+UdlÃ¸ber -
+
+Kunden er informeret om, at dette er en demo-konto med den valgte prÃ¸veperiode. Efter perioden skal kunden opgraderes manuelt for at fortsÃ¦tte.
+Tilbage
+NÃ¦ste
+Tilbage til Dashboard
+
+TilfÃ¸j Restaurant
+Opret en ny betalende kunde i systemet
+
+Restaurant Information
+Restaurantnavn *
+Ikon type
+                  Pizza
+                  Burger
+                  Sushi
+                  Nudler/Ramen
+                  Salat
+                  CafÃ©
+                  Dessert/Bageri
+                  Morgenmad
+                  Bar/Pub
+                  Pasta/Italiensk
+                  Standard
+                
+Telefon
+CVR-nummer
+E-mail
+Adresse
+Kontaktperson
+Annuller
+Opret Restaurant
+Tilbage til Dashboard
+
+Aktivitetslog
+De seneste 30 aktiviteter fra de sidste 2 mÃ¥neder
+                Alle typer
+                Opdateringer
+                Oprettelser
+                Ordrer
+                Workflow
+                AI
+                System
+              
+                Alle kategorier
+                Kunder
+                Stamdata
+                Produkter
+                Workflow
+                Faktura
+                Ordrer
+              
+Ryd log
+
+Restaurant Order Flow
+
+Active
+âˆ’
+100%
++
+
+
+Reset
+Gem workflow
+
+
+Rediger Node Ã—
+
+Test Workflow
+Test Chat Beskeder Log
+LIVE MODE LIVE
+Demo mode - SMS vises kun i UI
+Telefonnummer
+                  VÃ¦lg restaurant...
+                
+Opkald SMS
+VÃ¦lg en restaurant og tryk pÃ¥
+Opkald eller SMS for at starte
+SMS med +45 50 47 55 31
+
+Ingen beskeder endnu
+Start en test for at se SMS-samtalen
+Start en test for at se logs
+JSON payloads, API kald og workflow eksekvering vises her
+Ryd log Kopier
+API Adgang
+API NÃ¸gler
+
+Twilio
+Konfigurer
+
+OpenAI
+Konfigurer
+
+Google Reviews API
+Konfigurer
+
+Trustpilot API
+Konfigurer
+Twilio Function URL
+IndsÃ¦t din Twilio Function URL for at sende SMS
+Gem
+Webhook Sikkerhed
+Webhook secret til validering af indgÃ¥ende requests
+whsec_**********************
+Forny
+
+0
+Total Beskeder
+
+0%
+Automatisk HÃ¥ndteret
+
+0
+KrÃ¦ver Gennemgang
+
+-
+Sentiment
+Opdater Stats
+Eksporter Data
+Ryd Log
+Automatiske Intents
+AI genkender automatisk disse forespÃ¸rgsler:
+âœ“
+Kvittering / Receipt
+âœ“
+Ordrestatus
+âœ“
+Menukort
+âœ“
+Ã…bningstider
+!
+Annullering â†’ Eskalering
+!
+Klager â†’ Eskalering
+!
+Allergener â†’ Eskalering
+Seneste Ubehandlede
+Ingen ubehandlede beskeder
+Team Medlemmer
+D
+Demo Bruger
+[email protected]
+Administrator
+Dig
+M
+Martin Jensen
+[email protected]
+Manager
+Rediger
+S
+Sara Nielsen
+[email protected]
+Personale
+Rediger
+TilfÃ¸j bruger
+Rollerettigheder
+Administrator
+Fuld adgang til alle funktioner
+Manager
+Kan se KPI'er og redigere restauranter
+Personale
+Kan se ordrer og hÃ¥ndtere kunder
+Konfigurer Abonnementsplaner
+TilfÃ¸j plan
+Definer de abonnementsplaner der er tilgÃ¦ngelige for kunder. Disse planer vises pÃ¥ kundens Abonnement-side.
+Faktureringsindstillinger
+Standard betalingsfrist
+                  Kontant
+                  Netto 8 dage
+                  Netto 14 dage
+                  Netto 30 dage
+                
+Momssats
+                  25% (standard)
+                  0% (momsfritaget)
+                
+Gem indstillinger
+Platform Faktureringsinfo
+Firmanavn OrderFlow ApS
+CVR 12345678
+Bank (Reg + Konto)
+1234
+12345678
+Gem platforminfo
+
+Notifikationsindstillinger
+VÃ¦lg hvilke notifikationer du vil modtage og via hvilken kanal. Push er real-time alerts pÃ¥ din enhed. Email sendes til din registrerede email.
+Salg & Aktivitet
+Ordrer, kunder og anmeldelser
+NOTIFIKATION
+PUSH
+EMAIL
+Nye ordrer
+Ved hver ny ordre
+
+
+VIP-ordrer
+Over 500 kr eller stamkunder
+
+
+Nye anmeldelser
+Google / Trustpilot
+
+
+Negative anmeldelser
+1-2 stjerner (kritisk)
+
+
+Missed calls
+Ubesvarede opkald
+
+
+System & Integrationer
+Kritiske system- og sikkerhedsnotifikationer
+NOTIFIKATION
+PUSH
+EMAIL
+API-fejl / Systemfejl
+Ã˜jeblikkelig ved integrationsfejl
+
+
+Lav SMS-saldo
+NÃ¥r saldo er under 100
+
+
+Nyt login
+Fra ukendt enhed
+
+
+Integration afbrudt
+Webhook / POS fejl
+
+
+AI & Automatisering
+Status pÃ¥ AI-trÃ¦ning og workflows
+NOTIFIKATION
+PUSH
+EMAIL
+AI-trÃ¦ning fuldfÃ¸rt
+NÃ¥r modellen er klar
+
+
+Workflow-fejl
+Hvis automatisering stopper
+
+
+Nye AI-forslag
+Optimeringer fundet
+
+
+Ordre til gennemgang
+AI konfidens under 70%
+
+
+Rapportering
+Periodiske rapporter sendt via email
+RAPPORT
+EMAIL
+Daglig KPI-rapport
+Sendes kl. 23:00
+
+Ugentlig opsummering
+Sendes mandag morgen
+
+MÃ¥nedlig rapport
+Komplet mÃ¥nedsrapport
+
+MÃ¥nedlig faktura
+OrderFlow abonnement
+
+Email-adresse
+Notifikationer sendes til
+CC (valgfri)
+Gem
+Stille timer
+Ingen push-notifikationer i dette tidsrum
+til
+
+Tillad kritiske notifikationer altid
+Gem tidsrum
+Brugerroller
+Administrator
+Fuld adgang til alle funktioner
+1 bruger
+Manager
+Kan se rapporter og redigere
+1 bruger
+Personale
+BegrÃ¦nset lÃ¦seadgang
+1 bruger
++ TilfÃ¸j rolle
+Momssats
+Standard momssats
+                  25% (Standard)
+                  0% (Momsfritaget)
+                
+CVR-nummer 12345678
+Gem
+Momsrapportering
+Automatisk momsberegning pÃ¥ alle rapporter
+
+Vis moms pÃ¥ rapporter
+Systemsprog
+VÃ¦lg sprog
+                  ðŸ‡©ðŸ‡° Dansk
+                  ðŸ‡¬ðŸ‡§ English
+                  ðŸ‡©ðŸ‡ª Deutsch
+                  ðŸ‡¸ðŸ‡ª Svenska
+                
+Gem
+Dato- og tidsformat
+Datoformat
+                  DD.MM.YYYY (Dansk)
+                  MM/DD/YYYY (US)
+                  YYYY-MM-DD (ISO)
+                
+Tidszone
+                  Europe/Copenhagen (CET)
+                  UTC
+                
+Skift adgangskode
+NuvÃ¦rende adgangskode
+Ny adgangskode
+BekrÃ¦ft ny adgangskode
+Skift adgangskode
+To-faktor autentificering
+Beskyt din konto med et ekstra sikkerhedslag. NÃ¥r 2FA er aktiveret, skal du indtaste en kode fra din telefon ved login.
+
+Status
+Ikke aktiveret
+
+AktivÃ©r 2FA
+Konfigurer 2FA
+Support
+VI ER HER FOR AT HJÃ†LPE DIG
+Vores dedikerede support-team stÃ¥r klar til at hjÃ¦lpe dig med alt fra opsÃ¦tning til avancerede integrationer.
+Kontakt os
+Svar inden for 24 timer - altid!
+
+
+Guides & Dokumentation
+
+AI OrdrehÃ¥ndtering
+LÃ¦r hvordan AI'en automatisk fortolker og hÃ¥ndterer indkommende ordrer
+10 min lÃ¦sning
+
+SMS Konfiguration
+Tilpas automatiske SMS-beskeder til dine kunder
+8 min lÃ¦sning
+
+Missed Calls
+Konverter mistede opkald til ordrer med automatisk SMS-opfÃ¸lgning
+6 min lÃ¦sning
+
+TrÃ¦n din AI
+LÃ¦r AI'en at forstÃ¥ dine produkter, kundemÃ¸nstre og sÃ¦rlige Ã¸nsker
+20-30 min
+
+Custom Workflows
+Opret avancerede automatiseringsflows tilpasset din virksomhed
+30-45 min
+
+Moms-opsÃ¦tning
+Konfigurer momssatser og indstillinger for dansk lovgivning
+5 min lÃ¦sning
+
+Brugere & Roller
+Administrer brugere og tildel roller med forskellige adgangsniveauer
+8 min lÃ¦sning
+
+Rapporter & Eksport
+Generer detaljerede rapporter og eksporter data til PDF eller CSV
+12 min lÃ¦sning
+Ofte stillede spÃ¸rgsmÃ¥l
+Hvordan kommer jeg hurtigst i gang med OrderFlow?
+Start med at oprette din fÃ¸rste restaurant under "Kunder" i sidemenuen. Udfyld stamdata som navn, telefonnummer og adresse. Derefter kan du aktivere AI-workflows under "Workflow" for automatisk at hÃ¥ndtere indkommende ordrer, missed calls og kundehenvendelser. Vi anbefaler at starte med standard-workflowet og tilpasse det efter behov.
+Hvordan opretter jeg nye brugere og roller?
+GÃ¥ til "Indstillinger" â†’ "Brugerindstillinger" i sidemenuen. Her kan du invitere nye brugere via email og tildele dem roller som Admin, Manager eller Medarbejder. Hver rolle har forskellige adgangsniveauer - Admin har fuld adgang, Manager kan se rapporter og redigere kunder, mens Medarbejder kun kan se basale oplysninger.
+Hvordan integrerer jeg min webshop via API?
+Under "Indstillinger" â†’ "API & Integrationer" finder du din unikke API-nÃ¸gle. Brug denne til at forbinde din webshop eller POS-system. Vi understÃ¸tter REST API med webhook-callbacks for real-time ordrenotifikationer. Se vores fulde API-dokumentation pÃ¥ docs.orderflow.ai for endpoints, autentificering og kodeeksempler i flere programmeringssprog.
+Hvad koster OrderFlow, og hvilke planer findes der?
+Vi tilbyder tre planer: Starter (299 kr/md) til mindre restauranter, Professional (599 kr/md) med avancerede features og ubegrÃ¦nset SMS, samt Enterprise (1499 kr/md) til kÃ¦der med dedikeret support. Alle planer inkluderer 14 dages gratis prÃ¸veperiode. Kontakt os for specialpriser ved flere lokationer.
+Email Support
+Send os en email, sÃ¥ vender vi tilbage inden for 24 timer.
+
+[email protected]
+Telefon Support
+Ring til os pÃ¥ hverdage mellem 9-17.
+
++45 12 34 56 78
+Fuld Dokumentation
+Find alle guides, tutorials og API-dokumentation.
+
+docs.orderflow
+Bogholderi
+Bogholderi
+DIN BOGHOLDER VIL TAKKE DIG
+VÃ¦lg din Ã¸nskede integration og fÃ¥ et samlet overblik over din forretning. Befri din bogholder for at skulle jagte betalinger fra forskellige systemer og spar bÃ¥de tid og penge.
+Kom i gang
+Alle vores regnskabsprogrammer er gratis - for altid!
+
+Digital bogfÃ¸ring
+Digital bogfÃ¸ring samler salg, betalinger og bilag automatisk i Ã©t digitalt system. Det sparer tid, reducerer fejl og giver et klart overblik over Ã¸konomien. Fra 2026 trÃ¦der den nye digitalbogfÃ¸ringsregel i kraft, som krÃ¦ver, at virksomheder anvender et godkendt digitalt bogfÃ¸ringssystem â€“ og digital bogfÃ¸ring gÃ¸r det nemt at vÃ¦re klar i god tid.
+TilgÃ¦ngelige integrationer
+VÃ¦lg det regnskabsprogram du allerede bruger, og lad OrderFlow automatisk synkronisere dine ordrer og fakturaer.
+Forbind
+
+Synkroniser fakturaer, kunder og produkter.
+Forbind
+
+Eksporter salgsdata og fakturaer.
+Forbind
+
+Automatisk bogfÃ¸ring.
+SKALERBARE & ERP-SYSTEMER
+Forbind
+
+Cloud ERP fra Erik Damgaard.
+D365
+Dynamics 365
+Business Central
+Fuldt ERP til stÃ¸rre virksomheder.
+Forbind
+AirBOSS
+AirBOSS
+Klassisk dansk ERP
+Lager- og ordrestyring.
+Forbind
+SPECIALISEREDE & Ã˜VRIGE
+DA
+Dynaccount
+Hurtigtvoksende dansk
+StÃ¦rk automatisering.
+Forbind
+M
+Meneto
+Software + bogholder
+De overtager bogfÃ¸ringen.
+Forbind
+X
+Xero
+Globalt system
+Til internationale virksomheder.
+Forbind
+Simpelt
+Regnskab
+Simpelt Regnskab
+Til smÃ¥ virksomheder
+Minimum til lav pris.
+Forbind
+Betaling
+
+Stripe
+Online betaling og terminaler
+Modtag betalinger online og i butikken.
+Forbind
+
+PayPal
+Verdens mest brugte
+Betal med PayPal eller kreditkort.
+Forbind
+
+MobilePay
+Danmarks foretrukne
+Modtag betaling via MobilePay.
+Forbind
+
+Flatpay
+Danske terminaler
+Integrer med Flatpay POS.
+Forbind
+Rediger Restaurant
+Ã—
+
+Basis Information
+Navn
+

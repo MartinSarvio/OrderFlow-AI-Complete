@@ -1,0 +1,6 @@
+.vercel
+
+# Backup filer med mulige secrets
+*.backup
+*.bak
+OrderFlow-complete.html

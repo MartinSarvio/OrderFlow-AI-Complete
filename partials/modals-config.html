@@ -1,0 +1,234 @@
+  <div class="modal-overlay" id="modal-twilio-config">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Twilio Konfiguration</div>
+        <button class="modal-close" onclick="closeModal('twilio-config')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Account SID</label>
+          <input type="text" class="input" id="twilio-sid" placeholder="ACxxxxxxxx">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Auth Token</label>
+          <input type="password" class="input" id="twilio-token" placeholder="••••••••">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefonnummer</label>
+          <input type="tel" class="input" id="twilio-number" placeholder="+1xxxxxxxxxx">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('twilio-config')">Annuller</button>
+        <button class="btn btn-primary" onclick="saveTwilioConfig()">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OpenAI Config Modal -->
+  <div class="modal-overlay" id="modal-openai-config">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">OpenAI Konfiguration</div>
+        <button class="modal-close" onclick="closeModal('openai-config')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <input type="password" class="input" id="openai-key" placeholder="sk-...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('openai-config')">Annuller</button>
+        <button class="btn btn-primary" onclick="saveOpenAIConfig()">Gem</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages Configuration Modal -->
+  <div class="modal-overlay" id="modal-messages-config">
+    <div class="modal" style="max-width:700px">
+      <div class="modal-header">
+        <h3>Konfigurer Beskeder</h3>
+        <button class="modal-close" onclick="closeModal('messages-config')">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height:500px;overflow-y:auto">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Tilpas beskederne for denne restaurant. Brug variabler som {{restaurant}}, {{ventetid}}, {{ordre}}.</p>
+        
+        <!-- AUTOMATION SECTION -->
+        <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div>
+              <div style="font-weight:500;font-size:14px">⚡ Fuld Automatisering</div>
+              <div style="font-size:11px;color:var(--muted)">Auto-bekræft ordrer uden manuel accept</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="msg-auto-mode" onchange="toggleAutoMode(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="auto-mode-settings" style="display:none;padding-top:12px;border-top:1px solid var(--border)">
+            <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Standard ventetid (minutter)</label>
+            <input type="number" class="input" id="msg-auto-time" value="40" min="5" max="120" style="width:100px">
+            <span style="font-size:11px;color:var(--muted);margin-left:8px">Bruges i auto-bekræftelse</span>
+          </div>
+        </div>
+        
+        <!-- ORDER STATUS MESSAGES (NEW) -->
+        <div style="background:linear-gradient(135deg, rgba(0,212,255,0.05), rgba(0,212,255,0.02));padding:16px;border-radius:var(--radius-md);margin-bottom:20px;border:1px solid rgba(0,212,255,0.2)">
+          <div style="font-weight:500;font-size:13px;color:var(--accent);margin-bottom:12px">Ordre Status Beskeder</div>
+          
+          <div class="message-config-item" style="margin-bottom:12px">
+            <div class="message-config-header">
+              <span class="message-config-title">Besked 1: Ordre Bekræftet</span>
+              <span class="message-config-node">Trigger: Acceptér</span>
+            </div>
+            <textarea class="message-config-textarea" id="msg-order-accepted" placeholder="Din ordre er bekræftet! {{restaurant}} har modtaget din bestilling og går straks i gang. Vi sender besked, når maden er klar."></textarea>
+          </div>
+          
+          <div class="message-config-item" style="margin-bottom:12px">
+            <div class="message-config-header">
+              <span class="message-config-title">Besked 2: Køkkenet er i gang</span>
+              <span class="message-config-node">Trigger: Start</span>
+            </div>
+            <textarea class="message-config-textarea" id="msg-order-started" placeholder="Køkkenet er nu gået i gang med din bestilling! Din mad er klar om ca. {{ventetid}} minutter."></textarea>
+          </div>
+          
+          <div class="message-config-item">
+            <div class="message-config-header">
+              <span class="message-config-title">Besked 3: Ordre Færdig</span>
+              <span class="message-config-node">Trigger: Færdig</span>
+            </div>
+            <textarea class="message-config-textarea" id="msg-order-completed" placeholder="Din ordre er nu færdig og {{leveringstype}}! Velbekomme fra {{restaurant}}!"></textarea>
+          </div>
+        </div>
+        
+        <!-- EXISTING WORKFLOW MESSAGES -->
+        <div style="font-weight:500;font-size:13px;color:var(--muted);margin-bottom:12px">Workflow Beskeder</div>
+        
+        <div class="message-config-item">
+          <div class="message-config-header">
+            <span class="message-config-title">Velkomstbesked</span>
+            <span class="message-config-node">Node: send-welcome</span>
+          </div>
+          <textarea class="message-config-textarea" id="msg-welcome" placeholder="Hej! Tak for dit opkald til {{restaurant}}. Vi fik desværre ikke taget telefonen..."></textarea>
+        </div>
+        
+        <div class="message-config-item">
+          <div class="message-config-header">
+            <span class="message-config-title">Ordre Afventer Accept</span>
+            <span class="message-config-node">Node: send-order-confirm</span>
+          </div>
+          <textarea class="message-config-textarea" id="msg-order-confirm" placeholder="Tak! Din ordre er nu sendt til køkkenet. Afvent venligst, at restauranten accepterer din bestilling. Du modtager en bekræftelse snarest."></textarea>
+        </div>
+        
+        <div class="message-config-item">
+          <div class="message-config-header">
+            <span class="message-config-title">Leveringsbesked</span>
+            <span class="message-config-node">Node: send-delivery-info</span>
+          </div>
+          <textarea class="message-config-textarea" id="msg-delivery" placeholder="Din ordre er på vej! Forventet leveringstid: {{ventetid}} minutter..."></textarea>
+        </div>
+        
+        <div class="message-config-item">
+          <div class="message-config-header">
+            <span class="message-config-title">Anmeldelsesanmodning</span>
+            <span class="message-config-node">Node: send-review-request</span>
+          </div>
+          <textarea class="message-config-textarea" id="msg-review" placeholder="Tak for din ordre! Vi håber du nød maden. Del din oplevelse: {{review_link}}..."></textarea>
+        </div>
+        
+        <div class="message-config-item">
+          <div class="message-config-header">
+            <span class="message-config-title">Kvitteringsbesked</span>
+            <span class="message-config-node">Node: send-receipt</span>
+          </div>
+          <textarea class="message-config-textarea" id="msg-receipt" placeholder="Her er din kvittering for ordre #{{ordre_id}}..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('messages-config')">Annuller</button>
+        <button class="btn btn-primary" onclick="saveMessagesConfig()">Gem beskeder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminate Customer Modal -->
+  <div class="modal-overlay" id="modal-terminate-customer">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header">
+        <div class="modal-title" style="color:var(--danger)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          Opsig kunde
+        </div>
+        <button class="modal-close" onclick="closeModal('terminate-customer')">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="termination-customer-id">
+
+        <div class="termination-warning">
+          <div class="warning-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="warning-content">
+            <h4>Du er ved at opsige: <span id="termination-customer-name"></span></h4>
+            <p>Denne handling kan ikke fortrydes automatisk.</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Årsag til opsigelse *</label>
+          <select id="termination-reason" class="input" onchange="onTerminationReasonChange()">
+            <option value="">Vælg årsag...</option>
+            <option value="Kundens ønske">Kundens ønske</option>
+            <option value="Manglende betaling">Manglende betaling</option>
+            <option value="Virksomhed lukket">Virksomhed lukket</option>
+            <option value="Skiftet til konkurrent">Skiftet til konkurrent</option>
+            <option value="Utilfreds med service">Utilfreds med service</option>
+            <option value="Andet">Andet</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="termination-reason-other-group" style="display:none">
+          <label class="form-label">Angiv årsag</label>
+          <input type="text" id="termination-reason-other" class="input" placeholder="Beskriv årsagen...">
+        </div>
+
+        <div class="gdpr-info-box">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            GDPR & Bogføringslov
+          </h4>
+          <ul>
+            <li>Kundedata bevares i <strong>5 år</strong> iht. dansk bogføringslov</li>
+            <li>Persondata anonymiseres, men finansielle data bevares</li>
+            <li>Automatisk sletning: <strong id="termination-deletion-date"></strong></li>
+            <li>Du kan genaktivere kunden inden sletning</li>
+          </ul>
+        </div>
+
+        <div class="form-group" style="margin-top:16px">
+          <label class="checkbox-label" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+            <input type="checkbox" id="termination-confirm-check" style="margin-top:3px">
+            <span style="font-size:13px;color:var(--text2)">Jeg forstår at kundedata bevares i 5 år og derefter slettes permanent iht. GDPR</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('terminate-customer')">Annuller</button>
+        <button class="btn btn-danger" onclick="terminateCustomer()">Bekræft opsigelse</button>
+      </div>
+    </div>
+  </div>
+

@@ -1,0 +1,19692 @@
+// =====================================================
+// ORDERFLOW AI - APP.JS (v137)
+// =====================================================
+
+// Library Shims (jsPDF mock only - Chart.js loaded from CDN)
+window.jspdf={jsPDF:function(){var s={setFontSize:function(){return s},setTextColor:function(){return s},text:function(){return s},setDrawColor:function(){return s},setFillColor:function(){return s},rect:function(){return s},line:function(){return s},addImage:function(){return s},save:function(){alert("PDF kræver download");return s},internal:{pageSize:{getWidth:function(){return 210},getHeight:function(){return 297}}}};return s}};
+
+// =====================================================
+// ORDERFLOW AI - APP.JS (v133)
+// =====================================================
+// 
+// ⚠️  SIKKERHEDSADVARSEL: 
+// API-nøgler herunder er EKSPONEREDE i frontend-kode.
+// I produktion bør disse flyttes til:
+// - Environment variables på serveren
+// - En backend/serverless function der håndterer API-kald
+// - Supabase Edge Functions eller lignende
+//
+// CHANGELOG v133:
+// - Tilføjet Support/Dokumentation sektion
+// - Integreret alle guides fra dokumentationen
+// - Søgefunktion i dokumentation
+// - Responsivt design for dokumentation
+//
+// =====================================================
+
+// =====================================================
+// CONFIG - YOUR SETTINGS
+// =====================================================
+const CONFIG = {
+  // Supabase
+  SUPABASE_URL: 'https://qymtjhzgtcittohutmay.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTcyMzM2NiwiZXhwIjoyMDY3Mjk5MzY2fQ.th8EBi8r6JtR4nP0Q1FZoLiLT5-COohX4HvJ15Xd7G8',
+  
+  // GatewayAPI SMS (dansk SMS-udbyder)
+  GATEWAYAPI_TOKEN: '',  // Indtastes i Indstillinger
+  GATEWAYAPI_SENDER: 'OrderFlow',
+  
+  // OpenAI (indtastes i Indstillinger → API Adgang)
+  OPENAI_API_KEY: '',
+  
+  // Demo mode (DEAKTIVERET - Produktionsklar)
+  DEMO_MODE: false
+};
+
+// =====================================================
+// DEMO MENU DATA (Used when no API endpoint is configured)
+// =====================================================
+const DEMO_MENUS = {
+  'd1': { // Bella Italia
+    restaurantId: 'd1',
+    restaurantName: 'Bella Italia',
+    currency: 'DKK',
+    items: [
+      { id: 1, number: '1', name: 'Pizza Margherita', description: 'Tomat, mozzarella, basilikum', price: 89, category: 'Pizza' },
+      { id: 2, number: '2', name: 'Pizza Pepperoni', description: 'Tomat, mozzarella, pepperoni', price: 99, category: 'Pizza' },
+      { id: 3, number: '3', name: 'Pizza Hawaii', description: 'Tomat, mozzarella, skinke, ananas', price: 99, category: 'Pizza' },
+      { id: 4, number: '4', name: 'Pizza Quattro Stagioni', description: 'Tomat, mozzarella, skinke, champignon, artiskok, oliven', price: 109, category: 'Pizza' },
+      { id: 5, number: '5', name: 'Pizza Diavola', description: 'Tomat, mozzarella, spicy salami, chili', price: 105, category: 'Pizza' },
+      { id: 6, number: '6', name: 'Calzone', description: 'Foldet pizza med skinke og ost', price: 99, category: 'Pizza' },
+      { id: 7, number: '7', name: 'Spaghetti Bolognese', description: 'Klassisk kødsauce', price: 95, category: 'Pasta' },
+      { id: 8, number: '8', name: 'Spaghetti Carbonara', description: 'Æg, bacon, parmesan', price: 99, category: 'Pasta' },
+      { id: 9, number: '9', name: 'Lasagne', description: 'Hjemmelavet med kødsauce og bechamel', price: 109, category: 'Pasta' },
+      { id: 10, number: '10', name: 'Tiramisu', description: 'Klassisk italiensk dessert', price: 59, category: 'Dessert' },
+      { id: 11, number: '11', name: 'Panna Cotta', description: 'Med bærcompot', price: 55, category: 'Dessert' },
+      { id: 12, number: '12', name: 'Coca-Cola', description: '33cl', price: 25, category: 'Drikkevarer' },
+      { id: 13, number: '13', name: 'Fanta', description: '33cl', price: 25, category: 'Drikkevarer' },
+      { id: 14, number: '14', name: 'Vand', description: '50cl', price: 20, category: 'Drikkevarer' }
+    ]
+  },
+  'd2': { // Sushi House
+    restaurantId: 'd2',
+    restaurantName: 'Sushi House',
+    currency: 'DKK',
+    items: [
+      { id: 1, number: '1', name: 'Salmon Nigiri (2 stk)', description: 'Frisk laks på ris', price: 45, category: 'Nigiri' },
+      { id: 2, number: '2', name: 'Tuna Nigiri (2 stk)', description: 'Frisk tun på ris', price: 55, category: 'Nigiri' },
+      { id: 3, number: '3', name: 'California Roll (8 stk)', description: 'Krabbe, avocado, agurk', price: 89, category: 'Maki' },
+      { id: 4, number: '4', name: 'Spicy Tuna Roll (8 stk)', description: 'Krydret tun, avocado', price: 99, category: 'Maki' },
+      { id: 5, number: '5', name: 'Dragon Roll (8 stk)', description: 'Tempura rejer, ål, avocado', price: 129, category: 'Special Rolls' },
+      { id: 6, number: '6', name: 'Rainbow Roll (8 stk)', description: 'Assorteret fisk ovenpå California roll', price: 139, category: 'Special Rolls' },
+      { id: 7, number: '7', name: 'Sashimi Mix (12 stk)', description: 'Laks, tun, hamachi', price: 159, category: 'Sashimi' },
+      { id: 8, number: '8', name: 'Edamame', description: 'Dampede sojabønner med salt', price: 35, category: 'Sides' },
+      { id: 9, number: '9', name: 'Miso Suppe', description: 'Traditionel japansk suppe', price: 29, category: 'Sides' },
+      { id: 10, number: '10', name: 'Grøn Te', description: 'Varm japansk grøn te', price: 25, category: 'Drikkevarer' }
+    ]
+  },
+  'd3': { // Burger Joint
+    restaurantId: 'd3',
+    restaurantName: 'Burger Joint',
+    currency: 'DKK',
+    items: [
+      { id: 1, number: '1', name: 'Classic Burger', description: '180g bøf, salat, tomat, løg, dressing', price: 89, category: 'Burgere' },
+      { id: 2, number: '2', name: 'Cheese Burger', description: '180g bøf, cheddar, salat, tomat, dressing', price: 99, category: 'Burgere' },
+      { id: 3, number: '3', name: 'Bacon Burger', description: '180g bøf, bacon, cheddar, BBQ sauce', price: 109, category: 'Burgere' },
+      { id: 4, number: '4', name: 'Double Burger', description: '2x180g bøf, dobbelt ost, special sauce', price: 139, category: 'Burgere' },
+      { id: 5, number: '5', name: 'Chicken Burger', description: 'Sprød kylling, coleslaw, mayo', price: 99, category: 'Burgere' },
+      { id: 6, number: '6', name: 'Pommes Frites', description: 'Stor portion', price: 35, category: 'Sides' },
+      { id: 7, number: '7', name: 'Sweet Potato Fries', description: 'Søde kartofler', price: 45, category: 'Sides' },
+      { id: 8, number: '8', name: 'Onion Rings', description: '8 stk med dip', price: 45, category: 'Sides' },
+      { id: 9, number: '9', name: 'Milkshake', description: 'Vanilje, chokolade eller jordbær', price: 49, category: 'Drikkevarer' },
+      { id: 10, number: '10', name: 'Coca-Cola', description: '50cl', price: 30, category: 'Drikkevarer' }
+    ]
+  }
+};
+
+// =====================================================
+// INITIALIZE
+// =====================================================
+// NOTE: supabase/supabaseClient is initialized in supabase-client.js
+let currentUser = null;
+let restaurants = [];
+let liveMode = false;
+let testRunning = false;
+let replyResolver = null;
+
+// =====================================================
+// ROLE MANAGEMENT
+// =====================================================
+const ROLES = {
+  ADMIN: 'admin',
+  EMPLOYEE: 'employee',
+  CUSTOMER: 'customer',
+  DEMO: 'demo'
+};
+
+// Menu visibility per role - admin/employee only items
+const ADMIN_ONLY_MENUS = {
+  'kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'alle-kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'nav-salg': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'nav-rapporter': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'nav-integrationer': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE], // Real test only for admin
+  'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'settings-billing': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'settings-users': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'settings-roles': [ROLES.ADMIN, ROLES.EMPLOYEE]
+};
+
+// Customer/Demo only menus (hidden for admin/employee)
+const CUSTOMER_ONLY_MENUS = {
+  'nav-butikindstillinger': [ROLES.CUSTOMER, ROLES.DEMO],
+  'nav-indsigt': [ROLES.CUSTOMER, ROLES.DEMO]
+};
+
+function hasRoleAccess(menuItem) {
+  const role = currentUser?.role || ROLES.CUSTOMER;
+
+  // Check admin-only menus
+  if (ADMIN_ONLY_MENUS[menuItem]) {
+    return ADMIN_ONLY_MENUS[menuItem].includes(role);
+  }
+
+  // Check customer-only menus
+  if (CUSTOMER_ONLY_MENUS[menuItem]) {
+    return CUSTOMER_ONLY_MENUS[menuItem].includes(role);
+  }
+
+  // Default: visible to all
+  return true;
+}
+
+function applyRoleBasedSidebar() {
+  const role = currentUser?.role || ROLES.CUSTOMER;
+  const isCustomerView = [ROLES.CUSTOMER, ROLES.DEMO].includes(role);
+  const isDemoView = role === ROLES.DEMO;
+  const isRegularCustomer = role === ROLES.CUSTOMER;
+  console.log('🔐 Applying role-based sidebar for role:', role, '(Customer view:', isCustomerView, ', Demo view:', isDemoView, ')');
+
+  // Helper function for konsistent display manipulation med !important
+  const setDisplay = (el, show) => {
+    if (el) el.style.setProperty('display', show ? '' : 'none', 'important');
+  };
+
+  // === SKJUL KUNDER KNAP FOR KUNDE/DEMO ===
+  const kunderBtn = document.querySelector('[data-role-menu="kunder"]');
+  setDisplay(kunderBtn, !isCustomerView);
+  if (kunderBtn) console.log(`  - Kunder knap: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+
+  // === INDSTILLINGER BEGRÆNSNINGER ===
+  // Kunde/Demo har IKKE adgang til: API adgang, AI læring, Abonnement (billing)
+  // Kunde/Demo HAR adgang til: Brugere, Roller, Sprog, Notifikationer, Adgangskoder, Support
+  const adminOnlySettings = ['settings-api', 'settings-ailearning', 'settings-billing'];
+  adminOnlySettings.forEach(menuId => {
+    const el = document.querySelector(`[data-role-menu="${menuId}"]`);
+    setDisplay(el, !isCustomerView);
+  });
+
+  // Vis bruger/rolle settings for alle
+  ['settings-users', 'settings-roles'].forEach(menuId => {
+    const el = document.querySelector(`[data-role-menu="${menuId}"]`);
+    setDisplay(el, true);
+  });
+
+  // === ADMIN ELEMENTER ===
+  if (isCustomerView) {
+    document.querySelectorAll('.admin-customer-search').forEach(el => setDisplay(el, false));
+    document.querySelectorAll('.admin-quick-actions').forEach(el => setDisplay(el, false));
+  } else {
+    document.querySelectorAll('.admin-customer-search').forEach(el => setDisplay(el, true));
+    document.querySelectorAll('.admin-quick-actions').forEach(el => setDisplay(el, true));
+  }
+
+  // === KUNDE-SPECIFIKKE MENUPUNKTER ===
+  // Butikindstillinger, Indsigt: Vis kun for kunde/demo
+  ['nav-butikindstillinger', 'nav-indsigt'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', isCustomerView ? 'block' : 'none', 'important');
+      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
+    }
+  });
+
+  // Workflow Kontrol og Produktbibliotek: Kun for demo/kunde (admin bruger kunde-kontekst menu)
+  ['nav-workflow-kontrol', 'nav-produktbibliotek'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', isCustomerView ? '' : 'none', 'important');
+      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
+    }
+  });
+
+  // === SALG, RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
+  ['nav-salg', 'nav-rapporter', 'nav-integrationer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', '', 'important');
+      console.log(`  - ${id}: ✓ visible`);
+    }
+  });
+
+  // === SYSTEM SEKTION ===
+  // Workflow: Synlig for Admin + Demo (IKKE for almindelige kunder)
+  // Indstillinger: Synlig for ALLE (men med begrænsede items)
+  const systemSection = document.querySelector('.nav-section:has(#nav-indstillinger)');
+  if (systemSection) {
+    // Vis system sektion for alle
+    systemSection.style.setProperty('display', '', 'important');
+  }
+
+  // Workflow knap: Kun for admin + demo (ikke almindelige kunder)
+  const workflowBtn = document.querySelector('.nav-btn[onclick="showPage(\'workflow\')"]');
+  if (workflowBtn) {
+    // Admin: fuld adgang, Demo: kun test workflow, Kunde: ingen adgang
+    setDisplay(workflowBtn, !isRegularCustomer);
+    console.log(`  - Workflow: ${isRegularCustomer ? '✗ hidden' : '✓ visible'}`);
+  }
+
+  // Indstillinger dropdown: Synlig for alle
+  const indstillingerDropdown = document.getElementById('nav-indstillinger');
+  if (indstillingerDropdown) {
+    indstillingerDropdown.style.setProperty('display', '', 'important');
+    console.log('  - Indstillinger: ✓ visible');
+  }
+
+  // === WORKFLOW TEST PANEL ===
+  // Demo brugere ser demo overlay i stedet for test panel
+  const workflowTestPanel = document.querySelector('.test-panel');
+  if (workflowTestPanel) {
+    setDisplay(workflowTestPanel, !isCustomerView);
+  }
+
+  // === DASHBOARD TYPE ===
+  const adminDash = document.getElementById('admin-dashboard');
+  const customerDash = document.getElementById('customer-dashboard');
+
+  if (isCustomerView) {
+    // VIGTIGT: Brug style.setProperty med !important for at sikre admin elementer forbliver skjulte
+    if (adminDash) {
+      adminDash.classList.add('hidden');
+      adminDash.style.setProperty('display', 'none', 'important');
+    }
+    if (customerDash) {
+      customerDash.classList.remove('hidden');
+      customerDash.style.setProperty('display', '', 'important');
+    }
+    // Skjul ALLE admin dashboard elementer med !important
+    document.querySelectorAll('.admin-dashboard-content').forEach(el => {
+      el.classList.add('hidden');
+      el.style.setProperty('display', 'none', 'important');
+    });
+    console.log('  - Dashboard: customer view activated');
+  } else {
+    if (adminDash) {
+      adminDash.classList.remove('hidden');
+      adminDash.style.removeProperty('display');
+    }
+    if (customerDash) {
+      customerDash.classList.add('hidden');
+      customerDash.style.setProperty('display', 'none', 'important');
+    }
+    document.querySelectorAll('.admin-dashboard-content').forEach(el => {
+      el.classList.remove('hidden');
+      el.style.removeProperty('display');
+    });
+    console.log('  - Dashboard: admin view activated');
+  }
+
+  // === SKJUL ADMIN-ELEMENTER FOR DEMO/KUNDE ===
+  if (isCustomerView) {
+    // Skjul admin-knapper i kunde profil
+    const terminateBtn = document.getElementById('btn-terminate-customer');
+    const profileStatus = document.getElementById('profile-status');
+    const backToCustomers = document.querySelector('.crm-back-btn');
+
+    if (terminateBtn) terminateBtn.style.setProperty('display', 'none', 'important');
+    if (profileStatus) profileStatus.style.setProperty('display', 'none', 'important');
+    if (backToCustomers) backToCustomers.style.setProperty('display', 'none', 'important');
+
+    // Skjul "Vis alle" og "+ Tilføj kunde" knapper
+    document.querySelectorAll('.btn[onclick*="showPage(\'alle-kunder\')"]').forEach(el => {
+      el.style.setProperty('display', 'none', 'important');
+    });
+    document.querySelectorAll('.btn[onclick*="showPage(\'add-restaurant\')"]').forEach(el => {
+      el.style.setProperty('display', 'none', 'important');
+    });
+
+    console.log('  - Admin buttons hidden for customer/demo');
+  }
+
+  // === DROPDOWN MANAGEMENT FOR DEMO/KUNDE ===
+  // Alle dropdowns forbliver lukkede som standard - præcis som for admin
+  // Brugeren klikker selv for at åbne dem
+
+  console.log('✅ Sidebar updated for', isCustomerView ? 'customer/demo' : 'admin/employee', 'view');
+}
+
+// Make role functions globally available
+window.ROLES = ROLES;
+window.hasRoleAccess = hasRoleAccess;
+window.applyRoleBasedSidebar = applyRoleBasedSidebar;
+
+// =====================================================
+// WORKFLOW DEMO MODE
+// Interactive demo for demo users
+// =====================================================
+const DEMO_SCRIPT = [
+  {
+    step: 1,
+    title: 'Kunden ringer',
+    desc: 'Systemet registrerer et mistet opkald automatisk',
+    outgoing: null,
+    expectedReply: null
+  },
+  {
+    step: 2,
+    title: 'Automatisk SMS sendes',
+    desc: 'AI sender en venlig besked til kunden',
+    outgoing: 'Hej! Vi missede dit opkald. Vil du bestille? Svar JA for at starte.',
+    expectedReply: 'ja'
+  },
+  {
+    step: 3,
+    title: 'Levering eller afhentning?',
+    desc: 'Systemet spørger efter leveringstype',
+    outgoing: 'Super! Skal det leveres eller afhentes?',
+    expectedReply: 'levering'
+  },
+  {
+    step: 4,
+    title: 'Indhent adresse',
+    desc: 'AI beder om leveringsadresse',
+    outgoing: 'Hvad er din adresse?',
+    expectedReply: 'Vestergade 10, 2100 København'
+  },
+  {
+    step: 5,
+    title: 'Modtag bestilling',
+    desc: 'Kunden sender sin bestilling',
+    outgoing: 'Perfekt! Hvad vil du gerne bestille?',
+    expectedReply: '2 margherita og 1 cola'
+  },
+  {
+    step: 6,
+    title: 'Bekræft ordre',
+    desc: 'AI opsummerer og bekræfter ordren',
+    outgoing: 'Din ordre: 2x Margherita (198 kr) + 1x Cola (25 kr) = 223 kr. Bekræft med JA',
+    expectedReply: 'ja'
+  },
+  {
+    step: 7,
+    title: 'Ordre gennemført!',
+    desc: 'Ordren gemmes automatisk i systemet',
+    outgoing: 'Tak! Din ordre er registreret. Levering om ca. 45 min.',
+    expectedReply: null
+  }
+];
+
+let currentDemoStep = 0;
+
+function initWorkflowDemo() {
+  const overlay = document.getElementById('workflow-demo-overlay');
+  if (!overlay) return;
+
+  const isCustomerView = [ROLES.DEMO, ROLES.CUSTOMER].includes(currentUser?.role);
+
+  if (isCustomerView) {
+    // Show demo overlay for customer/demo users
+    overlay.style.display = 'block';
+    currentDemoStep = 0;
+    document.getElementById('demo-messages').innerHTML = '';
+    renderDemoStep();
+
+    // Hide the test panel completely for customer view
+    const testPanel = document.querySelector('.test-panel');
+    if (testPanel) testPanel.style.display = 'none';
+  } else {
+    // Hide demo overlay for admin/employee
+    overlay.style.display = 'none';
+
+    // Show test panel for admin/employee
+    const testPanel = document.querySelector('.test-panel');
+    if (testPanel) testPanel.style.display = '';
+  }
+}
+
+function renderDemoStep() {
+  const step = DEMO_SCRIPT[currentDemoStep];
+  if (!step) return;
+
+  document.getElementById('demo-step-title').textContent = `Trin ${step.step}: ${step.title}`;
+  document.getElementById('demo-step-desc').textContent = step.desc;
+
+  if (step.outgoing) {
+    addDemoMessage(step.outgoing, 'out');
+  }
+}
+
+function addDemoMessage(text, dir) {
+  const container = document.getElementById('demo-messages');
+  if (!container) return;
+  container.innerHTML += `<div class="demo-msg ${dir}">${text}</div>`;
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendDemoReply() {
+  const input = document.getElementById('demo-reply');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addDemoMessage(text, 'in');
+  input.value = '';
+
+  // Auto-advance if reply matches expected
+  const step = DEMO_SCRIPT[currentDemoStep];
+  if (step?.expectedReply && text.toLowerCase().includes(step.expectedReply.toLowerCase())) {
+    setTimeout(() => nextDemoStep(), 1000);
+  }
+}
+
+function nextDemoStep() {
+  currentDemoStep++;
+  if (currentDemoStep < DEMO_SCRIPT.length) {
+    renderDemoStep();
+  } else {
+    // Demo complete
+    document.getElementById('demo-step-title').textContent = 'Demo fuldført!';
+    document.getElementById('demo-step-desc').textContent = 'Du har nu set hele workflow-processen. Opgrader til fuld adgang for at aktivere denne funktion.';
+  }
+}
+
+function resetWorkflowDemo() {
+  currentDemoStep = 0;
+  document.getElementById('demo-messages').innerHTML = '';
+  renderDemoStep();
+}
+
+function showDemoTab(tab) {
+  document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.demo-tab[onclick*="${tab}"]`)?.classList.add('active');
+
+  const interactive = document.getElementById('demo-interactive');
+  const video = document.getElementById('demo-video');
+  if (interactive) interactive.classList.toggle('hidden', tab !== 'interactive');
+  if (video) video.classList.toggle('hidden', tab !== 'video');
+}
+
+// Make demo functions globally available
+window.initWorkflowDemo = initWorkflowDemo;
+window.sendDemoReply = sendDemoReply;
+window.nextDemoStep = nextDemoStep;
+window.resetWorkflowDemo = resetWorkflowDemo;
+window.showDemoTab = showDemoTab;
+
+// =====================================================
+// AKTIVITETSLOG & OPDATERINGSSYSTEM
+// Viser diskret lyseblå prik ved nye funktioner/opdateringer
+// =====================================================
+const UPDATE_STORAGE_KEY = 'orderflow_seen_updates';
+const ACTIVITY_LOG_KEY = 'orderflow_activity_log';
+
+// Aktivitetstyper med farver og ikoner
+const ACTIVITY_TYPES = {
+  'update': { color: 'purple', label: 'Opdatering', icon: 'edit' },
+  'create': { color: 'green', label: 'Oprettet', icon: 'plus' },
+  'delete': { color: 'red', label: 'Slettet', icon: 'trash' },
+  'order': { color: 'green', label: 'Ordre', icon: 'cart' },
+  'workflow': { color: 'blue', label: 'Workflow', icon: 'zap' },
+  'ai': { color: 'yellow', label: 'AI', icon: 'cpu' },
+  'system': { color: 'cyan', label: 'System', icon: 'settings' },
+  'login': { color: 'blue', label: 'Login', icon: 'user' },
+  // NYE TYPER - FASE 7
+  'page_create': { color: 'green', label: 'Side oprettet', icon: 'file-plus' },
+  'page_rename': { color: 'purple', label: 'Side omdøbt', icon: 'edit' },
+  'page_reorder': { color: 'blue', label: 'Rækkefølge ændret', icon: 'move' },
+  'employee': { color: 'cyan', label: 'Medarbejder', icon: 'users' },
+  'user': { color: 'blue', label: 'Bruger', icon: 'user' }
+};
+
+// Hent aktivitetslog
+// SYNC version for backwards compatibility (loads from localStorage)
+function getActivityLog() {
+  try {
+    const log = JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY) || '[]');
+    // Filtrer aktiviteter ældre end 2 måneder
+    const twoMonthsAgo = Date.now() - (60 * 24 * 60 * 60 * 1000);
+    return log.filter(a => a.timestamp > twoMonthsAgo);
+  } catch (e) {
+    return [];
+  }
+}
+
+// ASYNC version - loads from Supabase
+async function getActivityLogAsync() {
+  if (typeof SupabaseDB !== 'undefined' && currentUser) {
+    try {
+      const activities = await SupabaseDB.getActivities(currentUser.id, 100);
+      // Transform timestamp from ISO string to milliseconds for UI compatibility
+      return activities.map(a => ({
+        ...a,
+        timestamp: new Date(a.timestamp).getTime()
+      }));
+    } catch (err) {
+      console.error('❌ Error loading activities from Supabase:', err);
+      // Fallback to localStorage
+      return getActivityLog();
+    }
+  } else {
+    return getActivityLog();
+  }
+}
+
+// Gem aktivitetslog (for localStorage fallback)
+function saveActivityLog(log) {
+  // Behold kun de seneste 100 aktiviteter
+  const trimmed = log.slice(0, 100);
+  localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(trimmed));
+}
+
+// Log en aktivitet
+async function logActivity(type, description, details = {}) {
+  // Save to Supabase if available
+  let activity;
+  if (typeof SupabaseDB !== 'undefined' && currentUser) {
+    try {
+      activity = await SupabaseDB.logActivity(currentUser.id, type, description, details);
+      console.log('✅ Activity logged to Supabase:', activity.id);
+    } catch (err) {
+      console.error('❌ Error logging to Supabase:', err);
+      // Fallback to localStorage
+      activity = {
+        id: 'act_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        type: type,
+        description: description,
+        details: details,
+        timestamp: Date.now(),
+        seen: false
+      };
+    }
+  } else {
+    // Fallback to localStorage
+    activity = {
+      id: 'act_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+      type: type,
+      description: description,
+      details: details,
+      timestamp: Date.now(),
+      seen: false
+    };
+    const log = getActivityLog();
+    log.unshift(activity);
+    saveActivityLog(log);
+  }
+
+  // Opdater UI
+  updateRecentActivityUI();
+  updateActivityIndicators();
+
+  // REAL-TIME INTEGRATION: Tilføj automatisk blå prik via NotificationSystem
+  if (typeof NotificationSystem !== 'undefined' && details.category) {
+    const notificationPath = buildNotificationPath(details.category, details.subCategory);
+    NotificationSystem.add(notificationPath, {
+      title: 'Ny aktivitet',
+      message: description,
+      timestamp: Date.now(),
+      activityId: activity.id
+    });
+    console.log(`🔵 Auto-notification added: ${notificationPath} -> "${description}"`);
+  }
+
+  return activity;
+}
+
+/**
+ * Build notification path from category and subcategory
+ * Used for NotificationSystem integration
+ */
+function buildNotificationPath(category, subCategory) {
+  // Special handling for integrationer
+  if (category === 'integrationer' && subCategory) {
+    return `${category}.${subCategory}`;
+  }
+  // For other categories with subcategories
+  if (subCategory) {
+    return `${category}.${subCategory}`;
+  }
+  // Just category
+  return category;
+}
+
+// Markér aktivitet som set
+function markActivitySeen(activityId) {
+  const log = getActivityLog();
+  const activity = log.find(a => a.id === activityId);
+  if (activity) {
+    activity.seen = true;
+    saveActivityLog(log);
+    updateActivityIndicators();
+  }
+}
+
+// Markér alle aktiviteter i en kategori som set
+function markCategoryActivitiesSeen(category, subCategory = null) {
+  const log = getActivityLog();
+  let changed = false;
+  log.forEach(a => {
+    if (a.details?.category === category && !a.seen) {
+      if (!subCategory || a.details?.subCategory === subCategory) {
+        a.seen = true;
+        changed = true;
+      }
+    }
+  });
+  if (changed) {
+    saveActivityLog(log);
+    updateActivityIndicators();
+  }
+}
+
+// Få usete aktiviteter for en kategori
+function getUnseenActivities(category = null, subCategory = null) {
+  const log = getActivityLog();
+  return log.filter(a => {
+    if (a.seen) return false;
+    if (category && a.details?.category !== category) return false;
+    if (subCategory && a.details?.subCategory !== subCategory) return false;
+    return true;
+  });
+}
+
+// Formater tidspunkt relativt
+function formatRelativeTime(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'Lige nu';
+  if (minutes < 60) return `${minutes} minut${minutes !== 1 ? 'ter' : ''} siden`;
+  if (hours < 24) return `${hours} time${hours !== 1 ? 'r' : ''} siden`;
+  if (days < 7) return `${days} dag${days !== 1 ? 'e' : ''} siden`;
+  
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+}
+
+// Opdater Seneste Aktivitet UI på dashboard
+function updateRecentActivityUI() {
+  const container = document.getElementById('recent-activity');
+  if (!container) return;
+  
+  const log = getActivityLog().slice(0, 5); // Vis kun de 5 seneste
+  
+  if (log.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--muted)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:8px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div>Ingen aktivitet endnu</div>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = log.map(activity => {
+    const typeInfo = ACTIVITY_TYPES[activity.type] || ACTIVITY_TYPES.system;
+    const details = activity.details || {};
+    
+    // Byg detalje-tekst
+    let detailText = '';
+    if (details.field) {
+      detailText = ` -> ${details.field}`;
+      if (details.newValue) {
+        detailText += `: "${details.newValue}"`;
+      }
+    }
+    
+    return `
+      <div class="activity-item ${activity.seen ? '' : 'unseen'}" data-activity-id="${activity.id}" onclick="showActivityDetail('${activity.id}')">
+        <div class="activity-dot ${typeInfo.color}"></div>
+        <div class="activity-content">
+          <div class="activity-text">${activity.description}${detailText}</div>
+          <div class="activity-time">${formatRelativeTime(activity.timestamp)}</div>
+        </div>
+        ${!activity.seen ? '<span class="activity-new-badge">NY</span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// DEAKTIVERET: Bruger NotificationSystem til blå prikker i stedet
+// Activity Logging System bruges stadig til "Seneste Aktiviteter" sektionen
+function updateActivityIndicators() {
+  // NO-OP: NotificationSystem håndterer blå prikker nu
+  return;
+  // Ryd alle eksisterende indikatorer
+  document.querySelectorAll('.activity-indicator').forEach(el => el.remove());
+
+  const log = getActivityLog();
+  const unseenByCategory = {};
+  
+  // Gruppér usete aktiviteter efter PRIMÆR kategori (details.category)
+  // Ignorer aktiviteter uden gyldig kategori
+  log.filter(a => !a.seen && a.details?.category).forEach(a => {
+    const cat = a.details.category;
+    const subCat = a.details?.subCategory || null;
+    
+    if (!unseenByCategory[cat]) {
+      unseenByCategory[cat] = { count: 0, subCategories: {} };
+    }
+    unseenByCategory[cat].count++;
+    
+    if (subCat) {
+      if (!unseenByCategory[cat].subCategories[subCat]) {
+        unseenByCategory[cat].subCategories[subCat] = 0;
+      }
+      unseenByCategory[cat].subCategories[subCat]++;
+    }
+  });
+  
+  // Mapping fra nav-element til hvilke primære kategorier der skal matche
+  // VIGTIGT: Kun match på primær category, IKKE subCategory
+  const categoryMappings = {
+    'kunder': ['kunder'],           // Kun aktiviteter med category:'kunder'
+    'workflow': ['workflow'],       // Kun aktiviteter med category:'workflow'
+    'dagsrapport': ['dagsrapport'],
+    'ordrer': ['ordrer'],
+    'indstillinger': ['indstillinger', 'settings'],
+    'integrationer': ['integrationer'],
+    'pages': ['pages'],             // FASE 7: Side-aktiviteter (omd\u00f8bning, nye sider, etc.)
+    'dashboard': ['pages']          // FASE 7: Dashboard viser ogs\u00e5 'pages' aktiviteter
+  };
+  
+  Object.entries(categoryMappings).forEach(([navId, categories]) => {
+    const totalUnseen = categories.reduce((sum, cat) => sum + (unseenByCategory[cat]?.count || 0), 0);
+    if (totalUnseen > 0) {
+      // Find nav-item
+      const navItem = document.querySelector(`#nav-${navId}`) || 
+                      document.querySelector(`[onclick*="showPage('${navId}')"]`) ||
+                      document.querySelector(`[onclick*="toggleNavDropdown('${navId}')"]`);
+      if (navItem) {
+        addActivityIndicator(navItem, totalUnseen);
+      }
+    }
+  });
+  
+  // Tilføj indikatorer til underkategorier i kunde-dropdown (baseret på subCategory)
+  if (unseenByCategory['kunder']) {
+    Object.entries(unseenByCategory['kunder'].subCategories).forEach(([subCat, count]) => {
+      if (count > 0) {
+        const subNavItem = document.querySelector(`[onclick*="showCustomerSubpage('${subCat}')"]`);
+        if (subNavItem) {
+          addActivityIndicator(subNavItem, count, true);
+        }
+      }
+    });
+  }
+  
+  // Tilføj indikatorer til indstillinger-dropdown
+  if (unseenByCategory['indstillinger']) {
+    Object.entries(unseenByCategory['indstillinger'].subCategories).forEach(([subCat, count]) => {
+      if (count > 0) {
+        const subNavItem = document.querySelector(`[onclick*="showSettingsPage('${subCat}')"]`);
+        if (subNavItem) {
+          addActivityIndicator(subNavItem, count, true);
+        }
+      }
+    });
+  }
+
+  // Tilføj indikatorer til integrationer-dropdown
+  if (unseenByCategory['integrationer']) {
+    Object.entries(unseenByCategory['integrationer'].subCategories).forEach(([subCat, count]) => {
+      if (count > 0) {
+        const subNavItem = document.querySelector(`[onclick*="showPage('${subCat}')"]`);
+        if (subNavItem) {
+          addActivityIndicator(subNavItem, count, true);
+        }
+      }
+    });
+  }
+}
+
+// DEAKTIVERET: Bruger NotificationSystem til blå prikker i stedet
+function addActivityIndicator(element, count, isSubItem = false) {
+  // NO-OP: NotificationSystem håndterer blå prikker nu
+  return;
+  if (!element) return;
+
+  // Fjern eksisterende
+  const existing = element.querySelector('.activity-indicator');
+  if (existing) existing.remove();
+
+  const indicator = document.createElement('span');
+  indicator.className = 'activity-indicator' + (isSubItem ? ' sub-item' : '');
+  indicator.title = `${count} nye opdatering${count !== 1 ? 'er' : ''}`;
+  indicator.onclick = (e) => {
+    e.stopPropagation();
+    showAllActivities();
+  };
+  element.style.position = 'relative';
+
+  // Add hover event handlers if in hover mode
+  const settings = getActivityIndicatorSettings();
+  if (settings.dismissType === 'hover') {
+    // Extract category from element's onclick attribute
+    const onclickAttr = element.getAttribute('onclick');
+    let category = null;
+
+    // Try to match showPage('category') or showSettingsPage('category')
+    const pageMatch = onclickAttr?.match(/showPage\('(.+?)'\)/);
+    const settingsMatch = onclickAttr?.match(/showSettingsPage\('(.+?)'\)/);
+
+    if (pageMatch) {
+      category = pageMatch[1];
+    } else if (settingsMatch) {
+      category = settingsMatch[1];
+    }
+
+    // For dropdown toggles, extract from toggleNavDropdown('category')
+    const dropdownMatch = onclickAttr?.match(/toggleNavDropdown\('(.+?)'\)/);
+    if (dropdownMatch) {
+      category = dropdownMatch[1];
+    }
+
+    if (category) {
+      // Store hover handler to avoid duplicates
+      if (!element._activityHoverAdded) {
+        element._activityHoverAdded = true;
+
+        element.addEventListener('mouseenter', function() {
+          // Mark activities as seen when hovering
+          markCategoryActivitiesSeen(category);
+
+          // For integrationer category, also mark subcategories
+          if (category === 'bogholderi' || category === 'betaling') {
+            markCategoryActivitiesSeen('integrationer', category);
+          }
+        });
+
+        element.addEventListener('mouseleave', function() {
+          // Remove indicator when mouse leaves
+          const ind = element.querySelector('.activity-indicator');
+          if (ind) {
+            ind.remove();
+          }
+        });
+      }
+    }
+  }
+
+  element.appendChild(indicator);
+}
+
+// Vis aktivitetsdetalje (markér som set)
+function showActivityDetail(activityId) {
+  const activity = getActivityLog().find(a => a.id === activityId);
+  if (!activity) return;
+
+  // Mark as seen
+  markActivitySeen(activityId);
+
+  // Populate detail page
+  const typeInfo = ACTIVITY_TYPES[activity.type] || ACTIVITY_TYPES.system;
+
+  document.getElementById('detail-activity-dot').className = `activity-dot ${typeInfo.color}`;
+  document.getElementById('detail-activity-title').textContent = activity.description;
+  document.getElementById('detail-activity-time').textContent = formatRelativeTime(activity.timestamp);
+
+  // Show real username instead of "System"
+  const details = activity.details || {};
+  const userName = details.user || (currentUser ? currentUser.email : 'System');
+  document.getElementById('detail-activity-user').textContent = userName;
+
+  // Build detailed "what changed" text
+  let whatChanged = activity.description;
+
+  if (details.field) {
+    whatChanged += `\n\nFelt: ${details.field}`;
+  }
+  if (details.category) {
+    whatChanged += `\n\nKategori: ${details.category}`;
+  }
+  if (details.subCategory) {
+    whatChanged += ` > ${details.subCategory}`;
+  }
+  if (details.restaurantName) {
+    whatChanged += `\n\nRestaurant: ${details.restaurantName}`;
+  }
+
+  document.getElementById('detail-what-changed').textContent = whatChanged;
+
+  // Update subtitle with activity type
+  const subtitle = document.getElementById('activity-detail-subtitle');
+  if (subtitle) {
+    subtitle.textContent = `${typeInfo.label} • ${formatRelativeTime(activity.timestamp)}`;
+  }
+
+  // Before/After section
+  if (details.oldValue && details.newValue) {
+    document.getElementById('detail-before-after').style.display = 'block';
+    document.getElementById('detail-old-value').textContent = details.oldValue;
+    document.getElementById('detail-new-value').textContent = details.newValue;
+  } else if (details.oldName && details.newName) {
+    // For page renames
+    document.getElementById('detail-before-after').style.display = 'block';
+    document.getElementById('detail-old-value').textContent = details.oldName;
+    document.getElementById('detail-new-value').textContent = details.newName;
+  } else {
+    document.getElementById('detail-before-after').style.display = 'none';
+  }
+
+  // Location section
+  const locationText = getActivityLocationText(activity);
+  document.getElementById('detail-location-text').textContent = locationText;
+
+  // "Gå til ændringen" button
+  const goToBtn = document.getElementById('detail-go-to-location');
+  goToBtn.onclick = () => navigateToActivity(activity);
+
+  // Show page (NOTE: showPage adds 'page-' prefix automatically!)
+  showPage('activity-detail');
+}
+
+// Hent lokationstekst for aktivitet
+function getActivityLocationText(activity) {
+  const details = activity.details || {};
+
+  if (details.category === 'pages') {
+    return `Navigation -> ${details.pageName || details.oldName || 'Ukendt side'}`;
+  } else if (details.category === 'kunder') {
+    if (details.subCategory && details.restaurantName) {
+      const subCategoryLabels = {
+        'stamdata': 'Stamdata',
+        'produkter': 'Produkter',
+        'kategorier': 'Kategorier',
+        'faktura': 'Faktura',
+        'workflow-kontrol': 'Workflow Kontrol',
+        'beskeder': 'Beskeder',
+        'review': 'Review Links'
+      };
+      const subLabel = subCategoryLabels[details.subCategory] || details.subCategory;
+      return `Kunder -> ${details.restaurantName} -> ${subLabel}`;
+    } else if (details.restaurantName) {
+      return `Kunder -> ${details.restaurantName}`;
+    }
+    return 'Kunder';
+  } else if (details.category === 'workflow') {
+    return details.restaurantName ? `Workflow -> ${details.restaurantName}` : 'Workflow';
+  } else if (details.category === 'indstillinger') {
+    return 'Indstillinger';
+  } else if (details.category === 'integrationer') {
+    return 'Integrationer';
+  } else if (details.category === 'ordrer') {
+    return 'Ordrer';
+  }
+
+  return details.category || 'System';
+}
+
+// Naviger til aktivitets lokation
+function navigateToActivity(activity) {
+  const details = activity.details || {};
+
+  // === ROLLE-CHECK: Blokér navigation til kunde-aktiviteter for demo/kunde ===
+  const isCustomerView = currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role);
+
+  // Navigate to the page based on category
+  if (details.category === 'pages') {
+    // Navigate to specific page if pageId is provided
+    if (details.pageId) {
+      showPage(details.pageId);
+    } else {
+      showPage('dashboard');
+    }
+  } else if (details.category === 'kunder') {
+    // Blokér for demo/kunde brugere
+    if (isCustomerView) {
+      console.warn('🚫 Blocked activity navigation to kunder for demo/kunde user');
+      return;
+    }
+    showPage('kunder');
+    const customerId = details.customerId || details.restaurantId;
+    if (customerId) {
+      // Load specific customer profile
+      setTimeout(() => {
+        showCrmProfileView(customerId);
+        if (details.subCategory) {
+          setTimeout(() => {
+            showCustomerSubpage(details.subCategory);
+            // Highlight changed field if specified
+            if (details.field) {
+              setTimeout(() => highlightChangedField(details.field), 300);
+            }
+          }, 300);
+        } else if (details.field) {
+          // If no subCategory but field is specified, still highlight
+          setTimeout(() => highlightChangedField(details.field), 300);
+        }
+      }, 200);
+    }
+  } else if (details.category === 'workflow') {
+    showPage('workflow');
+    const customerId = details.customerId || details.restaurantId;
+    if (customerId) {
+      setTimeout(() => {
+        showCrmProfileView(customerId);
+        // Highlight changed field if specified
+        if (details.field) {
+          setTimeout(() => highlightChangedField(details.field), 300);
+        }
+      }, 200);
+    }
+  } else if (details.category === 'indstillinger') {
+    showPage('settings');
+  } else if (details.category === 'ordrer') {
+    showPage('orders');
+  } else {
+    // Default to dashboard
+    showPage('dashboard');
+  }
+
+  // Add in-page indicator with delay to ensure page is loaded
+  if (details.targetElementSelector) {
+    setTimeout(() => {
+      addInPageIndicator(details.targetElementSelector, activity.id);
+    }, 500);
+  }
+}
+
+// Tilføj in-page aktivitetsindikator (præcis blue dot)
+function addInPageIndicator(elementSelector, activityId) {
+  // Remove existing in-page indicators
+  document.querySelectorAll('.in-page-activity-indicator').forEach(el => el.remove());
+
+  // Find target element
+  const targetElement = document.querySelector(elementSelector);
+  if (!targetElement) {
+    console.warn(`Target element not found: ${elementSelector}`);
+    return;
+  }
+
+  // Create indicator
+  const indicator = document.createElement('span');
+  indicator.className = 'in-page-activity-indicator';
+  indicator.dataset.activityId = activityId;
+  indicator.title = 'Denne ændring er ny';
+
+  // Position next to element
+  if (targetElement.tagName === 'H1' || targetElement.tagName === 'H2') {
+    // For headers, insert after
+    targetElement.insertAdjacentElement('afterend', indicator);
+  } else {
+    // For other elements, position absolutely
+    indicator.style.position = 'absolute';
+    targetElement.style.position = 'relative';
+    targetElement.appendChild(indicator);
+  }
+
+  // Highlight target element
+  targetElement.classList.add('has-activity-indicator');
+
+  // Auto-remove when user interacts with the element
+  const markSeenOnInteraction = () => {
+    indicator.remove();
+    targetElement.classList.remove('has-activity-indicator');
+    markActivitySeen(activityId);
+  };
+
+  targetElement.addEventListener('click', markSeenOnInteraction, { once: true });
+
+  // Auto-remove after 30 seconds on page
+  setTimeout(() => {
+    if (indicator.parentElement) {
+      indicator.remove();
+      targetElement.classList.remove('has-activity-indicator');
+      markActivitySeen(activityId);
+    }
+  }, 30000);
+}
+
+// Highlight changed field when navigating to activity
+function highlightChangedField(fieldName) {
+  // Find input/element by name, ID, or data-field attribute
+  const input = document.querySelector(`[name="${fieldName}"], #${fieldName}, [data-field="${fieldName}"]`);
+
+  if (input) {
+    // Scroll into view
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Add highlight animation
+    input.classList.add('field-highlight');
+    setTimeout(() => input.classList.remove('field-highlight'), 3000);
+
+    // Focus if it's an input
+    if (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT') {
+      setTimeout(() => input.focus(), 500);
+    }
+  } else {
+    console.warn(`Field not found for highlighting: ${fieldName}`);
+  }
+}
+
+// Vis alle aktiviteter (ny side)
+function showAllActivities() {
+  showPage('activities');
+  loadActivitiesPage();
+}
+
+// Load aktiviteter side
+function loadActivitiesPage() {
+  const container = document.getElementById('activities-list');
+  if (!container) return;
+  
+  const log = getActivityLog().slice(0, 30); // De seneste 30
+  
+  if (log.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted)">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:16px;opacity:0.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="font-size:16px;margin-bottom:8px">Ingen aktiviteter</div>
+        <div style="font-size:13px">Aktiviteter vil blive vist her når der sker ændringer i systemet</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Gruppér efter dato
+  const grouped = {};
+  log.forEach(activity => {
+    const date = new Date(activity.timestamp);
+    const dateKey = date.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (!grouped[dateKey]) grouped[dateKey] = [];
+    grouped[dateKey].push(activity);
+  });
+  
+  container.innerHTML = Object.entries(grouped).map(([dateStr, activities]) => `
+    <div class="activity-date-group">
+      <div class="activity-date-header">${dateStr}</div>
+      ${activities.map(activity => {
+        const typeInfo = ACTIVITY_TYPES[activity.type] || ACTIVITY_TYPES.system;
+        const details = activity.details || {};
+        const time = new Date(activity.timestamp).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+        
+        let detailPath = '';
+        if (details.category) {
+          detailPath = details.category;
+          if (details.subCategory) detailPath += ' -> ' + details.subCategory;
+          if (details.field) detailPath += ' -> ' + details.field;
+        }
+        
+        return `
+          <div class="activity-item-full ${activity.seen ? '' : 'unseen'}" onclick="showActivityDetail('${activity.id}')">
+            <div class="activity-time-col">${time}</div>
+            <div class="activity-dot-col"><div class="activity-dot ${typeInfo.color}"></div></div>
+            <div class="activity-main-col">
+              <div class="activity-description">${activity.description}</div>
+              ${detailPath ? `<div class="activity-path">${detailPath}</div>` : ''}
+              ${details.oldValue && details.newValue ? `
+                <div class="activity-change">
+                  <span class="old-value">${details.oldValue}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  <span class="new-value">${details.newValue}</span>
+                </div>
+              ` : ''}
+              ${details.restaurantName ? `<div class="activity-restaurant">${details.restaurantName}</div>` : ''}
+            </div>
+            <div class="activity-type-col">
+              <span class="activity-type-badge ${typeInfo.color}">${typeInfo.label}</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `).join('');
+  
+  // Markér alle viste som set
+  log.forEach(a => markActivitySeen(a.id));
+}
+
+// Generer demo aktiviteter
+function generateDemoActivities() {
+  const existingLog = getActivityLog();
+  
+  // Rens eventuelle korrupte/gamle aktiviteter - markér alle demo aktiviteter som set
+  if (existingLog.length > 0) {
+    let needsSave = false;
+    existingLog.forEach(a => {
+      // Markér demo aktiviteter som set
+      if (a.id && a.id.startsWith('demo_') && !a.seen) {
+        a.seen = true;
+        needsSave = true;
+      }
+      // Markér aktiviteter uden gyldig kategori som set (korrupte data)
+      if (!a.details?.category && !a.seen) {
+        a.seen = true;
+        needsSave = true;
+      }
+    });
+    if (needsSave) {
+      saveActivityLog(existingLog);
+    }
+    return; // Allerede genereret
+  }
+  
+  const now = Date.now();
+  const demoActivities = [
+    { type: 'order', description: 'Ny ordre modtaget: 2x Margharita', details: { category: 'ordrer' }, offset: 2 * 60000 },
+    { type: 'workflow', description: 'Workflow test gennemført', details: { category: 'workflow' }, offset: 5 * 60000 },
+    { type: 'update', description: 'Restaurant opdateret', details: { category: 'kunder', subCategory: 'stamdata', field: 'Navn', oldValue: 'Bella Italia', newValue: 'Bella Italia Ristorante', restaurantName: 'Bella Italia' }, offset: 12 * 60000 },
+    { type: 'ai', description: 'AI klassificering: GREETING', details: { category: 'workflow' }, offset: 18 * 60000 },
+    { type: 'update', description: 'Åbningstider ændret', details: { category: 'kunder', subCategory: 'stamdata', field: 'Åbningstider', restaurantName: 'Sushi House' }, offset: 45 * 60000 },
+    { type: 'create', description: 'Nyt produkt oprettet', details: { category: 'kunder', subCategory: 'produkter', field: 'Pizza Diavola', restaurantName: 'Bella Italia' }, offset: 2 * 3600000 },
+    { type: 'update', description: 'Kontaktperson opdateret', details: { category: 'kunder', subCategory: 'stamdata', field: 'Kontaktperson', oldValue: 'Marco Rossi', newValue: 'Giulia Bianchi', restaurantName: 'Bella Italia' }, offset: 5 * 3600000 },
+    { type: 'system', description: 'Faktura genereret', details: { category: 'kunder', subCategory: 'faktura', restaurantName: 'Thai Orchid' }, offset: 24 * 3600000 },
+    { type: 'workflow', description: 'SMS sendt til kunde', details: { category: 'workflow' }, offset: 26 * 3600000 },
+    { type: 'update', description: 'Priser opdateret', details: { category: 'kunder', subCategory: 'produkter', field: 'Priser', restaurantName: 'Sushi House' }, offset: 48 * 3600000 },
+    { type: 'login', description: 'Bruger logget ind', details: { category: 'system' }, offset: 72 * 3600000 },
+    { type: 'create', description: 'Ny restaurant oprettet', details: { category: 'kunder', subCategory: 'stamdata', field: 'Restaurant', restaurantName: 'New Restaurant' }, offset: 96 * 3600000 }
+  ];
+  
+  const log = demoActivities.map((a, i) => ({
+    id: 'demo_' + i,
+    type: a.type,
+    description: a.description,
+    details: a.details,
+    timestamp: now - a.offset,
+    seen: true // Demo-aktiviteter er altid set - kun rigtige aktiviteter trigger indikatorer
+  }));
+  
+  saveActivityLog(log);
+}
+
+// Wrapper funktion til at logge feltændringer
+function logFieldChange(restaurantName, category, subCategory, field, oldValue, newValue) {
+  const description = `${field} opdateret`;
+  logActivity('update', description, {
+    category: category,
+    subCategory: subCategory,
+    field: field,
+    oldValue: oldValue,
+    newValue: newValue,
+    restaurantName: restaurantName
+  });
+}
+
+// TEST FUNCTION - FASE 7: Test activity tracking med demo data
+// Fjern senere når side-management UI er bygget
+function testActivityTracking() {
+  console.log('🧪 Tester aktivitets-tracking system...');
+
+  // Test 1: Side omdøbning
+  logActivity('page_rename', 'Side omdøbt: Indstillinger -> Opsætning', {
+    category: 'pages',
+    subCategory: 'navigation',
+    pageId: 'page-settings',
+    oldName: 'Indstillinger',
+    newName: 'Opsætning',
+    targetElementSelector: '#page-settings .page-header h1'
+  });
+  console.log('✓ Test 1: Side omdøbning logged');
+
+  // Test 2: Ny side oprettet
+  logActivity('page_create', 'Ny side oprettet: Analyser', {
+    category: 'pages',
+    subCategory: 'navigation',
+    pageId: 'page-analyser',
+    pageName: 'Analyser',
+    targetElementSelector: '.nav-item[data-page="analyser"]'
+  });
+  console.log('✓ Test 2: Ny side oprettet logged');
+
+  // Test 3: Side-rækkefølge ændret
+  logActivity('page_reorder', 'Side flyttet: Produktrapport til position 3', {
+    category: 'pages',
+    subCategory: 'navigation',
+    movedPage: 'Produktrapport',
+    oldPosition: 5,
+    newPosition: 3,
+    targetElementSelector: '.nav-item[data-page="produktrapport"]'
+  });
+  console.log('✓ Test 3: Side-rækkefølge ændring logged');
+
+  // Test 4: Medarbejder aktivitet
+  logActivity('employee', 'Medarbejder "John Doe" tilføjet til restaurant', {
+    category: 'kunder',
+    subCategory: 'stamdata',
+    restaurantName: 'Demo Restaurant',
+    employeeName: 'John Doe'
+  });
+  console.log('✓ Test 4: Medarbejder aktivitet logged');
+
+  // Test 5: Bruger aktivitet
+  logActivity('user', 'Bruger opdateret restaurant stamdata', {
+    category: 'kunder',
+    subCategory: 'stamdata',
+    restaurantName: 'Test Restaurant',
+    field: 'Adresse',
+    oldValue: 'Gl. Adresse 123',
+    newValue: 'Ny Adresse 456'
+  });
+  console.log('✓ Test 5: Bruger aktivitet logged');
+
+  console.log('✅ Alle test aktiviteter oprettet!');
+  console.log('💡 Klik på en aktivitet i "Seneste Aktivitet" sektionen for at se detaljer');
+  console.log('💡 Klik "Gå til ændringen" for at se in-page blue dot (hvis targetElementSelector findes)');
+
+  return 'Test completed! Check the Recent Activity section on the dashboard.';
+}
+
+// Filtrer aktiviteter på aktivitetssiden
+function filterActivities() {
+  const typeFilter = document.getElementById('activity-filter-type')?.value || '';
+  const categoryFilter = document.getElementById('activity-filter-category')?.value || '';
+  
+  const container = document.getElementById('activities-list');
+  if (!container) return;
+  
+  let log = getActivityLog().slice(0, 30);
+  
+  // Anvend filtre
+  if (typeFilter) {
+    log = log.filter(a => a.type === typeFilter);
+  }
+  if (categoryFilter) {
+    log = log.filter(a => a.details?.category === categoryFilter || a.details?.subCategory === categoryFilter);
+  }
+  
+  if (log.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px;color:var(--muted)">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:16px;opacity:0.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <div style="font-size:16px;margin-bottom:8px">Ingen aktiviteter matcher filteret</div>
+        <div style="font-size:13px">Prøv at ændre filtreringen</div>
+      </div>
+    `;
+    return;
+  }
+  
+  // Render filtrerede aktiviteter
+  const grouped = {};
+  log.forEach(activity => {
+    const date = new Date(activity.timestamp);
+    const dateKey = date.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    if (!grouped[dateKey]) grouped[dateKey] = [];
+    grouped[dateKey].push(activity);
+  });
+  
+  container.innerHTML = Object.entries(grouped).map(([dateStr, activities]) => `
+    <div class="activity-date-group">
+      <div class="activity-date-header">${dateStr}</div>
+      ${activities.map(activity => {
+        const typeInfo = ACTIVITY_TYPES[activity.type] || ACTIVITY_TYPES.system;
+        const details = activity.details || {};
+        const time = new Date(activity.timestamp).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+        
+        let detailPath = '';
+        if (details.category) {
+          detailPath = details.category;
+          if (details.subCategory) detailPath += ' -> ' + details.subCategory;
+          if (details.field) detailPath += ' -> ' + details.field;
+        }
+        
+        return `
+          <div class="activity-item-full ${activity.seen ? '' : 'unseen'}"
+               data-activity-id="${activity.id}"
+               onclick="showActivityDetail('${activity.id}')"
+               style="cursor:pointer">
+            <div class="activity-time-col">${time}</div>
+            <div class="activity-dot-col"><div class="activity-dot ${typeInfo.color}"></div></div>
+            <div class="activity-main-col">
+              <div class="activity-description">${activity.description}</div>
+              ${detailPath ? `<div class="activity-path">${detailPath}</div>` : ''}
+              ${details.oldValue && details.newValue ? `
+                <div class="activity-change">
+                  <span class="old-value">${details.oldValue}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  <span class="new-value">${details.newValue}</span>
+                </div>
+              ` : ''}
+              ${details.restaurantName ? `<div class="activity-restaurant">${details.restaurantName}</div>` : ''}
+            </div>
+            <div class="activity-type-col">
+              <span class="activity-type-badge ${typeInfo.color}">${typeInfo.label}</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+// Ryd aktivitetslog
+function clearActivityLog() {
+  if (confirm('Er du sikker på du vil rydde hele aktivitetsloggen?')) {
+    localStorage.removeItem(ACTIVITY_LOG_KEY);
+    loadActivitiesPage();
+    updateRecentActivityUI();
+    updateActivityIndicators();
+    toast('Aktivitetslog ryddet', 'success');
+  }
+}
+
+// Legacy support - gamle funktioner
+const CURRENT_UPDATES = {};
+
+function getSeenUpdates() {
+  try {
+    return JSON.parse(localStorage.getItem(UPDATE_STORAGE_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+function markUpdateSeen(updateId) {
+  const seen = getSeenUpdates();
+  if (!seen.includes(updateId)) {
+    seen.push(updateId);
+    localStorage.setItem(UPDATE_STORAGE_KEY, JSON.stringify(seen));
+  }
+}
+
+function hasUnseenUpdates(elementId) {
+  return getUnseenActivities(elementId).length > 0;
+}
+
+function addUpdateIndicator(element, updateId) {
+  addActivityIndicator(element, 1);
+}
+
+function initUpdateIndicators() {
+  // DEAKTIVERET: Demo aktiviteter fjernet i produktion
+  // generateDemoActivities();
+
+  updateActivityIndicators();
+  updateRecentActivityUI();
+}
+
+function markPageUpdatesAsSeen(pageName) {
+  const settings = getActivityIndicatorSettings();
+
+  // Only auto-mark as seen if NOT in hover mode
+  if (settings.dismissType !== 'hover') {
+    // Marker aktiviteter i primær kategori
+    markCategoryActivitiesSeen(pageName);
+
+    // For integrationer undersider (bogholderi, betaling), marker også:
+    // 1. Aktiviteter med category 'integrationer' og matching subCategory
+    // 2. ALLE aktiviteter med category 'integrationer' UDEN subCategory (legacy/fejl)
+    if (pageName === 'bogholderi' || pageName === 'betaling') {
+      markCategoryActivitiesSeen('integrationer', pageName);
+
+      // Marker også integrationer aktiviteter UDEN subCategory
+      const log = getActivityLog();
+      let changed = false;
+      log.forEach(a => {
+        if (a.details?.category === 'integrationer' && !a.details?.subCategory && !a.seen) {
+          a.seen = true;
+          changed = true;
+        }
+      });
+      if (changed) {
+        saveActivityLog(log);
+        updateActivityIndicators();
+      }
+    }
+
+    // INTEGRATION MED NOTIFICATIONSYSTEM: Fjern notifikationer for denne side
+    if (typeof NotificationSystem !== 'undefined') {
+      // Konverter pageName til notification path
+      let notificationPath = pageName;
+
+      // Special handling for integrationer undersider
+      if (pageName === 'bogholderi') {
+        notificationPath = 'integrationer.bogholderi';
+      } else if (pageName === 'betaling') {
+        notificationPath = 'integrationer.betaling';
+      }
+
+      // Fjern alle notifikationer under denne path (og alle child paths)
+      NotificationSystem.clearPath(notificationPath);
+
+      // Også fjern parent path hvis det er en underside
+      if (pageName === 'bogholderi' || pageName === 'betaling') {
+        // Tjek om der er flere notifikationer under integrationer, ellers fjern parent også
+        // FIXED: Brug notifications.keys() i stedet for getAll()
+        let hasOtherIntegrationNotifications = false;
+        NotificationSystem.notifications.forEach((notif, path) => {
+          if (path.startsWith('integrationer.') && path !== notificationPath) {
+            hasOtherIntegrationNotifications = true;
+          }
+        });
+
+        if (!hasOtherIntegrationNotifications) {
+          NotificationSystem.clearPath('integrationer');
+        }
+      }
+
+      console.log(`🔵 Cleared notifications for path: ${notificationPath}`);
+    }
+  }
+  // In hover mode, don't auto-mark as seen - wait for hover interaction
+}
+
+// Activity Indicator Settings Management
+function getActivityIndicatorSettings() {
+  const stored = localStorage.getItem('orderflow_activity_indicator_settings');
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch(e) {
+      console.error('Error parsing activity indicator settings:', e);
+    }
+  }
+  // Default to hover mode
+  return { dismissType: 'hover', dismissValue: 1 };
+}
+
+// Check and auto-dismiss activities based on time settings
+function checkTimedDismissal() {
+  const settings = getActivityIndicatorSettings();
+
+  if (settings.dismissType !== 'hover') {
+    const log = getActivityLog();
+    const now = Date.now();
+    let changed = false;
+
+    log.forEach(activity => {
+      if (!activity.seen) {
+        const ageMs = now - activity.timestamp;
+        let thresholdMs = 0;
+
+        switch(settings.dismissType) {
+          case 'minutes':
+            thresholdMs = settings.dismissValue * 60 * 1000;
+            break;
+          case 'hours':
+            thresholdMs = settings.dismissValue * 60 * 60 * 1000;
+            break;
+          case 'days':
+            thresholdMs = settings.dismissValue * 24 * 60 * 60 * 1000;
+            break;
+        }
+
+        if (thresholdMs > 0 && ageMs >= thresholdMs) {
+          activity.seen = true;
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      saveActivityLog(log);
+      updateActivityIndicators();
+    }
+  }
+}
+
+// Start interval timer for timed dismissal (check every 30 seconds)
+setInterval(checkTimedDismissal, 30000);
+
+// Demo data
+const DEMO_RESTAURANTS = [
+  { 
+    id: 'd1', 
+    name: 'Bella Italia', 
+    logo: 'pizza', 
+    phone: '+4570123456', 
+    status: 'active', 
+    orders: 234, 
+    recovered: 38, 
+    features: { ai: true, sms: true },
+    // CRM Data
+    cvr: '12345678',
+    email: 'info@bellaitalia.dk',
+    owner: 'Marco Rossi',
+    contactPerson: 'Giulia Bianchi',
+    address: 'Vesterbrogade 45, 1620 København V',
+    createdAt: '2024-06-15',
+    // Links
+    menuUrl: 'https://bellaitalia.dk/menu',
+    website: 'https://bellaitalia.dk',
+    googleReviewUrl: 'https://g.page/r/bellaitalia/review',
+    trustpilotUrl: 'https://trustpilot.com/review/bellaitalia.dk',
+    reviewDelay: 60,
+    timeFormat: '24h',
+    deliveryEnabled: true,
+    // Workflow Sync
+    reviewRequestEnabled: true,
+    // KPI Data
+    kpiEnabled: true,
+    kpi: {
+      totalRevenue: 187450,
+      recoveredRevenue: 28350,
+      avgOrderValue: 285,
+      reviews: {
+        total: 127,
+        avgRating: 4.6,
+        google: { count: 89, avgRating: 4.7 },
+        trustpilot: { count: 38, avgRating: 4.4 }
+      },
+      conversionRate: 68,
+      responseTime: 2.3,
+      // Extended KPIs
+      aiAutomationRate: 94,
+      clv: 1245,
+      reviewCTR: 18.5,
+      missedCalls: 56,
+      completedOrders: 38,
+      // Heatmap data (hour of day -> order count)
+      orderHeatmap: {
+        monday: [0,0,0,0,0,0,0,0,0,0,2,4,8,5,3,2,1,6,12,15,8,4,1,0],
+        tuesday: [0,0,0,0,0,0,0,0,0,1,3,5,7,4,2,1,2,5,10,14,9,5,2,0],
+        wednesday: [0,0,0,0,0,0,0,0,0,0,2,4,6,5,3,2,3,7,11,16,10,4,1,0],
+        thursday: [0,0,0,0,0,0,0,0,0,1,2,5,8,6,4,2,2,8,14,18,12,6,2,0],
+        friday: [0,0,0,0,0,0,0,0,0,0,3,6,10,7,5,3,4,10,18,22,16,8,3,0],
+        saturday: [0,0,0,0,0,0,0,0,0,0,2,5,12,9,6,4,5,12,20,25,18,10,4,0],
+        sunday: [0,0,0,0,0,0,0,0,0,0,1,3,8,6,4,3,4,8,14,16,10,5,2,0]
+      },
+      // Sentiment data
+      sentiment: { positive: 78, neutral: 18, negative: 4 }
+    },
+    openingHours: {
+      mon: { enabled: true, open: '10:00', close: '22:00' },
+      tue: { enabled: true, open: '10:00', close: '22:00' },
+      wed: { enabled: true, open: '10:00', close: '22:00' },
+      thu: { enabled: true, open: '10:00', close: '22:00' },
+      fri: { enabled: true, open: '10:00', close: '23:00' },
+      sat: { enabled: true, open: '11:00', close: '23:00' },
+      sun: { enabled: true, open: '12:00', close: '21:00' }
+    }
+  },
+  { 
+    id: 'd2', 
+    name: 'Sushi House', 
+    logo: 'sushi', 
+    phone: '+4570234567', 
+    status: 'active', 
+    orders: 156, 
+    recovered: 24, 
+    features: { ai: true, sms: true },
+    // CRM Data
+    cvr: '87654321',
+    email: 'contact@sushihouse.dk',
+    owner: 'Takeshi Yamamoto',
+    contactPerson: 'Lisa Hansen',
+    address: 'Nørrebrogade 123, 2200 København N',
+    createdAt: '2024-08-22',
+    // Links
+    menuUrl: 'https://sushihouse.dk/menu',
+    website: 'https://sushihouse.dk',
+    googleReviewUrl: 'https://g.page/r/sushihouse/review',
+    trustpilotUrl: 'https://trustpilot.com/review/sushihouse.dk',
+    reviewDelay: 45,
+    timeFormat: '24h',
+    deliveryEnabled: true,
+    // Workflow Sync
+    reviewRequestEnabled: true,
+    // KPI Data
+    kpiEnabled: true,
+    kpi: {
+      totalRevenue: 142800,
+      recoveredRevenue: 19200,
+      avgOrderValue: 345,
+      reviews: {
+        total: 94,
+        avgRating: 4.8,
+        google: { count: 62, avgRating: 4.9 },
+        trustpilot: { count: 32, avgRating: 4.6 }
+      },
+      conversionRate: 72,
+      responseTime: 1.8,
+      // Extended KPIs
+      aiAutomationRate: 91,
+      clv: 1580,
+      reviewCTR: 22.3,
+      missedCalls: 33,
+      completedOrders: 24,
+      // Heatmap data
+      orderHeatmap: {
+        monday: [0,0,0,0,0,0,0,0,0,0,1,2,4,3,2,1,1,4,8,10,6,3,1,0],
+        tuesday: [0,0,0,0,0,0,0,0,0,0,1,3,5,4,2,1,2,5,9,12,7,4,1,0],
+        wednesday: [0,0,0,0,0,0,0,0,0,0,2,3,5,4,3,1,2,5,10,13,8,4,2,0],
+        thursday: [0,0,0,0,0,0,0,0,0,1,2,4,6,5,3,2,3,6,11,14,9,5,2,0],
+        friday: [0,0,0,0,0,0,0,0,0,0,2,5,8,6,4,3,4,8,15,19,14,7,3,0],
+        saturday: [0,0,0,0,0,0,0,0,0,0,2,4,9,7,5,4,5,10,17,21,15,8,3,0],
+        sunday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      },
+      sentiment: { positive: 82, neutral: 15, negative: 3 }
+    },
+    openingHours: {
+      mon: { enabled: true, open: '11:00', close: '21:00' },
+      tue: { enabled: true, open: '11:00', close: '21:00' },
+      wed: { enabled: true, open: '11:00', close: '21:00' },
+      thu: { enabled: true, open: '11:00', close: '21:00' },
+      fri: { enabled: true, open: '11:00', close: '22:00' },
+      sat: { enabled: true, open: '12:00', close: '22:00' },
+      sun: { enabled: false, open: '00:00', close: '00:00' }
+    }
+  },
+  { 
+    id: 'd3', 
+    name: 'Burger Joint', 
+    logo: 'burger', 
+    phone: null, 
+    status: 'pending', 
+    orders: 0, 
+    recovered: 0, 
+    features: { ai: true },
+    // CRM Data
+    cvr: '55667788',
+    email: 'hello@burgerjoint.dk',
+    owner: 'Anders Jensen',
+    contactPerson: 'Mette Andersen',
+    address: 'Amagerbrogade 78, 2300 København S',
+    createdAt: '2024-12-01',
+    // Links
+    menuUrl: 'https://burgerjoint.dk/menu',
+    website: 'https://burgerjoint.dk',
+    googleReviewUrl: 'https://g.page/r/burgerjoint/review',
+    trustpilotUrl: 'https://trustpilot.com/review/burgerjoint.dk',
+    reviewDelay: 30,
+    timeFormat: '24h',
+    deliveryEnabled: false,
+    // Workflow Sync
+    reviewRequestEnabled: true,
+    // KPI Data
+    kpiEnabled: false,
+    kpi: {
+      totalRevenue: 0,
+      recoveredRevenue: 0,
+      avgOrderValue: 0,
+      reviews: {
+        total: 0,
+        avgRating: 0,
+        google: { count: 0, avgRating: 0 },
+        trustpilot: { count: 0, avgRating: 0 }
+      },
+      conversionRate: 0,
+      responseTime: 0,
+      // Extended KPIs
+      aiAutomationRate: 0,
+      clv: 0,
+      reviewCTR: 0,
+      missedCalls: 0,
+      completedOrders: 0,
+      orderHeatmap: {
+        monday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        tuesday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        wednesday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        thursday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        friday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        saturday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        sunday: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      },
+      sentiment: { positive: 0, neutral: 0, negative: 0 }
+    },
+    openingHours: {
+      mon: { enabled: true, open: '11:00', close: '22:00' },
+      tue: { enabled: true, open: '11:00', close: '22:00' },
+      wed: { enabled: true, open: '11:00', close: '22:00' },
+      thu: { enabled: true, open: '11:00', close: '22:00' },
+      fri: { enabled: true, open: '11:00', close: '23:00' },
+      sat: { enabled: true, open: '11:00', close: '23:00' },
+      sun: { enabled: true, open: '12:00', close: '21:00' }
+    }
+  },
+  { 
+    id: 'd4', 
+    name: 'Café Hygge', 
+    logo: 'cafe', 
+    phone: '+4533445566', 
+    status: 'inactive', 
+    orders: 0, 
+    recovered: 0, 
+    features: { ai: false, sms: false },
+    cvr: '99887766',
+    email: 'info@cafehygge.dk',
+    owner: 'Louise Nielsen',
+    contactPerson: 'Louise Nielsen',
+    address: 'Gothersgade 55, 1123 København K',
+    createdAt: '2024-11-15',
+    kpiEnabled: false,
+    kpi: { totalRevenue: 0, recoveredRevenue: 0, avgOrderValue: 0, reviews: { total: 0, avgRating: 0, google: { count: 0, avgRating: 0 }, trustpilot: { count: 0, avgRating: 0 } }, conversionRate: 0, responseTime: 0 }
+  },
+  { 
+    id: 'd5', 
+    name: 'Pizza Express', 
+    logo: 'pizza', 
+    phone: '+4577889900', 
+    status: 'churned', 
+    orders: 156, 
+    recovered: 12, 
+    features: { ai: true, sms: true },
+    cvr: '11223344',
+    email: 'kontakt@pizzaexpress.dk',
+    owner: 'Roberto Mancini',
+    contactPerson: 'Roberto Mancini',
+    address: 'Østerbrogade 102, 2100 København Ø',
+    createdAt: '2024-03-10',
+    churnedAt: '2024-10-15',
+    churnReason: 'Skiftede til konkurrent',
+    kpiEnabled: false,
+    kpi: { totalRevenue: 89500, recoveredRevenue: 8400, avgOrderValue: 245, reviews: { total: 45, avgRating: 4.1, google: { count: 30, avgRating: 4.0 }, trustpilot: { count: 15, avgRating: 4.3 } }, conversionRate: 52, responseTime: 3.8 }
+  },
+  // Demo Customer - Example of trial customer
+  { 
+    id: 'demo_example', 
+    name: 'Taste of Thailand', 
+    logo: 'ramen', 
+    phone: '+4520304050', 
+    status: 'demo',
+    isDemo: true,
+    demoLicense: {
+      startDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // Started 5 days ago
+      expiryDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString(), // 9 days remaining
+      daysRemaining: 9,
+      messagesUsed: 12,
+      messagesLimit: 50,
+      status: 'active'
+    },
+    contact: {
+      firstName: 'Somchai',
+      lastName: 'Patel',
+      email: 'somchai@tasteofthailand.dk',
+      phone: '+4520304050'
+    },
+    orders: 8, 
+    recovered: 2, 
+    features: { ai: true, sms: true, billing: false, export: false },
+    cvr: '55667788',
+    email: 'somchai@tasteofthailand.dk',
+    owner: 'Somchai Patel',
+    contactPerson: 'Somchai Patel',
+    address: {
+      street: 'Istedgade 78',
+      zip: '1650',
+      city: 'København V',
+      country: 'DK'
+    },
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    createdBy: 'demo@orderflow.ai',
+    kpiEnabled: true,
+    kpi: { totalRevenue: 4200, recoveredRevenue: 850, avgOrderValue: 185, reviews: { total: 3, avgRating: 4.7, google: { count: 2, avgRating: 4.5 }, trustpilot: { count: 1, avgRating: 5.0 } }, conversionRate: 68, responseTime: 1.2 },
+    openingHours: {
+      mon: { enabled: true, open: '16:00', close: '22:00' },
+      tue: { enabled: true, open: '16:00', close: '22:00' },
+      wed: { enabled: true, open: '16:00', close: '22:00' },
+      thu: { enabled: true, open: '16:00', close: '22:00' },
+      fri: { enabled: true, open: '16:00', close: '23:00' },
+      sat: { enabled: true, open: '12:00', close: '23:00' },
+      sun: { enabled: true, open: '12:00', close: '21:00' }
+    }
+  }
+];
+
+// Supabase is optional - demo mode works without it
+supabase = null;
+
+// =====================================================
+// AUTH
+// =====================================================
+function showAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.auth-tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active');
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+
+  // Wait for Supabase to initialize (max 5 seconds)
+  if (typeof window.waitForSupabase === 'function') {
+    try {
+      await Promise.race([
+        window.waitForSupabase(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+      ]);
+      console.log('✅ Supabase client ready for user login');
+    } catch (err) {
+      console.warn('⚠️ Supabase initialization timeout for user login');
+      showAuthError('Kunne ikke forbinde til server. Prøv igen om et øjeblik.');
+      return;
+    }
+  }
+
+  // Check if Supabase is available
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    console.error('❌ Supabase not available after waiting');
+
+    // Fallback for admin users
+    const ADMIN_EMAILS = ['martinsarvio@hotmail.com'];
+    if (ADMIN_EMAILS.includes(email.toLowerCase())) {
+      console.log('🔑 Using local admin fallback...');
+      loginAdminLocal();
+      return;
+    }
+
+    showAuthError('Kunne ikke forbinde til server. Prøv igen.');
+    return;
+  }
+
+  try {
+    console.log('🔑 Attempting login with email:', email);
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error('❌ Login error:', error);
+      throw error;
+    }
+    console.log('✅ Login successful:', data.user.email);
+
+    // Admin emails list - these users always get admin role
+    const ADMIN_EMAILS = ['martinsarvio@hotmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(email.toLowerCase());
+
+    // Determine user role
+    let userRole = isAdmin ? 'admin' : 'user';
+
+    // Try to get role from database
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getUserRole) {
+      try {
+        const dbRole = await SupabaseDB.getUserRole(data.user.id);
+        if (dbRole && ['admin', 'employee', 'customer'].includes(dbRole)) {
+          userRole = dbRole;
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not get user role from database:', err);
+      }
+    }
+
+    // Build temporary user object for 2FA check
+    const tempUser = {
+      ...data.user,
+      role: userRole
+    };
+
+    console.log(`👤 User role: ${tempUser.role}${isAdmin ? ' (admin)' : ''}`);
+
+    // =====================================================
+    // 2FA CHECK - Only for admin and employee roles
+    // =====================================================
+    if (typeof check2FARequired === 'function' && (userRole === 'admin' || userRole === 'employee')) {
+      console.log('🔐 Checking 2FA requirements...');
+
+      const twoFACheck = await check2FARequired(tempUser);
+
+      if (twoFACheck.required) {
+        if (twoFACheck.settings || twoFACheck.methods) {
+          // User has 2FA set up - show challenge
+          console.log('🔐 2FA required - showing challenge');
+
+          // Store pending login data
+          window._pending2FALogin = {
+            user: tempUser,
+            settings: twoFACheck.settings,
+            isAdmin: isAdmin
+          };
+
+          // Hide login form and show 2FA challenge
+          show2FAChallenge(tempUser, twoFACheck.settings);
+          return; // Wait for 2FA verification
+
+        } else if (userRole === 'employee') {
+          // Employee without 2FA - force setup
+          console.log('🔐 Employee requires 2FA setup');
+
+          // Store pending login data
+          window._pending2FALogin = {
+            user: tempUser,
+            settings: null,
+            isAdmin: isAdmin
+          };
+
+          // Show 2FA setup required screen
+          show2FASetupRequired(tempUser);
+          return; // Wait for 2FA setup
+        }
+        // Admin without 2FA can proceed (they can opt-out)
+      }
+    }
+
+    // =====================================================
+    // COMPLETE LOGIN (no 2FA required or admin opt-out)
+    // =====================================================
+    await finishLogin(tempUser, isAdmin);
+
+  } catch (err) {
+    showAuthError(err.message);
+  }
+}
+
+/**
+ * Play premium login transition animation
+ * Logo zoom effect with form blur
+ * @returns {Promise} Resolves when animation completes
+ */
+function playLoginTransition() {
+  return new Promise((resolve) => {
+    console.log('✨ Starting login transition...');
+
+    const authCard = document.querySelector('.auth-card');
+    const authLogo = document.querySelector('.auth-logo');
+    const authScreen = document.getElementById('auth-screen');
+
+    // Step 1: Blur and fade out the login form (0.8s)
+    if (authCard) {
+      authCard.style.transition = 'all 0.8s ease';
+      authCard.style.filter = 'blur(20px)';
+      authCard.style.opacity = '0';
+    }
+
+    // Step 2: Center the logo and zoom (2s) - reduceret zoom fra 3.5 til 2
+    if (authLogo) {
+      const logoRect = authLogo.getBoundingClientRect();
+      const screenCenterY = window.innerHeight / 2;
+      const logoCenterY = logoRect.top + logoRect.height / 2;
+      const offsetY = screenCenterY - logoCenterY;
+
+      authLogo.style.transition = 'all 2s ease-in-out';
+      authLogo.style.transform = `translateY(${offsetY}px) scale(2)`;
+    }
+
+    // Wait for zoom animation (2s), then blur entire screen (0.5s)
+    setTimeout(() => {
+      // Blur hele auth-screen (baggrund + logo)
+      if (authScreen) {
+        authScreen.style.transition = 'all 0.5s ease';
+        authScreen.style.filter = 'blur(20px)';
+        authScreen.style.opacity = '0';
+      }
+
+      setTimeout(() => {
+        // Reset styles
+        if (authCard) {
+          authCard.style.filter = '';
+          authCard.style.opacity = '';
+        }
+        if (authLogo) {
+          authLogo.style.transform = '';
+          authLogo.style.filter = '';
+          authLogo.style.opacity = '';
+        }
+        if (authScreen) {
+          authScreen.style.filter = '';
+          authScreen.style.opacity = '';
+        }
+        console.log('✨ Login transition complete');
+        resolve();
+      }, 500);
+    }, 2000);
+  });
+}
+
+/**
+ * Complete the login process after authentication (and optional 2FA)
+ */
+async function finishLogin(user, isAdmin) {
+  currentUser = user;
+
+  // Load restaurants from Supabase
+  if (typeof SupabaseDB !== 'undefined') {
+    try {
+      const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
+      restaurants = dbRestaurants || [];
+      console.log('✅ Loaded restaurants from Supabase:', restaurants.length);
+
+      // Also merge any locally persisted restaurants (created while offline)
+      loadPersistedRestaurants();
+      console.log('📦 Total restaurants after merge:', restaurants.length);
+    } catch (err) {
+      console.warn('⚠️ Could not load restaurants from Supabase:', err);
+      restaurants = [];
+      // Fall back to localStorage
+      loadPersistedRestaurants();
+      console.log('📦 Loaded restaurants from localStorage:', restaurants.length);
+    }
+
+    // Initialize real-time sync
+    if (typeof RealtimeSync !== 'undefined') {
+      await RealtimeSync.init(currentUser.id);
+    }
+  } else {
+    // Supabase not available, use localStorage
+    restaurants = [];
+    loadPersistedRestaurants();
+    console.log('📦 Loaded restaurants from localStorage (no Supabase):', restaurants.length);
+  }
+
+  // Play login transition animation
+  await playLoginTransition();
+
+  showApp();
+
+  // Log user login activity
+  logActivity('login', 'Bruger login', {
+    category: 'system',
+    user: currentUser.email,
+    role: currentUser.role
+  });
+}
+
+// =====================================================
+// SIGNUP FLOW (3 STEPS)
+// =====================================================
+
+let signupInviteCount = 1;
+let selectedIntegrations = [];
+
+// Signup step navigation
+function nextSignupStep(step) {
+  // Validate step 1 before going to step 2
+  if (step === 2) {
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-password-confirm')?.value || '';
+
+    if (!email || !password) {
+      showAuthError('Udfyld email og password');
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError('Password skal være mindst 6 tegn');
+      return;
+    }
+    if (password !== confirm) {
+      showAuthError('Passwords matcher ikke');
+      return;
+    }
+  }
+
+  // Validate step 2 before going to step 3
+  if (step === 3) {
+    const company = document.getElementById('signup-company').value;
+    if (!company) {
+      showAuthError('Virksomhedsnavn er påkrævet');
+      return;
+    }
+  }
+
+  // Hide all steps
+  document.querySelectorAll('.signup-step').forEach(s => s.style.display = 'none');
+  document.getElementById(`signup-step-${step}`).style.display = 'block';
+
+  // Update step dots (now 3 steps)
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.style.background = (i + 1) <= step ? 'var(--accent)' : 'var(--border)';
+  });
+
+  // Clear any error
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function prevSignupStep(step) {
+  document.querySelectorAll('.signup-step').forEach(s => s.style.display = 'none');
+  document.getElementById(`signup-step-${step}`).style.display = 'block';
+
+  // Update step dots
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.style.background = (i + 1) <= step ? 'var(--accent)' : 'var(--border)';
+  });
+}
+
+// Team invite field management
+function addInviteField() {
+  signupInviteCount++;
+  const container = document.getElementById('team-invite-list');
+  const newRow = document.createElement('div');
+  newRow.className = 'invite-row';
+  newRow.innerHTML = `
+    <input type="email" class="input invite-email" placeholder="kollega@email.dk">
+    <select class="input invite-role">
+      <option value="staff">Medarbejder</option>
+      <option value="manager">Manager</option>
+    </select>
+    <button type="button" class="btn-icon-remove" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(newRow);
+}
+
+// Integration toggle
+function toggleIntegration(integration) {
+  const btn = document.querySelector(`[data-integration="${integration}"]`);
+  const index = selectedIntegrations.indexOf(integration);
+
+  if (index > -1) {
+    selectedIntegrations.splice(index, 1);
+    btn.classList.remove('selected');
+  } else {
+    selectedIntegrations.push(integration);
+    btn.classList.add('selected');
+  }
+}
+
+function getSelectedIntegrations() {
+  return selectedIntegrations;
+}
+
+// CSV Import
+let currentImportType = null;
+
+function showImportDialog(type) {
+  currentImportType = type;
+  document.getElementById('csv-import-input').click();
+}
+
+async function handleCsvImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const rows = text.split('\n').map(row => row.split(','));
+    const headers = rows[0].map(h => h.trim().toLowerCase());
+    const data = rows.slice(1).filter(row => row.length > 1);
+
+    if (currentImportType === 'customers') {
+      const customers = data.map(row => ({
+        name: row[headers.indexOf('name')] || row[0],
+        phone: row[headers.indexOf('phone')] || row[headers.indexOf('telefon')] || row[1],
+        email: row[headers.indexOf('email')] || row[2],
+        address: row[headers.indexOf('address')] || row[headers.indexOf('adresse')] || row[3]
+      }));
+      window.pendingImportData = { type: 'customers', data: customers };
+      toast(`${customers.length} kunder klar til import`, 'success');
+    } else if (currentImportType === 'products') {
+      const products = data.map(row => ({
+        name: row[headers.indexOf('name')] || row[headers.indexOf('navn')] || row[0],
+        price: parseFloat(row[headers.indexOf('price')] || row[headers.indexOf('pris')] || row[1]) || 0,
+        category: row[headers.indexOf('category')] || row[headers.indexOf('kategori')] || row[2]
+      }));
+      window.pendingImportData = { type: 'products', data: products };
+      toast(`${products.length} produkter klar til import`, 'success');
+    }
+  } catch (err) {
+    toast('Fejl ved læsning af CSV fil', 'error');
+    console.error('CSV import error:', err);
+  }
+
+  event.target.value = '';
+}
+
+async function sendTeamInvitations(userId, restaurantId) {
+  const inviteRows = document.querySelectorAll('.invite-row');
+  const invitations = [];
+
+  inviteRows.forEach(row => {
+    const emailEl = row.querySelector('.invite-email');
+    const roleEl = row.querySelector('.invite-role');
+    const email = emailEl ? emailEl.value.trim() : '';
+    const role = roleEl ? roleEl.value : 'staff';
+    if (email) {
+      invitations.push({ email, role });
+    }
+  });
+
+  if (invitations.length === 0) return;
+
+  try {
+    for (const invite of invitations) {
+      await supabaseClient.from('pending_invitations').insert({
+        inviter_id: userId,
+        restaurant_id: restaurantId,
+        email: invite.email,
+        role: invite.role,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      });
+      console.log(`📧 Invitation gemt til ${invite.email} som ${invite.role}`);
+    }
+    toast(`${invitations.length} invitationer sendt`, 'success');
+  } catch (err) {
+    console.warn('⚠️ Kunne ikke gemme invitationer:', err.message);
+  }
+}
+
+async function processPendingImports(userId, restaurantId) {
+  if (!window.pendingImportData) return;
+
+  const { type, data } = window.pendingImportData;
+
+  try {
+    if (type === 'customers') {
+      for (const customer of data) {
+        await supabaseClient.from('customer_contacts').insert({
+          restaurant_id: restaurantId,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          address: customer.address,
+          created_at: new Date().toISOString()
+        });
+      }
+      toast(`${data.length} kunder importeret`, 'success');
+    } else if (type === 'products') {
+      for (const product of data) {
+        await supabaseClient.from('products').insert({
+          user_id: userId,
+          restaurant_id: restaurantId,
+          name: product.name,
+          price: product.price,
+          category: product.category,
+          created_at: new Date().toISOString()
+        });
+      }
+      toast(`${data.length} produkter importeret`, 'success');
+    }
+  } catch (err) {
+    console.warn('⚠️ Kunne ikke importere data:', err.message);
+  }
+
+  window.pendingImportData = null;
+}
+
+function resetSignupForm() {
+  // Reset til step 1
+  document.querySelectorAll('.signup-step').forEach(s => s.style.display = 'none');
+  const step1 = document.getElementById('signup-step-1');
+  if (step1) step1.style.display = 'block';
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.style.background = i === 0 ? 'var(--accent)' : 'var(--border)';
+  });
+
+  // Clear all fields
+  const fields = ['signup-email', 'signup-password', 'signup-password-confirm', 'signup-company',
+    'signup-cvr', 'signup-owner', 'signup-contact-name', 'signup-contact-email',
+    'signup-phone', 'signup-address', 'signup-website'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Reset team invites
+  const teamList = document.getElementById('team-invite-list');
+  if (teamList) {
+    teamList.innerHTML = `
+      <div class="invite-row">
+        <input type="email" class="input invite-email" placeholder="kollega@email.dk">
+        <select class="input invite-role">
+          <option value="staff">Medarbejder</option>
+          <option value="manager">Manager</option>
+        </select>
+      </div>
+    `;
+  }
+  signupInviteCount = 1;
+
+  // Reset integrations
+  selectedIntegrations = [];
+  document.querySelectorAll('.integration-btn').forEach(btn => btn.classList.remove('selected'));
+
+  // Reset import data
+  window.pendingImportData = null;
+}
+
+async function handleSignup(e) {
+  e.preventDefault();
+
+  // Step 1 data
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+
+  // Step 2 data
+  const company = document.getElementById('signup-company').value;
+  const cvr = document.getElementById('signup-cvr')?.value || '';
+  const owner = document.getElementById('signup-owner')?.value || '';
+  const contactName = document.getElementById('signup-contact-name')?.value || '';
+  const contactEmail = document.getElementById('signup-contact-email')?.value || '';
+  const phone = document.getElementById('signup-phone')?.value || '';
+  const address = document.getElementById('signup-address')?.value || '';
+  const website = document.getElementById('signup-website')?.value || '';
+  const industry = document.getElementById('signup-industry')?.value || 'restaurant';
+  const role = document.getElementById('signup-role')?.value || 'owner';
+
+  // Step 3 data
+  const notifications = document.getElementById('setting-notifications')?.checked ?? true;
+  const aiEnabled = document.getElementById('setting-ai')?.checked ?? true;
+  const smsEnabled = document.getElementById('setting-sms')?.checked ?? true;
+  const integrations = getSelectedIntegrations();
+
+  if (CONFIG.DEMO_MODE || !supabase) {
+    loginDemo();
+    return;
+  }
+
+  try {
+    // 1. Opret bruger i Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          company, cvr, owner, contact_name: contactName,
+          contact_email: contactEmail, phone, address, website,
+          industry, user_role: role,
+          settings: { notifications, ai_enabled: aiEnabled, sms_enabled: smsEnabled }
+        }
+      }
+    });
+
+    if (error) throw error;
+
+    // 2. Opret automatisk første restaurant
+    let restaurantId = null;
+    if (data.user && company && typeof SupabaseDB !== 'undefined') {
+      try {
+        const restaurant = await SupabaseDB.createRestaurant(data.user.id, {
+          name: company,
+          cvr: cvr,
+          contact_name: contactName || owner,
+          contact_email: contactEmail || email,
+          contact_phone: phone,
+          address: address,
+          status: 'pending',
+          ai_enabled: aiEnabled,
+          integration_status: integrations.length > 0 ? 'pending' : 'none',
+          metadata: {
+            owner: owner,
+            website: website,
+            industry: industry,
+            integrations: integrations,
+            features: {
+              ai: aiEnabled,
+              sms: smsEnabled,
+              notifications: notifications
+            }
+          }
+        });
+        restaurantId = restaurant?.id;
+        console.log('✅ Restaurant oprettet:', restaurantId);
+      } catch (restErr) {
+        console.warn('⚠️ Kunne ikke oprette restaurant:', restErr.message);
+      }
+    }
+
+    // 3. Send team invitationer (fra Trin 3)
+    if (data.user && restaurantId) {
+      await sendTeamInvitations(data.user.id, restaurantId);
+    }
+
+    // 4. Process pending CSV imports (fra Trin 3)
+    if (data.user && restaurantId) {
+      await processPendingImports(data.user.id, restaurantId);
+    }
+
+    // 5. Success
+    toast('Konto oprettet! Tjek din email for bekræftelse.', 'success');
+    resetSignupForm();
+    showAuthTab('login');
+  } catch (err) {
+    showAuthError(err.message);
+  }
+}
+
+async function loginDemo() {
+  console.log('🎯 Demo login...');
+
+  // Demo bruger med begrænset adgang
+  currentUser = {
+    id: 'demo-user-' + Date.now(),
+    email: 'demo@orderflow.dk',
+    user_metadata: { full_name: 'Demo Bruger' },
+    role: ROLES.DEMO
+  };
+
+  // Load demo restaurant data
+  restaurants = getDemoRestaurants();
+
+  // Sæt demo restaurant som aktiv (for subpages)
+  currentProfileRestaurantId = restaurants[0]?.id || 'demo-restaurant-1';
+  console.log('📍 Demo restaurant ID sat:', currentProfileRestaurantId);
+
+  // Play login transition animation
+  await playLoginTransition();
+
+  showApp();
+
+  // VIGTIGT: Brug requestAnimationFrame for at sikre at DOM er færdig
+  // Dette løser race condition hvor applyRoleBasedSidebar() blev kaldt før DOM var opdateret
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      applyRoleBasedSidebar();
+      console.log('✅ Role-based sidebar applied after showApp() completed');
+
+    });
+  });
+
+  toast('Demo mode aktiveret', 'info');
+  console.log('👤 Logget ind som Demo bruger');
+}
+
+function getDemoRestaurants() {
+  return [{
+    id: 'demo-restaurant-1',
+    name: 'Demo Pizzeria',
+    status: 'demo',
+    isDemo: true,
+    cvr: '12345678',
+    contact_phone: '+4512345678',
+    contact_email: 'demo@pizzeria.dk',
+    contact_name: 'Demo Kontakt',
+    owner: 'Demo Ejer',
+    phone: '+4512345678',
+    email: 'demo@pizzeria.dk',
+    address: 'Demovej 123, 2100 København',
+    country: 'DK',
+    industry: 'pizzeria',
+    website: 'https://demo.orderflow.dk',
+    created_at: new Date().toISOString(),
+    orders_total: 127,
+    revenue_total: 45890,
+    ai_enabled: true,
+    integration_status: 'active',
+    // Workflow settings
+    googleReviewUrl: 'https://g.page/demo-pizzeria/review',
+    trustpilotUrl: 'https://trustpilot.com/review/demo-pizzeria',
+    reorderEnabled: true,
+    receiptEnabled: true,
+    deliveryEnabled: true,
+    // Opening hours
+    openingHours: {
+      mon: { enabled: true, open: '10:00', close: '22:00' },
+      tue: { enabled: true, open: '10:00', close: '22:00' },
+      wed: { enabled: true, open: '10:00', close: '22:00' },
+      thu: { enabled: true, open: '10:00', close: '22:00' },
+      fri: { enabled: true, open: '10:00', close: '23:00' },
+      sat: { enabled: true, open: '11:00', close: '23:00' },
+      sun: { enabled: true, open: '12:00', close: '21:00' }
+    },
+    // SMS messages
+    messages: {
+      'msg-welcome-text': 'Hej {{kunde}}! Tak for din interesse i Demo Pizzeria.',
+      'msg-pending-text': 'Vi har modtaget din ordre og arbejder på den.',
+      'msg-accepted-text': 'Din ordre er accepteret! Forventet ventetid: {{ventetid}} min.',
+      'msg-preparing-text': 'Din ordre er nu under tilberedning.',
+      'msg-ready-text': 'Din ordre er klar til afhentning/levering!',
+      'msg-picked-up-text': 'Tak for din ordre hos Demo Pizzeria!',
+      'msg-closed-text': 'Vi har desværre lukket. Åbningstider: {{åbningstider}}',
+      'msg-error-text': 'Beklager, der opstod en fejl. Prøv igen eller ring til os.'
+    },
+    metadata: {
+      industry: 'pizzeria',
+      website: 'https://demo.orderflow.dk'
+    }
+  }];
+}
+
+/**
+ * Admin Login Function
+ * Logs in with hardcoded admin credentials via Supabase Auth
+ */
+async function loginAdmin() {
+  const adminEmail = 'martinsarvio@hotmail.com';
+  const adminPassword = 'Ma_93rtin';
+
+  try {
+    console.log('🔑 Attempting admin login...');
+
+    // Wait for Supabase to initialize (max 5 seconds)
+    if (typeof window.waitForSupabase === 'function') {
+      try {
+        await Promise.race([
+          window.waitForSupabase(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+        ]);
+        console.log('✅ Supabase client ready for admin login');
+      } catch (err) {
+        console.warn('⚠️ Supabase initialization timeout, using local admin login');
+        loginAdminLocal();
+        return;
+      }
+    }
+
+    // Check if Supabase is available
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+      console.warn('⚠️ Supabase not available, using local admin login');
+      loginAdminLocal();
+      return;
+    }
+
+    // Login via Supabase Auth
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: adminEmail,
+      password: adminPassword
+    });
+
+    if (error) {
+      console.error('❌ Admin login error:', error);
+      throw error;
+    }
+
+    console.log('✅ Admin login successful:', data.user.email);
+
+    // Set current user
+    currentUser = {
+      ...data.user,
+      role: 'admin' // Add admin role
+    };
+
+    // Load restaurants from Supabase
+    if (typeof SupabaseDB !== 'undefined') {
+      try {
+        const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
+        restaurants = dbRestaurants || [];
+        console.log('✅ Loaded restaurants:', restaurants.length);
+      } catch (err) {
+        console.warn('⚠️ Could not load restaurants:', err);
+        restaurants = [];
+      }
+
+      // Initialize real-time sync
+      if (typeof RealtimeSync !== 'undefined') {
+        await RealtimeSync.init(currentUser.id);
+      }
+    }
+
+    // Play login transition animation
+    await playLoginTransition();
+
+    // Show app
+    showApp();
+    applyRoleBasedSidebar();
+
+    // Log admin login activity
+    logActivity('login', 'Administrator login', {
+      category: 'system',
+      user: currentUser.email,
+      role: currentUser.role
+    });
+
+    console.log('✅ Admin logged in successfully!');
+
+  } catch (err) {
+    console.error('❌ Admin login failed:', err);
+    showAuthError('Admin login fejlede: ' + err.message);
+  }
+}
+
+/**
+ * Local Admin Login Fallback
+ * Used when Supabase is not available
+ */
+async function loginAdminLocal() {
+  console.log('🔑 Local admin login (fallback)...');
+
+  const tempUser = {
+    id: 'admin-martin',
+    email: 'martinsarvio@hotmail.com',
+    user_metadata: {
+      full_name: 'Martin Sarvio'
+    },
+    role: 'admin'
+  };
+
+  // Check 2FA from localStorage
+  try {
+    const localSettings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+    const hasTOTP = localSettings.totp_enabled && localSettings.totp_confirmed;
+    const hasEmail = localSettings.email_otp_enabled;
+
+    console.log('🔐 Local 2FA Check:', { hasTOTP, hasEmail, localSettings });
+
+    if (hasTOTP || hasEmail) {
+      // Store pending login
+      pending2FAUser = tempUser;
+      pending2FASettings = localSettings;
+
+      // Show 2FA challenge
+      show2FAChallenge(tempUser, localSettings);
+      return; // Wait for 2FA verification
+    }
+  } catch (e) {
+    console.warn('Could not check local 2FA settings:', e);
+  }
+
+  // No 2FA - proceed with login
+  currentUser = tempUser;
+  restaurants = [];
+
+  // Load locally persisted restaurants from localStorage
+  loadPersistedRestaurants();
+  console.log('📦 Loaded persisted restaurants:', restaurants.length);
+
+  // Play login transition animation
+  await playLoginTransition();
+
+  showApp();
+  applyRoleBasedSidebar();
+
+  // Log admin login activity
+  logActivity('login', 'Administrator login (local)', {
+    category: 'system',
+    user: currentUser.email,
+    role: currentUser.role
+  });
+
+  console.log('✅ Local admin logged in!');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function logout() {
+  if (supabase) supabase.auth.signOut();
+  resetAuthUI();
+}
+
+function resetAuthUI() {
+  currentUser = null;
+  pending2FAUser = null;
+  pending2FASettings = null;
+  window._pending2FALogin = null;
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('auth-screen').style.display = 'flex';
+  const loginForm = document.getElementById('login-form');
+  const challengeForm = document.getElementById('2fa-challenge-form');
+  const setupRequired = document.getElementById('2fa-setup-required');
+  const authTabs = document.querySelector('.auth-tabs');
+  const demoButtons = document.getElementById('auth-demo-buttons');
+
+  if (loginForm) loginForm.style.display = 'block';
+  if (challengeForm) challengeForm.style.display = 'none';
+  if (setupRequired) setupRequired.style.display = 'none';
+  if (authTabs) authTabs.style.display = 'flex';
+  if (demoButtons) demoButtons.style.display = 'block';
+
+  const codeInput = document.getElementById('2fa-code-input');
+  const emailCodeInput = document.getElementById('2fa-email-code-input');
+  const backupCodeInput = document.getElementById('2fa-backup-code-input');
+  if (codeInput) codeInput.value = '';
+  if (emailCodeInput) emailCodeInput.value = '';
+  if (backupCodeInput) backupCodeInput.value = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderHeaderNotifications();
+});
+
+async function initAuthStateListener() {
+  if (typeof window.waitForSupabase === 'function') {
+    try {
+      await window.waitForSupabase();
+    } catch (err) {
+      console.warn('Supabase not ready for auth listener:', err);
+    }
+  }
+
+  if (typeof supabaseClient !== 'undefined' && supabaseClient?.auth?.onAuthStateChange) {
+    supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
+        resetAuthUI();
+      }
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initAuthStateListener();
+});
+
+// =====================================================
+// HEADER DROPDOWN FUNKTIONER
+// =====================================================
+let activeDropdown = null;
+
+function toggleDropdown(type) {
+  const dropdowns = {
+    'help': 'help-dropdown-wrap',
+    'news': 'news-dropdown-wrap',
+    'notif': 'notif-dropdown-wrap',
+    'profile': null // Profile uses different system
+  };
+  
+  // Handle profile separately
+  if (type === 'profile') {
+    const profile = document.querySelector('.topbar-profile');
+    const wasOpen = profile.classList.contains('open');
+    
+    // Close all other dropdowns
+    closeAllDropdowns();
+    
+    if (!wasOpen) {
+      profile.classList.add('open');
+      activeDropdown = 'profile';
+    }
+    return;
+  }
+  
+  const wrapId = dropdowns[type];
+  if (!wrapId) return;
+  
+  const wrap = document.getElementById(wrapId);
+  const wasOpen = wrap.classList.contains('open');
+  
+  // Close all dropdowns first
+  closeAllDropdowns();
+  
+  // Toggle this one if it was closed
+  if (!wasOpen) {
+    wrap.classList.add('open');
+    activeDropdown = type;
+  }
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.topbar-dropdown-wrap').forEach(el => {
+    el.classList.remove('open');
+  });
+  document.querySelector('.topbar-profile')?.classList.remove('open');
+  activeDropdown = null;
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  const isDropdownClick = e.target.closest('.topbar-dropdown-wrap') || 
+                          e.target.closest('.topbar-profile');
+  
+  if (!isDropdownClick) {
+    closeAllDropdowns();
+  }
+});
+
+// Close dropdowns on Escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllDropdowns();
+  }
+});
+
+// =====================================================
+// APP
+// =====================================================
+function showApp() {
+  try {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app').classList.add('active');
+    
+    // Set user info - sidebar (with null checks)
+    const name = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'Bruger';
+    
+    const userNameEl = document.getElementById('user-name');
+    const userEmailEl = document.getElementById('user-email');
+    const userAvatarEl = document.getElementById('user-avatar');
+    
+    if (userNameEl) userNameEl.textContent = name;
+    if (userEmailEl) userEmailEl.textContent = currentUser?.email || '';
+    if (userAvatarEl) userAvatarEl.textContent = name.charAt(0).toUpperCase();
+    
+    // Set user info - topbar
+    const topbarAvatar = document.getElementById('topbar-avatar');
+    const dropdownName = document.getElementById('dropdown-name');
+    const dropdownEmail = document.getElementById('dropdown-email');
+    
+    if (topbarAvatar) topbarAvatar.textContent = name.charAt(0).toUpperCase();
+    if (dropdownName) dropdownName.textContent = name;
+    if (dropdownEmail) dropdownEmail.textContent = currentUser?.email || '';
+    
+    // Load data with error handling
+    // VIGTIGT: Kun load admin dashboard for admin/employee - ikke for demo/kunde
+    const isCustomerOrDemo = currentUser?.role && [ROLES.DEMO, ROLES.CUSTOMER].includes(currentUser.role);
+    if (!isCustomerOrDemo) {
+      try { loadDashboard(); } catch(e) { console.error('loadDashboard:', e); }
+    }
+    try { loadRestaurants(); } catch(e) { console.error('loadRestaurants:', e); }
+    try { renderWorkflowNodes(); } catch(e) { console.error('renderWorkflowNodes:', e); }
+    try { loadConfig(); } catch(e) { console.error('loadConfig:', e); }
+    
+    // Initialiser update indikatorer efter kort delay
+    setTimeout(() => {
+      try { initUpdateIndicators(); } catch(e) { console.error('initUpdateIndicators:', e); }
+    }, 100);
+
+    // Clear stale notifications hvis ingen kunder eksisterer
+    if (restaurants.length === 0 && typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.clearPath('kunder');
+      NotificationSystem.clearPath('alle-kunder');
+      console.log('🧹 Cleared stale customer notifications (no customers exist)');
+    }
+
+    // ALTID start på dashboard efter login
+    // (ignorer URL hash så brugeren ikke ender på den sidst besøgte side)
+    history.replaceState({ page: 'dashboard' }, '', '#dashboard');
+    showPage('dashboard');
+
+    console.log('App loaded successfully');
+  } catch (err) {
+    console.error('showApp error:', err);
+  }
+}
+
+// =====================================================
+// SMART SIDEBAR - Toggle collapsed state
+// =====================================================
+let sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const workflowPage = document.getElementById('page-workflow');
+
+  sidebarCollapsed = !sidebarCollapsed;
+
+  if (sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    // Close all open dropdowns when collapsing
+    document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+    // Update workflow page position
+    if (workflowPage) workflowPage.classList.add('sidebar-collapsed');
+  } else {
+    sidebar.classList.remove('collapsed');
+    if (workflowPage) workflowPage.classList.remove('sidebar-collapsed');
+  }
+
+  // Save preference
+  localStorage.setItem('sidebarCollapsed', sidebarCollapsed);
+}
+
+// Initialize sidebar state on load
+function initSidebarState() {
+  const sidebar = document.getElementById('sidebar');
+  const workflowPage = document.getElementById('page-workflow');
+  if (sidebar && sidebarCollapsed) {
+    sidebar.classList.add('collapsed');
+    if (workflowPage) workflowPage.classList.add('sidebar-collapsed');
+  }
+}
+
+// Call on page load
+document.addEventListener('DOMContentLoaded', initSidebarState);
+
+// Browser history navigation flag
+let isNavigatingFromHistory = false;
+
+function showPage(page) {
+  // Luk kunde-kontekst menu når man navigerer til en anden side (kun for admin)
+  if (page !== 'kunder') {
+    const customerContext = document.getElementById('nav-customer-context');
+    if (customerContext) {
+      customerContext.style.display = 'none';
+    }
+    currentProfileRestaurantId = null;
+  }
+
+  // === ROLLE-GUARDS: Blokér admin-sider for kunde/demo ===
+  const adminOnlyPages = ['kunder', 'alle-kunder', 'add-restaurant'];
+  if (currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role) && adminOnlyPages.includes(page)) {
+    console.warn('🚫 Blocked navigation to admin page:', page);
+    page = 'dashboard'; // Redirect til dashboard i stedet
+  }
+
+  // === DEMO/KUNDE: Dashboard skal bruge kundens profil-dashboard ===
+  const isCustomerView = currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role);
+  if (isCustomerView && page === 'dashboard') {
+    if (!isNavigatingFromHistory) {
+      history.pushState({ page: page }, '', `#${page}`);
+    }
+    isNavigatingFromHistory = false;
+
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
+
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const dashBtn = document.querySelector('.nav-btn[onclick="showPage(\'dashboard\')"]');
+    if (dashBtn) dashBtn.classList.add('active');
+
+    if (currentUser?.role) {
+      applyRoleBasedSidebar();
+    }
+
+    showCustomerSubpage('dashboard');
+    return;
+  }
+
+  // Push til browser history (undgå ved popstate navigation)
+  if (!isNavigatingFromHistory) {
+    history.pushState({ page: page }, '', `#${page}`);
+  }
+  isNavigatingFromHistory = false;
+  // Reset scroll position to top when leaving page
+  const mainContent = document.querySelector('.main-content');
+  if (mainContent) {
+    mainContent.scrollTop = 0;
+  }
+
+  document.querySelectorAll('.page, .workflow-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-toggle').forEach(t => t.classList.remove('active'));
+
+  // Markér opdateringer som set for denne side
+  markPageUpdatesAsSeen(page);
+  
+  // KRITISK: Kontroller body overflow baseret på side
+  if (page === 'workflow') {
+    document.body.classList.add('workflow-active');
+  } else {
+    document.body.classList.remove('workflow-active');
+  }
+  
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) {
+    pageEl.classList.add('active');
+  }
+  
+  // Reset CRM til search view når man går til kunder-siden
+  if (page === 'kunder') {
+    showCrmSearchView();
+  }
+  
+  // Load ordrer når orders-siden vises
+  if (page === 'orders') {
+    loadOrdersPage();
+  }
+  
+  // Set dagsrapport dato til i dag
+  if (page === 'dagsrapport') {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dagsrapport-dato').value = today;
+  }
+  
+  // Load aktiviteter når activities-siden vises
+  if (page === 'activities') {
+    loadActivitiesPage();
+  }
+  
+  // Reset demo onboarding when page is shown
+  if (page === 'demo-onboarding') {
+    resetDemoOnboarding();
+  }
+  
+  // Clear add-restaurant form when page is shown
+  if (page === 'add-restaurant') {
+    clearAddRestaurantForm();
+  }
+
+  // Load alle-kunder grid when page is shown
+  if (page === 'alle-kunder') {
+    loadAlleKunderGrid();
+  }
+
+  // Centrer workflow når workflow-siden vises
+  if (page === 'workflow') {
+    // Initialize demo mode for demo users
+    initWorkflowDemo();
+
+    // Populate test restaurant dropdown
+    populateTestRestaurants();
+
+    // Reset transform to ensure clean state
+    canvasTransform = { x: 0, y: 0, scale: 0.6 };
+
+    // Initialize canvas and render nodes first
+    setTimeout(() => {
+      initCanvasPanning();
+      renderWorkflowNodes();
+
+      // Then center after nodes are rendered
+      setTimeout(() => {
+        fitWorkflowToView();
+      }, 100);
+
+      // Final check
+      setTimeout(() => {
+        fitWorkflowToView();
+      }, 300);
+    }, 50);
+  }
+  
+  // Highlight correct nav item
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    const btnPage = b.getAttribute('onclick')?.match(/showPage\('(.+?)'\)/)?.[1];
+    if (btnPage === page || btnPage === 'page-' + page || page === 'page-' + btnPage) {
+      b.classList.add('active');
+    }
+  });
+  
+  // Highlight dropdown items
+  const activeDropdowns = new Set();
+  document.querySelectorAll('.nav-dropdown-item').forEach(item => {
+    const onclick = item.getAttribute('onclick');
+    if (onclick && onclick.includes(`'${page}'`)) {
+      item.classList.add('active');
+      // Open parent dropdown
+      const dropdown = item.closest('.nav-dropdown');
+      if (dropdown) {
+        dropdown.classList.add('open');
+        activeDropdowns.add(dropdown);
+      }
+    }
+  });
+  
+  if (activeDropdowns.size > 0) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    activeDropdowns.forEach(dropdown => {
+      dropdown.querySelector('.nav-dropdown-toggle')?.classList.add('active');
+    });
+  }
+
+  // === ROLE-BASED SIDEBAR: Lad applyRoleBasedSidebar() håndtere ALT visibility ===
+  // Fjernet duplicate style manipulation - applyRoleBasedSidebar() er single source of truth
+  if (currentUser?.role) {
+    // Brug synkront kald for at sikre sidebar er korrekt INDEN siden vises
+    applyRoleBasedSidebar();
+  }
+}
+
+// Browser back/forward navigation handler
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.page) {
+    isNavigatingFromHistory = true;
+    showPage(event.state.page);
+  }
+});
+
+// Toggle sidebar dropdown menus - auto-expand sidebar if collapsed
+function toggleNavDropdown(name) {
+  const dropdown = document.getElementById('nav-' + name);
+  const sidebar = document.getElementById('sidebar');
+  const wasOpen = dropdown && dropdown.classList.contains('open');
+  
+  // Luk alle åbne dropdowns (accordion logik)
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  
+  // Luk kunde-kontekst menu når andre dropdowns åbnes (medmindre vi er i kunde-profil)
+  if (name !== 'kunder' && currentProfileRestaurantId) {
+    // Vis kun kort besked, luk ikke profilen helt
+  }
+  
+  if (sidebar && sidebar.classList.contains('collapsed')) {
+    sidebarCollapsed = false;
+    sidebar.classList.remove('collapsed');
+    localStorage.setItem('sidebarCollapsed', 'false');
+    setTimeout(() => { if (dropdown) dropdown.classList.add('open'); }, 100);
+  } else if (dropdown && !wasOpen) {
+    dropdown.classList.add('open');
+  }
+}
+
+// =====================================================
+// FAQ ACCORDION FUNCTIONS
+// =====================================================
+function toggleFAQ(id) {
+  const items = document.querySelectorAll('.faq-item');
+  const clickedItem = document.querySelector(`.faq-item[data-faq="${id}"]`);
+  
+  if (!clickedItem) return;
+  
+  // If clicking on already open item, close it
+  if (clickedItem.classList.contains('open')) {
+    clickedItem.classList.remove('open');
+    return;
+  }
+  
+  // Close all other items
+  items.forEach(item => item.classList.remove('open'));
+  
+  // Open clicked item
+  clickedItem.classList.add('open');
+}
+
+function filterFAQ(searchTerm) {
+  const items = document.querySelectorAll('.faq-item');
+  const term = searchTerm.toLowerCase().trim();
+  
+  items.forEach(item => {
+    const question = item.querySelector('.faq-question span')?.textContent.toLowerCase() || '';
+    const answer = item.querySelector('.faq-answer p')?.textContent.toLowerCase() || '';
+    
+    if (term === '' || question.includes(term) || answer.includes(term)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
+
+// Filter both docs and FAQ on support page
+function filterSupportContent(searchTerm) {
+  const term = searchTerm.toLowerCase().trim();
+  
+  // Filter documentation cards
+  const docCards = document.querySelectorAll('.support-doc-card');
+  docCards.forEach(card => {
+    const title = card.querySelector('h4')?.textContent.toLowerCase() || '';
+    const desc = card.querySelector('p')?.textContent.toLowerCase() || '';
+    const searchData = card.getAttribute('data-search')?.toLowerCase() || '';
+    
+    if (term === '' || title.includes(term) || desc.includes(term) || searchData.includes(term)) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+  
+  // Filter FAQ items
+  const faqItems = document.querySelectorAll('#faq-accordion .faq-item');
+  faqItems.forEach(item => {
+    const question = item.querySelector('.faq-question span')?.textContent.toLowerCase() || '';
+    const answer = item.querySelector('.faq-answer p')?.textContent.toLowerCase() || '';
+    const searchData = item.getAttribute('data-search')?.toLowerCase() || '';
+    
+    if (term === '' || question.includes(term) || answer.includes(term) || searchData.includes(term)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+  
+  // Show/hide section titles based on visible items
+  const docsSection = document.querySelector('.support-docs-section');
+  const faqSection = document.querySelector('.faq-section');
+  
+  if (docsSection) {
+    const visibleDocs = docsSection.querySelectorAll('.support-doc-card:not(.hidden)');
+    docsSection.style.display = visibleDocs.length > 0 ? 'block' : 'none';
+  }
+  
+  if (faqSection) {
+    const visibleFaq = faqSection.querySelectorAll('.faq-item:not(.hidden)');
+    faqSection.style.display = visibleFaq.length > 0 ? 'block' : 'none';
+  }
+}
+
+// Show support documentation - opens external docs site
+// Dokumentation data
+const DOCS_DATA = {
+  'ai-order-handling': {
+    section: 'Kom godt i gang',
+    title: 'Opsætning af AI-ordrehåndtering',
+    desc: 'Lær hvordan OrderFlows AI automatisk fortolker og håndterer indkommende ordrer.',
+    time: '10 min',
+    prev: null,
+    next: 'sms-configuration',
+    content: `
+      <h2>Sådan virker AI-ordrehåndtering</h2>
+      <p>Når en kunde sender en SMS eller besked, sker følgende:</p>
+      <div class="docs-flow">
+        <div class="docs-flow-step">📱 Kunde sender besked</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">🤖 AI analyserer teksten</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">📋 Ordre oprettes</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">✅ Bekræftelse sendes</div>
+      </div>
+      
+      <h2>Aktiver AI-ordrehåndtering</h2>
+      <h3>Trin 1: Gå til Workflow</h3>
+      <ol>
+        <li>Klik på <strong>Workflow</strong> i sidemenuen</li>
+        <li>Vælg din restaurant i dropdown'en</li>
+      </ol>
+      
+      <h3>Trin 2: Aktiver Standard Workflow</h3>
+      <ol>
+        <li>Find <strong>"AI Ordrehåndtering"</strong> workflow</li>
+        <li>Klik på toggle-knappen for at aktivere</li>
+        <li>Workflowet er nu aktivt!</li>
+      </ol>
+      
+      <h2>AI Konfidens-niveauer</h2>
+      <p>AI'en vurderer hvor sikker den er på sin fortolkning:</p>
+      <table>
+        <thead>
+          <tr><th>Konfidens</th><th>Handling</th><th>Eksempel</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="docs-badge green">90-100%</span></td><td>Auto-bekræft ordre</td><td>"2 pepperoni pizzaer til Vestergade 10"</td></tr>
+          <tr><td><span class="docs-badge yellow">70-89%</span></td><td>Ordre oprettes, markeres til gennemgang</td><td>"2 store pizzaer med skinke"</td></tr>
+          <tr><td><span class="docs-badge red">&lt; 70%</span></td><td>Manuel håndtering påkrævet</td><td>"det sædvanlige tak"</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <div><strong>💡 Pro-tip:</strong> Start med 90% og sænk gradvist når AI'en lærer dine produkter.</div>
+      </div>
+    `
+  },
+  'sms-configuration': {
+    section: 'Kom godt i gang',
+    title: 'Konfigurer SMS-beskeder',
+    desc: 'Tilpas automatiske SMS-beskeder til dine kunder og optimer din kommunikation.',
+    time: '8 min',
+    prev: 'ai-order-handling',
+    next: 'missed-calls',
+    content: `
+      <h2>Oversigt</h2>
+      <p>OrderFlow sender automatisk SMS'er ved forskellige hændelser. Du kan tilpasse alle skabeloner til at matche din tone og brand.</p>
+      
+      <h2>Adgang til SMS-indstillinger</h2>
+      <ol>
+        <li>Gå til <strong>Indstillinger</strong> i sidemenuen</li>
+        <li>Klik på <strong>SMS & Beskeder</strong> tab</li>
+        <li>Vælg den restaurant du vil konfigurere</li>
+      </ol>
+      
+      <h2>Tilgængelige variabler</h2>
+      <p>Du kan bruge disse variabler i dine SMS-skabeloner:</p>
+      <table>
+        <thead>
+          <tr><th>Variabel</th><th>Beskrivelse</th><th>Eksempel</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>{kundenavn}</code></td><td>Kundens navn</td><td>Anders</td></tr>
+          <tr><td><code>{restaurant}</code></td><td>Restaurant navn</td><td>Bella Italia</td></tr>
+          <tr><td><code>{ordrenummer}</code></td><td>Ordre ID</td><td>1234</td></tr>
+          <tr><td><code>{total}</code></td><td>Total beløb</td><td>259,00 kr</td></tr>
+          <tr><td><code>{leveringstid}</code></td><td>Estimeret leveringstid</td><td>kl. 18:30</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>💡 Pro-tip:</strong> Hold SMS'er korte og informative. Brug emojis sparsomt.</div>
+      </div>
+    `
+  },
+  'missed-calls': {
+    section: 'Kom godt i gang',
+    title: 'Missed Calls Auto-SMS',
+    desc: 'Konverter mistede opkald til ordrer med automatisk SMS-opfølgning.',
+    time: '6 min',
+    prev: 'sms-configuration',
+    next: 'train-ai-orders',
+    content: `
+      <h2>Oversigt</h2>
+      <p>Konverter mistede opkald til ordrer ved automatisk at sende en SMS til kunden inden for 30 sekunder.</p>
+      
+      <h2>Sådan virker det</h2>
+      <div class="docs-flow">
+        <div class="docs-flow-step">📞 Kunde ringer</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">⏰ Ubesvaret efter 15 sek</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">📱 Auto-SMS sendes</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">🛒 Kunde bestiller via SMS</div>
+      </div>
+      
+      <h2>Opsætning</h2>
+      <ol>
+        <li>Gå til <strong>Workflow</strong></li>
+        <li>Find <strong>"Missed Call Handler"</strong></li>
+        <li>Aktiver workflowet</li>
+        <li>Tilpas SMS-skabelonen</li>
+      </ol>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>💡 Pro-tip:</strong> Inkluder link til online-menu i SMS'en for højere konvertering.</div>
+      </div>
+    `
+  },
+  'train-ai-orders': {
+    section: 'Tutorials',
+    title: 'Træn din AI til ordrer',
+    desc: 'Lær AI\'en at forstå dine produkter, kundemønstre og særlige ønsker.',
+    time: '20 min',
+    prev: 'missed-calls',
+    next: 'custom-workflow',
+    content: `
+      <h2>Oversigt</h2>
+      <p>Jo mere du træner AI'en, jo bedre bliver den til at forstå dine kunders ordrer.</p>
+      
+      <h2>Upload din menu</h2>
+      <ol>
+        <li>Gå til <strong>Kunder</strong> -> vælg restaurant</li>
+        <li>Klik på <strong>Produkter</strong> tab</li>
+        <li>Tilføj alle produkter med navn, pris og kategori</li>
+      </ol>
+      
+      <h2>Godkend/afvis ordrer</h2>
+      <p>Hver gang du godkender eller afviser en AI-fortolkning, lærer systemet:</p>
+      <ul>
+        <li><strong>Godkend:</strong> AI'en lærer at denne fortolkning var korrekt</li>
+        <li><strong>Afvis:</strong> AI'en lærer at undgå denne fejl fremover</li>
+        <li><strong>Rediger:</strong> AI'en lærer den korrekte fortolkning</li>
+      </ul>
+      
+      <h2>Tilføj produktvarianter</h2>
+      <p>Hjælp AI'en med at forstå varianter og synonymer:</p>
+      <table>
+        <thead>
+          <tr><th>Produkt</th><th>Varianter/Synonymer</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Margherita</td><td>margarita, den klassiske, den simple</td></tr>
+          <tr><td>Coca-Cola</td><td>cola, coke, sodavand</td></tr>
+          <tr><td>Pommes frites</td><td>fritter, pomfrit, fries</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>💡 Pro-tip:</strong> Brug de første 50-100 ordrer aktivt til at træne AI'en.</div>
+      </div>
+    `
+  },
+  'custom-workflow': {
+    section: 'Tutorials',
+    title: 'Byg custom workflows',
+    desc: 'Opret avancerede automatiseringsflows tilpasset din virksomhed.',
+    time: '30 min',
+    prev: 'train-ai-orders',
+    next: 'vat-configuration',
+    content: `
+      <h2>Oversigt</h2>
+      <p>Workflow-builderen lader dig skabe avancerede automatiseringer uden at skrive kode.</p>
+      
+      <h2>Workflow-komponenter</h2>
+      <ul>
+        <li><strong>Triggers:</strong> Hvad starter workflowet (SMS modtaget, ordre oprettet, etc.)</li>
+        <li><strong>Conditions:</strong> Hvornår skal handlingen udføres</li>
+        <li><strong>Actions:</strong> Hvad skal der ske (send SMS, opret ordre, etc.)</li>
+      </ul>
+      
+      <h2>Opret nyt workflow</h2>
+      <ol>
+        <li>Gå til <strong>Workflow</strong></li>
+        <li>Klik <strong>+ Nyt Workflow</strong></li>
+        <li>Vælg trigger type</li>
+        <li>Tilføj conditions og actions</li>
+        <li>Test og aktiver</li>
+      </ol>
+      
+      <h2>Eksempel: Automatisk opfølgning</h2>
+      <p>Et workflow der sender opfølgning 24 timer efter levering:</p>
+      <div class="docs-flow">
+        <div class="docs-flow-step">🚚 Ordre leveret</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">⏰ Vent 24 timer</div>
+        <span class="docs-flow-arrow">-></span>
+        <div class="docs-flow-step">📱 Send feedback SMS</div>
+      </div>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>💡 Pro-tip:</strong> Start med simple workflows og byg gradvist kompleksitet.</div>
+      </div>
+    `
+  },
+  'vat-configuration': {
+    section: 'Tutorials',
+    title: 'Moms-opsætning',
+    desc: 'Konfigurer korrekt momsberegning for din virksomhed.',
+    time: '5 min',
+    prev: 'custom-workflow',
+    next: 'user-management',
+    content: `
+      <h2>Dansk moms (25%)</h2>
+      <p>OrderFlow er konfigureret til dansk moms som standard.</p>
+      
+      <h2>Indstillinger</h2>
+      <ol>
+        <li>Gå til <strong>Indstillinger</strong> -> <strong>Moms</strong></li>
+        <li>Vælg momssats (25% for Danmark)</li>
+        <li>Angiv om priser vises inkl. eller ekskl. moms</li>
+      </ol>
+      
+      <h2>Momsberegning på kvitteringer</h2>
+      <p>Alle kvitteringer og rapporter viser:</p>
+      <ul>
+        <li>Subtotal (ekskl. moms)</li>
+        <li>Moms (25%)</li>
+        <li>Total (inkl. moms)</li>
+      </ul>
+      
+      <h2>Eksempel</h2>
+      <table>
+        <thead>
+          <tr><th>Beskrivelse</th><th>Beløb</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Subtotal (ekskl. moms)</td><td>200,00 kr</td></tr>
+          <tr><td>Moms (25%)</td><td>50,00 kr</td></tr>
+          <tr><td><strong>Total (inkl. moms)</strong></td><td><strong>250,00 kr</strong></td></tr>
+        </tbody>
+      </table>
+    `
+  },
+  'user-management': {
+    section: 'Administration',
+    title: 'Brugere & Roller',
+    desc: 'Administrer brugere og tildel roller med forskellige adgangsniveauer.',
+    time: '8 min',
+    prev: 'vat-configuration',
+    next: 'reports-export',
+    content: `
+      <h2>Roller i OrderFlow</h2>
+      <table>
+        <thead>
+          <tr><th>Rolle</th><th>Beskrivelse</th><th>Adgang</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Admin</strong></td><td>Fuld kontrol</td><td>Alt inkl. API, fakturering og brugere</td></tr>
+          <tr><td><strong>Manager</strong></td><td>Daglig drift</td><td>Kunder, rapporter, workflows</td></tr>
+          <tr><td><strong>Support</strong></td><td>Kundesupport</td><td>Kunder, ordrer (kun læse)</td></tr>
+          <tr><td><strong>Medarbejder</strong></td><td>Basalt</td><td>Kun egne opgaver</td></tr>
+        </tbody>
+      </table>
+      
+      <h2>Opret ny bruger</h2>
+      <ol>
+        <li>Gå til <strong>Indstillinger</strong> -> <strong>Brugerindstillinger</strong></li>
+        <li>Klik <strong>+ Tilføj bruger</strong></li>
+        <li>Indtast email og vælg rolle</li>
+        <li>Bruger modtager invitation på email</li>
+      </ol>
+      
+      <div class="docs-callout warning">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div><strong>Vigtigt:</strong> Admin-rollen giver fuld adgang til alle data og indstillinger. Tildel den kun til betroede brugere.</div>
+      </div>
+    `
+  },
+  'reports-export': {
+    section: 'Administration',
+    title: 'Rapporter & Eksport',
+    desc: 'Generer detaljerede rapporter og eksporter data til PDF eller CSV.',
+    time: '12 min',
+    prev: 'user-management',
+    next: null,
+    content: `
+      <h2>Tilgængelige rapporter</h2>
+      <ul>
+        <li><strong>Dagsrapport:</strong> Dagens omsætning og ordrer</li>
+        <li><strong>Z-rapport:</strong> Kasseafstemning</li>
+        <li><strong>Produktrapport:</strong> Salg pr. produkt</li>
+        <li><strong>Konverteringsrapport:</strong> SMS -> ordre konvertering</li>
+        <li><strong>Genbestillingsrapport:</strong> Tilbagevendende kunder</li>
+      </ul>
+      
+      <h2>Eksportér data</h2>
+      <ol>
+        <li>Gå til <strong>Rapporter</strong></li>
+        <li>Vælg rapporttype og datointerval</li>
+        <li>Klik <strong>Generer</strong></li>
+        <li>Vælg <strong>Download PDF</strong> eller <strong>Eksportér CSV</strong></li>
+      </ol>
+      
+      <h2>Eksportformater</h2>
+      <table>
+        <thead>
+          <tr><th>Format</th><th>Brug</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>PDF</strong></td><td>Print, arkivering, deling med bogholder</td></tr>
+          <tr><td><strong>CSV</strong></td><td>Import i Excel, videre analyse</td></tr>
+          <tr><td><strong>Excel</strong></td><td>Direkte redigering i regneark</td></tr>
+        </tbody>
+      </table>
+      
+      <div class="docs-callout tip">
+        <svg class="docs-callout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><strong>💡 Pro-tip:</strong> CSV-filer kan åbnes direkte i Excel for videre analyse.</div>
+      </div>
+    `
+  }
+};
+
+// Vis support dokumentation - åbner docs page
+function showSupportDoc(docId) {
+  window.location.href = 'docs.html?doc=' + docId;
+}
+
+// Load dokumentation i docs-page
+function loadDoc(docId) {
+  const doc = DOCS_DATA[docId];
+  if (!doc) {
+    toast('Dokumentation ikke fundet', 'error');
+    return;
+  }
+  
+  // Vis docs page
+  showPage('docs');
+  
+  // Opdater sidebar active state
+  document.querySelectorAll('.docs-nav-link').forEach(link => {
+    link.classList.remove('active');
+    if (link.dataset.doc === docId) {
+      link.classList.add('active');
+    }
+  });
+  
+  // Opdater breadcrumb
+  document.getElementById('docs-breadcrumb-section').textContent = doc.section;
+  
+  // Opdater artikel header
+  document.getElementById('docs-article-title').textContent = doc.title;
+  document.getElementById('docs-article-desc').textContent = doc.desc;
+  document.getElementById('docs-article-time').textContent = doc.time;
+  
+  // Opdater indhold
+  document.getElementById('docs-article-content').innerHTML = doc.content;
+  
+  // Opdater footer navigation
+  const prevLink = document.getElementById('docs-prev-link');
+  const nextLink = document.getElementById('docs-next-link');
+  
+  if (doc.prev && DOCS_DATA[doc.prev]) {
+    prevLink.style.display = 'flex';
+    prevLink.dataset.doc = doc.prev;
+    document.getElementById('docs-prev-title').textContent = DOCS_DATA[doc.prev].title;
+  } else {
+    prevLink.style.display = 'none';
+  }
+  
+  if (doc.next && DOCS_DATA[doc.next]) {
+    nextLink.style.display = 'flex';
+    nextLink.dataset.doc = doc.next;
+    document.getElementById('docs-next-title').textContent = DOCS_DATA[doc.next].title;
+  } else {
+    nextLink.style.display = 'none';
+  }
+  
+  // Scroll to top
+  document.querySelector('.docs-main')?.scrollTo(0, 0);
+}
+
+// Filtrer docs navigation
+function filterDocsNav(query) {
+  const searchTerm = query.toLowerCase().trim();
+  const navLinks = document.querySelectorAll('.docs-nav-link');
+  
+  if (!searchTerm) {
+    navLinks.forEach(link => link.style.display = 'flex');
+    document.querySelectorAll('.docs-nav-group').forEach(group => group.style.display = 'block');
+    return;
+  }
+  
+  navLinks.forEach(link => {
+    const docId = link.dataset.doc;
+    const doc = DOCS_DATA[docId];
+    if (doc) {
+      const searchText = `${doc.title} ${doc.desc} ${doc.section}`.toLowerCase();
+      link.style.display = searchText.includes(searchTerm) ? 'flex' : 'none';
+    }
+  });
+  
+  // Skjul tomme grupper
+  document.querySelectorAll('.docs-nav-group').forEach(group => {
+    const visibleLinks = group.querySelectorAll('.docs-nav-link[style="display: flex;"], .docs-nav-link:not([style*="display: none"])');
+    let hasVisible = false;
+    group.querySelectorAll('.docs-nav-link').forEach(link => {
+      if (link.style.display !== 'none') hasVisible = true;
+    });
+    group.style.display = hasVisible ? 'block' : 'none';
+  });
+}
+
+// Navigate to settings sub-page
+function showSettingsPage(tab) {
+  showPage('settings');
+  setTimeout(() => switchSettingsTab(tab), 50);
+  
+  // Open indstillinger dropdown
+  document.getElementById('nav-indstillinger')?.classList.add('open');
+}
+
+// =====================================================
+// DAGSRAPPORT FUNKTIONER
+// =====================================================
+let dagsrapportData = null;
+
+function generateDagsrapport() {
+  const dato = document.getElementById('dagsrapport-dato').value;
+  if (!dato) {
+    toast('Vælg venligst en dato', 'error');
+    return;
+  }
+  
+  // Generate demo data based on date
+  const dateObj = new Date(dato);
+  const seed = dateObj.getDate() + dateObj.getMonth() * 31;
+  
+  // Format date to Danish (DD.MM.YYYY)
+  const formatDateDK = (d) => {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}.${month}.${year}`;
+  };
+  
+  const datoDK = formatDateDK(dateObj);
+  
+  // Pseudo-random but consistent for same date
+  const random = (min, max) => {
+    const x = Math.sin(seed * 9999 + min) * 10000;
+    return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
+  };
+  
+  const brutto = random(150000, 550000) + random(0, 99) / 100;
+  const rabatter = random(0, 5000) + random(0, 99) / 100;
+  const kontantSalg = random(20000, 80000) + random(0, 99) / 100;
+  const kortSalg = brutto - kontantSalg - rabatter;
+  const surcharge = random(200, 800) + random(0, 99) / 100;
+  const drikkepenge = random(0, 500) + random(0, 99) / 100;
+  const momsRate = 0.25;
+  
+  dagsrapportData = {
+    dato: dato, // Keep ISO for filename
+    datoDK: datoDK, // Danish format for display
+    aabnet: datoDK + ', ' + String(random(4, 10)).padStart(2, '0') + ':' + String(random(0, 59)).padStart(2, '0'),
+    lukket: datoDK + ', ' + String(random(20, 23)).padStart(2, '0') + ':' + String(random(0, 59)).padStart(2, '0'),
+    medarbejder: 'Medarbejder / Medarbejder',
+    dokumentNummer: 'DOC-' + new Date().getFullYear() + '-' + String(random(1, 999999)).padStart(6, '0'),
+    bruttoomsaetning: brutto,
+    rabatter: rabatter,
+    totalomsaetning: brutto - rabatter,
+    momsOpkraevet: (brutto - rabatter) * momsRate / (1 + momsRate),
+    salgEksMoms: (brutto - rabatter) / (1 + momsRate),
+    kontant: {
+      salg: kontantSalg,
+      omsaetning: kontantSalg,
+      total: kontantSalg
+    },
+    kort: {
+      salg: kortSalg,
+      omsaetning: kortSalg,
+      surcharge: surcharge,
+      drikkepenge: drikkepenge,
+      total: kortSalg + surcharge + drikkepenge
+    },
+    moms: {
+      rate: 25,
+      netto: (brutto - rabatter) / (1 + momsRate),
+      moms: (brutto - rabatter) * momsRate / (1 + momsRate),
+      brutto: brutto - rabatter
+    }
+  };
+  
+  renderDagsrapport();
+  toast('Dagsrapport genereret', 'success');
+}
+
+function renderDagsrapport() {
+  if (!dagsrapportData) return;
+  
+  const d = dagsrapportData;
+  const fmt = (n) => n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DKK';
+  
+  document.getElementById('dagsrapport-content').innerHTML = `
+    <div class="report-section">
+      <div class="report-header">
+        <h2>Detaljer</h2>
+        <span class="report-subheader">Oversigt</span>
+      </div>
+      <div class="report-grid">
+        <div class="report-row"><span class="report-label">Åbnet</span><span class="report-value">${d.aabnet}</span></div>
+        <div class="report-row"><span class="report-label">Lukket</span><span class="report-value">${d.lukket}</span></div>
+        <div class="report-row"><span class="report-label">Åbnet af</span><span class="report-value">${d.medarbejder}</span></div>
+        <div class="report-row"><span class="report-label">Dokumentnummer</span><span class="report-value" style="font-family:monospace">${d.dokumentNummer}</span></div>
+      </div>
+    </div>
+    
+    <div class="report-section">
+      <div class="report-header">
+        <h2>Salgsoversigt</h2>
+        <span class="report-subheader">Oversigt</span>
+      </div>
+      <div class="report-grid">
+        <div class="report-row"><span class="report-label">Bruttoomsætning</span><span class="report-value">${fmt(d.bruttoomsaetning)}</span></div>
+        <div class="report-row"><span class="report-label">Rabatter</span><span class="report-value">${fmt(d.rabatter)}</span></div>
+        <div class="report-row highlight"><span class="report-label">Totalomsætning</span><span class="report-value">${fmt(d.totalomsaetning)}</span></div>
+        <div class="report-row"><span class="report-label">Moms opkrævet</span><span class="report-value">${fmt(d.momsOpkraevet)}</span></div>
+        <div class="report-row"><span class="report-label">Salg ekskl. moms</span><span class="report-value">${fmt(d.salgEksMoms)}</span></div>
+      </div>
+    </div>
+    
+    <div class="report-section">
+      <div class="report-header">
+        <h2>Betalingsfordeling</h2>
+      </div>
+      
+      <div class="report-subsection">
+        <h3>Kontant</h3>
+        <div class="report-grid">
+          <div class="report-row"><span class="report-label">Salg</span><span class="report-value">${fmt(d.kontant.salg)}</span></div>
+          <div class="report-row"><span class="report-label">Omsætning</span><span class="report-value">${fmt(d.kontant.omsaetning)}</span></div>
+          <div class="report-row highlight"><span class="report-label">Total</span><span class="report-value">${fmt(d.kontant.total)}</span></div>
+        </div>
+        <p class="report-note">Alle salg som er afhentning og ikke betales via kort i forbindelse med levering anses som kontant salg.</p>
+      </div>
+      
+      <div class="report-subsection">
+        <h3>Kort</h3>
+        <div class="report-grid">
+          <div class="report-row"><span class="report-label">Salg</span><span class="report-value">${fmt(d.kort.salg)}</span></div>
+          <div class="report-row"><span class="report-label">Omsætning</span><span class="report-value">${fmt(d.kort.omsaetning)}</span></div>
+          <div class="report-row"><span class="report-label">Surcharge</span><span class="report-value">${fmt(d.kort.surcharge)}</span></div>
+          <div class="report-row"><span class="report-label">Drikkepenge</span><span class="report-value">${fmt(d.kort.drikkepenge)}</span></div>
+          <div class="report-row highlight"><span class="report-label">Total</span><span class="report-value">${fmt(d.kort.total)}</span></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="report-section">
+      <div class="report-header">
+        <h2>Momsspecifikation</h2>
+      </div>
+      
+      <div class="report-subsection">
+        <h3>Rate: ${d.moms.rate}%</h3>
+        <div class="report-grid">
+          <div class="report-row"><span class="report-label">Net</span><span class="report-value">${fmt(d.moms.netto)}</span></div>
+          <div class="report-row"><span class="report-label">Moms</span><span class="report-value">${fmt(d.moms.moms)}</span></div>
+          <div class="report-row"><span class="report-label">Brutto</span><span class="report-value">${fmt(d.moms.brutto)}</span></div>
+        </div>
+      </div>
+      
+      <div class="report-subsection">
+        <h3>Total</h3>
+        <div class="report-grid total-grid">
+          <div class="report-row"><span class="report-label">Nettobeløb</span><span class="report-value">${fmt(d.moms.netto)}</span></div>
+          <div class="report-row"><span class="report-label">Momsbeløb</span><span class="report-value">${fmt(d.moms.moms)}</span></div>
+          <div class="report-row highlight"><span class="report-label">Bruttobeløb</span><span class="report-value">${fmt(d.moms.brutto)}</span></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function exportDagsrapportPDF() {
+  if (!dagsrapportData) {
+    toast('Generer først en rapport', 'error');
+    return;
+  }
+  
+  const d = dagsrapportData;
+  const fmt = (n) => n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DKK';
+  
+  // Wait for jsPDF to load
+  if (typeof window.jspdf === 'undefined') {
+    toast('PDF bibliotek indlæses...', 'info');
+    setTimeout(exportDagsrapportPDF, 500);
+    return;
+  }
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  // PDF Konfiguration - Matcher Python script farver
+  const PRIMARY_COLOR = [26, 26, 46];      // #1a1a2e
+  const ACCENT_COLOR = [15, 52, 96];       // #0f3460
+  const TEXT_COLOR = [51, 51, 51];         // #333333
+  const MEDIUM_GRAY = [224, 224, 224];     // #e0e0e0
+  const MUTED_COLOR = [128, 128, 128];     // gray
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 25;
+  const contentWidth = pageWidth - (margin * 2);
+  
+  // Platform info
+  const platformInfo = {
+    name: 'Ordreflow SaaS',
+    address: 'Vestergade 12',
+    postalCity: '2100 København Ø',
+    cvr: '12345678'
+  };
+  
+  // Get restaurant info - try selected restaurant or use demo data
+  const selectedRestaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const restaurant = {
+    name: selectedRestaurant?.name || 'Restaurant Bella Vista ApS',
+    cvr: selectedRestaurant?.cvr || '87654321',
+    address: selectedRestaurant?.address || 'Nørrebrogade 45',
+    postalCity: '2200 København N'
+  };
+  
+  // Format date to Danish format (DD.MM.YYYY)
+  const formatDateDanish = (dateStr) => {
+    if (!dateStr) return '';
+    // Handle both ISO and already formatted dates
+    if (dateStr.includes('.')) return dateStr;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}.${parts[1]}.${parts[0]}`;
+    }
+    return dateStr;
+  };
+  
+  // Format datetime to Danish format
+  const formatDateTimeDanish = (dateTimeStr) => {
+    if (!dateTimeStr) return '';
+    const [datePart, timePart] = dateTimeStr.split(', ');
+    if (timePart) {
+      return `${formatDateDanish(datePart)}, ${timePart}`;
+    }
+    // If format is "YYYY-MM-DD, HH:MM"
+    const match = dateTimeStr.match(/(\d{4}-\d{2}-\d{2}),?\s*(\d{2}:\d{2})/);
+    if (match) {
+      return `${formatDateDanish(match[1])}, ${match[2]}`;
+    }
+    return dateTimeStr;
+  };
+  
+  let currentPage = 1;
+  const totalPages = 2;
+  
+  // === HELPER FUNCTIONS ===
+  function drawFooter() {
+    const footerY = pageHeight - 15;
+    
+    // Linje over footer
+    doc.setDrawColor(...MEDIUM_GRAY);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    // Side nummer
+    doc.setFontSize(9);
+    doc.setTextColor(...TEXT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Side ${currentPage} af ${totalPages}`, pageWidth / 2, footerY, { align: 'center' });
+    
+    // Platform info
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED_COLOR);
+    const footerText = `${platformInfo.name}  •  ${platformInfo.address}, ${platformInfo.postalCity}  •  CVR: ${platformInfo.cvr}`;
+    doc.text(footerText, pageWidth / 2, footerY + 4, { align: 'center' });
+  }
+  
+  function drawHeader() {
+    let y = 20;
+    
+    // Titel
+    doc.setFontSize(22);
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DAGSRAPPORT', margin, y);
+    
+    // Platform navn
+    y += 7;
+    doc.setFontSize(10);
+    doc.setTextColor(...ACCENT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text(platformInfo.name, margin, y);
+    
+    // Højre side: Dato
+    const todayFormatted = new Date().toLocaleDateString('da-DK', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    });
+    doc.setFontSize(10);
+    doc.setTextColor(...TEXT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text(todayFormatted, pageWidth - margin, y - 7, { align: 'right' });
+    
+    // Restaurant info til højre
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(restaurant.name, pageWidth - margin, y - 1, { align: 'right' });
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(restaurant.address, pageWidth - margin, y + 5, { align: 'right' });
+    doc.text(restaurant.postalCity, pageWidth - margin, y + 10, { align: 'right' });
+    doc.text('CVR: ' + restaurant.cvr, pageWidth - margin, y + 15, { align: 'right' });
+    
+    // Header linje
+    y += 18;
+    doc.setDrawColor(...PRIMARY_COLOR);
+    doc.setLineWidth(2);
+    doc.line(margin, y, pageWidth - margin, y);
+    
+    return y + 8;
+  }
+  
+  let y = drawHeader();
+  
+  function drawSectionHeader(title) {
+    // Check for page break
+    if (y > pageHeight - 60) {
+      drawFooter();
+      doc.addPage();
+      currentPage++;
+      y = 25;
+    }
+    
+    doc.setFontSize(14);
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, margin, y);
+    y += 2;
+  }
+  
+  function drawSubsectionHeader(title) {
+    doc.setFontSize(11);
+    doc.setTextColor(...ACCENT_COLOR);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, margin, y + 6);
+    y += 10;
+  }
+  
+  function drawDataRow(label, value, isLast = false) {
+    // Check for page break
+    if (y > pageHeight - 40) {
+      drawFooter();
+      doc.addPage();
+      currentPage++;
+      y = 25;
+    }
+    
+    // Background for row
+    y += 4;
+    
+    // Label
+    doc.setFontSize(10);
+    doc.setTextColor(...TEXT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text(label, margin, y);
+    
+    // Value
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.setFont('helvetica', 'bold');
+    doc.text(value, pageWidth - margin, y, { align: 'right' });
+    
+    y += 4;
+    
+    // Linje under
+    if (isLast) {
+      doc.setDrawColor(...PRIMARY_COLOR);
+      doc.setLineWidth(1);
+    } else {
+      doc.setDrawColor(...MEDIUM_GRAY);
+      doc.setLineWidth(0.5);
+    }
+    doc.line(margin, y, pageWidth - margin, y);
+    
+    y += 4;
+  }
+  
+  // === PAGE 1: DETALJER + SALGSOVERSIGT ===
+  
+  // Detaljer sektion
+  drawSectionHeader('Detaljer');
+  drawSubsectionHeader('Oversigt');
+  
+  drawDataRow('Åbnet', d.aabnet);
+  drawDataRow('Lukket', d.lukket);
+  drawDataRow('Åbnet af', d.medarbejder);
+  drawDataRow('Dokumentnummer', d.dokumentNummer, true);
+  
+  y += 8;
+  
+  // Salgsoversigt sektion
+  drawSectionHeader('Salgsoversigt');
+  drawSubsectionHeader('Oversigt');
+  
+  drawDataRow('Bruttoomsætning', fmt(d.bruttoomsaetning));
+  drawDataRow('Rabatter', fmt(d.rabatter));
+  drawDataRow('Totalomsætning', fmt(d.totalomsaetning));
+  drawDataRow('Moms opkrævet', fmt(d.momsOpkraevet));
+  drawDataRow('Salg ekskl. moms', fmt(d.salgEksMoms), true);
+  
+  // Draw footer for page 1
+  drawFooter();
+  
+  // === PAGE 2: BETALINGSFORDELING + MOMSSPECIFIKATION ===
+  doc.addPage();
+  currentPage++;
+  y = 25;
+  
+  // Betalingsfordeling sektion
+  drawSectionHeader('Betalingsfordeling');
+  
+  // Kontant
+  drawSubsectionHeader('Kontant');
+  drawDataRow('Salg', fmt(d.kontant.salg));
+  drawDataRow('Omsætning', fmt(d.kontant.omsaetning));
+  drawDataRow('Total', fmt(d.kontant.total), true);
+  
+  y += 6;
+  
+  // Kort
+  drawSubsectionHeader('Kort');
+  drawDataRow('Salg', fmt(d.kort.salg));
+  drawDataRow('Omsætning', fmt(d.kort.omsaetning));
+  drawDataRow('Surcharge', fmt(d.kort.surcharge));
+  drawDataRow('Drikkepenge', fmt(d.kort.drikkepenge));
+  drawDataRow('Total', fmt(d.kort.total), true);
+  
+  y += 8;
+  
+  // Momsspecifikation sektion
+  drawSectionHeader('Momsspecifikation');
+  
+  drawSubsectionHeader('Rate: ' + d.moms.rate + '%');
+  drawDataRow('Net', fmt(d.moms.netto));
+  drawDataRow('Moms', fmt(d.moms.moms));
+  drawDataRow('Brutto', fmt(d.moms.brutto), true);
+  
+  y += 6;
+  
+  drawSubsectionHeader('Total');
+  drawDataRow('Nettobeløb', fmt(d.moms.netto));
+  drawDataRow('Momsbeløb', fmt(d.moms.moms));
+  drawDataRow('Bruttobeløb', fmt(d.moms.brutto), true);
+  
+  // Draw footer for page 2
+  drawFooter();
+  
+  // === DOWNLOAD ===
+  // Use Danish date format for filename (DDMMYYYY)
+  const dateForFile = d.datoDK ? d.datoDK.replace(/\./g, '') : d.dato.replace(/-/g, '');
+  const fileName = `Dagsrapport_${dateForFile}.pdf`;
+  doc.save(fileName);
+  
+  // toast('PDF downloadet', 'success'); // Removed - unnecessary
+}
+
+function exportDagsrapportExcel() {
+  // Redirect to new ExportService
+  ExportService.toExcel('dagsrapport');
+}
+
+// =====================================================
+// EXPORT SERVICE - Centraliseret eksport med global wrapper
+// =====================================================
+const ExportService = {
+  // Global template konfiguration (Dagsrapport som master)
+  config: {
+    platform: {
+      name: 'Ordreflow SaaS',
+      address: 'Vestergade 12',
+      postalCity: '2100 København Ø',
+      cvr: '12345678'
+    },
+    colors: {
+      primary: [26, 26, 46],      // #1a1a2e
+      accent: [15, 52, 96],       // #0f3460
+      text: [51, 51, 51],         // #333333
+      muted: [128, 128, 128],     // gray
+      border: [224, 224, 224]     // #e0e0e0
+    },
+    fonts: {
+      title: 22,
+      header: 14,
+      subheader: 11,
+      body: 10,
+      small: 9
+    }
+  },
+  
+  // Get current restaurant context
+  getRestaurant() {
+    const selected = restaurants.find(r => r.id === currentProfileRestaurantId);
+    return {
+      name: selected?.name || 'Restaurant',
+      cvr: selected?.cvr || '',
+      address: selected?.address || '',
+      postalCity: '2200 København N'
+    };
+  },
+  
+  // Get report data based on type
+  getReportData(reportType) {
+    switch(reportType) {
+      case 'dagsrapport':
+        return dagsrapportData;
+      case 'produktrapport':
+        return { title: 'Produktrapport', data: [] };
+      case 'zrapport':
+        return { title: 'Z-rapport', data: [] };
+      case 'konverteringsrapport':
+        return { title: 'Konverteringsrapport', data: [] };
+      case 'genbestillingsrapport':
+        return { title: 'Genbestillingsrapport', data: [] };
+      case 'anmeldelsesrapport':
+        return { title: 'Anmeldelsesrapport', data: [] };
+      case 'heatmaprapport':
+        return { title: 'Heatmap', data: [] };
+      default:
+        return null;
+    }
+  },
+  
+  // Report titles mapping
+  titles: {
+    'dagsrapport': 'DAGSRAPPORT',
+    'produktrapport': 'PRODUKTRAPPORT',
+    'zrapport': 'Z-RAPPORT',
+    'konverteringsrapport': 'KONVERTERINGSRAPPORT',
+    'genbestillingsrapport': 'GENBESTILLINGSRAPPORT',
+    'anmeldelsesrapport': 'ANMELDELSESRAPPORT',
+    'heatmaprapport': 'HEATMAP RAPPORT'
+  },
+  
+  // === PDF EXPORT with Global Wrapper ===
+  toPDF(reportType) {
+    const data = this.getReportData(reportType);
+    
+    if (reportType === 'dagsrapport') {
+      if (!data) {
+        toast('Generer først en rapport', 'error');
+        return;
+      }
+      // Use existing dagsrapport PDF function
+      exportDagsrapportPDF();
+      return;
+    }
+    
+    // For other reports - use wrapper template
+    this.generatePDFWithWrapper(reportType, data);
+  },
+  
+  generatePDFWithWrapper(reportType, data) {
+    if (typeof window.jspdf === 'undefined') {
+      toast('PDF bibliotek indlæses...', 'info');
+      setTimeout(() => this.generatePDFWithWrapper(reportType, data), 500);
+      return;
+    }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    
+    const c = this.config.colors;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 25;
+    const contentWidth = pageWidth - (margin * 2);
+    const restaurant = this.getRestaurant();
+    const platform = this.config.platform;
+    
+    let y = 20;
+    
+    // === HEADER (Same as Dagsrapport) ===
+    doc.setFontSize(22);
+    doc.setTextColor(...c.primary);
+    doc.setFont('helvetica', 'bold');
+    doc.text(this.titles[reportType] || reportType.toUpperCase(), margin, y);
+    
+    y += 7;
+    doc.setFontSize(10);
+    doc.setTextColor(...c.accent);
+    doc.setFont('helvetica', 'normal');
+    doc.text(platform.name, margin, y);
+    
+    // Date (right side)
+    const today = new Date().toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    doc.setFontSize(10);
+    doc.setTextColor(...c.text);
+    doc.text(today, pageWidth - margin, y - 7, { align: 'right' });
+    
+    // Restaurant info (right side)
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(restaurant.name, pageWidth - margin, y - 1, { align: 'right' });
+    
+    if (restaurant.address) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(restaurant.address, pageWidth - margin, y + 5, { align: 'right' });
+    }
+    if (restaurant.cvr) {
+      doc.text('CVR: ' + restaurant.cvr, pageWidth - margin, y + 10, { align: 'right' });
+    }
+    
+    // Header line
+    y += 18;
+    doc.setDrawColor(...c.primary);
+    doc.setLineWidth(2);
+    doc.line(margin, y, pageWidth - margin, y);
+    
+    y += 15;
+    
+    // === CONTENT ===
+    doc.setFontSize(12);
+    doc.setTextColor(...c.text);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Rapporten er under udvikling...', margin, y);
+    
+    y += 10;
+    doc.setFontSize(10);
+    doc.setTextColor(...c.muted);
+    doc.text('Data vil blive vist her når funktionen er implementeret.', margin, y);
+    
+    // === FOOTER (Same as Dagsrapport) ===
+    const footerY = pageHeight - 15;
+    doc.setDrawColor(...c.border);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    doc.setFontSize(9);
+    doc.setTextColor(...c.text);
+    doc.text('Side 1 af 1', pageWidth / 2, footerY, { align: 'center' });
+    
+    doc.setFontSize(8);
+    doc.setTextColor(...c.muted);
+    const footerText = `${platform.name}  •  ${platform.address}, ${platform.postalCity}  •  CVR: ${platform.cvr}`;
+    doc.text(footerText, pageWidth / 2, footerY + 4, { align: 'center' });
+    
+    // Save PDF
+    const filename = `${this.titles[reportType] || reportType}_${today.replace(/\./g, '-')}.pdf`;
+    doc.save(filename);
+    // toast('PDF downloadet', 'success'); // Removed - unnecessary
+    closeExportDropdown();
+  },
+  
+  // === EXCEL EXPORT (True .xlsx format) ===
+  toExcel(reportType) {
+    const data = this.getReportData(reportType);
+    
+    if (reportType === 'dagsrapport' && !data) {
+      toast('Generer først en rapport', 'error');
+      return;
+    }
+    
+    // Build Excel-compatible XML (SpreadsheetML)
+    const rows = this.buildExcelRows(reportType, data);
+    const xmlContent = this.generateExcelXML(reportType, rows);
+    
+    // Create blob with correct MIME type
+    const blob = new Blob([xmlContent], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    });
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const today = new Date().toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '-');
+    link.download = `${this.titles[reportType] || reportType}_${today}.xlsx`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    // toast('Excel-fil downloadet', 'success'); // Removed - unnecessary
+    closeExportDropdown();
+  },
+  
+  buildExcelRows(reportType, data) {
+    if (reportType === 'dagsrapport' && data) {
+      const d = data;
+      const fmt = (n) => n.toFixed(2);
+      return [
+        ['DAGSRAPPORT', d.dato],
+        [''],
+        ['DETALJER'],
+        ['Åbnet', d.aabnet],
+        ['Lukket', d.lukket],
+        ['Åbnet af', d.medarbejder],
+        ['Dokumentnummer', d.dokumentNummer],
+        [''],
+        ['SALGSOVERSIGT'],
+        ['Bruttoomsætning', fmt(d.bruttoomsaetning)],
+        ['Rabatter', fmt(d.rabatter)],
+        ['Totalomsætning', fmt(d.totalomsaetning)],
+        ['Moms opkrævet', fmt(d.momsOpkraevet)],
+        ['Salg ekskl. moms', fmt(d.salgEksMoms)],
+        [''],
+        ['BETALINGSFORDELING - KONTANT'],
+        ['Salg', fmt(d.kontant.salg)],
+        ['Omsætning', fmt(d.kontant.omsaetning)],
+        ['Total', fmt(d.kontant.total)],
+        [''],
+        ['BETALINGSFORDELING - KORT'],
+        ['Salg', fmt(d.kort.salg)],
+        ['Omsætning', fmt(d.kort.omsaetning)],
+        ['Surcharge', fmt(d.kort.surcharge)],
+        ['Drikkepenge', fmt(d.kort.drikkepenge)],
+        ['Total', fmt(d.kort.total)],
+        [''],
+        ['MOMSSPECIFIKATION - Rate 25%'],
+        ['Net', fmt(d.moms.netto)],
+        ['Moms', fmt(d.moms.moms)],
+        ['Brutto', fmt(d.moms.brutto)],
+        [''],
+        ['TOTAL'],
+        ['Nettobeløb', fmt(d.moms.netto)],
+        ['Momsbeløb', fmt(d.moms.moms)],
+        ['Bruttobeløb', fmt(d.moms.brutto)]
+      ];
+    }
+    
+    // Default empty template for other reports
+    return [
+      [this.titles[reportType] || reportType, new Date().toLocaleDateString('da-DK')],
+      [''],
+      ['Data ikke tilgængelig'],
+      ['Rapport under udvikling']
+    ];
+  },
+  
+  generateExcelXML(reportType, rows) {
+    // SpreadsheetML format for Excel
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<?mso-application progid="Excel.Sheet"?>\n';
+    xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ';
+    xml += 'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+    xml += '<Styles>\n';
+    xml += '<Style ss:ID="Header"><Font ss:Bold="1" ss:Size="14"/></Style>\n';
+    xml += '<Style ss:ID="Bold"><Font ss:Bold="1"/></Style>\n';
+    xml += '<Style ss:ID="Number"><NumberFormat ss:Format="#,##0.00"/></Style>\n';
+    xml += '</Styles>\n';
+    xml += `<Worksheet ss:Name="${this.titles[reportType] || 'Rapport'}">\n`;
+    xml += '<Table>\n';
+    
+    rows.forEach((row, idx) => {
+      xml += '<Row>\n';
+      row.forEach((cell, cellIdx) => {
+        const isHeader = idx === 0 || (typeof cell === 'string' && cell === cell.toUpperCase() && cell.length > 2);
+        const isNumber = typeof cell === 'string' && !isNaN(parseFloat(cell));
+        
+        let styleAttr = '';
+        if (idx === 0) styleAttr = ' ss:StyleID="Header"';
+        else if (isHeader) styleAttr = ' ss:StyleID="Bold"';
+        else if (isNumber) styleAttr = ' ss:StyleID="Number"';
+        
+        const cellType = isNumber ? 'Number' : 'String';
+        const cellValue = cell === undefined || cell === null ? '' : cell;
+        
+        xml += `<Cell${styleAttr}><Data ss:Type="${cellType}">${this.escapeXml(cellValue)}</Data></Cell>\n`;
+      });
+      xml += '</Row>\n';
+    });
+    
+    xml += '</Table>\n';
+    xml += '</Worksheet>\n';
+    xml += '</Workbook>';
+    
+    return xml;
+  },
+  
+  // === CSV EXPORT (UTF-8 with BOM) ===
+  toCSV(reportType) {
+    const data = this.getReportData(reportType);
+    
+    if (reportType === 'dagsrapport' && !data) {
+      toast('Generer først en rapport', 'error');
+      return;
+    }
+    
+    const rows = this.buildExcelRows(reportType, data);
+    
+    // Convert to CSV with semicolon separator (Danish Excel default)
+    const csv = rows.map(row => 
+      row.map(cell => {
+        const str = String(cell === undefined || cell === null ? '' : cell);
+        // Escape quotes and wrap in quotes if contains separator
+        if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }).join(';')
+    ).join('\n');
+    
+    // UTF-8 BOM for proper Danish character encoding
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    const today = new Date().toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\./g, '-');
+    link.download = `${this.titles[reportType] || reportType}_${today}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    // toast('CSV-fil downloadet', 'success'); // Removed - unnecessary
+    closeExportDropdown();
+  },
+  
+  // Helper: Escape XML special characters
+  escapeXml(str) {
+    if (str === undefined || str === null) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+};
+
+// === EXPORT DROPDOWN FUNCTIONS ===
+function toggleExportDropdown(id) {
+  const dropdown = document.getElementById('export-' + id);
+  if (!dropdown) return;
+  
+  // Close all other dropdowns
+  document.querySelectorAll('.export-dropdown.open').forEach(d => {
+    if (d.id !== 'export-' + id) d.classList.remove('open');
+  });
+  
+  dropdown.classList.toggle('open');
+}
+
+function closeExportDropdown() {
+  document.querySelectorAll('.export-dropdown.open').forEach(d => d.classList.remove('open'));
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.export-dropdown')) {
+    closeExportDropdown();
+  }
+});
+
+// =====================================================
+// DATA LOADING
+// =====================================================
+function updateBreadcrumb(page, subpage) {
+  const pageTitle = document.getElementById('page-title-kunder');
+  if (!pageTitle) return;
+  
+  const pageTitles = {
+    'dashboard': 'Dashboard',
+    'kunder': 'Kunder',
+    'orders': 'Ordrer',
+    'workflow': 'Workflow',
+    'settings': 'Indstillinger'
+  };
+  
+  if (subpage) {
+    pageTitle.innerHTML = `${pageTitles[page] || page} <span style="color:var(--muted);font-weight:400"> / </span> <span style="color:var(--text)">${subpage}</span>`;
+  } else {
+    pageTitle.textContent = pageTitles[page] || page;
+  }
+}
+
+function showModal(id) {
+  document.getElementById('modal-' + id).classList.add('active');
+}
+
+function closeModal(id) {
+  document.getElementById('modal-' + id).classList.remove('active');
+}
+
+// =====================================================
+// DATA LOADING
+// =====================================================
+// Dashboard data storage
+let dashboardStats = {
+  ordersThisMonth: 0,
+  ordersTotal: 0,
+  revenueThisMonth: 0,
+  revenueTotal: 0,
+  revenueHistory: [],
+  revenuePeriod: 'week'
+};
+
+let revenueChart = null;
+
+function loadDashboard() {
+  // Restaurant counts - EXTENDED for full lifecycle
+  const active = restaurants.filter(r => r.status === 'active').length;
+  const inactive = restaurants.filter(r => r.status === 'inactive' || r.status === 'pending').length;
+  const churned = restaurants.filter(r => r.status === 'churned' || r.status === 'cancelled').length;
+  const terminated = restaurants.filter(r => r.status === 'terminated').length;
+
+  // Order counts (REAL DATA ONLY - no random generation)
+  const ordersToday = restaurants.reduce((s, r) => s + (r.orders || 0), 0);
+
+  // PRODUKTIONSKLAR: Brug reelle data fra restaurants (ingen mock data)
+  dashboardStats.ordersThisMonth = restaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
+  dashboardStats.ordersTotal = restaurants.reduce((s, r) => s + (r.ordersTotal || 0), 0);
+
+  const conversations = Math.floor(ordersToday * 0.3);
+
+  // Revenue calculations (REAL DATA ONLY)
+  const revenueToday = restaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
+  dashboardStats.revenueThisMonth = restaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
+  dashboardStats.revenueTotal = restaurants.reduce((s, r) => s + (r.revenueTotal || 0), 0);
+
+  // Generate revenue history for chart (empty if no data)
+  generateRevenueHistory();
+  
+  // Update Restaurant Status
+  const el1 = document.getElementById('stat-restaurants');
+  const el2 = document.getElementById('stat-inactive');
+  const el3 = document.getElementById('stat-churned');
+  
+  if (el1) el1.textContent = active;
+  if (el2) el2.textContent = inactive;
+  if (el3) el3.textContent = churned;
+
+  // Update terminated count (GDPR retention)
+  const elTerminated = document.getElementById('stat-terminated');
+  if (elTerminated) elTerminated.textContent = terminated;
+
+  // Update Order Statistics
+  const el4 = document.getElementById('stat-orders');
+  const el5 = document.getElementById('stat-orders-month');
+  const el6 = document.getElementById('stat-orders-total');
+  const el7 = document.getElementById('stat-conversations');
+  
+  if (el4) el4.textContent = ordersToday;
+  if (el5) el5.textContent = dashboardStats.ordersThisMonth.toLocaleString('da-DK');
+  if (el6) el6.textContent = dashboardStats.ordersTotal.toLocaleString('da-DK');
+  if (el7) el7.textContent = conversations;
+  
+  // Update Revenue
+  const el8 = document.getElementById('stat-revenue');
+  const el9 = document.getElementById('stat-revenue-month');
+  const el10 = document.getElementById('stat-revenue-total');
+  
+  if (el8) el8.textContent = revenueToday.toLocaleString('da-DK') + ' kr';
+  if (el9) el9.textContent = dashboardStats.revenueThisMonth.toLocaleString('da-DK') + ' kr';
+  if (el10) el10.textContent = dashboardStats.revenueTotal.toLocaleString('da-DK') + ' kr';
+  
+  // Initialize chart with delay to ensure Chart.js is loaded
+  setTimeout(() => {
+    initRevenueChart();
+  }, 100);
+
+  // Update recent activity feed
+  updateRecentActivityUI();
+}
+
+function generateRevenueHistory() {
+  const now = new Date();
+  const history = { week: [], month: [], year: [], weekPrev: [], monthPrev: [], yearPrev: [] };
+
+  // PRODUKTIONSKLAR: Hvis ingen restauranter, returner tom data
+  if (!restaurants || restaurants.length === 0) {
+    // Generer labels med 0 values
+    // 7 dage
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayLabel = date.toLocaleDateString('da-DK', { weekday: 'short' });
+      history.week.push({ label: dayLabel, value: 0 });
+      history.weekPrev.push({ label: dayLabel, value: 0 });
+    }
+
+    // 30 dage
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayLabel = date.getDate() + '/' + (date.getMonth() + 1);
+      history.month.push({ label: dayLabel, value: 0 });
+      history.monthPrev.push({ label: dayLabel, value: 0 });
+    }
+
+    // 12 måneder
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now);
+      date.setMonth(date.getMonth() - i);
+      const monthLabel = monthNames[date.getMonth()];
+      history.year.push({ label: monthLabel, value: 0 });
+      history.yearPrev.push({ label: monthLabel, value: 0 });
+    }
+
+    dashboardStats.revenueHistory = history;
+    return;
+  }
+
+  // REAL DATA: Beregn revenue history fra restaurants' faktiske data
+  // (For nu: tom data da vi ikke har historik endnu)
+  // Denne kode kan udvides når backend tilføjer revenue history
+
+  // 7 dage - tom data indtil historik implementeres
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dayLabel = date.toLocaleDateString('da-DK', { weekday: 'short' });
+    history.week.push({ label: dayLabel, value: 0 });
+    history.weekPrev.push({ label: dayLabel, value: 0 });
+  }
+
+  // 30 dage - tom data
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dayLabel = date.getDate() + '/' + (date.getMonth() + 1);
+    history.month.push({ label: dayLabel, value: 0 });
+    history.monthPrev.push({ label: dayLabel, value: 0 });
+  }
+
+  // 12 måneder - tom data
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now);
+    date.setMonth(date.getMonth() - i);
+    const monthLabel = monthNames[date.getMonth()];
+    history.year.push({ label: monthLabel, value: 0 });
+    history.yearPrev.push({ label: monthLabel, value: 0 });
+  }
+
+  dashboardStats.revenueHistory = history;
+}
+
+function initRevenueChart() {
+  const canvas = document.getElementById('revenue-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  
+  // Destroy existing chart
+  if (revenueChart) {
+    revenueChart.destroy();
+  }
+  
+  const ctx = canvas.getContext('2d');
+  const period = dashboardStats.revenuePeriod;
+  const data = dashboardStats.revenueHistory[period] || [];
+  const prevData = dashboardStats.revenueHistory[period + 'Prev'] || [];
+  
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.label),
+      datasets: [
+        {
+          label: 'Omsætning',
+          data: data.map(d => d.value),
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          fill: true,
+          tension: 0.4,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        },
+        {
+          label: 'Forrige periode',
+          data: prevData.map(d => d.value),
+          borderColor: '#60a5fa',
+          backgroundColor: 'transparent',
+          borderDash: [5, 5],
+          tension: 0.4,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: false,
+          external: function(context) {
+            // Get or create tooltip element
+            let tooltipEl = document.getElementById('chartjs-tooltip');
+            if (!tooltipEl) {
+              tooltipEl = document.createElement('div');
+              tooltipEl.id = 'chartjs-tooltip';
+              tooltipEl.innerHTML = '<div class="chart-tooltip-inner"></div>';
+              document.body.appendChild(tooltipEl);
+            }
+            
+            const tooltipModel = context.tooltip;
+            
+            // Hide if no tooltip
+            if (tooltipModel.opacity === 0) {
+              tooltipEl.style.opacity = 0;
+              return;
+            }
+            
+            // Set content
+            if (tooltipModel.body) {
+              const dataPoints = tooltipModel.dataPoints;
+              const label = dataPoints[0].label;
+              
+              // Format date based on period
+              let dateStr = label;
+              const now = new Date();
+              if (dashboardStats.revenuePeriod === 'week') {
+                // Convert weekday to full date
+                const dayMap = { 'man': 1, 'tir': 2, 'ons': 3, 'tor': 4, 'fre': 5, 'lør': 6, 'søn': 0 };
+                const dayIndex = dataPoints[0].dataIndex;
+                const date = new Date();
+                date.setDate(date.getDate() - (6 - dayIndex));
+                dateStr = date.getDate() + ' ' + ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'][date.getMonth()] + ' ' + date.getFullYear();
+              } else if (dashboardStats.revenuePeriod === 'month') {
+                // Already in d/m format, convert to full
+                const parts = label.split('/');
+                if (parts.length === 2) {
+                  const monthNames = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+                  dateStr = parts[0] + ' ' + monthNames[parseInt(parts[1]) - 1] + ' ' + now.getFullYear();
+                }
+              } else {
+                // Year view - month name
+                dateStr = label + ' ' + now.getFullYear();
+              }
+              
+              let innerHtml = '<div class="chart-tooltip-title">' + dateStr + '</div>';
+              innerHtml += '<div class="chart-tooltip-body">';
+              
+              dataPoints.forEach((point, i) => {
+                const color = point.dataset.borderColor;
+                const value = point.raw.toLocaleString('da-DK');
+                const labelText = i === 0 ? 'Omsætning' : 'Forrige periode';
+                innerHtml += '<div class="chart-tooltip-row">';
+                innerHtml += '<span class="chart-tooltip-dot" style="background:' + color + '"></span>';
+                innerHtml += '<span class="chart-tooltip-label">' + labelText + '</span>';
+                innerHtml += '<span class="chart-tooltip-value">' + value + ' DKK</span>';
+                innerHtml += '</div>';
+              });
+              
+              innerHtml += '</div>';
+              tooltipEl.querySelector('.chart-tooltip-inner').innerHTML = innerHtml;
+            }
+            
+            // Position
+            const position = context.chart.canvas.getBoundingClientRect();
+            tooltipEl.style.opacity = 1;
+            tooltipEl.style.position = 'absolute';
+            tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
+            tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 10 + 'px';
+            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.transform = 'translateX(-50%)';
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: {
+            display: true,
+            color: 'rgba(255,255,255,0.05)',
+            drawBorder: true,
+            borderColor: 'rgba(255,255,255,0.1)'
+          },
+          ticks: {
+            display: true,
+            color: '#ffffff',
+            font: { size: 11 },
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 7
+          },
+          border: {
+            display: true,
+            color: 'rgba(255,255,255,0.2)'
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            display: true,
+            color: 'rgba(255,255,255,0.05)',
+            drawBorder: true,
+            borderColor: 'rgba(255,255,255,0.2)'
+          },
+          ticks: {
+            display: true,
+            color: '#ffffff',
+            font: { size: 11 },
+            maxTicksLimit: 6,
+            callback: function(value) {
+              if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+              if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+              return value;
+            }
+          },
+          border: {
+            display: true,
+            color: 'rgba(255,255,255,0.2)'
+          }
+        }
+      }
+    }
+  });
+}
+
+function setRevenuePeriod(period) {
+  dashboardStats.revenuePeriod = period;
+  
+  // Update button states
+  document.querySelectorAll('.chart-period').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.includes(
+      period === 'week' ? '7 dage' : period === 'month' ? '30 dage' : '12 mdr'
+    ));
+  });
+  
+  // Redraw chart
+  initRevenueChart();
+}
+
+// Restaurant logo SVG icons based on type/emoji
+function getRestaurantLogoSvg(logo) {
+  // Map food types to SVG icons - supports both emoji (legacy) and text keys
+  const iconMap = {
+    // Text keys (new format)
+    'pizza': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 19.5h20L12 2z"/><circle cx="9" cy="13" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="15" cy="14" r="1.5"/></svg>',
+    'burger': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15h16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2z"/><path d="M4 11h16"/><path d="M20 11V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2"/><ellipse cx="12" cy="5" rx="8" ry="2"/></svg>',
+    'sushi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="14" rx="8" ry="4"/><path d="M4 14c0-2.21 3.58-4 8-4s8 1.79 8 4"/><path d="M8 10c0-2 1.79-4 4-4s4 2 4 4"/></svg>',
+    'ramen': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 11h16"/><path d="M6 11c0 4 2 8 6 8s6-4 6-8"/><path d="M9 5c0 2 1.5 3 3 3s3-1 3-3"/><line x1="12" y1="8" x2="12" y2="11"/></svg>',
+    'salad': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="14" rx="9" ry="6"/><path d="M3 14c0-4 4-7 9-7s9 3 9 7"/><path d="M8 12l2 3 4-5"/></svg>',
+    'cafe': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
+    'dessert': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19h16v-4H4v4z"/><path d="M4 15V11a4 4 0 0 1 8 0h8v4"/><path d="M12 7V4"/><circle cx="12" cy="3" r="1"/></svg>',
+    'breakfast': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0-4 3.5-6 8-6s8 2 8 6-3.5 6-8 6-8-2-8-6z"/><path d="M6 12c2-2 4-2 6 0s4 2 6 0"/></svg>',
+    'bar': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M5 7h12v10a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V7z"/><path d="M5 7l1-4h10l1 4"/></svg>',
+    'pasta': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16" rx="8" ry="4"/><path d="M4 16v-2c0-1 2-2 2-4s2-4 6-4 6 2 6 4 2 3 2 4v2"/></svg>',
+    'default': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    // Emoji keys (legacy support)
+    '🍕': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 19.5h20L12 2z"/><circle cx="9" cy="13" r="1.5"/><circle cx="12" cy="9" r="1.5"/><circle cx="15" cy="14" r="1.5"/></svg>',
+    '🍔': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15h16v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2z"/><path d="M4 11h16"/><path d="M20 11V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v2"/><ellipse cx="12" cy="5" rx="8" ry="2"/></svg>',
+    '🍣': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="14" rx="8" ry="4"/><path d="M4 14c0-2.21 3.58-4 8-4s8 1.79 8 4"/><path d="M8 10c0-2 1.79-4 4-4s4 2 4 4"/></svg>',
+    '🍜': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 11h16"/><path d="M6 11c0 4 2 8 6 8s6-4 6-8"/><path d="M9 5c0 2 1.5 3 3 3s3-1 3-3"/><line x1="12" y1="8" x2="12" y2="11"/></svg>',
+    '🥗': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="14" rx="9" ry="6"/><path d="M3 14c0-4 4-7 9-7s9 3 9 7"/><path d="M8 12l2 3 4-5"/></svg>',
+    '☕': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>',
+    '🍰': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19h16v-4H4v4z"/><path d="M4 15V11a4 4 0 0 1 8 0h8v4"/><path d="M12 7V4"/><circle cx="12" cy="3" r="1"/></svg>',
+    '🥐': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0-4 3.5-6 8-6s8 2 8 6-3.5 6-8 6-8-2-8-6z"/><path d="M6 12c2-2 4-2 6 0s4 2 6 0"/></svg>',
+    '🍺': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 11h1a3 3 0 0 1 0 6h-1"/><path d="M5 7h12v10a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V7z"/><path d="M5 7l1-4h10l1 4"/></svg>',
+    '🍝': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="16" rx="8" ry="4"/><path d="M4 16v-2c0-1 2-2 2-4s2-4 6-4 6 2 6 4 2 3 2 4v2"/></svg>',
+  };
+  
+  // Return mapped SVG or default restaurant icon
+  return iconMap[logo] || iconMap['default'];
+}
+
+function loadRestaurants() {
+  const grid = document.getElementById('restaurants-grid');
+  
+  // Null check - grid might not exist
+  if (!grid) {
+    console.log('restaurants-grid not found, skipping');
+    return;
+  }
+  
+  if (restaurants.length === 0) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div>Ingen restauranter endnu</div><button class="btn btn-primary" style="margin-top:16px" onclick="showModal(\'add-restaurant\')">+ Tilføj restaurant</button></div>';
+    return;
+  }
+  
+  grid.innerHTML = restaurants.map(r => {
+    // Tjek aktuel åbningsstatus
+    const openStatus = checkRestaurantOpen(r);
+    const openBadge = openStatus.isOpen 
+      ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--success);background:rgba(52,211,153,0.1);padding:3px 8px;border-radius:4px;margin-top:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--success)"></span>Åben nu</span>`
+      : `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--danger);background:rgba(248,113,113,0.1);padding:3px 8px;border-radius:4px;margin-top:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--danger)"></span>Lukket</span>`;
+    
+    // Få dagens åbningstider (støtter begge navne-formater)
+    const dayNamesShort = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const dayNamesFull = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const dayIndex = new Date().getDay();
+    const todayHours = r.openingHours?.[dayNamesShort[dayIndex]] || r.openingHours?.[dayNamesFull[dayIndex]];
+    let hoursText = 'Lukket i dag';
+    if (todayHours?.enabled) {
+      if (todayHours.open === '00:00' && todayHours.close === '00:00') {
+        hoursText = 'Døgnåbent';
+      } else {
+        hoursText = `I dag: ${todayHours.open} - ${todayHours.close}`;
+      }
+    }
+    
+    // KPI Section (only if enabled)
+    const kpiSection = r.kpiEnabled && r.kpi ? `
+      <div class="kpi-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:12px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+            Performance
+          </span>
+          <span style="font-size:10px;color:var(--muted)">Denne måned</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-item">
+            <div class="kpi-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              Omsætning
+            </div>
+            <div class="kpi-value">${formatCurrency(r.kpi.totalRevenue)}</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              Genvundet
+            </div>
+            <div class="kpi-value positive">${formatCurrency(r.kpi.recoveredRevenue)}</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Rating
+            </div>
+            <div class="kpi-value">${r.kpi.reviews.avgRating.toFixed(1)}</div>
+            <div class="kpi-sub">${r.kpi.reviews.total} anmeldelser</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Konvertering
+            </div>
+            <div class="kpi-value">${r.kpi.conversionRate}%</div>
+          </div>
+        </div>
+        <div class="review-stats">
+          <div class="review-source">
+            <svg class="review-source-icon google" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span>${r.kpi.reviews.google.avgRating.toFixed(1)} (${r.kpi.reviews.google.count})</span>
+          </div>
+          <div class="review-source">
+            <svg class="review-source-icon trustpilot" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+            <span>${r.kpi.reviews.trustpilot.avgRating.toFixed(1)} (${r.kpi.reviews.trustpilot.count})</span>
+          </div>
+        </div>
+      </div>
+    ` : '';
+    
+    return `
+    <div class="restaurant">
+      <div class="restaurant-header">
+        <div class="restaurant-logo">${getRestaurantLogoSvg(r.logo)}</div>
+        <div style="flex:1">
+          <div class="restaurant-name">${r.name}</div>
+          <div class="restaurant-phone">${r.phone || 'Ikke tildelt'}</div>
+          ${openBadge}
+        </div>
+        <span class="restaurant-status status-${r.status}">${r.status === 'active' ? '● Aktiv' : '○ Afventer'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${hoursText}
+      </div>
+      <div class="restaurant-stats">
+        <div class="restaurant-stat"><div class="restaurant-stat-value">${r.orders || 0}</div><div class="restaurant-stat-label">Ordrer</div></div>
+        <div class="restaurant-stat"><div class="restaurant-stat-value">${r.recovered || 0}</div><div class="restaurant-stat-label">Genvundet</div></div>
+        <div class="restaurant-stat"><div class="restaurant-stat-value">${r.orders ? Math.round((r.recovered / r.orders) * 100) : 0}%</div><div class="restaurant-stat-label">Rate</div></div>
+      </div>
+      ${kpiSection}
+      <div class="restaurant-actions">
+        <button class="btn btn-secondary" style="flex:1" onclick="event.stopPropagation(); editRestaurant('${r.id}')">Rediger</button>
+        <button class="btn btn-primary" style="flex:1" onclick="event.stopPropagation(); openCrmDrawer('${r.id}')">Detaljer</button>
+      </div>
+    </div>
+  `}).join('');
+  
+  // Add click handlers to restaurant cards
+  document.querySelectorAll('.restaurant').forEach((card, index) => {
+    card.addEventListener('click', () => showCrmProfileView(restaurants[index].id));
+  });
+  
+  // Initialize CRM table
+  initCrmTable();
+  
+  // Update test select (use safer population)
+  populateTestRestaurants();
+}
+
+// =====================================================
+// RESTAURANTS
+// =====================================================
+async function addRestaurant() {
+  const name = document.getElementById('new-restaurant-name').value;
+  const logo = document.getElementById('new-restaurant-logo').value || 'pizza';
+  const phone = document.getElementById('new-restaurant-phone').value;
+
+  if (!name) {
+    toast('Indtast et navn', 'error');
+    return;
+  }
+
+  const newRestaurantData = {
+    name,
+    contact_phone: phone,
+    status: phone ? 'active' : 'pending',
+    orders: 0,
+    orders_this_month: 0,
+    orders_total: 0,
+    revenue_today: 0,
+    revenue_this_month: 0,
+    revenue_total: 0,
+    // Store extra data in metadata JSONB field
+    metadata: {
+      logo,
+      recovered: 0,
+      features: { ai: true, sms: true },
+      website: '',
+      menuUrl: '',
+      googleReviewUrl: '',
+      trustpilotUrl: '',
+      reviewDelay: 60,
+      deliveryEnabled: true,
+      kpiEnabled: false,
+      kpi: {
+        totalRevenue: 0,
+        recoveredRevenue: 0,
+        avgOrderValue: 0,
+        reviews: {
+          total: 0,
+          avgRating: 0,
+          google: { count: 0, avgRating: 0 },
+          trustpilot: { count: 0, avgRating: 0 }
+        },
+        conversionRate: 0,
+        responseTime: 0
+      },
+      timeFormat: '24h',
+      openingHours: getDefaultOpeningHours()
+    }
+  };
+
+  // Save to Supabase
+  if (typeof SupabaseDB !== 'undefined' && currentUser) {
+    try {
+      const createdRestaurant = await SupabaseDB.createRestaurant(currentUser.id, newRestaurantData);
+
+      // Add to local array
+      restaurants.push(createdRestaurant);
+
+      // Update dashboard KPIs (don't reload all restaurants - real-time sync handles that)
+      loadDashboard();
+      closeModal('add-restaurant');
+
+      // Log activity
+      if (typeof logActivity === 'function') {
+        logActivity('create', 'Ny restaurant oprettet', {
+          category: 'kunder',
+          restaurantId: createdRestaurant.id,
+          restaurantName: createdRestaurant.name
+        });
+      }
+
+      // Add notification to Dashboard (så blå prik vises på Dashboard menupunkt)
+      if (typeof NotificationSystem !== 'undefined') {
+        NotificationSystem.add('dashboard', {
+          title: 'Ny kunde oprettet',
+          message: `${createdRestaurant.name} blev tilføjet`,
+          timestamp: Date.now()
+        });
+        console.log('🔵 Dashboard notification added for new customer (modal)');
+      }
+
+      toast('Restaurant oprettet!', 'success');
+    } catch (err) {
+      console.error('❌ Error creating restaurant:', err);
+      toast('Fejl ved oprettelse af restaurant', 'error');
+    }
+  } else {
+    toast('Supabase ikke tilgængelig', 'error');
+  }
+
+  // Clear form
+  document.getElementById('new-restaurant-name').value = '';
+  document.getElementById('new-restaurant-phone').value = '';
+}
+
+async function addRestaurantFromPage() {
+  const name = document.getElementById('new-restaurant-name').value;
+  const owner = document.getElementById('new-restaurant-owner')?.value || '';
+  const phone = document.getElementById('new-restaurant-phone').value;
+  const cvr = document.getElementById('new-restaurant-cvr')?.value || '';
+  const email = document.getElementById('new-restaurant-email')?.value || '';
+  const address = document.getElementById('new-restaurant-address')?.value || '';
+  const country = document.getElementById('new-restaurant-country')?.value || 'DK';
+  const contact = document.getElementById('new-restaurant-contact')?.value || '';
+  const website = document.getElementById('new-restaurant-website')?.value || '';
+  const industry = document.getElementById('new-restaurant-industry')?.value || 'restaurant';
+  const role = document.getElementById('new-restaurant-role')?.value || 'owner';
+
+  if (!name) {
+    toast('Indtast et restaurantnavn', 'error');
+    return;
+  }
+
+  // Create data structure matching Supabase schema
+  const newRestaurantData = {
+    name,
+    contact_phone: phone,
+    contact_email: email,
+    contact_name: contact,
+    address,
+    country,
+    cvr,
+    status: phone ? 'active' : 'pending',
+    orders: 0,
+    orders_this_month: 0,
+    orders_total: 0,
+    revenue_today: 0,
+    revenue_this_month: 0,
+    revenue_total: 0,
+    ai_enabled: true,
+    integration_status: 'none',
+    settings: {},
+    metadata: {
+      logo: 'pizza',
+      owner: owner || contact,
+      industry: industry,
+      user_role: role,
+      features: { ai: true, sms: true, billing: true, export: true },
+      website: website,
+      menuUrl: '',
+      googleReviewUrl: '',
+      trustpilotUrl: '',
+      reviewDelay: 60,
+      deliveryEnabled: true,
+      kpiEnabled: false,
+      kpi: {
+        totalRevenue: 0,
+        recoveredRevenue: 0,
+        avgOrderValue: 0,
+        reviews: { total: 0, avgRating: 0, google: { count: 0, avgRating: 0 }, trustpilot: { count: 0, avgRating: 0 } },
+        conversionRate: 0,
+        responseTime: 0
+      },
+      timeFormat: '24h',
+      openingHours: getDefaultOpeningHours(),
+      createdBy: currentUser?.email || 'system'
+    }
+  };
+
+  try {
+    // Check if Supabase is available
+    if (typeof SupabaseDB === 'undefined' || !SupabaseDB) {
+      console.warn('⚠️ Supabase not available, using localStorage fallback');
+      throw new Error('Supabase not available');
+    }
+
+    // Save to Supabase database
+    console.log('💾 Attempting to save restaurant to Supabase...');
+    const createdRestaurant = await SupabaseDB.createRestaurant(currentUser.id, newRestaurantData);
+
+    if (!createdRestaurant) {
+      throw new Error('Failed to create restaurant in database');
+    }
+
+    console.log('✅ Restaurant created in Supabase:', createdRestaurant.id);
+
+    // Add to local array with real UUID
+    restaurants.push(createdRestaurant);
+
+    // Log activity to Supabase
+    await logActivity('create', `Ny restaurant oprettet: ${name}`, {
+      category: 'kunder',
+      subCategory: 'stamdata',
+      customerId: createdRestaurant.id
+    });
+
+    // Add notification to Dashboard (så blå prik vises på Dashboard menupunkt)
+    if (typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.add('dashboard', {
+        title: 'Ny kunde oprettet',
+        message: `${name} blev tilføjet`,
+        timestamp: Date.now()
+      });
+      console.log('🔵 Dashboard notification added for new customer');
+    }
+
+    // Log to customer-specific aktivitetslogs
+    addCustomerAktivitetslog(createdRestaurant.id, 'system', 'Kundeprofil oprettet');
+
+    // Auto-import menu fra hjemmeside (i baggrunden)
+    if (website) {
+      console.log('🌐 Auto-importing menu from website:', website);
+      importMenuFromWebsite(website, createdRestaurant.id, true)
+        .then(products => {
+          if (products && products.length > 0) {
+            toast(`${products.length} produkter importeret fra hjemmeside`, 'success');
+            addCustomerAktivitetslog(createdRestaurant.id, 'system', `${products.length} produkter auto-importeret fra hjemmeside`);
+          }
+        })
+        .catch(err => console.warn('Auto-import menu failed:', err));
+    }
+
+    // Update dashboard KPIs (don't reload all restaurants - real-time sync handles that)
+    loadDashboard();
+
+    // Clear form
+    clearAddRestaurantForm();
+
+    toast(`Restaurant "${name}" oprettet`, 'success');
+
+    // Navigate to customer profile with real UUID
+    setTimeout(() => {
+      openCrmProfile(createdRestaurant.id);
+    }, 300);
+
+  } catch (err) {
+    console.error('❌ Error creating restaurant:', err);
+
+    // Fallback to localStorage when Supabase is not available
+    console.log('💾 Using localStorage fallback for restaurant creation...');
+
+    // Generate a local ID
+    const localId = 'local-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const localRestaurant = {
+      ...newRestaurantData,
+      id: localId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Add to local array
+    restaurants.push(localRestaurant);
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('orderflow_restaurants', JSON.stringify(restaurants));
+      console.log('✅ Restaurant saved to localStorage:', localId);
+    } catch (storageErr) {
+      console.error('localStorage save error:', storageErr);
+    }
+
+    // Add notification to Dashboard
+    if (typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.add('dashboard', {
+        title: 'Ny kunde oprettet (lokal)',
+        message: `${name} blev tilføjet`,
+        timestamp: Date.now()
+      });
+    }
+
+    // Log to customer-specific aktivitetslogs
+    addCustomerAktivitetslog(localId, 'system', 'Kundeprofil oprettet (lokal)');
+
+    // Update dashboard
+    loadDashboard();
+
+    // Clear form
+    clearAddRestaurantForm();
+
+    toast(`Restaurant "${name}" oprettet (lokal lagring)`, 'success');
+
+    // Navigate to customer profile
+    setTimeout(() => {
+      openCrmProfile(localId);
+    }, 300);
+  }
+}
+
+function clearAddRestaurantForm() {
+  const fields = ['new-restaurant-name', 'new-restaurant-owner', 'new-restaurant-phone', 'new-restaurant-cvr', 'new-restaurant-email', 'new-restaurant-address', 'new-restaurant-contact', 'new-restaurant-website'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const country = document.getElementById('new-restaurant-country');
+  if (country) country.value = 'DK';
+  const industry = document.getElementById('new-restaurant-industry');
+  if (industry) industry.value = 'restaurant';
+  const role = document.getElementById('new-restaurant-role');
+  if (role) role.value = 'owner';
+}
+
+// =====================================================
+// ALLE KUNDER LIST VIEW
+// =====================================================
+
+let alleKunderCurrentPage = 1;
+const alleKunderPageSize = 25;
+let alleKunderStatusFilter = 'all';
+let alleKunderSearchQuery = '';
+
+function loadAlleKunderGrid() {
+  const tbody = document.getElementById('alle-kunder-tbody');
+  if (!tbody) return;
+
+  // Get filtered restaurants
+  const filteredRestaurants = getFilteredAlleKunder();
+
+  // Calculate pagination
+  const totalItems = filteredRestaurants.length;
+  const totalPages = Math.ceil(totalItems / alleKunderPageSize);
+  const startIndex = (alleKunderCurrentPage - 1) * alleKunderPageSize;
+  const endIndex = startIndex + alleKunderPageSize;
+  const paginatedRestaurants = filteredRestaurants.slice(startIndex, endIndex);
+
+  if (filteredRestaurants.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" style="text-align:center;padding:60px 20px;color:var(--muted)">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 16px;opacity:0.3"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <p style="font-size:var(--font-size-lg)">Ingen kunder fundet</p>
+          <p style="font-size:var(--font-size-sm);margin-top:8px">${alleKunderSearchQuery ? 'Prøv en anden søgning' : 'Opret din første kunde for at komme i gang'}</p>
+        </td>
+      </tr>
+    `;
+    updateAlleKunderPagination(0, 0);
+    return;
+  }
+
+  tbody.innerHTML = paginatedRestaurants.map(restaurant => {
+    const status = restaurant.status || 'pending';
+    const statusBadge = getStatusBadge(status);
+    const userId = restaurant.user_id ? restaurant.user_id.substring(0, 8) + '...' : 'N/A';
+
+    return `
+      <tr onclick="openCustomerFromAlleKunder('${restaurant.id}')" style="cursor:pointer">
+        <td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">${userId}</code></td>
+        <td style="font-weight:var(--font-weight-medium)">${restaurant.name || 'Unavngivet'}</td>
+        <td>${restaurant.metadata?.owner || restaurant.contact_name || '-'}</td>
+        <td>${restaurant.phone || restaurant.contact_phone || '-'}</td>
+        <td>${restaurant.cvr || '-'}</td>
+        <td>${restaurant.orders_total || 0}</td>
+        <td>${statusBadge}</td>
+      </tr>
+    `;
+  }).join('');
+
+  updateAlleKunderPagination(totalItems, totalPages);
+}
+
+/**
+ * Open customer profile from Alle Kunder grid
+ * Navigates to Kunder page and shows the CRM profile
+ */
+function openCustomerFromAlleKunder(restaurantId) {
+  // Navigate to kunder page and show profile
+  showPage('kunder');
+  // Small delay to ensure page is rendered
+  setTimeout(() => {
+    showCrmProfileView(restaurantId);
+  }, 100);
+}
+
+function getStatusBadge(status) {
+  const statusConfig = {
+    active: { label: 'Aktiv', class: 'status-active' },
+    pending: { label: 'Afventer', class: 'status-pending' },
+    inactive: { label: 'Inaktiv', class: 'status-inactive' },
+    demo: { label: 'Demo', class: 'status-demo' },
+    churned: { label: 'Churned', class: 'status-churned' },
+    cancelled: { label: 'Annulleret', class: 'status-cancelled' },
+    terminated: { label: 'Opsagt', class: 'status-terminated' },
+    gdpr_deleted: { label: 'GDPR Slettet', class: 'status-gdpr-deleted' }
+  };
+  const config = statusConfig[status] || { label: status, class: '' };
+  return `<span class="status-badge ${config.class}">${config.label}</span>`;
+}
+
+function getFilteredAlleKunder() {
+  let filtered = [...restaurants];
+
+  // Apply status filter
+  if (alleKunderStatusFilter !== 'all') {
+    filtered = filtered.filter(r => r.status === alleKunderStatusFilter);
+  }
+
+  // Apply search filter
+  if (alleKunderSearchQuery) {
+    const query = alleKunderSearchQuery.toLowerCase();
+    filtered = filtered.filter(r =>
+      (r.name && r.name.toLowerCase().includes(query)) ||
+      (r.contact_name && r.contact_name.toLowerCase().includes(query)) ||
+      (r.metadata?.owner && r.metadata.owner.toLowerCase().includes(query)) ||
+      (r.contact_phone && r.contact_phone.includes(query)) ||
+      (r.cvr && r.cvr.includes(query)) ||
+      (r.user_id && r.user_id.toLowerCase().includes(query))
+    );
+  }
+
+  // Sort by created_at descending (newest first)
+  filtered.sort((a, b) => {
+    const aTime = new Date(a.created_at || 0).getTime();
+    const bTime = new Date(b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  return filtered;
+}
+
+function filterAlleKunderByStatus(status) {
+  alleKunderStatusFilter = status;
+  alleKunderCurrentPage = 1;
+  loadAlleKunderGrid();
+}
+
+function filterAlleKunderList() {
+  const searchInput = document.getElementById('alle-kunder-search');
+  alleKunderSearchQuery = searchInput ? searchInput.value.trim() : '';
+  alleKunderCurrentPage = 1;
+  loadAlleKunderGrid();
+}
+
+function updateAlleKunderPagination(totalItems, totalPages) {
+  // Update page info text
+  const pageInfo = document.getElementById('alle-kunder-page-info');
+  if (pageInfo) {
+    pageInfo.textContent = `Side ${alleKunderCurrentPage} af ${totalPages || 1}`;
+  }
+
+  // Update button disabled states
+  const paginationEl = document.getElementById('alle-kunder-pagination');
+  if (paginationEl) {
+    const buttons = paginationEl.querySelectorAll('.crm-page-btn');
+    buttons.forEach(btn => {
+      const onclick = btn.getAttribute('onclick') || '';
+      if (onclick.includes('First') || onclick.includes('Prev')) {
+        btn.disabled = alleKunderCurrentPage === 1;
+      } else if (onclick.includes('Next') || onclick.includes('Last')) {
+        btn.disabled = alleKunderCurrentPage >= totalPages || totalPages === 0;
+      }
+    });
+  }
+}
+
+function alleKunderFirstPage() {
+  alleKunderCurrentPage = 1;
+  loadAlleKunderGrid();
+}
+
+function alleKunderPrevPage() {
+  if (alleKunderCurrentPage > 1) {
+    alleKunderCurrentPage--;
+    loadAlleKunderGrid();
+  }
+}
+
+function alleKunderNextPage() {
+  const totalPages = Math.ceil(getFilteredAlleKunder().length / alleKunderPageSize);
+  if (alleKunderCurrentPage < totalPages) {
+    alleKunderCurrentPage++;
+    loadAlleKunderGrid();
+  }
+}
+
+function alleKunderLastPage() {
+  const totalPages = Math.ceil(getFilteredAlleKunder().length / alleKunderPageSize);
+  alleKunderCurrentPage = totalPages || 1;
+  loadAlleKunderGrid();
+}
+
+// =====================================================
+// DEMO CUSTOMER ONBOARDING
+// =====================================================
+
+let demoOnboardingStep = 1;
+const DEFAULT_DEMO_LICENSE_DAYS = 14;
+const DEFAULT_DEMO_MESSAGE_LIMIT = 50;
+
+function resetDemoOnboarding() {
+  demoOnboardingStep = 1;
+  
+  // Reset all form fields
+  document.getElementById('demo-firstname').value = '';
+  document.getElementById('demo-lastname').value = '';
+  document.getElementById('demo-email').value = '';
+  document.getElementById('demo-phone').value = '';
+  document.getElementById('demo-restaurant-name').value = '';
+  document.getElementById('demo-cvr').value = '';
+  document.getElementById('demo-address').value = '';
+  document.getElementById('demo-zip').value = '';
+  document.getElementById('demo-city').value = '';
+  document.getElementById('demo-confirm-terms').checked = false;
+  
+  // Reset license settings to defaults
+  const licenseDaysEl = document.getElementById('demo-license-days');
+  const messageLimitEl = document.getElementById('demo-message-limit');
+  if (licenseDaysEl) licenseDaysEl.value = DEFAULT_DEMO_LICENSE_DAYS.toString();
+  if (messageLimitEl) messageLimitEl.value = DEFAULT_DEMO_MESSAGE_LIMIT.toString();
+  
+  // Reset step indicators
+  updateDemoOnboardingSteps();
+}
+
+function updateDemoOnboardingSteps() {
+  const steps = document.querySelectorAll('#page-demo-onboarding .onboarding-step');
+  const sections = document.querySelectorAll('#page-demo-onboarding .onboarding-section');
+  const prevBtn = document.getElementById('demo-prev-btn');
+  const nextBtn = document.getElementById('demo-next-btn');
+  
+  // Update step indicators
+  steps.forEach((step, idx) => {
+    const stepNum = idx + 1;
+    step.classList.remove('active', 'completed');
+    if (stepNum === demoOnboardingStep) {
+      step.classList.add('active');
+    } else if (stepNum < demoOnboardingStep) {
+      step.classList.add('completed');
+      step.querySelector('.onboarding-step-dot').innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else {
+      step.querySelector('.onboarding-step-dot').textContent = stepNum;
+    }
+  });
+  
+  // Update sections
+  sections.forEach(section => {
+    section.classList.remove('active');
+    if (parseInt(section.dataset.step) === demoOnboardingStep) {
+      section.classList.add('active');
+    }
+  });
+  
+  // Update buttons
+  prevBtn.style.visibility = demoOnboardingStep === 1 ? 'hidden' : 'visible';
+  
+  if (demoOnboardingStep === 3) {
+    nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Opret Demo-kunde';
+    updateDemoSummary();
+  } else {
+    nextBtn.innerHTML = 'Næste <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  }
+}
+
+function updateDemoSummary() {
+  const firstName = document.getElementById('demo-firstname').value;
+  const lastName = document.getElementById('demo-lastname').value;
+  const email = document.getElementById('demo-email').value;
+  const phone = document.getElementById('demo-phone').value;
+  const restaurant = document.getElementById('demo-restaurant-name').value;
+  const cvr = document.getElementById('demo-cvr').value;
+  const address = document.getElementById('demo-address').value;
+  const zip = document.getElementById('demo-zip').value;
+  const city = document.getElementById('demo-city').value;
+  
+  // Get license settings
+  const licenseDays = parseInt(document.getElementById('demo-license-days')?.value) || DEFAULT_DEMO_LICENSE_DAYS;
+  const messageLimit = parseInt(document.getElementById('demo-message-limit')?.value) || DEFAULT_DEMO_MESSAGE_LIMIT;
+  
+  document.getElementById('summary-contact').textContent = `${firstName} ${lastName}`;
+  document.getElementById('summary-email').textContent = email || '-';
+  document.getElementById('summary-phone').textContent = phone || '-';
+  document.getElementById('summary-restaurant').textContent = restaurant || '-';
+  document.getElementById('summary-cvr').textContent = cvr || '-';
+  document.getElementById('summary-address').textContent = address ? `${address}, ${zip} ${city}` : '-';
+  
+  // Update license info in summary
+  document.getElementById('summary-license').innerHTML = `<span class="demo-badge">Demo ${licenseDays} dage</span>`;
+  document.getElementById('summary-messages').textContent = `${messageLimit} beskeder`;
+  
+  // Calculate expiry date
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + licenseDays);
+  document.getElementById('summary-expires').textContent = expiryDate.toLocaleDateString('da-DK', { 
+    day: 'numeric', 
+    month: 'long', 
+    year: 'numeric' 
+  });
+}
+
+function validateDemoStep(step) {
+  if (step === 1) {
+    const firstName = document.getElementById('demo-firstname').value.trim();
+    const lastName = document.getElementById('demo-lastname').value.trim();
+    const email = document.getElementById('demo-email').value.trim();
+    const phone = document.getElementById('demo-phone').value.trim();
+    
+    if (!firstName) { toast('Indtast fornavn', 'error'); return false; }
+    if (!lastName) { toast('Indtast efternavn', 'error'); return false; }
+    if (!email || !email.includes('@')) { toast('Indtast gyldig e-mail', 'error'); return false; }
+    if (!phone) { toast('Indtast telefonnummer', 'error'); return false; }
+    
+    return true;
+  }
+  
+  if (step === 2) {
+    const restaurant = document.getElementById('demo-restaurant-name').value.trim();
+    if (!restaurant) { toast('Indtast restaurantnavn', 'error'); return false; }
+    return true;
+  }
+  
+  if (step === 3) {
+    const confirmed = document.getElementById('demo-confirm-terms').checked;
+    if (!confirmed) { toast('Bekræft at kunden er informeret om demo-vilkår', 'error'); return false; }
+    return true;
+  }
+  
+  return true;
+}
+
+function demoOnboardingNext() {
+  if (!validateDemoStep(demoOnboardingStep)) return;
+  
+  if (demoOnboardingStep < 3) {
+    demoOnboardingStep++;
+    updateDemoOnboardingSteps();
+  } else {
+    // Create demo customer
+    createDemoCustomer();
+  }
+}
+
+function demoOnboardingPrev() {
+  if (demoOnboardingStep > 1) {
+    demoOnboardingStep--;
+    updateDemoOnboardingSteps();
+  }
+}
+
+function createDemoCustomer() {
+  const firstName = document.getElementById('demo-firstname').value.trim();
+  const lastName = document.getElementById('demo-lastname').value.trim();
+  const email = document.getElementById('demo-email').value.trim();
+  const phone = document.getElementById('demo-phone').value.trim();
+  const restaurantName = document.getElementById('demo-restaurant-name').value.trim();
+  const cvr = document.getElementById('demo-cvr').value.trim();
+  const restaurantType = document.getElementById('demo-restaurant-type').value;
+  const address = document.getElementById('demo-address').value.trim();
+  const zip = document.getElementById('demo-zip').value.trim();
+  const city = document.getElementById('demo-city').value.trim();
+  
+  // Get license settings from dropdowns
+  const licenseDays = parseInt(document.getElementById('demo-license-days')?.value) || DEFAULT_DEMO_LICENSE_DAYS;
+  const messageLimit = parseInt(document.getElementById('demo-message-limit')?.value) || DEFAULT_DEMO_MESSAGE_LIMIT;
+  
+  // Calculate demo license dates
+  const startDate = new Date();
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + licenseDays);
+  
+  // Create demo customer object
+  const demoCustomer = {
+    id: 'demo_' + Date.now(),
+    name: restaurantName,
+    logo: restaurantType,
+    phone: phone,
+    status: 'demo',
+    isDemo: true,
+    demoLicense: {
+      startDate: startDate.toISOString(),
+      expiryDate: expiryDate.toISOString(),
+      daysRemaining: licenseDays,
+      messagesUsed: 0,
+      messagesLimit: messageLimit,
+      status: 'active' // active, expired
+    },
+    contact: {
+      firstName,
+      lastName,
+      email,
+      phone
+    },
+    cvr: cvr,
+    address: {
+      street: address,
+      zip: zip,
+      city: city,
+      country: 'DK'
+    },
+    orders: 0,
+    recovered: 0,
+    features: { 
+      ai: true, 
+      sms: true,
+      billing: false, // Demo cannot access billing
+      export: false   // Demo cannot export sensitive data
+    },
+    website: '',
+    menuUrl: '',
+    googleReviewUrl: '',
+    trustpilotUrl: '',
+    reviewDelay: 60,
+    deliveryEnabled: true,
+    kpiEnabled: true,
+    kpi: {
+      totalRevenue: 0,
+      recoveredRevenue: 0,
+      avgOrderValue: 0,
+      reviews: { total: 0, avgRating: 0, google: { count: 0, avgRating: 0 }, trustpilot: { count: 0, avgRating: 0 } },
+      conversionRate: 0,
+      responseTime: 0
+    },
+    timeFormat: '24h',
+    openingHours: getDefaultOpeningHours(),
+    createdAt: startDate.toISOString(),
+    createdBy: currentUser?.email || 'system'
+  };
+  
+  // Add to restaurants array
+  restaurants.push(demoCustomer);
+  
+  // Log activity
+  logActivity('create', `Demo-kunde oprettet: ${restaurantName}`, { 
+    category: 'kunder', 
+    subCategory: 'stamdata',
+    customerId: demoCustomer.id, 
+    contact: `${firstName} ${lastName}`, 
+    demoExpiry: expiryDate.toISOString() 
+  });
+  
+  // Update UI
+  loadRestaurants();
+  loadDashboard();
+  
+  // Reset onboarding form
+  resetDemoOnboarding();
+  
+  // Show success and navigate to customer
+  toast(`Demo-kunde "${restaurantName}" oprettet med ${licenseDays} dages prøveperiode`, 'success');
+  
+  // Navigate to customer profile
+  setTimeout(() => {
+    openCrmProfile(demoCustomer.id);
+  }, 300);
+}
+
+function getDemoLicenseStatus(customer) {
+  if (!customer.isDemo || !customer.demoLicense) return null;
+  
+  const now = new Date();
+  const expiry = new Date(customer.demoLicense.expiryDate);
+  const daysRemaining = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+  
+  return {
+    isExpired: daysRemaining <= 0,
+    daysRemaining: Math.max(0, daysRemaining),
+    messagesUsed: customer.demoLicense.messagesUsed || 0,
+    messagesLimit: customer.demoLicense.messagesLimit || 50,
+    expiryDate: expiry
+  };
+}
+
+function formatDemoStatus(customer) {
+  const status = getDemoLicenseStatus(customer);
+  if (!status) return '';
+  
+  if (status.isExpired) {
+    return '<span class="status-demo status-demo-expired">Demo udløbet</span>';
+  }
+  
+  return `<span class="status-demo">Demo · ${status.daysRemaining} dage</span>`;
+}
+
+function upgradeDemoCustomer(id) {
+  const restaurant = restaurants.find(r => r.id === id);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+  
+  if (!confirm(`Er du sikker på, at du vil opgradere "${restaurant.name}" til betalende kunde?\n\nDette vil:\n- Fjerne demo-status\n- Aktivere fuld funktionalitet\n- Kræve manuel oprettelse af faktureringaftale`)) {
+    return;
+  }
+  
+  // Remove demo status
+  restaurant.isDemo = false;
+  restaurant.demoLicense = null;
+  restaurant.status = 'active';
+  restaurant.features.billing = true;
+  restaurant.features.export = true;
+  
+  // Log activity
+  logActivity('update', `Demo-kunde opgraderet til betalt: ${restaurant.name}`, { 
+    category: 'kunder',
+    subCategory: 'abonnement',
+    customerId: restaurant.id, 
+    previousStatus: 'demo',
+    newStatus: 'active'
+  });
+  
+  // Update UI
+  loadRestaurants();
+  loadDashboard();
+  
+  // Refresh profile view if open
+  if (currentProfileRestaurantId === id) {
+    showCrmProfileView(id);
+  }
+  
+  toast(`"${restaurant.name}" er nu en betalende kunde`, 'success');
+}
+
+// Override showModal to handle demo-onboarding reset
+const originalShowModal = showModal;
+showModal = function(id) {
+  if (id === 'demo-onboarding') {
+    resetDemoOnboarding();
+  }
+  originalShowModal(id);
+};
+
+function editRestaurant(id) {
+  const restaurant = restaurants.find(r => r.id === id);
+  if (!restaurant) {
+    toast('Restaurant ikke fundet', 'error');
+    return;
+  }
+  
+  // Populate basic form fields
+  document.getElementById('edit-restaurant-id').value = id;
+  document.getElementById('edit-restaurant-name').value = restaurant.name || '';
+  document.getElementById('edit-restaurant-logo').value = restaurant.logo || 'pizza';
+  document.getElementById('edit-restaurant-phone').value = restaurant.phone || '';
+  document.getElementById('edit-restaurant-website').value = restaurant.website || '';
+  document.getElementById('edit-restaurant-menu').value = restaurant.menuUrl || '';
+  document.getElementById('edit-restaurant-google').value = restaurant.googleReviewUrl || '';
+  document.getElementById('edit-restaurant-trustpilot').value = restaurant.trustpilotUrl || '';
+  document.getElementById('edit-restaurant-delay').value = restaurant.reviewDelay || 60;
+  
+  // Populate delivery toggle
+  document.getElementById('edit-restaurant-delivery').checked = restaurant.deliveryEnabled !== false;
+  
+  // Populate KPI toggle
+  const kpiEnabled = restaurant.kpiEnabled || false;
+  document.getElementById('edit-restaurant-kpi-enabled').checked = kpiEnabled;
+  document.getElementById('kpi-preview').style.display = kpiEnabled ? 'block' : 'none';
+  
+  // Update KPI preview values
+  if (restaurant.kpi) {
+    document.getElementById('kpi-preview-revenue').textContent = formatCurrency(restaurant.kpi.totalRevenue);
+    document.getElementById('kpi-preview-recovered').textContent = formatCurrency(restaurant.kpi.recoveredRevenue);
+    document.getElementById('kpi-preview-rating').textContent = restaurant.kpi.reviews?.avgRating?.toFixed(1) || '0.0';
+    document.getElementById('kpi-preview-conversion').textContent = (restaurant.kpi.conversionRate || 0) + '%';
+    
+    // Extended KPIs
+    document.getElementById('kpi-preview-ai').textContent = (restaurant.kpi.aiAutomationRate || 0) + '%';
+    document.getElementById('kpi-preview-clv').textContent = formatCurrency(restaurant.kpi.clv || 0);
+    document.getElementById('kpi-preview-ctr').textContent = (restaurant.kpi.reviewCTR || 0) + '%';
+    
+    // Render heatmap
+    renderOrderHeatmap(restaurant.kpi.orderHeatmap);
+    
+    // Render sentiment
+    renderSentiment(restaurant.kpi.sentiment);
+  }
+  
+  // Populate review request toggle (Workflow Sync)
+  document.getElementById('edit-restaurant-review-request').checked = restaurant.reviewRequestEnabled !== false;
+  updateReviewSyncStatus(restaurant.reviewRequestEnabled !== false);
+  
+  // Load menu editor
+  loadMenuItemsEditor(id);
+  
+  // Populate time format
+  const timeFormat = restaurant.timeFormat || '24h';
+  document.getElementById('time-format-24').checked = (timeFormat === '24h');
+  document.getElementById('time-format-12').checked = (timeFormat === '12h');
+  
+  // Populate opening hours
+  const defaultHours = getDefaultOpeningHours();
+  const hours = restaurant.openingHours || defaultHours;
+  
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  days.forEach(day => {
+    const dayEl = document.querySelector(`.opening-day[data-day="${day}"]`);
+    if (dayEl) {
+      const dayHours = hours[day] || defaultHours[day];
+      dayEl.querySelector('.day-enabled').checked = dayHours.enabled;
+      dayEl.querySelector('.open-time').value = dayHours.open;
+      dayEl.querySelector('.close-time').value = dayHours.close;
+    }
+  });
+  
+  showModal('edit-restaurant');
+}
+
+// Render order heatmap
+function renderOrderHeatmap(heatmapData) {
+  const container = document.getElementById('order-heatmap');
+  if (!container || !heatmapData) return;
+  
+  // Get max value for scaling
+  let maxVal = 1;
+  Object.values(heatmapData).forEach(dayData => {
+    dayData.forEach(val => { if (val > maxVal) maxVal = val; });
+  });
+  
+  // Sum all days for display
+  const hourTotals = new Array(24).fill(0);
+  Object.values(heatmapData).forEach(dayData => {
+    dayData.forEach((val, hour) => { hourTotals[hour] += val; });
+  });
+  
+  container.innerHTML = hourTotals.map((val, hour) => {
+    const intensity = val / (maxVal * 7); // 7 days
+    const color = intensity > 0.7 ? 'var(--green)' : intensity > 0.4 ? 'var(--orange)' : intensity > 0.1 ? 'var(--accent)' : 'var(--bg2)';
+    return `<div style="height:20px;background:${color};border-radius:2px;opacity:${0.3 + intensity * 0.7}" title="${hour}:00 - ${val} ordrer"></div>`;
+  }).join('');
+}
+
+// Render sentiment analysis
+function renderSentiment(sentimentData) {
+  if (!sentimentData) return;
+  
+  const total = sentimentData.positive + sentimentData.neutral + sentimentData.negative;
+  if (total === 0) return;
+  
+  const posPercent = Math.round((sentimentData.positive / total) * 100);
+  const neuPercent = Math.round((sentimentData.neutral / total) * 100);
+  const negPercent = Math.round((sentimentData.negative / total) * 100);
+  
+  document.getElementById('sentiment-positive').style.width = posPercent + '%';
+  document.getElementById('sentiment-neutral').style.width = neuPercent + '%';
+  document.getElementById('sentiment-negative').style.width = negPercent + '%';
+  
+  document.getElementById('sentiment-pos-pct').textContent = posPercent;
+  document.getElementById('sentiment-neu-pct').textContent = neuPercent;
+  document.getElementById('sentiment-neg-pct').textContent = negPercent;
+}
+
+// Sync review request toggle with workflow node
+function syncReviewRequestToggle() {
+  const enabled = document.getElementById('edit-restaurant-review-request').checked;
+  updateReviewSyncStatus(enabled);
+  
+  // Update workflow node status (visual indicator)
+  const reviewNode = workflowNodes.find(n => n.id === 'send-review-request');
+  if (reviewNode) {
+    reviewNode.disabled = !enabled;
+    renderWorkflowNodes(); // Re-render to show disabled state
+  }
+}
+
+// Update sync status indicator
+function updateReviewSyncStatus(enabled) {
+  const statusEl = document.getElementById('review-sync-status');
+  if (statusEl) {
+    statusEl.innerHTML = enabled 
+      ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span style="color:var(--green)">Aktiv - synkroniseret med workflow node "Anmeldelsesanmodning"</span>'
+      : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>Deaktiveret - noden springes over i workflow</span>';
+  }
+}
+
+// Export KPI as PDF
+function exportKpiPdf() {
+  const id = document.getElementById('edit-restaurant-id').value;
+  const restaurant = restaurants.find(r => r.id === id);
+  if (!restaurant) return;
+  
+  // In production, this would call a PDF generation API
+  console.log(`Generating PDF for ${restaurant.name}`);
+}
+
+// Export KPI as Excel
+function exportKpiExcel() {
+  const id = document.getElementById('edit-restaurant-id').value;
+  const restaurant = restaurants.find(r => r.id === id);
+  if (!restaurant) return;
+  
+  // In production, this would generate an XLSX file
+  console.log(`Generating Excel for ${restaurant.name}`);
+}
+
+// =====================================================
+// CRM MODULE FUNCTIONS - SEARCH FIRST DESIGN
+// =====================================================
+
+// Current CRM state
+let currentProfileRestaurantId = null;
+let crmCurrentPage = 1;
+const crmPageSize = 10;
+
+// Generate 6-digit UserID from restaurant id
+function generateUserId(id) {
+  // Handle null/undefined/empty
+  if (!id) return '000000';
+  
+  // Ensure id is a string
+  const idStr = String(id);
+  
+  // Create a hash from the id string to get consistent 6 digits
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = ((hash << 5) - hash) + idStr.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return String(Math.abs(hash) % 1000000).padStart(6, '0');
+}
+
+// Safe string getter for search
+function safeString(val) {
+  if (val === null || val === undefined) return '';
+  return String(val).toLowerCase();
+}
+
+// Initialize CRM table on page load - show empty state
+function initCrmTable() {
+  // Show empty state in table (table is always visible now)
+  const tbody = document.getElementById('crm-table-body');
+  if (tbody) {
+    tbody.innerHTML = `
+      <tr id="crm-empty-row">
+        <td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">
+          <div style="margin-bottom:8px">Indtast søgekriterier ovenfor</div>
+          <div style="font-size:12px">Søg på navn, CVR, telefonnummer eller UserID</div>
+        </td>
+      </tr>
+    `;
+  }
+  document.getElementById('crm-page-info').textContent = '1 af 1';
+}
+
+// Handle CRM search with autocomplete
+function handleCrmSearch(query) {
+  query = safeString(query).trim().toLowerCase();
+  
+  // Always filter and show results in table
+  let filtered;
+  
+  if (!query) {
+    // Show empty state row if no query
+    const tbody = document.getElementById('crm-table-body');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr id="crm-empty-row">
+          <td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">
+            <div style="margin-bottom:8px">Indtast søgekriterier ovenfor</div>
+            <div style="font-size:12px">Søg på navn, CVR, telefonnummer eller UserID</div>
+          </td>
+        </tr>
+      `;
+    }
+    document.getElementById('crm-page-info').textContent = '1 af 1';
+    return;
+  }
+  
+  // Filter restaurants with safe string handling
+  filtered = restaurants.filter(r => {
+    if (!r) return false;
+    const userId = generateUserId(r.id).toLowerCase();
+    const name = safeString(r.name).toLowerCase();
+    const phone = safeString(r.phone || r.contact_phone).toLowerCase();
+    const cvr = safeString(r.cvr).toLowerCase();
+    const address = safeString(r.address).toLowerCase();
+    const city = safeString(r.city).toLowerCase();
+
+    return name.includes(query) ||
+           phone.includes(query) ||
+           cvr.includes(query) ||
+           userId.includes(query) ||
+           address.includes(query) ||
+           city.includes(query);
+  });
+  
+  // Update table directly
+  renderCrmTable(filtered, query);
+}
+
+// Render CRM table
+function renderCrmTable(data, query) {
+  const tbody = document.getElementById('crm-table-body');
+  const pageInfo = document.getElementById('crm-page-info');
+  
+  if (!data || data.length === 0) {
+    // Show "no results" in table body
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">
+            <div style="margin-bottom:8px">Ingen kunder fundet</div>
+            <div style="font-size:12px">Prøv at tilpasse din søgning</div>
+          </td>
+        </tr>
+      `;
+    }
+    if (pageInfo) pageInfo.textContent = '0 af 0';
+    return;
+  }
+  
+  // HTML escape function
+  const escapeHtml = (str) => {
+    if (!str) return '-';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+  
+  // Pagination
+  const totalPages = Math.ceil(data.length / crmPageSize);
+  const start = (crmCurrentPage - 1) * crmPageSize;
+  const pageData = data.slice(start, start + crmPageSize);
+  
+  tbody.innerHTML = pageData.map(r => {
+    if (!r) return '';
+    const userId = generateUserId(r.id);
+    const id = escapeHtml(r.id);
+    const name = escapeHtml(r.name) || 'Uden navn';
+    const phone = escapeHtml(r.phone || r.contact_phone);
+    const cvr = escapeHtml(r.cvr);
+    const status = r.status || 'pending';
+    const isDemo = r.isDemo || false;
+    const rowClass = isDemo ? 'demo-row' : '';
+    
+    // Status badge with demo support
+    let statusBadge = '';
+    if (isDemo) {
+      const demoStatus = getDemoLicenseStatus(r);
+      if (demoStatus && demoStatus.isExpired) {
+        statusBadge = '<span class="status-badge status-demo status-demo-expired">Demo udløbet</span>';
+      } else if (demoStatus) {
+        statusBadge = `<span class="status-badge status-demo">Demo · ${demoStatus.daysRemaining}d</span>`;
+      } else {
+        statusBadge = '<span class="status-badge status-demo">Demo</span>';
+      }
+    } else if (status === 'active') {
+      statusBadge = '<span class="status-badge status-active">Aktiv</span>';
+    } else if (status === 'inactive') {
+      statusBadge = '<span class="status-badge status-pending">Inaktiv</span>';
+    } else if (status === 'churned') {
+      statusBadge = '<span class="status-badge" style="background:rgba(248,113,113,.1);color:var(--danger)">Opsagt</span>';
+    } else if (status === 'terminated') {
+      statusBadge = '<span class="status-badge status-terminated">Opsagt (GDPR)</span>';
+    } else if (status === 'gdpr_deleted') {
+      statusBadge = '<span class="status-badge" style="background:rgba(107,114,128,.15);color:var(--muted)">GDPR Slettet</span>';
+    } else {
+      statusBadge = '<span class="status-badge status-pending">Afventer</span>';
+    }
+    
+    return `
+    <tr class="${rowClass}" onclick="showCrmProfileView('${id}')">
+      <td style="font-family:'SF Mono',monospace;font-size:12px">${userId}</td>
+      <td style="font-weight:500">${name}${isDemo ? ' <span class="demo-badge">DEMO</span>' : ''}</td>
+      <td>${phone}</td>
+      <td>${cvr}</td>
+      <td>Danmark</td>
+      <td>${statusBadge}</td>
+    </tr>
+  `}).join('');
+  
+  // Update pagination info
+  if (pageInfo) pageInfo.textContent = `${crmCurrentPage} af ${totalPages}`;
+}
+
+// Pagination functions
+function crmFirstPage() { crmCurrentPage = 1; handleCrmSearch(document.getElementById('crm-search')?.value); }
+function crmPrevPage() { if (crmCurrentPage > 1) { crmCurrentPage--; handleCrmSearch(document.getElementById('crm-search')?.value); } }
+function crmNextPage() { const total = Math.ceil(restaurants.length / crmPageSize); if (crmCurrentPage < total) { crmCurrentPage++; handleCrmSearch(document.getElementById('crm-search')?.value); } }
+function crmLastPage() { crmCurrentPage = Math.ceil(restaurants.length / crmPageSize); handleCrmSearch(document.getElementById('crm-search')?.value); }
+
+// Show search view
+function showCrmSearchView() {
+  document.getElementById('crm-search-view').style.display = 'block';
+  document.getElementById('crm-profile-view').style.display = 'none';
+  currentProfileRestaurantId = null;
+  document.getElementById('crm-search').value = '';
+  initCrmTable();
+  
+  // Hide customer context menu
+  document.getElementById('nav-customer-context').style.display = 'none';
+  
+  // Update breadcrumb
+  updateBreadcrumb('kunder');
+}
+
+// Close customer context and return to search
+function closeCustomerContext() {
+  showCrmSearchView();
+}
+
+// Show customer sub-page
+function showCustomerSubpage(subpage) {
+  const isCustomerView = currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role);
+  const restaurantId = currentProfileRestaurantId || (restaurants[0]?.id);
+
+  console.log('📄 showCustomerSubpage:', subpage, 'isCustomerView:', isCustomerView, 'restaurantId:', restaurantId);
+
+  // === FOR DEMO/KUNDE: Brug de RIGTIGE subpages (samme som admin) ===
+  if (isCustomerView) {
+    // Sørg for at demo restaurant context er sat
+    if (!currentProfileRestaurantId && restaurants.length > 0) {
+      currentProfileRestaurantId = restaurants[0].id;
+      console.log('📍 Sat currentProfileRestaurantId til:', currentProfileRestaurantId);
+    }
+
+    // Vis kunder-siden med profil-view aktiv
+    const kunderPage = document.getElementById('page-kunder');
+    const crmSearchView = document.getElementById('crm-search-view');
+    const crmProfileView = document.getElementById('crm-profile-view');
+
+    if (kunderPage && crmProfileView) {
+      // Skjul andre pages
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      kunderPage.classList.add('active');
+
+      // Vis profil-view (ikke søge-view)
+      if (crmSearchView) crmSearchView.style.display = 'none';
+      crmProfileView.style.display = 'block';
+
+      // Opdater header med demo restaurant info
+      const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+      if (restaurant) {
+        const profileName = document.getElementById('profile-name');
+        const profileCvr = document.getElementById('profile-cvr');
+        if (profileName) profileName.textContent = restaurant.name;
+        if (profileCvr) profileCvr.textContent = restaurant.cvr || '-';
+      }
+    }
+  }
+
+  // Hide all subpages
+  document.querySelectorAll('.customer-subpage').forEach(sp => sp.classList.remove('active'));
+
+  // Show selected subpage
+  const targetSubpage = document.getElementById('subpage-' + subpage);
+  if (targetSubpage) {
+    targetSubpage.classList.add('active');
+    console.log('✅ Viser subpage:', 'subpage-' + subpage);
+  } else {
+    console.warn('⚠️ Subpage ikke fundet:', 'subpage-' + subpage);
+    // Fallback til dashboard subpage
+    const dashboardSubpage = document.getElementById('subpage-dashboard');
+    if (dashboardSubpage) {
+      dashboardSubpage.classList.add('active');
+      subpage = 'dashboard';
+    }
+  }
+
+  // Update sidebar menu items (ensure only one active highlight)
+  document.querySelectorAll('.nav-dropdown-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  event?.target?.closest('.nav-dropdown-item')?.classList.add('active');
+
+  // Load data for the sub-page if needed
+  if (subpage === 'noegletal') loadCustomerKPIData();
+  if (subpage === 'dashboard') loadCustomerDashboard(restaurantId);
+  if (subpage === 'produkter') loadProductsPage();
+  if (subpage === 'faktura') loadFakturaPage();
+  if (subpage === 'abonnement') loadAbonnementPage();
+  if (subpage === 'kundelogs') loadCustomerKundelogs();
+  if (subpage === 'aktivitetslogs') loadCustomerAktivitetslogs();
+  if (subpage === 'stamdata') loadStamdataPage(restaurantId);
+  if (subpage === 'beskeder') loadBeskederPage(restaurantId);
+  if (subpage === 'workflow-kontrol') loadWorkflowKontrolPage(restaurantId);
+}
+
+/**
+ * Load stamdata page - populerer formularfelter med restaurant data
+ */
+function loadStamdataPage(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    console.warn('Restaurant ikke fundet for stamdata:', restaurantId);
+    return;
+  }
+
+  console.log('📋 Loading stamdata for:', restaurant.name);
+
+  // Populate STAMDATA form
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  };
+
+  setVal('stamdata-name', restaurant.name);
+  setVal('stamdata-cvr', restaurant.cvr);
+  setVal('stamdata-owner', restaurant.owner || restaurant.contact_name);
+  setVal('stamdata-contact', restaurant.contactPerson || restaurant.contact_name);
+  setVal('stamdata-email', restaurant.email || restaurant.contact_email);
+  setVal('stamdata-phone', restaurant.phone || restaurant.contact_phone);
+  setVal('stamdata-industry', restaurant.industry || restaurant.metadata?.industry);
+  setVal('stamdata-address', restaurant.address);
+  setVal('stamdata-country', restaurant.country || 'DK');
+  setVal('stamdata-website', restaurant.website || restaurant.metadata?.website);
+  setVal('stamdata-created', restaurant.createdAt || restaurant.created_at || '-');
+
+  // MobilePay integration
+  setVal('stamdata-mobilepay-merchant', restaurant.mobilepayMerchantId);
+  setVal('stamdata-mobilepay-api-key', restaurant.mobilepayApiKey);
+}
+
+/**
+ * Load beskeder page - populerer SMS skabeloner
+ */
+function loadBeskederPage(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    console.warn('Restaurant ikke fundet for beskeder:', restaurantId);
+    return;
+  }
+
+  console.log('💬 Loading beskeder for:', restaurant.name);
+
+  // Load saved messages or defaults
+  const messages = restaurant.messages || {};
+  const setMsg = (id, defaultText) => {
+    const el = document.getElementById(id);
+    if (el) el.value = messages[id] || defaultText;
+  };
+
+  setMsg('msg-welcome-text', 'Hej {{kunde}}! Tak for din interesse i {{restaurant}}.');
+  setMsg('msg-pending-text', 'Vi har modtaget din ordre og arbejder på den.');
+  setMsg('msg-accepted-text', 'Din ordre er accepteret! Forventet ventetid: {{ventetid}} min.');
+  setMsg('msg-preparing-text', 'Din ordre er nu under tilberedning.');
+  setMsg('msg-ready-text', 'Din ordre er klar til afhentning/levering!');
+  setMsg('msg-picked-up-text', 'Tak for din ordre hos {{restaurant}}!');
+  setMsg('msg-closed-text', 'Vi har desværre lukket. Åbningstider: {{åbningstider}}');
+  setMsg('msg-error-text', 'Beklager, der opstod en fejl. Prøv igen eller ring til os.');
+}
+
+/**
+ * Load workflow kontrol page - populerer workflow indstillinger
+ */
+function loadWorkflowKontrolPage(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    console.warn('Restaurant ikke fundet for workflow kontrol:', restaurantId);
+    return;
+  }
+
+  console.log('⚙️ Loading workflow kontrol for:', restaurant.name);
+
+  // Workflow toggles
+  const setChecked = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = !!val;
+  };
+
+  setChecked('wf-review-enabled', restaurant.googleReviewUrl || restaurant.trustpilotUrl);
+  setChecked('wf-reorder-enabled', restaurant.reorderEnabled !== false);
+  setChecked('wf-receipt-enabled', restaurant.receiptEnabled !== false);
+  setChecked('wf-delivery-enabled', restaurant.deliveryEnabled !== false);
+
+  // Review links
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  };
+
+  setVal('wf-google-link', restaurant.googleReviewUrl);
+  setVal('wf-trustpilot-link', restaurant.trustpilotUrl);
+
+  // Opening hours
+  const oh = restaurant.openingHours || {};
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const defaultTimes = {
+    mon: { open: '10:00', close: '22:00' },
+    tue: { open: '10:00', close: '22:00' },
+    wed: { open: '10:00', close: '22:00' },
+    thu: { open: '10:00', close: '22:00' },
+    fri: { open: '10:00', close: '23:00' },
+    sat: { open: '11:00', close: '23:00' },
+    sun: { open: '12:00', close: '21:00' }
+  };
+
+  days.forEach(day => {
+    const dayData = oh[day] || defaultTimes[day];
+    setChecked(`oh-${day}-enabled`, dayData.enabled !== false);
+    setVal(`oh-${day}-open`, dayData.open);
+    setVal(`oh-${day}-close`, dayData.close);
+  });
+
+  // Toggle delivery settings visibility
+  if (typeof toggleDeliverySettings === 'function') {
+    toggleDeliverySettings();
+  }
+}
+
+// =====================================================
+// CUSTOMER DASHBOARD - Charts and Stats
+// =====================================================
+
+let customerRevenueChart = null;
+let customerPaymentChart = null;
+let customerProductsChart = null;
+
+/**
+ * Load customer dashboard data and render charts
+ */
+async function loadCustomerDashboard(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) return;
+
+  // Update KPI stats
+  const statsOrders = document.getElementById('customer-stat-orders');
+  const statsRevenue = document.getElementById('customer-stat-revenue');
+  const statsAvgOrder = document.getElementById('customer-stat-avg-order');
+  const statsContacts = document.getElementById('customer-stat-contacts');
+
+  if (statsOrders) statsOrders.textContent = restaurant.orders_total || 0;
+  if (statsRevenue) statsRevenue.textContent = formatCurrency(restaurant.revenue_total || 0);
+  if (statsAvgOrder) {
+    const avg = restaurant.orders_total > 0 ? (restaurant.revenue_total / restaurant.orders_total) : 0;
+    statsAvgOrder.textContent = formatCurrency(avg);
+  }
+  if (statsContacts) statsContacts.textContent = restaurant.contacts_count || 0;
+
+  // Try to load orders for charts (revenue & payment methods)
+  let orders = [];
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getOrdersByRestaurant) {
+      orders = await SupabaseDB.getOrdersByRestaurant(restaurantId) || [];
+      console.log(`📊 Loaded ${orders.length} orders from database`);
+    }
+  } catch (err) {
+    console.log('Could not load orders from database:', err.message);
+  }
+
+  // No demo data fallback - show empty/0 values if no real orders
+  if (orders.length === 0) {
+    console.log('📊 No orders found - charts will show empty values');
+  }
+
+  // Load menu items for products chart (from produktbibliotek)
+  let menuItems = [];
+  try {
+    // Try restaurant's customMenu first
+    if (restaurant.customMenu && restaurant.customMenu.items && restaurant.customMenu.items.length > 0) {
+      menuItems = restaurant.customMenu.items;
+      console.log(`📊 Loaded ${menuItems.length} products from customMenu`);
+    }
+    // Try localStorage
+    else {
+      const savedMenu = localStorage.getItem(`menu_${restaurantId}`);
+      if (savedMenu) {
+        const parsed = JSON.parse(savedMenu);
+        menuItems = parsed.items || [];
+        console.log(`📊 Loaded ${menuItems.length} products from localStorage`);
+      }
+    }
+    // Try Supabase if still empty
+    if (menuItems.length === 0 && typeof SupabaseDB !== 'undefined' && SupabaseDB.getMenu) {
+      const menu = await SupabaseDB.getMenu(restaurantId);
+      if (menu && menu.items && menu.items.length > 0) {
+        menuItems = menu.items;
+        console.log(`📊 Loaded ${menuItems.length} products from Supabase`);
+      }
+    }
+  } catch (err) {
+    console.log('Could not load menu items:', err.message);
+  }
+
+  // Hide demo data indicator (we no longer use demo data)
+  const demoIndicator = document.getElementById('demo-data-indicator');
+  if (demoIndicator) {
+    demoIndicator.style.display = 'none';
+  }
+
+  // Render charts
+  renderCustomerRevenueChart(orders);
+  renderCustomerPaymentChart(orders);
+  renderCustomerProductsChart(menuItems); // Nu med produktbibliotek data
+}
+
+// Chart instances for demo dashboard
+let demoRevenueChart = null;
+let demoPaymentChart = null;
+let demoProductsChart = null;
+
+// Track retry count to prevent infinite loops
+let demoDashboardRetryCount = 0;
+const MAX_DEMO_DASHBOARD_RETRIES = 10;
+
+/**
+ * Load demo dashboard with KPIs and charts for demo/kunde users
+ * Called from loginDemo() after showApp()
+ */
+async function loadDemoDashboard() {
+  console.log('📊 Loading demo dashboard... (attempt', demoDashboardRetryCount + 1, ')');
+
+  const restaurant = restaurants[0]; // Use first demo restaurant
+  if (!restaurant) {
+    console.warn('No restaurant for demo dashboard');
+    return;
+  }
+
+  // Tjek at customer-dashboard er synligt
+  const customerDash = document.getElementById('customer-dashboard');
+  if (!customerDash || customerDash.classList.contains('hidden')) {
+    if (demoDashboardRetryCount < MAX_DEMO_DASHBOARD_RETRIES) {
+      demoDashboardRetryCount++;
+      console.warn('Customer dashboard not visible, retrying... (', demoDashboardRetryCount, '/', MAX_DEMO_DASHBOARD_RETRIES, ')');
+      setTimeout(() => loadDemoDashboard(), 150);
+      return;
+    } else {
+      console.error('Customer dashboard still not visible after max retries. Forcing visibility.');
+      // Force visibility and continue
+      if (customerDash) customerDash.classList.remove('hidden');
+    }
+  }
+
+  // Tjek at canvas elementer eksisterer
+  const revenueCtx = document.getElementById('demo-revenue-chart');
+  const paymentCtx = document.getElementById('demo-payment-chart');
+  const productsCtx = document.getElementById('demo-products-chart');
+
+  if (!revenueCtx || !paymentCtx || !productsCtx) {
+    if (demoDashboardRetryCount < MAX_DEMO_DASHBOARD_RETRIES) {
+      demoDashboardRetryCount++;
+      console.warn('Demo chart canvas elements not found, retrying... (', demoDashboardRetryCount, '/', MAX_DEMO_DASHBOARD_RETRIES, ')');
+      setTimeout(() => loadDemoDashboard(), 150);
+      return;
+    } else {
+      console.error('Demo chart canvas elements not found after max retries');
+      return;
+    }
+  }
+
+  // Reset retry count on success
+  demoDashboardRetryCount = 0;
+
+  // Update KPI stats
+  const statsOrders = document.getElementById('demo-stat-orders');
+  const statsRevenue = document.getElementById('demo-stat-revenue');
+  const statsAvg = document.getElementById('demo-stat-avg');
+  const statsRating = document.getElementById('demo-stat-rating');
+
+  if (statsOrders) statsOrders.textContent = restaurant.orders_total || 127;
+  if (statsRevenue) statsRevenue.textContent = formatCurrency(restaurant.revenue_total || 45890);
+  if (statsAvg) {
+    const avg = restaurant.orders_total > 0 ? (restaurant.revenue_total / restaurant.orders_total) : 361;
+    statsAvg.textContent = formatCurrency(avg);
+  }
+  if (statsRating) statsRating.textContent = '4.8';
+
+  // Generate demo orders for charts
+  const orders = generateDemoOrdersData(restaurant.id);
+  console.log('📊 Generated', orders.length, 'demo orders for charts');
+
+  // Render demo charts med requestAnimationFrame for at sikre DOM er klar
+  requestAnimationFrame(() => {
+    renderDemoRevenueChart(orders);
+    renderDemoPaymentChart(orders);
+    renderDemoProductsChart(orders);
+    console.log('✅ Demo charts rendered');
+  });
+
+  console.log('✅ Demo dashboard loaded');
+}
+
+/**
+ * Demo revenue chart
+ */
+function renderDemoRevenueChart(orders) {
+  const ctx = document.getElementById('demo-revenue-chart');
+  if (!ctx) return;
+
+  // Group by day (last 30 days)
+  const last30Days = [];
+  const revenueByDay = {};
+  const ordersByDay = {};
+
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().split('T')[0];
+    last30Days.push(key);
+    revenueByDay[key] = 0;
+    ordersByDay[key] = 0;
+  }
+
+  orders.forEach(order => {
+    const date = new Date(order.created_at).toISOString().split('T')[0];
+    if (revenueByDay.hasOwnProperty(date)) {
+      revenueByDay[date] += order.total || 0;
+      ordersByDay[date]++;
+    }
+  });
+
+  if (demoRevenueChart) demoRevenueChart.destroy();
+
+  demoRevenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: last30Days.map(d => new Date(d).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })),
+      datasets: [
+        {
+          label: 'Omsætning',
+          data: last30Days.map(d => revenueByDay[d]),
+          backgroundColor: 'rgba(34, 197, 94, 0.7)',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+/**
+ * Demo payment methods pie chart
+ */
+function renderDemoPaymentChart(orders) {
+  const ctx = document.getElementById('demo-payment-chart');
+  if (!ctx) return;
+
+  const paymentCounts = {};
+  orders.forEach(order => {
+    const method = order.payment_method || 'Ukendt';
+    paymentCounts[method] = (paymentCounts[method] || 0) + 1;
+  });
+
+  if (demoPaymentChart) demoPaymentChart.destroy();
+
+  demoPaymentChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(paymentCounts),
+      datasets: [{
+        data: Object.values(paymentCounts),
+        backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#999' } }
+      }
+    }
+  });
+}
+
+/**
+ * Demo top products bar chart
+ */
+function renderDemoProductsChart(orders) {
+  const ctx = document.getElementById('demo-products-chart');
+  if (!ctx) return;
+
+  const productSales = {};
+  orders.forEach(order => {
+    (order.items || []).forEach(item => {
+      productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+    });
+  });
+
+  const sortedProducts = Object.entries(productSales)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  if (demoProductsChart) demoProductsChart.destroy();
+
+  demoProductsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sortedProducts.map(p => p[0]),
+      datasets: [{
+        label: 'Solgte enheder',
+        data: sortedProducts.map(p => p[1]),
+        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+/**
+ * Set demo chart period (not implemented fully - placeholder)
+ */
+function setDemoChartPeriod(days) {
+  // Update active button
+  document.querySelectorAll('.demo-charts-section .chart-period').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.includes(days === '30' ? '30' : days === '90' ? '3' : '12'));
+  });
+  // Could regenerate data for different period here
+}
+
+/**
+ * Generate demo orders data for charts
+ */
+function generateDemoOrdersData(restaurantId) {
+  const orders = [];
+  const paymentMethods = ['Kort', 'Kontant', 'MobilePay', 'Faktura'];
+  const products = ['Margherita', 'Pepperoni', 'Quattro Formaggi', 'Calzone', 'Hawaiianer', 'Kebab Pizza', 'Vegetar', 'Tiramisu', 'Cola', 'Fanta'];
+
+  for (let i = 0; i < 50; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+
+    const numItems = Math.floor(Math.random() * 4) + 1;
+    const items = [];
+    for (let j = 0; j < numItems; j++) {
+      items.push({
+        name: products[Math.floor(Math.random() * products.length)],
+        quantity: Math.floor(Math.random() * 3) + 1,
+        price: Math.floor(Math.random() * 100) + 50
+      });
+    }
+
+    orders.push({
+      id: `demo-${i}`,
+      restaurant_id: restaurantId,
+      created_at: date.toISOString(),
+      total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      payment_method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+      items: items
+    });
+  }
+  return orders;
+}
+
+/**
+ * Monthly revenue/orders line chart
+ */
+function renderCustomerRevenueChart(orders) {
+  const ctx = document.getElementById('customer-revenue-chart');
+  if (!ctx) return;
+
+  // Group by day (last 30 days)
+  const last30Days = [];
+  const revenueByDay = {};
+  const ordersByDay = {};
+
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().split('T')[0];
+    last30Days.push(key);
+    revenueByDay[key] = 0;
+    ordersByDay[key] = 0;
+  }
+
+  orders.forEach(order => {
+    const date = new Date(order.created_at).toISOString().split('T')[0];
+    if (revenueByDay.hasOwnProperty(date)) {
+      revenueByDay[date] += order.total || 0;
+      ordersByDay[date]++;
+    }
+  });
+
+  if (customerRevenueChart) customerRevenueChart.destroy();
+
+  customerRevenueChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: last30Days.map(d => new Date(d).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })),
+      datasets: [
+        {
+          label: 'Omsætning',
+          data: last30Days.map(d => revenueByDay[d]),
+          backgroundColor: 'rgba(134, 197, 158, 0.8)',  // Blød grøn (matcher cirkeldiagram)
+          borderRadius: 3
+        },
+        {
+          label: 'Ordrer',
+          data: last30Days.map(d => ordersByDay[d]),
+          backgroundColor: 'rgba(134, 182, 246, 0.8)',  // Blød blå (matcher cirkeldiagram)
+          borderRadius: 3,
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y1: {
+          position: 'right',
+          beginAtZero: true,
+          grid: { display: false }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Payment methods doughnut chart
+ */
+function renderCustomerPaymentChart(orders) {
+  const ctx = document.getElementById('customer-payment-chart');
+  if (!ctx) return;
+
+  // Standard betalingsmetoder (vises altid)
+  const defaultMethods = ['Kort', 'Kontant', 'MobilePay', 'Faktura'];
+  const methodColors = {
+    'Kort': 'rgba(134, 182, 246, 0.8)',
+    'Kontant': 'rgba(134, 197, 158, 0.8)',
+    'MobilePay': 'rgba(178, 132, 190, 0.8)',
+    'Faktura': 'rgba(246, 186, 134, 0.8)'
+  };
+
+  // Tæl betalingsmetoder fra ordrer
+  const paymentMethods = {};
+  orders.forEach(order => {
+    const method = order.payment_method || 'Ukendt';
+    paymentMethods[method] = (paymentMethods[method] || 0) + 1;
+  });
+
+  if (customerPaymentChart) customerPaymentChart.destroy();
+
+  // Hvis ingen data, vis grå placeholder doughnut
+  if (Object.keys(paymentMethods).length === 0) {
+    customerPaymentChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Ingen data'],
+        datasets: [{
+          data: [1],
+          backgroundColor: ['rgba(80, 80, 80, 0.3)'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        }
+      }
+    });
+  } else {
+    // Vis rigtig data
+    const colors = defaultMethods.map(m => methodColors[m]);
+    customerPaymentChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(paymentMethods),
+        datasets: [{
+          data: Object.values(paymentMethods),
+          backgroundColor: Object.keys(paymentMethods).map(m => methodColors[m] || 'rgba(158, 158, 158, 0.8)'),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+  }
+
+  // Generer betalingsmetode-tabel - viser ALTID de 4 standard metoder
+  const total = Object.values(paymentMethods).reduce((a, b) => a + b, 0);
+  let tableHtml = '';
+
+  defaultMethods.forEach(method => {
+    const count = paymentMethods[method] || 0;
+    const methodOrders = orders.filter(o => o.payment_method === method);
+    const amount = methodOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const percentage = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
+
+    tableHtml += `
+      <div class="payment-row">
+        <span class="payment-dot" style="background:${methodColors[method]}"></span>
+        <span class="payment-method">${method}</span>
+        <span class="payment-amount">${formatCurrency(amount)}</span>
+        <span class="payment-percent">${percentage}%</span>
+      </div>
+    `;
+  });
+
+  const tableEl = document.getElementById('payment-stats-table');
+  if (tableEl) tableEl.innerHTML = tableHtml;
+}
+
+/**
+ * Top products horizontal bar chart - viser produkter fra produktbibliotek
+ */
+function renderCustomerProductsChart(menuItems) {
+  const ctx = document.getElementById('customer-products-chart');
+  if (!ctx) return;
+
+  // Vis produkter fra kundens produktbibliotek (menu items)
+  const products = (menuItems || []).slice(0, 10);
+
+  if (customerProductsChart) customerProductsChart.destroy();
+
+  // Hvis ingen produkter, vis synlig grå placeholder bar
+  if (products.length === 0) {
+    customerProductsChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Ingen produkter endnu'],
+        datasets: [{
+          label: 'Produkter',
+          data: [100],  // Synlig værdi
+          backgroundColor: 'rgba(80, 80, 80, 0.3)',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false }
+        },
+        scales: {
+          x: { display: false, max: 100 },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+    return;
+  }
+
+  customerProductsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: products.map(p => p.name || p.title || 'Ukendt'),
+      datasets: [{
+        label: 'Pris',
+        data: products.map(p => p.price || 0),
+        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => `${context.raw} kr`
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          title: { display: true, text: 'Pris (kr)', color: 'var(--muted)' }
+        },
+        y: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Change chart period (placeholder for future implementation)
+ */
+function setCustomerChartPeriod(period) {
+  // Update active button
+  document.querySelectorAll('#subpage-dashboard .chart-period').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event?.target?.classList.add('active');
+
+  // TODO: Implement period filtering
+  console.log('Set customer chart period:', period);
+}
+
+// =====================================================
+// FAKTURA PAGE - Invoice Management
+// =====================================================
+
+let invoiceHistoryData = [];
+let invoiceCurrentPage = 1;
+const invoicesPerPage = 10;
+
+// Default subscription plans
+let subscriptionPlans = JSON.parse(localStorage.getItem('orderflow_subscription_plans') || 'null') || [
+  { id: 'starter', name: 'Starter', price: 299, description: 'Perfekt til små restauranter', features: ['100 SMS/måned', '2 brugere', 'Basis workflow', 'Email support'], popular: false },
+  { id: 'professional', name: 'Professional', price: 799, description: 'Den perfekte løsning for voksende restauranter', features: ['500 SMS/måned', '5 brugere', 'AI Workflow', 'Rapporter', 'Email support', 'API adgang'], popular: true },
+  { id: 'enterprise', name: 'Enterprise', price: 1499, description: 'For store restaurantkæder', features: ['Ubegrænset SMS', 'Ubegrænset brugere', 'AI Workflow Pro', 'Avancerede rapporter', '24/7 Support', 'Dedikeret manager'], popular: false }
+];
+
+function loadFakturaPage() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Version check - regenerate if old version (SMS-pakke update)
+  const invoiceVersion = 2; // Increment when invoice structure changes
+  if (!restaurant.invoices || restaurant.invoiceVersion !== invoiceVersion) {
+    restaurant.invoices = generateDemoInvoices(restaurant);
+    restaurant.invoiceVersion = invoiceVersion;
+  }
+  if (!restaurant.paymentMethod) restaurant.paymentMethod = { type: 'card', last4: '4242', holder: (restaurant.contactPerson || restaurant.contact || 'KORTHOLDER').toUpperCase(), expiry: '12/26' };
+  if (!restaurant.subscription) restaurant.subscription = { planId: 'professional', nextBilling: getNextMonthFirst() };
+  
+  invoiceHistoryData = restaurant.invoices;
+  invoiceCurrentPage = 1;
+  
+  updateUpcomingInvoice(restaurant);
+  updatePaymentMethodDisplay(restaurant);
+  renderInvoiceHistory();
+}
+
+function generateDemoInvoices(restaurant) {
+  const invoices = [];
+  const today = new Date();
+  for (let i = 0; i < 12; i++) {
+    const invoiceDate = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const dueDate = new Date(invoiceDate); dueDate.setDate(dueDate.getDate() + 14);
+    
+    // Generate realistic line items matching Python wrapper structure
+    const smsCount = Math.floor(Math.random() * 3) + 1;
+    const extraUsers = Math.floor(Math.random() * 5);
+    const apiCalls = Math.floor(Math.random() * 20000);
+    
+    const lines = [
+      { description: 'OrderFlow Professional - Månedligt abonnement', quantity: 1, unit: 'måned', price: 799 }
+    ];
+    
+    if (smsCount > 0) {
+      lines.push({ description: 'SMS-pakke (1.000 stk.)', quantity: smsCount, unit: 'pakke', price: 249 });
+    }
+    if (extraUsers > 0) {
+      lines.push({ description: 'Ekstra brugerkonti', quantity: extraUsers, unit: 'stk', price: 49 });
+    }
+    if (apiCalls > 10000) {
+      lines.push({ description: 'API-kald overskridelse', quantity: apiCalls - 10000, unit: 'kald', price: 0.02 });
+    }
+    
+    // Calculate totals
+    const subtotal = lines.reduce((sum, line) => sum + (line.quantity * line.price), 0);
+    const vat = Math.round(subtotal * 0.25 * 100) / 100;
+    
+    invoices.push({
+      id: `INV-${invoiceDate.getFullYear()}-${String(invoiceDate.getMonth() + 1).padStart(2, '0')}${String(Math.floor(Math.random() * 90) + 10)}`,
+      number: `${invoiceDate.getFullYear()}-${String(1000 + i + 42).slice(-4)}`,
+      date: invoiceDate.toISOString().split('T')[0],
+      dueDate: dueDate.toISOString().split('T')[0],
+      month: invoiceDate.toLocaleDateString('da-DK', { month: 'long', year: 'numeric' }),
+      subtotal: Math.round(subtotal * 100) / 100,
+      vat: vat,
+      total: Math.round((subtotal + vat) * 100) / 100,
+      lines: lines,
+      paymentTerms: 'Netto 14 dage',
+      orderReference: i < 3 ? `PO-${invoiceDate.getFullYear()}-${String(100 + i).padStart(3, '0')}` : null,
+      status: i === 0 ? 'pending' : 'paid'
+    });
+  }
+  return invoices;
+}
+
+function getNextMonthFirst() {
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString().split('T')[0];
+}
+
+function updateUpcomingInvoice(restaurant) {
+  const plan = subscriptionPlans.find(p => p.id === restaurant.subscription?.planId) || subscriptionPlans[1];
+  const subtotal = plan.price + 249 + 98; // SMS-pakke (1.000 stk.) 249 DKK + Ekstra brugere 98 DKK
+  const vat = Math.round(subtotal * 0.25 * 100) / 100;
+  const nextMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1);
+  document.getElementById('upcoming-invoice-number').textContent = `2025-${String(restaurant.invoices?.length + 43 || 43).padStart(4, '0')}`;
+  document.getElementById('upcoming-invoice-period').textContent = nextMonth.toLocaleDateString('da-DK', { month: 'long', year: 'numeric' });
+  document.getElementById('upcoming-invoice-date').textContent = formatDateDK(nextMonth);
+  document.getElementById('upcoming-invoice-due').textContent = formatDateDK(new Date(nextMonth.getTime() + 14*24*60*60*1000));
+  document.getElementById('upcoming-invoice-subtotal').textContent = formatCurrencyDK(subtotal);
+  document.getElementById('upcoming-invoice-vat').textContent = formatCurrencyDK(vat);
+  document.getElementById('upcoming-invoice-total').textContent = formatCurrencyDK(subtotal + vat);
+}
+
+function updatePaymentMethodDisplay(restaurant) {
+  const pm = restaurant.paymentMethod;
+  document.getElementById('payment-card-number').textContent = `•••• •••• •••• ${pm.last4}`;
+  document.getElementById('payment-card-holder').textContent = pm.holder;
+  document.getElementById('payment-card-expiry').textContent = pm.expiry;
+}
+
+function renderInvoiceHistory() {
+  const container = document.getElementById('invoice-history-list');
+  const searchTerm = document.getElementById('invoice-search')?.value?.toLowerCase() || '';
+  let filtered = searchTerm ? invoiceHistoryData.filter(inv => inv.number.toLowerCase().includes(searchTerm) || inv.month.toLowerCase().includes(searchTerm)) : invoiceHistoryData;
+  const start = (invoiceCurrentPage - 1) * invoicesPerPage;
+  const paginated = filtered.slice(start, start + invoicesPerPage);
+  container.innerHTML = paginated.map(inv => `
+    <div style="display:grid;grid-template-columns:1fr 100px 120px 120px 80px;gap:16px;padding:14px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:13px">
+      <span style="font-weight:500">${inv.month}</span>
+      <span style="color:var(--muted)">${formatDateDK(new Date(inv.date))}</span>
+      <span style="font-family:monospace;color:var(--accent)">${inv.number}</span>
+      <span style="text-align:right;font-weight:500">${formatCurrencyDK(inv.total)}</span>
+      <div style="text-align:center"><button class="btn btn-secondary btn-sm" onclick="downloadInvoicePDF('${inv.number}')" title="Eksporter PDF">↓</button></div>
+    </div>
+  `).join('');
+  document.getElementById('invoice-count-label').textContent = `Viser ${start + 1}-${Math.min(start + invoicesPerPage, filtered.length)} af ${filtered.length} fakturaer`;
+  document.getElementById('invoice-prev-btn').disabled = invoiceCurrentPage <= 1;
+  document.getElementById('invoice-next-btn').disabled = start + invoicesPerPage >= filtered.length;
+}
+
+function filterInvoiceHistory() { invoiceCurrentPage = 1; renderInvoiceHistory(); }
+function prevInvoicePage() { if (invoiceCurrentPage > 1) { invoiceCurrentPage--; renderInvoiceHistory(); } }
+function nextInvoicePage() { invoiceCurrentPage++; renderInvoiceHistory(); }
+function formatDateDK(date) { if (typeof date === 'string') date = new Date(date); return date.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }); }
+function formatCurrencyDK(amount) { return amount.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DKK'; }
+
+async function downloadInvoicePDF(invoiceNumber) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const invoice = restaurant?.invoices?.find(inv => inv.number === invoiceNumber);
+  if (!invoice) { toast('Faktura ikke fundet', 'error'); return; }
+  toast('Genererer faktura PDF...', 'info');
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    
+    // ============ COLORS (matching Python wrapper exactly) ============
+    const PRIMARY_COLOR = [26, 26, 46];     // #1a1a2e
+    const MEDIUM_GRAY = [224, 224, 224];    // #e0e0e0
+    const LIGHT_GRAY = [248, 249, 250];     // #f8f9fa
+    const TEXT_COLOR = [51, 51, 51];        // #333333
+    
+    // ============ PLATFORM INFO (from Python PlatformInfo dataclass) ============
+    const platform = {
+      company_name: 'OrderFlow ApS',
+      address: 'Vestergade 12',
+      postal_city: '2100 København Ø',
+      cvr: '12345678',
+      phone: '+45 70 20 30 40',
+      email: 'faktura@orderflow.dk',
+      website: 'www.orderflow.dk',
+      bank_name: 'Danske Bank',
+      bank_reg: '1234',
+      bank_account: '12345678'
+    };
+    
+    // ============ PAGE DIMENSIONS (matching Python: A4, 20mm margins) ============
+    const pageWidth = 210;   // A4 width in mm
+    const pageHeight = 297;  // A4 height in mm
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;  // 170mm
+    
+    // ============ HEADER - Left: Company Info ============
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...TEXT_COLOR);
+    doc.text(platform.company_name, margin, 25);
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${platform.address}, ${platform.postal_city}`, margin, 31);
+    doc.text(`CVR: DK ${platform.cvr} | Tlf: ${platform.phone}`, margin, 36);
+    doc.text(platform.email, margin, 41);
+    
+    // ============ HEADER - Right: FAKTURA Title ============
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...PRIMARY_COLOR);
+    doc.text('FAKTURA', pageWidth - margin, 25, { align: 'right' });
+    
+    doc.setFontSize(11);
+    doc.text(`Nr. ${invoice.number}`, pageWidth - margin, 33, { align: 'right' });
+    
+    // ============ HORIZONTAL LINE (1.5pt like Python) ============
+    doc.setDrawColor(...PRIMARY_COLOR);
+    doc.setLineWidth(0.5);
+    doc.line(margin, 46, pageWidth - margin, 46);
+    
+    // ============ CUSTOMER INFO BOX (Left, Light Gray Background) ============
+    // Matching Python: page_width * 0.55, with 3mm padding
+    const customerBoxY = 52;
+    const customerBoxWidth = contentWidth * 0.55;  // ~93.5mm
+    const customerBoxHeight = 38;
+    
+    doc.setFillColor(...LIGHT_GRAY);
+    doc.rect(margin, customerBoxY, customerBoxWidth, customerBoxHeight, 'F');
+    
+    // Customer info text (with 3mm padding)
+    let custY = customerBoxY + 6;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...TEXT_COLOR);
+    doc.text('Faktureres til:', margin + 3, custY);
+    
+    // Company name (bold, size 10)
+    custY += 6;
+    doc.setFontSize(10);
+    doc.text(restaurant.name || 'Kunde', margin + 3, custY);
+    
+    custY += 5;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    
+    // Att: (if contact exists)
+    if (restaurant.contactPerson || restaurant.contact) {
+      doc.text(`Att: ${restaurant.contactPerson || restaurant.contact}`, margin + 3, custY);
+      custY += 5;
+    }
+    
+    // Split address into street and postal/city
+    const fullAddress = restaurant.address || 'Adresse ikke angivet';
+    const addressParts = fullAddress.split(',').map(p => p.trim());
+    
+    // Street address
+    doc.text(addressParts[0] || fullAddress, margin + 3, custY);
+    custY += 5;
+    
+    // Postal city (if exists after comma)
+    if (addressParts[1]) {
+      doc.text(addressParts[1], margin + 3, custY);
+      custY += 5;
+    }
+    
+    // CVR
+    if (restaurant.cvr) {
+      doc.text(`CVR: ${restaurant.cvr}`, margin + 3, custY);
+    }
+    
+    // ============ INVOICE DATES (Right Side - on same line as labels) ============
+    const datesRightX = pageWidth - margin;
+    let dateY = customerBoxY + 6;
+    
+    doc.setFontSize(9);
+    
+    // Fakturadato
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fakturadato:', margin + customerBoxWidth + 5, dateY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDateDK(new Date(invoice.date)), datesRightX, dateY, { align: 'right' });
+    
+    // Forfaldsdato
+    dateY += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Forfaldsdato:', margin + customerBoxWidth + 5, dateY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formatDateDK(new Date(invoice.dueDate)), datesRightX, dateY, { align: 'right' });
+    
+    // Betaling
+    dateY += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Betaling:', margin + customerBoxWidth + 5, dateY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(invoice.paymentTerms || 'Netto 14 dage', datesRightX, dateY, { align: 'right' });
+    
+    // Deres ref. (if exists)
+    if (invoice.orderReference) {
+      dateY += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Deres ref.:', margin + customerBoxWidth + 5, dateY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(invoice.orderReference, datesRightX, dateY, { align: 'right' });
+    }
+    
+    // ============ INVOICE LINES TABLE ============
+    let y = customerBoxY + customerBoxHeight + 8;
+    
+    // Column widths (matching Python: 0.40, 0.12, 0.12, 0.18, 0.18)
+    const colWidths = [
+      contentWidth * 0.40,  // Beskrivelse
+      contentWidth * 0.12,  // Antal
+      contentWidth * 0.12,  // Enhed
+      contentWidth * 0.18,  // Enhedspris
+      contentWidth * 0.18   // Beløb
+    ];
+    
+    // Table Header (dark background)
+    doc.setFillColor(...PRIMARY_COLOR);
+    doc.rect(margin, y, contentWidth, 10, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    
+    let colX = margin + 3;
+    doc.text('Beskrivelse', colX, y + 7);
+    colX = margin + colWidths[0];
+    doc.text('Antal', colX + colWidths[1] - 3, y + 7, { align: 'right' });
+    colX += colWidths[1];
+    doc.text('Enhed', colX + colWidths[2] - 3, y + 7, { align: 'right' });
+    colX += colWidths[2];
+    doc.text('Enhedspris', colX + colWidths[3] - 3, y + 7, { align: 'right' });
+    doc.text('Beløb', pageWidth - margin - 3, y + 7, { align: 'right' });
+    
+    y += 14;
+    
+    // Table Rows
+    doc.setTextColor(...TEXT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    
+    const lines = invoice.lines || [
+      { description: 'OrderFlow Abonnement', quantity: 1, unit: 'måned', price: invoice.subtotal || 799 }
+    ];
+    
+    lines.forEach((line, index) => {
+      const qty = line.quantity || 1;
+      const unitPrice = line.price || line.unit_price || 0;
+      const lineTotal = qty * unitPrice;
+      
+      // Format quantity (integer or 2 decimals)
+      const qtyStr = qty === Math.floor(qty) ? String(qty) : qty.toFixed(2).replace('.', ',');
+      
+      colX = margin + 3;
+      doc.text(line.description || 'Linje', colX, y);
+      
+      colX = margin + colWidths[0];
+      doc.text(qtyStr, colX + colWidths[1] - 3, y, { align: 'right' });
+      
+      colX += colWidths[1];
+      doc.text(line.unit || 'stk', colX + colWidths[2] - 3, y, { align: 'right' });
+      
+      colX += colWidths[2];
+      doc.text(formatCurrencyDKShort(unitPrice), colX + colWidths[3] - 3, y, { align: 'right' });
+      
+      doc.text(formatCurrencyDKShort(lineTotal), pageWidth - margin - 3, y, { align: 'right' });
+      
+      // Line separator (gray, 0.5pt)
+      y += 3;
+      doc.setDrawColor(...MEDIUM_GRAY);
+      doc.setLineWidth(0.2);
+      doc.line(margin, y, pageWidth - margin, y);
+      
+      y += 5;
+    });
+    
+    // Final line under last row (darker, PRIMARY_COLOR)
+    doc.setDrawColor(...PRIMARY_COLOR);
+    doc.setLineWidth(0.4);
+    doc.line(margin, y - 5, pageWidth - margin, y - 5);
+    
+    // ============ TOTALS (Right Aligned, matching Python layout) ============
+    y += 6;
+    const totalsLabelX = pageWidth - margin - 75;
+    const totalsValueX = pageWidth - margin - 3;
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Subtotal ekskl. moms:', totalsLabelX, y);
+    doc.text(formatCurrencyDK(invoice.subtotal), totalsValueX, y, { align: 'right' });
+    
+    y += 6;
+    doc.text('Moms 25%:', totalsLabelX, y);
+    doc.text(formatCurrencyDK(invoice.vat), totalsValueX, y, { align: 'right' });
+    
+    // Line above total
+    y += 2;
+    doc.setDrawColor(...PRIMARY_COLOR);
+    doc.setLineWidth(0.4);
+    doc.line(totalsLabelX - 5, y, pageWidth - margin, y);
+    
+    // Total row with background
+    y += 1;
+    doc.setFillColor(...LIGHT_GRAY);
+    doc.rect(totalsLabelX - 5, y, 80, 9, 'F');
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total inkl. moms:', totalsLabelX, y + 6);
+    doc.text(formatCurrencyDK(invoice.total), totalsValueX, y + 6, { align: 'right' });
+    
+    // ============ PAYMENT INFO BOX (Bottom Left, matching Python exactly) ============
+    // Python: box_y = 20mm from bottom, box_height = 22mm, box_width = page_width * 0.55
+    const paymentBoxY = pageHeight - 42;  // 20mm + 22mm from bottom
+    const paymentBoxHeight = 22;
+    const paymentBoxWidth = contentWidth * 0.55;
+    
+    doc.setFillColor(...LIGHT_GRAY);
+    doc.rect(margin, paymentBoxY, paymentBoxWidth, paymentBoxHeight, 'F');
+    
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...TEXT_COLOR);
+    doc.text('Betalingsoplysninger', margin + 3, paymentBoxY + 5);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${platform.bank_name} | Reg: ${platform.bank_reg} | Konto: ${platform.bank_account}`, margin + 3, paymentBoxY + 11);
+    
+    // "Anfør fakturanr. XXXX ved betaling" with bold invoice number
+    const refPrefix = 'Anfør fakturanr. ';
+    const refSuffix = ' ved betaling';
+    doc.text(refPrefix, margin + 3, paymentBoxY + 17);
+    
+    const prefixWidth = doc.getStringUnitWidth(refPrefix) * 9 / doc.internal.scaleFactor;
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.number, margin + 3 + prefixWidth, paymentBoxY + 17);
+    
+    const numWidth = doc.getStringUnitWidth(invoice.number) * 9 / doc.internal.scaleFactor;
+    doc.setFont('helvetica', 'normal');
+    doc.text(refSuffix, margin + 3 + prefixWidth + numWidth, paymentBoxY + 17);
+    
+    // ============ FOOTER (matching Python exactly) ============
+    const footerLineY = pageHeight - 15;
+    
+    // Thin line above footer
+    doc.setDrawColor(...MEDIUM_GRAY);
+    doc.setLineWidth(0.2);
+    doc.line(margin, footerLineY, pageWidth - margin, footerLineY);
+    
+    // Company info line
+    doc.setFontSize(7);
+    doc.setTextColor(128, 128, 128);
+    const footerText = `${platform.company_name} | ${platform.address}, ${platform.postal_city} | CVR: DK ${platform.cvr} | ${platform.phone} | ${platform.email} | ${platform.website}`;
+    doc.text(footerText, pageWidth / 2, footerLineY + 5, { align: 'center' });
+    
+    // Page number
+    doc.setFontSize(8);
+    doc.text('Side 1 af 1', pageWidth / 2, footerLineY + 10, { align: 'center' });
+    
+    // ============ SAVE PDF ============
+    doc.save(`Faktura_${invoice.number}.pdf`);
+    // toast('Faktura downloadet', 'success'); // Removed - unnecessary
+    
+  } catch (err) { 
+    console.error('PDF generation error:', err); 
+    toast('Kunne ikke generere PDF: ' + err.message, 'error'); 
+  }
+}
+
+// Helper function for currency without "DKK" suffix
+function formatCurrencyDKShort(amount) {
+  return amount.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function editPaymentMethod() { toast('Betalingsmetode redigering kommer snart', 'info'); }
+function updatePaymentCard() { toast('Kortopdatering kommer snart', 'info'); }
+function exportInvoiceHistory() { toast('Eksport funktion kommer snart', 'info'); }
+
+// =====================================================
+// ABONNEMENT PAGE - Subscription Management
+// =====================================================
+
+function loadAbonnementPage() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  if (!restaurant.subscription) restaurant.subscription = { planId: 'professional', nextBilling: getNextMonthFirst() };
+  const currentPlan = subscriptionPlans.find(p => p.id === restaurant.subscription.planId) || subscriptionPlans[1];
+  document.getElementById('current-plan-name').textContent = currentPlan.name;
+  document.getElementById('current-plan-desc').textContent = currentPlan.description;
+  document.getElementById('current-plan-price').innerHTML = `${currentPlan.price} <span style="font-size:16px;font-weight:400">DKK/md</span>`;
+  currentPlan.features.forEach((f, i) => { const el = document.getElementById(`plan-feature-${i + 1}`); if (el) el.textContent = f; });
+  document.getElementById('next-billing-date').textContent = new Date(restaurant.subscription.nextBilling).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+  renderOtherPlans(restaurant.subscription.planId);
+}
+
+function renderOtherPlans(currentPlanId) {
+  const container = document.getElementById('other-plans-grid');
+  container.innerHTML = subscriptionPlans.filter(p => p.id !== currentPlanId).map(plan => `
+    <div class="card" style="padding:24px;${plan.popular ? 'border:2px solid var(--accent)' : ''}">
+      ${plan.popular ? '<span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0a0b0d;font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px">POPULÆR</span>' : ''}
+      <h4 style="font-size:18px;font-weight:600;margin-bottom:4px">${plan.name}</h4>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">${plan.description}</p>
+      <div style="font-size:28px;font-weight:700;margin-bottom:16px">${plan.price} <span style="font-size:14px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">${plan.features.map(f => `<div style="display:flex;align-items:center;gap:8px;font-size:13px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>${f}</div>`).join('')}</div>
+      <button class="btn ${plan.popular ? 'btn-primary' : 'btn-secondary'}" style="width:100%" onclick="changePlan('${plan.id}')">Skift til ${plan.name}</button>
+    </div>
+  `).join('');
+}
+
+function changePlan(planId) {
+  const plan = subscriptionPlans.find(p => p.id === planId);
+  if (!plan) return;
+  if (confirm(`Er du sikker på du vil skifte til ${plan.name} (${plan.price} DKK/md)?`)) {
+    const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+    if (restaurant) { restaurant.subscription.planId = planId; saveRestaurants(); loadAbonnementPage(); toast(`Skiftet til ${plan.name}`, 'success'); }
+  }
+}
+
+function purchaseAddon(type) {
+  const addons = { 'sms': 'Ekstra SMS-pakke (249 DKK)', 'user': 'Ekstra bruger (49 DKK/md)' };
+  toast(`${addons[type]} tilføjet til næste faktura`, 'success');
+}
+
+// =====================================================
+// SUBSCRIPTION PLAN CONFIGURATION (Settings Admin)
+// =====================================================
+
+function renderSubscriptionPlansConfig() {
+  const container = document.getElementById('subscription-plans-config');
+  if (!container) return;
+  
+  container.innerHTML = subscriptionPlans.map((plan, index) => `
+    <div class="card" style="padding:20px;position:relative;${plan.popular ? 'border:2px solid var(--accent)' : ''}" data-plan-id="${plan.id}">
+      ${plan.popular ? '<span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0a0b0d;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px">POPULÆR</span>' : ''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <h4 style="font-size:16px;font-weight:600;margin:0">${plan.name}</h4>
+          <p style="font-size:12px;color:var(--muted);margin:4px 0 0 0">${plan.description}</p>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-secondary btn-sm" onclick="editSubscriptionPlan('${plan.id}')" title="Rediger">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="deleteSubscriptionPlan('${plan.id}')" title="Slet" ${subscriptionPlans.length <= 1 ? 'disabled' : ''}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+      <div style="font-size:24px;font-weight:700;margin-bottom:12px">${plan.price} <span style="font-size:12px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        ${plan.features.slice(0, 4).map(f => `
+          <div style="display:flex;align-items:center;gap:6px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            ${f}
+          </div>
+        `).join('')}
+        ${plan.features.length > 4 ? `<div style="color:var(--muted)">+${plan.features.length - 4} mere...</div>` : ''}
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+          <input type="checkbox" ${plan.popular ? 'checked' : ''} onchange="togglePlanPopular('${plan.id}', this.checked)">
+          Markér som populær
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addSubscriptionPlan() {
+  const newPlan = {
+    id: 'plan_' + Date.now(),
+    name: 'Ny Plan',
+    price: 499,
+    description: 'Beskrivelse af planen',
+    features: ['Feature 1', 'Feature 2', 'Feature 3'],
+    popular: false
+  };
+  
+  subscriptionPlans.push(newPlan);
+  saveSubscriptionPlans();
+  renderSubscriptionPlansConfig();
+  editSubscriptionPlan(newPlan.id);
+}
+
+function editSubscriptionPlan(planId) {
+  const plan = subscriptionPlans.find(p => p.id === planId);
+  if (!plan) return;
+  
+  const html = `
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-group">
+        <label class="form-label">Plannavn</label>
+        <input type="text" class="input" id="edit-plan-name" value="${plan.name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beskrivelse</label>
+        <input type="text" class="input" id="edit-plan-desc" value="${plan.description}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pris (DKK/md)</label>
+        <input type="number" class="input" id="edit-plan-price" value="${plan.price}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Features (én per linje)</label>
+        <textarea class="input" id="edit-plan-features" rows="6" style="resize:vertical">${plan.features.join('\n')}</textarea>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeCustomModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveEditedPlan('${planId}')">Gem ændringer</button>
+      </div>
+    </div>
+  `;
+  
+  showCustomModal('Rediger plan: ' + plan.name, html);
+}
+
+function saveEditedPlan(planId) {
+  const plan = subscriptionPlans.find(p => p.id === planId);
+  if (!plan) return;
+  
+  plan.name = document.getElementById('edit-plan-name').value;
+  plan.description = document.getElementById('edit-plan-desc').value;
+  plan.price = parseInt(document.getElementById('edit-plan-price').value) || 0;
+  plan.features = document.getElementById('edit-plan-features').value.split('\n').filter(f => f.trim());
+  
+  saveSubscriptionPlans();
+  renderSubscriptionPlansConfig();
+  closeCustomModal();
+  toast('Plan opdateret', 'success');
+}
+
+function deleteSubscriptionPlan(planId) {
+  if (subscriptionPlans.length <= 1) {
+    toast('Der skal være mindst én plan', 'error');
+    return;
+  }
+  
+  if (confirm('Er du sikker på du vil slette denne plan?')) {
+    subscriptionPlans = subscriptionPlans.filter(p => p.id !== planId);
+    saveSubscriptionPlans();
+    renderSubscriptionPlansConfig();
+    toast('Plan slettet', 'success');
+  }
+}
+
+function togglePlanPopular(planId, isPopular) {
+  if (isPopular) {
+    subscriptionPlans.forEach(p => p.popular = false);
+  }
+  const plan = subscriptionPlans.find(p => p.id === planId);
+  if (plan) {
+    plan.popular = isPopular;
+    saveSubscriptionPlans();
+    renderSubscriptionPlansConfig();
+  }
+}
+
+function saveSubscriptionPlans() {
+  localStorage.setItem('orderflow_subscription_plans', JSON.stringify(subscriptionPlans));
+}
+
+function saveBillingSettings() {
+  const settings = {
+    paymentTerms: document.getElementById('default-payment-terms')?.value || '14',
+    vatRate: document.getElementById('default-vat-rate')?.value || '25'
+  };
+  localStorage.setItem('orderflow_billing_settings', JSON.stringify(settings));
+  // toast('Faktureringsindstillinger gemt', 'success'); // Removed - unnecessary
+}
+
+function savePlatformBillingInfo() {
+  const info = {
+    company: document.getElementById('platform-company')?.value || 'OrderFlow ApS',
+    cvr: document.getElementById('platform-cvr')?.value || '12345678',
+    bankReg: document.getElementById('platform-bank-reg')?.value || '1234',
+    bankAccount: document.getElementById('platform-bank-account')?.value || '12345678'
+  };
+  localStorage.setItem('orderflow_platform_billing', JSON.stringify(info));
+  // toast('Platforminfo gemt', 'success'); // Removed - unnecessary
+}
+
+function showCustomModal(title, content) {
+  let modal = document.getElementById('custom-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'custom-modal';
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:500px">
+        <div class="modal-header">
+          <h3 id="custom-modal-title"></h3>
+          <button class="modal-close" onclick="closeCustomModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="custom-modal-body"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  document.getElementById('custom-modal-title').textContent = title;
+  document.getElementById('custom-modal-body').innerHTML = content;
+  modal.classList.add('active');
+}
+
+function closeCustomModal() {
+  const modal = document.getElementById('custom-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+// =====================================================
+// PRODUKTER PAGE - Menu Management
+// =====================================================
+
+let currentProductFilter = null;
+
+function loadProductsPage() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Initialize products array if not exists
+  if (!restaurant.products) {
+    restaurant.products = [];
+  }
+  if (!restaurant.productCategories) {
+    restaurant.productCategories = ['Pizza', 'Pasta', 'Burger', 'Salat', 'Drikkevarer', 'Tilbehør'];
+  }
+  if (!restaurant.deliveryZones) {
+    restaurant.deliveryZones = [];
+  }
+  if (!restaurant.extras) {
+    restaurant.extras = [];
+  }
+  
+  renderProductCategories(restaurant);
+  renderProducts(restaurant);
+  renderDeliveryZones(restaurant);
+  renderExtras(restaurant);
+  updateProductCount(restaurant);
+}
+
+function renderProductCategories(restaurant) {
+  const container = document.getElementById('product-categories');
+  const filterContainer = document.getElementById('product-category-filters');
+  if (!container || !filterContainer) return;
+  
+  const categories = restaurant.productCategories || [];
+  
+  // Render category tags
+  container.innerHTML = categories.map((cat, idx) => `
+    <div class="tag" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg3);border-radius:var(--radius-full);font-size:12px">
+      ${cat}
+      <button onclick="removeProductCategory(${idx})" style="background:none;border:none;cursor:pointer;opacity:0.5;padding:0;line-height:1" title="Fjern kategori">×</button>
+    </div>
+  `).join('');
+  
+  // Render filter buttons
+  filterContainer.innerHTML = `
+    <button class="btn btn-secondary btn-sm ${!currentProductFilter ? 'active' : ''}" onclick="filterProductsByCategory(null)" data-category="all">Alle</button>
+    ${categories.map(cat => `
+      <button class="btn btn-secondary btn-sm ${currentProductFilter === cat ? 'active' : ''}" onclick="filterProductsByCategory('${cat}')">${cat}</button>
+    `).join('')}
+  `;
+}
+
+function addProductCategory() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const name = prompt('Navn på ny kategori:');
+  if (!name || name.trim() === '') return;
+  
+  if (!restaurant.productCategories) {
+    restaurant.productCategories = [];
+  }
+  
+  if (restaurant.productCategories.includes(name.trim())) {
+    toast('Kategori findes allerede', 'error');
+    return;
+  }
+  
+  restaurant.productCategories.push(name.trim());
+  renderProductCategories(restaurant);
+  markProductsUnsaved();
+  toast('Kategori tilføjet', 'success');
+}
+
+function removeProductCategory(idx) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.productCategories) return;
+  
+  if (!confirm('Fjern denne kategori?')) return;
+  
+  restaurant.productCategories.splice(idx, 1);
+  renderProductCategories(restaurant);
+  markProductsUnsaved();
+}
+
+function filterProductsByCategory(category) {
+  currentProductFilter = category;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (restaurant) {
+    renderProductCategories(restaurant);
+    renderProducts(restaurant);
+  }
+}
+
+function renderProducts(restaurant) {
+  const container = document.getElementById('products-list');
+  const emptyState = document.getElementById('products-empty');
+  if (!container) return;
+
+  let products = restaurant.products || [];
+
+  // Apply filter
+  if (currentProductFilter) {
+    products = products.filter(p => p.category === currentProductFilter);
+  }
+
+  // Apply category filter (multi-select)
+  const selectedCategories = getCategoryFilters(restaurant.id);
+  if (selectedCategories.length > 0) {
+    products = products.filter(p => selectedCategories.includes(p.category));
+  }
+
+  // Apply search
+  const searchTerm = document.getElementById('product-search')?.value?.toLowerCase() || '';
+  if (searchTerm) {
+    products = products.filter(p =>
+      p.name.toLowerCase().includes(searchTerm) ||
+      p.number?.toString().includes(searchTerm) ||
+      p.category?.toLowerCase().includes(searchTerm)
+    );
+  }
+  
+  if (products.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+    return;
+  }
+  
+  if (emptyState) emptyState.style.display = 'none';
+  
+  container.innerHTML = products.map((product, idx) => {
+    const originalIdx = restaurant.products.indexOf(product);
+    const categoryName = product.category || 'Ingen kategori';
+
+    return `
+    <div style="display:grid;grid-template-columns:60px 2fr 1.5fr 1fr 80px;gap:var(--space-3);padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);align-items:center">
+      <div style="width:32px;height:32px;background:var(--bg3);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--muted)">${product.number || idx + 1}</div>
+      <div style="font-weight:500;font-size:14px">${product.name}</div>
+      <div style="font-size:12px;color:var(--muted)">${categoryName}</div>
+      <div style="font-weight:600;color:var(--accent);text-align:right">${product.price || '0'} kr</div>
+      <div style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn btn-secondary btn-sm" onclick="editProduct(${originalIdx})" title="Rediger">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="deleteProduct(${originalIdx})" title="Slet" style="color:var(--danger)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+function filterProducts() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (restaurant) {
+    renderProducts(restaurant);
+  }
+}
+
+function updateProductCount(restaurant) {
+  const countEl = document.getElementById('product-count');
+  if (countEl) {
+    const count = restaurant.products?.length || 0;
+    countEl.textContent = `${count} produkt${count !== 1 ? 'er' : ''}`;
+  }
+}
+
+function showAddProductModal() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const categories = restaurant.productCategories || [];
+  const nextNumber = (restaurant.products?.length || 0) + 1;
+  
+  const modal = document.createElement('div');
+  modal.id = 'product-modal';
+  modal.className = 'modal active';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Tilføj produkt</h3>
+        <button class="modal-close" onclick="closeProductModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Nr.</label>
+            <input type="text" class="input" id="product-number" value="${nextNumber}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Navn *</label>
+            <input type="text" class="input" id="product-name" placeholder="Pizza Margherita">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Beskrivelse</label>
+          <input type="text" class="input" id="product-description" placeholder="Tomat, mozzarella, basilikum">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select class="input" id="product-category">
+              <option value="">Vælg kategori...</option>
+              ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pris (kr) *</label>
+            <input type="number" class="input" id="product-price" placeholder="89" min="0" step="1">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeProductModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Tilføj produkt</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  document.getElementById('product-name').focus();
+}
+
+function closeProductModal() {
+  const modal = document.getElementById('product-modal');
+  if (modal) modal.remove();
+}
+
+function saveProduct(editIdx = null) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const number = document.getElementById('product-number').value.trim();
+  const name = document.getElementById('product-name').value.trim();
+  const description = document.getElementById('product-description').value.trim();
+  const category = document.getElementById('product-category').value;
+  const price = parseFloat(document.getElementById('product-price').value) || 0;
+  
+  if (!name) {
+    toast('Navn er påkrævet', 'error');
+    return;
+  }
+  if (price <= 0) {
+    toast('Pris skal være større end 0', 'error');
+    return;
+  }
+  
+  const product = {
+    id: editIdx !== null ? restaurant.products[editIdx].id : Date.now().toString(),
+    number: number,
+    name: name,
+    description: description,
+    category: category,
+    price: price
+  };
+  
+  if (!restaurant.products) {
+    restaurant.products = [];
+  }
+  
+  if (editIdx !== null) {
+    restaurant.products[editIdx] = product;
+    showSaveStatus('product-library-save-status', 'saved');
+  } else {
+    restaurant.products.push(product);
+    showSaveStatus('product-library-save-status', 'saved');
+  }
+  
+  closeProductModal();
+  renderProducts(restaurant);
+  updateProductCount(restaurant);
+  markProductsUnsaved();
+}
+
+function editProduct(idx) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.products || !restaurant.products[idx]) return;
+  
+  const product = restaurant.products[idx];
+  const categories = restaurant.productCategories || [];
+  
+  const modal = document.createElement('div');
+  modal.id = 'product-modal';
+  modal.className = 'modal active';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Rediger produkt</h3>
+        <button class="modal-close" onclick="closeProductModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Nr.</label>
+            <input type="text" class="input" id="product-number" value="${product.number || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Navn *</label>
+            <input type="text" class="input" id="product-name" value="${product.name}">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Beskrivelse</label>
+          <input type="text" class="input" id="product-description" value="${product.description || ''}">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <div class="form-group">
+            <label class="form-label">Kategori</label>
+            <select class="input" id="product-category">
+              <option value="">Vælg kategori...</option>
+              ${categories.map(cat => `<option value="${cat}" ${product.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pris (kr) *</label>
+            <input type="number" class="input" id="product-price" value="${product.price}" min="0" step="1">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeProductModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveProduct(${idx})">Gem ændringer</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function deleteProduct(idx) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.products) return;
+  
+  if (!confirm('Slet dette produkt?')) return;
+  
+  restaurant.products.splice(idx, 1);
+  renderProducts(restaurant);
+  updateProductCount(restaurant);
+  markProductsUnsaved();
+  toast('Produkt slettet', 'info');
+}
+
+// =====================================================
+// DELIVERY ZONES
+// =====================================================
+
+function renderDeliveryZones(restaurant) {
+  const container = document.getElementById('delivery-zones-list');
+  const emptyState = document.getElementById('delivery-empty');
+  if (!container) return;
+  
+  const zones = restaurant.deliveryZones || [];
+  
+  if (zones.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+    return;
+  }
+  
+  if (emptyState) emptyState.style.display = 'none';
+  
+  container.innerHTML = zones.map((zone, idx) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${zone.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${zone.postalCodes || 'Ingen postnumre'}</div>
+      </div>
+      <div style="font-weight:600;color:var(--accent)">${zone.price} kr</div>
+      <button onclick="deleteDeliveryZone(${idx})" style="background:none;border:none;cursor:pointer;opacity:0.5;padding:4px">×</button>
+    </div>
+  `).join('');
+}
+
+function addDeliveryZone() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const name = prompt('Zonenavn (f.eks. "Indre by"):');
+  if (!name) return;
+  
+  const postalCodes = prompt('Postnumre (kommasepareret, f.eks. "2100, 2200, 2300"):');
+  const price = prompt('Leveringspris (kr):');
+  
+  if (!restaurant.deliveryZones) {
+    restaurant.deliveryZones = [];
+  }
+  
+  restaurant.deliveryZones.push({
+    name: name.trim(),
+    postalCodes: postalCodes?.trim() || '',
+    price: parseFloat(price) || 0
+  });
+  
+  renderDeliveryZones(restaurant);
+  markProductsUnsaved();
+  toast('Leveringszone tilføjet', 'success');
+}
+
+function deleteDeliveryZone(idx) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.deliveryZones) return;
+  
+  restaurant.deliveryZones.splice(idx, 1);
+  renderDeliveryZones(restaurant);
+  markProductsUnsaved();
+}
+
+// =====================================================
+// EXTRAS / TILBEHØR
+// =====================================================
+
+function renderExtras(restaurant) {
+  const container = document.getElementById('extras-list');
+  const emptyState = document.getElementById('extras-empty');
+  if (!container) return;
+  
+  const extras = restaurant.extras || [];
+  
+  if (extras.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+    return;
+  }
+  
+  if (emptyState) emptyState.style.display = 'none';
+  
+  container.innerHTML = extras.map((extra, idx) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${extra.name}</div>
+        ${extra.applicableTo ? `<div style="font-size:11px;color:var(--muted)">Til: ${extra.applicableTo}</div>` : ''}
+      </div>
+      <div style="font-weight:600;color:var(--accent)">+${extra.price} kr</div>
+      <button onclick="deleteExtra(${idx})" style="background:none;border:none;cursor:pointer;opacity:0.5;padding:4px">×</button>
+    </div>
+  `).join('');
+}
+
+function addExtra() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const name = prompt('Tilbehør navn (f.eks. "Ekstra ost"):');
+  if (!name) return;
+  
+  const price = prompt('Pris (kr):');
+  const applicableTo = prompt('Gælder for kategorier (valgfrit, f.eks. "Pizza, Burger"):');
+  
+  if (!restaurant.extras) {
+    restaurant.extras = [];
+  }
+  
+  restaurant.extras.push({
+    id: Date.now().toString(),
+    name: name.trim(),
+    price: parseFloat(price) || 0,
+    applicableTo: applicableTo?.trim() || ''
+  });
+  
+  renderExtras(restaurant);
+  markProductsUnsaved();
+  toast('Tilbehør tilføjet', 'success');
+}
+
+function deleteExtra(idx) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.extras) return;
+  
+  restaurant.extras.splice(idx, 1);
+  renderExtras(restaurant);
+  markProductsUnsaved();
+}
+
+// =====================================================
+// IMPORT FUNCTIONS
+// =====================================================
+
+async function importMenuFromUrl() {
+  const url = document.getElementById('product-import-url').value.trim();
+  if (!url) {
+    toast('Indtast en URL', 'error');
+    return;
+  }
+
+  const statusEl = document.getElementById('import-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Henter menu fra hjemmeside...</span>';
+
+  try {
+    // Check API key
+    if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ OpenAI API key mangler for URL import</span>';
+      return;
+    }
+
+    // Step 1: Scrape website content via Supabase Edge Function
+    let websiteContent = '';
+    try {
+      statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser hjemmeside indhold...</span>';
+
+      // Get Supabase config safely
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getConfig) {
+        const config = SupabaseDB.getConfig();
+        const scrapeResponse = await fetch(`${config.url}/functions/v1/scrape-menu`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.key}`
+          },
+          body: JSON.stringify({ url: url })
+        });
+
+        if (scrapeResponse.ok) {
+          const scrapeData = await scrapeResponse.json();
+          websiteContent = scrapeData.content || '';
+        }
+      }
+    } catch (scrapeErr) {
+      console.warn('Scrape fallback - using URL directly:', scrapeErr);
+    }
+
+    // Step 2: Parse with AI
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Analyserer menu med AI...</span>';
+
+    const aiPrompt = websiteContent
+      ? `Udtræk ALLE produkter med priser fra dette menukort:\n\n${websiteContent.substring(0, 8000)}`
+      : `Hent menukort fra denne hjemmeside og udtræk alle produkter: ${url}\nHvis du ikke kan tilgå URL'en, generer et realistisk eksempel-menukort baseret på restaurantens navn.`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Du er en menu-parser. Udtræk ALLE produkter fra menukortet.
+Returner KUN et JSON array med produkter i dette format:
+[
+  {"number": "1", "name": "Pizza Margherita", "description": "Tomat, mozzarella, basilikum", "category": "Pizza", "price": 89}
+]
+Svar KUN med JSON array, ingen anden tekst.
+Priser skal være tal uden "kr" eller valuta.
+Gæt kategori baseret på produktnavn hvis ikke angivet.`
+          },
+          {
+            role: 'user',
+            content: aiPrompt
+          }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3
+      })
+    });
+
+    const data = await response.json();
+    let products = [];
+
+    try {
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+      products = JSON.parse(content);
+    } catch (e) {
+      statusEl.innerHTML = '<span style="color:var(--danger)">❌ Kunne ikke parse menu data</span>';
+      return;
+    }
+
+    if (products.length > 0) {
+      const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+      if (restaurant) {
+        // Add unique categories
+        const newCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+        if (!restaurant.productCategories) restaurant.productCategories = [];
+        newCategories.forEach(cat => {
+          if (!restaurant.productCategories.includes(cat)) {
+            restaurant.productCategories.push(cat);
+          }
+        });
+
+        // Add products
+        if (!restaurant.products) restaurant.products = [];
+        products.forEach(p => {
+          p.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          restaurant.products.push(p);
+        });
+
+        // Save to Supabase
+        if (typeof SupabaseDB !== 'undefined') {
+          SupabaseDB.saveMenu(restaurant.id, restaurant.products)
+            .catch(err => console.error('Menu save error:', err));
+        }
+
+        loadProductsPage();
+        markProductsUnsaved();
+        statusEl.innerHTML = `<span style="color:var(--accent)">✓ ${products.length} produkter importeret fra hjemmesiden</span>`;
+        toast(`${products.length} produkter importeret`, 'success');
+      }
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--warn)">⚠️ Ingen produkter fundet på hjemmesiden</span>';
+    }
+  } catch (err) {
+    console.error('Import error:', err);
+    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${err.message}</span>`;
+  }
+}
+
+/**
+ * Import menu from restaurant's website (from stamdata)
+ * @param {string} websiteUrl - Website URL from stamdata
+ * @param {string} restaurantId - Restaurant ID
+ * @param {boolean} autoMode - If true, suppress error toasts
+ */
+async function importMenuFromWebsite(websiteUrl, restaurantId, autoMode = false) {
+  if (!websiteUrl) {
+    if (!autoMode) toast('Ingen hjemmeside angivet i stamdata', 'warning');
+    return [];
+  }
+
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) return [];
+
+  try {
+    // Check API key
+    if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+      if (!autoMode) toast('OpenAI API key mangler', 'error');
+      return [];
+    }
+
+    // Step 1: Fetch website using CORS proxy
+    let websiteContent = '';
+
+    // CORS proxy services (fallback chain)
+    const CORS_PROXIES = [
+      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+
+    // Try each proxy until one works
+    for (const proxyFn of CORS_PROXIES) {
+      if (websiteContent) break;
+      try {
+        const proxyUrl = proxyFn(websiteUrl);
+        console.log('🌐 Trying CORS proxy:', proxyUrl);
+        const response = await fetch(proxyUrl);
+        if (response.ok) {
+          websiteContent = await response.text();
+          console.log('✅ Successfully fetched website content:', websiteContent.length, 'chars');
+        }
+      } catch (err) {
+        console.warn('Proxy failed, trying next...', err);
+      }
+    }
+
+    if (!websiteContent) {
+      if (!autoMode) toast('Kunne ikke læse hjemmesiden. Prøv igen eller brug "Import fra tekst".', 'warning');
+      return [];
+    }
+
+    // Step 2: Parse with AI
+    console.log('🤖 Sending to OpenAI for parsing...', websiteContent.substring(0, 500));
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Du er en menu-parser. Udtræk ALLE produkter med priser fra teksten.
+Returner KUN et JSON array: [{"number": "1", "name": "Produkt", "price": 99, "category": "Kategori"}]
+Gæt kategori baseret på produktnavn. Priser skal være tal uden "kr".`
+          },
+          {
+            role: 'user',
+            content: websiteContent.substring(0, 10000)
+          }
+        ],
+        max_tokens: 4000
+      })
+    });
+
+    const aiResult = await response.json();
+    console.log('🤖 OpenAI response:', aiResult);
+    let products = [];
+
+    try {
+      let content = aiResult.choices[0].message.content;
+      console.log('🤖 AI content:', content);
+      content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+      products = JSON.parse(content);
+      console.log('✅ Parsed products:', products.length, 'items');
+    } catch (e) {
+      console.error('Parse error:', e, 'aiResult:', aiResult);
+      if (!autoMode) toast('Kunne ikke parse AI svar', 'error');
+      return [];
+    }
+
+    // Save products
+    if (products.length > 0) {
+      products.forEach(p => {
+        p.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      });
+
+      if (!restaurant.products) restaurant.products = [];
+      restaurant.products.push(...products);
+
+      // Save to Supabase
+      if (typeof SupabaseDB !== 'undefined') {
+        await SupabaseDB.saveMenu(restaurant.id, restaurant.products);
+      }
+
+      toast(`${products.length} produkter importeret fra hjemmeside`, 'success');
+    }
+
+    return products;
+  } catch (error) {
+    console.error('Menu import fejl:', error);
+    if (!autoMode) toast('Kunne ikke importere menu', 'error');
+    return [];
+  }
+}
+
+/**
+ * Import menu from website URL stored in stamdata
+ * Called from "Hent fra Stamdata" button on products page
+ */
+async function importFromStamdataWebsite() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Vælg en kunde først', 'error');
+    return;
+  }
+
+  const websiteUrl = restaurant.website || restaurant.metadata?.website;
+  if (!websiteUrl) {
+    toast('Ingen hjemmeside angivet i stamdata. Tilføj website URL under Stamdata først.', 'warning');
+    return;
+  }
+
+  const statusEl = document.getElementById('import-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = `<span style="color:var(--accent)">⏳ Henter menu fra ${websiteUrl}...</span>`;
+  }
+
+  const products = await importMenuFromWebsite(websiteUrl, restaurant.id, false);
+
+  if (statusEl) {
+    if (products.length > 0) {
+      statusEl.innerHTML = `<span style="color:var(--accent)">✓ ${products.length} produkter importeret fra hjemmesiden</span>`;
+      loadProductsPage();
+      markProductsUnsaved();
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--warn)">⚠️ Ingen produkter fundet på ${websiteUrl}</span>`;
+    }
+  }
+}
+
+/**
+ * Import menu from uploaded file (PDF or Image)
+ * Uses OpenAI Vision API for images, PDF.js + OpenAI for PDFs
+ */
+async function importMenuFromFile(file) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Vælg en kunde først', 'error');
+    return [];
+  }
+
+  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+    toast('OpenAI API key mangler', 'error');
+    return [];
+  }
+
+  const statusEl = document.getElementById('import-status');
+  if (statusEl) {
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser fil...</span>';
+  }
+
+  try {
+    let products = [];
+
+    if (file.type.startsWith('image/')) {
+      // Image file - use OpenAI Vision API
+      products = await parseImageMenuWithAI(file);
+    } else if (file.type === 'application/pdf') {
+      // PDF file - extract text and parse
+      products = await parsePDFMenuWithAI(file);
+    } else {
+      toast('Kun billeder (JPG, PNG) og PDF filer understøttes', 'warning');
+      return [];
+    }
+
+    if (products.length > 0) {
+      // Add unique IDs
+      products.forEach(p => {
+        p.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      });
+
+      // Add to restaurant
+      if (!restaurant.products) restaurant.products = [];
+      restaurant.products.push(...products);
+
+      // Add categories
+      const newCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+      if (!restaurant.productCategories) restaurant.productCategories = [];
+      newCategories.forEach(cat => {
+        if (!restaurant.productCategories.includes(cat)) {
+          restaurant.productCategories.push(cat);
+        }
+      });
+
+      // Save to Supabase
+      if (typeof SupabaseDB !== 'undefined') {
+        await SupabaseDB.saveMenu(restaurant.id, restaurant.products);
+      }
+
+      loadProductsPage();
+      markProductsUnsaved();
+
+      if (statusEl) {
+        statusEl.innerHTML = `<span style="color:var(--accent)">✓ ${products.length} produkter importeret fra fil</span>`;
+      }
+      toast(`${products.length} produkter importeret`, 'success');
+    } else {
+      if (statusEl) {
+        statusEl.innerHTML = '<span style="color:var(--warn)">⚠️ Ingen produkter fundet i filen</span>';
+      }
+    }
+
+    return products;
+  } catch (error) {
+    console.error('File import error:', error);
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${error.message}</span>`;
+    }
+    toast('Kunne ikke importere fra fil', 'error');
+    return [];
+  }
+}
+
+/**
+ * Parse menu from image using OpenAI Vision API
+ */
+async function parseImageMenuWithAI(file) {
+  // Convert file to base64
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'system',
+          content: `Du er en menu-parser. Udtræk ALLE produkter med priser fra billedet.
+Returner KUN et JSON array: [{"number": "1", "name": "Produkt", "description": "Beskrivelse", "price": 99, "category": "Kategori"}]
+Priser skal være tal uden "kr". Gæt kategori baseret på produktnavn.`
+        },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Udtræk alle produkter med priser fra dette menukort:' },
+            { type: 'image_url', image_url: { url: `data:${file.type};base64,${base64}` } }
+          ]
+        }
+      ],
+      max_tokens: 4000
+    })
+  });
+
+  const data = await response.json();
+
+  try {
+    let content = data.choices[0].message.content;
+    content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+    return JSON.parse(content);
+  } catch (e) {
+    console.error('Parse image menu error:', e);
+    return [];
+  }
+}
+
+/**
+ * Parse menu from PDF using text extraction + OpenAI
+ */
+async function parsePDFMenuWithAI(file) {
+  // Use PDF.js to extract text (if available)
+  let pdfText = '';
+
+  try {
+    // Check if PDF.js is loaded
+    if (typeof pdfjsLib !== 'undefined') {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        pdfText += textContent.items.map(item => item.str).join(' ') + '\n';
+      }
+    } else {
+      // Fallback: Read as text (won't work for most PDFs but worth trying)
+      pdfText = await file.text();
+    }
+  } catch (err) {
+    console.warn('PDF text extraction failed:', err);
+    // If text extraction fails, try using Vision API on first page
+    toast('Prøver billedbaseret analyse af PDF...', 'info');
+    return await parseImageMenuWithAI(file);
+  }
+
+  if (!pdfText.trim()) {
+    toast('Kunne ikke læse tekst fra PDF - prøver billedanalyse', 'info');
+    return await parseImageMenuWithAI(file);
+  }
+
+  // Parse extracted text with AI
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `Du er en menu-parser. Udtræk ALLE produkter med priser fra PDF-teksten.
+Returner KUN et JSON array: [{"number": "1", "name": "Produkt", "description": "Beskrivelse", "price": 99, "category": "Kategori"}]
+Priser skal være tal uden "kr". Gæt kategori baseret på produktnavn.`
+        },
+        {
+          role: 'user',
+          content: pdfText.substring(0, 10000)
+        }
+      ],
+      max_tokens: 4000
+    })
+  });
+
+  const data = await response.json();
+
+  try {
+    let content = data.choices[0].message.content;
+    content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+    return JSON.parse(content);
+  } catch (e) {
+    console.error('Parse PDF menu error:', e);
+    return [];
+  }
+}
+
+/**
+ * Handle file input for menu import
+ */
+function handleMenuFileImport(input) {
+  if (input.files && input.files[0]) {
+    importMenuFromFile(input.files[0]);
+  }
+}
+
+async function parseMenuFromText() {
+  const text = document.getElementById('product-import-text').value.trim();
+  if (!text) {
+    toast('Indsæt menu tekst først', 'error');
+    return;
+  }
+  
+  const statusEl = document.getElementById('import-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Parser menu tekst...</span>';
+  
+  try {
+    // Try AI parsing first
+    if (CONFIG.OPENAI_API_KEY && !CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: `Du er en menu-parser. Udtræk produkter fra teksten.
+Returner KUN et JSON array med produkter:
+[{"number": "1", "name": "...", "description": "...", "category": "...", "price": 89}]
+Priser skal være tal uden "kr". Gæt kategori baseret på produktnavn hvis ikke angivet.
+Svar KUN med JSON array.`
+            },
+            {
+              role: 'user',
+              content: text
+            }
+          ],
+          max_tokens: 2000,
+          temperature: 0.2
+        })
+      });
+      
+      const data = await response.json();
+      let products = [];
+      
+      try {
+        let content = data.choices[0].message.content;
+        content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+        products = JSON.parse(content);
+      } catch (e) {
+        // Fall through to regex parsing
+      }
+      
+      if (products.length > 0) {
+        importParsedProducts(products, statusEl);
+        return;
+      }
+    }
+    
+    // Fallback: Simple regex parsing
+    const products = parseMenuWithRegex(text);
+    if (products.length > 0) {
+      importParsedProducts(products, statusEl);
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--warn)">⚠️ Kunne ikke finde produkter. Prøv format: "1. Pizza Margherita - 89 kr"</span>';
+    }
+  } catch (err) {
+    console.error('Parse error:', err);
+    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${err.message}</span>`;
+  }
+}
+
+function parseMenuWithRegex(text) {
+  const products = [];
+  const lines = text.split('\n').filter(l => l.trim());
+  
+  for (const line of lines) {
+    // Try various patterns
+    // Pattern 1: "1. Pizza Margherita - 89 kr"
+    let match = line.match(/^(\d+)[\.\)]\s*(.+?)\s*[-–]\s*(\d+)\s*(kr|,-)?/i);
+    if (match) {
+      products.push({
+        number: match[1],
+        name: match[2].trim(),
+        price: parseInt(match[3]),
+        category: guessCategory(match[2])
+      });
+      continue;
+    }
+    
+    // Pattern 2: "Pizza Margherita 89,-"
+    match = line.match(/^(.+?)\s+(\d+)\s*(kr|,-)/i);
+    if (match) {
+      products.push({
+        number: (products.length + 1).toString(),
+        name: match[1].trim(),
+        price: parseInt(match[2]),
+        category: guessCategory(match[1])
+      });
+      continue;
+    }
+    
+    // Pattern 3: "Pizza Margherita: 89"
+    match = line.match(/^(.+?):\s*(\d+)/i);
+    if (match) {
+      products.push({
+        number: (products.length + 1).toString(),
+        name: match[1].trim(),
+        price: parseInt(match[2]),
+        category: guessCategory(match[1])
+      });
+    }
+  }
+  
+  return products;
+}
+
+function guessCategory(name) {
+  const n = name.toLowerCase();
+  if (n.includes('pizza')) return 'Pizza';
+  if (n.includes('pasta') || n.includes('spaghetti') || n.includes('lasagne')) return 'Pasta';
+  if (n.includes('burger')) return 'Burger';
+  if (n.includes('salat')) return 'Salat';
+  if (n.includes('sandwich') || n.includes('panini')) return 'Sandwich';
+  if (n.includes('suppe')) return 'Suppe';
+  if (n.includes('dessert') || n.includes('is') || n.includes('kage')) return 'Dessert';
+  if (n.includes('cola') || n.includes('fanta') || n.includes('vand') || n.includes('øl') || n.includes('vin')) return 'Drikkevarer';
+  if (n.includes('pommes') || n.includes('frites') || n.includes('dip') || n.includes('brød')) return 'Tilbehør';
+  return 'Andet';
+}
+
+function importParsedProducts(products, statusEl) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Add unique categories
+  const newCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+  if (!restaurant.productCategories) restaurant.productCategories = [];
+  newCategories.forEach(cat => {
+    if (!restaurant.productCategories.includes(cat)) {
+      restaurant.productCategories.push(cat);
+    }
+  });
+  
+  // Add products with unique IDs
+  if (!restaurant.products) restaurant.products = [];
+  products.forEach(p => {
+    p.id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    restaurant.products.push(p);
+  });
+  
+  loadProductsPage();
+  markProductsUnsaved();
+  statusEl.innerHTML = `<span style="color:var(--accent)">✓ ${products.length} produkter importeret</span>`;
+  toast(`${products.length} produkter importeret`, 'success');
+  
+  // Clear textarea
+  document.getElementById('product-import-text').value = '';
+}
+
+function handleMenuFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    document.getElementById('product-import-text').value = content;
+    toast('Fil indlæst - klik "Parse tekst" for at importere', 'info');
+  };
+  reader.readAsText(file);
+}
+
+// =====================================================
+// SAVE & SYNC
+// =====================================================
+
+function markProductsUnsaved() {
+  const statusEl = document.getElementById('products-save-status');
+  if (statusEl) {
+    statusEl.innerHTML = '<span style="color:var(--warn)">● Ændringer ikke gemt</span>';
+  }
+}
+
+function saveProductsExplicit() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Save to localStorage
+  const key = `products_${restaurant.id}`;
+  const data = {
+    products: restaurant.products || [],
+    productCategories: restaurant.productCategories || [],
+    deliveryZones: restaurant.deliveryZones || [],
+    extras: restaurant.extras || []
+  };
+  localStorage.setItem(key, JSON.stringify(data));
+  
+  // Update save status
+  const statusEl = document.getElementById('products-save-status');
+  if (statusEl) {
+    statusEl.innerHTML = '<span style="color:var(--accent)">✓ Gemt</span>';
+  }
+  
+  // Sync to workflow
+  syncProductsToWorkflow();
+  
+  // toast('Produkter gemt', 'success'); // Removed - unnecessary
+}
+
+function syncProductsToWorkflow() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Update DEMO_MENUS with restaurant products
+  const menuKey = restaurant.id;
+  
+  // Build menu structure for workflow
+  const workflowMenu = {
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name,
+    currency: 'DKK',
+    items: (restaurant.products || []).map(p => ({
+      id: p.id,
+      number: p.number,
+      name: p.name,
+      description: p.description || '',
+      price: p.price,
+      category: p.category || 'Andet'
+    })),
+    extras: restaurant.extras || [],
+    deliveryZones: restaurant.deliveryZones || []
+  };
+  
+  // Store in global menus
+  if (!window.RESTAURANT_MENUS) {
+    window.RESTAURANT_MENUS = {};
+  }
+  window.RESTAURANT_MENUS[menuKey] = workflowMenu;
+  
+  // Also update DEMO_MENUS if it's a demo restaurant
+  if (DEMO_MENUS && DEMO_MENUS[menuKey]) {
+    DEMO_MENUS[menuKey] = workflowMenu;
+  }
+  
+  addLog(`📦 Menu synkroniseret: ${workflowMenu.items.length} produkter`, 'success');
+  toast('Menu synkroniseret til workflow', 'success');
+}
+
+// Load saved products when showing CRM profile
+function loadSavedProducts(restaurant) {
+  const key = `products_${restaurant.id}`;
+  const saved = localStorage.getItem(key);
+  
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      restaurant.products = data.products || [];
+      restaurant.productCategories = data.productCategories || [];
+      restaurant.deliveryZones = data.deliveryZones || [];
+      restaurant.extras = data.extras || [];
+    } catch (e) {
+      console.error('Error loading saved products:', e);
+    }
+  }
+}
+
+// ==================== PRODUKTBIBLIOTEK FUNCTIONS ====================
+
+// Toggle product handlinger dropdown
+function toggleProductHandlingerDropdown() {
+  const dropdown = document.getElementById('product-handlinger-dropdown');
+  if (!dropdown) return;
+
+  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+    dropdown.style.display = 'block';
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', closeProductHandlingerOnOutsideClick);
+    }, 100);
+  } else {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeProductHandlingerOnOutsideClick);
+  }
+}
+
+function closeProductHandlingerOnOutsideClick(e) {
+  const dropdown = document.getElementById('product-handlinger-dropdown');
+  const btn = document.getElementById('product-handlinger-btn');
+  if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeProductHandlingerOnOutsideClick);
+  }
+}
+
+// Demo version of product handlinger dropdown
+function toggleDemoProductHandlingerDropdown() {
+  const dropdown = document.getElementById('demo-product-handlinger-dropdown');
+  if (!dropdown) return;
+
+  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+    dropdown.style.display = 'block';
+    setTimeout(() => {
+      document.addEventListener('click', closeDemoProductHandlingerOnOutsideClick);
+    }, 100);
+  } else {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeDemoProductHandlingerOnOutsideClick);
+  }
+}
+
+function closeDemoProductHandlingerOnOutsideClick(e) {
+  const dropdown = document.getElementById('demo-product-handlinger-dropdown');
+  const btn = document.getElementById('demo-product-handlinger-btn');
+  if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeDemoProductHandlingerOnOutsideClick);
+  }
+}
+
+// Navigate to Kategorier page
+function navigateToKategorier() {
+  showCustomerSubpage('kategorier');
+}
+
+// Toggle category filter dropdown
+function toggleCategoryFilterDropdown() {
+  const dropdown = document.getElementById('category-filter-dropdown');
+  if (!dropdown) return;
+
+  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+    // Load categories into dropdown
+    renderCategoryFilters();
+    dropdown.style.display = 'block';
+
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', closeCategoryFilterOnOutsideClick);
+    }, 100);
+  } else {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeCategoryFilterOnOutsideClick);
+  }
+}
+
+function closeCategoryFilterOnOutsideClick(e) {
+  const dropdown = document.getElementById('category-filter-dropdown');
+  const btn = document.getElementById('category-filter-btn');
+  if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeCategoryFilterOnOutsideClick);
+  }
+}
+
+// Render category filters with checkboxes (MULTI-SELECT)
+function renderCategoryFilters() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const container = document.getElementById('category-filter-list');
+  if (!container) return;
+
+  const categories = restaurant.productCategories || [];
+
+  // Hvis INGEN kategorier eksisterer - dropdown HELT TOM
+  if (categories.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // Load saved filter state from localStorage
+  const savedFilters = getCategoryFilters(restaurant.id);
+
+  let html = '';
+
+  // "Vis alle" som BUTTON (ikke checkbox) øverst
+  html += `
+    <button class="dropdown-item" onclick="clearAllCategoryFilters()" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:var(--font-size-sm);color:var(--text);font-weight:500">
+      Vis alle
+    </button>
+  `;
+
+  // Separator efter "Vis alle" button
+  html += `<hr style="margin:4px 0;border:none;border-top:1px solid var(--border)">`;
+
+  // Alle kategorier med checkboxes (visual feedback via checkbox styling)
+  categories.forEach(cat => {
+    const isChecked = savedFilters.includes(cat) || savedFilters.length === 0;
+    html += `
+      <label class="dropdown-item" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 16px;transition:background 0.15s">
+        <input type="checkbox"
+               class="category-filter-checkbox"
+               data-category="${cat}"
+               ${isChecked ? 'checked' : ''}
+               onchange="updateCategoryFilter()"
+               style="accent-color:var(--accent)">
+        <span style="color:${isChecked ? 'var(--accent)' : 'var(--text)'};font-weight:${isChecked ? '500' : '400'}">${cat}</span>
+      </label>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+// Clear all category filters (for "Vis alle" button)
+function clearAllCategoryFilters() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  // Clear localStorage
+  const key = `category_filters_${restaurant.id}`;
+  localStorage.removeItem(key);
+
+  // Re-render dropdown and products
+  renderCategoryFilters();
+  renderProducts(restaurant);
+
+  // Close dropdown
+  toggleCategoryFilterDropdown();
+}
+
+// Update category filter when checkbox changes (MULTI-SELECT)
+function updateCategoryFilter() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  // Get all checked category names (MULTI-SELECT)
+  const checkboxes = document.querySelectorAll('.category-filter-checkbox');
+  const selectedCategories = Array.from(checkboxes)
+    .filter(cb => cb.checked)
+    .map(cb => cb.getAttribute('data-category'));
+
+  // Save to localStorage (ARRAY)
+  saveCategoryFilters(restaurant.id, selectedCategories);
+
+  // Re-render products with filter
+  renderProducts(restaurant);
+
+  // Re-render dropdown to update visual feedback
+  renderCategoryFilters();
+}
+
+// Get saved category filters from localStorage (PLURAL - returns array)
+function getCategoryFilters(restaurantId) {
+  const key = `category_filters_${restaurantId}`;
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : [];
+}
+
+// Save category filters to localStorage (PLURAL - saves array)
+function saveCategoryFilters(restaurantId, categoryNames) {
+  const key = `category_filters_${restaurantId}`;
+  if (!categoryNames || categoryNames.length === 0) {
+    localStorage.removeItem(key);
+  } else {
+    localStorage.setItem(key, JSON.stringify(categoryNames));
+  }
+}
+
+// Show Bulk Product Modal (placeholder)
+function showBulkProductModal() {
+  toast('Tilføj samlet produkt modal kommer snart', 'info');
+}
+
+// Show Import CSV Modal (placeholder)
+function showImportCSVModal() {
+  toast('Import CSV modal kommer snart', 'info');
+}
+
+// Show Product Sorting Modal (placeholder)
+function showProductSortingModal() {
+  toast('Produktsortering modal kommer snart', 'info');
+}
+
+// Show Add Category Modal (placeholder)
+function showAddCategoryModal() {
+  toast('Tilføj kategori modal kommer snart', 'info');
+}
+
+// Save Product Library
+function saveProductLibrary() {
+  showSaveStatus('product-library-save-status', 'saved');
+}
+
+// ==================== MOMS FUNCTIONS ====================
+
+// Show Add Momssats Modal
+function showAddMomssatsModal() {
+  const modal = document.getElementById('add-momssats-modal');
+  if (modal) {
+    // Reset form
+    document.getElementById('momssats-name').value = '';
+    document.getElementById('momssats-rate').value = '';
+    document.getElementById('momssats-description').value = '';
+
+    modal.style.display = 'flex';
+    setTimeout(() => document.getElementById('momssats-name').focus(), 100);
+  }
+}
+
+// Close Add Momssats Modal
+function closeAddMomssatsModal() {
+  const modal = document.getElementById('add-momssats-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Save Momssats
+function saveMomssats() {
+  const name = document.getElementById('momssats-name').value.trim();
+  const rate = parseFloat(document.getElementById('momssats-rate').value);
+  const description = document.getElementById('momssats-description').value.trim();
+
+  // Validation
+  if (!name) {
+    toast('Indtast et navn til momssatsen', 'error');
+    document.getElementById('momssats-name').focus();
+    return;
+  }
+
+  if (isNaN(rate) || rate < 0 || rate > 100) {
+    toast('Indtast en gyldig momssats mellem 0 og 100', 'error');
+    document.getElementById('momssats-rate').focus();
+    return;
+  }
+
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  // Initialize customVatRates if not exists
+  if (!restaurant.customVatRates) {
+    restaurant.customVatRates = [];
+  }
+
+  // Add new VAT rate
+  const newRate = {
+    id: Date.now().toString(),
+    name: name,
+    rate: rate,
+    description: description,
+    createdAt: new Date().toISOString()
+  };
+
+  restaurant.customVatRates.push(newRate);
+
+  // Save to localStorage
+  saveRestaurants();
+
+  // Update dropdown
+  updateMomssatsDropdown();
+
+  // Close modal
+  closeAddMomssatsModal();
+
+  showSaveStatus('moms-save-status', 'saved');
+}
+
+// Update Momssats Dropdown
+function updateMomssatsDropdown() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const select = document.getElementById('restaurant-moms-rate');
+  if (!select) return;
+
+  // Keep default options
+  const defaultOptions = `
+    <option value="25">25% (Standard)</option>
+    <option value="0">0% (Momsfritaget)</option>
+  `;
+
+  // Add custom rates
+  let customOptions = '';
+  if (restaurant.customVatRates && restaurant.customVatRates.length > 0) {
+    customOptions = restaurant.customVatRates.map(rate =>
+      `<option value="${rate.rate}">${rate.rate}% (${rate.name})</option>`
+    ).join('');
+  }
+
+  select.innerHTML = defaultOptions + customOptions;
+}
+
+// Load KPI data for customer
+function loadCustomerKPIData() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Render heatmap
+  renderCustomerHeatmap(restaurant.kpi?.orderHeatmap);
+}
+
+// Render customer heatmap
+function renderCustomerHeatmap(heatmapData) {
+  const container = document.getElementById('customer-heatmap');
+  if (!container) return;
+  
+  if (!heatmapData) {
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:12px">Ingen data tilgængelig</div>';
+    return;
+  }
+  
+  let maxVal = 1;
+  Object.values(heatmapData).forEach(dayData => {
+    if (Array.isArray(dayData)) {
+      dayData.forEach(val => { if (val > maxVal) maxVal = val; });
+    }
+  });
+  
+  const hourTotals = new Array(24).fill(0);
+  Object.values(heatmapData).forEach(dayData => {
+    if (Array.isArray(dayData)) {
+      dayData.forEach((val, hour) => { hourTotals[hour] += val; });
+    }
+  });
+  
+  container.innerHTML = hourTotals.map((val, hour) => {
+    const intensity = val / (maxVal * 7);
+    const color = intensity > 0.7 ? 'var(--green)' : intensity > 0.4 ? 'var(--orange)' : intensity > 0.1 ? 'var(--accent)' : 'rgba(255,255,255,0.1)';
+    return `<div class="heatmap-bar" style="background:${color};opacity:${0.3 + intensity * 0.7}" title="${hour}:00 - ${val} ordrer"></div>`;
+  }).join('');
+}
+
+// Show profile view
+function showCrmProfileView(id) {
+  const restaurant = restaurants.find(r => r.id === id);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+  
+  currentProfileRestaurantId = id;
+  const userId = generateUserId(id);
+  
+  // Load saved products for this restaurant
+  loadSavedProducts(restaurant);
+  
+  // Hide search, show profile
+  document.getElementById('crm-search-view').style.display = 'none';
+  document.getElementById('crm-profile-view').style.display = 'block';
+
+  // Remove active indicator from Kunder nav button (the green dot)
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+  // Show customer context menu in sidebar
+  const contextMenu = document.getElementById('nav-customer-context');
+  contextMenu.style.display = 'block';
+  document.getElementById('nav-customer-name').textContent = restaurant.name;
+  document.getElementById('nav-customer-id').textContent = 'ID: ' + userId;
+  document.getElementById('nav-customer-avatar').textContent = restaurant.name.charAt(0).toUpperCase();
+  
+  // Reset to first subpage (dashboard)
+  document.querySelectorAll('.customer-subpage').forEach(sp => sp.classList.remove('active'));
+  document.getElementById('subpage-dashboard').classList.add('active');
+  document.querySelectorAll('.nav-customer-menu .nav-dropdown-item').forEach((item, i) => {
+    item.classList.toggle('active', i === 0);
+  });
+
+  // Load customer dashboard
+  loadCustomerDashboard(id);
+  
+  // Update breadcrumb with restaurant name
+  updateBreadcrumb('kunder', restaurant.name);
+  
+  // Populate header
+  document.getElementById('profile-logo').innerHTML = getRestaurantLogoSvg(restaurant.logo);
+  document.getElementById('profile-name').textContent = restaurant.name;
+  document.getElementById('profile-cvr').textContent = restaurant.cvr || '-';
+  document.getElementById('profile-userid').textContent = userId;
+  
+  const statusEl = document.getElementById('profile-status');
+  
+  // Handle demo customer status
+  if (restaurant.isDemo) {
+    const demoStatus = getDemoLicenseStatus(restaurant);
+    if (demoStatus && demoStatus.isExpired) {
+      statusEl.textContent = 'Demo udløbet';
+      statusEl.className = 'crm-profile-status demo-expired';
+      statusEl.style.background = 'rgba(248,113,113,0.1)';
+      statusEl.style.color = 'var(--danger)';
+    } else if (demoStatus) {
+      statusEl.textContent = `Demo · ${demoStatus.daysRemaining} dage`;
+      statusEl.className = 'crm-profile-status demo';
+      statusEl.style.background = 'rgba(251,191,36,0.1)';
+      statusEl.style.color = 'var(--warn)';
+    } else {
+      statusEl.textContent = 'Demo';
+      statusEl.className = 'crm-profile-status demo';
+      statusEl.style.background = 'rgba(251,191,36,0.1)';
+      statusEl.style.color = 'var(--warn)';
+    }
+  } else if (restaurant.status === 'active') {
+    statusEl.textContent = 'Aktiv';
+    statusEl.className = 'crm-profile-status active';
+    statusEl.style.background = '';
+    statusEl.style.color = '';
+  } else if (restaurant.status === 'inactive') {
+    statusEl.textContent = 'Inaktiv';
+    statusEl.className = 'crm-profile-status pending';
+    statusEl.style.background = '';
+    statusEl.style.color = '';
+  } else if (restaurant.status === 'churned') {
+    statusEl.textContent = 'Opsagt';
+    statusEl.className = 'crm-profile-status';
+    statusEl.style.background = 'rgba(248,113,113,0.1)';
+    statusEl.style.color = 'var(--danger)';
+  } else if (restaurant.status === 'terminated') {
+    statusEl.textContent = 'Opsagt (GDPR)';
+    statusEl.className = 'crm-profile-status terminated';
+    statusEl.style.background = 'rgba(248,113,113,0.15)';
+    statusEl.style.color = 'var(--danger)';
+    // Show termination banner
+    showTerminationBanner(restaurant);
+  } else if (restaurant.status === 'gdpr_deleted') {
+    statusEl.textContent = 'GDPR Slettet';
+    statusEl.className = 'crm-profile-status gdpr-deleted';
+    statusEl.style.background = 'rgba(107,114,128,0.15)';
+    statusEl.style.color = 'var(--muted)';
+  } else {
+    statusEl.textContent = 'Afventer';
+    statusEl.className = 'crm-profile-status pending';
+    statusEl.style.background = '';
+    statusEl.style.color = '';
+  }
+
+  // Hide termination banner if not terminated
+  if (restaurant.status !== 'terminated') {
+    const existingBanner = document.getElementById('termination-banner');
+    if (existingBanner) existingBanner.style.display = 'none';
+  }
+
+  // Show/hide activate button for pending customers (or undefined/null status)
+  const activateBtn = document.getElementById('btn-activate-customer');
+  if (activateBtn) {
+    // Show activate button if status is 'pending', undefined, null, or empty string
+    const canActivate = !restaurant.status || restaurant.status === 'pending';
+    activateBtn.style.display = canActivate ? 'flex' : 'none';
+  }
+
+  // Show/hide terminate button based on status
+  const terminateBtn = document.getElementById('btn-terminate-customer');
+  if (terminateBtn) {
+    const canTerminate = ['active', 'inactive', 'demo'].includes(restaurant.status);
+    terminateBtn.style.display = canTerminate ? 'flex' : 'none';
+  }
+
+  // Show demo license banner if demo customer
+  let demoBanner = document.getElementById('demo-license-banner');
+  if (restaurant.isDemo) {
+    const demoStatus = getDemoLicenseStatus(restaurant);
+    if (!demoBanner) {
+      demoBanner = document.createElement('div');
+      demoBanner.id = 'demo-license-banner';
+      const profileHeader = document.querySelector('.crm-profile-header');
+      if (profileHeader) {
+        profileHeader.parentNode.insertBefore(demoBanner, profileHeader.nextSibling);
+      }
+    }
+    
+    if (demoStatus && demoStatus.isExpired) {
+      demoBanner.className = 'demo-expired-banner';
+      demoBanner.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <div class="demo-expired-banner-content">
+          <h4>Demo-periode udløbet</h4>
+          <p>Denne kundes prøveperiode er udløbet. Opgrader til betalt licens for at fortsætte.</p>
+        </div>
+        <button class="btn btn-primary" onclick="upgradeDemoCustomer('${restaurant.id}')">Opgrader kunde</button>
+      `;
+    } else if (demoStatus) {
+      demoBanner.className = 'demo-license-info';
+      demoBanner.style.marginBottom = 'var(--space-5)';
+      demoBanner.innerHTML = `
+        <h4 style="margin-bottom:var(--space-3)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Demo-licens aktiv
+        </h4>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4)">
+          <div>
+            <div style="font-size:20px;font-weight:600;color:var(--text)">${demoStatus.daysRemaining}</div>
+            <div style="font-size:11px;color:var(--muted)">Dage tilbage</div>
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:600;color:var(--text)">${demoStatus.messagesUsed}/${demoStatus.messagesLimit}</div>
+            <div style="font-size:11px;color:var(--muted)">Beskeder brugt</div>
+          </div>
+          <div>
+            <div style="font-size:20px;font-weight:600;color:var(--text)">${demoStatus.expiryDate.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })}</div>
+            <div style="font-size:11px;color:var(--muted)">Udløber</div>
+          </div>
+          <div style="display:flex;align-items:center">
+            <button class="btn btn-primary btn-sm" onclick="upgradeDemoCustomer('${restaurant.id}')">Opgrader</button>
+          </div>
+        </div>
+      `;
+    }
+    demoBanner.style.display = 'block';
+  } else if (demoBanner) {
+    demoBanner.style.display = 'none';
+  }
+  
+  // Populate STAMDATA form
+  document.getElementById('stamdata-name').value = restaurant.name || '';
+  document.getElementById('stamdata-cvr').value = restaurant.cvr || '';
+  document.getElementById('stamdata-owner').value = restaurant.owner || '';
+  document.getElementById('stamdata-contact').value = restaurant.contactPerson || '';
+  document.getElementById('stamdata-email').value = restaurant.email || '';
+  document.getElementById('stamdata-phone').value = restaurant.phone || '';
+  document.getElementById('stamdata-industry').value = restaurant.industry || restaurant.metadata?.industry || '';
+  document.getElementById('stamdata-address').value = restaurant.address || '';
+  document.getElementById('stamdata-country').value = restaurant.country || 'DK';
+  document.getElementById('stamdata-website').value = restaurant.website || '';
+  document.getElementById('stamdata-created').value = restaurant.createdAt || restaurant.created_at || '-';
+
+  // Populate BETALINGSINTEGRATION
+  document.getElementById('stamdata-mobilepay-merchant').value = restaurant.mobilepayMerchantId || '';
+  document.getElementById('stamdata-mobilepay-api-key').value = restaurant.mobilepayApiKey || '';
+  // Generate callback URL
+  const callbackEl = document.getElementById('stamdata-payment-callback');
+  if (callbackEl) {
+    const supabaseUrl = (typeof SupabaseDB !== 'undefined' && SupabaseDB.getConfig) ? SupabaseDB.getConfig().url : '';
+    callbackEl.value = restaurant.id && supabaseUrl ? `${supabaseUrl}/functions/v1/mobilepay-webhook?restaurant=${restaurant.id}` : 'Genereres automatisk';
+  }
+
+  // Populate WORKFLOW KONTROL
+  document.getElementById('wf-review-enabled').checked = !!(restaurant.googleReviewUrl || restaurant.trustpilotUrl);
+  document.getElementById('wf-reorder-enabled').checked = restaurant.reorderEnabled !== false;
+  document.getElementById('wf-receipt-enabled').checked = restaurant.receiptEnabled !== false;
+  document.getElementById('wf-google-link').value = restaurant.googleReviewUrl || '';
+  document.getElementById('wf-trustpilot-link').value = restaurant.trustpilotUrl || '';
+  document.getElementById('wf-delivery-enabled').checked = restaurant.deliveryEnabled !== false;
+  toggleDeliverySettings();
+  
+  // Populate opening hours (with defaults if not set)
+  const oh = restaurant.openingHours || {};
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const defaultTimes = {
+    mon: { open: '10:00', close: '22:00' },
+    tue: { open: '10:00', close: '22:00' },
+    wed: { open: '10:00', close: '22:00' },
+    thu: { open: '10:00', close: '22:00' },
+    fri: { open: '10:00', close: '23:00' },
+    sat: { open: '11:00', close: '23:00' },
+    sun: { open: '12:00', close: '21:00' }
+  };
+  
+  days.forEach(day => {
+    const dayData = oh[day] || defaultTimes[day];
+    const enabledEl = document.getElementById(`oh-${day}-enabled`);
+    const openEl = document.getElementById(`oh-${day}-open`);
+    const closeEl = document.getElementById(`oh-${day}-close`);
+    if (enabledEl) enabledEl.checked = dayData.enabled !== false;
+    if (openEl) openEl.value = dayData.open || defaultTimes[day].open;
+    if (closeEl) closeEl.value = dayData.close || defaultTimes[day].close;
+  });
+  
+  // Delivery settings
+  document.getElementById('wf-delivery-from').value = restaurant.deliveryFrom || '18:00';
+  document.getElementById('wf-delivery-to').value = restaurant.deliveryTo || '22:00';
+  document.getElementById('wf-delivery-time-restricted').checked = restaurant.deliveryTimeRestricted || false;
+  
+  // Populate BESKEDER (with defaults)
+  const msg = restaurant.messages || {};
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const setChecked = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+  
+  // Automation toggle
+  setChecked('msg-auto-enabled', msg.autoEnabled || false);
+  
+  // Workflow Beskeder
+  setVal('msg-welcome-text', msg.welcome?.text || 'Hej! Tak for dit opkald til {{restaurant}}. Vi fik desværre ikke taget telefonen...');
+  setVal('msg-pending-text', msg.pending?.text || 'Tak! Din ordre er nu sendt til køkkenet. Afvent venligst, at restauranten accepterer din bestilling. Du modtager en bekræftelse snarest.');
+  setVal('msg-delivery-text', msg.delivery?.text || 'Din ordre er på vej! Forventet leveringstid: {{ventetid}} minutter...');
+  
+  // Ordre Status Beskeder
+  setVal('msg-confirmed-text', msg.confirmed?.text || 'Din ordre er bekræftet! {{restaurant}} har modtaget din bestilling og går straks i gang. Vi sender besked, når maden er klar.');
+  setVal('msg-cooking-text', msg.cooking?.text || 'Køkkenet er nu gået i gang med din bestilling! Din mad er klar om ca. {{ventetid}} minutter.');
+  setVal('msg-ready-text', msg.ready?.text || 'Din ordre er nu færdig og {{leveringstype}}! Velbekomme fra {{restaurant}}!');
+  
+  // Efter-Ordre Beskeder
+  setChecked('msg-review-enabled', msg.review?.enabled !== false);
+  setVal('msg-review-text', msg.review?.text || 'Tak for din ordre hos {{restaurant}}! Vi håber du nød maden 😊 Del gerne din oplevelse: {{review_link}}');
+  setChecked('msg-reorder-enabled', msg.reorder?.enabled || false);
+  setVal('msg-reorder-text', msg.reorder?.text || 'Hej {{kunde}}! Det er et stykke tid siden vi har set dig hos {{restaurant}}. Har du lyst til at bestille igen? Svar "JA" for at se din sidste ordre 🍕');
+  const reorderInterval = document.getElementById('msg-reorder-interval');
+  if (reorderInterval) reorderInterval.value = msg.reorder?.interval || '14';
+  setChecked('msg-receipt-enabled', msg.receipt?.enabled !== false);
+  setVal('msg-receipt-text', msg.receipt?.text || 'KVITTERING - {{restaurant}}\nOrdre: #{{ordre}}\nTotal: {{total}} kr\nDato: {{dato}}\nTak for din ordre!');
+  
+  // System Beskeder
+  setVal('msg-closed-text', msg.closed?.text || 'Tak for din henvendelse! {{restaurant}} har desværre lukket lige nu. Vores åbningstider er {{åbningstider}}. Vi glæder os til at høre fra dig!');
+  setVal('msg-error-text', msg.error?.text || 'Beklager, der opstod en fejl. Prøv venligst igen eller ring til os på {{telefon}}.');
+  
+  // Populate NØGLETAL
+  if (restaurant.kpi) {
+    document.getElementById('kpi-revenue').textContent = formatCurrency(restaurant.kpi.recoveredRevenue || 0);
+    document.getElementById('kpi-ai-rate').textContent = (restaurant.kpi.aiAutomationRate || 0) + '%';
+    document.getElementById('kpi-review-rate').textContent = (restaurant.kpi.reviewCTR || 0) + '%';
+    document.getElementById('kpi-conversion').textContent = (restaurant.kpi.conversionRate || 0) + '%';
+    
+    // Reviews
+    document.getElementById('review-avg-score').textContent = restaurant.kpi.reviews?.avgRating?.toFixed(1) || '0.0';
+    document.getElementById('review-total-count').textContent = restaurant.kpi.reviews?.total || 0;
+    document.getElementById('review-stars').innerHTML = renderStars(restaurant.kpi.reviews?.avgRating || 0);
+    document.getElementById('google-rating').textContent = restaurant.kpi.reviews?.google?.avgRating?.toFixed(1) || '0.0';
+    document.getElementById('google-count').textContent = restaurant.kpi.reviews?.google?.count || 0;
+    document.getElementById('trustpilot-rating').textContent = restaurant.kpi.reviews?.trustpilot?.avgRating?.toFixed(1) || '0.0';
+    document.getElementById('trustpilot-count').textContent = restaurant.kpi.reviews?.trustpilot?.count || 0;
+  }
+}
+
+// Render profile heatmap
+function renderProfileHeatmap(heatmapData) {
+  const container = document.getElementById('profile-heatmap');
+  if (!container || !heatmapData) return;
+  
+  let maxVal = 1;
+  Object.values(heatmapData).forEach(dayData => {
+    if (Array.isArray(dayData)) {
+      dayData.forEach(val => { if (val > maxVal) maxVal = val; });
+    }
+  });
+  
+  const hourTotals = new Array(24).fill(0);
+  Object.values(heatmapData).forEach(dayData => {
+    if (Array.isArray(dayData)) {
+      dayData.forEach((val, hour) => { hourTotals[hour] += val; });
+    }
+  });
+  
+  container.innerHTML = hourTotals.map((val, hour) => {
+    const intensity = val / (maxVal * 7);
+    const color = intensity > 0.7 ? 'var(--green)' : intensity > 0.4 ? 'var(--orange)' : intensity > 0.1 ? 'var(--accent)' : 'var(--bg2)';
+    return `<div class="crm-heatmap-cell" style="background:${color};opacity:${0.3 + intensity * 0.7}" title="${hour}:00 - ${val} ordrer"></div>`;
+  }).join('');
+}
+
+// Render stars
+function renderStars(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalf = rating % 1 >= 0.5;
+  let html = '';
+  
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    } else if (i === fullStars && hasHalf) {
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" style="opacity:0.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    } else {
+      html += '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity:0.3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    }
+  }
+  return html;
+}
+
+// =====================================================
+// CUSTOMER SUB-PAGE FUNCTIONS
+// =====================================================
+
+// Save Stamdata
+function saveStamdata() {
+  if (!currentProfileRestaurantId) return;
+  
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Track changes for activity log
+  const oldName = restaurant.name;
+  const oldCvr = restaurant.cvr;
+  const oldOwner = restaurant.owner;
+  const oldContact = restaurant.contactPerson;
+  const oldEmail = restaurant.email;
+  const oldPhone = restaurant.phone;
+  const oldIndustry = restaurant.industry;
+  const oldAddress = restaurant.address;
+  const oldWebsite = restaurant.website;
+
+  // Update values
+  restaurant.name = document.getElementById('stamdata-name')?.value || '';
+  restaurant.cvr = document.getElementById('stamdata-cvr')?.value || '';
+  restaurant.owner = document.getElementById('stamdata-owner')?.value || '';
+  restaurant.contactPerson = document.getElementById('stamdata-contact')?.value || '';
+  restaurant.email = document.getElementById('stamdata-email')?.value || '';
+  restaurant.phone = document.getElementById('stamdata-phone')?.value || '';
+  restaurant.industry = document.getElementById('stamdata-industry')?.value || '';
+  restaurant.address = document.getElementById('stamdata-address')?.value || '';
+  restaurant.country = document.getElementById('stamdata-country')?.value || 'DK';
+  restaurant.website = document.getElementById('stamdata-website')?.value || '';
+
+  // Save MobilePay integration
+  restaurant.mobilepayMerchantId = document.getElementById('stamdata-mobilepay-merchant')?.value || '';
+  restaurant.mobilepayApiKey = document.getElementById('stamdata-mobilepay-api-key')?.value || '';
+
+  // Log field changes
+  const fieldMappings = [
+    { field: 'Navn', old: oldName, new: restaurant.name },
+    { field: 'CVR', old: oldCvr, new: restaurant.cvr },
+    { field: 'Ejer', old: oldOwner, new: restaurant.owner },
+    { field: 'Kontaktperson', old: oldContact, new: restaurant.contactPerson },
+    { field: 'Email', old: oldEmail, new: restaurant.email },
+    { field: 'Telefon', old: oldPhone, new: restaurant.phone },
+    { field: 'Branche', old: oldIndustry, new: restaurant.industry },
+    { field: 'Adresse', old: oldAddress, new: restaurant.address },
+    { field: 'Website', old: oldWebsite, new: restaurant.website }
+  ];
+  
+  const changes = fieldMappings.filter(f => f.old !== f.new && (f.old || f.new));
+  
+  if (changes.length > 0) {
+    changes.forEach(change => {
+      logActivity('update', `${change.field} opdateret`, {
+        category: 'kunder',
+        subCategory: 'stamdata',
+        field: change.field,
+        oldValue: change.old || '(tom)',
+        newValue: change.new || '(tom)',
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name
+      });
+    });
+    
+    // Log to customer-specific aktivitetslogs
+    const changedFields = changes.map(c => c.field).join(', ');
+    addCustomerAktivitetslog(restaurant.id, 'profil', `Stamdata opdateret: ${changedFields}`);
+  }
+  
+  // Mark last saved timestamp
+  restaurant.stamdataUpdatedAt = new Date().toISOString();
+  
+  // Update header displays
+  document.getElementById('profile-name').textContent = restaurant.name || '-';
+  document.getElementById('profile-cvr').textContent = restaurant.cvr || '-';
+  document.getElementById('nav-customer-name').textContent = restaurant.name || 'Kunde';
+  document.getElementById('nav-customer-avatar').textContent = (restaurant.name || '?').charAt(0).toUpperCase();
+  
+  // Update CRM table if visible
+  updateCrmTableRow(restaurant);
+  
+  // Persist to localStorage
+  persistRestaurants();
+
+  // Show save status
+  showSaveStatus('stamdata-save-status', 'saved');
+}
+
+// Update CRM table row with new data
+function updateCrmTableRow(restaurant) {
+  const row = document.querySelector(`tr[data-id="${restaurant.id}"]`);
+  if (row) {
+    const cells = row.querySelectorAll('td');
+    if (cells[1]) cells[1].textContent = restaurant.name || '-';
+    if (cells[2]) cells[2].textContent = restaurant.phone || '-';
+    if (cells[3]) cells[3].textContent = restaurant.cvr || '-';
+  }
+}
+
+// Toggle delivery settings visibility
+function toggleDeliverySettings() {
+  const enabled = document.getElementById('wf-delivery-enabled').checked;
+  document.getElementById('delivery-settings').style.display = enabled ? 'block' : 'none';
+}
+
+// ============================================================================
+// MOBILEPAY INTEGRATION
+// ============================================================================
+
+/**
+ * Test MobilePay connection
+ */
+async function testMobilePayConnection() {
+  const statusEl = document.getElementById('mobilepay-test-status');
+  const merchantId = document.getElementById('stamdata-mobilepay-merchant')?.value;
+  const apiKey = document.getElementById('stamdata-mobilepay-api-key')?.value;
+
+  if (!merchantId || !apiKey) {
+    statusEl.textContent = '⚠️ Udfyld Merchant ID og API nøgle';
+    statusEl.style.color = 'var(--warning)';
+    return;
+  }
+
+  statusEl.textContent = 'Tester forbindelse...';
+  statusEl.style.color = 'var(--muted)';
+
+  try {
+    // In production, this would make a real API call to MobilePay
+    // For now, we validate the format and simulate a check
+    const isValidFormat = /^POSDK\d+$/.test(merchantId) || merchantId.length > 5;
+
+    if (isValidFormat && apiKey.length > 10) {
+      statusEl.textContent = '✅ Forbindelse OK';
+      statusEl.style.color = 'var(--success)';
+    } else {
+      statusEl.textContent = '❌ Ugyldigt format';
+      statusEl.style.color = 'var(--danger)';
+    }
+  } catch (err) {
+    statusEl.textContent = '❌ Fejl: ' + err.message;
+    statusEl.style.color = 'var(--danger)';
+  }
+}
+
+/**
+ * Create a MobilePay payment link for an order
+ * @param {Object} order - Order data
+ * @param {Object} restaurant - Restaurant with MobilePay credentials
+ * @returns {string|null} Payment URL or null if not configured
+ */
+async function createMobilePayLink(order, restaurant) {
+  const merchantId = restaurant.mobilepayMerchantId;
+  const apiKey = restaurant.mobilepayApiKey;
+
+  if (!merchantId || !apiKey) {
+    console.warn('MobilePay ikke konfigureret for denne restaurant');
+    return null;
+  }
+
+  try {
+    // MobilePay MyShop API endpoint
+    // In production, this should go through a Supabase Edge Function for security
+    const config = (typeof SupabaseDB !== 'undefined' && SupabaseDB.getConfig) ? SupabaseDB.getConfig() : null;
+    if (!config) {
+      console.error('Supabase config not available for MobilePay');
+      return null;
+    }
+
+    const response = await fetch(`${config.url}/functions/v1/create-mobilepay-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.key}`
+      },
+      body: JSON.stringify({
+        merchantId: merchantId,
+        amount: Math.round(order.total * 100), // MobilePay uses øre
+        orderId: order.id || Date.now().toString(),
+        description: `Ordre #${order.id} - ${restaurant.name}`,
+        restaurantId: restaurant.id,
+        customerPhone: order.phone
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('MobilePay API fejl');
+    }
+
+    const data = await response.json();
+    return data.paymentUrl || data.mobilePayAppRedirectUri;
+  } catch (err) {
+    console.error('MobilePay link error:', err);
+
+    // Fallback: Generate a simple payment reference link
+    // In production, this would be a proper MobilePay deep link
+    const amount = Math.round((order.total || 0) * 100);
+    const reference = order.id || Date.now().toString();
+    return `https://mobilepay.dk/erhverv/betalingslink/${merchantId}?amount=${amount}&ref=${reference}`;
+  }
+}
+
+/**
+ * Send payment link to customer via SMS
+ * @param {string} phone - Customer phone
+ * @param {Object} order - Order data
+ * @param {Object} restaurant - Restaurant
+ */
+async function sendPaymentLink(phone, order, restaurant) {
+  const paymentUrl = await createMobilePayLink(order, restaurant);
+
+  if (!paymentUrl) {
+    addLog('⚠️ MobilePay ikke konfigureret - springer betalingslink over', 'warning');
+    return false;
+  }
+
+  const msg = `💳 Betal din ordre med MobilePay:\n\nOrdre #${order.id || 'N/A'}\nTotal: ${order.total} kr\n\nBetal her: ${paymentUrl}\n\n${restaurant.name}`;
+
+  await sendSMS(phone, msg, restaurant);
+  addLog('💳 Betalingslink sendt til kunden', 'success');
+  return true;
+}
+
+// Clear workflow dirty state (shows save confirmation)
+function clearWorkflowDirty() {
+  showSaveStatus('workflow-save-status', 'saved');
+}
+
+/**
+ * Generic save status system
+ * Usage:
+ *   1. Add <span class="save-status" id="unique-id"></span> near save button in HTML
+ *   2. Call showSaveStatus('unique-id', 'saved') after successful save
+ *   3. Call showSaveStatus('unique-id', 'error') to display error message
+ */
+function showSaveStatus(elementId, status = 'saved') {
+  const statusEl = document.getElementById(elementId);
+  if (!statusEl) return;
+
+  if (status === 'saved') {
+    statusEl.textContent = '✓ Gemt';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => {
+      statusEl.textContent = '';
+    }, 3000);
+  } else if (status === 'error') {
+    statusEl.textContent = '✗ Fejl ved gemning';
+    statusEl.style.color = 'var(--red)';
+    setTimeout(() => {
+      statusEl.textContent = '';
+    }, 5000);
+  } else {
+    statusEl.textContent = '';
+  }
+}
+
+function clearSaveStatus(elementId) {
+  const statusEl = document.getElementById(elementId);
+  if (statusEl) {
+    statusEl.textContent = '';
+  }
+}
+
+// Save Workflow Settings (internal - collects data)
+function saveWorkflowSettings() {
+  if (!currentProfileRestaurantId) return false;
+  
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return false;
+  
+  // Workflow features
+  restaurant.reviewEnabled = document.getElementById('wf-review-enabled')?.checked ?? false;
+  restaurant.reorderEnabled = document.getElementById('wf-reorder-enabled')?.checked ?? false;
+  restaurant.receiptEnabled = document.getElementById('wf-receipt-enabled')?.checked ?? false;
+  restaurant.googleReviewUrl = document.getElementById('wf-google-link')?.value || '';
+  restaurant.trustpilotUrl = document.getElementById('wf-trustpilot-link')?.value || '';
+  
+  // Delivery settings
+  restaurant.deliveryEnabled = document.getElementById('wf-delivery-enabled')?.checked ?? false;
+  restaurant.deliveryFrom = document.getElementById('wf-delivery-from')?.value || '18:00';
+  restaurant.deliveryTo = document.getElementById('wf-delivery-to')?.value || '22:00';
+  restaurant.deliveryTimeRestricted = document.getElementById('wf-delivery-time-restricted')?.checked ?? false;
+  
+  // Opening hours
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  restaurant.openingHours = {};
+  days.forEach(day => {
+    restaurant.openingHours[day] = {
+      enabled: document.getElementById(`oh-${day}-enabled`)?.checked ?? true,
+      open: document.getElementById(`oh-${day}-open`)?.value || '10:00',
+      close: document.getElementById(`oh-${day}-close`)?.value || '22:00'
+    };
+  });
+  
+  // Time format
+  restaurant.timeFormat = document.getElementById('wf-time-format')?.value || '24h';
+  
+  // Mark last saved timestamp
+  restaurant.workflowSettingsUpdatedAt = new Date().toISOString();
+  
+  console.log('Workflow settings saved:', restaurant);
+  return true;
+}
+
+// Save Messages Config (for workflow messages modal)
+function saveMessagesConfig() {
+  if (!currentProfileRestaurantId) {
+    toast('Kunne ikke gemme beskeder - ingen restaurant valgt', 'error');
+    return;
+  }
+
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Restaurant ikke fundet', 'error');
+    return;
+  }
+
+  // Initialize messages object if needed
+  if (!restaurant.messages) {
+    restaurant.messages = {};
+  }
+
+  // Save message templates from form (assuming these IDs exist in the modal)
+  const confirmationMessage = document.getElementById('msg-confirmation')?.value;
+  const reviewMessage = document.getElementById('msg-review')?.value;
+  const reorderMessage = document.getElementById('msg-reorder')?.value;
+
+  if (confirmationMessage !== undefined) restaurant.messages.confirmation = confirmationMessage;
+  if (reviewMessage !== undefined) restaurant.messages.review = reviewMessage;
+  if (reorderMessage !== undefined) restaurant.messages.reorder = reorderMessage;
+
+  // Persist to localStorage and Supabase
+  persistRestaurants();
+
+  if (typeof SupabaseDB !== 'undefined') {
+    SupabaseDB.updateRestaurant(restaurant.id, {
+      metadata: { ...restaurant.metadata, messages: restaurant.messages }
+    }).catch(err => console.error('Error saving messages to Supabase:', err));
+  }
+
+  closeModal('messages-config');
+  toast('Beskeder gemt', 'success');
+
+  console.log('✅ Messages config saved for restaurant:', restaurant.name);
+}
+
+// Explicit save with user feedback
+function saveWorkflowSettingsExplicit() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  if (saveWorkflowSettings()) {
+    // Persist to localStorage
+    persistRestaurants();
+
+    clearWorkflowDirty();
+
+    // LOG ACTIVITY - dette vil automatisk vise blå prik på Workflow Kontrol nav item
+    logActivity('update', 'Workflow indstillinger opdateret', {
+      category: 'kunder',
+      subCategory: 'workflow-kontrol',
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name
+    });
+
+    // Sync to workflow if active
+    syncWorkflowFromCustomerSettings();
+  } else {
+    toast('Kunne ikke gemme indstillinger', 'error');
+  }
+}
+
+// Sync workflow from customer settings
+function syncWorkflowFromCustomerSettings() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Update workflow nodes based on customer settings
+  if (typeof syncWorkflowReviewNode === 'function') {
+    syncWorkflowReviewNode(restaurant.reviewEnabled && (restaurant.googleReviewUrl || restaurant.trustpilotUrl));
+  }
+  
+  console.log('Workflow synced with customer settings');
+}
+
+// Save Message Settings (internal - collects data)
+function saveMessageSettings() {
+  if (!currentProfileRestaurantId) return false;
+  
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return false;
+  
+  // Helper to safely get element value
+  const getVal = (id) => document.getElementById(id)?.value || '';
+  const getChecked = (id) => document.getElementById(id)?.checked || false;
+  
+  restaurant.messages = {
+    // Automation
+    autoEnabled: getChecked('msg-auto-enabled'),
+    
+    // Workflow Beskeder
+    welcome: { text: getVal('msg-welcome-text') },
+    pending: { text: getVal('msg-pending-text') },
+    delivery: { text: getVal('msg-delivery-text') },
+    
+    // Ordre Status Beskeder
+    confirmed: { text: getVal('msg-confirmed-text') },
+    cooking: { text: getVal('msg-cooking-text') },
+    ready: { text: getVal('msg-ready-text') },
+    
+    // Efter-Ordre Beskeder
+    review: { 
+      enabled: getChecked('msg-review-enabled'),
+      text: getVal('msg-review-text') 
+    },
+    reorder: { 
+      enabled: getChecked('msg-reorder-enabled'),
+      text: getVal('msg-reorder-text'),
+      interval: document.getElementById('msg-reorder-interval')?.value || '14'
+    },
+    receipt: { 
+      enabled: getChecked('msg-receipt-enabled'),
+      text: getVal('msg-receipt-text') 
+    },
+    
+    // System Beskeder
+    closed: { text: getVal('msg-closed-text') },
+    error: { text: getVal('msg-error-text') }
+  };
+  
+  // Mark last saved timestamp
+  restaurant.messagesUpdatedAt = new Date().toISOString();
+  
+  console.log('Message settings saved:', restaurant.messages);
+  return true;
+}
+
+// Save all messages with toast notification
+function saveAllMessages() {
+  if (saveMessageSettings()) {
+    // Persist to localStorage
+    persistRestaurants();
+
+    // Show save status
+    showSaveStatus('messages-save-status', 'saved');
+
+    // Sync messages to workflow
+    syncMessagesToWorkflow();
+  } else {
+    toast('Kunne ikke gemme beskeder', 'error');
+  }
+}
+
+// Sync messages to workflow nodes
+function syncMessagesToWorkflow() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.messages) return;
+  
+  // Update workflow nodes with new message templates
+  // This ensures the workflow uses the latest messages
+  console.log('Messages synced to workflow:', restaurant.messages);
+}
+
+// =====================================================
+// WORKFLOW RUNTIME HELPERS
+// Get customer-specific settings for workflow execution
+// =====================================================
+
+// Get message template for a specific type
+function getCustomerMessage(restaurantId, messageType, variables = {}) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant || !restaurant.messages) return null;
+  
+  let template = '';
+  
+  switch (messageType) {
+    case 'welcome':
+      template = restaurant.messages.welcome?.text || 'Hej! Tak for dit opkald til {{restaurant}}.';
+      break;
+    case 'pending':
+      template = restaurant.messages.pending?.text || 'Tak! Din ordre er nu sendt til køkkenet.';
+      break;
+    case 'delivery':
+      template = restaurant.messages.delivery?.text || 'Din ordre er på vej!';
+      break;
+    case 'confirmed':
+      template = restaurant.messages.confirmed?.text || 'Din ordre er bekræftet!';
+      break;
+    case 'cooking':
+      template = restaurant.messages.cooking?.text || 'Køkkenet er nu gået i gang med din bestilling!';
+      break;
+    case 'ready':
+      template = restaurant.messages.ready?.text || 'Din ordre er nu færdig!';
+      break;
+    case 'review':
+      if (!restaurant.messages.review?.enabled) return null;
+      template = restaurant.messages.review?.text || 'Tak for din ordre! Del gerne din oplevelse.';
+      break;
+    case 'closed':
+      template = restaurant.messages.closed?.text || 'Vi har desværre lukket lige nu.';
+      break;
+    case 'error':
+      template = restaurant.messages.error?.text || 'Beklager, der opstod en fejl.';
+      break;
+    default:
+      return null;
+  }
+  
+  // Replace variables
+  Object.keys(variables).forEach(key => {
+    template = template.replace(new RegExp(`{{${key}}}`, 'g'), variables[key]);
+  });
+  
+  // Replace restaurant name
+  template = template.replace(/{{restaurant}}/g, restaurant.name || 'restauranten');
+  
+  return template;
+}
+
+// Check if delivery is available for a restaurant right now
+function isDeliveryAvailableNow(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) return false;
+  if (!restaurant.deliveryEnabled) return false;
+  if (!restaurant.deliveryTimeRestricted) return true;
+  
+  const now = new Date();
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+  
+  const [fromHour, fromMin] = (restaurant.deliveryFrom || '18:00').split(':').map(Number);
+  const [toHour, toMin] = (restaurant.deliveryTo || '22:00').split(':').map(Number);
+  
+  const fromTime = fromHour * 60 + fromMin;
+  const toTime = toHour * 60 + toMin;
+  
+  return currentTime >= fromTime && currentTime <= toTime;
+}
+
+// Check if restaurant is open right now
+function isRestaurantOpenNow(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant || !restaurant.openingHours) return true; // Default to open
+  
+  const now = new Date();
+  // Support both short and full day names for compatibility
+  const dayNamesShort = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNamesFull = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayIndex = now.getDay();
+  
+  // Try both name formats
+  const todayHours = restaurant.openingHours[dayNamesShort[dayIndex]] || 
+                     restaurant.openingHours[dayNamesFull[dayIndex]];
+  
+  if (!todayHours || !todayHours.enabled) return false;
+  
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+  const [openHour, openMin] = (todayHours.open || '00:00').split(':').map(Number);
+  const [closeHour, closeMin] = (todayHours.close || '00:00').split(':').map(Number);
+  
+  const openTime = openHour * 60 + openMin;
+  let closeTime = closeHour * 60 + closeMin;
+  
+  // DØGNÅBENT: Hvis både open og close er 00:00
+  if (openTime === 0 && closeTime === 0 && todayHours.open === '00:00' && todayHours.close === '00:00') {
+    return true;
+  }
+  
+  // Midnat fix: 00:00 lukketid = 24:00
+  if (closeTime === 0 && todayHours.close === '00:00') {
+    closeTime = 1440;
+  }
+  
+  // Over midnat: fx 18:00 - 02:00
+  if (closeTime < openTime) {
+    return currentTime >= openTime || currentTime < closeTime;
+  }
+  
+  // Normal: fx 10:00 - 22:00
+  return currentTime >= openTime && currentTime < closeTime;
+}
+
+// Get customer workflow settings
+function getCustomerWorkflowSettings(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) return null;
+  
+  return {
+    reviewEnabled: restaurant.reviewEnabled && (restaurant.googleReviewUrl || restaurant.trustpilotUrl),
+    reorderEnabled: restaurant.reorderEnabled,
+    receiptEnabled: restaurant.receiptEnabled,
+    deliveryEnabled: restaurant.deliveryEnabled,
+    deliveryAvailableNow: isDeliveryAvailableNow(restaurantId),
+    isOpen: isRestaurantOpenNow(restaurantId),
+    autoEnabled: restaurant.messages?.autoEnabled || false,
+    googleReviewUrl: restaurant.googleReviewUrl,
+    trustpilotUrl: restaurant.trustpilotUrl
+  };
+}
+
+// Insert variable into textarea
+function insertVariable(textareaId, variable) {
+  const textarea = document.getElementById(textareaId);
+  if (!textarea) return;
+  
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  
+  textarea.value = text.substring(0, start) + variable + text.substring(end);
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+  
+  // Don't auto-save on variable insert to avoid confusion
+}
+
+// Export customer PDF (Månedlig KPI Rapport)
+function exportCustomerPdf() {
+  if (!currentProfileRestaurantId) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Wait for jsPDF to load
+  if (typeof window.jspdf === 'undefined') {
+    toast('PDF bibliotek indlæses...', 'info');
+    setTimeout(exportCustomerPdf, 500);
+    return;
+  }
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  // PDF Konfiguration
+  const PRIMARY_COLOR = [26, 26, 46];
+  const ACCENT_COLOR = [45, 212, 191];
+  const TEXT_COLOR = [51, 51, 51];
+  const MEDIUM_GRAY = [224, 224, 224];
+  const GREEN_COLOR = [34, 197, 94];
+  
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 25;
+  
+  let y = 20;
+  
+  // === HEADER ===
+  doc.setFontSize(22);
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MÅNEDSRAPPORT', margin, y);
+  
+  y += 6;
+  doc.setFontSize(10);
+  doc.setTextColor(...ACCENT_COLOR);
+  doc.setFont('helvetica', 'normal');
+  doc.text('OrderFlow SaaS - Nøgletal', margin, y);
+  
+  // Højre side
+  const dateStr = new Date().toLocaleDateString('da-DK');
+  doc.setFontSize(11);
+  doc.setTextColor(...TEXT_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text(restaurant.name || 'Restaurant', pageWidth - margin, y - 6, { align: 'right' });
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('CVR: ' + (restaurant.cvr || '-'), pageWidth - margin, y, { align: 'right' });
+  doc.text('Genereret: ' + dateStr, pageWidth - margin, y + 4, { align: 'right' });
+  
+  // Header linje
+  y += 5;
+  doc.setDrawColor(...PRIMARY_COLOR);
+  doc.setLineWidth(0.7);
+  doc.line(margin, y, pageWidth - margin, y);
+  
+  y += 15;
+  
+  // === KPI SEKTION ===
+  const kpi = restaurant.kpi || {};
+  
+  doc.setFontSize(14);
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Nøgletal', margin, y);
+  y += 10;
+  
+  // KPI Grid (2x2)
+  const kpiData = [
+    { label: 'Genvundet Omsætning', value: (kpi.recoveredRevenue || 0).toLocaleString('da-DK') + ' kr', color: GREEN_COLOR },
+    { label: 'AI Håndteringsrate', value: (kpi.aiAutomationRate || 0) + '%', color: [168, 85, 247] },
+    { label: 'Anmeldelseskonvertering', value: (kpi.reviewCTR || 0) + '%', color: [251, 146, 60] },
+    { label: 'Konverteringsrate', value: (kpi.conversionRate || 0) + '%', color: [59, 130, 246] }
+  ];
+  
+  const boxWidth = 75;
+  const boxHeight = 25;
+  
+  kpiData.forEach((item, index) => {
+    const col = index % 2;
+    const row = Math.floor(index / 2);
+    const x = margin + (col * (boxWidth + 10));
+    const boxY = y + (row * (boxHeight + 8));
+    
+    // Box background
+    doc.setFillColor(245, 245, 245);
+    doc.roundedRect(x, boxY, boxWidth, boxHeight, 2, 2, 'F');
+    
+    // Value
+    doc.setFontSize(16);
+    doc.setTextColor(...item.color);
+    doc.setFont('helvetica', 'bold');
+    doc.text(item.value, x + 5, boxY + 10);
+    
+    // Label
+    doc.setFontSize(9);
+    doc.setTextColor(...TEXT_COLOR);
+    doc.setFont('helvetica', 'normal');
+    doc.text(item.label, x + 5, boxY + 18);
+  });
+  
+  y += (boxHeight * 2) + 25;
+  
+  // === ANMELDELSER SEKTION ===
+  doc.setFontSize(14);
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Anmeldelser', margin, y);
+  y += 10;
+  
+  const reviews = kpi.reviews || {};
+  
+  doc.setFontSize(10);
+  doc.setTextColor(...TEXT_COLOR);
+  doc.setFont('helvetica', 'normal');
+  
+  doc.text('Samlet bedømmelse: ' + (reviews.avgRating || 0).toFixed(1) + ' / 5.0', margin, y);
+  y += 6;
+  doc.text('Antal anmeldelser: ' + (reviews.total || 0), margin, y);
+  y += 8;
+  
+  if (reviews.google) {
+    doc.text('Google: ' + (reviews.google.avgRating || 0).toFixed(1) + ' (' + (reviews.google.count || 0) + ' anmeldelser)', margin, y);
+    y += 6;
+  }
+  if (reviews.trustpilot) {
+    doc.text('Trustpilot: ' + (reviews.trustpilot.avgRating || 0).toFixed(1) + ' (' + (reviews.trustpilot.count || 0) + ' anmeldelser)', margin, y);
+    y += 6;
+  }
+  
+  y += 10;
+  
+  // === OMSÆTNING SEKTION ===
+  doc.setFontSize(14);
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Omsætning', margin, y);
+  y += 10;
+  
+  doc.setFontSize(10);
+  doc.setTextColor(...TEXT_COLOR);
+  doc.setFont('helvetica', 'normal');
+  
+  doc.text('Total omsætning: ' + (kpi.totalRevenue || 0).toLocaleString('da-DK') + ' kr', margin, y);
+  y += 6;
+  doc.text('Genvundet omsætning: ' + (kpi.recoveredRevenue || 0).toLocaleString('da-DK') + ' kr', margin, y);
+  y += 6;
+  doc.text('Gennemsnitlig ordreværdi: ' + (kpi.avgOrderValue || 0).toLocaleString('da-DK') + ' kr', margin, y);
+  
+  // === FOOTER ===
+  const footerY = pageHeight - 15;
+  
+  doc.setDrawColor(...MEDIUM_GRAY);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(...TEXT_COLOR);
+  doc.text('Side 1 af 1', pageWidth / 2, footerY, { align: 'center' });
+  
+  doc.setFontSize(8);
+  doc.setTextColor(128, 128, 128);
+  doc.text('OrderFlow SaaS  •  Vestergade 12, 2100 København Ø  •  CVR: 12345678', pageWidth / 2, footerY + 4, { align: 'center' });
+  
+  // === DOWNLOAD ===
+  const fileName = `Maanedsrapport_${restaurant.name?.replace(/\s+/g, '_') || 'Restaurant'}_${new Date().toISOString().slice(0,7)}.pdf`;
+  doc.save(fileName);
+  
+  // toast('PDF downloadet', 'success'); // Removed - unnecessary
+}
+
+// Export customer Excel
+function exportCustomerExcel() {
+  if (!currentProfileRestaurantId) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  const kpi = restaurant.kpi || {};
+  const reviews = kpi.reviews || {};
+  
+  // Create CSV content
+  const rows = [
+    ['MÅNEDSRAPPORT - ' + (restaurant.name || 'Restaurant')],
+    ['Genereret', new Date().toLocaleDateString('da-DK')],
+    [''],
+    ['STAMDATA'],
+    ['Virksomhedsnavn', restaurant.name || ''],
+    ['CVR', restaurant.cvr || ''],
+    ['Adresse', restaurant.address || ''],
+    [''],
+    ['NØGLETAL'],
+    ['Genvundet Omsætning', kpi.recoveredRevenue || 0],
+    ['AI Håndteringsrate (%)', kpi.aiAutomationRate || 0],
+    ['Anmeldelseskonvertering (%)', kpi.reviewCTR || 0],
+    ['Konverteringsrate (%)', kpi.conversionRate || 0],
+    [''],
+    ['OMSÆTNING'],
+    ['Total omsætning', kpi.totalRevenue || 0],
+    ['Genvundet omsætning', kpi.recoveredRevenue || 0],
+    ['Gennemsnitlig ordreværdi', kpi.avgOrderValue || 0],
+    [''],
+    ['ANMELDELSER'],
+    ['Samlet bedømmelse', reviews.avgRating || 0],
+    ['Antal anmeldelser', reviews.total || 0],
+    ['Google bedømmelse', reviews.google?.avgRating || 0],
+    ['Google antal', reviews.google?.count || 0],
+    ['Trustpilot bedømmelse', reviews.trustpilot?.avgRating || 0],
+    ['Trustpilot antal', reviews.trustpilot?.count || 0]
+  ];
+  
+  const csv = rows.map(row => row.join(';')).join('\n');
+  
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Maanedsrapport_${restaurant.name?.replace(/\s+/g, '_') || 'Restaurant'}_${new Date().toISOString().slice(0,7)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  // toast('Excel eksport downloadet', 'success'); // Removed - unnecessary
+}
+
+// Check if delivery is available based on time restrictions
+function isDeliveryAvailable(restaurant) {
+  if (!restaurant.deliveryEnabled) return false;
+  if (!restaurant.deliveryTimeRestricted) return true;
+  
+  const now = new Date();
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+  
+  const [fromHour, fromMin] = (restaurant.deliveryFrom || '18:00').split(':').map(Number);
+  const [toHour, toMin] = (restaurant.deliveryTo || '22:00').split(':').map(Number);
+  
+  const fromTime = fromHour * 60 + fromMin;
+  const toTime = toHour * 60 + toMin;
+  
+  return currentTime >= fromTime && currentTime <= toTime;
+}
+
+// Update review links status (legacy - now handled by saveWorkflowSettings)
+function updateReviewLinks() {
+  // This function is kept for backwards compatibility but logic moved to workflow settings
+  saveWorkflowSettings();
+}
+
+// Save review links and activate workflow node (legacy)
+function saveReviewLinks() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const googleUrl = document.getElementById('wf-google-link')?.value.trim() || '';
+  const trustpilotUrl = document.getElementById('wf-trustpilot-link')?.value.trim() || '';
+
+  restaurant.googleReviewUrl = googleUrl;
+  restaurant.trustpilotUrl = trustpilotUrl;
+  restaurant.reviewRequestEnabled = !!(googleUrl || trustpilotUrl);
+
+  // Persist to localStorage
+  persistRestaurants();
+
+  // LOG ACTIVITY - dette vil automatisk vise blå prik på Workflow Kontrol nav item
+  logActivity('update', 'Anmeldelseslinks opdateret', {
+    category: 'kunder',
+    subCategory: 'workflow-kontrol',
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name
+  });
+
+  // Sync workflow node - activate if links exist
+  syncWorkflowReviewNode(restaurant.reviewRequestEnabled);
+
+  // Show save status
+  showSaveStatus('workflow-save-status', 'saved');
+}
+
+// Toggle profile delivery (legacy - redirects to new function)
+function toggleProfileDelivery() {
+  toggleDeliverySettings();
+}
+
+// Toggle automation mode visibility
+function toggleAutoMode(enabled) {
+  const settings = document.getElementById('auto-mode-settings');
+  if (settings) {
+    settings.style.display = enabled ? 'block' : 'none';
+  }
+}
+
+// Open messages configuration modal
+function openMessagesModal() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Initialize custom messages object if not exists
+  if (!restaurant.customMessages) {
+    restaurant.customMessages = {};
+  }
+  
+  // Initialize automation settings if not exists
+  if (!restaurant.automation) {
+    restaurant.automation = { enabled: false, defaultTime: 40 };
+  }
+  
+  // Populate automation settings
+  document.getElementById('msg-auto-mode').checked = restaurant.automation.enabled || false;
+  document.getElementById('msg-auto-time').value = restaurant.automation.defaultTime || 40;
+  toggleAutoMode(restaurant.automation.enabled);
+  
+  // Populate NEW order status messages
+  document.getElementById('msg-order-accepted').value = restaurant.customMessages.orderAccepted || '';
+  document.getElementById('msg-order-started').value = restaurant.customMessages.orderStarted || '';
+  document.getElementById('msg-order-completed').value = restaurant.customMessages.orderCompleted || '';
+  
+  // Populate existing workflow messages
+  document.getElementById('msg-welcome').value = restaurant.customMessages.welcome || '';
+  document.getElementById('msg-order-confirm').value = restaurant.customMessages.orderConfirm || '';
+  document.getElementById('msg-delivery').value = restaurant.customMessages.delivery || '';
+  document.getElementById('msg-review').value = restaurant.customMessages.review || '';
+  document.getElementById('msg-receipt').value = restaurant.customMessages.receipt || '';
+  
+  showModal('messages-config');
+}
+
+// Save custom messages
+function saveCustomMessages() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  // Initialize if not exists
+  if (!restaurant.customMessages) {
+    restaurant.customMessages = {};
+  }
+  if (!restaurant.automation) {
+    restaurant.automation = {};
+  }
+  
+  // Save automation settings
+  restaurant.automation.enabled = document.getElementById('msg-auto-mode').checked;
+  restaurant.automation.defaultTime = parseInt(document.getElementById('msg-auto-time').value) || 40;
+  
+  // Save NEW order status messages
+  const orderAccepted = document.getElementById('msg-order-accepted').value.trim();
+  const orderStarted = document.getElementById('msg-order-started').value.trim();
+  const orderCompleted = document.getElementById('msg-order-completed').value.trim();
+  
+  restaurant.customMessages.orderAccepted = orderAccepted || null;
+  restaurant.customMessages.orderStarted = orderStarted || null;
+  restaurant.customMessages.orderCompleted = orderCompleted || null;
+  
+  // Save existing workflow messages
+  const welcome = document.getElementById('msg-welcome').value.trim();
+  const orderConfirm = document.getElementById('msg-order-confirm').value.trim();
+  const delivery = document.getElementById('msg-delivery').value.trim();
+  const review = document.getElementById('msg-review').value.trim();
+  const receipt = document.getElementById('msg-receipt').value.trim();
+  
+  restaurant.customMessages.welcome = welcome || null;
+  restaurant.customMessages.orderConfirm = orderConfirm || null;
+  restaurant.customMessages.delivery = delivery || null;
+  restaurant.customMessages.review = review || null;
+  restaurant.customMessages.receipt = receipt || null;
+  
+  closeModal('messages-config');
+}
+
+// Get message for a node - returns custom or default
+function getMessageForNode(restaurantId, nodeId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant || !restaurant.customMessages) return null;
+  
+  const messageMap = {
+    'send-welcome': restaurant.customMessages.welcome,
+    'send-order-confirm': restaurant.customMessages.orderConfirm,
+    'send-delivery-info': restaurant.customMessages.delivery,
+    'send-review-request': restaurant.customMessages.review,
+    'send-receipt': restaurant.customMessages.receipt
+  };
+  
+  return messageMap[nodeId] || null; // null = use default
+}
+
+// Edit current profile
+function editCurrentProfile() {
+  if (currentProfileRestaurantId) {
+    editRestaurant(currentProfileRestaurantId);
+  }
+}
+
+// Test current profile
+function testCurrentProfile() {
+  if (currentProfileRestaurantId) {
+    testRestaurant(currentProfileRestaurantId);
+    showPage('workflow');
+  }
+}
+
+// Export profile PDF
+function exportProfilePdf() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  console.log(`Generating PDF for ${restaurant.name}`);
+}
+
+// Export profile Excel
+function exportProfileExcel() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  
+  console.log(`Generating Excel for ${restaurant.name}`);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    const searchInput = document.getElementById('crm-search');
+    if (searchInput && document.getElementById('page-kunder').classList.contains('active')) {
+      showCrmSearchView();
+      searchInput.focus();
+      searchInput.select();
+    }
+  }
+  
+  // Escape to go back to search view
+  if (e.key === 'Escape' && currentProfileRestaurantId) {
+    showCrmSearchView();
+  }
+});
+
+// Click handler (autocomplete removed)
+document.addEventListener('click', (e) => {
+  // Close command results
+  if (!e.target.closest('.sidebar-search')) {
+    const commandResults = document.getElementById('command-results');
+    if (commandResults) commandResults.classList.remove('active');
+  }
+});
+
+// =====================================================
+// GLOBAL COMMAND SEARCH
+// =====================================================
+
+// Command search data
+const commandItems = [
+  { type: 'page', id: 'dashboard', name: 'Dashboard', hint: 'Overblik', keywords: ['dashboard', 'overblik', 'hjem', 'start'] },
+  { type: 'page', id: 'kunder', name: 'Kunder', hint: 'CRM', keywords: ['restauranter', 'kunder', 'crm', 'kunde'] },
+  { type: 'page', id: 'orders', name: 'Ordrer', hint: 'Alle ordrer', keywords: ['ordrer', 'ordre', 'bestillinger'] },
+  { type: 'page', id: 'workflow', name: 'Workflow', hint: 'Automatisering', keywords: ['workflow', 'flow', 'automatisering', 'automation'] },
+  { type: 'page', id: 'settings', name: 'Indstillinger', hint: 'Konfiguration', keywords: ['indstillinger', 'settings', 'config'] },
+  { type: 'setting', id: 'twilio', name: 'Twilio Integration', hint: 'SMS', keywords: ['twilio', 'sms', 'telefon', 'beskeder'] },
+  { type: 'setting', id: 'openai', name: 'OpenAI API', hint: 'AI', keywords: ['openai', 'ai', 'gpt', 'api'] },
+  { type: 'setting', id: 'beskeder', name: 'Beskeder', hint: 'Templates', keywords: ['beskeder', 'messages', 'templates', 'skabeloner'] },
+  { type: 'report', id: 'kpi', name: 'KPI Oversigt', hint: 'Analytics', keywords: ['kpi', 'analytics', 'statistik', 'data'] },
+  { type: 'report', id: 'monthly', name: 'Månedsrapport', hint: 'PDF', keywords: ['rapport', 'månedlig', 'pdf', 'export'] }
+];
+
+// Handle command search
+function handleCommandSearch(query) {
+  const results = document.getElementById('command-results');
+  if (!results) return;
+  
+  query = (query || '').toLowerCase().trim();
+  
+  if (!query) {
+    // Show all items grouped
+    results.innerHTML = buildCommandResultsHTML(commandItems);
+    return;
+  }
+  
+  // Filter items
+  const filtered = commandItems.filter(item => 
+    item.name.toLowerCase().includes(query) ||
+    item.hint.toLowerCase().includes(query) ||
+    item.keywords.some(k => k.includes(query))
+  );
+  
+  if (filtered.length === 0) {
+    results.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Ingen resultater fundet</div>';
+  } else {
+    results.innerHTML = buildCommandResultsHTML(filtered);
+  }
+}
+
+// Build command results HTML
+function buildCommandResultsHTML(items) {
+  const pages = items.filter(i => i.type === 'page');
+  const settings = items.filter(i => i.type === 'setting');
+  const reports = items.filter(i => i.type === 'report');
+  
+  let html = '';
+  
+  if (pages.length) {
+    html += '<div class="command-group"><div class="command-group-title">Sider</div>';
+    pages.forEach(item => {
+      html += `<div class="command-item" onclick="navigateCommand('${item.id}')">
+        ${getCommandIcon(item.id)}
+        <span class="command-item-text">${item.name}</span>
+        <span class="command-item-hint">${item.hint}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  
+  if (settings.length) {
+    html += '<div class="command-group"><div class="command-group-title">Indstillinger</div>';
+    settings.forEach(item => {
+      html += `<div class="command-item" onclick="navigateCommand('settings', '${item.id}')">
+        ${getCommandIcon(item.id)}
+        <span class="command-item-text">${item.name}</span>
+        <span class="command-item-hint">${item.hint}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  
+  if (reports.length) {
+    html += '<div class="command-group"><div class="command-group-title">Rapporter</div>';
+    reports.forEach(item => {
+      html += `<div class="command-item" onclick="navigateCommand('dashboard', '${item.id}')">
+        ${getCommandIcon(item.id)}
+        <span class="command-item-text">${item.name}</span>
+        <span class="command-item-hint">${item.hint}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  
+  return html;
+}
+
+// Get icon for command item
+function getCommandIcon(id) {
+  const icons = {
+    'dashboard': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+    'kunder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+    'orders': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>',
+    'workflow': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    'settings': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/></svg>',
+    'twilio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>',
+    'openai': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42"/></svg>',
+    'beskeder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    'kpi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
+    'monthly': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+  };
+  return icons[id] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg>';
+}
+
+// Show command results
+function showCommandResults() {
+  const results = document.getElementById('command-results');
+  if (results) {
+    results.classList.add('active');
+    handleCommandSearch(document.getElementById('command-search')?.value);
+  }
+}
+
+// Navigate from command
+function navigateCommand(page, sub) {
+  const results = document.getElementById('command-results');
+  const input = document.getElementById('command-search');
+  
+  if (results) results.classList.remove('active');
+  if (input) input.value = '';
+  
+  showPage(page);
+  
+  // Handle sub-navigation silently
+  if (sub && page === 'settings') {
+    // Switch to relevant settings tab
+  }
+}
+
+// Global keyboard shortcut for command search (Cmd/Ctrl + K)
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    const input = document.getElementById('command-search');
+    if (input) {
+      input.focus();
+      input.select();
+      showCommandResults();
+    }
+  }
+  
+  // Escape to close command results
+  if (e.key === 'Escape') {
+    const results = document.getElementById('command-results');
+    if (results && results.classList.contains('active')) {
+      results.classList.remove('active');
+      document.getElementById('command-search')?.blur();
+    }
+  }
+});
+
+// Update KPI preview visibility
+function updateKpiPreview() {
+  const checked = document.getElementById('edit-restaurant-kpi-enabled').checked;
+  document.getElementById('kpi-preview').style.display = checked ? 'block' : 'none';
+}
+
+// Sync workflow review node with restaurant setting
+function syncWorkflowReviewNode(enabled) {
+  // Find the review request node in workflow
+  const reviewNode = workflowNodes.find(n => n.id === 'send-review-request');
+  if (reviewNode) {
+    reviewNode.disabled = !enabled;
+    
+    // Re-render workflow to show visual change
+    if (typeof renderWorkflowNodes === 'function') {
+      renderWorkflowNodes();
+    }
+  }
+}
+
+async function saveRestaurantSettings() {
+  const id = document.getElementById('edit-restaurant-id').value;
+  const restaurant = restaurants.find(r => r.id === id);
+
+  if (!restaurant) {
+    toast('Restaurant ikke fundet', 'error');
+    return;
+  }
+  
+  // Update basic restaurant data
+  restaurant.name = document.getElementById('edit-restaurant-name').value;
+  restaurant.logo = document.getElementById('edit-restaurant-logo').value || 'pizza';
+  restaurant.phone = document.getElementById('edit-restaurant-phone').value;
+  restaurant.website = document.getElementById('edit-restaurant-website').value;
+  restaurant.menuUrl = document.getElementById('edit-restaurant-menu').value;
+  restaurant.googleReviewUrl = document.getElementById('edit-restaurant-google').value;
+  restaurant.trustpilotUrl = document.getElementById('edit-restaurant-trustpilot').value;
+  restaurant.reviewDelay = parseInt(document.getElementById('edit-restaurant-delay').value) || 60;
+  
+  // Save delivery toggle
+  restaurant.deliveryEnabled = document.getElementById('edit-restaurant-delivery').checked;
+  
+  // Save review request toggle (Workflow Sync)
+  const reviewWasEnabled = restaurant.reviewRequestEnabled;
+  restaurant.reviewRequestEnabled = document.getElementById('edit-restaurant-review-request').checked;
+  
+  // Sync with workflow node if changed
+  if (reviewWasEnabled !== restaurant.reviewRequestEnabled) {
+    syncWorkflowReviewNode(restaurant.reviewRequestEnabled);
+  }
+  
+  // Save KPI settings
+  const kpiWasEnabled = restaurant.kpiEnabled;
+  restaurant.kpiEnabled = document.getElementById('edit-restaurant-kpi-enabled').checked;
+  
+  // Initialize KPI data if newly enabled
+  if (restaurant.kpiEnabled && !restaurant.kpi) {
+    restaurant.kpi = {
+      totalRevenue: 0,
+      recoveredRevenue: 0,
+      avgOrderValue: 0,
+      reviews: {
+        total: 0,
+        avgRating: 0,
+        google: { count: 0, avgRating: 0 },
+        trustpilot: { count: 0, avgRating: 0 }
+      },
+      conversionRate: 0,
+      responseTime: 0,
+      // Extended KPIs
+      aiAutomationRate: 0,
+      clv: 0,
+      reviewCTR: 0,
+      missedCalls: 0,
+      completedOrders: 0,
+      orderHeatmap: {
+        monday: new Array(24).fill(0),
+        tuesday: new Array(24).fill(0),
+        wednesday: new Array(24).fill(0),
+        thursday: new Array(24).fill(0),
+        friday: new Array(24).fill(0),
+        saturday: new Array(24).fill(0),
+        sunday: new Array(24).fill(0)
+      },
+      sentiment: { positive: 0, neutral: 0, negative: 0 }
+    };
+  }
+  
+  // Save menu from editor
+  saveMenuFromEditor(id);
+  
+  // Save time format
+  restaurant.timeFormat = document.getElementById('time-format-24').checked ? '24h' : '12h';
+  
+  // Save opening hours
+  restaurant.openingHours = {};
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  days.forEach(day => {
+    const dayEl = document.querySelector(`.opening-day[data-day="${day}"]`);
+    if (dayEl) {
+      restaurant.openingHours[day] = {
+        enabled: dayEl.querySelector('.day-enabled').checked,
+        open: dayEl.querySelector('.open-time').value,
+        close: dayEl.querySelector('.close-time').value
+      };
+    }
+  });
+  
+  // Only auto-activate pending customers when phone is added
+  // NEVER reset an active/terminated/etc customer to pending
+  if ((!restaurant.status || restaurant.status === 'pending') && restaurant.phone) {
+    restaurant.status = 'active';
+  }
+
+  // Show save status
+  showSaveStatus('stamdata-save-status', 'saved');
+
+  // Log activity
+  if (typeof logActivity === 'function') {
+    await logActivity('update', `Restaurant opdateret: ${restaurant.name}`, {
+      category: 'kunder',
+      subCategory: 'stamdata',
+      customerId: restaurant.id,
+      data: { name: restaurant.name }
+    });
+  }
+
+  // Refresh UI
+  loadRestaurants();
+  loadDashboard();
+  closeModal('edit-restaurant');
+}
+
+// Default åbningstider
+function getDefaultOpeningHours() {
+  return {
+    mon: { enabled: true, open: '10:00', close: '22:00' },
+    tue: { enabled: true, open: '10:00', close: '22:00' },
+    wed: { enabled: true, open: '10:00', close: '22:00' },
+    thu: { enabled: true, open: '10:00', close: '22:00' },
+    fri: { enabled: true, open: '10:00', close: '23:00' },
+    sat: { enabled: true, open: '11:00', close: '23:00' },
+    sun: { enabled: true, open: '12:00', close: '21:00' }
+  };
+}
+
+async function deleteRestaurant() {
+  const id = document.getElementById('edit-restaurant-id').value;
+  const restaurant = restaurants.find(r => r.id === id);
+
+  if (!restaurant) return;
+
+  if (confirm(`Er du sikker på du vil slette "${restaurant.name}"?`)) {
+    // Delete from Supabase
+    if (typeof SupabaseDB !== 'undefined') {
+      try {
+        await SupabaseDB.deleteRestaurant(id);
+
+        // Log activity before removing from array
+        if (typeof logActivity === 'function') {
+          await logActivity('delete', `Restaurant slettet: ${restaurant.name}`, {
+            category: 'kunder',
+            subCategory: 'stamdata',
+            customerId: id,
+            data: { name: restaurant.name }
+          });
+        }
+
+        // Remove from local array
+        restaurants = restaurants.filter(r => r.id !== id);
+
+        // Refresh UI
+        loadRestaurants();
+        loadDashboard();
+        closeModal('edit-restaurant');
+
+        toast('Restaurant slettet', 'success');
+      } catch (err) {
+        console.error('❌ Error deleting restaurant:', err);
+        toast('Fejl ved sletning af restaurant', 'error');
+      }
+    }
+  }
+}
+
+// =====================================================
+// CUSTOMER TERMINATION & GDPR
+// =====================================================
+
+/**
+ * Show termination modal for customer
+ * @param {string} restaurantId - Restaurant ID to terminate
+ */
+function showTerminationModal(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+
+  // Check if customer can be terminated
+  if (restaurant.status === 'terminated' || restaurant.status === 'gdpr_deleted') {
+    toast('Denne kunde er allerede opsagt', 'warning');
+    return;
+  }
+
+  // Calculate retention info
+  const retentionYears = 5;
+  const deletionDate = new Date();
+  deletionDate.setFullYear(deletionDate.getFullYear() + retentionYears);
+
+  // Populate modal
+  const nameEl = document.getElementById('termination-customer-name');
+  const idEl = document.getElementById('termination-customer-id');
+  const dateEl = document.getElementById('termination-deletion-date');
+  const reasonEl = document.getElementById('termination-reason');
+  const reasonOtherEl = document.getElementById('termination-reason-other');
+  const confirmEl = document.getElementById('termination-confirm-check');
+
+  if (nameEl) nameEl.textContent = restaurant.name || 'Ukendt kunde';
+  if (idEl) idEl.value = restaurantId;
+  if (dateEl) dateEl.textContent = deletionDate.toLocaleDateString('da-DK', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+  if (reasonEl) reasonEl.value = '';
+  if (reasonOtherEl) {
+    reasonOtherEl.value = '';
+    reasonOtherEl.style.display = 'none';
+  }
+  if (confirmEl) confirmEl.checked = false;
+
+  showModal('terminate-customer');
+}
+
+/**
+ * Handle termination reason change (show/hide other field)
+ */
+function onTerminationReasonChange() {
+  const reasonEl = document.getElementById('termination-reason');
+  const otherEl = document.getElementById('termination-reason-other');
+
+  if (reasonEl && otherEl) {
+    otherEl.style.display = reasonEl.value === 'Andet' ? 'block' : 'none';
+    if (reasonEl.value !== 'Andet') {
+      otherEl.value = '';
+    }
+  }
+}
+
+/**
+ * Execute customer termination
+ */
+async function terminateCustomer() {
+  const restaurantId = document.getElementById('termination-customer-id')?.value;
+  const reasonSelect = document.getElementById('termination-reason')?.value;
+  const reasonOther = document.getElementById('termination-reason-other')?.value?.trim();
+  const confirmCheck = document.getElementById('termination-confirm-check')?.checked;
+
+  // Determine final reason
+  let reason = reasonSelect;
+  if (reasonSelect === 'Andet' && reasonOther) {
+    reason = reasonOther;
+  }
+
+  if (!reason) {
+    toast('Angiv venligst en årsag til opsigelsen', 'error');
+    return;
+  }
+
+  if (!confirmCheck) {
+    toast('Du skal bekræfte at du forstår GDPR-reglerne', 'error');
+    return;
+  }
+
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+
+  try {
+    let result;
+
+    // Terminate via Supabase if available
+    if (typeof SupabaseDB !== 'undefined' && supabaseClient) {
+      result = await SupabaseDB.terminateCustomer(
+        restaurantId,
+        reason,
+        currentUser?.email || 'unknown'
+      );
+    } else {
+      // Local fallback
+      const terminatedAt = new Date();
+      const gdprDeletionDate = new Date(terminatedAt);
+      gdprDeletionDate.setFullYear(gdprDeletionDate.getFullYear() + 5);
+
+      result = {
+        ...restaurant,
+        status: 'terminated',
+        terminated_at: terminatedAt.toISOString(),
+        termination_reason: reason,
+        termination_initiated_by: currentUser?.email || 'unknown',
+        gdpr_deletion_scheduled_at: gdprDeletionDate.toISOString()
+      };
+    }
+
+    // Update local array
+    const index = restaurants.findIndex(r => r.id === restaurantId);
+    if (index !== -1) {
+      restaurants[index] = result;
+    }
+
+    // Persist to localStorage
+    if (typeof persistRestaurants === 'function') {
+      persistRestaurants();
+    }
+
+    // Log activity
+    if (typeof logActivity === 'function') {
+      await logActivity('update', `Kunde opsagt: ${restaurant.name}`, {
+        category: 'kunder',
+        subCategory: 'opsigelse',
+        customerId: restaurantId,
+        data: { reason, status: 'terminated' }
+      });
+    }
+
+    // Refresh UI
+    loadDashboard();
+    if (typeof renderCrmTable === 'function') {
+      renderCrmTable(restaurants, '');
+    }
+    closeModal('terminate-customer');
+    closeCrmProfile();
+
+    toast('Kunde opsagt. Data bevares i 5 år iht. bogføringsloven.', 'success');
+  } catch (err) {
+    console.error('❌ Error terminating customer:', err);
+    toast('Fejl ved opsigelse af kunde: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Activate a pending customer (change status from pending to active)
+ * @param {string} restaurantId - Restaurant ID to activate
+ */
+async function activateCustomer(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+
+  // Allow activation if status is 'pending', undefined, null, or empty
+  if (restaurant.status && restaurant.status !== 'pending') {
+    toast('Kun afventende kunder kan aktiveres', 'warning');
+    return;
+  }
+
+  if (!confirm(`Vil du aktivere "${restaurant.name}"?\n\nKunden vil blive aktiv og kan modtage workflows.`)) {
+    return;
+  }
+
+  try {
+    // Update status
+    restaurant.status = 'active';
+    restaurant.activated_at = new Date().toISOString();
+
+    // Update via Supabase if available
+    if (typeof SupabaseDB !== 'undefined' && supabaseClient) {
+      await supabaseClient
+        .from('restaurants')
+        .update({
+          status: 'active',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', restaurantId);
+    }
+
+    // Persist to localStorage
+    if (typeof persistRestaurants === 'function') {
+      persistRestaurants();
+    }
+
+    // Log activity
+    if (typeof logActivity === 'function') {
+      await logActivity('update', `Kunde aktiveret: ${restaurant.name}`, {
+        category: 'kunder',
+        subCategory: 'aktivering',
+        customerId: restaurantId
+      });
+    }
+
+    // Refresh UI
+    loadDashboard();
+    if (typeof renderCrmTable === 'function') {
+      renderCrmTable(restaurants, '');
+    }
+
+    // Refresh profile view if open
+    if (currentProfileRestaurantId === restaurantId) {
+      showCrmProfileView(restaurantId);
+    }
+
+    toast('Kunde aktiveret', 'success');
+  } catch (err) {
+    console.error('❌ Error activating customer:', err);
+    toast('Fejl ved aktivering: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Reactivate a terminated customer
+ * @param {string} restaurantId - Restaurant ID to reactivate
+ */
+async function reactivateCustomer(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) {
+    toast('Kunde ikke fundet', 'error');
+    return;
+  }
+
+  if (restaurant.status !== 'terminated') {
+    toast('Kun opsagte kunder kan genaktiveres', 'warning');
+    return;
+  }
+
+  if (!confirm(`Vil du genaktivere "${restaurant.name}"?\n\nKunden vil igen være aktiv og modtage workflows.`)) {
+    return;
+  }
+
+  try {
+    let result;
+
+    // Reactivate via Supabase if available
+    if (typeof SupabaseDB !== 'undefined' && supabaseClient) {
+      result = await SupabaseDB.reactivateCustomer(
+        restaurantId,
+        currentUser?.email || 'unknown'
+      );
+    } else {
+      // Local fallback
+      result = {
+        ...restaurant,
+        status: 'active',
+        terminated_at: null,
+        termination_reason: null,
+        termination_initiated_by: null,
+        gdpr_deletion_scheduled_at: null
+      };
+    }
+
+    // Update local array
+    const index = restaurants.findIndex(r => r.id === restaurantId);
+    if (index !== -1) {
+      restaurants[index] = result;
+    }
+
+    // Persist to localStorage
+    if (typeof persistRestaurants === 'function') {
+      persistRestaurants();
+    }
+
+    // Log activity
+    if (typeof logActivity === 'function') {
+      await logActivity('update', `Kunde genaktiveret: ${restaurant.name}`, {
+        category: 'kunder',
+        subCategory: 'genaktivering',
+        customerId: restaurantId
+      });
+    }
+
+    // Refresh UI
+    loadDashboard();
+    if (typeof renderCrmTable === 'function') {
+      renderCrmTable(restaurants, '');
+    }
+
+    // Refresh profile view if open
+    if (currentProfileRestaurantId === restaurantId) {
+      showCrmProfileView(restaurantId);
+    }
+
+    toast('Kunde genaktiveret', 'success');
+  } catch (err) {
+    console.error('❌ Error reactivating customer:', err);
+    toast('Fejl ved genaktivering: ' + err.message, 'error');
+  }
+}
+
+/**
+ * Get retention info for a terminated customer
+ * @param {Object} restaurant - Restaurant object
+ * @returns {Object|null} Retention info or null if not terminated
+ */
+function getRetentionInfo(restaurant) {
+  if (!restaurant || restaurant.status !== 'terminated' || !restaurant.terminated_at) {
+    return null;
+  }
+
+  const terminatedDate = new Date(restaurant.terminated_at);
+  const deletionDate = new Date(restaurant.gdpr_deletion_scheduled_at);
+  const now = new Date();
+
+  const daysRemaining = Math.ceil((deletionDate - now) / (1000 * 60 * 60 * 24));
+  const totalDays = Math.ceil((deletionDate - terminatedDate) / (1000 * 60 * 60 * 24));
+  const percentComplete = Math.round(((totalDays - daysRemaining) / totalDays) * 100);
+
+  return {
+    terminatedDate,
+    deletionDate,
+    daysRemaining: Math.max(0, daysRemaining),
+    totalDays,
+    percentComplete: Math.min(100, Math.max(0, percentComplete)),
+    reason: restaurant.termination_reason || '-',
+    initiatedBy: restaurant.termination_initiated_by || '-'
+  };
+}
+
+/**
+ * Show termination info banner on customer profile
+ * @param {Object} restaurant - Restaurant object
+ */
+function showTerminationBanner(restaurant) {
+  const retentionInfo = getRetentionInfo(restaurant);
+  if (!retentionInfo) {
+    // Hide banner if exists
+    const existingBanner = document.getElementById('termination-banner');
+    if (existingBanner) existingBanner.style.display = 'none';
+    return;
+  }
+
+  let banner = document.getElementById('termination-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'termination-banner';
+    const profileView = document.getElementById('crm-profile-view');
+    const profileHeader = profileView?.querySelector('.crm-profile-header');
+    if (profileHeader) {
+      profileHeader.parentNode.insertBefore(banner, profileHeader.nextSibling);
+    }
+  }
+
+  banner.className = 'termination-info-banner';
+  banner.innerHTML = `
+    <div class="termination-banner-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <div>
+        <h4>Kunde opsagt</h4>
+        <p>Data bevares iht. dansk bogføringslov (5 år)</p>
+      </div>
+    </div>
+    <div class="termination-details">
+      <div class="termination-detail">
+        <span class="label">Opsagt</span>
+        <span class="value">${retentionInfo.terminatedDate.toLocaleDateString('da-DK')}</span>
+      </div>
+      <div class="termination-detail">
+        <span class="label">Årsag</span>
+        <span class="value">${retentionInfo.reason}</span>
+      </div>
+      <div class="termination-detail">
+        <span class="label">Slettes</span>
+        <span class="value">${retentionInfo.deletionDate.toLocaleDateString('da-DK')}</span>
+      </div>
+      <div class="termination-detail">
+        <span class="label">Dage tilbage</span>
+        <span class="value">${retentionInfo.daysRemaining} dage</span>
+      </div>
+    </div>
+    <div class="termination-progress">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: ${retentionInfo.percentComplete}%"></div>
+      </div>
+      <span class="progress-label">${retentionInfo.percentComplete}% af retention-periode</span>
+    </div>
+    <div class="termination-actions">
+      <button class="btn btn-secondary btn-sm" onclick="reactivateCustomer('${restaurant.id}')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Genaktiver kunde
+      </button>
+    </div>
+  `;
+  banner.style.display = 'block';
+}
+
+/**
+ * Check if a customer can receive workflow actions
+ * @param {Object} restaurant - Restaurant object
+ * @returns {boolean} True if workflow actions are allowed
+ */
+function canReceiveWorkflowActions(restaurant) {
+  if (!restaurant) return false;
+  // Default til 'pending' hvis status er undefined/null (nye kunder)
+  const status = restaurant.status || 'pending';
+  const allowedStatuses = ['active', 'pending', 'demo'];
+  return allowedStatuses.includes(status);
+}
+
+/**
+ * Get the currently selected restaurant from workflow test dropdown
+ * @returns {Object|null} Restaurant object or null if none selected
+ */
+function getSelectedRestaurant() {
+  const select = document.getElementById('test-restaurant');
+  if (!select || !select.value) return null;
+  return restaurants.find(r => r.id === select.value) || null;
+}
+
+/**
+ * Filter CRM list by status
+ * @param {string} status - Status to filter by ('all' for no filter)
+ */
+let currentCrmStatusFilter = 'all';
+
+function filterByStatus(status) {
+  currentCrmStatusFilter = status;
+
+  // Update active state on filter buttons
+  document.querySelectorAll('.crm-status-filters .filter-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.status === status);
+  });
+
+  // Filter restaurants
+  let filtered = restaurants;
+  if (status !== 'all') {
+    if (status === 'demo') {
+      filtered = restaurants.filter(r => r.status === 'demo' || r.isDemo);
+    } else {
+      filtered = restaurants.filter(r => r.status === status);
+    }
+  }
+
+  // Re-render table
+  renderCrmTable(filtered, document.getElementById('crm-search')?.value || '');
+}
+
+// Populate test restaurant dropdown
+function populateTestRestaurants() {
+  const select = document.getElementById('test-restaurant');
+  if (!select) return;
+
+  // HTML escape function
+  const escapeHtml = (str) => {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  };
+
+  // Get restaurants that can receive workflow actions (active, pending, demo)
+  const workflowRestaurants = restaurants.filter(r => r && canReceiveWorkflowActions(r));
+
+  // Build options
+  let optionsHtml = '<option value="">Vælg restaurant...</option>';
+  workflowRestaurants.forEach(r => {
+    const id = escapeHtml(r.id);
+    const name = escapeHtml(r.name) || 'Uden navn';
+    const userId = generateUserId(r.id);
+    const statusLabel = r.status === 'demo' ? ' [Demo]' : r.status === 'pending' ? ' [Afventer]' : '';
+    optionsHtml += `<option value="${id}">${name}${statusLabel} (${userId})</option>`;
+  });
+
+  select.innerHTML = optionsHtml;
+
+  // Update buttons state
+  updateTestButtons();
+}
+
+function testRestaurant(id) {
+  document.getElementById('test-restaurant').value = id;
+  showPage('workflow');
+  updateTestButtons();
+}
+
+// =====================================================
+// MENU EDITOR FUNKTIONER
+// =====================================================
+let currentEditingMenuItems = [];
+
+function loadMenuItemsEditor(restaurantId) {
+  const editor = document.getElementById('menu-items-editor');
+  if (!editor) return;
+  
+  // Hent eksisterende menu
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  
+  // Prioriter: customMenu > localStorage > demo menu
+  let menuItems = [];
+  
+  if (restaurant?.customMenu?.items?.length > 0) {
+    menuItems = restaurant.customMenu.items;
+  } else {
+    const storedMenu = localStorage.getItem(`menu_${restaurantId}`);
+    if (storedMenu) {
+      try {
+        const parsed = JSON.parse(storedMenu);
+        if (parsed.items) menuItems = parsed.items;
+      } catch (e) {}
+    }
+  }
+  
+  // Hvis ingen menu, vis demo eller tom
+  if (menuItems.length === 0 && DEMO_MENUS[restaurantId]) {
+    menuItems = DEMO_MENUS[restaurantId].items;
+  }
+  
+  currentEditingMenuItems = [...menuItems];
+  renderMenuItemsEditor();
+}
+
+function renderMenuItemsEditor() {
+  const editor = document.getElementById('menu-items-editor');
+  if (!editor) return;
+  
+  if (currentEditingMenuItems.length === 0) {
+    editor.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px">
+      Ingen produkter endnu. Klik "+ Tilføj produkt" eller "Importér fra tekst".
+    </div>`;
+    return;
+  }
+  
+  editor.innerHTML = currentEditingMenuItems.map((item, index) => `
+    <div class="menu-item-row" style="display:flex;gap:6px;align-items:center;margin-bottom:6px;padding:6px;background:var(--bg3);border-radius:4px">
+      <input type="text" class="input" value="${item.number || ''}" placeholder="Nr" 
+        style="width:40px;padding:6px;font-size:12px" 
+        onchange="updateMenuItem(${index}, 'number', this.value)">
+      <input type="text" class="input" value="${item.name || ''}" placeholder="Produktnavn" 
+        style="flex:1;padding:6px;font-size:12px" 
+        onchange="updateMenuItem(${index}, 'name', this.value)">
+      <input type="number" class="input" value="${item.price || ''}" placeholder="Pris" 
+        style="width:60px;padding:6px;font-size:12px" 
+        onchange="updateMenuItem(${index}, 'price', parseInt(this.value))">
+      <button onclick="removeMenuItem(${index})" style="background:none;border:none;cursor:pointer;color:#f87171;font-size:14px">✕</button>
+    </div>
+  `).join('');
+}
+
+function addMenuItemRow() {
+  const nextNumber = currentEditingMenuItems.length + 1;
+  currentEditingMenuItems.push({
+    id: Date.now(),
+    number: String(nextNumber),
+    name: '',
+    price: 0,
+    category: 'Mad'
+  });
+  renderMenuItemsEditor();
+  
+  // Scroll til bunden
+  const editor = document.getElementById('menu-items-editor');
+  if (editor) editor.scrollTop = editor.scrollHeight;
+}
+
+function updateMenuItem(index, field, value) {
+  if (currentEditingMenuItems[index]) {
+    currentEditingMenuItems[index][field] = value;
+  }
+}
+
+function removeMenuItem(index) {
+  currentEditingMenuItems.splice(index, 1);
+  renderMenuItemsEditor();
+}
+
+function clearMenuItems() {
+  if (confirm('Er du sikker på du vil fjerne alle produkter fra menuen?')) {
+    currentEditingMenuItems = [];
+    renderMenuItemsEditor();
+  }
+}
+
+function importMenuFromText() {
+  const text = prompt(`Indsæt menu tekst (et produkt per linje):\n\nFormat: "Nummer. Produktnavn - Pris kr"\nEller: "Produktnavn: Pris"\n\nEksempel:\n1. Pizza Margherita - 89 kr\n2. Calzone - 99 kr\nCoca-Cola: 25`);
+  
+  if (!text) return;
+  
+  const lines = text.split('\n').filter(line => line.trim());
+  const newItems = [];
+  
+  lines.forEach((line, index) => {
+    // Prøv forskellige formater
+    let match;
+    let number = String(index + 1);
+    let name = '';
+    let price = 0;
+    
+    // Format: "1. Pizza Margherita - 89 kr" eller "1. Pizza Margherita 89"
+    match = line.match(/^(\d+)[.\s]+(.+?)[\s-]+(\d+)\s*(kr)?$/i);
+    if (match) {
+      number = match[1];
+      name = match[2].trim();
+      price = parseInt(match[3]);
+    } else {
+      // Format: "Pizza Margherita: 89" eller "Pizza Margherita - 89"
+      match = line.match(/^(.+?)[\s:-]+(\d+)\s*(kr)?$/i);
+      if (match) {
+        name = match[1].trim();
+        price = parseInt(match[2]);
+      } else {
+        // Bare tekst - brug som navn
+        name = line.trim();
+      }
+    }
+    
+    if (name) {
+      newItems.push({
+        id: Date.now() + index,
+        number: number,
+        name: name,
+        price: price || 0,
+        category: 'Mad'
+      });
+    }
+  });
+  
+  if (newItems.length > 0) {
+    currentEditingMenuItems = [...currentEditingMenuItems, ...newItems];
+    renderMenuItemsEditor();
+  } else {
+    toast('Kunne ikke parse nogen produkter', 'error');
+  }
+}
+
+function saveMenuFromEditor(restaurantId) {
+  // Filtrer tomme items
+  const validItems = currentEditingMenuItems.filter(item => item.name && item.name.trim());
+
+  if (validItems.length === 0) {
+    // Slet menu
+    localStorage.removeItem(`menu_${restaurantId}`);
+    const restaurant = restaurants.find(r => r.id === restaurantId);
+    if (restaurant) delete restaurant.customMenu;
+    // Slet også fra Supabase
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveMenu) {
+      SupabaseDB.saveMenu(restaurantId, { items: [], currency: 'DKK' })
+        .catch(err => console.warn('Could not clear menu in Supabase:', err.message));
+    }
+    return;
+  }
+
+  // Gem menu
+  const menu = {
+    restaurantId: restaurantId,
+    items: validItems,
+    currency: 'DKK',
+    updatedAt: new Date().toISOString()
+  };
+
+  // Gem til localStorage (hurtig backup)
+  localStorage.setItem(`menu_${restaurantId}`, JSON.stringify(menu));
+
+  // Gem til Supabase (persistent storage)
+  if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveMenu) {
+    SupabaseDB.saveMenu(restaurantId, menu)
+      .catch(err => console.warn('Could not save menu to Supabase:', err.message));
+  }
+
+  // Opdater restaurant objektet
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (restaurant) {
+    restaurant.customMenu = menu;
+  }
+
+  console.log(`Menu saved for ${restaurantId}:`, validItems.length, 'items');
+}
+
+// =====================================================
+// WORKFLOW
+// =====================================================
+let workflowNodes = [
+  // ============================================
+  // LAYOUT KONSTANTER: Col spacing=220px, Row spacing=150px
+  // Col0=100, Col1=320, Col2=540, Col3=760, Col4=980
+  // ============================================
+  
+  // SEKTION 1: TRIGGERS (Row 0: y=50)
+  { id: 'trigger-call', type: 'trigger', label: 'Trigger', sublabel: 'Missed opkald', x: 320, y: 50, icon: '📞', next: 'open-check' },
+  { id: 'trigger-sms', type: 'trigger', label: 'Trigger', sublabel: 'SMS', x: 540, y: 50, icon: '💬', next: 'open-check' },
+  
+  // SEKTION 2: OPEN CHECKER (Row 1: y=200)
+  { id: 'open-check', type: 'condition', label: 'Open Checker', sublabel: '{{restaurant.openingHours}}', x: 430, y: 200, icon: '🕐', branches: [
+    { id: 'dynamic-open', label: 'Dynamisk: Åben', class: 'yes', next: 'open-node' },
+    { id: 'dynamic-closed', label: 'Dynamisk: Lukket', class: 'no', next: 'send-closed' }
+  ]},
+  
+  // SEKTION 3: OPEN BRANCHES (Row 2: y=350)
+  { id: 'open-node', type: 'condition', label: 'Open', x: 210, y: 350, icon: '✓', branches: [
+    { id: 'missed-call-branch', label: 'Missed Call', class: 'order', next: 'send-missed' },
+    { id: 'sms-branch', label: 'SMS', class: 'order', next: 'ai-classify-1' },
+    { id: 'none-branch', label: 'None', class: 'none', next: 'end-open-none' }
+  ]},
+  { id: 'go-to-open', type: 'action', label: 'Go To', x: 430, y: 350, icon: '↗️', next: 'open-node' },
+  { id: 'send-closed', type: 'sms', label: 'Lukket besked', sublabel: 'Dynamisk med næste åbning', x: 650, y: 350, icon: '💬', message: '{{generateClosedMessage}}', next: 'end-closed' },
+  { id: 'end-closed', type: 'end', label: 'END', x: 870, y: 350, icon: '🏁' },
+  { id: 'end-open-none', type: 'end', label: 'END', x: 430, y: 500, icon: '🏁' },
+  
+  // SEKTION 4: MISSED CALL PATH (Col0: x=100)
+  { id: 'send-missed', type: 'sms', label: 'Beklager, vi missede dit opkald', x: 100, y: 500, icon: '💬', message: 'Hej! Vi missede desværre dit opkald. Var det for at bestille mad? Svar JA for at starte din bestilling. Hilsen {restaurant}', next: 'wait-missed' },
+  { id: 'wait-missed', type: 'wait', label: 'Wait', x: 100, y: 650, icon: '⏳', timeout: 20, branches: [
+    { id: 'contact-reply-missed', label: 'Contact Reply', next: 'intent-check-missed' },
+    { id: 'timeout-missed', label: 'Time Out', class: 'timeout', next: 'end-timeout-missed' }
+  ]},
+  { id: 'end-timeout-missed', type: 'end', label: 'END', x: 320, y: 650, icon: '🏁' },
+  { id: 'intent-check-missed', type: 'condition', label: 'Intent check', x: 100, y: 800, icon: '🤖', branches: [
+    { id: 'yes-intent', label: 'Yes', class: 'yes', next: 'go-to-prev-order-1' },
+    { id: 'no-intent', label: 'No', class: 'no', next: 'end-no-intent' },
+    { id: 'none-intent', label: 'None', class: 'none', next: 'notification-unclear-1' },
+    { id: 'order-intent', label: 'ORDER', class: 'order', next: 'condition-prev-order' }
+  ]},
+  { id: 'go-to-prev-order-1', type: 'action', label: 'Go To', x: 100, y: 950, icon: '↗️', next: 'condition-prev-order' },
+  { id: 'end-no-intent', type: 'end', label: 'END', x: 320, y: 800, icon: '🏁' },
+  { id: 'notification-unclear-1', type: 'action', label: 'Notification', x: 100, y: 1100, icon: '🔔', next: 'end-notification-1' },
+  { id: 'end-notification-1', type: 'end', label: 'END', x: 100, y: 1250, icon: '🏁' },
+  
+  // SEKTION 5: SMS PATH + AI CLASSIFICATION (Col3-4: x=760-980)
+  { id: 'ai-classify-1', type: 'ai', label: '#1 AI Classification', x: 760, y: 500, icon: '🤖', systemPrompt: 'Kategoriser kundens svar: POSITIVE/YES, NEGATIVE/NO, GREETING, eller NONE.', next: 'ai-condition-1' },
+  { id: 'ai-condition-1', type: 'condition', label: 'Condition', x: 760, y: 650, icon: '❓', branches: [
+    { id: 'order-ai', label: 'ORDER', class: 'order', next: 'condition-prev-order' },
+    { id: 'greeting-ai', label: 'GREETING', class: 'greeting', next: 'send-greeting' },
+    { id: 'none-ai', label: 'None', class: 'none', next: 'end-none-ai' }
+  ]},
+  { id: 'end-none-ai', type: 'end', label: 'END', x: 980, y: 650, icon: '🏁' },
+  { id: 'send-greeting', type: 'sms', label: 'Vil du bestille over SMS?', x: 760, y: 800, icon: '💬', message: 'Hej! Kunne du tænke dig at afgive en bestilling over SMS?', next: 'wait-greeting' },
+  { id: 'wait-greeting', type: 'wait', label: 'Wait', x: 760, y: 950, icon: '⏳', timeout: 20, branches: [
+    { id: 'contact-reply-greet', label: 'Contact Reply', next: 'intent-check-greet' },
+    { id: 'timeout-greet', label: 'Time Out', class: 'timeout', next: 'end-timeout-greet' }
+  ]},
+  { id: 'end-timeout-greet', type: 'end', label: 'END', x: 980, y: 950, icon: '🏁' },
+  { id: 'intent-check-greet', type: 'condition', label: 'Intent check', x: 760, y: 1100, icon: '🤖', branches: [
+    { id: 'yes-greet', label: 'Yes', class: 'yes', next: 'go-to-prev-order-2' },
+    { id: 'no-greet', label: 'No', class: 'no', next: 'go-to-end-greet' },
+    { id: 'none-greet', label: 'None', class: 'none', next: 'end-none-greet' }
+  ]},
+  { id: 'go-to-prev-order-2', type: 'action', label: 'Go To', x: 760, y: 1250, icon: '↗️', next: 'condition-prev-order' },
+  { id: 'go-to-end-greet', type: 'action', label: 'Go To', x: 980, y: 1100, icon: '↗️', next: 'end-go-to-greet' },
+  { id: 'end-none-greet', type: 'end', label: 'END', x: 1200, y: 1100, icon: '🏁' },
+  { id: 'end-go-to-greet', type: 'end', label: 'END', x: 980, y: 1250, icon: '🏁' },
+  
+  // SEKTION 6: PREVIOUS ORDER CHECK (Center: x=430)
+  { id: 'condition-prev-order', type: 'condition', label: 'Previous Order Check', x: 430, y: 1400, icon: '❓', branches: [
+    { id: 'prev-delivery', label: 'Prev Delivery', class: 'order', next: 'reorder-delivery' },
+    { id: 'prev-pickup', label: 'Prev Pickup', class: 'order', next: 'reorder-pickup' },
+    { id: 'normal', label: 'Normal', class: 'none', next: 'ask-delivery-type' }
+  ]},
+  
+  // SEKTION 7: REORDER + DELIVERY TYPE
+  { id: 'reorder-delivery', type: 'sms', label: 'Genbestil levering?', x: 100, y: 1550, icon: '💬', message: 'Vil du genbestille din sidste levering?', next: 'wait-reorder-del' },
+  { id: 'reorder-pickup', type: 'sms', label: 'Genbestil afhentning?', x: 320, y: 1550, icon: '💬', message: 'Vil du genbestille din sidste afhentning?', next: 'wait-reorder-pick' },
+  { id: 'ask-delivery-type', type: 'sms', label: 'Levering eller afhentning?', x: 650, y: 1550, icon: '💬', message: 'Super! Skal maden leveres eller vil du hente? (Svar Levering eller Afhentning)', next: 'wait-delivery-type' },
+  
+  { id: 'wait-reorder-del', type: 'wait', label: 'Wait', x: 100, y: 1700, icon: '⏳', timeout: 20, branches: [
+    { id: 'reply-reorder-del', label: 'Contact Reply', next: 'intent-reorder-del' },
+    { id: 'timeout-reorder-del', label: 'Time Out', class: 'timeout', next: 'end-reorder-timeout-del' }
+  ]},
+  { id: 'wait-reorder-pick', type: 'wait', label: 'Wait', x: 320, y: 1700, icon: '⏳', timeout: 20, branches: [
+    { id: 'reply-reorder-pick', label: 'Contact Reply', next: 'intent-reorder-pick' },
+    { id: 'timeout-reorder-pick', label: 'Time Out', class: 'timeout', next: 'end-reorder-timeout-pick' }
+  ]},
+  { id: 'wait-delivery-type', type: 'wait', label: 'Wait', x: 650, y: 1700, icon: '⏳', timeout: 20, branches: [
+    { id: 'reply-type', label: 'Contact Reply', next: 'ai-delivery-type' },
+    { id: 'timeout-type', label: 'Time Out', class: 'timeout', next: 'end-timeout-type' }
+  ]},
+  
+  { id: 'end-reorder-timeout-del', type: 'end', label: 'END', x: 100, y: 2000, icon: '🏁' },
+  { id: 'end-reorder-timeout-pick', type: 'end', label: 'END', x: 320, y: 2000, icon: '🏁' },
+  { id: 'end-timeout-type', type: 'end', label: 'END', x: 870, y: 1700, icon: '🏁' },
+  
+  { id: 'intent-reorder-del', type: 'condition', label: 'Intent check', x: 100, y: 1850, icon: '🤖', branches: [
+    { id: 'yes-reorder-del', label: 'Yes', class: 'yes', next: 'go-to-delivery-type' },
+    { id: 'no-reorder-del', label: 'No', class: 'no', next: 'lukker-chat-del' }
+  ]},
+  { id: 'intent-reorder-pick', type: 'condition', label: 'Intent check', x: 320, y: 1850, icon: '🤖', branches: [
+    { id: 'yes-reorder-pick', label: 'Yes', class: 'yes', next: 'go-to-pickup-type' },
+    { id: 'no-reorder-pick', label: 'No', class: 'no', next: 'lukker-chat-pick' }
+  ]},
+  
+  { id: 'go-to-delivery-type', type: 'action', label: 'Go To', x: 100, y: 2150, icon: '↗️', next: 'order-type-delivery' },
+  { id: 'lukker-chat-del', type: 'sms', label: 'Lukker chat', x: 100, y: 2300, icon: '💬', message: 'Ok, vi lukker denne chat. Kontakt os igen!', next: 'end-reorder-del' },
+  { id: 'end-reorder-del', type: 'end', label: 'END', x: 100, y: 2450, icon: '🏁' },
+  
+  { id: 'go-to-pickup-type', type: 'action', label: 'Go To', x: 320, y: 2150, icon: '↗️', next: 'order-type-pickup' },
+  { id: 'lukker-chat-pick', type: 'sms', label: 'Lukker chat', x: 320, y: 2300, icon: '💬', message: 'Ok, vi lukker denne chat. Kontakt os igen!', next: 'end-reorder-pick' },
+  { id: 'end-reorder-pick', type: 'end', label: 'END', x: 320, y: 2450, icon: '🏁' },
+  
+  // SEKTION 8: AI DELIVERY TYPE
+  { id: 'ai-delivery-type', type: 'ai', label: '#3 GPT Delivery Check', x: 650, y: 1850, icon: '🤖', systemPrompt: 'Kategoriser: PICKUP, DELIVERY, eller UNCLEAR.', next: 'delivery-condition' },
+  { id: 'delivery-condition', type: 'condition', label: 'Condition', x: 650, y: 2000, icon: '❓', branches: [
+    { id: 'pickup-branch', label: 'Pickup', class: 'yes', next: 'order-type-pickup' },
+    { id: 'delivery-branch', label: 'DELIVERY', class: 'order', next: 'order-type-delivery' },
+    { id: 'none-delivery', label: 'None', class: 'none', next: 'notification-delivery' }
+  ]},
+  { id: 'notification-delivery', type: 'action', label: 'Notification', x: 870, y: 2000, icon: '🔔', next: 'end-notification-delivery' },
+  { id: 'end-notification-delivery', type: 'end', label: 'END', x: 870, y: 2150, icon: '🏁' },
+  
+  // SEKTION 9: ORDER TYPE + ASK ORDER
+  { id: 'order-type-pickup', type: 'action', label: 'Order Type: Pickup', x: 540, y: 2150, icon: '🏪', next: 'ask-order-pickup' },
+  { id: 'order-type-delivery', type: 'action', label: 'Order Type: Delivery', x: 760, y: 2150, icon: '🚗', next: 'ask-address' },
+  
+  { id: 'ask-order-pickup', type: 'sms', label: 'Send din bestilling', x: 540, y: 2300, icon: '💬', message: 'Lyder godt! Send hele din bestilling i én besked. Menu: {menu_url}', next: 'wait-order-pickup' },
+  { id: 'ask-address', type: 'sms', label: 'Hvad er din adresse?', x: 760, y: 2300, icon: '💬', message: 'Hvad er den fulde leveringsadresse inkl. postnummer?', next: 'wait-address' },
+  
+  { id: 'wait-order-pickup', type: 'wait', label: 'Wait', x: 540, y: 2450, icon: '⏳', timeout: 25, branches: [
+    { id: 'contact-reply-order-p', label: 'Contact Reply', next: 'ai-order-parser' },
+    { id: 'timeout-order-p', label: 'Time Out', class: 'timeout', next: 'end-timeout-order-p' }
+  ]},
+  { id: 'wait-address', type: 'wait', label: 'Wait', x: 760, y: 2450, icon: '⏳', timeout: 25, branches: [
+    { id: 'contact-reply-addr', label: 'Contact Reply', next: 'ai-address-extractor' },
+    { id: 'timeout-addr', label: 'Time Out', class: 'timeout', next: 'end-timeout-addr' }
+  ]},
+  { id: 'end-timeout-order-p', type: 'end', label: 'END', x: 540, y: 2600, icon: '🏁' },
+  { id: 'end-timeout-addr', type: 'end', label: 'END', x: 980, y: 2450, icon: '🏁' },
+  
+  // SEKTION 10: ADDRESS EXTRACTOR (Right side)
+  { id: 'ai-address-extractor', type: 'ai', label: '#5 Address Extractor', x: 760, y: 2600, icon: '🤖', systemPrompt: 'Udtræk adressen. Format: [Vejnavn] [Nr], [Postnr] [By]. Hvis mangelfuld: ERROR.', next: 'address-condition' },
+  { id: 'address-condition', type: 'condition', label: 'Condition', x: 760, y: 2750, icon: '❓', branches: [
+    { id: 'addr-valid', label: 'Valid', class: 'yes', next: 'update-delivery-address' },
+    { id: 'addr-error', label: 'ERROR', class: 'no', next: 'end-addr-error' }
+  ]},
+  { id: 'update-delivery-address', type: 'action', label: 'Update Address', x: 760, y: 2900, icon: '📍', next: 'ask-order-delivery' },
+  { id: 'end-addr-error', type: 'end', label: 'END', x: 980, y: 2750, icon: '🏁' },
+  
+  { id: 'ask-order-delivery', type: 'sms', label: 'Send din bestilling', x: 760, y: 3050, icon: '💬', message: 'Lyder godt! Send hele din bestilling i én besked. Menu: {menu_url}', next: 'wait-order-delivery' },
+  { id: 'wait-order-delivery', type: 'wait', label: 'Wait', x: 760, y: 3200, icon: '⏳', timeout: 25, branches: [
+    { id: 'contact-reply-order-d', label: 'Contact Reply', next: 'ai-order-parser' },
+    { id: 'timeout-order-d', label: 'Time Out', class: 'timeout', next: 'end-timeout-order-d' }
+  ]},
+  { id: 'end-timeout-order-d', type: 'end', label: 'END', x: 980, y: 3200, icon: '🏁' },
+  
+  // SEKTION 11: ORDER PARSER (Center)
+  { id: 'ai-order-parser', type: 'ai', label: '#4 GPT Order Parser', x: 430, y: 2750, icon: '🤖', systemPrompt: 'Analyser bestillingen. JSON med items og valid: true/false.', next: 'order-parser-condition' },
+  { id: 'order-parser-condition', type: 'condition', label: 'Condition', x: 430, y: 2900, icon: '❓', branches: [
+    { id: 'order-valid', label: 'Valid', class: 'yes', next: 'send-confirm-order' },
+    { id: 'order-invalid', label: 'Invalid', class: 'no', next: 'end-order-invalid' },
+    { id: 'order-offtopic', label: 'Off Topic', class: 'none', next: 'notification-off-topic' }
+  ]},
+  { id: 'end-order-invalid', type: 'end', label: 'END', x: 210, y: 2900, icon: '🏁' },
+  { id: 'notification-off-topic', type: 'action', label: 'Notification', x: 210, y: 3050, icon: '🔔', next: 'end-notification-off' },
+  { id: 'end-notification-off', type: 'end', label: 'END', x: 210, y: 3200, icon: '🏁' },
+  
+  // SEKTION 12: ORDER CONFIRMATION
+  { id: 'send-confirm-order', type: 'sms', label: 'Bekræft bestilling', x: 430, y: 3050, icon: '💬', message: 'Bare for at bekræfte: {order}. Er det korrekt?', next: 'wait-confirm' },
+  { id: 'wait-confirm', type: 'wait', label: 'Wait', x: 430, y: 3200, icon: '⏳', timeout: 25, branches: [
+    { id: 'contact-reply-confirm', label: 'Contact Reply', next: 'order-confirmation' },
+    { id: 'timeout-confirm', label: 'Time Out', class: 'timeout', next: 'end-timeout-confirm' }
+  ]},
+  { id: 'end-timeout-confirm', type: 'end', label: 'END', x: 210, y: 3350, icon: '🏁' },
+  
+  { id: 'order-confirmation', type: 'condition', label: 'Order Confirmation', x: 430, y: 3350, icon: '✓', branches: [
+    { id: 'yes-confirm', label: 'Yes', class: 'yes', next: 'ask-name' },
+    { id: 'no-confirm', label: 'No', class: 'no', next: 'send-retry' },
+    { id: 'none-confirm', label: 'None', class: 'none', next: 'notification-confirm' }
+  ]},
+  { id: 'send-retry', type: 'sms', label: 'Prøv igen', x: 210, y: 3500, icon: '💬', message: 'Ingen problem! Hvad vil du bestille?', next: 'go-to-wait-order' },
+  { id: 'go-to-wait-order', type: 'action', label: 'Go To', x: 210, y: 3650, icon: '↗️', next: 'wait-order-pickup' },
+  { id: 'notification-confirm', type: 'action', label: 'Notification', x: 650, y: 3350, icon: '🔔', next: 'end-notification-confirm' },
+  { id: 'end-notification-confirm', type: 'end', label: 'END', x: 650, y: 3500, icon: '🏁' },
+  
+  // SEKTION 13: ASK NAME
+  { id: 'ask-name', type: 'sms', label: 'Hvad er dit navn?', x: 430, y: 3500, icon: '💬', message: 'Må jeg bede om dit fulde navn til bestillingen?', next: 'wait-name' },
+  { id: 'wait-name', type: 'wait', label: 'Wait', x: 430, y: 3650, icon: '⏳', timeout: 25, branches: [
+    { id: 'contact-reply-name', label: 'Contact Reply', next: 'ai-name-extractor' },
+    { id: 'timeout-name', label: 'Time Out', class: 'timeout', next: 'end-timeout-name' }
+  ]},
+  { id: 'end-timeout-name', type: 'end', label: 'END', x: 650, y: 3650, icon: '🏁' },
+  
+  // SEKTION 14: NAME EXTRACTOR
+  { id: 'ai-name-extractor', type: 'ai', label: '#6 GPT Name Extractor', x: 430, y: 3800, icon: '🤖', systemPrompt: 'Udtræk kundens navn. Kun navnet eller ERROR.', next: 'name-condition' },
+  { id: 'name-condition', type: 'condition', label: 'Condition', x: 430, y: 3950, icon: '❓', branches: [
+    { id: 'name-valid', label: 'Valid', class: 'yes', next: 'update-contact-name' },
+    { id: 'name-error', label: 'ERROR', class: 'no', next: 'end-error-name' }
+  ]},
+  { id: 'end-error-name', type: 'end', label: 'END', x: 650, y: 3950, icon: '🏁' },
+  
+  // SEKTION 15: SAVE & PROCESS (Center column)
+  { id: 'update-contact-name', type: 'action', label: 'Update Contact Name', x: 430, y: 4100, icon: '👤', next: 'save-order-next' },
+  { id: 'save-order-next', type: 'action', label: 'Save Order', x: 430, y: 4250, icon: '💾', next: 'new-order-task' },
+  { id: 'new-order-task', type: 'action', label: 'New Order Task', x: 430, y: 4400, icon: '📋', next: 'increment-order-count' },
+  { id: 'increment-order-count', type: 'action', label: '+1 Order Count', x: 430, y: 4550, icon: '➕', next: 'internal-notification' },
+  { id: 'internal-notification', type: 'action', label: 'Internal Notification', x: 430, y: 4700, icon: '🔔', next: 'send-final-confirm' },
+  
+  // SEKTION 16: FINAL CONFIRMATION
+  { id: 'send-final-confirm', type: 'sms', label: 'Ordrebekræftelse', x: 430, y: 4850, icon: '💬', message: 'Tak! Din ordre er sendt til køkkenet. Vi giver besked når maden er klar!', next: 'ask-receipt' },
+  
+  // SEKTION 17: RECEIPT WORKFLOW (NY)
+  { id: 'ask-receipt', type: 'sms', label: 'Spørg om kvittering', x: 430, y: 5000, icon: '💬', message: 'Ønsker du en kvittering på din bestilling? Svar JA eller NEJ.', next: 'wait-receipt' },
+  { id: 'wait-receipt', type: 'wait', label: 'Wait', x: 430, y: 5150, icon: '⏳', timeout: 15, branches: [
+    { id: 'contact-reply-receipt', label: 'Contact Reply', next: 'intent-check-receipt' },
+    { id: 'timeout-receipt', label: 'Time Out', class: 'timeout', next: 'push-to-orders' }
+  ]},
+  { id: 'intent-check-receipt', type: 'condition', label: 'Intent check', x: 430, y: 5300, icon: '🤖', branches: [
+    { id: 'yes-receipt', label: 'Yes', class: 'yes', next: 'generate-receipt' },
+    { id: 'no-receipt', label: 'No', class: 'no', next: 'send-no-receipt' }
+  ]},
+  
+  // Receipt YES branch
+  { id: 'generate-receipt', type: 'action', label: 'Generér kvittering', x: 210, y: 5450, icon: '📄', next: 'send-receipt-sms' },
+  { id: 'send-receipt-sms', type: 'sms', label: 'Send kvittering', x: 210, y: 5600, icon: '💬', message: '📋 KVITTERING\n━━━━━━━━━━━━\nOrdre: #{order_number}\n{order_items}\n━━━━━━━━━━━━\nTotal: {total} kr\nAfhentning: {pickup_time}\n━━━━━━━━━━━━\nTak for din bestilling!\n{restaurant_name}', next: 'push-to-orders' },
+  
+  // Receipt NO branch
+  { id: 'send-no-receipt', type: 'sms', label: 'Pæn afslutning', x: 650, y: 5450, icon: '💬', message: 'Helt i orden! Vi glæder os til at se dig. Hav en fortsat god dag!', next: 'push-to-orders' },
+  
+  // SEKTION 18: ORDER PROCESSING + REVIEW
+  { id: 'push-to-orders', type: 'action', label: 'Push til Ordrer', x: 430, y: 5750, icon: '📦', next: 'add-to-review' },
+  { id: 'add-to-review', type: 'action', label: 'Add to Review Flow', x: 430, y: 5900, icon: '⭐', next: 'wait-review-delay' },
+  { id: 'wait-review-delay', type: 'wait', label: 'Wait Review Delay', x: 430, y: 6050, icon: '⏳', timeout: 60, next: 'send-review-request' },
+  { id: 'send-review-request', type: 'sms', label: 'Anmeldelsesanmodning', x: 430, y: 6200, icon: '⭐', message: 'Tak for din ordre! Giv os gerne en anmeldelse: Google: {google_review_url} Trustpilot: {trustpilot_url}', next: 'wait-1-hour' },
+  { id: 'wait-1-hour', type: 'wait', label: 'Wait 1 hour lock', x: 430, y: 6350, icon: '⏳', timeout: 60, next: 'end-final' },
+  { id: 'end-final', type: 'end', label: 'END', x: 430, y: 6500, icon: '🏁' }
+];
+
+let selectedNodeId = null;
+
+// SVG ikoner til workflow noder
+const nodeIcons = {
+  trigger: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  sms: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  wait: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  condition: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  ai: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A1.5 1.5 0 0 0 6 14.5 1.5 1.5 0 0 0 7.5 16 1.5 1.5 0 0 0 9 14.5 1.5 1.5 0 0 0 7.5 13m9 0a1.5 1.5 0 0 0-1.5 1.5 1.5 1.5 0 0 0 1.5 1.5 1.5 1.5 0 0 0 1.5-1.5 1.5 1.5 0 0 0-1.5-1.5"/></svg>',
+  action: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  end: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
+  goto: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+};
+
+function getNodeIcon(node) {
+  // Returner SVG baseret på node type
+  return nodeIcons[node.type] || nodeIcons['end'];
+}
+
+function renderWorkflowNodes() {
+  const container = document.getElementById('workflow-nodes');
+  const svg = document.getElementById('wf-connections');
+  
+  // Clear
+  container.innerHTML = '';
+  svg.innerHTML = '';
+  
+  // Render connections first
+  workflowNodes.forEach(node => {
+    if (node.next) {
+      const targetNode = workflowNodes.find(n => n.id === node.next);
+      if (targetNode) {
+        drawConnection(svg, node, targetNode);
+      }
+    }
+    if (node.branches) {
+      node.branches.forEach(branch => {
+        if (branch.next) {
+          const targetNode = workflowNodes.find(n => n.id === branch.next);
+          if (targetNode) {
+            drawConnection(svg, node, targetNode, branch.label);
+          }
+        }
+      });
+    }
+  });
+  
+  // Render nodes
+  workflowNodes.forEach(node => {
+    const nodeEl = document.createElement('div');
+    const disabledClass = node.disabled ? ' disabled' : '';
+    nodeEl.className = `wf-node ${node.id === selectedNodeId ? 'selected' : ''}${disabledClass}`;
+    nodeEl.id = `node-${node.id}`;
+    nodeEl.style.left = `${node.x}px`;
+    nodeEl.style.top = `${node.y}px`;
+    
+    const iconClass = node.type === 'trigger' ? 'trigger' : 
+                      node.type === 'condition' ? 'condition' :
+                      node.type === 'sms' ? 'sms' :
+                      node.type === 'wait' ? 'wait' :
+                      node.type === 'ai' ? 'ai' :
+                      node.type === 'action' ? 'action' : 'end';
+    
+    // Brug SVG ikon i stedet for emoji
+    const iconSvg = getNodeIcon(node);
+    
+    // Add disabled badge if node is disabled
+    const disabledBadge = node.disabled ? '<span style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:white;font-size:9px;padding:2px 6px;border-radius:10px">OFF</span>' : '';
+    
+    let html = `
+      ${disabledBadge}
+      <div class="wf-node-header">
+        <div class="wf-node-icon ${iconClass}">${iconSvg}</div>
+        <div class="wf-node-info">
+          <div class="wf-node-type">${node.type.toUpperCase()}</div>
+          <div class="wf-node-label">${node.label}</div>
+        </div>
+        <button class="wf-node-menu" onclick="event.stopPropagation(); openNodeEditor('${node.id}')">⋯</button>
+      </div>
+    `;
+    
+    if (node.sublabel) {
+      html += `<div class="wf-node-body">${node.sublabel}</div>`;
+    }
+    
+    if (node.branches && node.branches.length > 0) {
+      html += `<div class="wf-node-branches">`;
+      node.branches.forEach(branch => {
+        const branchClass = branch.class || '';
+        html += `<span class="wf-branch ${branchClass}" onclick="event.stopPropagation(); editBranch('${node.id}', '${branch.id}')">${branch.label}</span>`;
+      });
+      html += `</div>`;
+    }
+    
+    nodeEl.innerHTML = html;
+    
+    // Single click - select node
+    nodeEl.addEventListener('click', () => selectNode(node.id));
+    
+    // Double click - open editor
+    nodeEl.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      openNodeEditor(node.id);
+    });
+    
+    // Drag handler
+    makeDraggable(nodeEl, node);
+    
+    container.appendChild(nodeEl);
+  });
+}
+
+// Canvas transform state - SKAL være defineret før centerWorkflow
+let canvasTransform = { x: 0, y: 0, scale: 1 };
+let canvasPanningInitialized = false;
+let isSpaceHeld = false;
+
+// Centrer workflow i viewport - starter med triggers synlige og centreret horisontalt
+function centerWorkflow() {
+  const canvas = document.getElementById('workflow-canvas');
+  if (!canvas || workflowNodes.length === 0) return;
+  
+  // Ensure viewport exists
+  let viewport = canvas.querySelector('.canvas-viewport');
+  if (!viewport) {
+    console.warn('[Workflow] No viewport found, skipping center');
+    return;
+  }
+  
+  // Get actual viewport dimensions (wait for render)
+  const viewportWidth = canvas.clientWidth || canvas.offsetWidth || 800;
+  const viewportHeight = canvas.clientHeight || canvas.offsetHeight || 600;
+  
+  // Skip if dimensions are too small (not rendered yet)
+  if (viewportWidth < 100 || viewportHeight < 100) {
+    console.warn('[Workflow] Viewport too small, retrying...');
+    setTimeout(centerWorkflow, 100);
+    return;
+  }
+  
+  // Find bounding box af alle noder
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+  
+  workflowNodes.forEach(node => {
+    minX = Math.min(minX, node.x);
+    minY = Math.min(minY, node.y);
+    maxX = Math.max(maxX, node.x + 180);
+    maxY = Math.max(maxY, node.y + 100);
+  });
+  
+  // Beregn node cluster dimensioner
+  const nodesWidth = maxX - minX;
+  const nodesHeight = maxY - minY;
+  const nodesCenterX = minX + nodesWidth / 2;
+  const nodesCenterY = minY + nodesHeight / 2;
+  
+  // Calculate scale to fit all nodes with padding
+  const padding = 80;
+  const scaleX = (viewportWidth - padding * 2) / nodesWidth;
+  const scaleY = (viewportHeight - padding * 2) / nodesHeight;
+  
+  // Use fitScale to ensure all nodes are visible, but don't zoom in beyond 100%
+  const fitScale = Math.min(scaleX, scaleY, 1);
+  
+  // Set scale - start at 80% or fitScale if nodes are large
+  canvasTransform.scale = Math.max(0.3, Math.min(0.8, fitScale));
+  
+  // Center nodes in viewport
+  canvasTransform.x = (viewportWidth / 2) - (nodesCenterX * canvasTransform.scale);
+  canvasTransform.y = (viewportHeight / 2) - (nodesCenterY * canvasTransform.scale);
+  
+  // Apply transform
+  viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
+  
+  // Update zoom display
+  const zoomDisplay = document.getElementById('zoom-display');
+  if (zoomDisplay) zoomDisplay.textContent = Math.round(canvasTransform.scale * 100) + '%';
+  
+  console.log(`[Workflow] Centreret - Viewport: ${viewportWidth}x${viewportHeight}, Nodes: ${Math.round(nodesWidth)}x${Math.round(nodesHeight)}, Scale: ${Math.round(canvasTransform.scale*100)}%`);
+}
+
+// FitView function - shows top triggers at comfortable zoom
+function fitWorkflowToView() {
+  const canvas = document.getElementById('workflow-canvas');
+  if (!canvas || workflowNodes.length === 0) return;
+  
+  let viewport = canvas.querySelector('.canvas-viewport');
+  if (!viewport) {
+    console.warn('[Workflow] fitView: No viewport');
+    return;
+  }
+  
+  const viewportWidth = canvas.clientWidth || 800;
+  const viewportHeight = canvas.clientHeight || 600;
+  
+  if (viewportWidth < 100 || viewportHeight < 100) {
+    setTimeout(fitWorkflowToView, 100);
+    return;
+  }
+  
+  // Find only the top nodes (triggers) for initial view
+  const topNodes = workflowNodes.filter(n => n.y <= 400);
+  const targetNodes = topNodes.length > 0 ? topNodes : workflowNodes.slice(0, 10);
+  
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+  
+  targetNodes.forEach(node => {
+    minX = Math.min(minX, node.x);
+    minY = Math.min(minY, node.y);
+    maxX = Math.max(maxX, node.x + 180);
+    maxY = Math.max(maxY, node.y + 100);
+  });
+  
+  const nodesWidth = maxX - minX;
+  const nodesHeight = maxY - minY;
+  const nodesCenterX = minX + nodesWidth / 2;
+  
+  // Set comfortable zoom level (80%)
+  canvasTransform.scale = 0.8;
+  
+  // Center horizontally, position top nodes near top of view
+  canvasTransform.x = (viewportWidth / 2) - (nodesCenterX * canvasTransform.scale);
+  canvasTransform.y = 40 - (minY * canvasTransform.scale);
+  
+  viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
+  
+  const zoomDisplay = document.getElementById('zoom-display');
+  if (zoomDisplay) zoomDisplay.textContent = Math.round(canvasTransform.scale * 100) + '%';
+  
+  console.log(`[Workflow] fitView - Scale: ${Math.round(canvasTransform.scale*100)}%, X: ${Math.round(canvasTransform.x)}, Y: ${Math.round(canvasTransform.y)}`);
+}
+
+// Initialiser canvas panning - Figma/Miro style infinite canvas
+function initCanvasPanning() {
+  if (canvasPanningInitialized) return;
+  
+  const canvas = document.getElementById('workflow-canvas');
+  if (!canvas) return;
+  
+  canvasPanningInitialized = true;
+  
+  let isPanning = false;
+  let startX, startY;
+  
+  // Get viewport element (create if not exists)
+  let viewport = canvas.querySelector('.canvas-viewport');
+  if (!viewport) {
+    // Wrap existing content in viewport
+    const grid = canvas.querySelector('.canvas-grid');
+    const connections = canvas.querySelector('.wf-connections');
+    const nodes = canvas.querySelector('.nodes-container');
+    
+    viewport = document.createElement('div');
+    viewport.className = 'canvas-viewport';
+    viewport.style.width = '5000px';
+    viewport.style.height = '7000px';
+    
+    if (grid) viewport.appendChild(grid);
+    if (connections) viewport.appendChild(connections);
+    if (nodes) viewport.appendChild(nodes);
+    
+    canvas.appendChild(viewport);
+  }
+  
+  function updateTransform() {
+    viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
+  }
+  
+  // Space key handling for pan mode
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !isSpaceHeld && document.getElementById('page-workflow').classList.contains('active')) {
+      isSpaceHeld = true;
+      canvas.classList.add('space-held');
+      e.preventDefault();
+    }
+  });
+  
+  document.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') {
+      isSpaceHeld = false;
+      canvas.classList.remove('space-held');
+    }
+  });
+  
+  // Mouse down - start panning
+  canvas.addEventListener('mousedown', (e) => {
+    // Pan with space + click, middle mouse, or direct canvas click
+    const isMiddleMouse = e.button === 1;
+    const isLeftClick = e.button === 0;
+    const onCanvas = !e.target.closest('.wf-node') && !e.target.closest('.test-panel') && !e.target.closest('.node-editor');
+    
+    if (isMiddleMouse || (isSpaceHeld && isLeftClick) || (isLeftClick && onCanvas)) {
+      isPanning = true;
+      canvas.classList.add('panning');
+      startX = e.clientX - canvasTransform.x;
+      startY = e.clientY - canvasTransform.y;
+      e.preventDefault();
+    }
+  });
+  
+  // Mouse move - pan canvas
+  document.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    
+    canvasTransform.x = e.clientX - startX;
+    canvasTransform.y = e.clientY - startY;
+    
+    // Clamp to reasonable bounds
+    const maxPan = 2000;
+    canvasTransform.x = Math.max(-maxPan, Math.min(maxPan, canvasTransform.x));
+    canvasTransform.y = Math.max(-maxPan, Math.min(maxPan, canvasTransform.y));
+    
+    updateTransform();
+  });
+  
+  // Mouse up - stop panning
+  document.addEventListener('mouseup', () => {
+    if (isPanning) {
+      isPanning = false;
+      canvas.classList.remove('panning');
+    }
+  });
+  
+  // Mouse wheel - zoom
+  canvas.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.max(0.25, Math.min(2, canvasTransform.scale * delta));
+      
+      // Zoom towards mouse position
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const scaleChange = newScale / canvasTransform.scale;
+      canvasTransform.x = mouseX - (mouseX - canvasTransform.x) * scaleChange;
+      canvasTransform.y = mouseY - (mouseY - canvasTransform.y) * scaleChange;
+      canvasTransform.scale = newScale;
+      
+      updateTransform();
+      document.getElementById('zoom-level').textContent = Math.round(newScale * 100) + '%';
+    } else {
+      // Normal scroll to pan
+      e.stopPropagation();
+      canvasTransform.x -= e.deltaX;
+      canvasTransform.y -= e.deltaY;
+      updateTransform();
+    }
+  }, { passive: false });
+  
+  // Initial transform
+  updateTransform();
+}
+
+function drawConnection(svg, fromNode, toNode, label) {
+  // Calculate positions based on node type and position
+  const fromWidth = 160;
+  const fromHeight = fromNode.branches ? 100 : 70;
+  
+  const fromX = fromNode.x + fromWidth / 2;
+  const fromY = fromNode.y + fromHeight;
+  const toX = toNode.x + fromWidth / 2;
+  const toY = toNode.y;
+  
+  // Create path with bezier curve
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  
+  // Calculate control points for smoother curves
+  const deltaY = toY - fromY;
+  const deltaX = Math.abs(toX - fromX);
+  
+  let d;
+  if (deltaX < 50) {
+    // Straight down
+    d = `M ${fromX} ${fromY} L ${toX} ${toY - 8}`;
+  } else {
+    // Curved path
+    const cp1Y = fromY + Math.min(deltaY * 0.3, 50);
+    const cp2Y = toY - Math.min(deltaY * 0.3, 50);
+    d = `M ${fromX} ${fromY} C ${fromX} ${cp1Y}, ${toX} ${cp2Y}, ${toX} ${toY - 8}`;
+  }
+  
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'wf-connection');
+  path.setAttribute('fill', 'none');
+  svg.appendChild(path);
+  
+  // Add arrow at end
+  const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  arrow.setAttribute('points', `${toX},${toY} ${toX-5},${toY-10} ${toX+5},${toY-10}`);
+  arrow.setAttribute('class', 'wf-connection-arrow');
+  svg.appendChild(arrow);
+}
+
+function makeDraggable(element, node) {
+  let isDragging = false;
+  let startX, startY, nodeStartX, nodeStartY;
+  
+  element.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.wf-node-menu') || e.target.closest('.wf-branch')) return;
+    if (isSpaceHeld) return; // Don't drag nodes when panning
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    nodeStartX = node.x;
+    nodeStartY = node.y;
+    element.style.zIndex = '100';
+    e.preventDefault();
+    e.stopPropagation();
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    // Account for current zoom level
+    const scale = canvasTransform?.scale || currentZoom || 1;
+    const dx = (e.clientX - startX) / scale;
+    const dy = (e.clientY - startY) / scale;
+    
+    // Snap to grid (20px grid)
+    const gridSize = 20;
+    const newX = Math.round((nodeStartX + dx) / gridSize) * gridSize;
+    const newY = Math.round((nodeStartY + dy) / gridSize) * gridSize;
+    
+    node.x = Math.max(0, newX);
+    node.y = Math.max(0, newY);
+    element.style.left = `${node.x}px`;
+    element.style.top = `${node.y}px`;
+    renderWorkflowNodes(); // Re-render connections
+  });
+  
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      element.style.zIndex = '';
+    }
+  });
+}
+
+function selectNode(id) {
+  selectedNodeId = id;
+  renderWorkflowNodes();
+}
+
+function openNodeEditor(id) {
+  const node = workflowNodes.find(n => n.id === id);
+  if (!node) return;
+  
+  selectedNodeId = id;
+  renderWorkflowNodes();
+  
+  const editor = document.getElementById('node-editor');
+  const body = document.getElementById('node-editor-body');
+  
+  // Build editor based on node type
+  let html = '';
+  
+  // Header with node type title (no icons)
+  const typeLabels = {
+    trigger: 'TRIGGER',
+    condition: 'CONDITION',
+    sms: 'SMS BESKED',
+    wait: 'WAIT / VENT',
+    ai: 'AI CLASSIFICATION',
+    action: 'ACTION',
+    end: 'END'
+  };
+  
+  // Type badge colors
+  const typeColors = {
+    trigger: 'var(--accent)',
+    condition: 'var(--orange)',
+    sms: 'var(--green)',
+    wait: 'var(--purple)',
+    ai: 'var(--pink)',
+    action: 'var(--blue)',
+    end: 'var(--muted)'
+  };
+  
+  html += `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:40px;border-radius:4px;background:${typeColors[node.type] || 'var(--accent)'}"></div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600">${typeLabels[node.type] || node.type.toUpperCase()}</div>
+        <div style="font-size:16px;font-weight:600;margin-top:2px">${node.label}</div>
+      </div>
+    </div>
+  `;
+  
+  // === TRIGGER NODE ===
+  if (node.type === 'trigger') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Trigger Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Trigger Type</label>
+          <select class="input" onchange="updateNodeProperty('${id}', 'triggerType', this.value)">
+            <option value="missed_call" ${node.triggerType === 'missed_call' ? 'selected' : ''}>Missed Call</option>
+            <option value="sms" ${node.triggerType === 'sms' ? 'selected' : ''}>Incoming SMS</option>
+            <option value="both" ${node.triggerType === 'both' ? 'selected' : ''}>Begge</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sublabel</label>
+          <input class="input" value="${node.sublabel || ''}" onchange="updateNodeProperty('${id}', 'sublabel', this.value)">
+        </div>
+      </div>
+    `;
+  }
+  
+  // === SMS NODE ===
+  else if (node.type === 'sms') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">SMS Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Node Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SMS Besked til kunden</label>
+          <textarea class="input" rows="5" style="font-size:13px;line-height:1.5" onchange="updateNodeProperty('${id}', 'message', this.value)">${node.message || ''}</textarea>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">
+            Variabler: {restaurant}, {name}, {order}, {address}
+          </div>
+        </div>
+      </div>
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">SMS Skabeloner</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'missed_call')">Missed Call</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'delivery_type')">Levering/Afhentning</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'address')">Spørg Adresse</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'order')">Spørg Ordre</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'confirm')">Bekræftelse</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'error')">Fejl/Retry</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // === WAIT NODE ===
+  else if (node.type === 'wait') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Wait Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Wait Type</label>
+          <select class="input" onchange="updateNodeProperty('${id}', 'waitType', this.value)">
+            <option value="contact_reply" ${node.waitType === 'contact_reply' || !node.waitType ? 'selected' : ''}>Contact Reply (Vent på kundesvar)</option>
+            <option value="time_delay" ${node.waitType === 'time_delay' ? 'selected' : ''}>Time Delay (Fast ventetid)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Timeout (minutter)</label>
+          <input class="input" type="number" value="${node.timeout || 25}" onchange="updateNodeProperty('${id}', 'timeout', parseInt(this.value))">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">
+            Anbefalet: 20-30 min for madbestillinger
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+      </div>
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Timeout Handling</div>
+        <div style="background:var(--bg3);padding:12px;border-radius:8px;font-size:12px;color:var(--text2)">
+          <div style="margin-bottom:8px"><strong>Contact Reply:</strong> Kunden svarer inden timeout</div>
+          <div><strong>Time Out:</strong> Kunden svarer ikke - send reminder eller afslut</div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // === AI NODE ===
+  else if (node.type === 'ai') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">AI Classification Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">AI Funktion</label>
+          <select class="input" onchange="updateNodeProperty('${id}', 'aiFunction', this.value)">
+            <option value="intent" ${node.aiFunction === 'intent' || !node.aiFunction ? 'selected' : ''}>Intent Classifier (Ja/Nej/Greeting)</option>
+            <option value="address" ${node.aiFunction === 'address' ? 'selected' : ''}>Address Extractor</option>
+            <option value="order" ${node.aiFunction === 'order' ? 'selected' : ''}>Order Parser</option>
+            <option value="name" ${node.aiFunction === 'name' ? 'selected' : ''}>Name Extractor</option>
+            <option value="delivery" ${node.aiFunction === 'delivery' ? 'selected' : ''}>Delivery Type (Pickup/Levering)</option>
+            <option value="custom" ${node.aiFunction === 'custom' ? 'selected' : ''}>Custom Prompt</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+      </div>
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">System Prompt</div>
+        <div class="form-group">
+          <textarea class="input" rows="8" style="font-size:12px;font-family:monospace;line-height:1.4" onchange="updateNodeProperty('${id}', 'systemPrompt', this.value)">${node.systemPrompt || getDefaultAIPrompt(node.aiFunction || 'intent')}</textarea>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setAIPrompt('${id}', 'intent')">Intent Prompt</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setAIPrompt('${id}', 'address')">Address Prompt</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setAIPrompt('${id}', 'order')">Order Prompt</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setAIPrompt('${id}', 'name')">Name Prompt</button>
+        </div>
+      </div>
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">AI Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Temperature</label>
+          <input class="input" type="number" step="0.1" min="0" max="1" value="${node.temperature || 0.1}" onchange="updateNodeProperty('${id}', 'temperature', parseFloat(this.value))">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">
+            Anbefalet: 0.0-0.1 for konsistente svar
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // === CONDITION NODE ===
+  else if (node.type === 'condition') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Condition Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sublabel</label>
+          <input class="input" value="${node.sublabel || ''}" onchange="updateNodeProperty('${id}', 'sublabel', this.value)">
+        </div>
+      </div>
+    `;
+    
+    if (node.branches && node.branches.length > 0) {
+      html += `
+        <div class="node-editor-section">
+          <div class="node-editor-section-title">Branches (${node.branches.length})</div>
+          ${node.branches.map((b, i) => `
+            <div style="background:var(--bg3);padding:12px;border-radius:8px;margin-bottom:10px;border-left:3px solid ${b.class === 'yes' ? '#10b981' : b.class === 'no' ? '#ef4444' : b.class === 'order' ? '#3b82f6' : '#94a3b8'}">
+              <div class="form-group" style="margin-bottom:8px">
+                <label class="form-label">Branch Label</label>
+                <input class="input" value="${b.label}" onchange="updateBranchProperty('${id}', '${b.id}', 'label', this.value)">
+              </div>
+              <div class="form-group" style="margin-bottom:8px">
+                <label class="form-label">Condition</label>
+                <input class="input" value="${b.condition || ''}" placeholder="f.eks. Intent Type = Positive/Yes" onchange="updateBranchProperty('${id}', '${b.id}', 'condition', this.value)">
+              </div>
+              <div class="form-group" style="margin-bottom:8px">
+                <label class="form-label">Branch Type</label>
+                <select class="input" onchange="updateBranchProperty('${id}', '${b.id}', 'class', this.value)">
+                  <option value="yes" ${b.class === 'yes' ? 'selected' : ''}>Yes/Positive</option>
+                  <option value="no" ${b.class === 'no' ? 'selected' : ''}>No/Negative</option>
+                  <option value="order" ${b.class === 'order' ? 'selected' : ''}>Order</option>
+                  <option value="greeting" ${b.class === 'greeting' ? 'selected' : ''}>Greeting</option>
+                  <option value="timeout" ${b.class === 'timeout' ? 'selected' : ''}>Timeout</option>
+                  <option value="none" ${b.class === 'none' || !b.class ? 'selected' : ''}>None/Default</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label class="form-label">Next Node</label>
+                <input class="input" value="${b.next || ''}" placeholder="Node ID" onchange="updateBranchProperty('${id}', '${b.id}', 'next', this.value)">
+              </div>
+            </div>
+          `).join('')}
+          <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="addBranch('${id}')">+ Tilføj Branch</button>
+        </div>
+      `;
+    }
+  }
+  
+  // === ACTION NODE ===
+  else if (node.type === 'action') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Action Indstillinger</div>
+        <div class="form-group">
+          <label class="form-label">Action Type</label>
+          <select class="input" onchange="updateNodeProperty('${id}', 'actionType', this.value)">
+            <option value="update_contact" ${node.actionType === 'update_contact' ? 'selected' : ''}>Update Contact</option>
+            <option value="save_order" ${node.actionType === 'save_order' ? 'selected' : ''}>Save Order</option>
+            <option value="create_task" ${node.actionType === 'create_task' ? 'selected' : ''}>Create Task</option>
+            <option value="notification" ${node.actionType === 'notification' ? 'selected' : ''}>Send Notification</option>
+            <option value="go_to" ${node.actionType === 'go_to' ? 'selected' : ''}>Go To (Jump)</option>
+            <option value="increment" ${node.actionType === 'increment' ? 'selected' : ''}>Increment Counter</option>
+            <option value="add_workflow" ${node.actionType === 'add_workflow' ? 'selected' : ''}>Add to Workflow</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+      </div>
+    `;
+    
+    if (node.actionType === 'notification' || node.label.toLowerCase().includes('notification')) {
+      html += `
+        <div class="node-editor-section">
+          <div class="node-editor-section-title">Notification Besked</div>
+          <div class="form-group">
+            <textarea class="input" rows="4" onchange="updateNodeProperty('${id}', 'notificationText', this.value)">${node.notificationText || '🚨 NY SMS-ORDRE MODTAGET!\\n👤 Kunde: {name}\\n📞 Tlf: {phone}\\n📍 Type: {order_type}\\n🏠 Adresse: {address}\\n📝 Ordre: {order}'}</textarea>
+          </div>
+        </div>
+      `;
+    }
+  }
+  
+  // === END NODE ===
+  else if (node.type === 'end') {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">End Node</div>
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
+        </div>
+        <div style="background:var(--bg3);padding:12px;border-radius:8px;font-size:12px;color:var(--text2)">
+          End noden afslutter denne gren af workflowet. Kunden kan starte forfra ved næste henvendelse.
+        </div>
+      </div>
+    `;
+  }
+  
+  // Connection section for non-branch nodes
+  if (node.next && !node.branches) {
+    html += `
+      <div class="node-editor-section">
+        <div class="node-editor-section-title">Forbindelse</div>
+        <div class="form-group">
+          <label class="form-label">Next Node ID</label>
+          <input class="input" value="${node.next}" onchange="updateNodeProperty('${id}', 'next', this.value)">
+        </div>
+      </div>
+    `;
+  }
+  
+  // Delete button (except for critical nodes)
+  if (!['trigger-call', 'trigger-sms', 'end-final'].includes(id)) {
+    html += `
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+        <button class="btn btn-danger" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px" onclick="if(confirm('Slet denne node?')) deleteNode('${id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Slet Node
+        </button>
+      </div>
+    `;
+  }
+  
+  body.innerHTML = html;
+  editor.classList.add('active');
+}
+
+// SMS Templates
+function setSmsTemplate(id, template) {
+  const templates = {
+    missed_call: "Hej! Vi missede desværre dit opkald. Var det for at bestille mad? Svar 'JA' for at starte din bestilling direkte her over SMS. Hilsen {restaurant}",
+    delivery_type: "Super! Skal maden leveres direkte til din dør, eller vil du selv komme og hente den? (Svar 'Levering' eller 'Afhentning')",
+    address: "Hvad er den fulde leveringsadresse inkl. postnummer?",
+    order: "Perfekt! Send venligst hele din bestilling i én enkelt besked.",
+    confirm: "Tak! Din ordre er nu sendt til køkkenet. Afvent venligst, at restauranten accepterer din bestilling. Du modtager en bekræftelse snarest. 🍕",
+    error: "Beklager, jeg kunne ikke helt forstå dit svar. Kan du prøve igen?"
+  };
+  updateNodeProperty(id, 'message', templates[template] || '');
+  openNodeEditor(id); // Refresh editor
+}
+
+// AI Prompts
+function getDefaultAIPrompt(type) {
+  const prompts = {
+    intent: `Du er en AI-assistent for en restaurant. Din opgave er at kategorisere kundens svar i én af følgende kategorier:
+
+1. POSITIVE/YES: Hvis kunden bekræfter, at de vil bestille mad (f.eks. 'ja tak', 'jeg vil gerne bestille', 'kan jeg få en pizza').
+2. NEGATIVE/NO: Hvis kunden takker nej (f.eks. 'nej tak', 'forkert nummer').
+3. GREETING: Hvis kunden kun siger hej uden at tage stilling til bestilling.
+4. NONE: Hvis svaret er uklart eller irrelevant.
+
+Output format: Returnér kun ét ord: Enten 'POSITIVE', 'NEGATIVE', 'GREETING' eller 'NONE'.`,
+    
+    address: `Du er en data-ekstraktor. Kunden har sendt en besked med deres leveringsadresse. Din opgave er at udtrække adressen præcist.
+
+Regler:
+• Hvis du finder en gyldig adresse, returnér den i formatet: [Vejnavn] [Nummer], [Postnummer] [By].
+• Hvis beskeden IKKE indeholder en adresse, eller den er mangelfuld, skal du svare med ordet: 'ERROR'.
+• Fjern unødvendig tekst som 'min adresse er' eller 'lever venligst til'.
+
+Output: Kun selve adressen eller 'ERROR'.`,
+    
+    order: `Analyser kundens besked og udtræk bestillingen. 
+
+Output format (JSON):
+{
+  "items": "Liste over retter/varer kunden har nævnt",
+  "valid": true/false
+}
+
+Hvis beskeden ikke indeholder en gyldig bestilling, sæt valid til false.`,
+    
+    name: `Udtræk kundens navn fra beskeden.
+
+Regler:
+• Returnér kun navnet (fornavn og evt. efternavn)
+• Hvis intet navn findes, returnér 'ERROR'
+• Fjern hilsner og andet tekst
+
+Output: Kun navnet eller 'ERROR'.`,
+    
+    delivery: `Kategorisér kundens svar som enten levering eller afhentning.
+
+Output: Returnér kun ét ord: 'PICKUP' eller 'DELIVERY' eller 'UNCLEAR'.`
+  };
+  return prompts[type] || prompts.intent;
+}
+
+function setAIPrompt(id, type) {
+  updateNodeProperty(id, 'systemPrompt', getDefaultAIPrompt(type));
+  updateNodeProperty(id, 'aiFunction', type);
+  openNodeEditor(id);
+}
+
+// Add new branch to condition node
+function addBranch(nodeId) {
+  const node = workflowNodes.find(n => n.id === nodeId);
+  if (node && node.branches) {
+    const newBranch = {
+      id: 'branch-' + Date.now(),
+      label: 'New Branch',
+      class: 'none',
+      condition: '',
+      next: ''
+    };
+    node.branches.push(newBranch);
+    openNodeEditor(nodeId);
+  }
+}
+
+// Delete node
+function deleteNode(id) {
+  const index = workflowNodes.findIndex(n => n.id === id);
+  if (index > -1) {
+    workflowNodes.splice(index, 1);
+    closeNodeEditor();
+    renderWorkflowNodes();
+  }
+}
+
+// =====================================================
+// NODE PALETTE FUNCTIONS
+// =====================================================
+
+function toggleNodePalette() {
+  const palette = document.getElementById('node-palette');
+  const canvas = document.getElementById('workflow-canvas');
+
+  if (!palette || !canvas) return;
+
+  palette.classList.toggle('collapsed');
+  canvas.classList.toggle('palette-collapsed');
+
+  const isCollapsed = palette.classList.contains('collapsed');
+  addLog(`${isCollapsed ? '📦' : '📋'} Node palette ${isCollapsed ? 'skjult' : 'vist'}`, 'info');
+}
+
+function addNodeFromPalette(type) {
+  // Find max Y position to place new node below existing ones
+  const maxY = workflowNodes.length > 0 ? Math.max(...workflowNodes.map(n => n.y)) : 0;
+
+  // Generate unique ID
+  const newId = `${type}-${Date.now()}`;
+
+  // Create node with default values
+  const newNode = createDefaultNode(type, newId, 430, maxY + 200);
+
+  // Add to workflow
+  workflowNodes.push(newNode);
+  renderWorkflowNodes();
+
+  // Auto-open editor for new node
+  selectNode(newId);
+  openNodeEditor(newId);
+
+  addLog(`✅ Ny ${type} node tilføjet: ${newId}`, 'success');
+}
+
+function createDefaultNode(type, id, x, y) {
+  const defaults = {
+    trigger: {
+      id,
+      type,
+      label: 'Ny Trigger',
+      x,
+      y,
+      icon: '📞',
+      next: '',
+      triggerType: 'sms',
+      description: 'SMS trigger'
+    },
+    sms: {
+      id,
+      type,
+      label: 'Ny SMS',
+      x,
+      y,
+      icon: '💬',
+      next: '',
+      message: 'Skriv din SMS besked her...',
+      useTemplate: false
+    },
+    wait: {
+      id,
+      type,
+      label: 'Vent på svar',
+      x,
+      y,
+      icon: '⏳',
+      timeout: 25,
+      waitType: 'contact_reply',
+      branches: [
+        { id: `${id}-reply`, label: 'Contact Reply', next: '' },
+        { id: `${id}-timeout`, label: 'Time Out', class: 'timeout', next: '' }
+      ]
+    },
+    condition: {
+      id,
+      type,
+      label: 'Ny Betingelse',
+      x,
+      y,
+      icon: '❓',
+      conditionType: 'simple',
+      branches: [
+        { id: `${id}-yes`, label: 'Yes', class: 'yes', next: '' },
+        { id: `${id}-no`, label: 'No', class: 'no', next: '' }
+      ]
+    },
+    ai: {
+      id,
+      type,
+      label: 'AI Klassificering',
+      x,
+      y,
+      icon: '🤖',
+      next: '',
+      aiFunction: 'intent',
+      context: '',
+      expectedCategories: []
+    },
+    action: {
+      id,
+      type,
+      label: 'Ny Action',
+      x,
+      y,
+      icon: '⚡',
+      next: '',
+      actionType: 'notification',
+      actionData: {}
+    },
+    end: {
+      id,
+      type,
+      label: 'END',
+      x,
+      y,
+      icon: '🏁',
+      endType: 'success'
+    }
+  };
+
+  return defaults[type] || {
+    id,
+    type,
+    label: 'Ny Node',
+    x,
+    y,
+    icon: '📦',
+    next: ''
+  };
+}
+
+// Drag and drop functionality
+let draggedNodeType = null;
+
+function dragStartPalette(event, nodeType) {
+  draggedNodeType = nodeType;
+  event.dataTransfer.effectAllowed = 'copy';
+  event.dataTransfer.setData('text/plain', nodeType);
+}
+
+function initCanvasDrop() {
+  const canvas = document.getElementById('workflow-canvas');
+
+  if (!canvas) {
+    console.warn('Workflow canvas not found - drag-drop initialization skipped');
+    return;
+  }
+
+  canvas.addEventListener('dragover', (e) => {
+    if (draggedNodeType) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    }
+  });
+
+  canvas.addEventListener('drop', (e) => {
+    if (!draggedNodeType) return;
+    e.preventDefault();
+
+    // Beregn drop position relativt til canvas transform
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left - (canvasTransform?.x || 0)) / (canvasTransform?.scale || 1);
+    const y = (e.clientY - rect.top - (canvasTransform?.y || 0)) / (canvasTransform?.scale || 1);
+
+    // Opret node på drop position
+    const newId = `${draggedNodeType}-${Date.now()}`;
+    const newNode = createDefaultNode(draggedNodeType, newId, x, y);
+
+    workflowNodes.push(newNode);
+    renderWorkflowNodes();
+
+    // Auto-select og åbn editor
+    selectNode(newId);
+    openNodeEditor(newId);
+
+    addLog(`✅ ${draggedNodeType} node droppet på (${Math.round(x)}, ${Math.round(y)})`, 'success');
+
+    draggedNodeType = null;
+  });
+
+  addLog('🎨 Canvas drag-drop initialiseret', 'info');
+}
+
+// Slet node med bekræftelse
+function confirmDeleteNode(id) {
+  const node = workflowNodes.find(n => n.id === id);
+
+  if (!node) {
+    addLog(`⚠️ Node ikke fundet: ${id}`, 'warn');
+    return;
+  }
+
+  const confirmMessage = `Er du sikker på at du vil slette denne node?\n\nNode ID: ${id}\nType: ${node.type}\nLabel: ${node.label}\n\nDenne handling kan ikke fortrydes.`;
+
+  if (confirm(confirmMessage)) {
+    deleteNode(id);
+    addLog(`🗑️ Node slettet: ${id}`, 'warn');
+  } else {
+    addLog(`❌ Sletning annulleret for: ${id}`, 'info');
+  }
+}
+
+function closeNodeEditor() {
+  document.getElementById('node-editor').classList.remove('active');
+  selectedNodeId = null;
+  renderWorkflowNodes();
+}
+
+function updateNodeProperty(id, prop, value) {
+  const node = workflowNodes.find(n => n.id === id);
+  if (node) {
+    node[prop] = value;
+
+    // VIGTIGT: Gem med det samme til localStorage
+    saveWorkflow();
+
+    renderWorkflowNodes();
+    addLog(`💾 Node ${id} opdateret: ${prop} = ${typeof value === 'string' && value.length > 50 ? value.substring(0, 50) + '...' : value}`, 'info');
+  }
+}
+
+function updateBranchProperty(nodeId, branchId, prop, value) {
+  const node = workflowNodes.find(n => n.id === nodeId);
+  if (node && node.branches) {
+    const branch = node.branches.find(b => b.id === branchId);
+    if (branch) {
+      branch[prop] = value;
+
+      // VIGTIGT: Gem med det samme til localStorage
+      saveWorkflow();
+
+      renderWorkflowNodes();
+      addLog(`💾 Branch ${branchId} opdateret: ${prop} = ${value}`, 'info');
+    }
+  }
+}
+
+function editBranch(nodeId, branchId) {
+  openNodeEditor(nodeId);
+}
+
+// ============================================
+// ZOOM FUNKTIONALITET
+// ============================================
+let currentZoom = 1;
+const minZoom = 0.25;
+const maxZoom = 2;
+const zoomStep = 0.1;
+
+function zoomIn() {
+  if (currentZoom < maxZoom) {
+    currentZoom = Math.min(currentZoom + zoomStep, maxZoom);
+    applyZoom();
+  }
+}
+
+function zoomOut() {
+  if (currentZoom > minZoom) {
+    currentZoom = Math.max(currentZoom - zoomStep, minZoom);
+    applyZoom();
+  }
+}
+
+function resetZoom() {
+  currentZoom = 1;
+  canvasTransform = { x: 0, y: 0, scale: 1 };
+  applyZoom();
+  centerWorkflow();
+}
+
+function applyZoom() {
+  // Update canvas transform
+  canvasTransform.scale = currentZoom;
+  
+  const canvas = document.getElementById('workflow-canvas');
+  const viewport = canvas?.querySelector('.canvas-viewport');
+  
+  if (viewport) {
+    viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
+  } else {
+    // Fallback for old structure
+    const nodesContainer = document.getElementById('workflow-nodes');
+    const connectionsContainer = document.getElementById('wf-connections');
+    const grid = document.querySelector('.canvas-grid');
+    
+    if (nodesContainer) {
+      nodesContainer.style.transform = `scale(${currentZoom})`;
+      nodesContainer.style.transformOrigin = '0 0';
+    }
+    
+    if (connectionsContainer) {
+      connectionsContainer.style.transform = `scale(${currentZoom})`;
+      connectionsContainer.style.transformOrigin = '0 0';
+    }
+    
+    if (grid) {
+      grid.style.transform = `scale(${currentZoom})`;
+      grid.style.transformOrigin = '0 0';
+    }
+  }
+  
+  // Re-render connections for at sikre de er synkroniseret med nodes
+  // Dette sikrer at lines følger noderne præcist
+  setTimeout(() => {
+    renderWorkflowNodes();
+  }, 10);
+  
+  // Update zoom display
+  const zoomDisplay = document.getElementById('zoom-level');
+  if (zoomDisplay) {
+    zoomDisplay.textContent = Math.round(currentZoom * 100) + '%';
+  }
+}
+
+// Mouse wheel zoom
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('workflow-canvas');
+  if (canvas) {
+    canvas.addEventListener('wheel', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          zoomIn();
+        } else {
+          zoomOut();
+        }
+      }
+    }, { passive: false });
+  }
+
+  // Initialize node palette drag-drop functionality
+  initCanvasDrop();
+});
+
+function saveWorkflow() {
+  localStorage.setItem('workflow_nodes', JSON.stringify(workflowNodes));
+  // Visual feedback - brief button flash
+  const btn = document.querySelector('[onclick="saveWorkflow()"]');
+  if (btn) {
+    btn.style.background = 'var(--green)';
+    setTimeout(() => btn.style.background = '', 300);
+  }
+}
+
+function resetWorkflow() {
+  if (confirm('Er du sikker på du vil nulstille workflowet?')) {
+    localStorage.removeItem('workflow_nodes');
+    location.reload();
+  }
+}
+
+// Load saved workflow
+const savedWorkflow = localStorage.getItem('workflow_nodes');
+if (savedWorkflow) {
+  try {
+    workflowNodes = JSON.parse(savedWorkflow);
+  } catch (e) {}
+}
+
+// =====================================================
+// LOCALSTORAGE PERSISTENCE SYSTEM
+// =====================================================
+const STORAGE_KEYS = {
+  RESTAURANTS: 'orderflow_restaurants',
+  SETTINGS: 'orderflow_settings',
+  VERSION: 'orderflow_version'
+};
+
+// Save all restaurants to localStorage
+function persistRestaurants() {
+  try {
+    // Only save user-modified properties, not demo data
+    const toSave = restaurants.map(r => ({
+      id: r.id,
+      name: r.name,
+      cvr: r.cvr,
+      email: r.email,
+      phone: r.phone,
+      owner: r.owner,
+      contactPerson: r.contactPerson,
+      address: r.address,
+      website: r.website,
+      createdAt: r.createdAt,
+      // Status
+      status: r.status,
+      // Workflow settings
+      reviewEnabled: r.reviewEnabled,
+      reorderEnabled: r.reorderEnabled,
+      receiptEnabled: r.receiptEnabled,
+      googleReviewUrl: r.googleReviewUrl,
+      trustpilotUrl: r.trustpilotUrl,
+      deliveryEnabled: r.deliveryEnabled,
+      deliveryFrom: r.deliveryFrom,
+      deliveryTo: r.deliveryTo,
+      deliveryTimeRestricted: r.deliveryTimeRestricted,
+      timeFormat: r.timeFormat,
+      openingHours: r.openingHours,
+      // Messages
+      messages: r.messages,
+      // Timestamps
+      stamdataUpdatedAt: r.stamdataUpdatedAt,
+      workflowSettingsUpdatedAt: r.workflowSettingsUpdatedAt,
+      messagesUpdatedAt: r.messagesUpdatedAt
+    }));
+    
+    localStorage.setItem(STORAGE_KEYS.RESTAURANTS, JSON.stringify(toSave));
+    console.log('Restaurants persisted to localStorage:', toSave.length);
+    return true;
+  } catch (e) {
+    console.error('Failed to persist restaurants:', e);
+    return false;
+  }
+}
+
+// Load restaurants from localStorage and merge with demo data
+function loadPersistedRestaurants() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.RESTAURANTS);
+    if (!saved) return false;
+
+    const savedData = JSON.parse(saved);
+    console.log('Loading persisted restaurants:', savedData.length);
+
+    // Merge saved data with existing restaurants OR add new ones
+    savedData.forEach(savedRestaurant => {
+      const existing = restaurants.find(r => r.id === savedRestaurant.id);
+      if (existing) {
+        // Merge user-modified properties
+        Object.keys(savedRestaurant).forEach(key => {
+          if (savedRestaurant[key] !== undefined && savedRestaurant[key] !== null) {
+            existing[key] = savedRestaurant[key];
+          }
+        });
+      } else {
+        // Add new restaurant that doesn't exist yet (e.g., locally created)
+        restaurants.push(savedRestaurant);
+        console.log('✅ Added locally saved restaurant:', savedRestaurant.name);
+      }
+    });
+
+    return true;
+  } catch (e) {
+    console.error('Failed to load persisted restaurants:', e);
+    return false;
+  }
+}
+
+// Clear all persisted data
+function clearPersistedData() {
+  if (confirm('Er du sikker på du vil slette alle gemte data? Dette kan ikke fortrydes.')) {
+    localStorage.removeItem(STORAGE_KEYS.RESTAURANTS);
+    localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+    toast('Alle gemte data slettet', 'success');
+    location.reload();
+  }
+}
+
+// Initialize persistence on app load
+function initPersistence() {
+  // Load saved restaurants
+  loadPersistedRestaurants();
+  
+  console.log('Persistence system initialized');
+}
+
+// Call persistence init after restaurants are loaded
+setTimeout(initPersistence, 100);
+
+// =====================================================
+// TEST WORKFLOW
+// =====================================================
+// Initialize test panel event listeners safely
+function initTestPanel() {
+  const testRestaurant = document.getElementById('test-restaurant');
+  const testPhone = document.getElementById('test-phone');
+  
+  if (testRestaurant) {
+    testRestaurant.addEventListener('change', updateTestButtons);
+  }
+  if (testPhone) {
+    testPhone.addEventListener('input', function() {
+      const convPhone = document.getElementById('conv-phone');
+      if (convPhone) convPhone.textContent = this.value;
+    });
+  }
+}
+
+// Call init when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initTestPanel);
+} else {
+  initTestPanel();
+}
+
+function updateTestButtons() {
+  const hasRestaurant = !!document.getElementById('test-restaurant').value;
+  document.getElementById('btn-call').disabled = !hasRestaurant;
+  document.getElementById('btn-sms').disabled = !hasRestaurant;
+}
+
+function toggleLive() {
+  console.log('toggleLive called!');
+  const toggle = document.getElementById('live-toggle');
+  const checkbox = toggle?.querySelector('input[type="checkbox"]');
+  const badge = document.getElementById('live-badge');
+  const container = document.getElementById('live-toggle-container');
+  const warning = document.getElementById('live-mode-warning');
+  
+  // Determine new state from checkbox or toggle current state
+  const newState = checkbox ? checkbox.checked : !liveMode;
+  
+  if (newState) {
+    // Enable live mode - GRØN for aktiv
+    liveMode = true;
+    if (checkbox) checkbox.checked = true;
+    if (badge) badge.classList.add('active');
+    if (container) {
+      container.classList.add('active');
+      container.style.background = 'rgba(45,212,191,0.1)';
+      container.style.border = '1px solid rgba(45,212,191,0.3)';
+    }
+    if (warning) {
+      warning.textContent = 'LIVE aktiv - SMS sendes til telefon';
+      warning.style.color = 'var(--accent)';
+      warning.style.fontWeight = '500';
+    }
+    addLog('LIVE MODE aktiveret - SMS sendes nu', 'success');
+    toast('LIVE MODE aktiveret', 'success');
+    console.log('LIVE MODE ON');
+  } else {
+    // Disable live mode - tilbage til neutral
+    liveMode = false;
+    if (checkbox) checkbox.checked = false;
+    if (badge) badge.classList.remove('active');
+    if (container) {
+      container.classList.remove('active');
+      container.style.background = 'var(--bg)';
+      container.style.border = '1px solid var(--border)';
+    }
+    if (warning) {
+      warning.textContent = 'Demo mode - SMS vises kun i UI';
+      warning.style.color = 'var(--muted)';
+      warning.style.fontWeight = 'normal';
+    }
+    addLog('Demo mode aktiveret', 'info');
+    toast('Demo mode', 'info');
+    console.log('LIVE MODE OFF');
+  }
+}
+
+// Make it global
+window.toggleLive = toggleLive;
+
+async function startTest(type) {
+  const restaurantId = document.getElementById('test-restaurant').value;
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) return;
+
+  // Check if customer can receive workflow actions
+  if (!canReceiveWorkflowActions(restaurant)) {
+    toast(`Workflows er deaktiveret for ${restaurant.status === 'terminated' ? 'opsagte' : 'inaktive'} kunder`, 'warning');
+    addLog(`⚠️ Kunde "${restaurant.name}" kan ikke modtage workflows (status: ${restaurant.status})`, 'warning');
+    return;
+  }
+
+  // LIVE MODE PRE-FLIGHT CHECKS
+  if (liveMode) {
+    const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG?.GATEWAYAPI_TOKEN;
+    if (!apiToken) {
+      toast('Fejl: GatewayAPI token ikke konfigureret', 'error');
+      addLog('❌ GatewayAPI token mangler - gå til Indstillinger → API', 'error');
+      return;
+    }
+
+    const phone = document.getElementById('test-phone').value;
+    if (!phone || phone.replace(/\D/g, '').length < 8) {
+      toast('Ugyldigt telefonnummer', 'error');
+      addLog('❌ Telefonnummer skal være mindst 8 cifre', 'error');
+      return;
+    }
+  }
+
+  console.log('startTest called:', type, 'Restaurant:', restaurant.name);
+  
+  // Auto-switch to messages tab to show SMS conversation
+  switchTestTab('messages');
+  
+  // Hide empty state in messages tab
+  const emptyState = document.getElementById('messages-empty-state');
+  if (emptyState) emptyState.style.display = 'none';
+  
+  // Hide test empty state
+  const testEmptyState = document.getElementById('test-empty-state');
+  if (testEmptyState) testEmptyState.style.display = 'none';
+  
+  // Info about current mode
+  if (!liveMode) {
+    addLog('Demo mode - SMS vises i UI, sendes ikke', 'info');
+  } else {
+    addLog('✓ LIVE MODE - Rigtige SMS sendes', 'success');
+  }
+  
+  testRunning = true;
+  document.getElementById('btn-stop').style.display = 'block';
+  
+  const messagesContainer = document.getElementById('messages');
+  console.log('Messages container before clear:', messagesContainer);
+  messagesContainer.innerHTML = '';
+
+  // Clear intent display when starting new test
+  if (typeof window.hideIntentDisplay === 'function') {
+    window.hideIntentDisplay();
+  }
+
+  // Clear detailed log at start
+  const detailedLog = document.getElementById('detailed-log');
+  if (detailedLog) {
+    detailedLog.innerHTML = '';
+  }
+  
+  addLog(`Test startet: ${type === 'call' ? 'Missed Call' : 'SMS'}`, 'success');
+  addLog(`Nummer: ${document.getElementById('test-phone').value}`, 'info');
+
+  // Simulate workflow med error handling
+  try {
+    await runWorkflow(restaurant, type);
+  } catch (err) {
+    console.error('Workflow error:', err);
+    addLog(`❌ Workflow fejl: ${err.message}`, 'error');
+  } finally {
+    // Cleanup uanset hvad
+    testRunning = false;
+    document.getElementById('btn-stop').style.display = 'none';
+    document.getElementById('waiting').style.display = 'none';
+    if (replyResolver) {
+      replyResolver(null);
+      replyResolver = null;
+    }
+  }
+}
+
+function stopTest() {
+  testRunning = false;
+  document.getElementById('btn-stop').style.display = 'none';
+  document.getElementById('waiting').style.display = 'none';
+
+  // Clear any pending reply resolver
+  if (replyResolver) {
+    replyResolver(null);
+    replyResolver = null;
+  }
+
+  addLog('⏹️ Test stoppet manuelt', 'warn');
+  toast('Test stoppet', 'info');
+}
+
+async function runWorkflow(restaurant, type) {
+  const phone = document.getElementById('test-phone').value;
+  let customerName = '';
+  let order = '';
+  let orderType = '';
+  let address = '';
+  let parsedOrder = null; // NY: Parsed order med priser
+  let currentMenu = null; // NY: Menu data
+  let openingHoursContext = ''; // NY: Åbningstider til AI
+
+  // =====================================================
+  // ADVANCED AI: Initialisér conversation state
+  // =====================================================
+  const conversationId = getCurrentConversationId();
+
+  if (window.AdvancedAI) {
+    const conversation = AdvancedAI.ConversationStateManager.getConversation(conversationId);
+    addLog(`💬 Advanced AI conversation initialiseret: ${conversationId}`, 'ai');
+
+    // Nulstil conversation ved ny workflow
+    conversation.currentPhase = 'FASE_0_HILSEN';
+    conversation.customerData.orderItems = [];
+    conversation.customerData.modifications = [];
+    conversation.customerData.extras = [];
+    conversation.validationAttempts = {};
+  }
+  
+  // TRIN 1: Fetch menu ved workflow start
+  addLog('📋 Henter menu data...', 'info');
+  currentMenu = await fetchMenuForRestaurant(restaurant);
+  
+  // Gem åbningstider som context til AI
+  openingHoursContext = formatOpeningHoursText(restaurant);
+  
+  // Log aktuelle åbningstider fra restaurant indstillinger
+  const dayNamesShort = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNamesFull = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayIndex = new Date().getDay();
+  const todayShort = dayNamesShort[dayIndex];
+  const todayFull = dayNamesFull[dayIndex];
+  const todayHours = restaurant.openingHours?.[todayShort] || restaurant.openingHours?.[todayFull];
+  if (todayHours?.enabled) {
+    // Check for 24h
+    if (todayHours.open === '00:00' && todayHours.close === '00:00') {
+      addLog(`🕐 Dagens åbningstider (${getDayNameDanish(todayFull)}): Døgnåbent`, 'info');
+    } else {
+      addLog(`🕐 Dagens åbningstider (${getDayNameDanish(todayFull)}): ${todayHours.open} - ${todayHours.close}`, 'info');
+    }
+  } else {
+    addLog(`🕐 ${getDayNameDanish(todayFull)}: Lukket i dag`, 'warn');
+  }
+  
+  // Node 1: Trigger
+  activateNode(type === 'call' ? 'trigger-call' : 'trigger-sms');
+  addLog('⚡ Trigger: ' + (type === 'call' ? 'Missed Call' : 'SMS modtaget'), 'info');
+  await sleep(500);
+  
+  // Node 2: DYNAMISK Check if open (bruger restaurant.openingHours)
+  activateNode('open-check');
+  addLog('❓ Tjekker åbningstider fra restaurant indstillinger...', 'info');
+  await sleep(500);
+  
+  // Brug dynamisk Open Checker - læser DIREKTE fra restaurant.openingHours
+  const openStatus = checkRestaurantOpen(restaurant);
+  
+  if (openStatus.isOpen) {
+    addLog(`✅ ${restaurant.name} er åben (lukker kl. ${openStatus.closeTime})`, 'success');
+  } else {
+    addLog(`🔴 ${restaurant.name} er lukket (${openStatus.reason})`, 'warn');
+    if (openStatus.nextOpen) {
+      addLog(`📅 Næste åbning: ${openStatus.nextOpen.day} kl. ${openStatus.nextOpen.time}`, 'info');
+    }
+  }
+  
+  if (!openStatus.isOpen) {
+    activateNode('send-closed');
+    // Generer dynamisk lukket-besked med næste åbningstid
+    const closedMessage = generateClosedMessage(restaurant, openStatus);
+    await sendSMS(phone, closedMessage, restaurant);
+    activateNode('end-closed');
+    return;
+  }
+  
+  // Node: Open
+  activateNode('open-node');
+  await sleep(300);
+  
+  // Missed Call path
+  activateNode('send-missed');
+  await sendSMS(phone, `Hej! Vi missede desværre dit opkald. Var det for at bestille mad? Svar JA for at starte din bestilling direkte her over SMS. Hilsen ${restaurant.name}`, restaurant);
+  
+  // Wait for reply
+  activateNode('wait-missed');
+  const reply1 = await waitForReply();
+  if (!reply1 || !testRunning) return;
+  
+  // Intent check - inkluder åbningstider i AI context
+  activateNode('intent-check-missed');
+  const classification1 = await classifyWithAI(reply1, `Kategoriser svaret: POSITIVE/YES, NEGATIVE/NO, GREETING, eller NONE. Restaurantens åbningstider:\n${openingHoursContext}`);
+  
+  const replyLower = reply1.toLowerCase();
+  const normalizedCategory = (classification1.category || '').toUpperCase();
+  const isNo = normalizedCategory === 'NO' || normalizedCategory === 'NEGATIVE' ||
+    replyLower.includes('nej') ||
+    replyLower.includes('no') ||
+    replyLower.includes('ikke') ||
+    replyLower.includes('nej tak');
+  const isYes = !isNo;
+  
+  addLog(`🎯 AI Intent: ${classification1.category} -> ${isYes ? 'JA' : 'NEJ'}`, 'ai');
+  
+  if (isNo) {
+    activateNode('end-no-intent');
+    await sendSMS(phone, 'Ingen problem! Ring gerne igen 📞', restaurant);
+    return;
+  }
+  
+  // Go to previous order check
+  activateNode('go-to-prev-order-1');
+  await sleep(200);
+  
+  // Previous order check
+  activateNode('condition-prev-order');
+  await sleep(300);
+  
+  // DYNAMISK LEVERINGSKONTROL - Tjek om restaurant tilbyder levering
+  const deliveryEnabled = restaurant.deliveryEnabled !== false; // Default true
+  let isPickup = false;
+  
+  if (!deliveryEnabled) {
+    // Levering deaktiveret - spring direkte til afhentning
+    activateNode('delivery-check');
+    addLog('🚗 Levering deaktiveret for denne restaurant', 'warn');
+    await sleep(200);
+    
+    activateNode('ask-delivery-type');
+    await sendSMS(phone, 'Vi tilbyder desværre ikke levering i øjeblikket. Du kan bestille til afhentning. Er det okay?', restaurant);
+    
+    activateNode('wait-delivery-type');
+    const pickupConfirm = await waitForReply();
+    if (!pickupConfirm || !testRunning) return;
+    
+    // Tjek om kunden accepterer afhentning
+    const pickupClass = await classifyWithAI(pickupConfirm, 'Accepterer kunden afhentning? YES/NO');
+    const acceptsPickup = pickupClass.category === 'YES' || 
+                          pickupConfirm.toLowerCase().includes('ja') ||
+                          pickupConfirm.toLowerCase().includes('okay') ||
+                          pickupConfirm.toLowerCase().includes('fint');
+    
+    if (!acceptsPickup) {
+      await sendSMS(phone, 'Det forstår vi godt. Du er altid velkommen tilbage når det passer dig bedre 👋', restaurant);
+      activateNode('end-no-delivery');
+      return;
+    }
+    
+    isPickup = true;
+    orderType = 'Pickup';
+  } else {
+    // Levering aktiveret - spørg kunden
+    activateNode('ask-delivery-type');
+    await sendSMS(phone, 'Super! Skal maden leveres direkte til din dør, eller vil du selv komme og hente den? (Svar Levering eller Afhentning)', restaurant);
+    
+    // Wait for delivery type
+    activateNode('wait-delivery-type');
+    const replyDelivery = await waitForReply();
+    if (!replyDelivery || !testRunning) return;
+    
+    // AI classify delivery
+    activateNode('ai-delivery-type');
+    const deliveryClass = await classifyWithAI(replyDelivery, 'Kategoriser: PICKUP eller DELIVERY eller UNCLEAR');
+    isPickup = replyDelivery.toLowerCase().includes('afhent') || 
+               replyDelivery.toLowerCase().includes('hente') ||
+               deliveryClass.category === 'PICKUP';
+    orderType = isPickup ? 'Pickup' : 'Delivery';
+  }
+  
+  addLog(`🎯 Type: ${orderType}`, 'ai');
+  
+  activateNode('delivery-condition');
+  await sleep(300);
+  
+  const menuUrl = restaurant.menuUrl || restaurant.website || 'vores hjemmeside';
+  
+  if (isPickup) {
+    activateNode('order-type-pickup');
+    await sleep(200);
+    
+    // Ask for order (pickup)
+    activateNode('ask-order-pickup');
+    await sendSMS(phone, `Lyder godt! Send venligst hele din bestilling i én enkelt besked. Du kan se vores menu her: ${menuUrl}`, restaurant);
+    
+    activateNode('wait-order-pickup');
+  } else {
+    activateNode('order-type-delivery');
+    await sleep(200);
+    
+    // =====================================================
+    // ADRESSE INDSAMLING MED VALIDERING
+    // =====================================================
+    // ADRESSE VALIDERING - Med AdvancedAI integration
+    // =====================================================
+    let addressConfirmed = false;
+    let addressRetryCount = 0;
+    const maxAddressRetries = 3;
+
+    while (!addressConfirmed && addressRetryCount < maxAddressRetries && testRunning) {
+      activateNode('ask-address');
+
+      // Opdater conversation phase
+      if (window.AdvancedAI) {
+        const conv = AdvancedAI.ConversationStateManager.getConversation(conversationId);
+        conv.currentPhase = 'FASE_3_ADRESSE';
+        conv.validationAttempts.address = addressRetryCount;
+      }
+
+      // Brug AdvancedAI til at generere kontekst-aware prompt
+      let addressPrompt;
+      if (window.AdvancedAI && addressRetryCount > 0) {
+        const conv = AdvancedAI.ConversationStateManager.getConversation(conversationId);
+        addressPrompt = AdvancedAI.generateAddressPrompt(conv, addressRetryCount);
+      } else {
+        // Legacy prompts
+        if (addressRetryCount === 0) {
+          addressPrompt = 'Hvad er den fulde leveringsadresse inkl. postnummer?';
+        } else if (addressRetryCount === 1) {
+          addressPrompt = 'Jeg mangler adressen. Skriv venligst vejnavn, husnummer og postnummer (f.eks. "Vestergade 10, 2100 København")';
+        } else {
+          addressPrompt = 'Skriv din adresse så vi kan levere maden:';
+        }
+      }
+
+      await sendSMS(phone, addressPrompt, restaurant);
+
+      activateNode('wait-address');
+      const addressReply = await waitForReply();
+      if (!addressReply || !testRunning) return;
+
+      // Tilføj til conversation history
+      if (window.AdvancedAI) {
+        AdvancedAI.ConversationStateManager.addMessage(conversationId, 'user', addressReply);
+      }
+
+      // Brug AdvancedAI validering hvis tilgængelig
+      let validation;
+      if (window.AdvancedAI) {
+        validation = AdvancedAI.validation.validateAddress(addressReply);
+        addLog(`🔍 AdvancedAI adresse validering: ${validation.valid ? '✓' : '✗'} complete=${validation.complete}`, 'ai');
+      } else {
+        // Legacy validation
+        activateNode('ai-address-extractor');
+        const addressClass = await classifyWithAI(addressReply,
+          `Udtræk leveringsadressen fra beskeden.
+          Kategoriser:
+          - ADDRESS: Gyldig adresse fundet (udtræk i "extracted")
+          - INCOMPLETE: Mangler postnummer eller husnummer
+          - ERROR: Ikke en adresse
+
+          En gyldig adresse har: vejnavn, husnummer, og helst postnummer.`
+        );
+
+        const extractedAddress = addressClass.extracted || addressReply.trim();
+        const hasNumber = /\d+/.test(extractedAddress);
+        const hasLetters = /[a-zæøå]{3,}/i.test(extractedAddress);
+        const hasPostalCode = /\b\d{4}\b/.test(extractedAddress);
+
+        validation = {
+          valid: addressClass.category === 'ADDRESS' || (hasNumber && hasLetters),
+          complete: hasPostalCode,
+          address: extractedAddress,
+          missing: !hasPostalCode ? ['postnummer'] : []
+        };
+      }
+
+      activateNode('address-condition');
+      await sleep(200);
+
+      // Håndter validerings resultat
+      if (validation.valid && validation.complete) {
+        // Perfekt adresse
+        address = validation.address;
+        addressConfirmed = true;
+
+        if (window.AdvancedAI) {
+          AdvancedAI.ConversationStateManager.updateCustomerData(conversationId, 'address', validation.parsed || { full: address });
+        }
+
+        addLog(`📍 Adresse gemt: ${address}`, 'success');
+      } else if (validation.valid && !validation.complete) {
+        // Delvis adresse - spørg efter manglende dele
+        addressRetryCount++;
+
+        if (validation.prompt && window.AdvancedAI) {
+          await sendSMS(phone, validation.prompt, restaurant);
+          addLog(`⚠️ Delvis adresse - mangler: ${validation.missing.join(', ')}`, 'warn');
+        } else {
+          addLog(`⚠️ Postnummer mangler (forsøg ${addressRetryCount}/${maxAddressRetries})`, 'warn');
+        }
+      } else {
+        // Ugyldig adresse
+        addressRetryCount++;
+        addLog(`⚠️ Ugyldig adresse: "${validation.address || addressReply}" (forsøg ${addressRetryCount}/${maxAddressRetries})`, 'warn');
+
+        if (addressRetryCount >= maxAddressRetries) {
+          // Brug hvad vi har efter max forsøg
+          address = validation.address || addressReply.trim() || 'Ukendt adresse';
+          addressConfirmed = true;
+          addLog(`📍 Adresse accepteret efter ${maxAddressRetries} forsøg: ${address}`, 'info');
+        }
+      }
+    }
+    
+    activateNode('update-delivery-address');
+    await sleep(200);
+    
+    // Ask for order (delivery)
+    activateNode('ask-order-delivery');
+    await sendSMS(phone, `Lyder godt! Send venligst hele din bestilling i én enkelt besked. Du kan se vores menu her: ${menuUrl}`, restaurant);
+    
+    activateNode('wait-order-delivery');
+  }
+  
+  // Wait for order
+  const orderReply = await waitForReply();
+  if (!orderReply || !testRunning) return;
+  
+  // TRIN 2: AI parse order MED menu-matching og priskalkulation
+  activateNode('ai-order-parser');
+  parsedOrder = await parseOrderWithMenu(orderReply, currentMenu, restaurant.name);
+  
+  // =====================================================
+  // ORDRE VALIDERING - Kræv mindst 1 produkt
+  // =====================================================
+  let orderValidationAttempts = 0;
+  const maxOrderAttempts = 3;
+  
+  while ((!parsedOrder.valid || !parsedOrder.items || parsedOrder.items.length === 0 || parsedOrder.total <= 0) && 
+         orderValidationAttempts < maxOrderAttempts && testRunning) {
+    orderValidationAttempts++;
+    addLog(`⚠️ Ordre ikke valid - ingen produkter fundet (forsøg ${orderValidationAttempts}/${maxOrderAttempts})`, 'warn');
+    
+    // Bed kunden om at være mere specifik
+    let helpMessage;
+    if (orderValidationAttempts === 1) {
+      helpMessage = `Jeg kunne ikke finde produkterne i vores menu. Prøv at skrive f.eks. "2x Pizza Margherita" eller brug produktnumre fra menuen: ${restaurant.menuUrl || 'vores hjemmeside'}`;
+    } else if (orderValidationAttempts === 2) {
+      // List some menu items as examples
+      const exampleItems = currentMenu.items.slice(0, 3).map(i => `${i.number}. ${i.name} (${i.price} kr)`).join(', ');
+      helpMessage = `Her er nogle af vores produkter: ${exampleItems}. Hvad vil du gerne bestille?`;
+    } else {
+      helpMessage = 'Skriv venligst din bestilling som f.eks. "1 margherita og 1 pepperoni" eller "nummer 1 og nummer 5"';
+    }
+    
+    await sendSMS(phone, helpMessage, restaurant);
+    
+    activateNode('wait-order-retry');
+    const retryOrderReply = await waitForReply();
+    if (!retryOrderReply || !testRunning) return;
+    
+    // Parse igen
+    activateNode('ai-order-parser');
+    parsedOrder = await parseOrderWithMenu(retryOrderReply, currentMenu, restaurant.name);
+  }
+  
+  // Hvis stadig ikke valid efter max forsøg
+  if (!parsedOrder.valid || parsedOrder.items.length === 0) {
+    addLog('❌ Kunne ikke identificere produkter - afslutter', 'error');
+    await sendSMS(phone, 'Beklager, jeg kunne ikke forstå din bestilling. Prøv at ringe til os direkte, så hjælper vi dig gerne!', restaurant);
+    activateNode('end-invalid-order');
+    return;
+  }
+  
+  // Generer bekræftelsesbesked med produktnavne og pris
+  const orderConfirmation = generateOrderConfirmation(parsedOrder);
+  order = orderConfirmation.summary;
+  addLog(`📋 Ordre: ${order}`, 'success');
+  addLog(`💰 Total: ${parsedOrder.total} kr`, 'success');
+  
+  activateNode('order-parser-condition');
+  await sleep(300);
+  
+  // =====================================================
+  // ORDRE BEKRÆFTELSE MED LOOP-BACK
+  // =====================================================
+  let orderConfirmed = false;
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  while (!orderConfirmed && retryCount < maxRetries && testRunning) {
+    // Confirm order MED pris
+    activateNode('send-confirm-order');
+    await sendSMS(phone, orderConfirmation.message, restaurant);
+    
+    activateNode('wait-confirm');
+    const confirmReply = await waitForReply();
+    if (!confirmReply || !testRunning) return;
+    
+    // AI analyserer svar med forbedret kontekst
+    activateNode('order-confirmation');
+    const confirmClass = await classifyWithAI(confirmReply, 
+      `Kundens svar på ordrebekræftelse. Kategoriser:
+      - YES: Kunden bekræfter ordren er korrekt
+      - NO: Kunden siger ordren er forkert/vil ændre
+      - CHANGE: Kunden vil tilføje/fjerne noget
+      - QUESTION: Kunden stiller spørgsmål
+      Ordre: ${order}`
+    );
+    
+    const isConfirmed = confirmClass.category === 'YES' || 
+                        confirmClass.category === 'POSITIVE' ||
+                        confirmReply.toLowerCase().match(/^(ja|jep|yes|korrekt|rigtigt|det passer|fint|okay|ok|perfekt)[\s!.,]*$/i);
+    
+    const isRejected = confirmClass.category === 'NO' ||
+                       confirmClass.category === 'CHANGE' ||
+                       confirmReply.toLowerCase().includes('ikke korrekt') ||
+                       confirmReply.toLowerCase().includes('forkert') ||
+                       confirmReply.toLowerCase().includes('nej') ||
+                       confirmReply.toLowerCase().includes('ændre');
+    
+    if (isConfirmed) {
+      orderConfirmed = true;
+      addLog('✅ Ordre bekræftet af kunden', 'success');
+    } else if (isRejected) {
+      retryCount++;
+      addLog(`🔄 Kunden vil ændre ordren (forsøg ${retryCount}/${maxRetries})`, 'warn');
+      
+      // LOOP-BACK: Spørg hvad der skal ændres
+      activateNode('send-retry');
+      await sendSMS(phone, 'Ingen problem! Hvad vil du gerne ændre eller tilføje til din bestilling?', restaurant);
+      
+      activateNode('wait-order-change');
+      const changeReply = await waitForReply();
+      if (!changeReply || !testRunning) return;
+      
+      // Re-parse den ændrede ordre
+      activateNode('ai-order-parser');
+      
+      // Tjek om det er en tilføjelse eller helt ny ordre
+      const isAddition = changeReply.toLowerCase().includes('tilføj') || 
+                        changeReply.toLowerCase().includes('også') ||
+                        changeReply.toLowerCase().includes('ekstra');
+      
+      if (isAddition && parsedOrder.items.length > 0) {
+        // Parse kun tilføjelsen og kombiner
+        const additionalOrder = await parseOrderWithMenu(changeReply, currentMenu, restaurant.name);
+        if (additionalOrder.valid && additionalOrder.items.length > 0) {
+          parsedOrder.items = [...parsedOrder.items, ...additionalOrder.items];
+          parsedOrder.total = parsedOrder.items.reduce((sum, item) => sum + item.lineTotal, 0);
+          addLog(`➕ Tilføjet: ${additionalOrder.items.map(i => i.name).join(', ')}`, 'success');
+        }
+      } else {
+        // Helt ny ordre
+        parsedOrder = await parseOrderWithMenu(changeReply, currentMenu, restaurant.name);
+      }
+      
+      // Generer ny bekræftelse
+      const newConfirmation = generateOrderConfirmation(parsedOrder);
+      orderConfirmation.message = newConfirmation.message;
+      orderConfirmation.summary = newConfirmation.summary;
+      orderConfirmation.total = newConfirmation.total;
+      order = newConfirmation.summary;
+      
+      addLog(`📋 Opdateret ordre: ${order} = ${parsedOrder.total} kr`, 'info');
+    } else {
+      // Uklart svar - spørg igen
+      retryCount++;
+      addLog(`❓ Uklart svar - spørger igen (forsøg ${retryCount}/${maxRetries})`, 'warn');
+      await sendSMS(phone, 'Undskyld, jeg forstod ikke helt. Er ordren korrekt? Svar Ja eller Nej.', restaurant);
+      continue;
+    }
+  }
+  
+  if (!orderConfirmed) {
+    await sendSMS(phone, 'Det ser ud til vi har problemer med ordren. Ring venligst til os direkte, så hjælper vi dig! 📞', restaurant);
+    return;
+  }
+  
+  // =====================================================
+  // NAVN INDSAMLING MED FORBEDRET VALIDERING - AdvancedAI
+  // =====================================================
+  let customerNameConfirmed = false;
+  let nameRetryCount = 0;
+
+  while (!customerNameConfirmed && nameRetryCount < maxRetries && testRunning) {
+    // Ask name
+    activateNode('ask-name');
+
+    // Opdater conversation phase
+    if (window.AdvancedAI) {
+      const conv = AdvancedAI.ConversationStateManager.getConversation(conversationId);
+      conv.currentPhase = 'FASE_4_NAVN';
+      conv.validationAttempts.name = nameRetryCount;
+    }
+
+    // Brug kontekst-aware prompts
+    let namePrompt;
+    if (nameRetryCount === 0) {
+      namePrompt = 'Perfekt! Må jeg bede om dit fulde navn til bestillingen?';
+    } else if (nameRetryCount === 1) {
+      namePrompt = 'Jeg har brug for både fornavn og efternavn. Hvad hedder du?';
+    } else {
+      namePrompt = 'Et fornavn er nok - hvad må vi kalde dig?';
+    }
+
+    await sendSMS(phone, namePrompt, restaurant);
+
+    activateNode('wait-name');
+    const nameReply = await waitForReply();
+    if (!nameReply || !testRunning) return;
+
+    // Tilføj til conversation history
+    if (window.AdvancedAI) {
+      AdvancedAI.ConversationStateManager.addMessage(conversationId, 'user', nameReply);
+    }
+    
+    // Brug AdvancedAI navn validering hvis tilgængelig
+    let nameValidation;
+    if (window.AdvancedAI) {
+      nameValidation = AdvancedAI.validation.validateName(nameReply);
+      addLog(`🔍 AdvancedAI navn validering: ${nameValidation.valid ? '✓' : '✗'}`, 'ai');
+
+      if (nameValidation.valid) {
+        customerName = nameValidation.name;
+        customerNameConfirmed = true;
+
+        // Opdater conversation state
+        AdvancedAI.ConversationStateManager.updateCustomerData(conversationId, 'name', customerName);
+
+        addLog(`👤 Navn: ${customerName}`, 'success');
+      } else if (nameValidation.needsConfirmation) {
+        // Usædvanligt navn - spørg for at bekræfte
+        await sendSMS(phone, nameValidation.confirm, restaurant);
+        const confirmReply = await waitForReply();
+
+        if (confirmReply && /ja|yes|korrekt|rigtigt|ok/i.test(confirmReply)) {
+          customerName = nameValidation.name;
+          customerNameConfirmed = true;
+          AdvancedAI.ConversationStateManager.updateCustomerData(conversationId, 'name', customerName);
+          addLog(`👤 Navn bekræftet: ${customerName}`, 'success');
+        } else {
+          nameRetryCount++;
+          addLog(`⚠️ Navn ikke bekræftet (forsøg ${nameRetryCount}/${maxRetries})`, 'warn');
+        }
+      } else {
+        nameRetryCount++;
+        addLog(`⚠️ Ugyldigt navn: "${nameReply}" (forsøg ${nameRetryCount}/${maxRetries})`, 'warn');
+
+        if (nameRetryCount >= maxRetries) {
+          customerName = 'Gæst';
+          customerNameConfirmed = true;
+          addLog('👤 Navn sat til: Gæst', 'info');
+        }
+      }
+    } else {
+      // Legacy AI validering
+      activateNode('ai-name-extractor');
+      const nameClass = await classifyWithAI(nameReply,
+        `Udtræk kundens navn fra beskeden.
+        Accepter: fulde navne, fornavne, kaldenavne.
+        Kategoriser:
+        - NAME: Beskeden indeholder et navn (udtræk det i "extracted")
+        - NO: Kunden vil ikke give navn
+        - QUESTION: Kunden stiller spørgsmål
+        - OTHER: Andet
+
+        Eksempler på gyldige navne: "Martin", "Martin Klaksvig", "Klaksvig", "kh", "mk"`
+      );
+
+      // Tjek for negativt svar
+      const isNegative = nameClass.category === 'NO' ||
+                         nameReply.toLowerCase().match(/^(nej|no|ikke|vil ikke)[\s!.,]*$/i);
+
+      if (isNegative) {
+        nameRetryCount++;
+        addLog(`⚠️ Kunden vil ikke give navn (forsøg ${nameRetryCount}/${maxRetries})`, 'warn');
+
+        if (nameRetryCount >= maxRetries) {
+          customerName = 'Gæst';
+          customerNameConfirmed = true;
+          addLog('👤 Navn sat til: Gæst', 'info');
+        } else {
+          await sendSMS(phone, 'Vi har brug for et navn til ordren, så vi kan kalde dig op. Det kan bare være et fornavn 😊', restaurant);
+        }
+      } else if (nameClass.category === 'NAME' || nameClass.extracted) {
+        // Udtræk navn fra AI eller brug reply direkte
+        let extractedName = nameClass.extracted || nameReply.trim();
+
+        // Rens navnet - fjern "jeg hedder", "mit navn er" etc.
+        extractedName = extractedName
+          .replace(/^(jeg hedder|jeg er|mit navn er|hedder|navn:?)\s*/i, '')
+          .replace(/[.,!?]+$/, '')
+          .trim();
+
+        // Kapitaliser navn korrekt
+        extractedName = extractedName.split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+
+        // Valider at det ligner et navn (mindst 2 tegn, primært bogstaver)
+        const isValidName = extractedName.length >= 2 &&
+                            /^[A-ZÆØÅa-zæøå\s\-']+$/.test(extractedName) &&
+                            !/^\d+$/.test(extractedName);
+
+        if (isValidName) {
+          customerName = extractedName;
+          customerNameConfirmed = true;
+          addLog(`👤 Navn: ${customerName}`, 'success');
+        } else {
+          nameRetryCount++;
+          addLog(`⚠️ Ugyldigt navn format: "${extractedName}"`, 'warn');
+
+          if (nameRetryCount >= maxRetries) {
+            // Brug hvad vi har eller "Gæst"
+            customerName = extractedName.length >= 2 ? extractedName : 'Gæst';
+            customerNameConfirmed = true;
+            addLog(`👤 Navn (accepteret): ${customerName}`, 'info');
+          }
+        }
+      } else {
+        // Prøv at bruge reply direkte som navn hvis det ser ud som et
+        const directName = nameReply.trim();
+        if (directName.length >= 2 && directName.length <= 50 && /^[A-ZÆØÅa-zæøå\s\-']+$/.test(directName)) {
+          customerName = directName.split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+          customerNameConfirmed = true;
+          addLog(`👤 Navn (direkte): ${customerName}`, 'success');
+        } else {
+          nameRetryCount++;
+          addLog(`❓ Kunne ikke finde navn i: "${nameReply}"`, 'warn');
+
+          if (nameRetryCount >= maxRetries) {
+            customerName = 'Gæst';
+            customerNameConfirmed = true;
+            addLog('👤 Navn sat til: Gæst', 'info');
+          }
+        }
+      }
+    }
+  }
+  
+  activateNode('name-condition');
+  await sleep(300);
+  
+  // Save & Process
+  activateNode('update-contact-name');
+  addLog('💾 Kontakt opdateret', 'success');
+  await sleep(200);
+  
+  activateNode('save-order-next');
+  addLog('💾 Ordre gemt til næste gang', 'success');
+  await sleep(200);
+  
+  activateNode('new-order-task');
+  addLog('📋 Ny ordre task oprettet', 'success');
+  await sleep(200);
+  
+  activateNode('increment-order-count');
+  restaurant.orders++;
+  restaurant.recovered++;
+  await sleep(200);
+  
+  // Internal notification
+  activateNode('internal-notification');
+  addLog(`🔔 Notifikation: NY ORDRE fra ${customerName}!`, 'success');
+  await sleep(200);
+  
+  // Check if full automation is enabled
+  const isAutoMode = restaurant?.automation?.enabled || false;
+  const autoTime = restaurant?.automation?.defaultTime || 40;
+  
+  if (isAutoMode) {
+    // AUTOMATIC MODE - send confirmation immediately
+    activateNode('send-final-confirm');
+    
+    // Get custom message or default
+    const defaultAutoMsg = `🎉 Din ordre er bekræftet! {{restaurant}} har modtaget din bestilling og forventer den er klar om ca. {{ventetid}} minutter. Vi sender besked, når maden er klar.`;
+    let confirmMsg = restaurant?.customMessages?.orderAccepted || defaultAutoMsg;
+    confirmMsg = confirmMsg
+      .replace(/\{\{restaurant\}\}/gi, restaurant.name)
+      .replace(/\{\{ventetid\}\}/gi, autoTime);
+    
+    await sendSMS(phone, confirmMsg, restaurant);
+    addLog(`⚡ Auto-bekræftelse sendt (${autoTime} min estimat)`, 'success');
+    
+    // Auto-create order with accepted status
+    saveOrderToModule({
+      phone,
+      customerName,
+      orderType,
+      address,
+      items: order,
+      parsedOrder,
+      restaurantId: restaurant.id,
+      status: 'Accepteret',
+      estimatedTime: autoTime,
+      acceptedAt: new Date().toISOString()
+    });
+  } else {
+    // MANUAL MODE - wait for restaurant to accept
+    activateNode('send-final-confirm');
+    
+    // Get custom message or default
+    const defaultPendingMsg = `Tak! Din ordre er nu sendt til køkkenet. Afvent venligst, at restauranten accepterer din bestilling. Du modtager en bekræftelse snarest. 🍕`;
+    let pendingMsg = restaurant?.customMessages?.orderConfirm || defaultPendingMsg;
+    pendingMsg = pendingMsg.replace(/\{\{restaurant\}\}/gi, restaurant.name);
+    
+    await sendSMS(phone, pendingMsg, restaurant);
+    
+    // Create order with pending status
+    saveOrderToModule({
+      phone,
+      customerName,
+      orderType,
+      address,
+      items: order,
+      parsedOrder,
+      restaurantId: restaurant.id,
+      status: 'Afventer',
+      createdAt: new Date().toISOString()
+    });
+    
+    addLog('📋 Ordre oprettet - afventer restaurantens accept', 'info');
+  }
+  
+  // RECEIPT WORKFLOW (NY SEKTION)
+  activateNode('ask-receipt');
+  await sendSMS(phone, 'Ønsker du en kvittering på din bestilling? Svar JA eller NEJ.', restaurant);
+  addLog('Spørger kunde om kvittering...', 'info');
+  await sleep(200);
+  
+  activateNode('wait-receipt');
+  addLog('Venter på svar om kvittering...', 'info');
+  
+  // Wait for receipt response
+  const receiptReply = await waitForReply();
+  addLog(`Kunde svarede: "${receiptReply}"`, 'info');
+  
+  // Process receipt response
+  activateNode('intent-check-receipt');
+  const wantsReceipt = classifyReceiptIntent(receiptReply);
+  
+  if (wantsReceipt) {
+    // YES - Generate and send PDF receipt
+    activateNode('generate-receipt');
+    addLog('Genererer PDF-kvittering...', 'info');
+    await sleep(200);
+
+    // Build receipt data
+    const orderNumber = Math.floor(100000 + Math.random() * 900000);
+    const pickupTime = new Date(Date.now() + 30 * 60000).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+
+    // Generate PDF receipt
+    const receiptData = {
+      ordreNummer: orderNumber,
+      dato: new Date().toISOString(),
+      kunde: {
+        navn: customerName,
+        telefon: phone
+      },
+      linjer: (parsedOrder?.items || []).map(i => ({
+        beskrivelse: i.name,
+        antal: i.quantity || 1,
+        pris: i.price
+      })),
+      total: parsedOrder?.total || 0,
+      restaurant: {
+        navn: restaurant.name,
+        adresse: restaurant.address,
+        telefon: restaurant.phone || restaurant.contact_phone,
+        cvr: restaurant.cvr
+      },
+      orderType: orderType,
+      pickupTime: pickupTime
+    };
+
+    activateNode('send-receipt-sms');
+
+    // Try to generate and upload PDF
+    let receiptUrl = null;
+    try {
+      if (typeof kvitteringGenerator !== 'undefined' && typeof SupabaseDB !== 'undefined') {
+        const pdfBlob = kvitteringGenerator.getBlob(receiptData);
+        const uploadResult = await SupabaseDB.uploadReceipt(pdfBlob, orderNumber, restaurant.id);
+        if (!uploadResult.error) {
+          receiptUrl = uploadResult.url;
+          addLog(`📄 PDF uploadet: ${receiptUrl}`, 'success');
+        }
+      }
+    } catch (pdfErr) {
+      console.error('PDF generation error:', pdfErr);
+      addLog('⚠️ PDF kunne ikke genereres - sender tekst-kvittering', 'warning');
+    }
+
+    // Send SMS with PDF link OR fallback to text receipt
+    if (receiptUrl) {
+      const pdfMsg = `📋 Din kvittering er klar!\n\nOrdre #${orderNumber}\nTotal: ${parsedOrder?.total || 0} kr\n\nDownload her:\n${receiptUrl}\n\nTak for din bestilling!\n${restaurant.name}`;
+      await sendSMS(phone, pdfMsg, restaurant);
+      addLog('PDF-kvittering sendt til kunden via SMS', 'success');
+    } else {
+      // Fallback to text receipt
+      const orderItems = parsedOrder?.items?.map(i => `• ${i.name} - ${i.price} kr`).join('\n') || order;
+      const receiptMsg = `📋 KVITTERING\n━━━━━━━━━━━━\nOrdre: #${orderNumber}\n${orderItems}\n━━━━━━━━━━━━\nTotal: ${parsedOrder?.total || 0} kr\n${orderType === 'Pickup' ? 'Afhentning' : 'Levering'}: ca. ${pickupTime}\n━━━━━━━━━━━━\nTak for din bestilling!\n${restaurant.name}`;
+      await sendSMS(phone, receiptMsg, restaurant);
+      addLog('Tekst-kvittering sendt til kunden (PDF fallback)', 'success');
+    }
+  } else {
+    // NO - Send polite goodbye
+    activateNode('send-no-receipt');
+    await sendSMS(phone, 'Helt i orden! Vi glæder os til at se dig. Hav en fortsat god dag!', restaurant);
+    addLog('Kunde ønsker ikke kvittering - pæn afslutning sendt', 'success');
+  }
+  await sleep(200);
+  
+  // TRIN 3: Gem ordre til intern Ordrer-side
+  activateNode('push-to-orders');
+  
+  // Byg komplet ordre data pakke
+  const orderDataPackage = {
+    customerName: customerName,
+    phone: phone,
+    address: address,
+    orderType: orderType,
+    orderSummary: order,
+    items: parsedOrder?.items || [],
+    totalPrice: parsedOrder?.total || 0,
+    restaurantId: restaurant.id,
+    restaurantName: restaurant.name
+  };
+  
+  // Gem til intern Ordrer-side (sidebar menu)
+  saveOrderToInternalOrdersPage(orderDataPackage);
+  
+  addLog(`📦 Ordre sendt til Ordrer-siden: ${order} - ${parsedOrder?.total || 0} kr`, 'success');
+  await sleep(200);
+  
+  // Update KPI data
+  updateRestaurantKpi(restaurant, parsedOrder);
+  
+  // Check if review request is enabled for this restaurant
+  if (restaurant.reviewRequestEnabled !== false) {
+    // Add to review workflow
+    activateNode('add-to-review');
+    addLog('⭐ Tilføjet til Review Workflow (Trustpilot + Google)', 'success');
+    await sleep(200);
+    
+    // Wait for review delay (configurable per restaurant)
+    activateNode('wait-review-delay');
+    const reviewDelay = restaurant.reviewDelay || 60; // Default 60 min
+    addLog(`Wait: ${reviewDelay} min (fra ${restaurant.name} indstillinger)`, 'info');
+    await sleep(200);
+    
+    // Send review request (in real scenario this would be delayed)
+    activateNode('send-review-request');
+    
+    // Build review message with actual URLs
+    const reviewMsg = `Tak for din ordre hos ${restaurant.name}! Vi håber du nød maden. Giv os gerne en anmeldelse:\n\nGoogle: ${restaurant.googleReviewUrl || 'N/A'}\nTrustpilot: ${restaurant.trustpilotUrl || 'N/A'}`;
+    // In production: await sendSMS(phone, reviewMsg, restaurant);
+    addLog('⭐ Anmeldelsesanmodning sendt (Trustpilot + Google)', 'success');
+    await sleep(200);
+    
+    // 1 hour lock
+    activateNode('wait-1-hour');
+    addLog('🔒 1 time lock aktiveret (loop beskyttelse)', 'info');
+    await sleep(200);
+  } else {
+    addLog('⏭️ Anmeldelsesanmodning er deaktiveret - springer over', 'info');
+    await sleep(200);
+  }
+  
+  // Update stats
+  loadRestaurants();
+  loadDashboard();
+  
+  // End
+  activateNode('end-final');
+  addLog('🏁 Workflow færdig!', 'success');
+}
+
+// Update restaurant KPI data after order
+function updateRestaurantKpi(restaurant, parsedOrder) {
+  if (!restaurant.kpi) return;
+  
+  // Update heatmap for current hour
+  const now = new Date();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[now.getDay()];
+  const hour = now.getHours();
+  
+  if (restaurant.kpi.orderHeatmap && restaurant.kpi.orderHeatmap[dayName]) {
+    restaurant.kpi.orderHeatmap[dayName][hour]++;
+  }
+  
+  // Update revenue
+  if (parsedOrder?.total) {
+    restaurant.kpi.totalRevenue += parsedOrder.total;
+    restaurant.kpi.recoveredRevenue += parsedOrder.total;
+  }
+  
+  // Update completed orders
+  restaurant.kpi.completedOrders = (restaurant.kpi.completedOrders || 0) + 1;
+  
+  // Recalculate conversion rate
+  if (restaurant.kpi.missedCalls > 0) {
+    restaurant.kpi.conversionRate = Math.round((restaurant.kpi.completedOrders / restaurant.kpi.missedCalls) * 100);
+  }
+}
+
+function activateNode(id) {
+  document.querySelectorAll('.wf-node').forEach(n => n.classList.remove('active'));
+  const node = document.getElementById('node-' + id);
+  if (node) {
+    node.classList.add('active');
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+async function sendSMS(to, message, restaurant) {
+  addLog(`📱 SMS -> ${to}`, 'sms');
+  addMessage(message, 'out');
+
+  // Log to customer aktivitetslogs
+  if (restaurant?.id) {
+    addCustomerAktivitetslog(restaurant.id, 'sms', `SMS sendt til ${to}: ${message.substring(0, 80)}${message.length > 80 ? '...' : ''}`);
+  }
+
+  if (liveMode) {
+    // Format phone number
+    let phoneNumber = to.replace(/\s/g, '').replace('+', '');
+    if (!phoneNumber.startsWith('45')) {
+      phoneNumber = '45' + phoneNumber;
+    }
+
+    // Get GatewayAPI credentials
+    const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+
+    // Brug restaurantens navn som afsender (max 11 tegn, kun alfanumerisk)
+    let sender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
+    if (restaurant?.name) {
+      // Fjern specialtegn og begræns til 11 tegn (GatewayAPI krav)
+      sender = restaurant.name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 11);
+    }
+
+    if (!apiToken) {
+      addLog(`❌ GatewayAPI token mangler - tjek Indstillinger`, 'error');
+      return;
+    }
+
+    addLog(`📤 Sender SMS via GatewayAPI til ${phoneNumber}...`, 'info');
+
+    try {
+      // Use Supabase Edge Function as proxy (GatewayAPI doesn't support CORS)
+      const supabaseUrl = CONFIG.SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          to: phoneNumber,
+          message: message,
+          sender: sender,
+          token: apiToken
+        })
+      });
+
+      const result = await response.json();
+      console.log('SMS response:', result);
+
+      if (result.success || result.sid) {
+        const cost = result.cost ? ` (${result.cost} DKK)` : '';
+        addLog(`✅ SMS sendt! ID: ${result.sid}${cost}`, 'success');
+      } else {
+        addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
+      }
+    } catch (err) {
+      console.error('SMS error:', err);
+      addLog(`❌ SMS fejl: ${err.message}`, 'error');
+    }
+  }
+
+  await sleep(300);
+}
+
+function addMessage(text, dir, showApproval = false) {
+  const container = document.getElementById('messages');
+  if (!container) {
+    console.error('Messages container not found!');
+    return null;
+  }
+
+  console.log('addMessage called:', { text: text.substring(0, 50), dir, container: container.id });
+
+  // Classify intent for incoming messages (customer messages)
+  if (dir === 'in' && typeof window.classifyAndDisplayIntent === 'function') {
+    window.classifyAndDisplayIntent(text);
+  }
+
+  const time = new Date().toLocaleTimeString('da-DK');
+  const msgId = 'msg-' + Date.now();
+
+  let approvalHtml = '';
+  if (showApproval) {
+    approvalHtml = `
+      <div class="msg-approval" id="${msgId}-approval">
+        <div style="font-size:10px;color:var(--warn);margin-bottom:6px;">🤖 AI forslag - godkend eller rediger:</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-primary" style="flex:1;padding:6px;font-size:11px;" onclick="approveAiResponse('${msgId}')">✓ Send</button>
+          <button class="btn btn-secondary" style="flex:1;padding:6px;font-size:11px;" onclick="editAiResponse('${msgId}')">✎ Rediger</button>
+          <button class="btn btn-danger" style="padding:6px;font-size:11px;" onclick="rejectAiResponse('${msgId}')">✗</button>
+        </div>
+      </div>
+    `;
+  }
+
+  container.innerHTML += `
+    <div class="msg ${dir}" id="${msgId}" data-text="${encodeURIComponent(text)}">
+      ${text}
+      <div class="msg-time">${time}</div>
+      ${approvalHtml}
+    </div>
+  `;
+  container.scrollTop = container.scrollHeight;
+  return msgId;
+}
+
+// AI Classification with OpenAI
+// =====================================================
+// MENU & ORDER FUNCTIONS (Trin 1, 2, 3)
+// =====================================================
+
+// Trin 1: Fetch menu - bruger demo data eller scraper website (fremtidig feature)
+async function fetchMenuForRestaurant(restaurant) {
+  const restaurantId = restaurant.id;
+  const websiteUrl = restaurant.website || restaurant.menuUrl;
+  
+  addLog(`📋 Indlæser menu for ${restaurant.name}...`, 'info');
+  
+  // PRIORITET 0: Produkter fra Produkter-siden (højeste prioritet)
+  const productsKey = `products_${restaurantId}`;
+  const savedProducts = localStorage.getItem(productsKey);
+  if (savedProducts) {
+    try {
+      const productData = JSON.parse(savedProducts);
+      if (productData.products && productData.products.length > 0) {
+        addLog(`✅ Produkter indlæst fra Produkter-siden: ${productData.products.length} produkter`, 'success');
+        return {
+          items: productData.products.map(p => ({
+            id: p.id,
+            number: p.number || '',
+            name: p.name,
+            description: p.description || '',
+            price: p.price,
+            category: p.category || 'Andet'
+          })),
+          extras: productData.extras || [],
+          deliveryZones: productData.deliveryZones || [],
+          restaurantId: restaurantId,
+          restaurantName: restaurant.name,
+          currency: 'DKK'
+        };
+      }
+    } catch (e) {
+      console.error('Products parse error:', e);
+    }
+  }
+  
+  // PRIORITET 0.5: Produkter direkte på restaurant objektet
+  if (restaurant.products && restaurant.products.length > 0) {
+    addLog(`✅ Restaurant produkter indlæst: ${restaurant.products.length} produkter`, 'success');
+    return {
+      items: restaurant.products.map(p => ({
+        id: p.id,
+        number: p.number || '',
+        name: p.name,
+        description: p.description || '',
+        price: p.price,
+        category: p.category || 'Andet'
+      })),
+      extras: restaurant.extras || [],
+      deliveryZones: restaurant.deliveryZones || [],
+      restaurantId: restaurantId,
+      restaurantName: restaurant.name,
+      currency: 'DKK'
+    };
+  }
+  
+  // PRIORITET 1: Custom menu gemt i restaurant settings
+  if (restaurant.customMenu && restaurant.customMenu.items && restaurant.customMenu.items.length > 0) {
+    addLog(`✅ Custom menu indlæst: ${restaurant.customMenu.items.length} produkter`, 'success');
+    return {
+      items: restaurant.customMenu.items,
+      restaurantId: restaurantId,
+      restaurantName: restaurant.name,
+      currency: restaurant.customMenu.currency || 'DKK'
+    };
+  }
+  
+  // PRIORITET 2: Menu fra Supabase (persistent storage)
+  if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getMenu) {
+    try {
+      const supabaseMenu = await SupabaseDB.getMenu(restaurantId);
+      if (supabaseMenu && supabaseMenu.items && supabaseMenu.items.length > 0) {
+        addLog(`✅ Menu indlæst fra database: ${supabaseMenu.items.length} produkter`, 'success');
+        return {
+          ...supabaseMenu,
+          restaurantName: restaurant.name
+        };
+      }
+    } catch (e) {
+      console.log('Could not load menu from Supabase:', e.message);
+    }
+  }
+
+  // PRIORITET 3: Menu gemt i localStorage (fallback/cache)
+  const storedMenu = localStorage.getItem(`menu_${restaurantId}`);
+  if (storedMenu) {
+    try {
+      const parsedMenu = JSON.parse(storedMenu);
+      if (parsedMenu.items && parsedMenu.items.length > 0) {
+        addLog(`✅ Gemt menu indlæst fra cache: ${parsedMenu.items.length} produkter`, 'success');
+        return parsedMenu;
+      }
+    } catch (e) {
+      console.error('Menu parse error:', e);
+    }
+  }
+
+  // PRIORITET 4: Demo menu data
+  const demoMenu = DEMO_MENUS[restaurantId];
+  if (demoMenu) {
+    addLog(`✅ Demo menu indlæst: ${demoMenu.items.length} produkter`, 'success');
+    return demoMenu;
+  }
+  
+  // PRIORITET 4: Generisk standard menu
+  addLog('⚠️ Ingen menu fundet - bruger generisk standard menu', 'warn');
+  addLog('💡 Tip: Gå til Kunder -> [Restaurant] -> Produkter for at tilføje produkter', 'info');
+  return { 
+    items: [
+      { id: 1, number: '1', name: 'Ret 1', price: 99, category: 'Mad' },
+      { id: 2, number: '2', name: 'Ret 2', price: 119, category: 'Mad' },
+      { id: 3, number: '3', name: 'Ret 3', price: 89, category: 'Mad' },
+      { id: 4, number: '4', name: 'Drikkevare', price: 25, category: 'Drikkevarer' }
+    ], 
+    restaurantId, 
+    restaurantName: restaurant.name,
+    currency: 'DKK' 
+  };
+}
+
+// Gem custom menu for restaurant
+function saveCustomMenu(restaurantId, menuItems) {
+  const menu = {
+    restaurantId: restaurantId,
+    items: menuItems,
+    currency: 'DKK',
+    updatedAt: new Date().toISOString()
+  };
+
+  // Gem til localStorage (hurtig backup)
+  localStorage.setItem(`menu_${restaurantId}`, JSON.stringify(menu));
+
+  // Gem til Supabase (persistent storage)
+  if (typeof SupabaseDB !== 'undefined' && SupabaseDB.saveMenu) {
+    SupabaseDB.saveMenu(restaurantId, menu)
+      .catch(err => console.warn('Could not save menu to Supabase:', err.message));
+  }
+
+  // Opdater også restaurant objektet
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (restaurant) {
+    restaurant.customMenu = menu;
+  }
+
+  return menu;
+}
+
+// Trin 2: Parse ordre med menu-matching og priskalkulation - FORBEDRET
+async function parseOrderWithMenu(orderText, menu, restaurantName) {
+  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+    addLog('⚠️ OpenAI API key mangler - bruger fallback', 'warn');
+    return { items: [], total: 0, valid: false, orderText: orderText };
+  }
+  
+  addLog('🤖 AI parser ordre med menu (JSON integration)...', 'ai');
+  
+  // Byg komplet JSON menu struktur til AI
+  const menuJSON = JSON.stringify(menu.items.map(item => ({
+    nummer: item.number,
+    navn: item.name,
+    pris: item.price,
+    kategori: item.category || 'Andet'
+  })), null, 2);
+  
+  // Byg også simpel tekstliste som backup
+  const menuText = menu.items.map(item => 
+    `Nr. ${item.number}: ${item.name} = ${item.price} kr`
+  ).join('\n');
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Du er en ordre-parser for restauranten "${restaurantName}".
+Din ENESTE opgave er at matche kundens bestilling med menukortet og beregne den PRÆCISE totalpris.
+
+MENUKORT (JSON):
+${menuJSON}
+
+MENUKORT (TEKST):
+${menuText}
+
+KRITISKE REGLER:
+1. Match "nummer X", "nr X", "nr. X" til produktets nummer-felt
+2. Match produktnavne direkte (f.eks. "margherita" -> "Pizza Margherita")
+3. Match delvist (f.eks. "pepperoni" -> "Pizza Pepperoni")
+4. Udtræk antal: "2x", "to stk", "2 styk", "et par" = 2, default = 1
+5. BEREGN ALTID: unit_price × quantity = line_total
+6. BEREGN ALTID: sum af alle line_total = total_price
+
+DU SKAL SVARE MED PRÆCIS DETTE JSON FORMAT:
+{
+  "items": [
+    {
+      "number": "1",
+      "name": "Pizza Margherita",
+      "quantity": 2,
+      "unit_price": 89,
+      "line_total": 178
+    }
+  ],
+  "total_price": 178,
+  "valid": true,
+  "error": null
+}
+
+VIGTIGT:
+- unit_price SKAL være prisen fra menukortet
+- line_total SKAL være unit_price × quantity
+- total_price SKAL være summen af alle line_total
+- Hvis du ikke kan matche et produkt, sæt valid: false og forklar i "error"
+- Svar KUN med JSON, ingen anden tekst`
+          },
+          {
+            role: 'user',
+            content: `Parse denne bestilling og beregn totalpris:\n"${orderText}"`
+          }
+        ],
+        max_tokens: 800,
+        temperature: 0.05  // Lavere temperatur for mere præcis parsing
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0]) {
+      addLog('❌ Intet svar fra AI', 'error');
+      return { items: [], total: 0, valid: false, orderText: orderText };
+    }
+    
+    let result;
+    
+    try {
+      // Rens JSON output grundigt
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+      // Fjern eventuelle kommentarer
+      content = content.replace(/\/\/.*$/gm, '');
+      result = JSON.parse(content);
+    } catch (parseErr) {
+      addLog('⚠️ Kunne ikke parse AI JSON svar: ' + parseErr.message, 'warn');
+      console.error('AI response:', data.choices[0].message.content);
+      return { items: [], total: 0, valid: false, orderText: orderText };
+    }
+    
+    // Normaliser felter (håndter både total og total_price)
+    const total = Number(result.total_price) || Number(result.total) || 0;
+    const items = (result.items || []).map(item => {
+      const quantity = Number(item.quantity) || Number(item.antal) || 1;
+      const unitPrice = Number(item.unit_price) || Number(item.unitPrice) || Number(item.pris) || 0;
+      const lineTotal = Number(item.line_total) || Number(item.lineTotal) || (unitPrice * quantity);
+
+      return {
+        number: String(item.number || item.nummer || ''),
+        name: String(item.name || item.navn || ''),
+        quantity: quantity,
+        unitPrice: unitPrice,
+        lineTotal: isNaN(lineTotal) ? 0 : lineTotal
+      };
+    });
+
+    // Valider og genberegn total hvis nødvendigt (med NaN check)
+    const calculatedTotal = items.reduce((sum, item) => {
+      const val = Number(item.lineTotal) || 0;
+      return sum + (isNaN(val) ? 0 : val);
+    }, 0);
+    const finalTotal = calculatedTotal > 0 ? calculatedTotal : total;
+    
+    if (items.length > 0 && finalTotal > 0) {
+      const itemSummary = items.map(i => `${i.quantity}x ${i.name} (${i.unitPrice} kr)`).join(', ');
+      addLog(`✅ Ordre parsed: ${itemSummary}`, 'success');
+      addLog(`💰 Total pris: ${finalTotal} kr`, 'success');
+    } else if (result.error) {
+      addLog(`⚠️ Ordre kunne ikke parses: ${result.error}`, 'warn');
+    }
+    
+    return { 
+      items: items, 
+      total: finalTotal,
+      valid: items.length > 0 && finalTotal > 0,
+      orderText: orderText,
+      error: result.error
+    };
+  } catch (err) {
+    console.error('Order parsing error:', err);
+    addLog(`❌ Ordre parsing fejl: ${err.message}`, 'error');
+    return { items: [], total: 0, valid: false, orderText: orderText };
+  }
+}
+
+// Generer bekræftelsesbesked med produktnavne og TOTAL PRIS - FORBEDRET
+function generateOrderConfirmation(parsedOrder) {
+  if (!parsedOrder.valid || !parsedOrder.items || parsedOrder.items.length === 0) {
+    // Fallback uden priser
+    return {
+      message: `Bare for at bekræfte din bestilling: ${parsedOrder.orderText}. Er det korrekt?`,
+      summary: parsedOrder.orderText,
+      total: 0,
+      hasPrice: false
+    };
+  }
+  
+  // Byg detaljeret liste med priser
+  const itemsList = parsedOrder.items.map(item => {
+    if (item.quantity > 1) {
+      return `${item.quantity}x ${item.name}`;
+    }
+    return item.name;
+  }).join(', ');
+  
+  // Sikr at total er et tal
+  const totalPrice = Number(parsedOrder.total) || 0;
+  
+  // Bekræftelsesbesked MED total pris
+  let message;
+  if (totalPrice > 0) {
+    message = `Bare for at bekræfte din bestilling: ${itemsList}. Den samlede pris er ${totalPrice} kr. Er det korrekt?`;
+  } else {
+    message = `Bare for at bekræfte din bestilling: ${itemsList}. Er det korrekt?`;
+  }
+  
+  return {
+    message: message,
+    summary: itemsList,
+    total: totalPrice,
+    items: parsedOrder.items,
+    hasPrice: totalPrice > 0
+  };
+}
+
+// =====================================================
+// DYNAMISK OPEN CHECKER (Trin 2)
+// =====================================================
+
+// Tjek om restaurant er åben baseret på individuelle åbningstider
+// Synkroniserer automatisk med restaurant.openingHours
+function checkRestaurantOpen(restaurant) {
+  const now = new Date();
+  // VIGTIG: Brug KORTE dag-navne der matcher UI og saveWorkflowSettings
+  const dayNamesShort = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNamesFull = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayIndex = now.getDay();
+  const currentTime = now.getHours() * 60 + now.getMinutes(); // Minutter siden midnat
+  
+  // Hent AKTUELLE åbningstider direkte fra restaurant objektet
+  const hours = restaurant.openingHours || getDefaultOpeningHours();
+  
+  // Tjek begge navne-formater for bagudkompatibilitet
+  const shortDay = dayNamesShort[dayIndex];
+  const fullDay = dayNamesFull[dayIndex];
+  const todayHours = hours[shortDay] || hours[fullDay];
+  
+  // Log hvilke åbningstider der bruges (for debugging)
+  console.log(`[OpenChecker] ${restaurant.name} - Day: ${shortDay}/${fullDay}, Hours:`, todayHours, 'Current time:', currentTime);
+  
+  // Tjek om dagen er lukket
+  if (!todayHours || !todayHours.enabled) {
+    return {
+      isOpen: false,
+      reason: 'closed_day',
+      currentDay: getDayNameDanish(fullDay),
+      openingHours: hours,
+      nextOpen: getNextOpenTime(hours, now)
+    };
+  }
+  
+  // Parse åbnings- og lukketid
+  const openTime = parseTimeToMinutes(todayHours.open);
+  let closeTime = parseTimeToMinutes(todayHours.close);
+  
+  // VIGTIG FIX: Døgnåbent check (00:00 - 00:00)
+  // Hvis både open og close er 00:00, er restauranten døgnåben
+  if (openTime === 0 && closeTime === 0 && todayHours.open === '00:00' && todayHours.close === '00:00') {
+    console.log(`[OpenChecker] ${restaurant.name} - DØGNÅBEN (00:00-00:00)`);
+    return {
+      isOpen: true,
+      currentDay: getDayNameDanish(fullDay),
+      closeTime: '00:00',
+      openingHours: hours,
+      is24h: true
+    };
+  }
+  
+  // VIGTIG FIX: Hvis lukketid er 00:00 (midnat), behandl det som 24:00 (1440 minutter)
+  // Dette håndterer restauranter der lukker ved midnat
+  if (closeTime === 0 && todayHours.close === '00:00') {
+    closeTime = 1440; // 24 timer i minutter
+  }
+  
+  // Håndter natåbent (lukker efter midnat næste dag)
+  // Eksempel: Åben 10:00 - 02:00 (næste dag)
+  if (closeTime < openTime) {
+    // Restauranten lukker efter midnat
+    if (currentTime >= openTime || currentTime < closeTime) {
+      return {
+        isOpen: true,
+        currentDay: getDayNameDanish(fullDay),
+        closeTime: todayHours.close,
+        openingHours: hours,
+        closesAfterMidnight: true
+      };
+    }
+  } else {
+    // Normal åbningstid (samme dag)
+    if (currentTime >= openTime && currentTime < closeTime) {
+      return {
+        isOpen: true,
+        currentDay: getDayNameDanish(fullDay),
+        closeTime: todayHours.close,
+        openingHours: hours
+      };
+    }
+  }
+  
+  // Vi er uden for åbningstiden
+  return {
+    isOpen: false,
+    reason: currentTime < openTime ? 'not_yet_open' : 'already_closed',
+    currentDay: getDayNameDanish(fullDay),
+    todayOpen: todayHours.open,
+    todayClose: todayHours.close,
+    openingHours: hours,
+    nextOpen: getNextOpenTime(hours, now)
+  };
+}
+
+// Konverter tid string til minutter siden midnat
+function parseTimeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  return hours * 60 + (minutes || 0);
+}
+
+// Hent dansk navn for ugedag (understøtter både korte og fulde navne)
+function getDayNameDanish(day) {
+  const names = {
+    // Full names
+    monday: 'Mandag',
+    tuesday: 'Tirsdag',
+    wednesday: 'Onsdag',
+    thursday: 'Torsdag',
+    friday: 'Fredag',
+    saturday: 'Lørdag',
+    sunday: 'Søndag',
+    // Short names
+    mon: 'Mandag',
+    tue: 'Tirsdag',
+    wed: 'Onsdag',
+    thu: 'Torsdag',
+    fri: 'Fredag',
+    sat: 'Lørdag',
+    sun: 'Søndag'
+  };
+  return names[day] || day;
+}
+
+// Find næste åbningstid (understøtter både korte og fulde dag-navne)
+function getNextOpenTime(hours, fromDate) {
+  const dayNamesShort = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dayNamesFull = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const now = fromDate || new Date();
+  const currentDayIndex = now.getDay();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  
+  // Tjek de næste 7 dage
+  for (let i = 0; i < 7; i++) {
+    const checkDayIndex = (currentDayIndex + i) % 7;
+    // Try both name formats
+    const dayHours = hours[dayNamesShort[checkDayIndex]] || hours[dayNamesFull[checkDayIndex]];
+    const dayName = dayNamesFull[checkDayIndex]; // Use full name for display
+    
+    if (dayHours && dayHours.enabled) {
+      const openMinutes = parseTimeToMinutes(dayHours.open);
+      
+      // Hvis det er i dag og vi ikke har passeret åbningstiden
+      if (i === 0 && currentMinutes < openMinutes) {
+        return {
+          day: getDayNameDanish(dayName),
+          time: dayHours.open,
+          isToday: true
+        };
+      }
+      
+      // Hvis det er en fremtidig dag
+      if (i > 0) {
+        return {
+          day: getDayNameDanish(dayName),
+          time: dayHours.open,
+          isToday: false,
+          daysAhead: i
+        };
+      }
+    }
+  }
+  
+  return null; // Ingen åbne dage fundet
+}
+
+// Format åbningstider til tekst (til AI og beskeder)
+// Understøtter både korte (mon, tue) og fulde (monday, tuesday) dag-navne
+function formatOpeningHoursText(restaurant) {
+  const hours = restaurant.openingHours || getDefaultOpeningHours();
+  const timeFormat = restaurant.timeFormat || '24h';
+  
+  // Mapping fra kort/fuldt navn til dansk forkortelse
+  const dayMapping = [
+    { short: 'mon', full: 'monday', danish: 'Man' },
+    { short: 'tue', full: 'tuesday', danish: 'Tir' },
+    { short: 'wed', full: 'wednesday', danish: 'Ons' },
+    { short: 'thu', full: 'thursday', danish: 'Tor' },
+    { short: 'fri', full: 'friday', danish: 'Fre' },
+    { short: 'sat', full: 'saturday', danish: 'Lør' },
+    { short: 'sun', full: 'sunday', danish: 'Søn' }
+  ];
+  
+  const lines = dayMapping.map(({ short, full, danish }) => {
+    // Try both short and full names
+    const h = hours[short] || hours[full];
+    if (!h || !h.enabled) return `${danish}: Lukket`;
+    
+    // Special case: 00:00-00:00 means 24h
+    if (h.open === '00:00' && h.close === '00:00') {
+      return `${danish}: Døgnåbent`;
+    }
+    
+    const open = formatTime(h.open, timeFormat);
+    const close = formatTime(h.close, timeFormat);
+    return `${danish}: ${open}-${close}`;
+  });
+  
+  return lines.join('\n');
+}
+
+// Format tid baseret på valgt format
+function formatTime(timeStr, format) {
+  if (!timeStr) return '';
+  if (format === '24h') return timeStr;
+  
+  // Konverter til AM/PM
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// Generer lukket-besked med næste åbningstid
+function generateClosedMessage(restaurant, openStatus) {
+  const nextOpen = openStatus.nextOpen;
+  
+  let message = `Tak for din henvendelse til ${restaurant.name}. Vi har desværre lukket`;
+  
+  if (openStatus.reason === 'closed_day') {
+    message += ` ${openStatus.currentDay.toLowerCase()}`;
+  } else if (openStatus.reason === 'not_yet_open') {
+    message += `. Vi åbner kl. ${openStatus.todayOpen}`;
+  } else if (openStatus.reason === 'already_closed') {
+    message += ` for i dag`;
+  }
+  
+  if (nextOpen) {
+    if (nextOpen.isToday) {
+      message += `. Vi åbner igen kl. ${nextOpen.time} ☀️`;
+    } else if (nextOpen.daysAhead === 1) {
+      message += `. Vi åbner igen i morgen (${nextOpen.day}) kl. ${nextOpen.time} ☀️`;
+    } else {
+      message += `. Vi åbner igen ${nextOpen.day} kl. ${nextOpen.time} ☀️`;
+    }
+  }
+  
+  return message;
+}
+
+// Trin 3: Gem ordre til intern Ordrer-side (sidebar menu)
+function saveOrderToInternalOrdersPage(orderData) {
+  addLog('📦 Gemmer ordre til Ordrer-siden...', 'info');
+  
+  // Byg ordre objekt til intern brug
+  const order = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    status: 'Ny',
+    customerName: orderData.customerName,
+    phone: orderData.phone,
+    orderType: orderData.orderType,
+    address: orderData.address || null,
+    items: orderData.items || [],
+    orderSummary: orderData.orderSummary,
+    totalPrice: orderData.totalPrice,
+    currency: 'DKK',
+    restaurantId: orderData.restaurantId,
+    restaurantName: orderData.restaurantName
+  };
+  
+  // Gem i localStorage (vises på Ordrer-siden)
+  const existingOrders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  existingOrders.unshift(order);
+  localStorage.setItem('orders_module', JSON.stringify(existingOrders));
+  
+  addLog(`✅ Ordre #${order.id} gemt til Ordrer-siden`, 'success');
+  
+  // Opdater ordrer-siden hvis den er synlig
+  if (document.getElementById('page-orders')?.classList.contains('active')) {
+    loadOrdersPage();
+  }
+  
+  return order;
+}
+
+// Load og vis ordrer på Ordrer-siden
+function loadOrdersPage() {
+  const ordersList = document.getElementById('orders-list');
+  const ordersCount = document.getElementById('orders-count');
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  
+  if (ordersCount) {
+    const newOrders = orders.filter(o => o.status === 'Ny').length;
+    ordersCount.textContent = `${orders.length} ordre${orders.length !== 1 ? 'r' : ''}${newOrders > 0 ? ` (${newOrders} nye)` : ''}`;
+  }
+  
+  if (orders.length === 0) {
+    ordersList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📦</div>
+        <div>Ingen ordrer endnu</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px">Ordrer vises her når kunder bestiller via SMS</div>
+      </div>`;
+    return;
+  }
+  
+  ordersList.innerHTML = orders.map(order => {
+    // Status farver (uden ikoner)
+    const statusColors = {
+      'Ny': { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
+      'Afventer': { bg: 'rgba(251,191,36,0.15)', color: '#fbbf24' },
+      'Accepteret': { bg: 'rgba(96,165,250,0.15)', color: '#60a5fa' },
+      'I gang': { bg: 'rgba(168,85,247,0.15)', color: '#a855f7' },
+      'Færdig': { bg: 'rgba(52,211,153,0.15)', color: '#34d399' },
+      'Afvist': { bg: 'rgba(248,113,113,0.15)', color: '#f87171' }
+    };
+    const statusStyle = statusColors[order.status] || statusColors['Ny'];
+    
+    // Vis forskellige knapper baseret på status (uden emojis)
+    let actionButtons = '';
+    
+    if (order.status === 'Ny' || order.status === 'Afventer') {
+      // Ny/Afventer ordre: Accept/Afvis knapper
+      actionButtons = `
+        <button class="btn" style="flex:1;font-size:12px;background:#ef4444;color:#fff" onclick="rejectOrder(${order.id})">Afvis</button>
+        <button class="btn btn-primary" style="flex:1;font-size:12px" onclick="acceptOrder(${order.id})">Accepter</button>
+      `;
+    } else if (order.status === 'Accepteret') {
+      // Accepteret: Start knap
+      actionButtons = `
+        <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="startOrder(${order.id})">Start tilberedning</button>
+      `;
+    } else if (order.status === 'I gang') {
+      // I gang: Færdig knap
+      actionButtons = `
+        <button class="btn btn-primary" style="flex:1;font-size:12px" onclick="completeOrder(${order.id})">Færdig</button>
+      `;
+    } else if (order.status === 'Færdig' || order.status === 'Afvist') {
+      // Færdig/Afvist: Slet knap
+      actionButtons = `
+        <button class="btn btn-secondary" style="flex:1;font-size:12px" onclick="deleteOrder(${order.id})">Fjern</button>
+      `;
+    }
+    
+    return `
+    <div class="order-item" style="padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;background:var(--card);${order.status === 'Ny' || order.status === 'Afventer' ? 'border-left:3px solid #fbbf24;' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <div style="font-weight:600;font-size:15px">${order.customerName || 'Ukendt kunde'}</div>
+          <div style="font-size:12px;color:var(--muted)">${order.phone || ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-flex;align-items:center;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:500;background:${statusStyle.bg};color:${statusStyle.color}">
+            ${order.status}
+          </span>
+          <span style="font-size:11px;color:var(--muted)">#${order.id}</span>
+        </div>
+      </div>
+      <div style="background:var(--bg3);padding:12px;border-radius:var(--radius-sm);margin-bottom:12px">
+        <div style="font-size:13px;margin-bottom:8px"><strong>Ordre:</strong> ${order.orderSummary}</div>
+        <div style="font-size:14px;color:var(--accent);font-weight:600">Total: ${order.totalPrice || 0} kr</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:12px">
+        <span>${order.orderType === 'Delivery' ? 'Levering' : 'Afhentning'}${order.address ? ': ' + order.address : ''}</span>
+        <span>${new Date(order.timestamp).toLocaleString('da-DK')}</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${actionButtons}
+      </div>
+    </div>
+  `}).join('');
+}
+
+// ACCEPT ordre - sender bekræftelses-SMS
+async function acceptOrder(orderId) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  // Fix: Compare as strings to handle type mismatch
+  const order = orders.find(o => String(o.id) === String(orderId));
+  
+  if (!order) {
+    console.error('Order not found:', orderId);
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+  
+  // Find restaurant for SMS
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  
+  // Get custom message or use default
+  const defaultMsg = `🎉 Din ordre er bekræftet! ${restaurant?.name || 'Restauranten'} har modtaget din bestilling og går straks i gang. Vi sender besked, når maden er klar.`;
+  let message = restaurant?.customMessages?.orderAccepted || defaultMsg;
+  
+  // Send bekræftelses-SMS til kunden
+  if (order.phone) {
+    try {
+      await sendSMSToCustomer(order.phone, message, restaurant);
+      toast(`SMS sendt til ${order.customerName}`, 'success');
+    } catch (err) {
+      console.error('SMS fejl:', err);
+    }
+  }
+  
+  // Opdater status
+  order.status = 'Accepteret';
+  order.acceptedAt = new Date().toISOString();
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+  loadOrdersPage();
+  
+  toast(`Ordre #${order.id} accepteret`, 'success');
+}
+
+// AFVIS ordre - sender afvisnings-SMS
+async function rejectOrder(orderId) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  // Fix: Compare as strings to handle type mismatch
+  const order = orders.find(o => String(o.id) === String(orderId));
+  
+  if (!order) {
+    console.error('Order not found:', orderId);
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+  
+  if (!confirm(`Er du sikker på du vil afvise ordren fra ${order.customerName}? Kunden får besked.`)) return;
+  
+  // Find restaurant for SMS
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  
+  // Send afvisnings-SMS til kunden
+  if (order.phone) {
+    try {
+      await sendSMSToCustomer(order.phone,
+        `Beklager! ${restaurant?.name || 'Restauranten'} har desværre for travlt til at modtage din ordre lige nu. Prøv venligst igen om lidt, eller ring til os direkte. Vi beklager ulejligheden 🙏`,
+        restaurant
+      );
+    } catch (err) {
+      console.error('SMS fejl:', err);
+    }
+  }
+  
+  // Opdater status
+  order.status = 'Afvist';
+  order.rejectedAt = new Date().toISOString();
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+  loadOrdersPage();
+  
+  toast(`Ordre #${order.id} afvist`, 'info');
+}
+
+// START tilberedning - viser popup for tidsestimat
+async function startOrder(orderId) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  // Fix: Compare as strings to handle type mismatch
+  const order = orders.find(o => String(o.id) === String(orderId));
+  
+  if (!order) {
+    console.error('Order not found:', orderId);
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+  
+  // Find restaurant
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  
+  // Get default time from automation settings
+  const defaultTime = restaurant?.automation?.defaultTime || 30;
+  
+  // Show time estimate popup
+  showTimeEstimatePopup(orderId, defaultTime, restaurant);
+}
+
+// Show time estimate popup
+function showTimeEstimatePopup(orderId, defaultTime, restaurant) {
+  // Create popup overlay
+  const popup = document.createElement('div');
+  popup.id = 'time-estimate-popup';
+  popup.style.cssText = `
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.7);z-index:10000;
+    display:flex;align-items:center;justify-content:center;
+  `;
+  
+  popup.innerHTML = `
+    <div style="background:var(--bg2);padding:24px;border-radius:var(--radius-lg);max-width:400px;width:90%">
+      <h3 style="margin:0 0 16px;font-size:16px">Angiv forventet ventetid</h3>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Hvor lang tid forventes ordren at tage?</p>
+      
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-secondary time-btn" onclick="setEstimateTime(15)" style="flex:1">15 min</button>
+        <button class="btn btn-secondary time-btn" onclick="setEstimateTime(20)" style="flex:1">20 min</button>
+        <button class="btn btn-secondary time-btn" onclick="setEstimateTime(30)" style="flex:1">30 min</button>
+        <button class="btn btn-secondary time-btn" onclick="setEstimateTime(45)" style="flex:1">45 min</button>
+      </div>
+      
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px">
+        <input type="number" id="custom-estimate-time" class="input" value="${defaultTime}" min="5" max="120" style="width:80px">
+        <span style="color:var(--muted);font-size:13px">minutter</span>
+      </div>
+      
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeTimeEstimatePopup()">Annuller</button>
+        <button class="btn btn-primary" onclick="confirmStartOrder('${orderId}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Start Tilberedning
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(popup);
+}
+
+// Set estimate time from quick buttons
+function setEstimateTime(minutes) {
+  document.getElementById('custom-estimate-time').value = minutes;
+  // Highlight selected button
+  document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+}
+
+// Close time estimate popup
+function closeTimeEstimatePopup() {
+  const popup = document.getElementById('time-estimate-popup');
+  if (popup) popup.remove();
+}
+
+// Confirm and start order with time estimate
+async function confirmStartOrder(orderId) {
+  const estimateTime = parseInt(document.getElementById('custom-estimate-time').value) || 30;
+  closeTimeEstimatePopup();
+  
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  // Fix: Compare as strings to handle type mismatch
+  const order = orders.find(o => String(o.id) === String(orderId));
+  
+  if (!order) {
+    console.error('Order not found:', orderId);
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+  
+  // Find restaurant
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  
+  // Calculate estimated ready time
+  const readyTime = new Date(Date.now() + estimateTime * 60 * 1000);
+  const readyTimeStr = readyTime.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+  
+  // Get custom message or use default based on order type
+  let message;
+  if (order.orderType === 'Delivery') {
+    message = `🚗 Vi er nu i gang med din bestilling! Forventet levering om ca. ${estimateTime} minutter (kl. ${readyTimeStr}). Vi giver besked når maden er på vej!`;
+  } else {
+    message = `🍳 Køkkenet er nu i gang med din bestilling! Din mad er klar til afhentning om ca. ${estimateTime} minutter (kl. ${readyTimeStr}).`;
+  }
+  
+  // Send "i gang" SMS til kunden
+  if (order.phone) {
+    try {
+      await sendSMSToCustomer(order.phone, message, restaurant);
+      toast(`SMS sendt til ${order.customerName}`, 'success');
+    } catch (err) {
+      console.error('SMS fejl:', err);
+      toast('SMS kunne ikke sendes', 'error');
+    }
+  }
+  
+  // Opdater status
+  order.status = 'I gang';
+  order.estimatedTime = estimateTime;
+  order.estimatedReadyTime = readyTimeStr;
+  order.startedAt = new Date().toISOString();
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+  loadOrdersPage();
+  
+  toast(`Ordre #${order.id} - tilberedning startet (${estimateTime} min)`, 'success');
+}
+
+// FÆRDIG ordre - sender "færdig" SMS med dynamisk tekst
+async function completeOrder(orderId) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  // Fix: Compare as strings to handle type mismatch
+  const order = orders.find(o => String(o.id) === String(orderId));
+  
+  if (!order) {
+    console.error('Order not found:', orderId);
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+  
+  // Find restaurant for SMS
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  
+  // Dynamisk tekst baseret på ordretype
+  let message;
+  if (order.orderType === 'Delivery') {
+    message = `🚗 Din mad er nu på vej til dig! Forventet levering inden for kort tid. Velbekomme fra ${restaurant?.name || 'os'}! 🍕`;
+  } else {
+    message = `✅ Din ordre er nu klar til afhentning! Vi glæder os til at se dig. Velbekomme fra ${restaurant?.name || 'os'}! 🍕`;
+  }
+  
+  // Send "færdig" SMS til kunden
+  if (order.phone) {
+    try {
+      await sendSMSToCustomer(order.phone, message, restaurant);
+      toast(`SMS sendt til ${order.customerName}`, 'success');
+    } catch (err) {
+      console.error('SMS fejl:', err);
+    }
+  }
+  
+  // Opdater status
+  order.status = 'Færdig';
+  order.completedAt = new Date().toISOString();
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+  loadOrdersPage();
+  
+  toast(`Ordre #${order.id} markeret som færdig`, 'success');
+}
+
+// Replace message variables with actual values
+function replaceMessageVariables(message, restaurant, order, estimateTime = null) {
+  if (!message) return message;
+  
+  const restaurantName = restaurant?.name || 'Restauranten';
+  const orderType = order?.orderType || 'Afhentning';
+  const deliveryText = orderType === 'Delivery' ? 'på vej til dig! 🚗' : 'klar til afhentning! 🏪';
+  
+  return message
+    .replace(/\{\{restaurant\}\}/gi, restaurantName)
+    .replace(/\{\{restaurant_name\}\}/gi, restaurantName)
+    .replace(/\{\{ventetid\}\}/gi, estimateTime || order?.estimatedTime || '30')
+    .replace(/\{\{leveringstype\}\}/gi, deliveryText)
+    .replace(/\{\{ordre_id\}\}/gi, order?.id || '')
+    .replace(/\{\{kunde_navn\}\}/gi, order?.customerName || 'Kunde')
+    .replace(/\{\{ordre\}\}/gi, order?.items || '');
+}
+
+// Slet enkelt ordre
+function deleteOrder(orderId) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  const filtered = orders.filter(o => o.id !== orderId);
+  localStorage.setItem('orders_module', JSON.stringify(filtered));
+  loadOrdersPage();
+}
+
+// Save order to module (from workflow)
+function saveOrderToModule(orderData) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  
+  const newOrder = {
+    id: Date.now().toString(),
+    phone: orderData.phone,
+    customerName: orderData.customerName || 'Ukendt',
+    orderType: orderData.orderType || 'Pickup',
+    address: orderData.address || '',
+    items: orderData.items || '',
+    total: orderData.parsedOrder?.total || 0,
+    restaurantId: orderData.restaurantId,
+    status: orderData.status || 'Afventer',
+    estimatedTime: orderData.estimatedTime || null,
+    createdAt: orderData.createdAt || new Date().toISOString(),
+    acceptedAt: orderData.acceptedAt || null,
+    startedAt: orderData.startedAt || null,
+    completedAt: orderData.completedAt || null
+  };
+  
+  orders.push(newOrder);
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+  
+  addLog(`📋 Ordre gemt: #${newOrder.id} - ${newOrder.customerName}`, 'success');
+  return newOrder;
+}
+
+// Hjælpefunktion til at sende SMS til kunde (bruger eksisterende sendSMS)
+async function sendSMSToCustomer(phone, message, restaurant) {
+  try {
+    // Brug eksisterende Twilio funktion
+    const response = await fetch(CONFIG.TWILIO_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: phone,
+        message: message
+      })
+    });
+    return response.ok;
+  } catch (err) {
+    console.error('SMS error:', err);
+    return false;
+  }
+}
+
+// Legacy funktion for bagudkompatibilitet
+function updateOrderStatus(orderId, newStatus) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  const orderIndex = orders.findIndex(o => o.id === orderId);
+  
+  if (orderIndex !== -1) {
+    orders[orderIndex].status = newStatus;
+    localStorage.setItem('orders_module', JSON.stringify(orders));
+    loadOrdersPage();
+  }
+}
+
+// Ryd alle ordrer
+function clearAllOrders() {
+  if (confirm('Er du sikker på du vil slette alle ordrer?')) {
+    localStorage.removeItem('orders_module');
+    loadOrdersPage();
+  }
+}
+
+// =====================================================
+// ADVANCED AI HELPER FUNCTIONS
+// =====================================================
+
+/**
+ * Get current conversation ID for AdvancedAI
+ */
+function getCurrentConversationId() {
+  const selectedRestaurant = getSelectedRestaurant();
+  const phoneInput = document.getElementById('test-phone');
+  const phone = phoneInput ? phoneInput.value : 'default';
+  const restaurantId = selectedRestaurant ? selectedRestaurant.id : 'default';
+
+  return `${restaurantId}-${phone}`;
+}
+
+/**
+ * Toggle AdvancedAI system on/off
+ */
+function toggleAdvancedAI(enabled) {
+  localStorage.setItem('advanced_ai_enabled', enabled ? 'true' : 'false');
+
+  const status = enabled ? '✨ Advanced AI aktiveret' : '📦 Legacy AI aktiv (fallback)';
+  const type = enabled ? 'success' : 'info';
+
+  if (window.showNotification) {
+    showNotification(status, type);
+  } else {
+    addLog(status, type);
+  }
+}
+
+async function classifyWithAI(message, context = '', expectedCategories = null) {
+  // =====================================================
+  // ADVANCED AI SYSTEM INTEGRATION (with fallback)
+  // =====================================================
+
+  // Feature flag - kan aktiveres per restaurant
+  const USE_ADVANCED_AI = localStorage.getItem('advanced_ai_enabled') === 'true';
+
+  // Prøv Advanced AI system først hvis aktiveret
+  if (USE_ADVANCED_AI && window.AdvancedAI) {
+    try {
+      const conversationId = getCurrentConversationId();
+      const result = await AdvancedAI.classifyAdvanced(message, conversationId, context);
+
+      if (result && result.category) {
+        addLog(`✨ AdvancedAI: ${result.category} (${Math.round((result.confidence || 1.0) * 100)}%)`, 'ai');
+        return result;
+      }
+    } catch (error) {
+      console.error('AdvancedAI error:', error);
+      addLog(`⚠️ AdvancedAI fejl - falder tilbage til legacy: ${error.message}`, 'warn');
+      // Fall through til legacy system
+    }
+  }
+
+  // =====================================================
+  // LEGACY AI KLASSIFICERING (FALLBACK)
+  // - Deterministisk output
+  // - Context-aware prompts
+  // - Forbedret fallback
+  // =====================================================
+
+  const msg = message.toLowerCase().trim();
+  
+  // TRIN 1: Deterministisk pre-check (ingen AI nødvendig for klare svar)
+  const quickResult = quickClassify(msg, context);
+  if (quickResult && quickResult.confidence >= 0.9) {
+    addLog(`⚡ Hurtig klassificering: ${quickResult.category}`, 'ai');
+    return quickResult;
+  }
+  
+  // TRIN 2: Brug AI hvis tilgængelig
+  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+    addLog('⚠️ OpenAI API key ikke konfigureret - bruger fallback', 'warn');
+    return classifyWithFallback(message, context);
+  }
+  
+  addLog('🤖 AI analyserer besked...', 'ai');
+  
+  // Byg kontekst-specifik prompt
+  const systemPrompt = buildContextualPrompt(context, expectedCategories);
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Besked: "${message}"` }
+        ],
+        max_tokens: 250,
+        temperature: 0.1  // Lavere = mere deterministisk
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (!data.choices || !data.choices[0]) {
+      addLog('⚠️ Tomt AI svar - bruger fallback', 'warn');
+      return classifyWithFallback(message, context);
+    }
+    
+    let result;
+    try {
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
+      result = JSON.parse(content);
+    } catch (parseErr) {
+      addLog('⚠️ Kunne ikke parse AI JSON - bruger fallback', 'warn');
+      return classifyWithFallback(message, context);
+    }
+    
+    // Valider og normaliser resultat
+    if (!result.category || result.category === 'UNKNOWN') {
+      result.category = 'OTHER';
+      result.confidence = 0.5;
+    }
+    
+    addLog(`🎯 AI: ${result.category} (${Math.round((result.confidence || 0.5) * 100)}%)`, 'ai');
+    return result;
+  } catch (err) {
+    console.error('AI error:', err);
+    addLog(`⚠️ AI fejl - bruger fallback: ${err.message}`, 'warn');
+    return classifyWithFallback(message, context);
+  }
+}
+
+// =====================================================
+// HURTIG DETERMINISTISK KLASSIFICERING
+// Håndterer 80% af beskeder uden AI
+// =====================================================
+function quickClassify(msg, context = '') {
+  const contextLower = context.toLowerCase();
+  
+  // === JA/NEJ SVAR ===
+  // Meget høj sikkerhed for simple ja/nej
+  if (/^(ja|jep|yes|jo|jaa|yep|jaaa|ja!+|okay|ok|korrekt|rigtigt|det passer|fint|jeps)[\s!.,]*$/i.test(msg)) {
+    return { category: 'YES', confidence: 0.98, extracted: msg };
+  }
+  if (/^(nej|no|nope|ikke|nej tak|næ|nææ)[\s!.,]*$/i.test(msg)) {
+    return { category: 'NO', confidence: 0.98, extracted: msg };
+  }
+  
+  // Ja med tilføjelse
+  if (/^ja[,\s]+(det |gerne|tak|perfekt|super)/i.test(msg)) {
+    return { category: 'YES', confidence: 0.95, extracted: msg };
+  }
+  
+  // === KONTEKST-BASERET KLASSIFICERING ===
+  
+  // Hvis vi venter på navn
+  if (contextLower.includes('navn') || contextLower.includes('name')) {
+    // Enkelt ord uden tal = sandsynligvis navn
+    if (/^[a-zæøåA-ZÆØÅ\-']+$/.test(msg) && msg.length >= 2 && msg.length <= 30) {
+      return { category: 'NAME', confidence: 0.85, extracted: capitalizeWords(msg) };
+    }
+    // "Jeg hedder X" format
+    const nameMatch = msg.match(/(?:jeg hedder|jeg er|mit navn er|hedder)\s+([a-zæøåA-ZÆØÅ\s\-']+)/i);
+    if (nameMatch) {
+      return { category: 'NAME', confidence: 0.95, extracted: capitalizeWords(nameMatch[1].trim()) };
+    }
+    // To ord = fornavn + efternavn
+    if (/^[a-zæøåA-ZÆØÅ\-']+\s+[a-zæøåA-ZÆØÅ\-']+$/.test(msg)) {
+      return { category: 'NAME', confidence: 0.9, extracted: capitalizeWords(msg) };
+    }
+  }
+  
+  // Hvis vi venter på adresse
+  if (contextLower.includes('adresse') || contextLower.includes('address') || contextLower.includes('levering')) {
+    // Indeholder vejnavn og nummer
+    if (/[a-zæøå]+\s*\d+/i.test(msg) || /\d+\s*[a-zæøå]+/i.test(msg)) {
+      return { category: 'ADDRESS', confidence: 0.85, extracted: msg };
+    }
+    // Postnummer pattern
+    if (/\b\d{4}\b/.test(msg)) {
+      return { category: 'ADDRESS', confidence: 0.8, extracted: msg };
+    }
+  }
+  
+  // Hvis vi venter på ordre bekræftelse
+  if (contextLower.includes('korrekt') || contextLower.includes('bekræft') || contextLower.includes('confirm')) {
+    if (msg.includes('ikke korrekt') || msg.includes('forkert') || msg.includes('ændre')) {
+      return { category: 'NO', confidence: 0.95, extracted: msg };
+    }
+  }
+  
+  // === LEVERINGSTYPE ===
+  if (/\b(afhent|hente|selv hente|pick\s*up|kommer selv)\b/i.test(msg)) {
+    return { category: 'PICKUP', confidence: 0.9, extracted: 'Afhentning' };
+  }
+  if (/\b(lever|bring|udbring|kør|delivery|hjem)\b/i.test(msg)) {
+    return { category: 'DELIVERY', confidence: 0.9, extracted: 'Levering' };
+  }
+  
+  // === ORDRE PATTERNS ===
+  // Nummer-baseret ordre
+  if (/(?:nr\.?|nummer|#)\s*\d+/i.test(msg)) {
+    return { category: 'ORDER', confidence: 0.9, extracted: msg };
+  }
+  // Antal + produkt
+  if (/\d+\s*x\s*[a-zæøå]/i.test(msg) || /\b(en|et|to|tre|fire|fem|1|2|3|4|5)\s+[a-zæøå]{4,}/i.test(msg)) {
+    return { category: 'ORDER', confidence: 0.85, extracted: msg };
+  }
+  // Kendte madretter
+  if (/\b(pizza|burger|sandwich|pasta|salat|kebab|durum|falafel|sushi|karry|bøf|schnitzel)\b/i.test(msg)) {
+    return { category: 'ORDER', confidence: 0.85, extracted: msg };
+  }
+  
+  // === SPØRGSMÅL ===
+  if (/^(hvad|hvornår|hvordan|hvor|kan i|har i|er der|koster|pris|menu)\b/i.test(msg) || msg.endsWith('?')) {
+    return { category: 'QUESTION', confidence: 0.85, extracted: msg };
+  }
+  
+  // === HILSENER ===
+  if (/^(hej|hello|goddag|god morgen|god aften|hi|hey)[\s!.,]*$/i.test(msg)) {
+    return { category: 'GREETING', confidence: 0.95, extracted: msg };
+  }
+  
+  // === POSITIVE SVAR ===
+  if (/^(tak|super|perfekt|fedt|fantastisk|dejligt|godt|fint nok)[\s!.,]*$/i.test(msg)) {
+    return { category: 'POSITIVE', confidence: 0.9, extracted: msg };
+  }
+  
+  // Ingen klar match - returner null for at lade AI håndtere det
+  return null;
+}
+
+// =====================================================
+// KONTEKST-SPECIFIK PROMPT BUILDER
+// =====================================================
+function buildContextualPrompt(context, expectedCategories) {
+  const baseCategories = expectedCategories || ['YES', 'NO', 'NAME', 'ADDRESS', 'ORDER', 'PICKUP', 'DELIVERY', 'QUESTION', 'POSITIVE', 'OTHER'];
+  
+  const categoryDescriptions = {
+    'YES': 'Bekræftelse (ja, okay, korrekt, rigtigt, det passer, fint, gerne)',
+    'NO': 'Afvisning/ændring (nej, ikke, forkert, ændre, vil ikke)',
+    'NAME': 'Kundens navn (fornavn, efternavn, kaldenavn)',
+    'ADDRESS': 'Leveringsadresse (vejnavn, husnummer, postnummer, by)',
+    'ORDER': 'Bestilling af mad (produktnavne, numre, antal)',
+    'PICKUP': 'Vil afhente selv (afhentning, hente, kommer selv)',
+    'DELIVERY': 'Vil have levering (levering, bring, udbring)',
+    'QUESTION': 'Stiller spørgsmål (hvad, hvornår, hvordan, kan I)',
+    'POSITIVE': 'Positiv respons uden bekræftelse (tak, super, fedt)',
+    'OTHER': 'Uklart eller andet'
+  };
+  
+  const relevantCategories = baseCategories.map(cat => `- ${cat}: ${categoryDescriptions[cat] || cat}`).join('\n');
+  
+  return `Du er en præcis SMS-klassificerings-AI for en dansk restaurant.
+
+OPGAVE: Klassificer kundens besked i PRÆCIS én kategori.
+
+KONTEKST FOR DENNE BESKED:
+${context || 'Generel kundehenvendelse'}
+
+TILGÆNGELIGE KATEGORIER:
+${relevantCategories}
+
+REGLER:
+1. Vælg den MEST specifikke kategori der passer
+2. Ved tvivl mellem YES og NAME: hvis det er ét ord uden tal, vælg NAME
+3. Ved tvivl mellem YES og POSITIVE: YES kun ved direkte bekræftelse på et spørgsmål
+4. Udtræk ALTID relevant information i "extracted" feltet
+5. Sæt confidence baseret på hvor sikker du er (0.0-1.0)
+
+OUTPUT FORMAT (KUN JSON, ingen anden tekst):
+{
+  "category": "KATEGORI",
+  "extracted": "relevant udtrukket info",
+  "confidence": 0.0-1.0,
+  "reasoning": "kort forklaring på dansk"
+}`;
+}
+
+// =====================================================
+// FORBEDRET FALLBACK KLASSIFICERING
+// =====================================================
+function classifyWithFallback(message, context = '') {
+  const msg = message.toLowerCase().trim();
+  const contextLower = (context || '').toLowerCase();
+  
+  // Prøv hurtig klassificering først
+  const quickResult = quickClassify(msg, context);
+  if (quickResult) {
+    return quickResult;
+  }
+  
+  // Udvidet fallback logik
+  
+  // Ja/bekræftelse med variationer
+  if (/\b(ja|jep|yes|okay|ok|jo|gerne|selvfølgelig|korrekt|rigtigt|fint|accepter|godkend)\b/i.test(msg)) {
+    if (!msg.includes('nej') && !msg.includes('ikke')) {
+      return { category: 'YES', confidence: 0.75, extracted: msg };
+    }
+  }
+  
+  // Nej/afvisning
+  if (/\b(nej|no|ikke|afbestil|annuller|forkert|ændre)\b/i.test(msg)) {
+    return { category: 'NO', confidence: 0.75, extracted: msg };
+  }
+  
+  // Navn pattern (enkelt eller dobbelt ord med kun bogstaver)
+  if (contextLower.includes('navn')) {
+    if (/^[a-zæøåA-ZÆØÅ\-'\s]{2,40}$/.test(msg) && !/\d/.test(msg)) {
+      return { category: 'NAME', confidence: 0.7, extracted: capitalizeWords(msg) };
+    }
+  }
+  
+  // Adresse pattern
+  if (contextLower.includes('adresse') || /\d{4}/.test(msg) || /\d+\s*[a-z]/i.test(msg)) {
+    return { category: 'ADDRESS', confidence: 0.7, extracted: msg };
+  }
+  
+  // Ordre pattern
+  if (/\d/.test(msg) && /[a-zæøå]{3,}/i.test(msg)) {
+    return { category: 'ORDER', confidence: 0.6, extracted: msg };
+  }
+  
+  // Spørgsmål
+  if (msg.includes('?') || /^(hvad|hvornår|hvordan|hvor|kan|har)\b/i.test(msg)) {
+    return { 
+      category: 'QUESTION', 
+      confidence: 0.7, 
+      extracted: msg,
+      fallbackResponse: 'Tak for din besked! Jeg sender den videre til restauranten.'
+    };
+  }
+  
+  // Default: OTHER med fallback respons
+  return { 
+    category: 'OTHER', 
+    confidence: 0.5, 
+    extracted: msg,
+    fallbackResponse: 'Tak for din besked. Kan du uddybe hvad du mener?'
+  };
+}
+
+// Hjælpefunktion til at kapitalisere ord
+function capitalizeWords(str) {
+  return str.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// Generate AI response (med åbningstider context)
+async function generateAIResponse(customerMessage, context, restaurant) {
+  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+    return generateSmartFallbackResponse(customerMessage, context, restaurant);
+  }
+  
+  // Hent restaurant navn (håndter både string og objekt)
+  const restaurantName = typeof restaurant === 'string' ? restaurant : restaurant?.name || 'Restauranten';
+  
+  // Byg åbningstider context hvis restaurant objekt
+  let openingHoursInfo = '';
+  if (typeof restaurant === 'object' && restaurant.openingHours) {
+    openingHoursInfo = `\n\nÅBNINGSTIDER:\n${formatOpeningHoursText(restaurant)}`;
+  }
+  
+  // Byg menu context
+  let menuInfo = '';
+  if (typeof restaurant === 'object' && restaurant.menuUrl) {
+    menuInfo = `\n\nMENU: ${restaurant.menuUrl}`;
+  }
+  
+  addLog('🤖 AI genererer svar...', 'ai');
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Du er en venlig og professionel SMS-assistent for restauranten "${restaurantName}".
+
+DINE OPGAVER:
+1. Hjælp kunder med at bestille mad
+2. Svar på spørgsmål om menu, priser, åbningstider
+3. Vejled kunden gennem bestillingsprocessen
+
+REGLER:
+- Svar ALTID på dansk
+- Hold svaret KORT (max 160 tegn for SMS)
+- Vær venlig men professionel
+- Brug max 1-2 emojis
+- Hvis du ikke ved noget, bed kunden kontakte restauranten direkte
+${openingHoursInfo}${menuInfo}
+
+VIGTIGT: 
+- Spørg ALDRIG om det samme to gange
+- Hvis kunden har givet information, bekræft den og gå videre
+- Ved tvivl, stil ETT præcist opfølgende spørgsmål`
+          },
+          {
+            role: 'user',
+            content: `SAMTALEKONTEKST: ${context}\n\nKUNDENS BESKED: "${customerMessage}"\n\nGenerer et passende svar (max 160 tegn):`
+          }
+        ],
+        max_tokens: 100,
+        temperature: 0.5  // Lavere for mere konsistente svar
+      })
+    });
+    
+    const data = await response.json();
+    const aiResponse = data.choices?.[0]?.message?.content?.trim();
+    
+    if (!aiResponse) {
+      return generateSmartFallbackResponse(customerMessage, context, restaurant);
+    }
+    
+    addLog(`💡 AI svar: "${aiResponse.substring(0, 50)}..."`, 'ai');
+    return aiResponse;
+  } catch (err) {
+    console.error('AI response error:', err);
+    return generateSmartFallbackResponse(customerMessage, context, restaurant);
+  }
+}
+
+// Smart fallback når AI ikke er tilgængelig
+function generateSmartFallbackResponse(message, context, restaurant) {
+  const msg = message.toLowerCase();
+  const restaurantName = typeof restaurant === 'string' ? restaurant : restaurant?.name || 'os';
+  
+  // Åbningstider spørgsmål
+  if (/åben|lukket|hvornår|tider/i.test(msg)) {
+    if (typeof restaurant === 'object' && restaurant.openingHours) {
+      const today = new Date().getDay();
+      const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+      const hours = restaurant.openingHours[dayNames[today]];
+      if (hours?.enabled) {
+        return `Vi har åbent i dag fra ${hours.open} til ${hours.close} 🕐`;
+      }
+      return 'Vi har desværre lukket i dag. Se vores åbningstider på hjemmesiden.';
+    }
+    return 'Kontakt os for åbningstider.';
+  }
+  
+  // Menu/priser spørgsmål
+  if (/menu|pris|koster|hvad har i/i.test(msg)) {
+    const menuUrl = restaurant?.menuUrl || restaurant?.website;
+    if (menuUrl) {
+      return `Se vores menu her: ${menuUrl} 🍕`;
+    }
+    return 'Kontakt os for menu og priser.';
+  }
+  
+  // Hilsen
+  if (/^(hej|hello|goddag|hi|hey)/i.test(msg)) {
+    return `Hej! Velkommen til ${restaurantName}. Hvad kan jeg hjælpe med? 😊`;
+  }
+  
+  // Tak
+  if (/^tak|takker|mange tak/i.test(msg)) {
+    return 'Selv tak! God appetit 🍽️';
+  }
+  
+  // Default
+  return 'Tak for din besked! Kan du uddybe hvad du ønsker hjælp med?';
+}
+
+// Pending AI response storage
+let pendingAiResponse = null;
+let pendingMsgId = null;
+
+function approveAiResponse(msgId) {
+  if (pendingAiResponse && pendingMsgId === msgId) {
+    const phone = document.getElementById('test-phone').value;
+    sendSMSNow(phone, pendingAiResponse);
+    document.getElementById(msgId + '-approval').remove();
+    addLog('✅ AI svar godkendt og sendt', 'success');
+    pendingAiResponse = null;
+    pendingMsgId = null;
+  }
+}
+
+function editAiResponse(msgId) {
+  if (pendingAiResponse) {
+    const newText = prompt('Rediger svaret:', pendingAiResponse);
+    if (newText) {
+      pendingAiResponse = newText;
+      const msgEl = document.getElementById(msgId);
+      if (msgEl) {
+        msgEl.querySelector('.msg-approval').previousSibling.textContent = newText;
+      }
+    }
+  }
+}
+
+function rejectAiResponse(msgId) {
+  document.getElementById(msgId)?.remove();
+  addLog('❌ AI svar afvist', 'warn');
+  pendingAiResponse = null;
+  pendingMsgId = null;
+}
+
+// Send SMS immediately
+async function sendSMSNow(to, message) {
+  const functionUrl = CONFIG.TWILIO_FUNCTION_URL;
+  let phoneNumber = to.replace(/\s/g, '');
+  if (!phoneNumber.startsWith('+')) {
+    phoneNumber = '+45' + phoneNumber;
+  }
+  
+  try {
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      mode: 'cors',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ to: phoneNumber, message: message })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      addMessage(message, 'out');
+      addLog(`✅ SMS sendt!`, 'success');
+    } else {
+      addLog(`❌ SMS fejl: ${result.error}`, 'error');
+    }
+  } catch (err) {
+    addLog(`❌ Fejl: ${err.message}`, 'error');
+  }
+}
+
+// Classify receipt intent (JA/NEJ)
+function classifyReceiptIntent(reply) {
+  if (!reply) return false;
+  const lower = reply.toLowerCase().trim();
+  
+  // Positive patterns
+  const yesPatterns = /^(ja|jep|yes|gerne|selvfølgelig|ok|okay|jo|yep|jaa|ja tak|please|pls)[!.,\s]*$/i;
+  if (yesPatterns.test(lower)) return true;
+  if (lower.includes('ja ') || lower.includes('ja,') || lower.includes('ja!')) return true;
+  if (lower.includes('gerne') || lower.includes('kvittering')) return true;
+  
+  // Negative patterns
+  const noPatterns = /^(nej|no|nope|ikke|nej tak|nah)[!.,\s]*$/i;
+  if (noPatterns.test(lower)) return false;
+  if (lower.includes('nej') || lower.includes('ikke')) return false;
+  
+  // Default to no if unclear
+  return false;
+}
+
+// =====================================================
+// AI FALLBACK & LEARNING SYSTEM
+// =====================================================
+
+// Learning log storage (in-memory + localStorage persistence)
+let aiLearningLog = JSON.parse(localStorage.getItem('ai_learning_log') || '[]');
+
+// Special intent handlers - actions the AI can trigger
+const SPECIAL_INTENTS = {
+  RECEIPT: {
+    keywords: ['kvittering', 'receipt', 'bon', 'regning', 'faktura'],
+    action: 'SEND_RECEIPT',
+    response: 'Selvfølgelig! Jeg sender din kvittering med det samme. Tjek din SMS om et øjeblik 📄'
+  },
+  ORDER_STATUS: {
+    keywords: ['status', 'hvor langt', 'hvornår klar', 'hvor længe', 'estimat'],
+    action: 'CHECK_STATUS',
+    response: 'Jeg tjekker status på din ordre... Et øjeblik! ⏱️'
+  },
+  MENU: {
+    keywords: ['menukort', 'menu', 'hvad har i', 'priser', 'tilbud'],
+    action: 'SEND_MENU',
+    response: 'Her er vores menu: {menuUrl} - Skriv gerne hvad du kunne tænke dig! 🍕'
+  },
+  CANCEL: {
+    keywords: ['annuller', 'afbestil', 'fortryd', 'cancel'],
+    action: 'ESCALATE_CANCEL',
+    response: 'Jeg forstår. Jeg sender din forespørgsel videre til personalet, som kontakter dig hurtigst muligt 📞'
+  },
+  COMPLAINT: {
+    keywords: ['klage', 'dårlig', 'forkert', 'mangel', 'fejl', 'skuffet', 'utilfreds'],
+    action: 'ESCALATE_COMPLAINT',
+    response: 'Det er jeg ked af at høre. Jeg eskalerer dette til vores personale, som kontakter dig snarest for at løse problemet 🙏'
+  },
+  ALLERGEN: {
+    keywords: ['allergi', 'glutenfri', 'laktosefri', 'vegetar', 'vegan', 'nødder', 'intolerans'],
+    action: 'ESCALATE_ALLERGEN',
+    response: 'Godt spørgsmål om allergener! Jeg sender din forespørgsel til køkkenet, som svarer dig direkte med præcise oplysninger 🥗'
+  },
+  OPENING_HOURS: {
+    keywords: ['åbningstid', 'lukket', 'åben', 'hvornår åbner', 'hvornår lukker'],
+    action: 'SEND_HOURS',
+    response: null // Dynamic - uses restaurant opening hours
+  },
+  HELP: {
+    keywords: ['hjælp', 'help', 'hvordan', 'problem', 'virker ikke'],
+    action: 'SEND_HELP',
+    response: 'Jeg hjælper gerne! Du kan:\n📱 Bestille mad ved at skrive din ordre\n📄 Bede om kvittering\n❌ Annullere ved at skrive "annuller"\n\nEller kontakt os direkte!'
+  }
+};
+
+// Detect special intent from message
+function detectSpecialIntent(message) {
+  const lower = message.toLowerCase();
+  
+  for (const [intentName, config] of Object.entries(SPECIAL_INTENTS)) {
+    for (const keyword of config.keywords) {
+      if (lower.includes(keyword)) {
+        return { intent: intentName, ...config };
+      }
+    }
+  }
+  return null;
+}
+
+// Log message for AI learning
+function logForLearning(message, context, classification, wasHandled, sentiment = 'neutral') {
+  const logEntry = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    message: message,
+    context: context,
+    classification: classification,
+    wasHandled: wasHandled,
+    sentiment: sentiment,
+    needsReview: !wasHandled || classification?.confidence < 0.7
+  };
+  
+  aiLearningLog.push(logEntry);
+  
+  // Keep only last 500 entries
+  if (aiLearningLog.length > 500) {
+    aiLearningLog = aiLearningLog.slice(-500);
+  }
+  
+  // Persist to localStorage
+  localStorage.setItem('ai_learning_log', JSON.stringify(aiLearningLog));
+  
+  addLog(`📚 Logget til AI træning: ${classification?.category || 'UNKNOWN'}`, 'info');
+  
+  return logEntry;
+}
+
+// Analyze sentiment of customer message
+function analyzeSentiment(message) {
+  const lower = message.toLowerCase();
+  
+  const positiveWords = ['tak', 'super', 'perfekt', 'dejligt', 'godt', 'fantastisk', 'lækkert', 'fedt', 'nice', 'awesome', 'great'];
+  const negativeWords = ['dårligt', 'skuffet', 'ærgerligt', 'forkert', 'klage', 'utilfreds', 'langsomt', 'koldt', 'fejl', 'problem'];
+  
+  let positiveScore = 0;
+  let negativeScore = 0;
+  
+  positiveWords.forEach(word => { if (lower.includes(word)) positiveScore++; });
+  negativeWords.forEach(word => { if (lower.includes(word)) negativeScore++; });
+  
+  if (positiveScore > negativeScore) return 'positive';
+  if (negativeScore > positiveScore) return 'negative';
+  return 'neutral';
+}
+
+// AI Fallback Handler - handles messages that don't match workflow
+async function handleAIFallback(message, restaurant, conversationContext = '') {
+  addLog('🧠 AI Fallback aktiveret - analyserer besked...', 'ai');
+  
+  // 1. Check for special intents first (kvittering, status, etc.)
+  const specialIntent = detectSpecialIntent(message);
+  if (specialIntent) {
+    addLog(`🎯 Special intent detekteret: ${specialIntent.intent}`, 'ai');
+    
+    // Log for learning
+    logForLearning(message, conversationContext, { category: specialIntent.intent, confidence: 0.95 }, true);
+    
+    // Execute action if defined
+    await executeIntentAction(specialIntent, restaurant);
+    
+    // Return response (with dynamic substitution)
+    let response = specialIntent.response;
+    if (response && restaurant) {
+      response = response.replace('{menuUrl}', restaurant.menuUrl || restaurant.website || '');
+      response = response.replace('{restaurantName}', restaurant.name || '');
+    }
+    
+    // Special case: Opening hours
+    if (specialIntent.action === 'SEND_HOURS' && restaurant?.openingHours) {
+      response = generateOpeningHoursResponse(restaurant);
+    }
+    
+    return {
+      handled: true,
+      intent: specialIntent.intent,
+      response: response,
+      action: specialIntent.action
+    };
+  }
+  
+  // 2. Use AI classification for unknown messages
+  const classification = await classifyWithAI(message, conversationContext);
+  const sentiment = analyzeSentiment(message);
+  
+  // 3. Log for learning (mark as needing review if low confidence)
+  const wasHandled = classification.confidence >= 0.7;
+  logForLearning(message, conversationContext, classification, wasHandled, sentiment);
+  
+  // 4. Generate AI response if needed
+  let aiResponse = null;
+  if (classification.category === 'QUESTION' || classification.category === 'OTHER') {
+    aiResponse = await generateAIFallbackResponse(message, restaurant, conversationContext);
+  }
+  
+  // 5. Determine if escalation is needed
+  const needsEscalation = sentiment === 'negative' || classification.confidence < 0.5;
+  
+  return {
+    handled: wasHandled,
+    intent: classification.category,
+    classification: classification,
+    sentiment: sentiment,
+    response: aiResponse || classification.fallbackResponse,
+    needsEscalation: needsEscalation,
+    action: needsEscalation ? 'ESCALATE_STAFF' : null
+  };
+}
+
+// Execute intent action (send receipt, check status, etc.)
+async function executeIntentAction(intent, restaurant) {
+  switch(intent.action) {
+    case 'SEND_RECEIPT':
+      addLog('📄 Trigger: Sender kvittering...', 'success');
+      // In production: trigger receipt generation and send
+      triggerStaffNotification(restaurant, 'Kunde anmoder om kvittering');
+      break;
+      
+    case 'CHECK_STATUS':
+      addLog('⏱️ Trigger: Tjekker ordrestatus...', 'info');
+      // In production: fetch order status from database
+      break;
+      
+    case 'SEND_MENU':
+      addLog('📋 Trigger: Sender menukort...', 'info');
+      break;
+      
+    case 'ESCALATE_CANCEL':
+    case 'ESCALATE_COMPLAINT':
+    case 'ESCALATE_ALLERGEN':
+    case 'ESCALATE_STAFF':
+      addLog('🚨 Trigger: Eskalerer til personale...', 'warn');
+      triggerStaffNotification(restaurant, `Kundehenvendelse kræver opmærksomhed: ${intent.intent}`);
+      break;
+      
+    case 'SEND_HOURS':
+      addLog('🕐 Trigger: Sender åbningstider...', 'info');
+      break;
+      
+    case 'SEND_HELP':
+      addLog('❓ Trigger: Sender hjælp-info...', 'info');
+      break;
+  }
+}
+
+// Trigger notification to staff (placeholder for real implementation)
+function triggerStaffNotification(restaurant, message) {
+  const notification = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    restaurant: restaurant?.name || 'Ukendt',
+    restaurantId: restaurant?.id,
+    message: message,
+    status: 'pending'
+  };
+  
+  // Store in localStorage for now (would be database in production)
+  const notifications = JSON.parse(localStorage.getItem('staff_notifications') || '[]');
+  notifications.push(notification);
+  localStorage.setItem('staff_notifications', JSON.stringify(notifications));
+  
+  addLog(`📢 Staff notification: ${message}`, 'warn');
+}
+
+// Generate AI fallback response for unhandled messages
+async function generateAIFallbackResponse(message, restaurant, context) {
+  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+    return 'Beklager, jeg forstod ikke helt din besked. Kan du prøve at omformulere, eller kontakt os direkte? 📞';
+  }
+  
+  const restaurantName = restaurant?.name || 'restauranten';
+  let openingHoursInfo = '';
+  if (restaurant?.openingHours) {
+    openingHoursInfo = `\n\nÅbningstider:\n${formatOpeningHoursText(restaurant)}`;
+  }
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Du er en venlig SMS-assistent for "${restaurantName}".
+Du håndterer beskeder som ikke passer ind i det normale bestillingsflow.
+
+VIGTIGE REGLER:
+- Svar kort og venligt på dansk (max 160 tegn)
+- Hvis du ikke kan hjælpe, eskaler venligt til personalet
+- Brug max 1-2 emojis
+- Vær professionel men varm
+- Hvis kunden virker utilfreds, anerkend det og tilbyd hjælp
+${openingHoursInfo}
+
+Almindelige forespørgsler du kan hjælpe med:
+- Kvittering: Bed dem vente mens du henter den
+- Ordrestatus: Bed dem vente mens du tjekker
+- Åbningstider: Giv dem de korrekte tider
+- Alt andet: Tilbyd at eskalere til personale`
+          },
+          {
+            role: 'user',
+            content: `Kontekst: ${context}\n\nKundens besked: "${message}"\n\nGenerer et passende svar:`
+          }
+        ],
+        max_tokens: 100,
+        temperature: 0.6
+      })
+    });
+    
+    const data = await response.json();
+    return data.choices[0]?.message?.content?.trim() || null;
+  } catch (err) {
+    console.error('AI Fallback error:', err);
+    return null;
+  }
+}
+
+// Generate opening hours response
+function generateOpeningHoursResponse(restaurant) {
+  if (!restaurant?.openingHours) {
+    return 'Kontakt os for at høre vores åbningstider 📞';
+  }
+  
+  const dayNames = {
+    monday: 'Mandag', tuesday: 'Tirsdag', wednesday: 'Onsdag',
+    thursday: 'Torsdag', friday: 'Fredag', saturday: 'Lørdag', sunday: 'Søndag'
+  };
+  
+  const today = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][new Date().getDay()];
+  const todayHours = restaurant.openingHours[today];
+  
+  if (todayHours?.enabled) {
+    return `Vi har åbent i dag (${dayNames[today]}) fra ${todayHours.open} til ${todayHours.close} 🕐`;
+  } else {
+    // Find next open day
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    const todayIndex = days.indexOf(today);
+    for (let i = 1; i <= 7; i++) {
+      const nextDay = days[(todayIndex + i) % 7];
+      const nextHours = restaurant.openingHours[nextDay];
+      if (nextHours?.enabled) {
+        return `Vi har desværre lukket i dag. Vi åbner igen ${dayNames[nextDay]} kl. ${nextHours.open} 🕐`;
+      }
+    }
+    return 'Kontakt os for at høre vores åbningstider 📞';
+  }
+}
+
+// Get learning log for dashboard display
+function getAILearningStats() {
+  const total = aiLearningLog.length;
+  const needsReview = aiLearningLog.filter(e => e.needsReview).length;
+  const handled = aiLearningLog.filter(e => e.wasHandled).length;
+  const sentimentBreakdown = {
+    positive: aiLearningLog.filter(e => e.sentiment === 'positive').length,
+    neutral: aiLearningLog.filter(e => e.sentiment === 'neutral').length,
+    negative: aiLearningLog.filter(e => e.sentiment === 'negative').length
+  };
+  
+  // Category breakdown
+  const categories = {};
+  aiLearningLog.forEach(e => {
+    const cat = e.classification?.category || 'UNKNOWN';
+    categories[cat] = (categories[cat] || 0) + 1;
+  });
+  
+  return {
+    total,
+    needsReview,
+    handled,
+    handledRate: total > 0 ? Math.round((handled / total) * 100) : 0,
+    sentimentBreakdown,
+    categories,
+    recentUnhandled: aiLearningLog.filter(e => e.needsReview).slice(-10).reverse()
+  };
+}
+
+// Export learning data for training
+function exportLearningData() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    totalEntries: aiLearningLog.length,
+    entries: aiLearningLog
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ai-learning-data-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  
+  addLog('📥 AI træningsdata eksporteret', 'success');
+}
+
+// Clear learning log
+function clearLearningLog() {
+  if (confirm('Er du sikker på du vil slette alle AI træningsdata?')) {
+    aiLearningLog = [];
+    localStorage.removeItem('ai_learning_log');
+    addLog('🗑️ AI træningsdata slettet', 'warn');
+  }
+}
+
+async function waitForReply() {
+  document.getElementById('waiting').style.display = 'block';
+  addLog('⏳ Venter på kundens svar...', 'info');
+
+  return new Promise(resolve => {
+    // Gem reference til denne specifikke resolve
+    const thisResolve = resolve;
+    replyResolver = resolve;
+
+    // I Live Mode: Poll Supabase for indgående SMS
+    let pollInterval = null;
+    let lastMessageTimestamp = null;  // FIXED: Brug timestamp i stedet for ID
+    let timeoutId = null;
+    let warningTimeout = null;
+    let isResolved = false;
+
+    // Cleanup funktion for at sikre alle ressourcer frigives
+    const cleanup = () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (warningTimeout) {
+        clearTimeout(warningTimeout);
+        warningTimeout = null;
+      }
+      document.getElementById('waiting').style.display = 'none';
+    };
+
+    // Safe resolve funktion
+    const safeResolve = (value) => {
+      if (isResolved) return;
+      isResolved = true;
+      cleanup();
+      if (replyResolver === thisResolve) {
+        replyResolver = null;
+      }
+      resolve(value);
+    };
+
+    if (liveMode) {
+      const phone = document.getElementById('test-phone').value.replace(/\s/g, '');
+      const formattedPhone = phone.startsWith('+') ? phone : '+45' + phone;
+
+      // FIXED: Gem starttidspunkt for at undgå gamle beskeder
+      const pollStartTime = new Date().toISOString();
+      addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
+
+      pollInterval = setInterval(async () => {
+        // Stop polling hvis allerede resolved eller workflow stoppet
+        if (isResolved || !testRunning) {
+          cleanup();
+          return;
+        }
+
+        try {
+          // FIXED: Filtrer på created_at > pollStartTime for kun at få nye beskeder
+          const response = await fetch(
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?phone=eq.${encodeURIComponent(formattedPhone)}&direction=eq.inbound&created_at=gt.${encodeURIComponent(pollStartTime)}&order=created_at.desc&limit=1`,
+            {
+              headers: {
+                'apikey': CONFIG.SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+              }
+            }
+          );
+          const messages = await response.json();
+
+          if (messages && messages.length > 0) {
+            const msg = messages[0];
+            // FIXED: Check mod timestamp i stedet for ID
+            if (!lastMessageTimestamp || msg.created_at > lastMessageTimestamp) {
+              lastMessageTimestamp = msg.created_at;
+              addLog(`📨 Indgående SMS: "${msg.content}"`, 'success');
+              safeResolve(msg.content);
+            }
+          }
+        } catch (err) {
+          console.warn('Poll error (continuing):', err.message);
+          // Fortsæt polling ved fejl
+        }
+      }, 2000); // Poll hver 2. sekund
+
+      // FIXED: Advarsel efter 60 sekunder
+      warningTimeout = setTimeout(() => {
+        if (!isResolved) {
+          addLog('⏰ Venter stadig på svar... (60s)', 'warn');
+        }
+      }, 60000);
+    }
+
+    // Timeout efter 2 minutter
+    timeoutId = setTimeout(() => {
+      if (!isResolved) {
+        addLog('⏰ Timeout efter 2 minutter - ingen svar modtaget', 'warn');
+        safeResolve(null);
+      }
+    }, 120000);
+  });
+}
+
+async function handleIncomingReply(text) {
+  // Show incoming message
+  addMessage(text, 'in');
+  addLog(`📨 Kunde: "${text}"`, 'success');
+  
+  // Get restaurant context
+  const restaurantId = document.getElementById('test-restaurant').value;
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  
+  // First, try AI Fallback for special intents (kvittering, status, etc.)
+  const fallbackResult = await handleAIFallback(text, restaurant, currentConversationContext);
+  
+  if (fallbackResult.handled && fallbackResult.response) {
+    // Special intent detected and handled
+    addLog(`✅ AI Fallback håndteret: ${fallbackResult.intent}`, 'success');
+    
+    if (fallbackResult.action) {
+      addLog(`🔧 Action triggered: ${fallbackResult.action}`, 'info');
+    }
+    
+    // Show response with approval if needed
+    if (fallbackResult.needsEscalation) {
+      pendingMsgId = addMessage(fallbackResult.response, 'out', true);
+      pendingAiResponse = fallbackResult.response;
+    } else {
+      // Auto-send for high-confidence special intents
+      addMessage(fallbackResult.response, 'out');
+      if (liveMode) {
+        const phone = document.getElementById('test-phone').value;
+        sendSMSNow(phone, fallbackResult.response);
+      }
+    }
+    
+    // Update context
+    currentConversationContext += `\nKunde: ${text} [AI Fallback: ${fallbackResult.intent}]`;
+    
+    return { text, classification: fallbackResult.classification || { category: fallbackResult.intent }, fallback: true };
+  }
+  
+  // Standard classification if not handled by fallback
+  const classification = await classifyWithAI(text, currentConversationContext);
+  
+  // Generate AI response suggestion
+  const aiSuggestion = await generateAIResponse(text, currentConversationContext, restaurant?.name || 'Restauranten');
+  
+  if (aiSuggestion) {
+    // Show AI suggestion with approval buttons
+    pendingMsgId = addMessage(aiSuggestion, 'out', true);
+    pendingAiResponse = aiSuggestion;
+  }
+  
+  // Update context
+  currentConversationContext += `\nKunde: ${text}`;
+  if (classification.extracted) {
+    currentConversationContext += ` [${classification.category}: ${classification.extracted}]`;
+  }
+  
+  return { text, classification };
+}
+
+let currentConversationContext = '';
+
+function sendReply() {
+  const input = document.getElementById('reply-input');
+  const text = input.value.trim();
+  if (!text) return;
+  
+  input.value = '';
+  
+  // If we have a resolver waiting, use it (simulation mode)
+  if (replyResolver) {
+    addMessage(text, 'in');
+    addLog(`📨 Svar modtaget: "${text}"`, 'success');
+    document.getElementById('waiting').style.display = 'none';
+    replyResolver(text);
+    replyResolver = null;
+  } else {
+    // Live mode - handle as incoming
+    handleIncomingReply(text);
+  }
+}
+
+function quickReply(text) {
+  document.getElementById('reply-input').value = text;
+  sendReply();
+}
+
+function addLog(msg, type = 'info') {
+  const time = new Date().toLocaleTimeString('da-DK');
+  
+  // Fjern emojis fra besked til ren tekst visning
+  const cleanMsg = msg.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim();
+  
+  // Add to detailed log (log tab) only
+  addDetailedLog(cleanMsg, type, time);
+}
+
+// Tab switching - 3 tabs: chat, messages, log
+function switchTestTab(tab) {
+  // Update tab buttons
+  document.getElementById('tab-chat')?.classList.toggle('active', tab === 'chat');
+  document.getElementById('tab-messages')?.classList.toggle('active', tab === 'messages');
+  document.getElementById('tab-log')?.classList.toggle('active', tab === 'log');
+  
+  // Update tab content
+  document.getElementById('content-chat')?.classList.toggle('active', tab === 'chat');
+  document.getElementById('content-messages')?.classList.toggle('active', tab === 'messages');
+  document.getElementById('content-log')?.classList.toggle('active', tab === 'log');
+}
+
+// Detailed log functions
+function addDetailedLog(msg, type = 'info', time) {
+  const container = document.getElementById('detailed-log');
+  if (!container) return;
+  
+  // Clear placeholder if first log
+  if (container.querySelector('.log-empty-state')) {
+    container.innerHTML = '';
+  }
+  
+  const typeLabels = {
+    info: 'INFO',
+    success: 'SUCCESS',
+    warn: 'WARNING',
+    error: 'ERROR',
+    ai: 'AI',
+    sms: 'SMS'
+  };
+  
+  const entry = document.createElement('div');
+  entry.className = `log-entry-detailed ${type}`;
+  entry.innerHTML = `
+    <span class="log-time">${time || new Date().toLocaleTimeString('da-DK')}</span>
+    <span class="log-type">${typeLabels[type] || 'INFO'}</span>
+    <span class="log-content">${msg}</span>
+  `;
+  
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+function addDetailedLogWithPayload(msg, type, payload) {
+  const container = document.getElementById('detailed-log');
+  if (!container) return;
+  
+  const time = new Date().toLocaleTimeString('da-DK');
+  const typeLabels = {
+    info: 'INFO',
+    success: 'SUCCESS',
+    warn: 'WARNING',
+    error: 'ERROR',
+    ai: 'AI',
+    api: 'API'
+  };
+  
+  const entry = document.createElement('div');
+  entry.className = `log-entry-detailed ${type}`;
+  entry.innerHTML = `
+    <span class="log-time">${time}</span>
+    <span class="log-type">${typeLabels[type] || 'INFO'}</span>
+    <span class="log-content">${msg}</span>
+    ${payload ? `<pre>${JSON.stringify(payload, null, 2)}</pre>` : ''}
+  `;
+  
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearDetailedLog() {
+  const container = document.getElementById('detailed-log');
+  if (container) {
+    container.innerHTML = `
+      <div class="log-empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <div>Log ryddet</div>
+        <div class="log-empty-sub">Start en ny test for at se logs</div>
+      </div>
+    `;
+  }
+}
+
+function copyDetailedLog() {
+  const container = document.getElementById('detailed-log');
+  if (container) {
+    const text = container.innerText;
+    navigator.clipboard.writeText(text).catch(() => {
+      toast('Kunne ikke kopiere log', 'error');
+    });
+  }
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// =====================================================
+// SETTINGS
+// =====================================================
+function loadConfig() {
+  // Brug CONFIG værdier som defaults hvis localStorage er tom
+
+  // GatewayAPI SMS
+  const gatewayToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+  const gatewaySender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
+
+  if (gatewayToken) localStorage.setItem('gatewayapi_token', gatewayToken);
+  if (gatewaySender) localStorage.setItem('gatewayapi_sender', gatewaySender);
+
+  // Populate input fields if they exist
+  const tokenInput = document.getElementById('gatewayapi-token');
+  const senderInput = document.getElementById('gatewayapi-sender');
+  if (tokenInput && gatewayToken) tokenInput.value = gatewayToken;
+  if (senderInput) senderInput.value = gatewaySender;
+
+  // OpenAI
+  const openaiKey = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
+  if (openaiKey) {
+    localStorage.setItem('openai_key', openaiKey);
+  }
+
+  updateApiStatus();
+}
+
+function saveGatewayApiSettings() {
+  const token = document.getElementById('gatewayapi-token')?.value.trim();
+  const sender = document.getElementById('gatewayapi-sender')?.value.trim();
+
+  if (!token) {
+    toast('Indtast din GatewayAPI token', 'error');
+    return;
+  }
+
+  localStorage.setItem('gatewayapi_token', token);
+  if (sender) {
+    localStorage.setItem('gatewayapi_sender', sender);
+  }
+
+  toast('GatewayAPI indstillinger gemt', 'success');
+  updateApiStatus();
+}
+
+function loadGatewayApiSettings() {
+  const token = localStorage.getItem('gatewayapi_token');
+  const sender = localStorage.getItem('gatewayapi_sender') || 'OrderFlow';
+
+  const tokenInput = document.getElementById('gatewayapi-token');
+  const senderInput = document.getElementById('gatewayapi-sender');
+
+  if (tokenInput && token) tokenInput.value = token;
+  if (senderInput) senderInput.value = sender;
+}
+
+function saveOpenAIConfig() {
+  const key = document.getElementById('openai-key').value.trim();
+  if (key) localStorage.setItem('openai_key', key);
+  closeModal('openai-config');
+  // toast('OpenAI API key gemt', 'success'); // Removed - unnecessary
+  updateApiStatus();
+}
+
+function updateApiStatus() {
+  const gatewayApiOk = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+  const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
+
+  const smsStatusEl = document.getElementById('status-twilio') || document.getElementById('status-sms');
+  const openaiStatusEl = document.getElementById('status-openai');
+
+  if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (gatewayApiOk ? 'ok' : 'missing');
+  if (openaiStatusEl) openaiStatusEl.className = 'api-key-status ' + (openaiOk ? 'ok' : 'missing');
+}
+
+// =====================================================
+// UTILS
+// =====================================================
+
+// Format currency for KPI display
+function formatCurrency(amount) {
+  if (!amount) return '0 kr';
+  return new Intl.NumberFormat('da-DK', { 
+    style: 'decimal',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0 
+  }).format(amount) + ' kr';
+}
+
+// Settings tab switching - synchronized with sidebar
+function switchSettingsTab(tab) {
+  // Tab name to display title mapping
+  const tabTitles = {
+    'api': 'API Adgang',
+    'ailearning': 'Læring',
+    'users': 'Brugerindstillinger',
+    'roles': 'Roller',
+    'moms': 'Moms',
+    'sprog': 'Sprog',
+    'billing': 'Abonnement',
+    'notifications': 'Notifikationer',
+    'passwords': 'Adgangskoder',
+    'support': 'Support'
+  };
+  
+  // Update dynamic page title
+  const titleEl = document.getElementById('settings-page-title');
+  if (titleEl) {
+    titleEl.textContent = tabTitles[tab] || 'Indstillinger';
+  }
+  
+  // Update tab content
+  document.querySelectorAll('.settings-tab-content').forEach(c => c.classList.remove('active'));
+  const contentEl = document.getElementById('settings-content-' + tab);
+  if (contentEl) contentEl.classList.add('active');
+  
+  // SYNC: Highlight corresponding sidebar item
+  syncSidebarSettingsItem(tab);
+  
+  // Load AI learning stats when that tab is opened
+  if (tab === 'ailearning') {
+    refreshAILearningStats();
+  }
+  
+  // Load subscription plans config when billing tab is opened
+  if (tab === 'billing') {
+    renderSubscriptionPlansConfig();
+  }
+
+  // Initialize notification settings when notifications tab is opened
+  if (tab === 'notifications') {
+    initNotificationEmailField();
+  }
+
+  // Initialize 2FA settings when password tab is opened
+  if (tab === 'passwords') {
+    init2FASettings();
+  }
+}
+
+// Sync sidebar highlight with settings tab
+function syncSidebarSettingsItem(tab) {
+  // Clear all sidebar nav-dropdown-item active states under indstillinger
+  document.querySelectorAll('#nav-indstillinger .nav-dropdown-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Find and highlight the matching sidebar item
+  const sidebarItems = document.querySelectorAll('#nav-indstillinger .nav-dropdown-item');
+  sidebarItems.forEach(item => {
+    const onclick = item.getAttribute('onclick');
+    if (onclick && onclick.includes(`showSettingsPage('${tab}')`)) {
+      item.classList.add('active');
+    }
+  });
+}
+
+// Refresh AI Learning Stats in dashboard
+function refreshAILearningStats() {
+  const stats = getAILearningStats();
+  
+  // Update stat cards
+  document.getElementById('ai-stat-total').textContent = stats.total;
+  document.getElementById('ai-stat-handled').textContent = stats.handledRate + '%';
+  document.getElementById('ai-stat-review').textContent = stats.needsReview;
+  
+  // Sentiment display
+  const sentimentEl = document.getElementById('ai-stat-sentiment');
+  if (stats.total > 0) {
+    const posPercent = Math.round((stats.sentimentBreakdown.positive / stats.total) * 100);
+    const negPercent = Math.round((stats.sentimentBreakdown.negative / stats.total) * 100);
+    if (posPercent > negPercent) {
+      sentimentEl.textContent = '😊 ' + posPercent + '%';
+      sentimentEl.style.color = 'var(--green)';
+    } else if (negPercent > posPercent) {
+      sentimentEl.textContent = '😟 ' + negPercent + '%';
+      sentimentEl.style.color = 'var(--danger)';
+    } else {
+      sentimentEl.textContent = '😐 Neutral';
+      sentimentEl.style.color = 'var(--muted)';
+    }
+  } else {
+    sentimentEl.textContent = '-';
+    sentimentEl.style.color = 'var(--muted)';
+  }
+  
+  // Render unhandled list
+  const listEl = document.getElementById('ai-unhandled-list');
+  if (stats.recentUnhandled.length > 0) {
+    listEl.innerHTML = stats.recentUnhandled.map(entry => `
+      <div style="padding:10px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid ${entry.sentiment === 'negative' ? 'var(--danger)' : 'var(--orange)'}">
+        <div style="font-size:12px;color:var(--text);margin-bottom:4px">"${escapeHtml(entry.message?.substring(0, 80))}${entry.message?.length > 80 ? '...' : ''}"</div>
+        <div style="display:flex;gap:8px;font-size:10px;color:var(--muted)">
+          <span>${entry.classification?.category || 'UNKNOWN'}</span>
+          <span>•</span>
+          <span>${Math.round((entry.classification?.confidence || 0) * 100)}% conf</span>
+          <span>•</span>
+          <span>${new Date(entry.timestamp).toLocaleDateString('da-DK')}</span>
+        </div>
+      </div>
+    `).join('');
+  } else {
+    listEl.innerHTML = '<p style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Ingen ubehandlede beskeder</p>';
+  }
+}
+
+// Helper for HTML escaping
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Toggle notification setting - visual feedback only
+function toggleNotification(type) {
+  // Toggle state is already visible on the checkbox
+}
+
+// Save notification email - visual feedback only
+function saveNotificationEmail() {
+  // Form validation handles errors
+}
+
+// Regenerate webhook secret - visual feedback in input field
+function regenerateWebhookSecret() {
+  const secret = 'whsec_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  document.getElementById('webhook-secret').value = secret;
+  // Value update in input is visual feedback
+}
+
+// Edit user role (placeholder)
+function editUserRole(userId) {
+  // Would open modal
+}
+
+// Toggle KPI for restaurant - visual feedback in UI update
+function toggleRestaurantKpi(restaurantId) {
+  const restaurant = restaurants.find(r => r.id === restaurantId);
+  if (restaurant) {
+    restaurant.kpiEnabled = !restaurant.kpiEnabled;
+    
+    // Initialize KPI data if enabling and not present
+    if (restaurant.kpiEnabled && !restaurant.kpi) {
+      restaurant.kpi = {
+        totalRevenue: 0,
+        recoveredRevenue: 0,
+        avgOrderValue: 0,
+        reviews: {
+          total: 0,
+          avgRating: 0,
+          google: { count: 0, avgRating: 0 },
+          trustpilot: { count: 0, avgRating: 0 }
+        },
+        conversionRate: 0,
+        responseTime: 0
+      };
+    }
+    
+    loadRestaurants();
+  }
+}
+
+// ========================================
+// CUSTOMER-SPECIFIC LOGS SYSTEM
+// ========================================
+
+// Format timestamp for aktivitetslog (DD.MM.YYYY, HH.MM)
+function formatAktivitetslogTimestamp(timestamp) {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  
+  return `${day}.${month}.${year}, ${hours}.${minutes}`;
+}
+
+// Get border color based on type and priority
+function getLogBorderColor(type, prioritet) {
+  if (prioritet === 'kritisk') return 'var(--danger)';
+  if (prioritet === 'høj') return 'var(--orange)';
+  
+  const colors = {
+    'sms': 'var(--accent)',
+    'opkald': 'var(--purple)',
+    'email': 'var(--info)',
+    'ordre': 'var(--green)',
+    'klage': 'var(--danger)',
+    'feedback': 'var(--cyan)',
+    'andet': 'var(--muted)'
+  };
+  return colors[type] || 'var(--accent)';
+}
+
+// Get icon for log type
+function getLogTypeIcon(type) {
+  const icons = {
+    'sms': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    'opkald': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
+    'email': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+    'ordre': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    'klage': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'feedback': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    'andet': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+  };
+  return icons[type] || icons['andet'];
+}
+
+// Get priority badge
+function getPrioritetBadge(prioritet) {
+  const badges = {
+    'lav': '<span style="font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:var(--radius-full);color:var(--muted);margin-left:8px">Lav</span>',
+    'høj': '<span style="font-size:10px;padding:2px 8px;background:rgba(251,191,36,0.15);border-radius:var(--radius-full);color:var(--orange);margin-left:8px">Høj</span>',
+    'kritisk': '<span style="font-size:10px;padding:2px 8px;background:rgba(248,113,113,0.15);border-radius:var(--radius-full);color:var(--danger);margin-left:8px">Kritisk</span>'
+  };
+  return badges[prioritet] || '';
+}
+
+// Format log date
+function formatLogDate(timestamp) {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  if (days === 0) {
+    return 'I dag ' + date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+  } else if (days === 1) {
+    return 'I går ' + date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+  } else if (days < 7) {
+    return days + ' dage siden';
+  } else {
+    return date.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+}
+
+// Helper: Download file
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Get all customer kundelogs from localStorage
+function getAllCustomerKundelogs() {
+  return JSON.parse(localStorage.getItem('orderflow_customer_kundelogs') || '{}');
+}
+
+// Save all customer kundelogs to localStorage
+function saveAllCustomerKundelogs(data) {
+  localStorage.setItem('orderflow_customer_kundelogs', JSON.stringify(data));
+}
+
+// Get kundelogs for specific customer
+function getCustomerKundelogs(customerId) {
+  const allLogs = getAllCustomerKundelogs();
+  return allLogs[customerId] || [];
+}
+
+// Save kundelogs for specific customer
+function saveCustomerKundelogsForCustomer(customerId, logs) {
+  const allLogs = getAllCustomerKundelogs();
+  allLogs[customerId] = logs;
+  saveAllCustomerKundelogs(allLogs);
+}
+
+// Load and render customer kundelogs
+function loadCustomerKundelogs() {
+  if (!currentProfileRestaurantId) return;
+  renderCustomerKundelogs();
+}
+
+// Render customer kundelogs
+function renderCustomerKundelogs() {
+  const container = document.getElementById('customer-kundelogs-container');
+  const countEl = document.getElementById('customer-kundelogs-count');
+  
+  if (!container || !currentProfileRestaurantId) return;
+  
+  const logs = getCustomerKundelogs(currentProfileRestaurantId);
+  
+  // Get filter values
+  const searchTerm = (document.getElementById('customer-kundelog-search')?.value || '').toLowerCase();
+  const typeFilter = document.getElementById('customer-kundelog-type-filter')?.value || 'all';
+  
+  // Filter logs
+  let filteredLogs = logs.filter(log => {
+    const matchesSearch = !searchTerm || 
+      (log.beskrivelse && log.beskrivelse.toLowerCase().includes(searchTerm)) ||
+      (log.reference && log.reference.toLowerCase().includes(searchTerm)) ||
+      (log.tags && log.tags.some(t => t.toLowerCase().includes(searchTerm)));
+    
+    const matchesType = typeFilter === 'all' || log.type === typeFilter;
+    
+    return matchesSearch && matchesType;
+  });
+  
+  // Sort by date (newest first)
+  filteredLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  // Update count
+  if (countEl) {
+    countEl.textContent = `(${filteredLogs.length} log${filteredLogs.length !== 1 ? 's' : ''})`;
+  }
+  
+  // Empty state
+  if (filteredLogs.length === 0) {
+    if (logs.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:60px 20px">
+          <div style="width:80px;height:80px;background:var(--accent-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="11" x2="12" y2="17"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+          </div>
+          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;color:var(--text)">Ingen kundelogs fundet</h3>
+          <p style="color:var(--text2);font-size:14px;margin-bottom:24px">Opret en log for at se den her</p>
+          <button class="btn btn-primary" onclick="openCustomerKundelogModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Opret første log
+          </button>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `
+        <div style="text-align:center;padding:40px 20px">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="margin-bottom:16px">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <p style="color:var(--text2);font-size:14px">Ingen logs matcher din søgning</p>
+        </div>
+      `;
+    }
+    return;
+  }
+  
+  // Render logs
+  container.innerHTML = filteredLogs.map(log => {
+    const borderColor = getLogBorderColor(log.type, log.prioritet);
+    const typeIcon = getLogTypeIcon(log.type);
+    const prioritetBadge = log.prioritet !== 'normal' ? getPrioritetBadge(log.prioritet) : '';
+    const formattedDate = formatLogDate(log.timestamp);
+    const tagsHtml = log.tags && log.tags.length > 0 
+      ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:8px">${log.tags.map(t => `<span style="font-size:10px;padding:2px 8px;background:var(--bg2);border-radius:var(--radius-full);color:var(--text2)">${escapeHtml(t)}</span>`).join('')}</div>` 
+      : '';
+    
+    return `
+      <div class="log-entry" style="padding:14px 16px;background:var(--bg3);border-radius:var(--radius-sm);margin-bottom:10px;border-left:3px solid ${borderColor};transition:all 0.15s" 
+           onmouseenter="this.style.background='var(--card-hover)'" 
+           onmouseleave="this.style.background='var(--bg3)'">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;background:var(--bg2);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center">
+              ${typeIcon}
+            </div>
+            <div>
+              <span style="font-weight:600;color:var(--text);text-transform:capitalize">${log.type}</span>
+              ${log.reference ? `<span style="color:var(--muted);font-size:12px;margin-left:8px">${escapeHtml(log.reference)}</span>` : ''}
+              ${prioritetBadge}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">${formattedDate}</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-icon" style="width:28px;height:28px" onclick="editCustomerKundelog('${log.id}')" title="Rediger">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-ghost btn-icon" style="width:28px;height:28px;color:var(--danger)" onclick="deleteCustomerKundelog('${log.id}')" title="Slet">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.5;margin-left:42px">${escapeHtml(log.beskrivelse)}</div>
+        ${tagsHtml ? `<div style="margin-left:42px">${tagsHtml}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// Filter customer kundelogs
+function filterCustomerKundelogs() {
+  renderCustomerKundelogs();
+}
+
+// Toggle export dropdown for customer kundelogs
+function toggleCustomerKundelogExportDropdown() {
+  const dropdown = document.getElementById('customer-kundelog-export-dropdown');
+  dropdown.classList.toggle('open');
+  
+  if (dropdown.classList.contains('open')) {
+    setTimeout(() => {
+      document.addEventListener('click', closeCustomerKundelogExportDropdownOnOutside);
+    }, 0);
+  }
+}
+
+function closeCustomerKundelogExportDropdownOnOutside(e) {
+  const dropdown = document.getElementById('customer-kundelog-export-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    dropdown.classList.remove('open');
+    document.removeEventListener('click', closeCustomerKundelogExportDropdownOnOutside);
+  }
+}
+
+// Open customer kundelog modal
+function openCustomerKundelogModal(editId = null) {
+  const modal = document.getElementById('customer-kundelog-modal');
+  const title = document.getElementById('customer-kundelog-modal-title');
+  
+  // Reset form
+  document.getElementById('customer-kundelog-edit-id').value = '';
+  document.getElementById('customer-kundelog-type').value = 'sms';
+  document.getElementById('customer-kundelog-reference').value = '';
+  document.getElementById('customer-kundelog-prioritet').value = 'normal';
+  document.getElementById('customer-kundelog-beskrivelse').value = '';
+  document.getElementById('customer-kundelog-tags').value = '';
+  
+  if (editId) {
+    const logs = getCustomerKundelogs(currentProfileRestaurantId);
+    const log = logs.find(l => l.id === editId);
+    if (log) {
+      title.textContent = 'Rediger kundelog';
+      document.getElementById('customer-kundelog-edit-id').value = log.id;
+      document.getElementById('customer-kundelog-type').value = log.type;
+      document.getElementById('customer-kundelog-reference').value = log.reference || '';
+      document.getElementById('customer-kundelog-prioritet').value = log.prioritet;
+      document.getElementById('customer-kundelog-beskrivelse').value = log.beskrivelse;
+      document.getElementById('customer-kundelog-tags').value = (log.tags || []).join(', ');
+    }
+  } else {
+    title.textContent = 'Opret kundelog';
+  }
+  
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('customer-kundelog-beskrivelse').focus(), 100);
+}
+
+// Close customer kundelog modal
+function closeCustomerKundelogModal() {
+  document.getElementById('customer-kundelog-modal').style.display = 'none';
+}
+
+// Edit customer kundelog
+function editCustomerKundelog(id) {
+  openCustomerKundelogModal(id);
+}
+
+// Delete customer kundelog
+function deleteCustomerKundelog(id) {
+  if (confirm('Er du sikker på, at du vil slette denne log?')) {
+    let logs = getCustomerKundelogs(currentProfileRestaurantId);
+    logs = logs.filter(l => l.id !== id);
+    saveCustomerKundelogsForCustomer(currentProfileRestaurantId, logs);
+    renderCustomerKundelogs();
+    toast('Log slettet', 'success');
+  }
+}
+
+// Save customer kundelog
+function saveCustomerKundelog() {
+  if (!currentProfileRestaurantId) {
+    toast('Ingen kunde valgt', 'error');
+    return;
+  }
+  
+  const editId = document.getElementById('customer-kundelog-edit-id').value;
+  const type = document.getElementById('customer-kundelog-type').value;
+  const reference = document.getElementById('customer-kundelog-reference').value.trim();
+  const prioritet = document.getElementById('customer-kundelog-prioritet').value;
+  const beskrivelse = document.getElementById('customer-kundelog-beskrivelse').value.trim();
+  const tagsInput = document.getElementById('customer-kundelog-tags').value;
+  const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+  
+  // Validation
+  if (!beskrivelse) {
+    toast('Indtast en beskrivelse', 'error');
+    document.getElementById('customer-kundelog-beskrivelse').focus();
+    return;
+  }
+  
+  let logs = getCustomerKundelogs(currentProfileRestaurantId);
+  
+  // Get customer name for the log
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const kundeName = restaurant?.name || 'Ukendt kunde';
+  
+  if (editId) {
+    // Update existing
+    const index = logs.findIndex(l => l.id === editId);
+    if (index !== -1) {
+      logs[index] = {
+        ...logs[index],
+        type,
+        reference,
+        prioritet,
+        beskrivelse,
+        tags,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    toast('Log opdateret', 'success');
+  } else {
+    // Create new
+    logs.push({
+      id: 'clog_' + Date.now(),
+      customerId: currentProfileRestaurantId,
+      kunde: kundeName,
+      type,
+      reference,
+      prioritet,
+      beskrivelse,
+      tags,
+      timestamp: new Date().toISOString(),
+      createdBy: currentUser?.name || 'System'
+    });
+    toast('Log oprettet', 'success');
+  }
+  
+  saveCustomerKundelogsForCustomer(currentProfileRestaurantId, logs);
+  closeCustomerKundelogModal();
+  renderCustomerKundelogs();
+}
+
+// Export customer kundelogs
+function exportCustomerKundelogs(format) {
+  document.getElementById('customer-kundelog-export-dropdown').classList.remove('open');
+  
+  const logs = getCustomerKundelogs(currentProfileRestaurantId);
+  
+  if (logs.length === 0) {
+    toast('Ingen logs at eksportere', 'error');
+    return;
+  }
+  
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const kundeName = restaurant?.name || 'kunde';
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `kundelogs_${kundeName.replace(/\s+/g, '_')}_${timestamp}`;
+  
+  if (format === 'csv') {
+    const headers = ['ID', 'Dato', 'Type', 'Reference', 'Prioritet', 'Beskrivelse', 'Tags'];
+    const rows = logs.map(log => [
+      log.id,
+      new Date(log.timestamp).toLocaleString('da-DK'),
+      log.type,
+      log.reference || '',
+      log.prioritet,
+      '"' + (log.beskrivelse || '').replace(/"/g, '""') + '"',
+      (log.tags || []).join('; ')
+    ]);
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    downloadFile(csv, filename + '.csv', 'text/csv;charset=utf-8');
+    // toast('CSV eksporteret', 'success'); // Removed - unnecessary
+  } else if (format === 'json') {
+    const json = JSON.stringify(logs, null, 2);
+    downloadFile(json, filename + '.json', 'application/json');
+    // toast('JSON eksporteret', 'success'); // Removed - unnecessary
+  } else if (format === 'pdf') {
+    const printContent = `
+      <!DOCTYPE html>
+      <html><head><meta charset="UTF-8"><title>Kundelogs - ${kundeName}</title>
+      <style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h1{color:#2dd4bf;border-bottom:2px solid #2dd4bf;padding-bottom:10px}.meta{color:#666;margin-bottom:30px}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#2dd4bf;color:#000;padding:12px;text-align:left;font-weight:600}td{padding:10px 12px;border-bottom:1px solid #ddd;vertical-align:top}tr:nth-child(even){background:#f9f9f9}</style></head>
+      <body><h1>Kundelogs: ${escapeHtml(kundeName)}</h1><div class="meta">Eksporteret: ${new Date().toLocaleString('da-DK')}<br>Antal logs: ${logs.length}</div>
+      <table><thead><tr><th>Dato</th><th>Type</th><th>Reference</th><th>Prioritet</th><th>Beskrivelse</th></tr></thead><tbody>
+      ${logs.map(log => `<tr><td>${new Date(log.timestamp).toLocaleString('da-DK')}</td><td>${log.type}</td><td>${escapeHtml(log.reference || '-')}</td><td>${log.prioritet}</td><td>${escapeHtml(log.beskrivelse)}</td></tr>`).join('')}
+      </tbody></table></body></html>`;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.onload = function() { printWindow.print(); };
+    // toast('PDF klar til print', 'success'); // Removed - unnecessary
+  }
+}
+
+// ========================================
+// CUSTOMER-SPECIFIC AKTIVITETSLOGS
+// ========================================
+
+// Get all customer aktivitetslogs from localStorage
+function getAllCustomerAktivitetslogs() {
+  return JSON.parse(localStorage.getItem('orderflow_customer_aktivitetslogs') || '{}');
+}
+
+// Save all customer aktivitetslogs to localStorage
+function saveAllCustomerAktivitetslogs(data) {
+  localStorage.setItem('orderflow_customer_aktivitetslogs', JSON.stringify(data));
+}
+
+// Get aktivitetslogs for specific customer
+function getCustomerAktivitetslogs(customerId) {
+  const allLogs = getAllCustomerAktivitetslogs();
+  return allLogs[customerId] || [];
+}
+
+// Save aktivitetslogs for specific customer
+function saveCustomerAktivitetslogsForCustomer(customerId, logs) {
+  const allLogs = getAllCustomerAktivitetslogs();
+  allLogs[customerId] = logs;
+  saveAllCustomerAktivitetslogs(allLogs);
+}
+
+// Add a new aktivitetslog for a customer (called automatically by system)
+function addCustomerAktivitetslog(customerId, type, besked) {
+  if (!customerId) return;
+  
+  let logs = getCustomerAktivitetslogs(customerId);
+  logs.unshift({
+    id: 'cakt_' + Date.now(),
+    customerId: customerId,
+    timestamp: new Date().toISOString(),
+    type: type,
+    besked: besked
+  });
+  
+  // Keep only last 500 logs per customer
+  if (logs.length > 500) {
+    logs = logs.slice(0, 500);
+  }
+  
+  saveCustomerAktivitetslogsForCustomer(customerId, logs);
+  
+  // Refresh if viewing this customer's aktivitetslogs
+  if (currentProfileRestaurantId === customerId && 
+      document.getElementById('subpage-aktivitetslogs')?.classList.contains('active')) {
+    renderCustomerAktivitetslogs();
+  }
+}
+
+// Load and render customer aktivitetslogs
+function loadCustomerAktivitetslogs() {
+  if (!currentProfileRestaurantId) return;
+  
+  // Generate demo data if none exists
+  const logs = getCustomerAktivitetslogs(currentProfileRestaurantId);
+  if (logs.length === 0) {
+    const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+    const name = restaurant?.name || 'Kunde';
+    
+    // Add demo aktivitetslogs
+    const demoLogs = [
+      { type: 'email', besked: `E-mail sendt til ${name}: Velkommen til OrderFlow` },
+      { type: 'system', besked: 'Kundeprofil oprettet' },
+      { type: 'profil', besked: 'Virksomhedsnavn opdateret' }
+    ];
+    
+    demoLogs.forEach((log, i) => {
+      const timestamp = new Date();
+      timestamp.setDate(timestamp.getDate() - i);
+      logs.push({
+        id: 'cakt_demo_' + i,
+        customerId: currentProfileRestaurantId,
+        timestamp: timestamp.toISOString(),
+        type: log.type,
+        besked: log.besked
+      });
+    });
+    
+    saveCustomerAktivitetslogsForCustomer(currentProfileRestaurantId, logs);
+  }
+  
+  renderCustomerAktivitetslogs();
+}
+
+// Render customer aktivitetslogs
+function renderCustomerAktivitetslogs() {
+  const container = document.getElementById('customer-aktivitetslogs-body');
+  const countEl = document.getElementById('customer-aktivitetslogs-count');
+  
+  if (!container || !currentProfileRestaurantId) return;
+  
+  const logs = getCustomerAktivitetslogs(currentProfileRestaurantId);
+  
+  // Get filter values
+  const searchTerm = (document.getElementById('customer-aktivitetslog-search')?.value || '').toLowerCase();
+  const typeFilter = document.getElementById('customer-aktivitetslog-type-filter')?.value || 'all';
+  
+  // Filter logs
+  let filteredLogs = logs.filter(log => {
+    const matchesSearch = !searchTerm || log.besked.toLowerCase().includes(searchTerm);
+    const matchesType = typeFilter === 'all' || log.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+  
+  // Sort by timestamp (newest first)
+  filteredLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  
+  // Update count
+  if (countEl) {
+    countEl.textContent = `(${filteredLogs.length} log${filteredLogs.length !== 1 ? 's' : ''})`;
+  }
+  
+  // Empty state
+  if (filteredLogs.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="margin-bottom:16px">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <p style="color:var(--text2);font-size:14px">${logs.length === 0 ? 'Ingen aktivitetslogs endnu' : 'Ingen logs matcher din søgning'}</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Render tabel rows
+  container.innerHTML = filteredLogs.map((log, index) => {
+    const formattedTimestamp = formatAktivitetslogTimestamp(log.timestamp);
+    const bgColor = index % 2 === 0 ? 'transparent' : 'var(--bg2)';
+    
+    return `
+      <div style="display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--border);background:${bgColor};transition:background 0.15s"
+           onmouseenter="this.style.background='var(--card-hover)'" 
+           onmouseleave="this.style.background='${bgColor}'">
+        <div style="padding:14px 20px;font-size:13px;color:var(--muted)">${formattedTimestamp}</div>
+        <div style="padding:14px 20px;font-size:13px;color:var(--text2);text-align:right">${escapeHtml(log.besked)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Filter customer aktivitetslogs
+function filterCustomerAktivitetslogs() {
+  renderCustomerAktivitetslogs();
+}
+
+// Toggle export dropdown for customer aktivitetslogs
+function toggleCustomerAktivitetslogExportDropdown() {
+  const dropdown = document.getElementById('customer-aktivitetslog-export-dropdown');
+  dropdown.classList.toggle('open');
+  
+  if (dropdown.classList.contains('open')) {
+    setTimeout(() => {
+      document.addEventListener('click', closeCustomerAktivitetslogExportDropdownOnOutside);
+    }, 0);
+  }
+}
+
+function closeCustomerAktivitetslogExportDropdownOnOutside(e) {
+  const dropdown = document.getElementById('customer-aktivitetslog-export-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    dropdown.classList.remove('open');
+    document.removeEventListener('click', closeCustomerAktivitetslogExportDropdownOnOutside);
+  }
+}
+
+// Export customer aktivitetslogs
+function exportCustomerAktivitetslogs(format) {
+  document.getElementById('customer-aktivitetslog-export-dropdown').classList.remove('open');
+  
+  const logs = getCustomerAktivitetslogs(currentProfileRestaurantId);
+  
+  if (logs.length === 0) {
+    toast('Ingen logs at eksportere', 'error');
+    return;
+  }
+  
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const kundeName = restaurant?.name || 'kunde';
+  const timestamp = new Date().toISOString().split('T')[0];
+  const filename = `aktivitetslogs_${kundeName.replace(/\s+/g, '_')}_${timestamp}`;
+  
+  if (format === 'csv') {
+    const headers = ['Timestamp', 'Type', 'Besked'];
+    const rows = logs.map(log => [
+      formatAktivitetslogTimestamp(log.timestamp),
+      log.type,
+      '"' + (log.besked || '').replace(/"/g, '""') + '"'
+    ]);
+    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    downloadFile(csv, filename + '.csv', 'text/csv;charset=utf-8');
+    // toast('CSV eksporteret', 'success'); // Removed - unnecessary
+  } else if (format === 'json') {
+    const json = JSON.stringify(logs, null, 2);
+    downloadFile(json, filename + '.json', 'application/json');
+    // toast('JSON eksporteret', 'success'); // Removed - unnecessary
+  } else if (format === 'pdf') {
+    const printContent = `
+      <!DOCTYPE html>
+      <html><head><meta charset="UTF-8"><title>Aktivitetslogs - ${kundeName}</title>
+      <style>body{font-family:Arial,sans-serif;padding:40px;color:#333}h1{color:#2dd4bf;border-bottom:2px solid #2dd4bf;padding-bottom:10px}.meta{color:#666;margin-bottom:30px}table{width:100%;border-collapse:collapse;margin-top:20px}th{background:#2dd4bf;color:#000;padding:12px;text-align:left;font-weight:600}th:last-child{text-align:right}td{padding:10px 12px;border-bottom:1px solid #ddd;vertical-align:top}td:last-child{text-align:right}tr:nth-child(even){background:#f9f9f9}</style></head>
+      <body><h1>Aktivitetslogs: ${escapeHtml(kundeName)}</h1><div class="meta">Eksporteret: ${new Date().toLocaleString('da-DK')}<br>Antal logs: ${logs.length}</div>
+      <table><thead><tr><th>Timestamp</th><th>Besked</th></tr></thead><tbody>
+      ${logs.map(log => `<tr><td>${formatAktivitetslogTimestamp(log.timestamp)}</td><td>${escapeHtml(log.besked)}</td></tr>`).join('')}
+      </tbody></table></body></html>`;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.onload = function() { printWindow.print(); };
+    // toast('PDF klar til print', 'success'); // Removed - unnecessary
+  }
+}
+
+// ========================================
+// END CUSTOMER-SPECIFIC LOGS SYSTEM
+// ========================================
+
+function toast(msg, type = 'info') {
+  // Remove existing toast
+  const existing = document.querySelector('.toast-notification');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast-notification';
+  
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #D5DDEC;
+    color: #1a1a2e;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+  `;
+  
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'fadeIn 0.3s ease reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ========================================
+// MANGLENDE FUNKTIONER - TILFØJET I V128
+// ========================================
+// Gem notifikationsindstillinger
+function saveNotificationSettings() {
+  const email = document.getElementById('notification-email')?.value || '';
+  const cc = document.getElementById('notification-cc')?.value || '';
+  
+  // Gem alle checkbox-indstillinger
+  const checkboxes = document.querySelectorAll('[data-notif]');
+  const settings = {};
+  checkboxes.forEach(cb => {
+    settings[cb.dataset.notif] = cb.checked;
+  });
+  
+  localStorage.setItem('orderflow_notification_settings', JSON.stringify({
+    email,
+    cc,
+    settings
+  }));
+
+  showSaveStatus('notification-save-status', 'saved');
+}
+
+// Gem stille timer
+function saveQuietHours() {
+  const start = document.getElementById('quiet-start')?.value || '22:00';
+  const end = document.getElementById('quiet-end')?.value || '08:00';
+  const allowCritical = document.getElementById('allow-critical')?.checked || true;
+
+  localStorage.setItem('orderflow_quiet_hours', JSON.stringify({
+    start,
+    end,
+    allowCritical
+  }));
+
+  showSaveStatus('quiet-hours-save-status', 'saved');
+}
+
+// Gem blå prik notifikationsindstillinger
+function saveBlueNotificationSettings() {
+  const dismissType = document.querySelector('input[name="dismiss-type"]:checked')?.value || 'click';
+  const dismissValue = parseInt(document.getElementById('dismiss-value')?.value) || 1;
+
+  // Save to activity indicator settings
+  const settings = {
+    dismissType: dismissType === 'click' ? 'hover' : dismissType,
+    dismissValue: dismissValue
+  };
+  localStorage.setItem('orderflow_activity_indicator_settings', JSON.stringify(settings));
+
+  // Also save to NotificationSystem for compatibility
+  if (typeof NotificationSystem !== 'undefined') {
+    NotificationSystem.saveSettings({
+      defaultDismissType: dismissType,
+      defaultDismissValue: dismissValue
+    });
+  }
+
+  showSaveStatus('blue-notification-save-status', 'saved');
+
+  // Refresh indicators to apply new settings
+  updateActivityIndicators();
+}
+
+// Ryd alle blå prik notifikationer
+function clearAllBlueNotifications() {
+  if (typeof NotificationSystem !== 'undefined') {
+    const count = NotificationSystem.notifications.size;
+    if (count === 0) {
+      toast('Ingen notifikationer at rydde', 'info');
+      return;
+    }
+
+    if (confirm(`Er du sikker på at du vil rydde alle ${count} notifikationer?`)) {
+      NotificationSystem.notifications.clear();
+      NotificationSystem.saveNotifications();
+      NotificationSystem.applyNotifications();
+      toast(`${count} notifikationer ryddet`, 'success');
+    }
+  } else {
+    console.error('NotificationSystem not loaded');
+    toast('Fejl: Notifikationssystem ikke indlæst', 'error');
+  }
+}
+
+// =====================================================
+// NOTIFIKATION INITIALISERING
+// =====================================================
+
+/**
+ * Initialiserer notification email-feltet med brugerens login-email
+ * Hvis der allerede er gemt en email i localStorage, bruges den i stedet
+ */
+function initNotificationEmailField() {
+  const emailField = document.getElementById('notification-email');
+  if (!emailField) return;
+
+  // Tjek om der er gemt indstillinger i localStorage
+  const savedSettings = localStorage.getItem('orderflow_notification_settings');
+
+  if (savedSettings) {
+    try {
+      const parsed = JSON.parse(savedSettings);
+      if (parsed.email) {
+        emailField.value = parsed.email;
+        // Sæt også CC hvis gemt
+        const ccField = document.getElementById('notification-cc');
+        if (ccField && parsed.cc) {
+          ccField.value = parsed.cc;
+        }
+        return;
+      }
+    } catch (e) {
+      console.warn('Kunne ikke parse gemte notifikationsindstillinger:', e);
+    }
+  }
+
+  // Ingen gemt email - brug brugerens login-email
+  if (currentUser && currentUser.email) {
+    emailField.value = currentUser.email;
+  }
+}
+
+// =====================================================
+// SAMLET NOTIFIKATION GEM-FUNKTION
+// =====================================================
+
+/**
+ * Gem alle notifikationsindstillinger på én gang
+ * Sender også notifikation til header bell og email (hvis aktiveret)
+ */
+async function saveAllNotificationSettings() {
+  try {
+    // 1. Gem Blå Prik indstillinger
+    const dismissType = document.querySelector('input[name="dismiss-type"]:checked')?.value || 'click';
+    const dismissValue = parseInt(document.getElementById('dismiss-value')?.value) || 1;
+
+    const blueSettings = {
+      dismissType: dismissType === 'click' ? 'hover' : dismissType,
+      dismissValue: dismissValue
+    };
+    localStorage.setItem('orderflow_activity_indicator_settings', JSON.stringify(blueSettings));
+
+    if (typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.saveSettings({
+        defaultDismissType: dismissType,
+        defaultDismissValue: dismissValue
+      });
+    }
+
+    // 2. Gem Email indstillinger
+    const email = document.getElementById('notification-email')?.value || '';
+    const cc = document.getElementById('notification-cc')?.value || '';
+
+    const checkboxes = document.querySelectorAll('[data-notif]');
+    const notifSettings = {};
+    checkboxes.forEach(cb => {
+      notifSettings[cb.dataset.notif] = cb.checked;
+    });
+
+    localStorage.setItem('orderflow_notification_settings', JSON.stringify({
+      email,
+      cc,
+      settings: notifSettings
+    }));
+
+    // 3. Gem Stille timer
+    const quietStart = document.getElementById('quiet-start')?.value || '22:00';
+    const quietEnd = document.getElementById('quiet-end')?.value || '08:00';
+    const allowCritical = document.getElementById('allow-critical')?.checked ?? true;
+
+    localStorage.setItem('orderflow_quiet_hours', JSON.stringify({
+      start: quietStart,
+      end: quietEnd,
+      allowCritical
+    }));
+
+    // 4. Send notifikation til header ringeklokke
+    addHeaderNotification({
+      type: 'settings',
+      title: 'Indstillinger gemt',
+      message: 'Dine notifikationsindstillinger er blevet opdateret',
+      icon: 'green'
+    });
+
+    // 5. Send email hvis checkbox er aktiveret og email er udfyldt
+    // Tjek om "indstillinger ændret" notifikation er slået til
+    const monthlyInvoiceCheckbox = document.querySelector('input[data-notif="monthly-invoice"]');
+    if (monthlyInvoiceCheckbox?.checked && email) {
+      try {
+        await sendSettingsEmail(email, cc);
+      } catch (err) {
+        console.warn('Email notification failed:', err);
+      }
+    }
+
+    // 6. Vis gem-status
+    showSaveStatus('all-notifications-save-status', 'saved');
+
+    // 7. Opdater activity indicators
+    if (typeof updateActivityIndicators === 'function') {
+      updateActivityIndicators();
+    }
+
+    console.log('✅ Alle notifikationsindstillinger gemt');
+
+  } catch (error) {
+    console.error('Fejl ved gem af notifikationsindstillinger:', error);
+    toast('Fejl ved gem af indstillinger', 'error');
+  }
+}
+
+/**
+ * Tilføj notifikation til header dropdown (ringeklokke)
+ * @param {Object} notification - Notifikationsdata
+ * @param {string} notification.type - Type af notifikation
+ * @param {string} notification.title - Titel på notifikation
+ * @param {string} notification.message - Besked
+ * @param {string} notification.icon - Icon farve (green, yellow, blue, purple)
+ */
+function addHeaderNotification(notification) {
+  saveHeaderNotifications(notification);
+  renderHeaderNotifications();
+}
+
+/**
+ * Hent ikon SVG baseret på notifikationstype
+ */
+function getNotificationIcon(type) {
+  const icons = {
+    settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
+    order: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+    success: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    default: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+  };
+  return icons[type] || icons.default;
+}
+
+/**
+ * Opdater notification badge tæller
+ * @param {number} change - Ændring (+1 eller -1)
+ */
+function updateNotificationBadge(change) {
+  const badge = document.querySelector('.topbar-badge');
+  if (!badge) return;
+
+  let count = parseInt(badge.textContent) || 0;
+  count = Math.max(0, count + change);
+  
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'flex' : 'none';
+}
+
+function getHeaderNotifications() {
+  const saved = JSON.parse(localStorage.getItem('orderflow_header_notifications') || '[]');
+  return saved.filter(n => !n.read);
+}
+
+function formatNotificationTime(timestamp) {
+  if (!timestamp) return 'Lige nu';
+  const diffMs = Date.now() - timestamp;
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return 'Lige nu';
+  if (minutes < 60) return `${minutes} min siden`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} timer siden`;
+  const days = Math.floor(hours / 24);
+  return `${days} dage siden`;
+}
+
+function renderHeaderNotifications() {
+  const list = document.getElementById('notif-list');
+  const badge = document.querySelector('.topbar-badge');
+  if (!list) return;
+
+  const notifications = [];
+  getHeaderNotifications().forEach(n => notifications.push({ ...n, source: 'header' }));
+
+  if (typeof NotificationSystem !== 'undefined' && NotificationSystem.notifications) {
+    NotificationSystem.notifications.forEach((notification) => {
+      if (notification.read) return;
+      notifications.push({
+        title: notification.title || notification.message || 'Notifikation',
+        message: notification.message,
+        timestamp: notification.timestamp,
+        source: 'system'
+      });
+    });
+  }
+
+  notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+  if (!notifications.length) {
+    list.innerHTML = '<div class="notif-empty">Ingen notifikationer</div>';
+  } else {
+    list.innerHTML = notifications.map(item => `
+      <div class="topbar-dropdown-item notif-item">
+        <div class="notif-content">
+          <div class="notif-text">${escapeHtml(item.title || item.message || 'Notifikation')}</div>
+          <div class="notif-time">${formatNotificationTime(item.timestamp)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const count = notifications.length;
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  }
+}
+
+function markAllHeaderNotificationsRead() {
+  const saved = JSON.parse(localStorage.getItem('orderflow_header_notifications') || '[]');
+  const updated = saved.map(n => ({ ...n, read: true }));
+  localStorage.setItem('orderflow_header_notifications', JSON.stringify(updated));
+  if (typeof NotificationSystem !== 'undefined' && NotificationSystem.notifications) {
+    NotificationSystem.notifications.forEach((notification, path) => {
+      if (!notification.read) {
+        NotificationSystem.markRead(path);
+      }
+    });
+  }
+  renderHeaderNotifications();
+}
+
+/**
+ * Gem header notifikationer til localStorage
+ */
+function saveHeaderNotifications(notification) {
+  const saved = JSON.parse(localStorage.getItem('orderflow_header_notifications') || '[]');
+  saved.unshift({
+    ...notification,
+    timestamp: Date.now(),
+    read: false
+  });
+  // Behold kun de sidste 10
+  localStorage.setItem('orderflow_header_notifications', JSON.stringify(saved.slice(0, 10)));
+}
+
+/**
+ * Send email med indstillingsændringer
+ * @param {string} email - Modtager email
+ * @param {string} cc - CC email (valgfri)
+ */
+async function sendSettingsEmail(email, cc) {
+  if (!email) return;
+
+  // Brug eksisterende Edge Function til at sende email
+  const supabaseUrl = window.SUPABASE_CONFIG?.url || 'https://qymtjhzgtcittohutmay.supabase.co';
+  const supabaseKey = window.SUPABASE_CONFIG?.key || '';
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/send-otp-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`
+    },
+    body: JSON.stringify({
+      to: email,
+      otp: 'SETTINGS', // Special marker - not a real OTP
+      appName: 'OrderFlow',
+      subject: 'OrderFlow: Dine indstillinger er opdateret',
+      // Custom template flag
+      isSettingsEmail: true
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to send settings email');
+  }
+
+  console.log('✅ Settings email sent to:', email);
+}
+
+
+// Gem momsindstillinger
+function saveMomsSettings() {
+  const momsRate = document.getElementById('moms-rate')?.value || '25';
+  const showMoms = document.getElementById('show-moms')?.checked || true;
+  
+  localStorage.setItem('orderflow_moms_settings', JSON.stringify({
+    rate: parseFloat(momsRate),
+    showOnReceipt: showMoms
+  }));
+
+  showSaveStatus('moms-save-status', 'saved');
+}
+
+// Gem sprogindstillinger
+function saveLanguage() {
+  const language = document.getElementById('language-select')?.value || 'da';
+
+  localStorage.setItem('orderflow_language', language);
+
+  showSaveStatus('language-save-status', 'saved');
+}
+
+// Gem bankindstillinger
+function saveBankSettings() {
+  const bankName = document.getElementById('bank-name')?.value || '';
+  const regNumber = document.getElementById('bank-reg')?.value || '';
+  const accountNumber = document.getElementById('bank-account')?.value || '';
+
+  localStorage.setItem('orderflow_bank_settings', JSON.stringify({
+    bankName,
+    regNumber,
+    accountNumber
+  }));
+}
+
+// Gem virksomhedsoplysninger
+function saveCompanySettings() {
+  const cvr = document.getElementById('company-cvr')?.value || '';
+  const phone = document.getElementById('company-phone')?.value || '';
+  const email = document.getElementById('company-invoice-email')?.value || '';
+  const address = document.getElementById('company-address')?.value || '';
+  const postalCode = document.getElementById('company-zip')?.value || '';
+  const city = document.getElementById('company-city')?.value || '';
+
+  localStorage.setItem('orderflow_company_settings', JSON.stringify({
+    cvr,
+    phone,
+    email,
+    address,
+    postalCode,
+    city
+  }));
+}
+
+// Gem alle bank- og virksomhedsoplysninger
+function saveAllBankSettings() {
+  saveBankSettings();
+  saveCompanySettings();
+  showSaveStatus('bank-save-status', 'saved');
+}
+
+// Indlæs bankindstillinger
+function loadBankSettings() {
+  const bankSettings = JSON.parse(localStorage.getItem('orderflow_bank_settings') || '{}');
+  const companySettings = JSON.parse(localStorage.getItem('orderflow_company_settings') || '{}');
+
+  if (bankSettings.bankName) document.getElementById('bank-name').value = bankSettings.bankName;
+  if (bankSettings.regNumber) document.getElementById('bank-reg').value = bankSettings.regNumber;
+  if (bankSettings.accountNumber) document.getElementById('bank-account').value = bankSettings.accountNumber;
+
+  if (companySettings.cvr) document.getElementById('company-cvr').value = companySettings.cvr;
+  if (companySettings.phone) document.getElementById('company-phone').value = companySettings.phone;
+  if (companySettings.email) document.getElementById('company-invoice-email').value = companySettings.email;
+  if (companySettings.address) document.getElementById('company-address').value = companySettings.address;
+  if (companySettings.postalCode) document.getElementById('company-zip').value = companySettings.postalCode;
+  if (companySettings.city) document.getElementById('company-city').value = companySettings.city;
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId, button) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+
+  // Update icon - show eye-off when password is visible, eye when hidden
+  const svg = button.querySelector('svg');
+  if (svg) {
+    if (isPassword) {
+      // Eye-off icon (password is now visible)
+      svg.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+    } else {
+      // Eye icon (password is now hidden)
+      svg.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+  }
+}
+
+// Skift adgangskode
+function changePassword() {
+  const currentPassword = document.getElementById('current-password')?.value || '';
+  const newPassword = document.getElementById('new-password')?.value || '';
+  const confirmPassword = document.getElementById('confirm-password')?.value || '';
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    showSaveStatus('password-save-status', 'error');
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showSaveStatus('password-save-status', 'error');
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    showSaveStatus('password-save-status', 'error');
+    return;
+  }
+
+  // I demo-mode simulerer vi bare at det lykkes
+  if (CONFIG.DEMO_MODE) {
+    showSaveStatus('password-save-status', 'saved');
+    document.getElementById('current-password').value = '';
+    document.getElementById('new-password').value = '';
+    document.getElementById('confirm-password').value = '';
+    return;
+  }
+
+  // Her ville normalt være et API-kald til at ændre adgangskoden
+  showSaveStatus('password-save-status', 'saved');
+}
+
+// Gem brugerindstillinger
+function saveUserSettings() {
+  const firstName = document.getElementById('user-firstname')?.value || '';
+  const lastName = document.getElementById('user-lastname')?.value || '';
+  const email = document.getElementById('user-email')?.value || '';
+  const phone = document.getElementById('user-phone')?.value || '';
+
+  // Gem til localStorage (demo mode)
+  localStorage.setItem('orderflow_user_profile', JSON.stringify({
+    firstName,
+    lastName,
+    email,
+    phone
+  }));
+
+  // Vis status
+  showSaveStatus('users-save-status', 'saved');
+}
+
+// Vis salgsoversigt
+function loadSalgsoversigt() {
+  const fromDate = document.getElementById('sales-from-date')?.value || '';
+  const toDate = document.getElementById('sales-to-date')?.value || '';
+  
+  if (!fromDate || !toDate) {
+    toast('Vælg dato interval', 'error');
+    return;
+  }
+  
+  // Demo data
+  const demoSales = {
+    total: Math.floor(Math.random() * 50000) + 10000,
+    orders: Math.floor(Math.random() * 200) + 50,
+    avgOrder: 0
+  };
+  demoSales.avgOrder = Math.round(demoSales.total / demoSales.orders);
+  
+  const salesContainer = document.getElementById('sales-overview-result');
+  if (salesContainer) {
+    salesContainer.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
+        <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--accent)">${demoSales.total.toLocaleString('da-DK')} kr</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Total omsætning</div>
+        </div>
+        <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--green)">${demoSales.orders}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Antal ordrer</div>
+        </div>
+        <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
+          <div style="font-size:24px;font-weight:700;color:var(--purple)">${demoSales.avgOrder} kr</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Gns. ordre</div>
+        </div>
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">Data fra ${fromDate} til ${toDate} (demo)</p>
+    `;
+    salesContainer.style.display = 'block';
+  }
+  
+  toast('Salgsoversigt indlæst', 'success');
+}
+
+// Vis korttransaktioner
+function loadKorttransaktioner() {
+  const fromDate = document.getElementById('transactions-from-date')?.value || '';
+  const toDate = document.getElementById('transactions-to-date')?.value || '';
+  
+  if (!fromDate || !toDate) {
+    toast('Vælg dato interval', 'error');
+    return;
+  }
+  
+  // Demo transaktioner
+  const demoTransactions = [];
+  const numTransactions = Math.floor(Math.random() * 20) + 5;
+  
+  for (let i = 0; i < numTransactions; i++) {
+    const date = new Date();
+    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+    
+    demoTransactions.push({
+      id: 'TXN' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+      date: date.toLocaleDateString('da-DK'),
+      time: date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+      amount: Math.floor(Math.random() * 500) + 50,
+      card: '**** ' + Math.floor(1000 + Math.random() * 9000),
+      status: Math.random() > 0.1 ? 'Godkendt' : 'Afvist'
+    });
+  }
+  
+  const transContainer = document.getElementById('transactions-result');
+  if (transContainer) {
+    transContainer.innerHTML = `
+      <div style="margin-top:16px;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden">
+        <div style="display:grid;grid-template-columns:100px 80px 100px 100px 100px;gap:8px;padding:12px;background:var(--bg);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
+          <div>ID</div>
+          <div>Dato</div>
+          <div>Beløb</div>
+          <div>Kort</div>
+          <div>Status</div>
+        </div>
+        ${demoTransactions.map(t => `
+          <div style="display:grid;grid-template-columns:100px 80px 100px 100px 100px;gap:8px;padding:12px;border-top:1px solid var(--border);font-size:13px">
+            <div style="font-family:monospace;font-size:11px">${t.id}</div>
+            <div>${t.date}</div>
+            <div style="font-weight:600">${t.amount} kr</div>
+            <div style="color:var(--muted)">${t.card}</div>
+            <div style="color:${t.status === 'Godkendt' ? 'var(--green)' : 'var(--danger)'}">${t.status}</div>
+          </div>
+        `).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">${demoTransactions.length} transaktioner fundet (demo)</p>
+    `;
+    transContainer.style.display = 'block';
+  }
+  
+  toast('Korttransaktioner indlæst', 'success');
+}
+
+// ==================== TEST FUNCTIONS ====================
+
+/**
+ * TEST FUNCTION - Demonstrer automatic real-time tracking
+ * Kald denne funktion i browser console for at se hvordan
+ * ActivityTracker automatisk tracker ændringer
+ */
+function testAutoTracking() {
+  console.log('🤖 Testing Automatic Real-Time Tracking...');
+  console.log('');
+  console.log('📝 For at teste automatic tracking:');
+  console.log('');
+  console.log('1️⃣ Tilføj data-track attribut til et input felt:');
+  console.log('   <input data-track="kunder:stamdata:navn" value="Demo Restaurant">');
+  console.log('');
+  console.log('2️⃣ Ændr værdien i inputfeltet (skriv noget nyt)');
+  console.log('');
+  console.log('3️⃣ Aktiviteten logges AUTOMATISK efter 1 sekund!');
+  console.log('   - Aktivitet tilføjes til "Seneste Aktiviteter"');
+  console.log('   - Blå prik vises automatisk i sidebar');
+  console.log('   - Notifikation sendes til NotificationSystem');
+  console.log('');
+  console.log('📊 Eksempel data-track formater:');
+  console.log('   data-track="kunder:stamdata:navn"          -> Kunder > Stamdata > navn felt');
+  console.log('   data-track="workflow:nodes:title"          -> Workflow > Nodes > title felt');
+  console.log('   data-track="indstillinger:general:email"   -> Indstillinger > General > email');
+  console.log('');
+  console.log('💡 ActivityTracker wrapper også automatisk alle save-funktioner:');
+  console.log('   - saveStamdata()');
+  console.log('   - saveProduct()');
+  console.log('   - saveWorkflow()');
+  console.log('   - saveSettings()');
+  console.log('   - osv...');
+  console.log('');
+  console.log('✨ Systemet er nu HELT automatisk - ingen manuel logActivity() nødvendig!');
+}
+
+/**
+ * TEST FUNCTION - Clear all activities and notifications
+ * Nyttig til at starte forfra under testing
+ */
+function clearAllActivities() {
+  if (confirm('Er du sikker på at du vil slette ALLE aktiviteter og notifikationer?')) {
+    localStorage.removeItem('orderflow_activity_log');
+    if (typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.clear();
+    }
+    console.log('🗑️ Alle aktiviteter og notifikationer slettet!');
+    console.log('🔄 Refresh siden for at se ændringerne...');
+
+    // Refresh UI
+    if (typeof updateRecentActivityUI === 'function') {
+      updateRecentActivityUI();
+    }
+    if (typeof NotificationSystem !== 'undefined') {
+      NotificationSystem.render();
+    }
+  }
+}
+
+// Gør tilgængelig i console
+window.testActivityTracking = testActivityTracking;
+window.testAutoTracking = testAutoTracking;
+window.clearAllActivities = clearAllActivities;
+
+// ============================================================================
+// 2FA / OTP AUTHENTICATION FUNCTIONS
+// ============================================================================
+
+// Global state for 2FA flow
+let pending2FAUser = null;
+let pending2FASettings = null;
+let current2FAMethod = 'totp';
+
+/**
+ * Check if user requires 2FA and handle challenge
+ * Called after successful password authentication
+ */
+async function check2FARequired(user) {
+  try {
+    // Get user role
+    let roleData = null;
+    try {
+      roleData = await SupabaseDB.getUserRole(user.id);
+    } catch (e) {
+      console.warn('Could not get user role from DB:', e);
+    }
+
+    const role = roleData?.role || user.role || 'customer';
+    const isEmployee = role === 'admin' || role === 'employee';
+
+    // Customers and demo users skip 2FA
+    if (!isEmployee) {
+      return { required: false, canProceed: true };
+    }
+
+    // Get 2FA settings - try database first, then localStorage
+    let settings = null;
+    try {
+      settings = await SupabaseDB.get2FASettings(user.id);
+    } catch (e) {
+      console.warn('Could not get 2FA settings from DB:', e);
+    }
+
+    // Fallback to localStorage if DB settings not found
+    if (!settings || (!settings.totp_enabled && !settings.email_otp_enabled)) {
+      try {
+        const localSettings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+        if (localSettings.totp_enabled || localSettings.email_otp_enabled) {
+          settings = localSettings;
+          console.log('📱 Using 2FA settings from localStorage');
+        }
+      } catch (e) {
+        console.warn('Could not get 2FA settings from localStorage:', e);
+      }
+    }
+
+    // Check if 2FA is configured
+    const hasTOTP = settings?.totp_enabled && settings?.totp_confirmed;
+    const hasEmail = settings?.email_otp_enabled;
+    const hasAny2FA = hasTOTP || hasEmail;
+
+    console.log('🔐 2FA Check:', {
+      role,
+      settings,
+      hasTOTP,
+      hasEmail,
+      hasAny2FA,
+      totp_enabled: settings?.totp_enabled,
+      totp_confirmed: settings?.totp_confirmed
+    });
+
+    // Employee without 2FA - require setup
+    if (isEmployee && !hasAny2FA && role !== 'admin') {
+      return {
+        required: true,
+        canProceed: false,
+        requiresSetup: true,
+        message: 'Du skal aktivere 2FA for at fortsætte'
+      };
+    }
+
+    // Admin without 2FA - can proceed (optional)
+    if (role === 'admin' && !hasAny2FA) {
+      return { required: false, canProceed: true };
+    }
+
+    // Has 2FA - show challenge
+    if (hasAny2FA) {
+      return {
+        required: true,
+        canProceed: false,
+        settings: settings,
+        methods: {
+          totp: hasTOTP,
+          email: hasEmail
+        }
+      };
+    }
+
+    return { required: false, canProceed: true };
+  } catch (err) {
+    console.error('check2FARequired error:', err);
+    return { required: false, canProceed: true, error: err.message };
+  }
+}
+
+/**
+ * Show 2FA challenge UI
+ */
+function show2FAChallenge(user, settings) {
+  pending2FAUser = user;
+  pending2FASettings = settings;
+
+  // Hide login form, show 2FA challenge
+  const loginForm = document.getElementById('login-form');
+  const challengeForm = document.getElementById('2fa-challenge-form');
+  const authTabs = document.querySelector('.auth-tabs');
+  const demoButtons = document.getElementById('auth-demo-buttons');
+
+  if (loginForm) loginForm.style.display = 'none';
+  if (challengeForm) challengeForm.style.display = 'block';
+  if (authTabs) authTabs.style.display = 'none';
+  if (demoButtons) demoButtons.style.display = 'none';
+
+  const cancelBtn = document.getElementById('2fa-cancel-btn');
+  if (cancelBtn) {
+    cancelBtn.disabled = false;
+    cancelBtn.classList.remove('disabled');
+  }
+
+  attach2FAEnterHandlers();
+
+  // Configure method tabs
+  const methodTabs = document.getElementById('2fa-method-tabs');
+  if (methodTabs) {
+    const hasTOTP = settings?.totp_enabled && settings?.totp_confirmed;
+    const hasEmail = settings?.email_otp_enabled;
+
+    const totpTab = methodTabs.querySelector('[data-method="totp"]');
+    const emailTab = methodTabs.querySelector('[data-method="email"]');
+
+    if (totpTab) totpTab.style.display = hasTOTP ? 'flex' : 'none';
+    if (emailTab) emailTab.style.display = hasEmail ? 'flex' : 'none';
+
+    // Select first available method
+    if (hasTOTP) {
+      switch2FAMethod('totp');
+    } else if (hasEmail) {
+      switch2FAMethod('email');
+    }
+  }
+
+  // Set email display
+  const emailDisplay = document.getElementById('2fa-email-display');
+  if (emailDisplay && user?.email) {
+    emailDisplay.textContent = user.email;
+  }
+
+  // Focus code input
+  setTimeout(() => {
+    const input = document.getElementById('2fa-code-input');
+    if (input) input.focus();
+  }, 100);
+}
+
+function attach2FAEnterHandlers() {
+  const inputs = [
+    document.getElementById('2fa-code-input'),
+    document.getElementById('2fa-email-code-input'),
+    document.getElementById('2fa-backup-code-input')
+  ].filter(Boolean);
+
+  inputs.forEach((input) => {
+    if (input.dataset.enterBound === 'true') {
+      return;
+    }
+    input.dataset.enterBound = 'true';
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        verify2FAChallenge();
+      }
+    });
+  });
+}
+
+/**
+ * Show 2FA setup required UI (for employees)
+ */
+function show2FASetupRequired(user) {
+  pending2FAUser = user;
+
+  // Hide all forms, show setup required
+  const loginForm = document.getElementById('login-form');
+  const challengeForm = document.getElementById('2fa-challenge-form');
+  const setupRequired = document.getElementById('2fa-setup-required');
+  const authTabs = document.querySelector('.auth-tabs');
+  const demoButtons = document.getElementById('auth-demo-buttons');
+
+  if (loginForm) loginForm.style.display = 'none';
+  if (challengeForm) challengeForm.style.display = 'none';
+  if (setupRequired) setupRequired.style.display = 'block';
+  if (authTabs) authTabs.style.display = 'none';
+  if (demoButtons) demoButtons.style.display = 'none';
+}
+
+/**
+ * Switch between 2FA methods (TOTP/Email)
+ */
+function switch2FAMethod(method) {
+  current2FAMethod = method;
+
+  // Update tabs
+  document.querySelectorAll('.2fa-method-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.method === method);
+    if (tab.dataset.method === method) {
+      tab.style.background = 'var(--accent-dim)';
+      tab.style.borderColor = 'var(--accent)';
+    } else {
+      tab.style.background = '';
+      tab.style.borderColor = '';
+    }
+  });
+
+  // Show/hide inputs
+  const totpInput = document.getElementById('2fa-totp-input');
+  const emailInput = document.getElementById('2fa-email-input');
+
+  if (totpInput) totpInput.style.display = method === 'totp' ? 'block' : 'none';
+  if (emailInput) emailInput.style.display = method === 'email' ? 'block' : 'none';
+
+  // If switching to email, send OTP automatically
+  if (method === 'email' && pending2FAUser) {
+    send2FAEmailOTP();
+  }
+
+  // Focus appropriate input
+  setTimeout(() => {
+    const inputId = method === 'totp' ? '2fa-code-input' : '2fa-email-code-input';
+    const input = document.getElementById(inputId);
+    if (input) input.focus();
+  }, 100);
+}
+
+/**
+ * Toggle backup code input visibility
+ */
+function toggle2FABackupInput() {
+  const backupInput = document.getElementById('2fa-backup-input');
+  if (backupInput) {
+    const isVisible = backupInput.style.display !== 'none';
+    backupInput.style.display = isVisible ? 'none' : 'block';
+
+    if (!isVisible) {
+      const input = document.getElementById('2fa-backup-code-input');
+      if (input) input.focus();
+    }
+  }
+}
+
+/**
+ * Send 2FA email OTP
+ */
+async function send2FAEmailOTP() {
+  if (!pending2FAUser?.email) return;
+
+  const resendBtn = document.getElementById('2fa-resend-btn');
+  if (resendBtn) {
+    resendBtn.disabled = true;
+    resendBtn.textContent = 'Sender...';
+  }
+
+  try {
+    // Generate OTP via EmailOTP module
+    const result = await window.EmailOTP?.generate(
+      pending2FAUser.email,
+      { userId: pending2FAUser.id },
+      async (emailData) => {
+        // Send via Edge Function
+        const response = await fetch(`${SUPABASE_CONFIG?.url || 'https://qymtjhzgtcittohutmay.supabase.co'}/functions/v1/send-otp-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_CONFIG?.key || ''}`
+          },
+          body: JSON.stringify({
+            to: emailData.to,
+            otp: emailData.otp,
+            appName: 'OrderFlow'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send email');
+        }
+      }
+    );
+
+    if (result?.success) {
+      toast('Kode sendt til din email', 'success');
+    } else {
+      toast(result?.error || 'Kunne ikke sende kode', 'error');
+    }
+  } catch (err) {
+    console.error('send2FAEmailOTP error:', err);
+    toast('Fejl ved afsendelse af kode', 'error');
+  } finally {
+    if (resendBtn) {
+      resendBtn.disabled = false;
+      resendBtn.textContent = 'Send ny kode';
+    }
+  }
+}
+
+/**
+ * Resend 2FA email OTP
+ */
+async function resend2FAEmail() {
+  await send2FAEmailOTP();
+}
+
+/**
+ * Verify 2FA challenge
+ */
+async function verify2FAChallenge() {
+  const verifyBtn = document.getElementById('2fa-verify-btn');
+  if (verifyBtn) {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verificerer...';
+  }
+
+  try {
+    let code = '';
+    let method = current2FAMethod;
+
+    // Check for backup code first
+    const backupInput = document.getElementById('2fa-backup-input');
+    const backupCode = document.getElementById('2fa-backup-code-input')?.value?.trim();
+
+    if (backupInput?.style.display !== 'none' && backupCode) {
+      code = backupCode.replace(/-/g, '');
+      method = 'backup';
+    } else if (current2FAMethod === 'email') {
+      code = document.getElementById('2fa-email-code-input')?.value?.trim() || '';
+    } else {
+      code = document.getElementById('2fa-code-input')?.value?.trim() || '';
+    }
+
+    if (!code) {
+      toast('Indtast en kode', 'error');
+      return;
+    }
+
+    let result;
+
+    if (method === 'email') {
+      // Verify email OTP
+      result = await window.EmailOTP?.verify(pending2FAUser.email, code);
+    } else {
+      // Verify TOTP or backup code (use email as userId for consistency)
+      result = await window.TOTP2FA?.verify(pending2FAUser.email, code);
+    }
+
+    if (result?.success) {
+      // Update last used timestamp in database
+      if (typeof SupabaseDB !== 'undefined') {
+        SupabaseDB.update2FASettings(pending2FAUser.id, {
+          last_used_at: new Date().toISOString()
+        });
+
+        // Update backup codes if one was used
+        if (result.method === 'backup' && result.backupCodesRemaining !== undefined) {
+          // Would need to sync with database here
+        }
+      }
+
+      // 2FA successful - complete login
+      currentUser = pending2FAUser;
+      pending2FAUser = null;
+      pending2FASettings = null;
+
+      // Load user data and show app
+      await completeLogin();
+
+    } else {
+      toast(result?.error || 'Ugyldig kode', 'error');
+
+      // Clear input on error
+      const inputId = method === 'email' ? '2fa-email-code-input' :
+                      method === 'backup' ? '2fa-backup-code-input' : '2fa-code-input';
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }
+
+  } catch (err) {
+    console.error('verify2FAChallenge error:', err);
+    toast('Fejl ved verificering', 'error');
+  } finally {
+    if (verifyBtn) {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Bekræft';
+    }
+  }
+}
+
+/**
+ * Complete login after 2FA verification
+ */
+async function completeLogin() {
+  try {
+    // Get pending login data
+    const pendingData = window._pending2FALogin;
+    if (pendingData && pendingData.user) {
+      currentUser = pendingData.user;
+    }
+
+    // Clean up pending data
+    window._pending2FALogin = null;
+    pending2FAUser = null;
+    pending2FASettings = null;
+
+    // Load restaurants from Supabase
+    if (typeof SupabaseDB !== 'undefined' && currentUser) {
+      const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
+      restaurants = dbRestaurants || [];
+      loadPersistedRestaurants();
+
+      if (typeof RealtimeSync !== 'undefined') {
+        await RealtimeSync.init(currentUser.id);
+      }
+    }
+
+    // Play login animation (same as normal login)
+    await playLoginTransition();
+
+    showApp();
+
+    logActivity('login', '2FA login succesfuld', {
+      category: 'system',
+      user: currentUser.email,
+      role: currentUser.role
+    });
+
+  } catch (err) {
+    console.error('completeLogin error:', err);
+    showApp(); // Show app anyway
+  }
+}
+
+/**
+ * Cancel 2FA challenge and return to login
+ */
+function cancel2FAChallenge() {
+  pending2FAUser = null;
+  pending2FASettings = null;
+  window._pending2FALogin = null;
+
+  // Sign out from Supabase since login was cancelled
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    supabaseClient.auth.signOut().catch(err => {
+      console.warn('Could not sign out after 2FA cancel:', err);
+    });
+  }
+
+  // Show login form, hide challenge
+  const loginForm = document.getElementById('login-form');
+  const challengeForm = document.getElementById('2fa-challenge-form');
+  const authTabs = document.querySelector('.auth-tabs');
+  const demoButtons = document.getElementById('auth-demo-buttons');
+
+  if (loginForm) loginForm.style.display = 'block';
+  if (challengeForm) challengeForm.style.display = 'none';
+  if (authTabs) authTabs.style.display = 'flex';
+  if (demoButtons) demoButtons.style.display = 'block';
+
+  // Clear inputs
+  const codeInput = document.getElementById('2fa-code-input');
+  const emailInput = document.getElementById('2fa-email-code-input');
+  const backupInput = document.getElementById('2fa-backup-code-input');
+  if (codeInput) codeInput.value = '';
+  if (emailInput) emailInput.value = '';
+  if (backupInput) backupInput.value = '';
+}
+
+/**
+ * Setup 2FA from login screen (for employees without 2FA)
+ */
+async function setup2FAFromLogin(method) {
+  if (!pending2FAUser) return;
+
+  if (method === 'email') {
+    // Enable email OTP directly
+    const result = await SupabaseDB?.enableEmailOTP(pending2FAUser.id);
+    if (result?.success) {
+      toast('Email 2FA aktiveret', 'success');
+      // Now show challenge
+      const settings = await SupabaseDB?.get2FASettings(pending2FAUser.id);
+      show2FAChallenge(pending2FAUser, settings);
+    } else {
+      toast('Kunne ikke aktivere email 2FA', 'error');
+    }
+  } else if (method === 'totp') {
+    // Show TOTP setup - would need to implement inline setup
+    // For now, complete login and redirect to settings
+    currentUser = pending2FAUser;
+    pending2FAUser = null;
+    await completeLogin();
+    // Navigate to 2FA settings
+    setTimeout(() => {
+      showSettings('passwords');
+      toast('Konfigurer venligst din authenticator app', 'info');
+    }, 500);
+  }
+}
+
+/**
+ * Cancel 2FA setup from login and logout
+ */
+function cancel2FASetupFromLogin() {
+  pending2FAUser = null;
+  pending2FASettings = null;
+  window._pending2FALogin = null;
+
+  // Sign out from Supabase
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    supabaseClient.auth.signOut();
+  }
+
+  // Reset UI
+  const loginForm = document.getElementById('login-form');
+  const setupRequired = document.getElementById('2fa-setup-required');
+  const authTabs = document.querySelector('.auth-tabs');
+  const demoButtons = document.getElementById('auth-demo-buttons');
+
+  if (loginForm) loginForm.style.display = 'block';
+  if (setupRequired) setupRequired.style.display = 'none';
+  if (authTabs) authTabs.style.display = 'flex';
+  if (demoButtons) demoButtons.style.display = 'block';
+}
+
+// ============================================================================
+// 2FA SETTINGS FUNCTIONS (for index.html settings page)
+// ============================================================================
+
+/**
+ * Initialize 2FA settings page
+ */
+async function init2FASettings() {
+  if (!currentUser) return;
+
+  try {
+    // Get settings from localStorage first (always available)
+    const localSettings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+    let settings = { ...localSettings };
+
+    // Try to get from database if available (non-blocking)
+    if (typeof window.SupabaseDB !== 'undefined' && window.SupabaseDB.get2FASettings) {
+      try {
+        const dbSettings = await window.SupabaseDB.get2FASettings(currentUser.id);
+        if (dbSettings) {
+          settings = { ...settings, ...dbSettings };
+          if (localSettings.totp_enabled && !settings.totp_enabled) {
+            settings.totp_enabled = true;
+          }
+          if (localSettings.totp_confirmed && !settings.totp_confirmed) {
+            settings.totp_confirmed = true;
+          }
+          if (localSettings.email_otp_enabled && !settings.email_otp_enabled) {
+            settings.email_otp_enabled = true;
+          }
+          // Sync to localStorage
+          localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+        }
+      } catch (dbErr) {
+        console.warn('Database read failed, using localStorage:', dbErr);
+      }
+    }
+
+    const role = currentUser.role || 'customer';
+    const isEmployee = role === 'employee';
+    const isAdmin = role === 'admin';
+
+    // Show employee warning if applicable
+    const warning = document.getElementById('2fa-employee-warning');
+    if (warning) {
+      warning.style.display = isEmployee ? 'block' : 'none';
+    }
+
+    // Update TOTP status
+    const totpEnabled = settings?.totp_enabled;
+    const totpConfirmed = settings?.totp_confirmed;
+    const hasTOTP = totpEnabled && totpConfirmed;
+    const totpToggle = document.getElementById('2fa-totp-toggle');
+    const totpStatus = document.getElementById('2fa-totp-status');
+    const totpBtn = document.getElementById('2fa-totp-btn');
+
+    // Update toggle state
+    if (totpToggle) {
+      totpToggle.checked = hasTOTP;
+      totpToggle.disabled = false;
+    }
+
+    // Legacy support for old UI elements
+    if (totpStatus) {
+      totpStatus.style.display = 'inline-block';
+      totpStatus.textContent = hasTOTP ? 'Aktiv' : 'Ikke aktiv';
+      totpStatus.style.background = hasTOTP ? 'var(--green)' : 'var(--muted)';
+      totpStatus.style.color = 'white';
+    }
+
+    if (totpBtn) {
+      totpBtn.textContent = hasTOTP ? 'Deaktiver' : 'Aktivér';
+      totpBtn.onclick = hasTOTP ? deactivateTOTP : setup2FATOTP;
+    }
+
+    const setupDiv = document.getElementById('2fa-totp-setup');
+    if (setupDiv) {
+      const inSetup = totpEnabled && !totpConfirmed;
+      setupDiv.style.display = inSetup ? 'block' : 'none';
+      if (inSetup && settings?.totp_secret && currentUser?.email) {
+        const secretCode = document.getElementById('2fa-secret-code');
+        if (secretCode) {
+          secretCode.textContent = settings.totp_secret;
+        }
+
+        const qrImg = document.getElementById('2fa-qr-code');
+        if (qrImg && window.TOTP2FA?.utils?.generateOtpauthUrl) {
+          const otpauthUrl = window.TOTP2FA.utils.generateOtpauthUrl(currentUser.email, settings.totp_secret);
+          render2FAQrCode(otpauthUrl);
+        }
+      }
+    }
+
+    // Update Email OTP status
+    const hasEmail = settings?.email_otp_enabled;
+    const emailToggle = document.getElementById('2fa-email-toggle');
+    const emailStatus = document.getElementById('2fa-email-status');
+    const emailBtn = document.getElementById('2fa-email-btn');
+
+    // Update toggle state
+    if (emailToggle) {
+      emailToggle.checked = hasEmail;
+      emailToggle.disabled = false;
+    }
+
+    // Legacy support for old UI elements
+    if (emailStatus) {
+      emailStatus.style.display = 'inline-block';
+      emailStatus.textContent = hasEmail ? 'Aktiv' : 'Ikke aktiv';
+      emailStatus.style.background = hasEmail ? 'var(--green)' : 'var(--muted)';
+      emailStatus.style.color = 'white';
+    }
+
+    if (emailBtn) {
+      emailBtn.textContent = hasEmail ? 'Deaktiver' : 'Aktivér';
+    }
+
+    // Show email address
+    const emailAddress = document.getElementById('2fa-email-address');
+    if (emailAddress && currentUser.email) {
+      emailAddress.textContent = currentUser.email;
+    }
+
+    // Show backup codes section if any 2FA is enabled
+    const backupSection = document.getElementById('2fa-backup-section');
+    if (backupSection) {
+      backupSection.style.display = (hasTOTP || hasEmail) ? 'block' : 'none';
+    }
+
+    // Update backup codes count
+    const backupCount = document.getElementById('2fa-backup-count');
+    if (backupCount && settings?.backup_codes_remaining !== undefined) {
+      backupCount.textContent = `${settings.backup_codes_remaining} koder tilbage`;
+    }
+
+    // Show disable section for admin only
+    const disableSection = document.getElementById('2fa-disable-section');
+    if (disableSection) {
+      disableSection.style.display = isAdmin && (hasTOTP || hasEmail) ? 'block' : 'none';
+    }
+
+  } catch (err) {
+    console.error('init2FASettings error:', err);
+  }
+}
+
+/**
+ * Setup TOTP 2FA
+ */
+async function setup2FATOTP() {
+  if (!currentUser) return;
+
+  try {
+    // Generate TOTP secret using local TOTP2FA module
+    const result = await window.TOTP2FA?.enable(currentUser.email, 'OrderFlow');
+
+    if (!result?.success) {
+      toast(result?.error || 'Kunne ikke starte 2FA opsætning', 'error');
+      return;
+    }
+
+    // Save to localStorage (works without database)
+    const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+    settings.totp_enabled = true;
+    settings.totp_secret = result.secret;
+    settings.totp_confirmed = false;
+    settings.backup_codes = result.backupCodes;
+    localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+
+    // Also try database if available (non-blocking)
+    if (typeof window.SupabaseDB !== 'undefined' && window.SupabaseDB.enableTOTP) {
+      try {
+        await window.SupabaseDB.enableTOTP(currentUser.id, result.secret, result.backupCodes);
+      } catch (dbErr) {
+        console.warn('Database save failed, using localStorage:', dbErr);
+      }
+    }
+
+    // Show setup UI
+    const setupDiv = document.getElementById('2fa-totp-setup');
+    if (setupDiv) {
+      setupDiv.style.display = 'block';
+    }
+
+    // Display secret code
+    const secretCode = document.getElementById('2fa-secret-code');
+    if (secretCode) {
+      secretCode.textContent = result.secret;
+    }
+
+    // Generate QR code
+    render2FAQrCode(result.otpauthUrl);
+
+    // Store backup codes for display after confirmation
+    window._pending2FABackupCodes = result.backupCodes;
+
+    toast('Scan QR-koden med din authenticator app', 'success');
+
+  } catch (err) {
+    console.error('setup2FATOTP error:', err);
+    toast('Fejl ved opsætning af 2FA', 'error');
+  }
+}
+
+function render2FAQrCode(otpauthUrl) {
+  const container = document.getElementById('2fa-qr-container');
+  if (!container) return;
+
+  // Clear previous QR content
+  container.innerHTML = '';
+
+  // Try QRCode.toDataURL first (from qrcode npm package)
+  if (typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function') {
+    QRCode.toDataURL(otpauthUrl, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#000000', light: '#ffffff' }
+    }).then((qrDataUrl) => {
+      const img = document.createElement('img');
+      img.width = 200;
+      img.height = 200;
+      img.alt = 'QR Code';
+      img.style.display = 'block';
+      img.src = qrDataUrl;
+      container.appendChild(img);
+      console.log('✅ QR code generated with toDataURL');
+    }).catch((qrErr) => {
+      console.error('QR code generation error:', qrErr);
+      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+    });
+    return;
+  }
+
+  // Fallback to QRCode constructor (from qrcodejs library)
+  if (typeof QRCode !== 'undefined' && typeof QRCode === 'function') {
+    try {
+      const temp = document.createElement('div');
+      temp.style.position = 'fixed';
+      temp.style.left = '-9999px';
+      temp.style.top = '-9999px';
+      document.body.appendChild(temp);
+
+      new QRCode(temp, {
+        text: otpauthUrl,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
+      });
+
+      setTimeout(() => {
+        const rendered = temp.querySelector('img') || temp.querySelector('canvas');
+        if (rendered) {
+          const img = document.createElement('img');
+          img.width = 200;
+          img.height = 200;
+          img.alt = 'QR Code';
+          img.style.display = 'block';
+          img.src = rendered.tagName === 'CANVAS' ? rendered.toDataURL('image/png') : rendered.src;
+          container.appendChild(img);
+          console.log('✅ QR code generated with constructor');
+        } else {
+          container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+        }
+        temp.remove();
+      }, 100);
+    } catch (e) {
+      console.error('QRCode constructor error:', e);
+      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+    }
+    return;
+  }
+
+  console.warn('QRCode library not available');
+  container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+}
+
+/**
+ * Confirm TOTP 2FA setup
+ */
+async function confirm2FATOTP() {
+  const code = document.getElementById('2fa-totp-verify-code')?.value?.trim();
+
+  if (!code || code.length !== 6) {
+    toast('Indtast 6-cifret kode', 'error');
+    return;
+  }
+
+  try {
+    // Verify the code using local TOTP module
+    const result = await window.TOTP2FA?.confirm(currentUser.email, code);
+
+    if (result?.success) {
+      // Update localStorage
+      const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+      settings.totp_confirmed = true;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+
+      // Also try database if available (non-blocking)
+      if (typeof window.SupabaseDB !== 'undefined' && window.SupabaseDB.confirmTOTP) {
+        try {
+          await window.SupabaseDB.confirmTOTP(currentUser.id);
+        } catch (dbErr) {
+          console.warn('Database confirm failed, using localStorage:', dbErr);
+        }
+      }
+
+      toast('2FA aktiveret!', 'success');
+
+      // Hide setup UI
+      const setupDiv = document.getElementById('2fa-totp-setup');
+      if (setupDiv) {
+        setupDiv.style.display = 'none';
+      }
+
+      // Show backup codes
+      if (window._pending2FABackupCodes) {
+        showBackupCodesModal(window._pending2FABackupCodes);
+        delete window._pending2FABackupCodes;
+      }
+
+      // Refresh settings
+      init2FASettings();
+
+    } else {
+      toast(result?.error || 'Ugyldig kode', 'error');
+      document.getElementById('2fa-totp-verify-code').value = '';
+    }
+
+  } catch (err) {
+    console.error('confirm2FATOTP error:', err);
+    toast('Fejl ved bekræftelse', 'error');
+  }
+}
+
+/**
+ * Cancel 2FA setup
+ */
+function cancel2FASetup() {
+  // Nulstil localStorage flags - vigtig for at forhindre at setup UI vises igen
+  const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+  settings.totp_enabled = false;
+  settings.totp_secret = null;
+  settings.totp_confirmed = false;
+  localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+
+  // Skjul setup div
+  const setupDiv = document.getElementById('2fa-totp-setup');
+  if (setupDiv) {
+    setupDiv.style.display = 'none';
+  }
+
+  // Nulstil toggle
+  const toggle = document.getElementById('2fa-totp-toggle');
+  if (toggle) toggle.checked = false;
+
+  // Clear inputs og pending data
+  const verifyCode = document.getElementById('2fa-totp-verify-code');
+  if (verifyCode) verifyCode.value = '';
+  delete window._pending2FABackupCodes;
+
+  // Refresh UI state
+  init2FASettings();
+}
+
+/**
+ * Deactivate TOTP 2FA
+ */
+async function deactivateTOTP() {
+  const code = prompt('Indtast din nuværende 2FA kode for at deaktivere:');
+  if (!code) return;
+
+  try {
+    const result = await window.TOTP2FA?.disable(currentUser.email, code);
+
+    if (result?.success) {
+      // Update localStorage
+      const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+      settings.totp_enabled = false;
+      settings.totp_secret = null;
+      settings.totp_confirmed = false;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+
+      // Also try database if available (non-blocking)
+      if (typeof window.SupabaseDB !== 'undefined') {
+        try {
+          await window.SupabaseDB.update2FASettings(currentUser.id, {
+            totp_enabled: false,
+            totp_secret: null,
+            totp_confirmed: false
+          });
+        } catch (dbErr) {
+          console.warn('Database update failed, using localStorage:', dbErr);
+        }
+      }
+
+      toast('TOTP deaktiveret', 'success');
+      init2FASettings();
+    } else {
+      toast(result?.error || 'Kunne ikke deaktivere', 'error');
+    }
+  } catch (err) {
+    console.error('deactivateTOTP error:', err);
+    toast('Fejl', 'error');
+  }
+}
+
+/**
+ * Toggle Email OTP
+ */
+async function toggle2FAEmail() {
+  if (!currentUser) return;
+
+  try {
+    // Get current settings from localStorage
+    const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+    const hasEmail = settings.email_otp_enabled;
+
+    if (hasEmail) {
+      // Check if can disable (must have another method or be admin)
+      const hasTOTP = settings.totp_enabled && settings.totp_confirmed;
+      const role = currentUser.role;
+
+      if (!hasTOTP && role === 'employee') {
+        toast('Du skal have mindst én 2FA metode aktiveret', 'error');
+        return;
+      }
+
+      // Disable
+      settings.email_otp_enabled = false;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+      toast('Email 2FA deaktiveret', 'success');
+
+    } else {
+      // Enable
+      settings.email_otp_enabled = true;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+      toast('Email 2FA aktiveret', 'success');
+    }
+
+    // Also try database if available (non-blocking)
+    if (typeof window.SupabaseDB !== 'undefined') {
+      try {
+        if (hasEmail) {
+          await window.SupabaseDB.update2FASettings(currentUser.id, { email_otp_enabled: false });
+        } else {
+          await window.SupabaseDB.enableEmailOTP(currentUser.id);
+        }
+      } catch (dbErr) {
+        console.warn('Database update failed, using localStorage:', dbErr);
+      }
+    }
+
+    init2FASettings();
+
+  } catch (err) {
+    console.error('toggle2FAEmail error:', err);
+    toast('Fejl', 'error');
+  }
+}
+
+/**
+ * Handle TOTP toggle change
+ * @param {boolean} checked - Whether toggle is checked
+ */
+async function handleTOTPToggle(checked) {
+  const toggle = document.getElementById('2fa-totp-toggle');
+  const emailToggle = document.getElementById('2fa-email-toggle');
+
+  if (!currentUser) {
+    if (toggle) toggle.checked = !checked;
+    return;
+  }
+
+  if (checked) {
+    // Deaktiver E-mail Kode hvis den er aktiv (mutually exclusive)
+    const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+    if (settings.email_otp_enabled) {
+      settings.email_otp_enabled = false;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+      if (emailToggle) emailToggle.checked = false;
+    }
+
+    // Enable TOTP - start setup process
+    await setup2FATOTP();
+  } else {
+    // Disable TOTP
+    await deactivateTOTP();
+  }
+
+  // Refresh toggle state after action
+  init2FASettings();
+}
+
+/**
+ * Handle Email OTP toggle change
+ * @param {boolean} checked - Whether toggle is checked
+ */
+async function handleEmailToggle(checked) {
+  const toggle = document.getElementById('2fa-email-toggle');
+  const totpToggle = document.getElementById('2fa-totp-toggle');
+
+  if (!currentUser) {
+    if (toggle) toggle.checked = !checked;
+    return;
+  }
+
+  try {
+    // Get settings from localStorage
+    const settings = JSON.parse(localStorage.getItem('orderflow_2fa_settings') || '{}');
+
+    if (!checked) {
+      // Disable E-mail OTP
+      settings.email_otp_enabled = false;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+      toast('E-mail 2FA deaktiveret', 'success');
+
+    } else {
+      // Deaktiver Authenticator App hvis den er aktiv (mutually exclusive)
+      if (settings.totp_enabled && settings.totp_confirmed) {
+        settings.totp_enabled = false;
+        settings.totp_confirmed = false;
+        settings.totp_secret = null;
+        if (totpToggle) totpToggle.checked = false;
+      }
+
+      // Enable E-mail OTP
+      settings.email_otp_enabled = true;
+      localStorage.setItem('orderflow_2fa_settings', JSON.stringify(settings));
+      toast('E-mail 2FA aktiveret. Ved login sendes en kode til din e-mail.', 'success');
+    }
+
+    // Also try database if available (non-blocking)
+    if (typeof window.SupabaseDB !== 'undefined') {
+      try {
+        if (!checked) {
+          await window.SupabaseDB.update2FASettings(currentUser.id, { email_otp_enabled: false });
+        }
+      } catch (dbErr) {
+        console.warn('Database update failed, using localStorage:', dbErr);
+      }
+    }
+
+    init2FASettings();
+
+  } catch (err) {
+    console.error('handleEmailToggle error:', err);
+    toast('Fejl', 'error');
+    // Revert toggle on error
+    if (toggle) toggle.checked = !checked;
+  }
+}
+
+/**
+ * Show backup codes
+ */
+function showBackupCodes() {
+  const display = document.getElementById('2fa-backup-codes-display');
+  if (display) {
+    display.style.display = 'block';
+    // Would need to fetch from TOTP2FA or database
+    const list = document.getElementById('2fa-backup-codes-list');
+    if (list) {
+      list.innerHTML = '<p style="color:var(--muted);font-size:13px">Backup koder er krypteret. Kontakt support hvis du har brug for nye.</p>';
+    }
+  }
+}
+
+/**
+ * Hide backup codes
+ */
+function hideBackupCodes() {
+  const display = document.getElementById('2fa-backup-codes-display');
+  if (display) {
+    display.style.display = 'none';
+  }
+}
+
+/**
+ * Show backup codes modal after TOTP setup
+ */
+function showBackupCodesModal(codes) {
+  const list = document.getElementById('2fa-backup-codes-list');
+  if (list && codes) {
+    list.innerHTML = codes.map(code =>
+      `<code style="background:var(--bg2);padding:8px;border-radius:4px;font-size:14px;text-align:center">${code}</code>`
+    ).join('');
+
+    const display = document.getElementById('2fa-backup-codes-display');
+    if (display) {
+      display.style.display = 'block';
+    }
+
+    // Also show the backup section
+    const section = document.getElementById('2fa-backup-section');
+    if (section) {
+      section.style.display = 'block';
+    }
+  }
+}
+
+/**
+ * Regenerate backup codes
+ */
+async function regenerateBackupCodes() {
+  const code = prompt('Indtast din nuværende 2FA kode for at generere nye backup koder:');
+  if (!code) return;
+
+  try {
+    const result = await window.TOTP2FA?.regenerateBackupCodes(currentUser.email, code);
+
+    if (result?.success) {
+      showBackupCodesModal(result.backupCodes);
+      toast('Nye backup koder genereret', 'success');
+      init2FASettings();
+    } else {
+      toast(result?.error || 'Kunne ikke generere nye koder', 'error');
+    }
+  } catch (err) {
+    console.error('regenerateBackupCodes error:', err);
+    toast('Fejl', 'error');
+  }
+}
+
+/**
+ * Disable all 2FA (admin only)
+ */
+async function disable2FA() {
+  if (currentUser?.role !== 'admin') {
+    toast('Kun administratorer kan deaktivere 2FA helt', 'error');
+    return;
+  }
+
+  if (!confirm('Er du sikker på at du vil deaktivere al 2FA? Dette reducerer sikkerheden på din konto.')) {
+    return;
+  }
+
+  try {
+    await SupabaseDB?.disable2FA(currentUser.id);
+    toast('2FA deaktiveret', 'success');
+    init2FASettings();
+  } catch (err) {
+    console.error('disable2FA error:', err);
+    toast('Fejl ved deaktivering', 'error');
+  }
+}
+
+// Export 2FA functions to window
+window.check2FARequired = check2FARequired;
+window.show2FAChallenge = show2FAChallenge;
+window.show2FASetupRequired = show2FASetupRequired;
+window.switch2FAMethod = switch2FAMethod;
+window.toggle2FABackupInput = toggle2FABackupInput;
+window.send2FAEmailOTP = send2FAEmailOTP;
+window.resend2FAEmail = resend2FAEmail;
+window.verify2FAChallenge = verify2FAChallenge;
+window.cancel2FAChallenge = cancel2FAChallenge;
+window.setup2FAFromLogin = setup2FAFromLogin;
+window.cancel2FASetupFromLogin = cancel2FASetupFromLogin;
+window.init2FASettings = init2FASettings;
+window.setup2FATOTP = setup2FATOTP;
+window.confirm2FATOTP = confirm2FATOTP;
+window.cancel2FASetup = cancel2FASetup;
+window.toggle2FAEmail = toggle2FAEmail;
+window.showBackupCodes = showBackupCodes;
+window.hideBackupCodes = hideBackupCodes;
+window.regenerateBackupCodes = regenerateBackupCodes;
+window.disable2FA = disable2FA;

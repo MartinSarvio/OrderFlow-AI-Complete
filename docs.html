@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrderFlow Dokumentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --card: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text2: #8b949e;
+      --muted: #6e7681;
+      --accent: #2dd4bf;
+      --accent-dim: rgba(45, 212, 191, 0.15);
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --blue: #58a6ff;
+      --purple: #a371f7;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    /* Layout */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+    
+    .sidebar-header {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo-icon svg { width: 20px; height: 20px; }
+    
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .logo-badge {
+      font-size: 10px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
+    
+    /* Search */
+    .search-container {
+      padding: 0 16px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 10px 12px 10px 36px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+    
+    .search-input::placeholder { color: var(--muted); }
+    
+    .search-icon {
+      position: absolute;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Navigation */
+    .nav-section {
+      margin-bottom: 8px;
+    }
+    
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      padding: 12px 20px 8px;
+    }
+    
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    
+    .nav-item:hover {
+      color: var(--text);
+      background: var(--bg3);
+    }
+    
+    .nav-item.active {
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+    
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.7;
+    }
+    
+    .nav-item.active svg { opacity: 1; }
+    
+    .nav-badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: var(--bg3);
+      color: var(--muted);
+    }
+    
+    .nav-badge.new {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    
+    /* Main Content */
+    .main {
+      flex: 1;
+      margin-left: 280px;
+      padding: 40px 60px;
+      max-width: 900px;
+    }
+    
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    
+    .breadcrumb a {
+      color: var(--text2);
+      text-decoration: none;
+    }
+    
+    .breadcrumb a:hover { color: var(--accent); }
+    
+    /* Article */
+    .article-header {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .article-title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    
+    .article-description {
+      font-size: 18px;
+      color: var(--text2);
+    }
+    
+    .article-meta {
+      display: flex;
+      gap: 20px;
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    
+    .article-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Content Styling */
+    .content h2 {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 40px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .content h2:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    
+    .content h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+    }
+    
+    .content p {
+      margin-bottom: 16px;
+      color: var(--text2);
+    }
+    
+    .content a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    
+    .content a:hover {
+      text-decoration: underline;
+    }
+    
+    .content strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    
+    .content ul, .content ol {
+      margin: 16px 0;
+      padding-left: 24px;
+      color: var(--text2);
+    }
+    
+    .content li {
+      margin-bottom: 8px;
+    }
+    
+    .content li::marker {
+      color: var(--accent);
+    }
+    
+    /* Code */
+    .content code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: var(--bg3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+    
+    .content pre {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    
+    .content pre code {
+      background: none;
+      padding: 0;
+      color: var(--text);
+    }
+    
+    /* Tables */
+    .content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0;
+      font-size: 14px;
+    }
+    
+    .content th {
+      text-align: left;
+      padding: 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .content td {
+      padding: 12px;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+    
+    .content tr:nth-child(even) td {
+      background: var(--bg2);
+    }
+    
+    /* Blockquotes */
+    .content blockquote {
+      border-left: 3px solid var(--accent);
+      padding-left: 16px;
+      margin: 20px 0;
+      color: var(--text2);
+      font-style: italic;
+    }
+    
+    /* Card Grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent-dim);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+    
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent);
+    }
+    
+    .card-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .card-desc {
+      font-size: 13px;
+      color: var(--text2);
+    }
+    
+    /* Footer Navigation */
+    .article-footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .footer-nav {
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .footer-nav-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      min-width: 200px;
+    }
+    
+    .footer-nav-item:hover {
+      border-color: var(--accent);
+      background: var(--bg2);
+    }
+    
+    .footer-nav-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    .footer-nav-title {
+      font-weight: 500;
+      color: var(--text);
+    }
+    
+    /* Loading */
+    .loading {
+      color: var(--muted);
+      font-style: italic;
+      padding: 40px 0;
+    }
+    
+    .error {
+      color: var(--red);
+      padding: 20px;
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="index.html" class="logo">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="logo-text">OrderFlow</span>
+          <span class="logo-badge">Docs</span>
+        </a>
+      </div>
+      
+      <div class="search-container">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="search-input" placeholder="Søg dokumentation...">
+      </div>
+      
+      <nav>
+        <div class="nav-section">
+          <div class="nav-section-title">Kom godt i gang</div>
+          <a class="nav-item" data-doc="index" onclick="loadDoc('index')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            Oversigt
+          </a>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Guides</div>
+          <a class="nav-item" data-doc="ai-order-handling" onclick="loadDoc('ai-order-handling')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
+            AI Ordrehåndtering
+          </a>
+          <a class="nav-item" data-doc="sms-configuration" onclick="loadDoc('sms-configuration')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            SMS Konfiguration
+          </a>
+          <a class="nav-item" data-doc="missed-calls" onclick="loadDoc('missed-calls')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>
+            Missed Calls
+          </a>
+          <a class="nav-item" data-doc="reports-export" onclick="loadDoc('reports-export')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Rapporter & Eksport
+          </a>
+          <a class="nav-item" data-doc="user-management" onclick="loadDoc('user-management')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Brugere & Roller
+          </a>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Tutorials</div>
+          <a class="nav-item" data-doc="train-ai-orders" onclick="loadDoc('train-ai-orders')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Træn din AI
+          </a>
+          <a class="nav-item" data-doc="vat-configuration" onclick="loadDoc('vat-configuration')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Moms-opsætning
+          </a>
+          <a class="nav-item" data-doc="custom-workflow" onclick="loadDoc('custom-workflow')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Custom Workflows
+            <span class="nav-badge new">Ny</span>
+          </a>
+        </div>
+        
+        <div class="nav-section">
+          <div class="nav-section-title">Links</div>
+          <a class="nav-item" href="index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Tilbage til app
+          </a>
+        </div>
+      </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main">
+      <article>
+        <div class="breadcrumb">
+          <a href="docs.html">Docs</a>
+          <span>/</span>
+          <span id="breadcrumb-section">Kom godt i gang</span>
+        </div>
+        
+        <div class="article-header">
+          <h1 class="article-title" id="article-title">Indlæser...</h1>
+          <p class="article-description" id="article-description"></p>
+          <div class="article-meta">
+            <span id="article-time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="article-time-text"></span>
+            </span>
+          </div>
+        </div>
+        
+        <div class="content" id="article-content">
+          <p class="loading">Indlæser dokumentation...</p>
+        </div>
+        
+        <footer class="article-footer">
+          <div class="footer-nav">
+            <a class="footer-nav-item" id="footer-prev" style="visibility:hidden">
+              <span class="footer-nav-label">← Forrige</span>
+              <span class="footer-nav-title" id="footer-prev-title"></span>
+            </a>
+            <a class="footer-nav-item" id="footer-next" style="visibility:hidden">
+              <span class="footer-nav-label">Næste →</span>
+              <span class="footer-nav-title" id="footer-next-title"></span>
+            </a>
+          </div>
+        </footer>
+      </article>
+    </main>
+  </div>
+  
+  <script>
+    // Documentation metadata
+    const docsInfo = {
+      'index': {
+        section: 'Kom godt i gang',
+        title: 'OrderFlow Dokumentation',
+        desc: 'Velkommen til OrderFlow dokumentationen. Find guides, tutorials og API-reference.',
+        time: '2 min',
+        prev: null,
+        next: 'ai-order-handling'
+      },
+      'ai-order-handling': {
+        section: 'Guides',
+        title: 'AI Ordrehåndtering',
+        desc: 'Lær hvordan AI\'en automatisk fortolker og håndterer indkommende ordrer.',
+        time: '15 min',
+        prev: 'index',
+        next: 'sms-configuration'
+      },
+      'sms-configuration': {
+        section: 'Guides',
+        title: 'SMS Konfiguration',
+        desc: 'Tilpas automatiske SMS-beskeder til dine kunder.',
+        time: '10 min',
+        prev: 'ai-order-handling',
+        next: 'missed-calls'
+      },
+      'missed-calls': {
+        section: 'Guides',
+        title: 'Missed Calls',
+        desc: 'Konverter mistede opkald til ordrer med automatisk SMS-opfølgning.',
+        time: '8 min',
+        prev: 'sms-configuration',
+        next: 'reports-export'
+      },
+      'reports-export': {
+        section: 'Guides',
+        title: 'Rapporter & Eksport',
+        desc: 'Generer detaljerede rapporter og eksporter data til PDF eller CSV.',
+        time: '12 min',
+        prev: 'missed-calls',
+        next: 'user-management'
+      },
+      'user-management': {
+        section: 'Guides',
+        title: 'Brugere & Roller',
+        desc: 'Administrer brugere og tildel roller med forskellige adgangsniveauer.',
+        time: '10 min',
+        prev: 'reports-export',
+        next: 'train-ai-orders'
+      },
+      'train-ai-orders': {
+        section: 'Tutorials',
+        title: 'Træn din AI',
+        desc: 'Lær AI\'en at forstå dine produkter, kundemønstre og særlige ønsker.',
+        time: '25 min',
+        prev: 'user-management',
+        next: 'vat-configuration'
+      },
+      'vat-configuration': {
+        section: 'Tutorials',
+        title: 'Moms-opsætning',
+        desc: 'Konfigurer momssatser og indstillinger for dansk lovgivning.',
+        time: '12 min',
+        prev: 'train-ai-orders',
+        next: 'custom-workflow'
+      },
+      'custom-workflow': {
+        section: 'Tutorials',
+        title: 'Custom Workflows',
+        desc: 'Opret avancerede automatiseringsflows tilpasset din virksomhed.',
+        time: '35 min',
+        prev: 'vat-configuration',
+        next: null
+      }
+    };
+    
+    // Get doc from URL
+    const params = new URLSearchParams(window.location.search);
+    const initialDoc = params.get('doc') || 'index';
+    
+    // Load documentation
+    function loadDoc(docId) {
+      const info = docsInfo[docId];
+      if (!info) {
+        document.getElementById('article-content').innerHTML = '<div class="error">Dokumentation ikke fundet.</div>';
+        return;
+      }
+      
+      // Update URL
+      history.pushState({}, '', `docs.html?doc=${docId}`);
+      
+      // Update header
+      document.getElementById('breadcrumb-section').textContent = info.section;
+      document.getElementById('article-title').textContent = info.title;
+      document.getElementById('article-description').textContent = info.desc;
+      document.getElementById('article-time-text').textContent = info.time + ' læsetid';
+      
+      // Update active nav
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.doc === docId);
+      });
+      
+      // Update footer nav
+      const prevEl = document.getElementById('footer-prev');
+      const nextEl = document.getElementById('footer-next');
+      
+      if (info.prev && docsInfo[info.prev]) {
+        prevEl.style.visibility = 'visible';
+        prevEl.onclick = () => loadDoc(info.prev);
+        document.getElementById('footer-prev-title').textContent = docsInfo[info.prev].title;
+      } else {
+        prevEl.style.visibility = 'hidden';
+      }
+      
+      if (info.next && docsInfo[info.next]) {
+        nextEl.style.visibility = 'visible';
+        nextEl.onclick = () => loadDoc(info.next);
+        document.getElementById('footer-next-title').textContent = docsInfo[info.next].title;
+      } else {
+        nextEl.style.visibility = 'hidden';
+      }
+      
+      // Fetch and render markdown
+      const contentEl = document.getElementById('article-content');
+      contentEl.innerHTML = '<p class="loading">Indlæser...</p>';
+      
+      fetch(`docs/${docId}.md`)
+        .then(response => {
+          if (!response.ok) throw new Error('File not found');
+          return response.text();
+        })
+        .then(markdown => {
+          contentEl.innerHTML = marked.parse(markdown);
+          window.scrollTo(0, 0);
+        })
+        .catch(error => {
+          contentEl.innerHTML = `<div class="error">
+            <strong>Kunne ikke indlæse dokumentation</strong><br>
+            Filen "docs/${docId}.md" blev ikke fundet.
+          </div>`;
+        });
+    }
+    
+    // Search functionality
+    document.getElementById('search-input').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      document.querySelectorAll('.nav-item[data-doc]').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        const docId = item.dataset.doc;
+        const info = docsInfo[docId];
+        const searchText = text + (info ? info.desc.toLowerCase() : '');
+        item.style.display = searchText.includes(query) ? 'flex' : 'none';
+      });
+    });
+    
+    // Load initial doc
+    loadDoc(initialDoc);
+  </script>
+</body>
+</html>

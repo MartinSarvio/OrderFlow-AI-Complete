@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Faktura Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="js/faktura_generator.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a1a2e;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #0f3460;
+        }
+        .info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1a1a2e;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #1a1a2e;
+        }
+        .info p {
+            margin: 5px 0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Faktura Generator Test</h1>
+
+        <div class="info">
+            <h3>Eksempel Faktura</h3>
+            <p><strong>Kunde:</strong> Restaurant Bella Vista ApS</p>
+            <p><strong>Fakturanummer:</strong> 2025-0042</p>
+            <p><strong>Total:</strong> 2.302,50 DKK</p>
+        </div>
+
+        <button onclick="generateFaktura()">⬇️ Download Faktura PDF</button>
+    </div>
+
+    <script>
+        function generateFaktura() {
+            const generator = new FakturaGenerator();
+
+            const fakturaData = {
+                invoiceNumber: '2025-0042',
+                invoiceDate: '2025-12-31',
+                dueDate: '2026-01-14',
+                paymentTerms: 'Netto 14 dage',
+                orderReference: 'PO-2025-123',
+                customer: {
+                    companyName: 'Restaurant Bella Vista ApS',
+                    cvr: '87654321',
+                    address: 'Nørrebrogade 45',
+                    postalCity: '2200 København N',
+                    attention: 'Martin Jensen'
+                },
+                lines: [
+                    {
+                        description: 'OrderFlow Professional - Månedligt abonnement',
+                        quantity: 1,
+                        unit: 'måned',
+                        unitPrice: 799.00,
+                        amount: 799.00
+                    },
+                    {
+                        description: 'SMS-pakke (1.000 stk.)',
+                        quantity: 2,
+                        unit: 'pakke',
+                        unitPrice: 249.00,
+                        amount: 498.00
+                    },
+                    {
+                        description: 'Ekstra brugerkonti',
+                        quantity: 5,
+                        unit: 'stk',
+                        unitPrice: 49.00,
+                        amount: 245.00
+                    },
+                    {
+                        description: 'API-kald overskridelse (december)',
+                        quantity: 15000,
+                        unit: 'kald',
+                        unitPrice: 0.02,
+                        amount: 300.00
+                    }
+                ],
+                subtotal: 1842.00,
+                vat: 460.50,
+                total: 2302.50
+            };
+
+            generator.download(fakturaData, `faktura_${fakturaData.invoiceNumber}.pdf`);
+        }
+    </script>
+</body>
+</html>
