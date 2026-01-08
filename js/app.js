@@ -2896,8 +2896,16 @@ function logout() {
 }
 
 function resetAuthUI() {
-  currentUser = null;
-  clearSession(); // Also clear session on reset
+  // KRITISK: Kun clear session hvis vi IKKE har en gyldig lokal session
+  // Dette forhindrer Supabase auth events i at slette vores lokale session
+  const hasLocalSession = localStorage.getItem(SESSION_KEY);
+  if (!hasLocalSession) {
+    currentUser = null;
+    clearSession();
+  } else {
+    console.log('🛡️ resetAuthUI: Bevarer lokal session');
+    return; // Stop her - bevar session
+  }
   pending2FAUser = null;
   pending2FASettings = null;
   window._pending2FALogin = null;
