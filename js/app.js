@@ -9892,8 +9892,29 @@ async function deleteCategory(categoryName) {
 }
 
 // Save Product Library
-function saveProductLibrary() {
-  showSaveStatus('product-library-save-status', 'saved');
+async function saveProductLibrary() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Ingen restaurant valgt', 'error');
+    return;
+  }
+
+  try {
+    // Get current products from the local restaurant object
+    const products = restaurant.menu_items || restaurant.menuItems || [];
+    const categories = restaurant.productCategories || [];
+
+    // Save to Supabase
+    await SupabaseDB.updateRestaurant(restaurant.id, {
+      menu_items: products,
+      product_categories: categories
+    });
+
+    toast('Produktbibliotek gemt', 'success');
+  } catch (err) {
+    console.error('Error saving product library:', err);
+    toast('Fejl ved gem af produktbibliotek', 'error');
+  }
 }
 
 // ==================== MOMS FUNCTIONS ====================
