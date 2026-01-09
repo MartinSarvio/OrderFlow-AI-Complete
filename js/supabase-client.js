@@ -51,8 +51,16 @@ function initializeSupabase() {
       }
 
       try {
-        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-        console.log('✅ Supabase client initialized:', SUPABASE_CONFIG.url);
+        supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: 'orderflow-auth-token',
+            storage: window.localStorage
+          }
+        });
+        console.log('✅ Supabase client initialized with session persistence:', SUPABASE_CONFIG.url);
 
         // Export immediately once initialized
         window.supabaseClient = supabase;
@@ -769,6 +777,10 @@ const SupabaseDB = {
       updatedAt: dbRestaurant.updated_at,
       contactPhone: dbRestaurant.contact_phone,
       contactEmail: dbRestaurant.contact_email,
+      // Product categories array
+      productCategories: dbRestaurant.product_categories || [],
+      // VAT rates
+      vatRates: dbRestaurant.vat_rates || [],
     };
   },
 
