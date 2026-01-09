@@ -9917,6 +9917,29 @@ async function saveProductLibrary() {
   }
 }
 
+// Save Categories Changes
+async function saveCategoriesChanges() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Ingen restaurant valgt', 'error');
+    return;
+  }
+
+  try {
+    const categories = restaurant.productCategories || [];
+
+    // Save to Supabase
+    await SupabaseDB.updateRestaurant(restaurant.id, {
+      product_categories: categories
+    });
+
+    toast('Kategorier gemt', 'success');
+  } catch (err) {
+    console.error('Error saving categories:', err);
+    toast('Fejl ved gem af kategorier', 'error');
+  }
+}
+
 // ==================== MOMS FUNCTIONS ====================
 
 // Show Add Momssats Modal
