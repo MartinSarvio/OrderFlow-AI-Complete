@@ -91,6 +91,59 @@
       --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
     }
 
+    /* Light mode dropdown overrides */
+    [data-theme="light"] .topbar-dropdown {
+      background: rgba(255, 255, 255, 0.98);
+      border-color: var(--border);
+    }
+    [data-theme="light"] .topbar-dropdown-header {
+      color: var(--text);
+      border-color: var(--border);
+    }
+    [data-theme="light"] .topbar-dropdown-item {
+      color: var(--text);
+    }
+    [data-theme="light"] .topbar-dropdown-item:hover {
+      background: var(--hover);
+    }
+    [data-theme="light"] .topbar-dropdown-divider {
+      background: var(--border);
+    }
+    [data-theme="light"] .profile-dropdown {
+      background: rgba(255, 255, 255, 0.98);
+      border-color: var(--border);
+    }
+    [data-theme="light"] .profile-dropdown-header {
+      border-color: var(--border);
+    }
+    [data-theme="light"] .profile-dropdown-name {
+      color: var(--text);
+    }
+    [data-theme="light"] .profile-dropdown-email {
+      color: var(--muted);
+    }
+    [data-theme="light"] .profile-dropdown-item {
+      color: var(--text);
+    }
+    [data-theme="light"] .profile-dropdown-item:hover {
+      background: var(--hover);
+    }
+    [data-theme="light"] .notif-text {
+      color: var(--text);
+    }
+    [data-theme="light"] .notif-time {
+      color: var(--muted);
+    }
+    [data-theme="light"] .support-banner-title {
+      color: #0f172a;
+    }
+    [data-theme="light"] .support-banner-title span {
+      color: #0d9488;
+    }
+    [data-theme="light"] .support-banner-desc {
+      color: #475569;
+    }
+
     *{margin:0;padding:0;box-sizing:border-box}
     
     /* Focus States - Accessibility */

@@ -64,6 +64,208 @@ function initTheme() {
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
+// =====================================================
+// DEVICE DETECTION & TRUSTED DEVICES
+// =====================================================
+
+/**
+ * Detect device type from User-Agent
+ * @returns {Object} Device type and icon identifier
+ */
+function detectDeviceType() {
+  const ua = navigator.userAgent;
+
+  if (/iPhone/i.test(ua)) return { type: 'iPhone', icon: 'phone' };
+  if (/iPad/i.test(ua)) return { type: 'iPad', icon: 'tablet' };
+  if (/Android/i.test(ua) && /Mobile/i.test(ua)) return { type: 'Android', icon: 'phone' };
+  if (/Android/i.test(ua)) return { type: 'Android Tablet', icon: 'tablet' };
+  if (/Macintosh|Mac OS/i.test(ua)) return { type: 'macOS', icon: 'laptop' };
+  if (/Windows/i.test(ua)) return { type: 'Windows', icon: 'laptop' };
+  if (/Linux/i.test(ua)) return { type: 'Linux', icon: 'laptop' };
+
+  return { type: 'Ukendt enhed', icon: 'unknown' };
+}
+
+/**
+ * Register current device in Supabase
+ */
+async function registerDevice() {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    console.warn('⚠️ Cannot register device: Supabase not available');
+    return;
+  }
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const device = detectDeviceType();
+
+    const { error } = await supabaseClient.from('trusted_devices').upsert({
+      user_id: user.id,
+      device_type: device.type,
+      device_icon: device.icon,
+      user_agent: navigator.userAgent,
+      last_seen: new Date().toISOString()
+    }, { onConflict: 'user_id,user_agent' });
+
+    if (error) {
+      console.warn('⚠️ Could not register device:', error.message);
+    } else {
+      console.log('✅ Device registered:', device.type);
+    }
+  } catch (err) {
+    console.warn('⚠️ Device registration error:', err);
+  }
+}
+
+/**
+ * Load trusted devices from Supabase
+ */
+async function loadTrustedDevices() {
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    console.warn('⚠️ Cannot load devices: Supabase not available');
+    return;
+  }
+
+  try {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
+
+    const { data: devices, error } = await supabaseClient
+      .from('trusted_devices')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('last_seen', { ascending: false });
+
+    if (error) {
+      console.warn('⚠️ Could not load devices:', error.message);
+      return;
+    }
+
+    renderTrustedDevices(devices || []);
+    console.log('✅ Loaded trusted devices:', devices?.length || 0);
+  } catch (err) {
+    console.warn('⚠️ Load devices error:', err);
+  }
+}
+
+/**
+ * Render trusted devices in the UI
+ * @param {Array} devices - Array of device objects
+ */
+function renderTrustedDevices(devices) {
+  const container = document.getElementById('trusted-devices-list');
+  if (!container) return;
+
+  if (!devices || devices.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:var(--space-6);color:var(--muted)">
+        <p>Ingen betroede enheder registreret endnu.</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = devices.map((device, index) => {
+    const iconSvg = getDeviceIcon(device.device_icon);
+    const gradientColors = getDeviceGradient(device.device_icon);
+    const lastSeen = formatDeviceDate(device.last_seen);
+
+    return `
+      <div style="display:flex;align-items:center;gap:var(--space-4);padding:var(--space-4);background:var(--bg3);border-radius:var(--radius-sm)">
+        <div style="width:56px;height:56px;background:${gradientColors};border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${iconSvg}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-base);margin-bottom:var(--space-1)">${escapeHtml(device.device_type)}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--muted)">Sidst set ${lastSeen}</div>
+        </div>
+        <button class="btn btn-secondary" onclick="removeTrustedDevice('${device.id}')">Fjern</button>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Get SVG icon for device type
+ */
+function getDeviceIcon(iconType) {
+  switch (iconType) {
+    case 'phone':
+      return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+    case 'tablet':
+      return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>';
+    case 'laptop':
+      return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>';
+    default:
+      return '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+  }
+}
+
+/**
+ * Get gradient colors for device type
+ */
+function getDeviceGradient(iconType) {
+  switch (iconType) {
+    case 'phone':
+      return 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)';
+    case 'tablet':
+      return 'linear-gradient(135deg,#f093fb 0%,#f5576c 100%)';
+    case 'laptop':
+      return 'linear-gradient(135deg,#4facfe 0%,#00f2fe 100%)';
+    default:
+      return 'var(--bg2)';
+  }
+}
+
+/**
+ * Format device last seen date
+ */
+function formatDeviceDate(isoDate) {
+  const date = new Date(isoDate);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${day}.${month}.${year}, ${hours}.${minutes}`;
+}
+
+/**
+ * Remove a trusted device
+ */
+async function removeTrustedDevice(deviceId) {
+  if (!confirm('Er du sikker på, at du vil fjerne denne enhed fra dine betroede enheder?')) {
+    return;
+  }
+
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    console.warn('⚠️ Cannot remove device: Supabase not available');
+    return;
+  }
+
+  try {
+    const { error } = await supabaseClient
+      .from('trusted_devices')
+      .delete()
+      .eq('id', deviceId);
+
+    if (error) {
+      console.error('❌ Could not remove device:', error.message);
+      alert('Kunne ikke fjerne enheden. Prøv igen.');
+      return;
+    }
+
+    // Reload the devices list
+    await loadTrustedDevices();
+    console.log('✅ Device removed:', deviceId);
+  } catch (err) {
+    console.error('❌ Remove device error:', err);
+    alert('Kunne ikke fjerne enheden. Prøv igen.');
+  }
+}
+
 // Library Shims (jsPDF mock only - Chart.js loaded from CDN)
 window.jspdf={jsPDF:function(){var s={setFontSize:function(){return s},setTextColor:function(){return s},text:function(){return s},setDrawColor:function(){return s},setFillColor:function(){return s},rect:function(){return s},line:function(){return s},addImage:function(){return s},save:function(){alert("PDF kræver download");return s},internal:{pageSize:{getWidth:function(){return 210},getHeight:function(){return 297}}}};return s}};
 
@@ -2346,6 +2548,9 @@ async function finishLogin(user, isAdmin) {
     user: currentUser.email,
     role: currentUser.role
   });
+
+  // Register device for trusted devices tracking
+  registerDevice();
 }
 
 // =====================================================
@@ -17536,6 +17741,11 @@ function switchSettingsTab(tab) {
   // Initialize 2FA settings when password tab is opened
   if (tab === 'passwords') {
     init2FASettings();
+  }
+
+  // Load trusted devices when users tab is opened
+  if (tab === 'users') {
+    loadTrustedDevices();
   }
 }
 
