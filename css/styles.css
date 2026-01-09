@@ -2171,6 +2171,20 @@
     .api-key-status.ok,.api-key-status.connected{background:var(--green)}
     .api-key-status.missing{background:var(--muted)}
     .api-key-name{flex:1;font-size:14px;font-weight:500}
+
+    /* API Config Cards */
+    .api-connections-section{display:flex;flex-direction:column;gap:var(--space-3)}
+    .api-config-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4);transition:border-color .2s}
+    .api-config-card:hover{border-color:var(--border-light)}
+    .api-config-header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-4)}
+    .api-config-info{display:flex;align-items:center;gap:var(--space-3)}
+    .api-status-indicator{width:10px;height:10px;border-radius:50%;background:var(--muted);flex-shrink:0}
+    .api-status-indicator.connected{background:var(--green)}
+    .api-status-indicator.error{background:var(--danger)}
+    .api-config-details{display:flex;flex-direction:column;gap:2px}
+    .api-config-name{font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:var(--text)}
+    .api-config-desc{font-size:var(--font-size-sm);color:var(--muted)}
+    .api-config-fields{padding-top:var(--space-4);margin-top:var(--space-4);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:var(--space-3)}
     
     /* Settings Nav Tabs */
     .settings-nav-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--radius-md);transition:color .15s,background .15s,border-color .15s}

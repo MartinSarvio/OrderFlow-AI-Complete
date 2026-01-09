@@ -2536,6 +2536,11 @@ async function finishLogin(user, isAdmin) {
     if (typeof RealtimeSync !== 'undefined') {
       await RealtimeSync.init(currentUser.id);
     }
+
+    // Load API settings from Supabase
+    if (typeof loadAllApiSettings === 'function') {
+      await loadAllApiSettings();
+    }
   } else {
     // Supabase not available, use localStorage
     restaurants = [];
@@ -17483,12 +17488,139 @@ function saveOpenAIKey() {
 function updateApiStatus() {
   const gatewayApiOk = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
+  const googleOk = localStorage.getItem('google_api_key');
+  const trustpilotOk = localStorage.getItem('trustpilot_api_key');
 
+  // Legacy status elements
   const smsStatusEl = document.getElementById('status-twilio') || document.getElementById('status-sms');
   const openaiStatusEl = document.getElementById('status-openai');
 
   if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (gatewayApiOk ? 'ok' : 'missing');
   if (openaiStatusEl) openaiStatusEl.className = 'api-key-status ' + (openaiOk ? 'ok' : 'missing');
+
+  // New indicator elements
+  const indicators = {
+    'openai-indicator': openaiOk,
+    'gatewayapi-indicator': gatewayApiOk,
+    'google-indicator': googleOk,
+    'trustpilot-indicator': trustpilotOk
+  };
+
+  Object.entries(indicators).forEach(([id, isConnected]) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.className = 'api-status-indicator' + (isConnected ? ' connected' : '');
+    }
+  });
+}
+
+// Toggle API config fields visibility
+function toggleApiConfig(api) {
+  const fields = document.getElementById(`${api}-fields`);
+  if (!fields) return;
+
+  const isVisible = fields.style.display !== 'none';
+  fields.style.display = isVisible ? 'none' : 'block';
+}
+
+// Save all API settings to Supabase
+async function saveAllApiSettings() {
+  const statusEl = document.getElementById('api-save-status');
+  if (statusEl) statusEl.textContent = 'Gemmer...';
+
+  // Collect all API settings
+  const settings = {
+    openai_key: document.getElementById('openai-api-key-input')?.value.trim() || '',
+    gatewayapi_token: document.getElementById('gatewayapi-token')?.value.trim() || '',
+    gatewayapi_sender: document.getElementById('gatewayapi-sender')?.value.trim() || 'OrderFlow',
+    google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
+    google_api_key: document.getElementById('google-api-key')?.value.trim() || '',
+    trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
+    trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || ''
+  };
+
+  // Save to localStorage as backup
+  Object.entries(settings).forEach(([key, value]) => {
+    if (value) localStorage.setItem(key, value);
+  });
+
+  // Try to save to Supabase
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { error } = await window.supabaseClient
+        .from('user_settings')
+        .upsert({
+          user_id: currentUser.id,
+          settings_type: 'api_keys',
+          settings_data: settings,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,settings_type' });
+
+      if (error) throw error;
+      console.log('✅ API settings saved to Supabase');
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not save to Supabase, using localStorage:', err.message);
+  }
+
+  if (statusEl) {
+    statusEl.textContent = 'Gemt!';
+    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+  }
+
+  toast('API indstillinger gemt', 'success');
+  updateApiStatus();
+}
+
+// Load all API settings from Supabase or localStorage
+async function loadAllApiSettings() {
+  let settings = {};
+
+  // Try to load from Supabase first
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { data, error } = await window.supabaseClient
+        .from('user_settings')
+        .select('settings_data')
+        .eq('user_id', currentUser.id)
+        .eq('settings_type', 'api_keys')
+        .single();
+
+      if (!error && data?.settings_data) {
+        settings = data.settings_data;
+        console.log('✅ API settings loaded from Supabase');
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not load from Supabase, using localStorage');
+  }
+
+  // Merge with localStorage (localStorage takes precedence for non-empty values)
+  const localKeys = ['openai_key', 'gatewayapi_token', 'gatewayapi_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  localKeys.forEach(key => {
+    const localValue = localStorage.getItem(key);
+    if (localValue) settings[key] = localValue;
+  });
+
+  // Populate form fields
+  const fieldMappings = {
+    'openai-api-key-input': 'openai_key',
+    'gatewayapi-token': 'gatewayapi_token',
+    'gatewayapi-sender': 'gatewayapi_sender',
+    'google-place-id': 'google_place_id',
+    'google-api-key': 'google_api_key',
+    'trustpilot-business-id': 'trustpilot_business_id',
+    'trustpilot-api-key': 'trustpilot_api_key'
+  };
+
+  Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
+    const el = document.getElementById(elementId);
+    if (el && settings[settingKey]) {
+      el.value = settings[settingKey];
+    }
+  });
+
+  updateApiStatus();
 }
 
 // =====================================================
