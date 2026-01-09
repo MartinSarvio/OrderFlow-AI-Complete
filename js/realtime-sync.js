@@ -23,6 +23,17 @@ const RealtimeSync = {
       return;
     }
 
+    // Wait for Supabase to be initialized
+    if (typeof window.waitForSupabase === 'function') {
+      try {
+        await window.waitForSupabase();
+        console.log('✅ Supabase ready for RealtimeSync');
+      } catch (err) {
+        console.error('❌ Supabase failed to initialize:', err);
+        return;
+      }
+    }
+
     console.log('🔄 Initializing real-time sync for user:', userId);
 
     try {

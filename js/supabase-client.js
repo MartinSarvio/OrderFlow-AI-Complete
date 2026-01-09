@@ -670,6 +670,10 @@ const SupabaseDB = {
    * Subscribe to inbound SMS messages
    */
   subscribeToMessages(callback) {
+    if (!supabase) {
+      console.error('❌ Cannot subscribe to messages: Supabase not initialized');
+      return null;
+    }
     return supabase
       .channel('messages-changes')
       .on(
@@ -694,8 +698,10 @@ const SupabaseDB = {
    * Unsubscribe from all channels
    */
   unsubscribeAll() {
-    supabase.removeAllChannels();
-    console.log('🔇 All subscriptions removed');
+    if (supabase) {
+      supabase.removeAllChannels();
+      console.log('🔇 All subscriptions removed');
+    }
   },
 
   // ============================================================================
