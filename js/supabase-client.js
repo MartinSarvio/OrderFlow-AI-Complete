@@ -96,6 +96,15 @@ const SupabaseDB = {
    */
   async getRestaurants(userId) {
     try {
+      // Wait for Supabase to be initialized
+      if (!supabase) {
+        await window.waitForSupabase();
+      }
+      if (!supabase) {
+        console.error('❌ Supabase not initialized in getRestaurants');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
@@ -117,6 +126,15 @@ const SupabaseDB = {
    */
   async getRestaurant(restaurantId) {
     try {
+      // Wait for Supabase to be initialized
+      if (!supabase) {
+        await window.waitForSupabase();
+      }
+      if (!supabase) {
+        console.error('❌ Supabase not initialized in getRestaurant');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
@@ -669,12 +687,22 @@ const SupabaseDB = {
   /**
    * Subscribe to inbound SMS messages
    */
-  subscribeToMessages(callback) {
+  async subscribeToMessages(callback) {
+    // Wait for Supabase to be initialized
+    if (!supabase) {
+      try {
+        await window.waitForSupabase();
+      } catch (err) {
+        console.error('❌ Cannot subscribe to messages: Supabase failed to initialize', err);
+        return null;
+      }
+    }
     if (!supabase) {
       console.error('❌ Cannot subscribe to messages: Supabase not initialized');
       return null;
     }
-    return supabase
+
+    const channel = supabase
       .channel('messages-changes')
       .on(
         'postgres_changes',
@@ -691,7 +719,23 @@ const SupabaseDB = {
           }
         }
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Messages realtime subscription established');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ Messages subscription error:', err);
+        } else if (status === 'TIMED_OUT') {
+          console.error('❌ Messages subscription timed out - retrying...');
+          // Retry subscription after timeout
+          setTimeout(() => {
+            channel.subscribe();
+          }, 2000);
+        } else if (status === 'CLOSED') {
+          console.warn('⚠️ Messages subscription closed');
+        }
+      });
+
+    return channel;
   },
 
   /**
@@ -1142,6 +1186,15 @@ const SupabaseDB = {
    */
   async getMenu(restaurantId) {
     try {
+      // Wait for Supabase to be initialized
+      if (!supabase) {
+        await window.waitForSupabase();
+      }
+      if (!supabase) {
+        console.error('❌ Supabase not initialized in getMenu');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .select('menu_items, menu_currency, menu_updated_at')

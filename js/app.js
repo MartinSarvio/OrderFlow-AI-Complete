@@ -6857,6 +6857,7 @@ function showCustomerSubpage(subpage) {
   if (subpage === 'noegletal') loadCustomerKPIData();
   if (subpage === 'dashboard') loadCustomerDashboard(restaurantId);
   if (subpage === 'produkter') loadProductsPage();
+  if (subpage === 'kategorier') renderCategoriesTable();
   if (subpage === 'faktura') loadFakturaPage();
   if (subpage === 'abonnement') loadAbonnementPage();
   if (subpage === 'kundelogs') loadCustomerKundelogs();
@@ -9743,9 +9744,151 @@ function showProductSortingModal() {
   toast('Produktsortering modal kommer snart', 'info');
 }
 
-// Show Add Category Modal (placeholder)
+// Show Add Category Modal
 function showAddCategoryModal() {
-  toast('Tilføj kategori modal kommer snart', 'info');
+  const modal = document.getElementById('add-category-modal');
+  if (modal) {
+    // Reset form
+    document.getElementById('category-name').value = '';
+
+    // Populate VAT dropdown with restaurant's momssatser
+    const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+    const vatSelect = document.getElementById('category-vat');
+    if (vatSelect && restaurant) {
+      vatSelect.innerHTML = '<option value="">Vælg momssats (valgfri)</option>';
+      const vatRates = restaurant.vatRates || [];
+      vatRates.forEach(vat => {
+        vatSelect.innerHTML += `<option value="${vat.rate}">${vat.name} (${vat.rate}%)</option>`;
+      });
+    }
+
+    modal.style.display = 'flex';
+  }
+}
+
+// Close Add Category Modal
+function closeAddCategoryModal() {
+  const modal = document.getElementById('add-category-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Save Category
+async function saveCategory() {
+  const nameInput = document.getElementById('category-name');
+  const vatSelect = document.getElementById('category-vat');
+
+  const name = nameInput?.value?.trim();
+  const vatRate = vatSelect?.value || null;
+
+  if (!name) {
+    toast('Kategorinavn er påkrævet', 'error');
+    return;
+  }
+
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) {
+    toast('Ingen restaurant valgt', 'error');
+    return;
+  }
+
+  // Initialize productCategories if not exists
+  if (!restaurant.productCategories) {
+    restaurant.productCategories = [];
+  }
+
+  // Check for duplicate
+  if (restaurant.productCategories.includes(name)) {
+    toast('Kategori eksisterer allerede', 'error');
+    return;
+  }
+
+  // Add category
+  restaurant.productCategories.push(name);
+
+  // Save to Supabase
+  try {
+    await SupabaseDB.updateRestaurant(restaurant.id, {
+      product_categories: restaurant.productCategories
+    });
+
+    toast('Kategori tilføjet', 'success');
+    closeAddCategoryModal();
+
+    // Re-render categories table
+    renderCategoriesTable();
+  } catch (err) {
+    console.error('Error saving category:', err);
+    toast('Fejl ved gem af kategori', 'error');
+  }
+}
+
+// Render Categories Table
+function renderCategoriesTable() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const tableBody = document.getElementById('categories-table-body');
+  const emptyState = document.getElementById('categories-empty');
+
+  if (!tableBody) return;
+
+  const categories = restaurant.productCategories || [];
+
+  if (categories.length === 0) {
+    tableBody.innerHTML = '';
+    if (emptyState) emptyState.style.display = 'block';
+    return;
+  }
+
+  if (emptyState) emptyState.style.display = 'none';
+
+  let html = '';
+  categories.forEach((cat, index) => {
+    html += `
+      <div style="display:grid;grid-template-columns:2fr 1fr 100px;gap:var(--space-3);padding:14px 16px;border-bottom:1px solid var(--border);align-items:center">
+        <span style="font-weight:500">${cat}</span>
+        <span style="text-align:right;color:var(--muted)">-</span>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-secondary btn-sm" onclick="deleteCategory('${cat}')" title="Slet kategori">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  tableBody.innerHTML = html;
+}
+
+// Delete Category
+async function deleteCategory(categoryName) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.productCategories) return;
+
+  if (!confirm(`Er du sikker på at du vil slette kategorien "${categoryName}"?`)) {
+    return;
+  }
+
+  // Remove category from array
+  restaurant.productCategories = restaurant.productCategories.filter(c => c !== categoryName);
+
+  // Save to Supabase
+  try {
+    await SupabaseDB.updateRestaurant(restaurant.id, {
+      product_categories: restaurant.productCategories
+    });
+
+    toast('Kategori slettet', 'success');
+    renderCategoriesTable();
+
+    // Also re-render category filters in case dropdown is open
+    renderCategoryFilters();
+  } catch (err) {
+    console.error('Error deleting category:', err);
+    toast('Fejl ved sletning af kategori', 'error');
+  }
 }
 
 // Save Product Library
@@ -17140,7 +17283,7 @@ async function waitForReply() {
       const formattedPhone = phone.startsWith('+') ? phone : '+45' + phone;
 
       // FIXED: Gem starttidspunkt for at undgå gamle beskeder
-      const pollStartTime = new Date().toISOString();
+      const pollStartTime = new Date(Date.now() - 2000).toISOString();
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
 
       pollInterval = setInterval(async () => {
@@ -17153,7 +17296,7 @@ async function waitForReply() {
         try {
           // FIXED: Filtrer på created_at > pollStartTime for kun at få nye beskeder
           const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?phone=eq.${encodeURIComponent(formattedPhone)}&direction=eq.inbound&created_at=gt.${encodeURIComponent(pollStartTime)}&order=created_at.desc&limit=1`,
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?phone=eq.${encodeURIComponent(formattedPhone)}&direction=eq.inbound&created_at=gte.${encodeURIComponent(pollStartTime)}&order=created_at.desc&limit=1`,
             {
               headers: {
                 'apikey': CONFIG.SUPABASE_ANON_KEY,

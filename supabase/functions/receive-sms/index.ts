@@ -6,8 +6,11 @@ const corsHeaders = {
 }
 
 function normalizePhone(raw: string): string {
-  const digits = raw.replace(/[^0-9]/g, "")
+  let digits = raw.replace(/[^0-9]/g, "")
   if (!digits) return ""
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2)
+  }
   if (digits.startsWith("45")) {
     return `+${digits}`
   }

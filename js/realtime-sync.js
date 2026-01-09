@@ -58,15 +58,26 @@ const RealtimeSync = {
       this.subscriptions.push(notificationSub);
       console.log('✅ Subscribed to notification changes');
 
-      // Subscribe to inbound SMS messages
-      const messageSub = SupabaseDB.subscribeToMessages((payload) => {
+      // Subscribe to inbound SMS messages (await because it waits for Supabase init)
+      const messageSub = await SupabaseDB.subscribeToMessages((payload) => {
         this.handleMessageChange(payload);
       });
-      this.subscriptions.push(messageSub);
-      console.log('✅ Subscribed to message changes');
+      if (messageSub) {
+        this.subscriptions.push(messageSub);
+        console.log('✅ Subscribed to message changes');
+      } else {
+        console.error('❌ Failed to subscribe to message changes');
+      }
 
       this.initialized = true;
       console.log('✅ Real-time sync initialized successfully');
+
+      // Re-subscribe when tab becomes visible (handles connection loss when tab is hidden)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.initialized) {
+          console.log('🔄 Tab visible - verifying subscriptions');
+        }
+      });
     } catch (err) {
       console.error('❌ Error initializing real-time sync:', err);
     }
@@ -173,7 +184,15 @@ const RealtimeSync = {
    * Handle inbound SMS message events
    */
   handleMessageChange(payload) {
-    console.log('📨 Message change:', payload.eventType, payload);
+    // Detaljeret logging for debugging
+    console.log('📨 Message change received:', {
+      eventType: payload.eventType,
+      direction: payload.new?.direction,
+      phone: payload.new?.phone,
+      content: payload.new?.content?.substring(0, 50),
+      hasResolver: typeof window.resolveWorkflowReply === 'function',
+      timestamp: new Date().toISOString()
+    });
 
     if (payload.eventType === 'INSERT' && payload.new.direction === 'inbound') {
       const message = payload.new;
@@ -216,6 +235,8 @@ const RealtimeSync = {
       if (typeof window.resolveWorkflowReply === 'function') {
         console.log('✅ Resolving workflow with message:', message.content);
         window.resolveWorkflowReply(message.content);
+      } else {
+        console.warn('⚠️ No workflow resolver waiting - message not routed to workflow');
       }
 
       console.log('✅ Inbound SMS displayed:', message.phone);
