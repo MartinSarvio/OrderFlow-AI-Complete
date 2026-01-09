@@ -183,7 +183,7 @@ window.resolveWorkflowReply = null;
 // SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION = 5 * 60 * 1000; // 5 minutter
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dage
 let sessionTimeoutId = null;
 
 function persistSession(user) {
