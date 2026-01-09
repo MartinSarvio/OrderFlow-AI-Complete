@@ -4996,14 +4996,7 @@
   gap: 4px;
 }
 
-/* Logo switch for light mode */
-[data-theme="light"] .logo img {
-  filter: invert(1);
-}
-
-[data-theme="light"] .sidebar .logo img {
-  filter: invert(1);
-}
+/* Logo is switched via JavaScript using updateLogos() - no CSS filter needed */
 
 .hamburger-btn {
   background: none;

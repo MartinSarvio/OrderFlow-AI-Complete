@@ -19,7 +19,22 @@ function toggleTheme() {
     metaTheme.setAttribute('content', newTheme === 'light' ? '#ffffff' : '#0a0a0a');
   }
 
+  // Update logos based on theme
+  updateLogos(newTheme);
+
   console.log('Theme changed to:', newTheme);
+}
+
+// Update logo images based on theme
+function updateLogos(theme) {
+  const logoSrc = theme === 'light'
+    ? 'images/FLOW-logo-sort-4K.png'
+    : 'images/FLOW-logo-hvid-4K.png';
+
+  // Update all logo images
+  document.querySelectorAll('.logo img, .app-logo img, .auth-logo img').forEach(img => {
+    img.src = logoSrc;
+  });
 }
 
 // Initialize theme on page load
@@ -34,6 +49,13 @@ function initTheme() {
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
     metaTheme.setAttribute('content', theme === 'light' ? '#ffffff' : '#0a0a0a');
+  }
+
+  // Update logos when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => updateLogos(theme));
+  } else {
+    updateLogos(theme);
   }
 
   console.log('Theme initialized:', theme);
