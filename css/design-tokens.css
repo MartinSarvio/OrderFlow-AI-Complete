@@ -223,8 +223,46 @@
   --avatar-2xl: 96px;
 }
 
-/* ==================== DARK MODE OVERRIDES ==================== */
-/* Already in dark mode by default, but structure for future light mode */
+/* ==================== LIGHT MODE ==================== */
 [data-theme="light"] {
-  /* Placeholder for light mode tokens if needed */
+  /* Base Colors */
+  --color-bg: #f8fafc;
+  --color-bg-2: #f1f5f9;
+  --color-bg-3: #e2e8f0;
+  --color-nav-bg: #ffffff;
+  --color-content-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-card-hover: #f1f5f9;
+  --color-card-elevated: #ffffff;
+
+  /* Borders */
+  --color-border: #e2e8f0;
+  --color-border-light: #cbd5e1;
+
+  /* Text Colors */
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-disabled: rgba(15, 23, 42, 0.4);
+
+  /* Brand Colors */
+  --color-primary: #0d9488;
+  --color-primary-hover: #14b8a6;
+  --color-primary-active: #0f766e;
+  --color-primary-dim: rgba(13, 148, 136, 0.1);
+  --color-primary-glow: rgba(13, 148, 136, 0.2);
+
+  /* Semantic Colors */
+  --color-danger: #dc2626;
+  --color-danger-dim: rgba(220, 38, 38, 0.1);
+  --color-danger-border: rgba(220, 38, 38, 0.2);
+
+  --color-warning: #d97706;
+  --color-warning-dim: rgba(217, 119, 6, 0.1);
+
+  --color-success: #059669;
+  --color-success-dim: rgba(5, 150, 105, 0.1);
+
+  --color-info: #2563eb;
+  --color-info-dim: rgba(37, 99, 235, 0.1);
 }

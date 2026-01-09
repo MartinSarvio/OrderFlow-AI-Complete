@@ -1,0 +1,20 @@
+{
+  "name": "OrderFlow",
+  "short_name": "OrderFlow",
+  "description": "Restaurant management og workflow automation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "images/FLOW-logo-hvid-4K.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "lang": "da"
+}

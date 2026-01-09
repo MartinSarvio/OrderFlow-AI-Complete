@@ -677,12 +677,14 @@ const SupabaseDB = {
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'messages',
-          filter: 'direction=eq.inbound'
+          table: 'messages'
         },
         (payload) => {
-          console.log('📨 New inbound SMS detected:', payload);
-          callback(payload);
+          console.log('📨 New message detected:', payload);
+          // Filtrer på inbound i callback i stedet for i Supabase filter
+          if (payload.new && payload.new.direction === 'inbound') {
+            callback(payload);
+          }
         }
       )
       .subscribe();

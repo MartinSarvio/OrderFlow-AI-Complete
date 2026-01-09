@@ -24,7 +24,7 @@ function parseTimestamp(value: unknown): string | null {
   return date.toISOString()
 }
 
-async function parsePayload(req: Request): Promise<Record<string, string>> {
+async function parsePayload(req: Request): Promise<Record<string, unknown>> {
   if (req.method === "GET") {
     const params = new URL(req.url).searchParams
     return Object.fromEntries(params.entries())
@@ -38,7 +38,7 @@ async function parsePayload(req: Request): Promise<Record<string, string>> {
 
   if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
     const form = await req.formData()
-    const payload: Record<string, string> = {}
+    const payload: Record<string, unknown> = {}
     for (const [key, value] of form.entries()) {
       payload[key] = String(value)
     }
@@ -72,9 +72,10 @@ serve(async (req) => {
       }
     }
 
-    const message = payload.message || payload.text || payload.body || payload.content || ""
-    const sender = payload.sender || payload.from || payload.msisdn || payload.phone || payload.originator || ""
-    const receiver = payload.receiver || payload.to || payload.recipient || ""
+    // GatewayAPI sender msisdn og receiver som TAL, ikke strenge
+    const message = String(payload.message || payload.text || payload.body || payload.content || "")
+    const sender = String(payload.msisdn || payload.sender || payload.from || payload.phone || payload.originator || "")
+    const receiver = String(payload.receiver || payload.to || payload.recipient || "")
 
     if (!message || !sender) {
       return new Response(
@@ -84,7 +85,9 @@ serve(async (req) => {
     }
 
     const phone = normalizePhone(sender)
-    const createdAt = parseTimestamp(payload.timestamp) || parseTimestamp(payload.time) || null
+    // GatewayAPI bruger senttime (Unix timestamp i sekunder)
+    const sentTime = payload.senttime ? new Date(Number(payload.senttime) * 1000).toISOString() : null
+    const createdAt = sentTime || parseTimestamp(payload.timestamp) || parseTimestamp(payload.time) || null
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") ||

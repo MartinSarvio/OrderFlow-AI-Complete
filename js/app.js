@@ -2,6 +2,46 @@
 // ORDERFLOW AI - APP.JS (v137)
 // =====================================================
 
+// =====================================================
+// THEME TOGGLE
+// =====================================================
+function toggleTheme() {
+  const html = document.documentElement;
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+
+  // Update meta theme-color for mobile browsers
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute('content', newTheme === 'light' ? '#ffffff' : '#0a0a0a');
+  }
+
+  console.log('Theme changed to:', newTheme);
+}
+
+// Initialize theme on page load
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+  document.documentElement.setAttribute('data-theme', theme);
+
+  // Update meta theme-color
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) {
+    metaTheme.setAttribute('content', theme === 'light' ? '#ffffff' : '#0a0a0a');
+  }
+
+  console.log('Theme initialized:', theme);
+}
+
+// Initialize theme immediately (before DOMContentLoaded)
+initTheme();
+
 // Library Shims (jsPDF mock only - Chart.js loaded from CDN)
 window.jspdf={jsPDF:function(){var s={setFontSize:function(){return s},setTextColor:function(){return s},text:function(){return s},setDrawColor:function(){return s},setFillColor:function(){return s},rect:function(){return s},line:function(){return s},addImage:function(){return s},save:function(){alert("PDF kræver download");return s},internal:{pageSize:{getWidth:function(){return 210},getHeight:function(){return 297}}}};return s}};
 
