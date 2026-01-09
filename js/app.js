@@ -90,18 +90,19 @@ function detectDeviceType() {
  * Register current device in Supabase
  */
 async function registerDevice() {
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+  const client = window.supabaseClient;
+  if (!client) {
     console.warn('⚠️ Cannot register device: Supabase not available');
     return;
   }
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) return;
 
     const device = detectDeviceType();
 
-    const { error } = await supabaseClient.from('trusted_devices').upsert({
+    const { error } = await client.from('trusted_devices').upsert({
       user_id: user.id,
       device_type: device.type,
       device_icon: device.icon,
@@ -126,16 +127,17 @@ async function registerDevice() {
  * Load trusted devices from Supabase
  */
 async function loadTrustedDevices() {
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+  const client = window.supabaseClient;
+  if (!client) {
     console.warn('⚠️ Cannot load devices: Supabase not available');
     return;
   }
 
   try {
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) return;
 
-    const { data: devices, error } = await supabaseClient
+    const { data: devices, error } = await client
       .from('trusted_devices')
       .select('*')
       .eq('user_id', user.id)
@@ -243,13 +245,14 @@ async function removeTrustedDevice(deviceId) {
     return;
   }
 
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+  const client = window.supabaseClient;
+  if (!client) {
     console.warn('⚠️ Cannot remove device: Supabase not available');
     return;
   }
 
   try {
-    const { error } = await supabaseClient
+    const { error } = await client
       .from('trusted_devices')
       .delete()
       .eq('id', deviceId);
