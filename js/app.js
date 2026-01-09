@@ -107,7 +107,10 @@ async function registerDevice() {
       device_icon: device.icon,
       user_agent: navigator.userAgent,
       last_seen: new Date().toISOString()
-    }, { onConflict: 'user_id,user_agent' });
+    }, {
+      onConflict: 'user_id,user_agent',
+      ignoreDuplicates: false
+    });
 
     if (error) {
       console.warn('⚠️ Could not register device:', error.message);
