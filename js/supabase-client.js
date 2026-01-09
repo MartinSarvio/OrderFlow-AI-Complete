@@ -804,6 +804,18 @@ const SupabaseDB = {
       delete dbData.revenueTotal;
     }
 
+    // Handle productCategories → product_categories
+    if ('productCategories' in restaurant) {
+      dbData.product_categories = restaurant.productCategories;
+      delete dbData.productCategories;
+    }
+
+    // Handle vatRates → vat_rates
+    if ('vatRates' in restaurant) {
+      dbData.vat_rates = restaurant.vatRates;
+      delete dbData.vatRates;
+    }
+
     // Remove computed/readonly fields
     delete dbData.id;
     delete dbData.created_at;
