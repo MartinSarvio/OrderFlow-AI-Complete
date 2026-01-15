@@ -387,6 +387,22 @@ let replyResolver = null;
 // Global resolver for workflow replies - bruges af RealtimeSync
 window.resolveWorkflowReply = null;
 
+// Normalize phone numbers for consistent matching (inbound/outbound)
+function normalizePhoneNumber(raw) {
+  const digitsOnly = String(raw || '').replace(/[^0-9]/g, '');
+  if (!digitsOnly) {
+    return { digits: '', e164: '' };
+  }
+  let digits = digitsOnly;
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
+  if (digits.length === 8) {
+    digits = '45' + digits;
+  }
+  return { digits, e164: `+${digits}` };
+}
+
 // =====================================================
 // SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
 // =====================================================
@@ -15186,9 +15202,11 @@ async function sendSMS(to, message, restaurant) {
 
   if (liveMode) {
     // Format phone number
-    let phoneNumber = to.replace(/\s/g, '').replace('+', '');
-    if (!phoneNumber.startsWith('45')) {
-      phoneNumber = '45' + phoneNumber;
+    const normalized = normalizePhoneNumber(to);
+    const phoneNumber = normalized.digits;
+    if (!phoneNumber) {
+      addLog('❌ Ugyldigt telefonnummer', 'error');
+      return;
     }
 
     // Get GatewayAPI credentials
@@ -16844,9 +16862,11 @@ function rejectAiResponse(msgId) {
 // Send SMS immediately
 async function sendSMSNow(to, message) {
   const functionUrl = CONFIG.TWILIO_FUNCTION_URL;
-  let phoneNumber = to.replace(/\s/g, '');
-  if (!phoneNumber.startsWith('+')) {
-    phoneNumber = '+45' + phoneNumber;
+  const normalized = normalizePhoneNumber(to);
+  let phoneNumber = normalized.e164;
+  if (!phoneNumber) {
+    addLog('❌ Ugyldigt telefonnummer', 'error');
+    return;
   }
   
   try {
@@ -17283,6 +17303,7 @@ async function waitForReply() {
     let timeoutId = null;
     let warningTimeout = null;
     let isResolved = false;
+    let mismatchLogged = false;
 
     // Cleanup funktion for at sikre alle ressourcer frigives
     const cleanup = () => {
@@ -17323,8 +17344,15 @@ async function waitForReply() {
     };
 
     if (liveMode) {
-      const phone = document.getElementById('test-phone').value.replace(/\s/g, '');
-      const formattedPhone = phone.startsWith('+') ? phone : '+45' + phone;
+      const phone = document.getElementById('test-phone').value;
+      const formattedPhone = normalizePhoneNumber(phone).e164;
+      if (!formattedPhone) {
+        addLog('❌ Ugyldigt telefonnummer - kan ikke lytte efter svar', 'error');
+        safeResolve(null);
+        return;
+      }
+
+      addLog(`🔎 Live match: raw="${phone}" normalized="${formattedPhone}"`, 'info');
 
       // FIXED: Gem starttidspunkt for at undgå gamle beskeder
       const pollStartTime = new Date(Date.now() - 2000).toISOString();
@@ -17338,9 +17366,9 @@ async function waitForReply() {
         }
 
         try {
-          // FIXED: Filtrer på created_at > pollStartTime for kun at få nye beskeder
+          // Hent alle nylige inbound beskeder uden strikt created_at filter
           const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?phone=eq.${encodeURIComponent(formattedPhone)}&direction=eq.inbound&created_at=gte.${encodeURIComponent(pollStartTime)}&order=created_at.desc&limit=1`,
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=created_at.desc&limit=10`,
             {
               headers: {
                 'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -17348,20 +17376,53 @@ async function waitForReply() {
               }
             }
           );
+
+          if (!response.ok) {
+            console.error('❌ Poll API error:', response.status, response.statusText);
+            return;
+          }
+
           const messages = await response.json();
+          console.log('📥 Poll found', messages.length, 'messages');
 
           if (messages && messages.length > 0) {
-            const msg = messages[0];
-            // FIXED: Check mod timestamp i stedet for ID
-            if (!lastMessageTimestamp || msg.created_at > lastMessageTimestamp) {
-              lastMessageTimestamp = msg.created_at;
-              addLog(`📨 Indgående SMS: "${msg.content}"`, 'success');
-              safeResolve(msg.content);
+            // Log de seneste beskeder for debugging
+            console.log('📋 Recent messages:', messages.slice(0, 3).map(m => ({
+              phone: m.phone,
+              content: m.content?.substring(0, 20),
+              created_at: m.created_at
+            })));
+
+            const matched = messages.find((msg) => {
+              const msgPhone = normalizePhoneNumber(msg.phone).e164;
+              const isMatch = msgPhone === formattedPhone;
+              if (!isMatch && messages.indexOf(msg) === 0) {
+                console.log(`🔍 Phone compare: "${msgPhone}" vs "${formattedPhone}"`);
+              }
+              return isMatch;
+            });
+
+            if (matched) {
+              // Tjek at beskeden er nyere end workflow start
+              const msgTime = new Date(matched.created_at).getTime();
+              const startTime = new Date(pollStartTime).getTime();
+
+              if (msgTime >= startTime) {
+                if (!lastMessageTimestamp || matched.created_at > lastMessageTimestamp) {
+                  lastMessageTimestamp = matched.created_at;
+                  addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
+                  safeResolve(matched.content);
+                }
+              } else {
+                console.log('⏭️ Skipping old message from', matched.created_at);
+              }
+            } else if (!mismatchLogged) {
+              mismatchLogged = true;
+              addLog(`⚠️ Indgående SMS matchede ikke nummer. Senest: ${messages[0]?.phone || 'ukendt'}`, 'warn');
             }
           }
         } catch (err) {
-          console.warn('Poll error (continuing):', err.message);
-          // Fortsæt polling ved fejl
+          console.error('❌ Poll error:', err);
         }
       }, 2000); // Poll hver 2. sekund
 
