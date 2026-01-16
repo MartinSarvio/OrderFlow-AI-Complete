@@ -17292,7 +17292,7 @@ async function waitForReply() {
   document.getElementById('waiting').style.display = 'block';
   addLog('⏳ Venter på kundens svar...', 'info');
 
-  return new Promise(resolve => {
+  return new Promise(async (resolve) => {
     // Gem reference til denne specifikke resolve
     const thisResolve = resolve;
     replyResolver = resolve;
