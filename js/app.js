@@ -17354,8 +17354,27 @@ async function waitForReply() {
 
       addLog(`🔎 Live match: raw="${phone}" normalized="${formattedPhone}"`, 'info');
 
-      // FIXED: Gem starttidspunkt for at undgå gamle beskeder
-      const pollStartTime = new Date(Date.now() - 2000).toISOString();
+      // Hent seneste besked-ID ved start for at kunne filtrere gamle beskeder
+      let lastSeenMessageId = null;
+      try {
+        const initResponse = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=1`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        if (initResponse.ok) {
+          const initMessages = await initResponse.json();
+          lastSeenMessageId = initMessages[0]?.id || null;
+          console.log('📌 Initial lastSeenMessageId:', lastSeenMessageId);
+        }
+      } catch (e) {
+        console.warn('Could not get initial message ID:', e);
+      }
+
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
 
       pollInterval = setInterval(async () => {
@@ -17366,9 +17385,9 @@ async function waitForReply() {
         }
 
         try {
-          // Hent alle nylige inbound beskeder uden strikt created_at filter
+          // Hent nylige inbound beskeder fra dette telefonnummer
           const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=created_at.desc&limit=10`,
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=5`,
             {
               headers: {
                 'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -17383,42 +17402,18 @@ async function waitForReply() {
           }
 
           const messages = await response.json();
-          console.log('📥 Poll found', messages.length, 'messages');
+          console.log('📥 Poll found', messages.length, 'messages for', formattedPhone);
 
           if (messages && messages.length > 0) {
-            // Log de seneste beskeder for debugging
-            console.log('📋 Recent messages:', messages.slice(0, 3).map(m => ({
-              phone: m.phone,
-              content: m.content?.substring(0, 20),
-              created_at: m.created_at
-            })));
+            const latestMessage = messages[0];
 
-            const matched = messages.find((msg) => {
-              const msgPhone = normalizePhoneNumber(msg.phone).e164;
-              const isMatch = msgPhone === formattedPhone;
-              if (!isMatch && messages.indexOf(msg) === 0) {
-                console.log(`🔍 Phone compare: "${msgPhone}" vs "${formattedPhone}"`);
-              }
-              return isMatch;
-            });
-
-            if (matched) {
-              // Tjek at beskeden er nyere end workflow start
-              const msgTime = new Date(matched.created_at).getTime();
-              const startTime = new Date(pollStartTime).getTime();
-
-              if (msgTime >= startTime) {
-                if (!lastMessageTimestamp || matched.created_at > lastMessageTimestamp) {
-                  lastMessageTimestamp = matched.created_at;
-                  addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
-                  safeResolve(matched.content);
-                }
-              } else {
-                console.log('⏭️ Skipping old message from', matched.created_at);
-              }
-            } else if (!mismatchLogged) {
-              mismatchLogged = true;
-              addLog(`⚠️ Indgående SMS matchede ikke nummer. Senest: ${messages[0]?.phone || 'ukendt'}`, 'warn');
+            // Tjek om dette er en NY besked (forskellig fra den vi så ved start)
+            if (latestMessage.id !== lastSeenMessageId) {
+              console.log('✅ New message found:', latestMessage.id, 'content:', latestMessage.content);
+              addLog(`📨 Indgående SMS: "${latestMessage.content}"`, 'success');
+              safeResolve(latestMessage.content);
+            } else {
+              console.log('⏳ Waiting for new message (current:', lastSeenMessageId, ')');
             }
           }
         } catch (err) {
