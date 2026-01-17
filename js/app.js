@@ -17624,8 +17624,8 @@ async function waitForReply() {
 
       addLog(`🔎 Live match: raw="${phone}" normalized="${formattedPhone}"`, 'info');
 
-      // FIXED: Gem starttidspunkt for at undgå gamle beskeder
-      const pollStartTime = new Date(Date.now() - 2000).toISOString();
+      // Accepter beskeder fra de sidste 5 minutter (i stedet for kun 2 sekunder)
+      const pollStartTime = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
 
       pollInterval = setInterval(async () => {
