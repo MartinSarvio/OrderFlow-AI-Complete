@@ -11500,7 +11500,7 @@ const commandItems = [
   { type: 'page', id: 'orders', name: 'Ordrer', hint: 'Alle ordrer', keywords: ['ordrer', 'ordre', 'bestillinger'] },
   { type: 'page', id: 'workflow', name: 'Workflow', hint: 'Automatisering', keywords: ['workflow', 'flow', 'automatisering', 'automation'] },
   { type: 'page', id: 'settings', name: 'Indstillinger', hint: 'Konfiguration', keywords: ['indstillinger', 'settings', 'config'] },
-  { type: 'setting', id: 'twilio', name: 'Twilio Integration', hint: 'SMS', keywords: ['twilio', 'sms', 'telefon', 'beskeder'] },
+  { type: 'setting', id: 'sms', name: 'SMS Integration', hint: 'GatewayAPI', keywords: ['gatewayapi', 'sms', 'telefon', 'beskeder'] },
   { type: 'setting', id: 'openai', name: 'OpenAI API', hint: 'AI', keywords: ['openai', 'ai', 'gpt', 'api'] },
   { type: 'setting', id: 'beskeder', name: 'Beskeder', hint: 'Templates', keywords: ['beskeder', 'messages', 'templates', 'skabeloner'] },
   { type: 'report', id: 'kpi', name: 'KPI Oversigt', hint: 'Analytics', keywords: ['kpi', 'analytics', 'statistik', 'data'] },
@@ -11589,7 +11589,7 @@ function getCommandIcon(id) {
     'orders': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>',
     'workflow': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
     'settings': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/></svg>',
-    'twilio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>',
+    'sms': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>',
     'openai': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42"/></svg>',
     'beskeder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     'kpi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
@@ -16312,16 +16312,38 @@ function saveOrderToModule(orderData) {
   return newOrder;
 }
 
-// Hjælpefunktion til at sende SMS til kunde (bruger eksisterende sendSMS)
+// Hjælpefunktion til at sende SMS til kunde via GatewayAPI
 async function sendSMSToCustomer(phone, message, restaurant) {
   try {
-    // Brug eksisterende Twilio funktion
-    const response = await fetch(CONFIG.TWILIO_FUNCTION_URL, {
+    const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+    if (!apiToken) {
+      console.error('GatewayAPI token mangler');
+      return false;
+    }
+
+    const normalized = normalizePhoneNumber(phone);
+    const phoneNumber = normalized.e164;
+    if (!phoneNumber) {
+      console.error('Ugyldigt telefonnummer:', phone);
+      return false;
+    }
+
+    // Brug restaurantens navn som afsender (max 11 tegn)
+    let sender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
+    if (restaurant?.name) {
+      sender = restaurant.name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 11);
+    }
+
+    const response = await fetch('https://gatewayapi.com/rest/mtsms', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${btoa(apiToken + ':')}`
+      },
       body: JSON.stringify({
-        to: phone,
-        message: message
+        sender: sender,
+        message: message,
+        recipients: [{ msisdn: parseInt(phoneNumber.replace('+', '')) }]
       })
     });
     return response.ok;
@@ -16859,33 +16881,43 @@ function rejectAiResponse(msgId) {
   pendingMsgId = null;
 }
 
-// Send SMS immediately
+// Send SMS immediately via GatewayAPI
 async function sendSMSNow(to, message) {
-  const functionUrl = CONFIG.TWILIO_FUNCTION_URL;
+  const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+  if (!apiToken) {
+    addLog('❌ GatewayAPI token mangler - gå til Indstillinger', 'error');
+    return;
+  }
+
   const normalized = normalizePhoneNumber(to);
   let phoneNumber = normalized.e164;
   if (!phoneNumber) {
     addLog('❌ Ugyldigt telefonnummer', 'error');
     return;
   }
-  
+
+  const sender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
+
   try {
-    const response = await fetch(functionUrl, {
+    const response = await fetch('https://gatewayapi.com/rest/mtsms', {
       method: 'POST',
-      mode: 'cors',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Authorization': `Basic ${btoa(apiToken + ':')}`
       },
-      body: JSON.stringify({ to: phoneNumber, message: message })
+      body: JSON.stringify({
+        sender: sender,
+        message: message,
+        recipients: [{ msisdn: parseInt(phoneNumber.replace('+', '')) }]
+      })
     });
-    
-    const result = await response.json();
-    if (result.success) {
+
+    if (response.ok) {
       addMessage(message, 'out');
       addLog(`✅ SMS sendt!`, 'success');
     } else {
-      addLog(`❌ SMS fejl: ${result.error}`, 'error');
+      const result = await response.json();
+      addLog(`❌ SMS fejl: ${result.message || 'Ukendt fejl'}`, 'error');
     }
   } catch (err) {
     addLog(`❌ Fejl: ${err.message}`, 'error');
@@ -17734,8 +17766,8 @@ function updateApiStatus() {
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
 
-  // Legacy status elements
-  const smsStatusEl = document.getElementById('status-twilio') || document.getElementById('status-sms');
+  // SMS status element
+  const smsStatusEl = document.getElementById('status-sms') || document.getElementById('status-gatewayapi');
   const openaiStatusEl = document.getElementById('status-openai');
 
   if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (gatewayApiOk ? 'ok' : 'missing');
