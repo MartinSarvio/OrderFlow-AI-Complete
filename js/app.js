@@ -404,19 +404,24 @@ function normalizePhoneNumber(raw) {
 }
 
 // =====================================================
-// SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
+// SESSION MANAGEMENT - 2 min inaktivitets-timeout med page restore
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dage
+const SESSION_DURATION = 2 * 60 * 1000; // 2 minutter inaktivitet
 let sessionTimeoutId = null;
 
-function persistSession(user) {
+function persistSession(user, page = null) {
+  // Hent aktuel side fra URL hash eller brug parameter
+  const currentPage = page || window.location.hash.replace('#', '') || 'dashboard';
+
   const sessionData = {
     user: user,
-    expiresAt: Date.now() + SESSION_DURATION
+    expiresAt: Date.now() + SESSION_DURATION,
+    lastPage: currentPage,
+    selectedRestaurantId: typeof getSelectedRestaurant === 'function' ? getSelectedRestaurant()?.id : null
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
-  console.log('💾 Session saved, expires:', new Date(sessionData.expiresAt).toLocaleString());
+  console.log('💾 Session saved, page:', currentPage, 'expires:', new Date(sessionData.expiresAt).toLocaleString());
   startSessionTimeout();
 }
 
@@ -432,9 +437,15 @@ function restoreSession() {
       return null;
     }
 
-    console.log('🔄 Restoring session for:', session.user.email);
+    console.log('🔄 Restoring session for:', session.user.email, 'page:', session.lastPage);
     startSessionTimeout();
-    return session.user;
+
+    // Returner objekt med user og session data
+    return {
+      user: session.user,
+      lastPage: session.lastPage || 'dashboard',
+      selectedRestaurantId: session.selectedRestaurantId || null
+    };
   } catch (err) {
     console.warn('⚠️ Could not restore session:', err);
     localStorage.removeItem(SESSION_KEY);
@@ -3250,17 +3261,21 @@ async function initAuthStateListener() {
 document.addEventListener('DOMContentLoaded', () => {
   // KRITISK: Restore session FØRST, FØR Supabase auth listener
   // Ellers vil Supabase's SIGNED_OUT event slette vores lokale session
-  const savedUser = restoreSession();
+  const savedSession = restoreSession();
 
-  if (savedUser) {
-    currentUser = savedUser;
-    console.log('🔄 Session restored, showing app...');
+  if (savedSession) {
+    // Udtræk user og page data fra session objekt
+    currentUser = savedSession.user;
+    const lastPage = savedSession.lastPage || 'dashboard';
+    const selectedRestaurantId = savedSession.selectedRestaurantId;
+
+    console.log('🔄 Session restored, page:', lastPage, 'showing app...');
 
     // Immediately show app to prevent flash of login screen
     showApp();
     applyRoleBasedSidebar();
 
-    // Load restaurants in background
+    // Load restaurants in background, then restore page
     (async () => {
       if (typeof SupabaseDB !== 'undefined') {
         try {
@@ -3269,14 +3284,18 @@ document.addEventListener('DOMContentLoaded', () => {
           loadPersistedRestaurants();
           console.log('✅ Restaurants loaded from restored session:', restaurants.length);
 
+          // Restore selected restaurant if saved
+          if (selectedRestaurantId && restaurants.length > 0) {
+            const savedRestaurant = restaurants.find(r => r.id === selectedRestaurantId);
+            if (savedRestaurant && typeof selectRestaurant === 'function') {
+              selectRestaurant(savedRestaurant.id);
+              console.log('✅ Restaurant restored:', savedRestaurant.name);
+            }
+          }
+
           // Initialize real-time sync
           if (typeof RealtimeSync !== 'undefined') {
             await RealtimeSync.init(currentUser.id);
-          }
-
-          // Refresh dashboard if visible
-          if (typeof loadDashboard === 'function') {
-            loadDashboard();
           }
         } catch (err) {
           console.warn('⚠️ Could not load restaurants:', err);
@@ -3285,6 +3304,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         loadPersistedRestaurants();
       }
+
+      // KRITISK: Gendan sidst besøgte side EFTER data er loaded
+      if (lastPage && lastPage !== 'dashboard') {
+        console.log('📍 Restoring page:', lastPage);
+        showPage(lastPage);
+      } else if (typeof loadDashboard === 'function') {
+        loadDashboard();
+      }
+
       console.log('✅ App restored from saved session');
     })();
   } else {
@@ -3539,6 +3567,11 @@ function showPage(page) {
     }
     isNavigatingFromHistory = false;
 
+    // Gem aktuel side i session (så den kan gendannes ved refresh)
+    if (currentUser) {
+      persistSession(currentUser, page);
+    }
+
     const mainContent = document.querySelector('.main-content');
     if (mainContent) mainContent.scrollTop = 0;
 
@@ -3559,6 +3592,12 @@ function showPage(page) {
     history.pushState({ page: page }, '', `#${page}`);
   }
   isNavigatingFromHistory = false;
+
+  // Gem aktuel side i session (så den kan gendannes ved refresh)
+  if (currentUser) {
+    persistSession(currentUser, page);
+  }
+
   // Reset scroll position to top when leaving page
   const mainContent = document.querySelector('.main-content');
   if (mainContent) {
