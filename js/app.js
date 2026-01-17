@@ -17640,7 +17640,7 @@ async function waitForReply() {
         try {
           // Hent alle nylige inbound beskeder uden strikt created_at filter
           const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=created_at.desc&limit=10`,
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.incoming&order=created_at.desc&limit=10`,
             {
               headers: {
                 'apikey': CONFIG.SUPABASE_ANON_KEY,
