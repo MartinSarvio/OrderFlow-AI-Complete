@@ -17417,6 +17417,10 @@ async function waitForReply() {
     if (liveMode) {
       const phone = document.getElementById('test-phone').value;
       const formattedPhone = normalizePhoneNumber(phone).e164;
+
+      console.log('🚀 LIVE MODE POLLING START - phone:', phone, 'formatted:', formattedPhone);
+      addLog(`🚀 Live mode aktiv - polling starter`, 'info');
+
       if (!formattedPhone) {
         addLog('❌ Ugyldigt telefonnummer - kan ikke lytte efter svar', 'error');
         safeResolve(null);
@@ -17427,77 +17431,100 @@ async function waitForReply() {
 
       // Hent seneste besked-ID ved start for at kunne filtrere gamle beskeder
       let lastSeenMessageId = null;
+      let lastSeenCreatedAt = null;
       try {
-        const initResponse = await fetch(
-          `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=1`,
-          {
-            headers: {
-              'apikey': CONFIG.SUPABASE_ANON_KEY,
-              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-            }
+        const initUrl = `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=1`;
+        console.log('📍 Init URL:', initUrl);
+
+        const initResponse = await fetch(initUrl, {
+          headers: {
+            'apikey': CONFIG.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
           }
-        );
+        });
+
+        console.log('📍 Init response status:', initResponse.status);
+
         if (initResponse.ok) {
           const initMessages = await initResponse.json();
+          console.log('📍 Init messages:', initMessages);
           lastSeenMessageId = initMessages[0]?.id || null;
-          console.log('📌 Initial lastSeenMessageId:', lastSeenMessageId);
+          lastSeenCreatedAt = initMessages[0]?.created_at || null;
+          console.log('📌 Initial lastSeenMessageId:', lastSeenMessageId, 'created_at:', lastSeenCreatedAt);
+          addLog(`📌 Baseline message ID: ${lastSeenMessageId?.substring(0, 8) || 'none'}`, 'info');
         }
       } catch (e) {
         console.warn('Could not get initial message ID:', e);
+        addLog(`⚠️ Kunne ikke hente baseline: ${e.message}`, 'warn');
       }
 
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
 
+      let pollCount = 0;
       pollInterval = setInterval(async () => {
+        pollCount++;
+
         // Stop polling hvis allerede resolved eller workflow stoppet
         if (isResolved || !testRunning) {
+          console.log('🛑 Stopping poll - isResolved:', isResolved, 'testRunning:', testRunning);
           cleanup();
           return;
         }
 
         try {
           // Hent nylige inbound beskeder fra dette telefonnummer
-          const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=5`,
-            {
-              headers: {
-                'apikey': CONFIG.SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-              }
+          const pollUrl = `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&phone=eq.${encodeURIComponent(formattedPhone)}&order=created_at.desc&limit=5`;
+
+          const response = await fetch(pollUrl, {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
             }
-          );
+          });
 
           if (!response.ok) {
             console.error('❌ Poll API error:', response.status, response.statusText);
+            addLog(`❌ Poll fejl: ${response.status}`, 'error');
             return;
           }
 
           const messages = await response.json();
-          console.log('📥 Poll found', messages.length, 'messages for', formattedPhone);
+
+          // Log hver 5. poll eller når der er beskeder
+          if (pollCount % 5 === 0 || messages.length > 0) {
+            console.log(`📥 Poll #${pollCount}: found ${messages.length} messages for ${formattedPhone}`);
+          }
 
           if (messages && messages.length > 0) {
             const latestMessage = messages[0];
 
             // Tjek om dette er en NY besked (forskellig fra den vi så ved start)
             if (latestMessage.id !== lastSeenMessageId) {
-              console.log('✅ New message found:', latestMessage.id, 'content:', latestMessage.content);
+              console.log('✅ NEW MESSAGE DETECTED!');
+              console.log('   ID:', latestMessage.id);
+              console.log('   Content:', latestMessage.content);
+              console.log('   Created:', latestMessage.created_at);
+              console.log('   Previous ID was:', lastSeenMessageId);
+
               addLog(`📨 Indgående SMS: "${latestMessage.content}"`, 'success');
               safeResolve(latestMessage.content);
-            } else {
-              console.log('⏳ Waiting for new message (current:', lastSeenMessageId, ')');
             }
           }
         } catch (err) {
           console.error('❌ Poll error:', err);
+          addLog(`❌ Poll fejl: ${err.message}`, 'error');
         }
       }, 2000); // Poll hver 2. sekund
 
       // FIXED: Advarsel efter 60 sekunder
       warningTimeout = setTimeout(() => {
         if (!isResolved) {
-          addLog('⏰ Venter stadig på svar... (60s)', 'warn');
+          addLog(`⏰ Venter stadig på svar... (60s, ${pollCount} polls)`, 'warn');
         }
       }, 60000);
+    } else {
+      console.log('⚠️ waitForReply called but liveMode is FALSE');
+      addLog('⚠️ Live mode er ikke aktiveret', 'warn');
     }
 
     // Timeout efter 2 minutter
