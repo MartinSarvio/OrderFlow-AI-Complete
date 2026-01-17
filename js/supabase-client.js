@@ -722,7 +722,7 @@ const SupabaseDB = {
         (payload) => {
           console.log('📨 New message detected:', payload);
           // Filtrer på inbound i callback i stedet for i Supabase filter
-          if (payload.new && payload.new.direction === 'incoming') {
+          if (payload.new && payload.new.direction === 'inbound') {
             callback(payload);
           }
         }

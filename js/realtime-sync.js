@@ -194,7 +194,7 @@ const RealtimeSync = {
       timestamp: new Date().toISOString()
     });
 
-    if (payload.eventType === 'INSERT' && payload.new.direction === 'incoming') {
+    if (payload.eventType === 'INSERT' && payload.new.direction === 'inbound') {
       const message = payload.new;
 
       // 1. Switch to Beskeder tab
