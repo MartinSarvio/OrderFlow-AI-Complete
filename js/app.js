@@ -420,16 +420,32 @@ function normalizePhoneNumber(raw) {
 }
 
 // =====================================================
-// SESSION MANAGEMENT - 5 min timeout med aktivitets-tracking
+// SESSION MANAGEMENT - Rolle-baseret timeout med inaktivitets-prompt
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dage
+const SESSION_DURATION_ADMIN = 2 * 60 * 1000;      // 2 minutter for admin/employee
+const SESSION_DURATION_CUSTOMER = 10 * 60 * 1000;  // 10 minutter for customer/demo
+const INACTIVITY_WARNING_TIME = 30 * 1000;         // 30 sek warning før logout
 let sessionTimeoutId = null;
+let warningTimeoutId = null;
+let countdownInterval = null;
+
+// Hent session duration baseret på brugerrolle
+function getSessionDuration() {
+  const role = currentUser?.role;
+  if (role === 'admin' || role === 'employee') {
+    return SESSION_DURATION_ADMIN;
+  }
+  return SESSION_DURATION_CUSTOMER;
+}
 
 function persistSession(user) {
+  const duration = (user?.role === 'admin' || user?.role === 'employee')
+    ? SESSION_DURATION_ADMIN
+    : SESSION_DURATION_CUSTOMER;
   const sessionData = {
     user: user,
-    expiresAt: Date.now() + SESSION_DURATION
+    expiresAt: Date.now() + duration
   };
   localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
   console.log('💾 Session saved, expires:', new Date(sessionData.expiresAt).toLocaleString());
@@ -449,7 +465,8 @@ function restoreSession() {
     }
 
     console.log('🔄 Restoring session for:', session.user.email);
-    startSessionTimeout();
+    // Delay startSessionTimeout until after currentUser is set
+    setTimeout(() => startSessionTimeout(), 100);
     return session.user;
   } catch (err) {
     console.warn('⚠️ Could not restore session:', err);
@@ -464,35 +481,106 @@ function clearSession() {
     clearTimeout(sessionTimeoutId);
     sessionTimeoutId = null;
   }
+  if (warningTimeoutId) {
+    clearTimeout(warningTimeoutId);
+    warningTimeoutId = null;
+  }
+  hideInactivityWarning();
   console.log('🗑️ Session cleared');
 }
 
 function startSessionTimeout() {
-  // Clear any existing timeout
-  if (sessionTimeoutId) {
-    clearTimeout(sessionTimeoutId);
-  }
+  // Clear existing timeouts
+  if (sessionTimeoutId) clearTimeout(sessionTimeoutId);
+  if (warningTimeoutId) clearTimeout(warningTimeoutId);
 
-  // Set new timeout
+  const duration = getSessionDuration();
+  const warningTime = Math.max(0, duration - INACTIVITY_WARNING_TIME);
+
+  console.log(`⏱️ Session timeout set: ${duration/1000}s (warning at ${warningTime/1000}s)`);
+
+  // Vis warning 30 sek før logout
+  warningTimeoutId = setTimeout(() => {
+    showInactivityWarning();
+  }, warningTime);
+
+  // Logout efter fuld duration
   sessionTimeoutId = setTimeout(() => {
+    hideInactivityWarning();
     console.log('⏰ Session timeout - logging out due to inactivity');
     showToast('Session udløbet - log venligst ind igen', 'warning');
     logout();
-  }, SESSION_DURATION);
+  }, duration);
 }
 
 function resetSessionTimeout() {
+  // Skjul warning hvis den vises
+  hideInactivityWarning();
+
   const stored = localStorage.getItem(SESSION_KEY);
   if (stored) {
     try {
       const session = JSON.parse(stored);
-      session.expiresAt = Date.now() + SESSION_DURATION;
+      const duration = getSessionDuration();
+      session.expiresAt = Date.now() + duration;
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       startSessionTimeout();
     } catch (err) {
       console.warn('⚠️ Could not reset session:', err);
     }
   }
+}
+
+// Inaktivitets-warning modal
+function showInactivityWarning() {
+  let modal = document.getElementById('inactivity-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'inactivity-modal';
+    modal.innerHTML = `
+      <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg, #1a1a2e);padding:2rem;border-radius:16px;text-align:center;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+          <h3 style="margin-bottom:1rem;color:var(--text-primary, #fff);font-size:1.25rem;">Er du stadig der?</h3>
+          <p style="margin-bottom:1.5rem;color:var(--text-secondary, #aaa);">Du vil blive logget ud om <span id="inactivity-countdown" style="font-weight:bold;color:var(--primary, #6366f1);">30</span> sekunder.</p>
+          <button onclick="dismissInactivityWarning()" style="padding:0.75rem 2rem;background:var(--primary, #6366f1);color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:500;transition:transform 0.2s;">Ja, jeg er her</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  modal.style.display = 'block';
+  startInactivityCountdown();
+}
+
+function hideInactivityWarning() {
+  const modal = document.getElementById('inactivity-modal');
+  if (modal) modal.style.display = 'none';
+  if (countdownInterval) {
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+}
+
+function dismissInactivityWarning() {
+  hideInactivityWarning();
+  resetSessionTimeout();
+  console.log('✅ User confirmed activity, session extended');
+}
+
+function startInactivityCountdown() {
+  let seconds = 30;
+  const el = document.getElementById('inactivity-countdown');
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (el) el.textContent = seconds;
+
+  countdownInterval = setInterval(() => {
+    seconds--;
+    if (el) el.textContent = seconds;
+    if (seconds <= 0) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }, 1000);
 }
 
 // Track user activity to reset session timeout
