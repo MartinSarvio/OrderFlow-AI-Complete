@@ -387,6 +387,22 @@ let replyResolver = null;
 // Global resolver for workflow replies - bruges af RealtimeSync
 window.resolveWorkflowReply = null;
 
+// Refresh data fra database - kaldes ved navigation for at sikre frisk data
+async function refreshRestaurantsFromDB() {
+  if (!currentUser?.id || typeof SupabaseDB === 'undefined') return;
+
+  try {
+    const freshData = await SupabaseDB.getRestaurants(currentUser.id);
+    if (freshData && freshData.length > 0) {
+      restaurants = freshData;
+      persistRestaurants();
+      console.log('✅ Data refreshed from database:', freshData.length, 'restaurants');
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not refresh data:', err.message);
+  }
+}
+
 // Normalize phone numbers for consistent matching (inbound/outbound)
 function normalizePhoneNumber(raw) {
   const digitsOnly = String(raw || '').replace(/[^0-9]/g, '');
@@ -3587,6 +3603,7 @@ function showPage(page) {
   
   // Reset CRM til search view når man går til kunder-siden
   if (page === 'kunder') {
+    refreshRestaurantsFromDB().then(() => loadRestaurants());
     showCrmSearchView();
   }
   
@@ -3626,7 +3643,12 @@ function showPage(page) {
 
   // Load alle-kunder grid when page is shown
   if (page === 'alle-kunder') {
-    loadAlleKunderGrid();
+    refreshRestaurantsFromDB().then(() => loadAlleKunderGrid());
+  }
+
+  // Refresh dashboard data
+  if (page === 'dashboard') {
+    refreshRestaurantsFromDB().then(() => loadDashboard());
   }
 
   // Centrer workflow når workflow-siden vises
