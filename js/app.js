@@ -17734,9 +17734,12 @@ async function waitForReply() {
 
       addLog(`🔎 Live match: raw="${phone}" normalized="${formattedPhone}"`, 'info');
 
-      // Accepter beskeder fra de sidste 5 minutter (i stedet for kun 2 sekunder)
+      // Accepter beskeder fra de sidste 5 minutter
       const pollStartTime = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      // VIGTIGT: Sæt lastMessageTimestamp til pollStartTime for at undgå at fange gamle beskeder
+      lastMessageTimestamp = pollStartTime;
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
+      addLog(`⏰ Accepterer beskeder efter: ${new Date(pollStartTime).toLocaleTimeString()}`, 'info');
 
       pollInterval = setInterval(async () => {
         console.log('🔄 Poll tick - isResolved:', isResolved, 'testRunning:', testRunning);
@@ -17785,18 +17788,23 @@ async function waitForReply() {
             });
 
             if (matched) {
-              // Tjek at beskeden er nyere end workflow start
+              // Tjek at beskeden er nyere end sidste behandlede besked
               const msgTime = new Date(matched.created_at).getTime();
-              const startTime = new Date(pollStartTime).getTime();
+              const lastTime = new Date(lastMessageTimestamp).getTime();
 
-              if (msgTime >= startTime) {
-                if (!lastMessageTimestamp || matched.created_at > lastMessageTimestamp) {
-                  lastMessageTimestamp = matched.created_at;
-                  addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
-                  safeResolve(matched.content);
-                }
+              console.log(`🕐 Time check: msg=${msgTime}, last=${lastTime}, diff=${msgTime - lastTime}ms`);
+
+              // Accepter beskeder der er NYERE end lastMessageTimestamp
+              if (msgTime > lastTime) {
+                lastMessageTimestamp = matched.created_at;
+                addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
+                console.log('✅ Message accepted, resolving workflow');
+                safeResolve(matched.content);
               } else {
-                console.log('⏭️ Skipping old message from', matched.created_at);
+                // Log kun første gang vi springer over
+                if (!mismatchLogged) {
+                  console.log('⏭️ Message not newer than last:', matched.created_at, 'vs', lastMessageTimestamp);
+                }
               }
             } else if (!mismatchLogged) {
               mismatchLogged = true;
