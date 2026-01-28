@@ -18352,7 +18352,7 @@ function updateApiToggles() {
     const isEnabled = localStorage.getItem(`api_${api}_enabled`) !== 'false'; // Default to enabled
 
     if (toggle) {
-      toggle.classList.toggle('enabled', isEnabled);
+      toggle.checked = isEnabled;
     }
     if (card) {
       card.classList.toggle('disabled', !isEnabled);
@@ -18362,8 +18362,8 @@ function updateApiToggles() {
 
 // Toggle API enabled/disabled state
 function toggleApiEnabled(api) {
-  const currentState = localStorage.getItem(`api_${api}_enabled`) !== 'false';
-  const newState = !currentState;
+  const toggle = document.getElementById(`${api}-toggle`);
+  const newState = toggle ? toggle.checked : false;
 
   // Special handling for SMS providers - only one can be enabled at a time
   const smsProviders = ['twilio', 'gatewayapi', 'inmobile'];
@@ -18383,18 +18383,6 @@ function toggleApiEnabled(api) {
 
   // Save to Supabase
   saveApiEnabledStates();
-
-  const statusText = newState ? 'aktiveret' : 'deaktiveret';
-  const apiNames = {
-    'openai': 'OpenAI',
-    'twilio': 'Twilio SMS',
-    'gatewayapi': 'GatewayAPI SMS',
-    'inmobile': 'InMobile SMS',
-    'google': 'Google Reviews',
-    'trustpilot': 'Trustpilot',
-    'webhook': 'Webhook Sikkerhed'
-  };
-  toast(`${apiNames[api] || api} ${statusText}`, newState ? 'success' : 'info');
 }
 
 // Save API enabled states to Supabase
@@ -18514,10 +18502,10 @@ async function saveAllApiSettings() {
 
   if (statusEl) {
     statusEl.textContent = 'Gemt!';
+    statusEl.style.color = '#22c55e';
     setTimeout(() => { statusEl.textContent = ''; }, 2000);
   }
 
-  toast('API indstillinger gemt', 'success');
   updateApiStatus();
 }
 
