@@ -23288,8 +23288,16 @@ async function selectRole(roleId) {
       usersTitle.textContent = `Brugere med "${roleName}"`;
     }
 
-    // Get users with this role
-    const usersResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/user_roles?custom_role_id=eq.${roleId}&select=user_id,profiles(id,email,full_name,avatar_url)`, {
+    // Map display names to database role values
+    const roleMapping = {
+      'Administrator': 'admin',
+      'Manager': 'manager',
+      'Personale': 'employee'
+    };
+    const dbRoleName = roleMapping[roleName] || roleName.toLowerCase();
+
+    // Get users by role name from user_roles table
+    const usersResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/user_roles?role=eq.${dbRoleName}&select=user_id,profiles(id,email,full_name,avatar_url)`, {
       headers: {
         'apikey': CONFIG.SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
@@ -23297,16 +23305,7 @@ async function selectRole(roleId) {
     });
 
     if (!usersResponse.ok) {
-      // Fallback: get users by role name
-      const fallbackResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/user_roles?role=eq.${roleName.toLowerCase()}&select=user_id,profiles(id,email,full_name,avatar_url)`, {
-        headers: {
-          'apikey': CONFIG.SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-        }
-      });
-      const users = await fallbackResponse.json();
-      renderRoleUsers(users, usersContent);
-      return;
+      throw new Error('Kunne ikke hente brugere');
     }
 
     const users = await usersResponse.json();
