@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     console.log('Incoming SMS webhook:', JSON.stringify(body));
 
-    // Parse GatewayAPI format
+    // Parse Twilio format
     let phone = body.msisdn || body.sender || body.from || '';
     let content = body.message || body.text || body.body || '';
     let receiver = body.receiver || body.to || '';

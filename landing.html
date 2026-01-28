@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrderFlow - Restaurant Automation Platform</title>
+  <meta name="description" content="OrderFlow giver dig de samme værktøjer som store restaurantkæder bruger til at drive salg. Online bestilling, automatisk marketing og mere.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-gray-100: #f8f9fa;
+      --color-gray-200: #e9ecef;
+      --color-gray-400: #787a7d;
+      --color-gray-600: #495057;
+      --section-radius: 2.4rem;
+      --section-overlap: -2.4rem;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 62.5%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      color: var(--color-dark);
+      background: var(--color-white);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .nav.scrolled {
+      border-color: var(--color-gray-200);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.6rem 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--color-dark);
+    }
+
+    .nav-logo {
+      height: 3.2rem;
+      width: auto;
+    }
+
+    .nav-brand-text {
+      font-size: 2rem;
+      font-weight: 600;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 3.2rem;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--color-dark);
+      font-size: 1.5rem;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--color-primary);
+    }
+
+    .nav-cta {
+      display: flex;
+      gap: 1.2rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      padding: 1.2rem 2.4rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: var(--color-white);
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: var(--color-gray-100);
+      color: var(--color-dark);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-gray-200);
+    }
+
+    .btn-dark {
+      background: var(--color-dark);
+      color: var(--color-white);
+    }
+
+    .btn-dark:hover {
+      background: #1a1a1a;
+      transform: translateY(-2px);
+    }
+
+    .btn-large {
+      padding: 1.6rem 3.2rem;
+      font-size: 1.6rem;
+      border-radius: 1.2rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 14rem 2.4rem 8rem;
+      background: linear-gradient(180deg, #f8faff 0%, var(--color-white) 100%);
+      text-align: center;
+    }
+
+    .hero-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 1.6rem;
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-200);
+      border-radius: 100px;
+      font-size: 1.4rem;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+    }
+
+    .hero-badge-dot {
+      width: 0.8rem;
+      height: 0.8rem;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero-title {
+      font-size: clamp(4rem, 8vw, 7.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 2.4rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-title span {
+      color: var(--color-primary);
+    }
+
+    .hero-subtitle {
+      font-size: 2rem;
+      color: var(--color-gray-600);
+      max-width: 600px;
+      margin: 0 auto 4rem;
+      line-height: 1.5;
+    }
+
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.6rem;
+      justify-content: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 4.8rem;
+      padding-top: 4rem;
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat-value {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--color-dark);
+    }
+
+    .hero-stat-label {
+      font-size: 1.4rem;
+      color: var(--color-gray-400);
+    }
+
+    /* Features Section */
+    .features {
+      padding: 10rem 2.4rem;
+      background: var(--color-white);
+    }
+
+    .features-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 6.4rem;
+    }
+
+    .section-label {
+      display: inline-block;
+      padding: 0.6rem 1.4rem;
+      background: #e8f0ff;
+      color: var(--color-primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+      border-radius: 100px;
+      margin-bottom: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title {
+      font-size: clamp(3.2rem, 5vw, 4.8rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.6rem;
+    }
+
+    .section-subtitle {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 3.2rem;
+    }
+
+    .feature-card {
+      background: var(--color-gray-100);
+      border-radius: 2rem;
+      padding: 3.2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .feature-icon {
+      width: 5.6rem;
+      height: 5.6rem;
+      background: var(--color-primary);
+      border-radius: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .feature-icon svg {
+      width: 2.8rem;
+      height: 2.8rem;
+      color: var(--color-white);
+    }
+
+    .feature-title {
+      font-size: 2rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+    }
+
+    .feature-description {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+    }
+
+    /* Product Section */
+    .product {
+      padding: 10rem 2.4rem;
+      background: var(--color-dark);
+      color: var(--color-white);
+      border-radius: var(--section-radius);
+      margin: 0 0.8rem;
+    }
+
+    .product-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6.4rem;
+      align-items: center;
+    }
+
+    .product-content {
+      padding-right: 4rem;
+    }
+
+    .product-label {
+      color: var(--color-primary);
+    }
+
+    .product-title {
+      font-size: clamp(3.2rem, 4vw, 4rem);
+      font-weight: 700;
+      margin-bottom: 2.4rem;
+      line-height: 1.2;
+    }
+
+    .product-description {
+      font-size: 1.7rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 3.2rem;
+      line-height: 1.6;
+    }
+
+    .product-features {
+      list-style: none;
+      margin-bottom: 3.2rem;
+    }
+
+    .product-features li {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 0;
+      font-size: 1.6rem;
+      color: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .product-features li:last-child {
+      border-bottom: none;
+    }
+
+    .product-features svg {
+      width: 2rem;
+      height: 2rem;
+      color: #10b981;
+      flex-shrink: 0;
+    }
+
+    .product-image {
+      position: relative;
+      border-radius: 2rem;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .product-image-placeholder {
+      width: 80%;
+      height: 80%;
+      background: linear-gradient(135deg, rgba(1, 91, 248, 0.2) 0%, rgba(1, 91, 248, 0.05) 100%);
+      border-radius: 1.6rem;
+      border: 1px solid rgba(1, 91, 248, 0.3);
+    }
+
+    /* Testimonials */
+    .testimonials {
+      padding: 10rem 2.4rem;
+      background: var(--color-white);
+    }
+
+    .testimonials-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2.4rem;
+    }
+
+    .testimonial-card {
+      background: var(--color-gray-100);
+      border-radius: 2rem;
+      padding: 3.2rem;
+    }
+
+    .testimonial-rating {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 2rem;
+    }
+
+    .testimonial-rating svg {
+      width: 2rem;
+      height: 2rem;
+      color: #f59e0b;
+    }
+
+    .testimonial-text {
+      font-size: 1.7rem;
+      line-height: 1.6;
+      margin-bottom: 2.4rem;
+      color: var(--color-dark);
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+    }
+
+    .testimonial-avatar {
+      width: 4.8rem;
+      height: 4.8rem;
+      border-radius: 50%;
+      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 1.6rem;
+    }
+
+    .testimonial-info h4 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .testimonial-info p {
+      font-size: 1.4rem;
+      color: var(--color-gray-400);
+    }
+
+    /* CTA Section */
+    .cta {
+      padding: 10rem 2.4rem;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #0047cc 100%);
+      text-align: center;
+      border-radius: var(--section-radius);
+      margin: 0 0.8rem 0.8rem;
+    }
+
+    .cta-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .cta-title {
+      font-size: clamp(3.2rem, 5vw, 4.8rem);
+      font-weight: 700;
+      color: var(--color-white);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+    }
+
+    .cta-subtitle {
+      font-size: 1.8rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 4rem;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-white {
+      background: var(--color-white);
+      color: var(--color-primary);
+    }
+
+    .btn-white:hover {
+      background: var(--color-gray-100);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--color-white);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Partners Marquee */
+    .partners {
+      padding: 6rem 2.4rem;
+      background: var(--color-gray-100);
+      overflow: hidden;
+    }
+
+    .partners-title {
+      text-align: center;
+      font-size: 1.4rem;
+      color: var(--color-gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 3.2rem;
+    }
+
+    .partners-track {
+      display: flex;
+      gap: 6.4rem;
+      animation: scroll 30s linear infinite;
+    }
+
+    .partners-track img {
+      height: 3.2rem;
+      opacity: 0.5;
+      filter: grayscale(100%);
+      transition: all 0.3s ease;
+    }
+
+    .partners-track img:hover {
+      opacity: 1;
+      filter: grayscale(0%);
+    }
+
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* Ratings Section */
+    .ratings {
+      padding: 4rem 2.4rem;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .ratings-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 4.8rem;
+      flex-wrap: wrap;
+    }
+
+    .rating-badge {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 2rem;
+      background: var(--color-gray-100);
+      border-radius: 1.2rem;
+    }
+
+    .rating-logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+    }
+
+    .rating-stars {
+      display: flex;
+      gap: 0.2rem;
+    }
+
+    .rating-stars svg {
+      width: 1.6rem;
+      height: 1.6rem;
+      color: #f59e0b;
+    }
+
+    .rating-score {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+
+    /* Video Section */
+    .video-section {
+      padding: 8rem 2.4rem;
+      background: var(--color-gray-100);
+    }
+
+    .video-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .video-wrapper {
+      position: relative;
+      margin-top: 4rem;
+      border-radius: 2rem;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      aspect-ratio: 16/9;
+      cursor: pointer;
+    }
+
+    .video-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 1;
+    }
+
+    .video-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      width: 8rem;
+      height: 8rem;
+      background: var(--color-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+    }
+
+    .video-wrapper:hover .video-play-btn {
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .video-play-btn svg {
+      width: 3rem;
+      height: 3rem;
+      color: var(--color-primary);
+      margin-left: 0.4rem;
+    }
+
+    .video-placeholder {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Video Modal */
+    .video-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .video-modal.active {
+      display: flex;
+    }
+
+    .video-modal-content {
+      width: 100%;
+      max-width: 1000px;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 1.2rem;
+      position: relative;
+    }
+
+    .video-modal-close {
+      position: absolute;
+      top: -4rem;
+      right: 0;
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0.8rem;
+    }
+
+    .video-modal-close svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    /* Mobile Menu */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--color-white);
+      z-index: 999;
+      padding: 8rem 2.4rem 2.4rem;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .mobile-menu.active {
+      display: flex;
+    }
+
+    .mobile-menu a {
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      text-decoration: none;
+      padding: 1.2rem 0;
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .mobile-menu .btn {
+      margin-top: 2rem;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--color-dark);
+      color: var(--color-white);
+      padding: 6.4rem 2.4rem 3.2rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr repeat(3, 1fr);
+      gap: 4.8rem;
+      margin-bottom: 4.8rem;
+    }
+
+    .footer-brand p {
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 1.6rem;
+      font-size: 1.5rem;
+      line-height: 1.6;
+      max-width: 300px;
+    }
+
+    .footer-column h4 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column li {
+      margin-bottom: 1.2rem;
+    }
+
+    .footer-column a {
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      font-size: 1.5rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-column a:hover {
+      color: var(--color-white);
+    }
+
+    .footer-bottom {
+      padding-top: 3.2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1.6rem;
+    }
+
+    .footer-bottom p {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 1.4rem;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 1.6rem;
+    }
+
+    .footer-social a {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-white);
+      transition: background 0.2s ease;
+    }
+
+    .footer-social a:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Mobile Menu */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.8rem;
+    }
+
+    .mobile-menu-btn svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .nav-menu {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .product-grid {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+      }
+
+      .product-content {
+        padding-right: 0;
+        text-align: center;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        padding: 12rem 2rem 6rem;
+      }
+
+      .hero-stats {
+        flex-direction: column;
+        gap: 2.4rem;
+      }
+
+      .features-grid,
+      .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 3.2rem;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-container">
+      <a href="/" class="nav-brand">
+        <img src="images/FLOW-logo-sort-4K.png" alt="FLOW" class="nav-logo">
+      </a>
+      <div class="nav-menu">
+        <a href="#features" class="nav-link">Funktioner</a>
+        <a href="#product" class="nav-link">Produkt</a>
+        <a href="#testimonials" class="nav-link">Anmeldelser</a>
+        <a href="/pricing" class="nav-link">Priser</a>
+        <div class="nav-cta">
+          <a href="index.html" class="btn btn-secondary">Log ind</a>
+          <a href="index.html" class="btn btn-primary">Kom i gang</a>
+        </div>
+      </div>
+      <button class="mobile-menu-btn" aria-label="Menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features">Funktioner</a>
+    <a href="#product">Produkt</a>
+    <a href="#testimonials">Anmeldelser</a>
+    <a href="/pricing">Priser</a>
+    <a href="index.html" class="btn btn-primary btn-large" style="text-align: center;">Kom i gang</a>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <span>Trusted af 500+ restauranter i Danmark</span>
+      </div>
+      <h1 class="hero-title">
+        Automatisér din<br>
+        <span>restaurant</span> med AI
+      </h1>
+      <p class="hero-subtitle">
+        OrderFlow giver dig de samme værktøjer som store restaurantkæder bruger. Online bestilling, automatisk marketing, SMS kommunikation og meget mere.
+      </p>
+      <div class="hero-cta">
+        <a href="index.html" class="btn btn-primary btn-large">
+          Start gratis prøveperiode
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="#product" class="btn btn-secondary btn-large">
+          Se hvordan det virker
+        </a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-value">500+</div>
+          <div class="hero-stat-label">Restauranter</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">2M+</div>
+          <div class="hero-stat-label">Ordrer behandlet</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-value">98%</div>
+          <div class="hero-stat-label">Kundetilfredshed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ratings Section -->
+  <section class="ratings">
+    <div class="ratings-container">
+      <div class="rating-badge">
+        <span class="rating-logo">G2</span>
+        <div class="rating-stars">
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <span class="rating-score">4.9/5</span>
+      </div>
+      <div class="rating-badge">
+        <span class="rating-logo">Capterra</span>
+        <div class="rating-stars">
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <span class="rating-score">4.8/5</span>
+      </div>
+      <div class="rating-badge">
+        <span class="rating-logo">Google</span>
+        <div class="rating-stars">
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <span class="rating-score">4.9/5</span>
+      </div>
+      <div class="rating-badge">
+        <span class="rating-logo">Trustpilot</span>
+        <div class="rating-stars">
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <span class="rating-score">4.7/5</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="features-container">
+      <div class="section-header">
+        <span class="section-label">Funktioner</span>
+        <h2 class="section-title">Alt hvad du behøver for at vækste</h2>
+        <p class="section-subtitle">
+          Fra online bestilling til automatisk marketing - vi har alle værktøjer samlet ét sted.
+        </p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Online Bestilling</h3>
+          <p class="feature-description">
+            Få flere ordrer med online bestilling der føles velkendt og nem at bruge for dine kunder.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">SMS Kommunikation</h3>
+          <p class="feature-description">
+            Automatiske SMS-beskeder til kunder om ordrestatus, leveringstid og meget mere.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">AI-drevet Automatisering</h3>
+          <p class="feature-description">
+            Lad AI håndtere rutineopgaver så du kan fokusere på det der virkelig betyder noget.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Avanceret Analytics</h3>
+          <p class="feature-description">
+            Få indsigt i din forretning med detaljerede rapporter og realtidsdata.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Automatisk Marketing</h3>
+          <p class="feature-description">
+            Driv salg fra kunder med gennemprøvede, automatiserede kampagner.
+          </p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="feature-title">Mobil App</h3>
+          <p class="feature-description">
+            Styr din restaurant fra lommen med vores brugervenlige mobil app.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Section -->
+  <section class="product" id="product">
+    <div class="product-container">
+      <div class="product-grid">
+        <div class="product-content">
+          <span class="section-label product-label">Workflow Automatisering</span>
+          <h2 class="product-title">Automatisér hele ordreprocessen</h2>
+          <p class="product-description">
+            Fra ordremodtagelse til levering - OrderFlow automatiserer hvert trin så du kan fokusere på at lave fantastisk mad.
+          </p>
+          <ul class="product-features">
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Automatisk ordrebekræftelse via SMS
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              AI-drevet kundeservice 24/7
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Intelligent tidsestimering
+            </li>
+            <li>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Automatiske statusopdateringer
+            </li>
+          </ul>
+          <a href="index.html" class="btn btn-white btn-large">
+            Prøv det selv
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+            </svg>
+          </a>
+        </div>
+        <div class="product-image">
+          <div class="product-image-placeholder"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Section -->
+  <section class="video-section">
+    <div class="video-container">
+      <div class="section-header">
+        <span class="section-label">Se det i aktion</span>
+        <h2 class="section-title">Se hvordan OrderFlow virker</h2>
+        <p class="section-subtitle">
+          Se en kort demo af hvordan OrderFlow automatiserer din restaurant og sparer dig tid hver dag.
+        </p>
+      </div>
+      <div class="video-wrapper" id="videoWrapper">
+        <div class="video-play-btn">
+          <svg fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+        <div style="position: absolute; inset: 0; background: linear-gradient(135deg, rgba(1, 91, 248, 0.1) 0%, rgba(1, 91, 248, 0.05) 100%); display: flex; align-items: center; justify-content: center;">
+          <img src="images/FLOW-logo-hvid-4K.png" alt="OrderFlow" style="width: 200px; opacity: 0.3;">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="videoModal">
+    <div class="video-modal-content">
+      <button class="video-modal-close" id="closeVideoModal">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+      <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white;">
+        <p>Video indhold her (YouTube/Vimeo embed)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials" id="testimonials">
+    <div class="testimonials-container">
+      <div class="section-header">
+        <span class="section-label">Anmeldelser</span>
+        <h2 class="section-title">Hvad vores kunder siger</h2>
+        <p class="section-subtitle">
+          Se hvordan OrderFlow hjælper restauranter med at vækste deres forretning.
+        </p>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-rating">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="testimonial-text">
+            "OrderFlow har transformeret vores restaurant. Vi har sparet 20+ timer om ugen på administrative opgaver og øget vores omsætning med 35%."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">MN</div>
+            <div class="testimonial-info">
+              <h4>Michael Nielsen</h4>
+              <p>Ejer, Café Nørrebro</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-rating">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="testimonial-text">
+            "SMS-automatiseringen er fantastisk! Vores kunder elsker at få opdateringer om deres ordrer, og vi får færre telefonopkald."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">SJ</div>
+            <div class="testimonial-info">
+              <h4>Sara Jensen</h4>
+              <p>Manager, Pizza Palace</p>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <div class="testimonial-rating">
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="testimonial-text">
+            "Nem at bruge, fantastisk support, og resultaterne taler for sig selv. Vores online ordrer er steget 50% siden vi startede."
+          </p>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">TH</div>
+            <div class="testimonial-info">
+              <h4>Thomas Hansen</h4>
+              <p>Ejer, Sushi House</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Partners Section -->
+  <section class="partners">
+    <p class="partners-title">Integrerer med dine foretrukne platforme</p>
+    <div style="display: flex; justify-content: center; gap: 4.8rem; flex-wrap: wrap; align-items: center;">
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #333;">Wolt</div>
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #ff5200;">Just Eat</div>
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #d70f64;">Foodora</div>
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #00857c;">MobilePay</div>
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #6772e5;">Stripe</div>
+      <div style="padding: 1.2rem 2.4rem; background: white; border-radius: 1rem; font-weight: 600; color: #f22f46;">Twilio</div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta">
+    <div class="cta-container">
+      <h2 class="cta-title">Klar til at transformere din restaurant?</h2>
+      <p class="cta-subtitle">
+        Start din gratis prøveperiode i dag og se hvordan OrderFlow kan hjælpe dig med at vækste.
+      </p>
+      <div class="cta-buttons">
+        <a href="index.html" class="btn btn-white btn-large">
+          Start gratis nu
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="#" class="btn btn-outline btn-large">
+          Book en demo
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-brand" style="color: white;">
+            <img src="images/FLOW-logo-hvid-4K.png" alt="FLOW" class="nav-logo">
+          </a>
+          <p>
+            Den komplette platform til restaurant automatisering. Gør det nemt at drive en succesfuld restaurant.
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>Produkt</h4>
+          <ul>
+            <li><a href="#features">Funktioner</a></li>
+            <li><a href="#product">Workflow</a></li>
+            <li><a href="/pricing">Priser</a></li>
+            <li><a href="#">Integrationer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Virksomhed</h4>
+          <ul>
+            <li><a href="#">Om os</a></li>
+            <li><a href="#">Karriere</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Kontakt</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Hjælp</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Status</a></li>
+            <li><a href="#">Privatlivspolitik</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 OrderFlow. Alle rettigheder forbeholdes.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Navbar scroll effect
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+        // Close mobile menu if open
+        mobileMenu.classList.remove('active');
+      });
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('active');
+    });
+
+    // Video modal
+    const videoWrapper = document.getElementById('videoWrapper');
+    const videoModal = document.getElementById('videoModal');
+    const closeVideoModal = document.getElementById('closeVideoModal');
+
+    videoWrapper.addEventListener('click', () => {
+      videoModal.classList.add('active');
+    });
+
+    closeVideoModal.addEventListener('click', () => {
+      videoModal.classList.remove('active');
+    });
+
+    videoModal.addEventListener('click', (e) => {
+      if (e.target === videoModal) {
+        videoModal.classList.remove('active');
+      }
+    });
+
+    // Close modal on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        videoModal.classList.remove('active');
+        mobileMenu.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+</html>

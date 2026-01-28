@@ -302,9 +302,10 @@ const CONFIG = {
   SUPABASE_URL: 'https://qymtjhzgtcittohutmay.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTcyMzM2NiwiZXhwIjoyMDY3Mjk5MzY2fQ.th8EBi8r6JtR4nP0Q1FZoLiLT5-COohX4HvJ15Xd7G8',
   
-  // GatewayAPI SMS (dansk SMS-udbyder)
-  GATEWAYAPI_TOKEN: '',  // Indtastes i Indstillinger
-  GATEWAYAPI_SENDER: 'OrderFlow',
+  // Twilio SMS
+  TWILIO_ACCOUNT_SID: '',  // Indtastes i Indstillinger
+  TWILIO_AUTH_TOKEN: '',   // Indtastes i Indstillinger
+  TWILIO_PHONE_NUMBER: '+4552512921',  // Dit Twilio nummer
   
   // OpenAI (indtastes i Indstillinger → API Adgang)
   OPENAI_API_KEY: '',
@@ -3732,6 +3733,21 @@ function showPage(page) {
   // Load alle-kunder grid when page is shown
   if (page === 'alle-kunder') {
     refreshRestaurantsFromDB().then(() => loadAlleKunderGrid());
+  }
+
+  // Load loyalty page
+  if (page === 'loyalty') {
+    renderLoyaltyPage();
+  }
+
+  // Load campaigns page
+  if (page === 'campaigns') {
+    renderCampaignsPage();
+  }
+
+  // Load segments page
+  if (page === 'segments') {
+    renderSegmentsPage();
   }
 
   // Refresh dashboard data
@@ -14566,10 +14582,11 @@ async function startTest(type) {
 
   // LIVE MODE PRE-FLIGHT CHECKS
   if (liveMode) {
-    const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG?.GATEWAYAPI_TOKEN;
-    if (!apiToken) {
-      toast('Fejl: GatewayAPI token ikke konfigureret', 'error');
-      addLog('❌ GatewayAPI token mangler - gå til Indstillinger → API', 'error');
+    const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG?.TWILIO_ACCOUNT_SID;
+    const authToken = localStorage.getItem('twilio_auth_token') || CONFIG?.TWILIO_AUTH_TOKEN;
+    if (!accountSid || !authToken) {
+      toast('Fejl: Twilio credentials ikke konfigureret', 'error');
+      addLog('❌ Twilio Account SID eller Auth Token mangler - gå til Indstillinger → API', 'error');
       return;
     }
 
@@ -15589,25 +15606,20 @@ async function sendSMS(to, message, restaurant) {
       return;
     }
 
-    // Get GatewayAPI credentials
-    const apiToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+    // Get Twilio credentials
+    const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
+    const authToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
+    const fromNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
 
-    // Brug restaurantens navn som afsender (max 11 tegn, kun alfanumerisk)
-    let sender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
-    if (restaurant?.name) {
-      // Fjern specialtegn og begræns til 11 tegn (GatewayAPI krav)
-      sender = restaurant.name.replace(/[^a-zA-Z0-9]/g, '').substring(0, 11);
-    }
-
-    if (!apiToken) {
-      addLog(`❌ GatewayAPI token mangler - tjek Indstillinger`, 'error');
+    if (!accountSid || !authToken) {
+      addLog(`❌ Twilio credentials mangler - tjek Indstillinger`, 'error');
       return;
     }
 
-    addLog(`📤 Sender SMS via GatewayAPI til ${phoneNumber}...`, 'info');
+    addLog(`📤 Sender SMS via Twilio til ${phoneNumber}...`, 'info');
 
     try {
-      // Use Supabase Edge Function as proxy (GatewayAPI doesn't support CORS)
+      // Send via Supabase Edge Function (Twilio)
       const supabaseUrl = CONFIG.SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
         method: 'POST',
@@ -15618,8 +15630,9 @@ async function sendSMS(to, message, restaurant) {
         body: JSON.stringify({
           to: phoneNumber,
           message: message,
-          sender: sender,
-          token: apiToken
+          from: fromNumber,
+          accountSid: accountSid,
+          authToken: authToken
         })
       });
 
@@ -15627,8 +15640,7 @@ async function sendSMS(to, message, restaurant) {
       console.log('SMS response:', result);
 
       if (result.success || result.sid) {
-        const cost = result.cost ? ` (${result.cost} DKK)` : '';
-        addLog(`✅ SMS sendt! ID: ${result.sid}${cost}`, 'success');
+        addLog(`✅ SMS sendt! ID: ${result.sid}`, 'success');
       } else {
         addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
       }
@@ -17672,7 +17684,7 @@ async function waitForReply() {
   document.getElementById('waiting').style.display = 'block';
   addLog('⏳ Venter på kundens svar...', 'info');
 
-  return new Promise(resolve => {
+  return new Promise(async (resolve) => {
     // Gem reference til denne specifikke resolve
     const thisResolve = resolve;
     replyResolver = resolve;
@@ -17734,15 +17746,35 @@ async function waitForReply() {
 
       addLog(`🔎 Live match: raw="${phone}" normalized="${formattedPhone}"`, 'info');
 
-      // Accepter beskeder fra de sidste 5 minutter
-      const pollStartTime = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      // VIGTIGT: Sæt lastMessageTimestamp til pollStartTime for at undgå at fange gamle beskeder
-      lastMessageTimestamp = pollStartTime;
+      // Gem tidspunkt for workflow start - vi accepterer alle beskeder efter dette tidspunkt
+      const workflowStartTime = new Date().toISOString();
+      // Track set af allerede sete besked-IDs
+      const seenMessageIds = new Set();
+
+      // Hent eksisterende beskeder og marker dem som "set"
+      try {
+        const initResponse = await fetch(
+          `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=id.desc&limit=20`,
+          {
+            headers: {
+              'apikey': CONFIG.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        );
+        if (initResponse.ok) {
+          const initMsgs = await initResponse.json();
+          initMsgs.forEach(m => seenMessageIds.add(m.id));
+          console.log('📋 Marked', seenMessageIds.size, 'existing messages as seen');
+        }
+      } catch (e) {
+        console.warn('Could not fetch initial messages:', e);
+      }
+
       addLog(`📡 Lytter efter svar fra ${formattedPhone}...`, 'info');
-      addLog(`⏰ Accepterer beskeder efter: ${new Date(pollStartTime).toLocaleTimeString()}`, 'info');
+      addLog(`⏰ Accepterer nye beskeder efter: ${new Date(workflowStartTime).toLocaleTimeString()}`, 'info');
 
       pollInterval = setInterval(async () => {
-        console.log('🔄 Poll tick - isResolved:', isResolved, 'testRunning:', testRunning);
         // Stop polling hvis allerede resolved eller workflow stoppet
         if (isResolved || !testRunning) {
           console.log('⚠️ Poll stopped - isResolved:', isResolved, 'testRunning:', testRunning);
@@ -17751,9 +17783,9 @@ async function waitForReply() {
         }
 
         try {
-          // Hent alle nylige inbound beskeder uden strikt created_at filter
+          // Hent seneste inbound beskeder - sortér efter id (nyeste først)
           const response = await fetch(
-            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=created_at.desc&limit=10`,
+            `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=id.desc&limit=20`,
             {
               headers: {
                 'apikey': CONFIG.SUPABASE_ANON_KEY,
@@ -17768,53 +17800,47 @@ async function waitForReply() {
           }
 
           const messages = await response.json();
-          console.log('📥 Poll found', messages.length, 'messages');
 
-          if (messages && messages.length > 0) {
-            // Log de seneste beskeder for debugging
-            console.log('📋 Recent messages:', messages.slice(0, 3).map(m => ({
+          // Find NYE beskeder (ikke set før)
+          const newMessages = messages.filter(m => !seenMessageIds.has(m.id));
+
+          if (newMessages.length > 0) {
+            console.log('📥 Found', newMessages.length, 'NEW messages:', newMessages.map(m => ({
+              id: m.id,
               phone: m.phone,
-              content: m.content?.substring(0, 20),
-              created_at: m.created_at
+              content: m.content?.substring(0, 30)
             })));
 
-            const matched = messages.find((msg) => {
+            // Find en ny besked der matcher telefonnummeret
+            const matched = newMessages.find((msg) => {
               const msgPhone = normalizePhoneNumber(msg.phone).e164;
               const isMatch = msgPhone === formattedPhone;
-              if (!isMatch && messages.indexOf(msg) === 0) {
-                console.log(`🔍 Phone compare: "${msgPhone}" vs "${formattedPhone}"`);
-              }
+              console.log(`🔍 Phone compare: "${msgPhone}" vs "${formattedPhone}" = ${isMatch}`);
               return isMatch;
             });
 
             if (matched) {
-              // Tjek at beskeden er nyere end sidste behandlede besked
-              const msgTime = new Date(matched.created_at).getTime();
-              const lastTime = new Date(lastMessageTimestamp).getTime();
+              // Marker som set
+              seenMessageIds.add(matched.id);
+              addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
+              console.log('✅ Message accepted, resolving workflow. ID:', matched.id);
+              safeResolve(matched.content);
+              return;
+            } else {
+              // Marker alle nye beskeder som set (så vi ikke tjekker dem igen)
+              newMessages.forEach(m => seenMessageIds.add(m.id));
 
-              console.log(`🕐 Time check: msg=${msgTime}, last=${lastTime}, diff=${msgTime - lastTime}ms`);
-
-              // Accepter beskeder der er NYERE end lastMessageTimestamp
-              if (msgTime > lastTime) {
-                lastMessageTimestamp = matched.created_at;
-                addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
-                console.log('✅ Message accepted, resolving workflow');
-                safeResolve(matched.content);
-              } else {
-                // Log kun første gang vi springer over
-                if (!mismatchLogged) {
-                  console.log('⏭️ Message not newer than last:', matched.created_at, 'vs', lastMessageTimestamp);
-                }
+              if (!mismatchLogged) {
+                mismatchLogged = true;
+                const otherPhones = newMessages.map(m => m.phone).join(', ');
+                addLog(`⚠️ Ny SMS fra andet nummer: ${otherPhones}`, 'warn');
               }
-            } else if (!mismatchLogged) {
-              mismatchLogged = true;
-              addLog(`⚠️ Indgående SMS matchede ikke nummer. Senest: ${messages[0]?.phone || 'ukendt'}`, 'warn');
             }
           }
         } catch (err) {
           console.error('❌ Poll error:', err);
         }
-      }, 2000); // Poll hver 2. sekund
+      }, 1500); // Poll hver 1.5 sekund for hurtigere respons
 
       // FIXED: Advarsel efter 60 sekunder
       warningTimeout = setTimeout(() => {
@@ -17833,6 +17859,50 @@ async function waitForReply() {
     }, 120000);
   });
 }
+
+// Debug funktion: Tjek alle indgående beskeder i databasen
+async function debugCheckMessages() {
+  try {
+    addLog('🔍 Tjekker database for indgående beskeder...', 'info');
+
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/messages?direction=eq.inbound&order=id.desc&limit=10`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      addLog(`❌ Database fejl: ${response.status}`, 'error');
+      return;
+    }
+
+    const messages = await response.json();
+
+    if (messages.length === 0) {
+      addLog('⚠️ Ingen indgående beskeder fundet i databasen', 'warn');
+      addLog('💡 Twilio webhook sender muligvis ikke til korrekt URL', 'info');
+    } else {
+      addLog(`✅ Fandt ${messages.length} indgående beskeder:`, 'success');
+      messages.slice(0, 5).forEach((m, i) => {
+        const time = new Date(m.created_at).toLocaleTimeString('da-DK');
+        addLog(`  ${i+1}. ${m.phone}: "${m.content?.substring(0, 30)}" (${time})`, 'info');
+      });
+    }
+
+    console.log('📋 Full message data:', messages);
+    return messages;
+  } catch (err) {
+    addLog(`❌ Fejl ved database-tjek: ${err.message}`, 'error');
+    console.error('Debug check error:', err);
+  }
+}
+
+// Gør funktionen tilgængelig globalt for debugging
+window.debugCheckMessages = debugCheckMessages;
 
 async function handleIncomingReply(text) {
   // Show incoming message
@@ -18035,18 +18105,22 @@ function sleep(ms) {
 function loadConfig() {
   // Brug CONFIG værdier som defaults hvis localStorage er tom
 
-  // GatewayAPI SMS
-  const gatewayToken = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
-  const gatewaySender = localStorage.getItem('gatewayapi_sender') || CONFIG.GATEWAYAPI_SENDER || 'OrderFlow';
+  // Twilio SMS
+  const twilioAccountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
+  const twilioAuthToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
+  const twilioPhoneNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
 
-  if (gatewayToken) localStorage.setItem('gatewayapi_token', gatewayToken);
-  if (gatewaySender) localStorage.setItem('gatewayapi_sender', gatewaySender);
+  if (twilioAccountSid) localStorage.setItem('twilio_account_sid', twilioAccountSid);
+  if (twilioAuthToken) localStorage.setItem('twilio_auth_token', twilioAuthToken);
+  if (twilioPhoneNumber) localStorage.setItem('twilio_phone_number', twilioPhoneNumber);
 
   // Populate input fields if they exist
-  const tokenInput = document.getElementById('gatewayapi-token');
-  const senderInput = document.getElementById('gatewayapi-sender');
-  if (tokenInput && gatewayToken) tokenInput.value = gatewayToken;
-  if (senderInput) senderInput.value = gatewaySender;
+  const sidInput = document.getElementById('twilio-account-sid');
+  const tokenInput = document.getElementById('twilio-auth-token');
+  const phoneInput = document.getElementById('twilio-phone-number');
+  if (sidInput && twilioAccountSid) sidInput.value = twilioAccountSid;
+  if (tokenInput && twilioAuthToken) tokenInput.value = twilioAuthToken;
+  if (phoneInput) phoneInput.value = twilioPhoneNumber;
 
   // OpenAI
   const openaiKey = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
@@ -18057,33 +18131,38 @@ function loadConfig() {
   updateApiStatus();
 }
 
-function saveGatewayApiSettings() {
-  const token = document.getElementById('gatewayapi-token')?.value.trim();
-  const sender = document.getElementById('gatewayapi-sender')?.value.trim();
+function saveTwilioSettings() {
+  const accountSid = document.getElementById('twilio-account-sid')?.value.trim();
+  const authToken = document.getElementById('twilio-auth-token')?.value.trim();
+  const phoneNumber = document.getElementById('twilio-phone-number')?.value.trim();
 
-  if (!token) {
-    toast('Indtast din GatewayAPI token', 'error');
+  if (!accountSid || !authToken) {
+    toast('Indtast Twilio Account SID og Auth Token', 'error');
     return;
   }
 
-  localStorage.setItem('gatewayapi_token', token);
-  if (sender) {
-    localStorage.setItem('gatewayapi_sender', sender);
+  localStorage.setItem('twilio_account_sid', accountSid);
+  localStorage.setItem('twilio_auth_token', authToken);
+  if (phoneNumber) {
+    localStorage.setItem('twilio_phone_number', phoneNumber);
   }
 
-  toast('GatewayAPI indstillinger gemt', 'success');
+  toast('Twilio indstillinger gemt', 'success');
   updateApiStatus();
 }
 
-function loadGatewayApiSettings() {
-  const token = localStorage.getItem('gatewayapi_token');
-  const sender = localStorage.getItem('gatewayapi_sender') || 'OrderFlow';
+function loadTwilioSettings() {
+  const accountSid = localStorage.getItem('twilio_account_sid');
+  const authToken = localStorage.getItem('twilio_auth_token');
+  const phoneNumber = localStorage.getItem('twilio_phone_number') || '+4552512921';
 
-  const tokenInput = document.getElementById('gatewayapi-token');
-  const senderInput = document.getElementById('gatewayapi-sender');
+  const sidInput = document.getElementById('twilio-account-sid');
+  const tokenInput = document.getElementById('twilio-auth-token');
+  const phoneInput = document.getElementById('twilio-phone-number');
 
-  if (tokenInput && token) tokenInput.value = token;
-  if (senderInput) senderInput.value = sender;
+  if (sidInput && accountSid) sidInput.value = accountSid;
+  if (tokenInput && authToken) tokenInput.value = authToken;
+  if (phoneInput) phoneInput.value = phoneNumber;
 }
 
 function saveOpenAIConfig() {
@@ -18124,7 +18203,8 @@ function saveOpenAIKey() {
 }
 
 function updateApiStatus() {
-  const gatewayApiOk = localStorage.getItem('gatewayapi_token') || CONFIG.GATEWAYAPI_TOKEN;
+  const twilioOk = (localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID) &&
+                   (localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN);
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
@@ -18133,13 +18213,13 @@ function updateApiStatus() {
   const smsStatusEl = document.getElementById('status-twilio') || document.getElementById('status-sms');
   const openaiStatusEl = document.getElementById('status-openai');
 
-  if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (gatewayApiOk ? 'ok' : 'missing');
+  if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (twilioOk ? 'ok' : 'missing');
   if (openaiStatusEl) openaiStatusEl.className = 'api-key-status ' + (openaiOk ? 'ok' : 'missing');
 
   // New indicator elements
   const indicators = {
     'openai-indicator': openaiOk,
-    'gatewayapi-indicator': gatewayApiOk,
+    'twilio-indicator': twilioOk,
     'google-indicator': googleOk,
     'trustpilot-indicator': trustpilotOk
   };
@@ -18169,8 +18249,9 @@ async function saveAllApiSettings() {
   // Collect all API settings
   const settings = {
     openai_key: document.getElementById('openai-api-key-input')?.value.trim() || '',
-    gatewayapi_token: document.getElementById('gatewayapi-token')?.value.trim() || '',
-    gatewayapi_sender: document.getElementById('gatewayapi-sender')?.value.trim() || 'OrderFlow',
+    twilio_account_sid: document.getElementById('twilio-account-sid')?.value.trim() || '',
+    twilio_auth_token: document.getElementById('twilio-auth-token')?.value.trim() || '',
+    twilio_phone_number: document.getElementById('twilio-phone-number')?.value.trim() || '+4552512921',
     google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
     google_api_key: document.getElementById('google-api-key')?.value.trim() || '',
     trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
@@ -18234,7 +18315,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'gatewayapi_token', 'gatewayapi_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  const localKeys = ['openai_key', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -18243,8 +18324,9 @@ async function loadAllApiSettings() {
   // Populate form fields
   const fieldMappings = {
     'openai-api-key-input': 'openai_key',
-    'gatewayapi-token': 'gatewayapi_token',
-    'gatewayapi-sender': 'gatewayapi_sender',
+    'twilio-account-sid': 'twilio_account_sid',
+    'twilio-auth-token': 'twilio_auth_token',
+    'twilio-phone-number': 'twilio_phone_number',
     'google-place-id': 'google_place_id',
     'google-api-key': 'google_api_key',
     'trustpilot-business-id': 'trustpilot_business_id',
@@ -21255,3 +21337,1608 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+
+// ===== LOYALTY PROGRAM =====
+
+// Loyalty data cache
+let loyaltySettings = null;
+let loyaltyRewards = [];
+let loyaltyMembers = [];
+
+// Tier colors and icons
+const LOYALTY_TIERS = {
+  bronze: { color: '#cd7f32', icon: '🥉', name: 'Bronze' },
+  silver: { color: '#c0c0c0', icon: '🥈', name: 'Sølv' },
+  gold: { color: '#ffd700', icon: '🥇', name: 'Guld' },
+  platinum: { color: '#e5e4e2', icon: '💎', name: 'Platin' }
+};
+
+// Get loyalty settings for restaurant
+async function getLoyaltySettings(restaurantId) {
+  if (!restaurantId) return null;
+
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_settings?restaurant_id=eq.${restaurantId}&limit=1`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    loyaltySettings = data[0] || null;
+    return loyaltySettings;
+  } catch (err) {
+    console.error('getLoyaltySettings error:', err);
+    return null;
+  }
+}
+
+// Create default loyalty settings
+async function createLoyaltySettings(restaurantId) {
+  try {
+    const defaultSettings = {
+      restaurant_id: restaurantId,
+      enabled: true,
+      points_per_kr: 1,
+      min_order_for_points: 50,
+      welcome_bonus: 50,
+      birthday_bonus: 100,
+      tier_bronze_min: 0,
+      tier_silver_min: 500,
+      tier_gold_min: 1500,
+      tier_platinum_min: 5000,
+      silver_multiplier: 1.25,
+      gold_multiplier: 1.5,
+      platinum_multiplier: 2.0
+    };
+
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_settings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(defaultSettings)
+    });
+
+    if (!response.ok) throw new Error('Failed to create settings');
+    const data = await response.json();
+    loyaltySettings = data[0];
+    return loyaltySettings;
+  } catch (err) {
+    console.error('createLoyaltySettings error:', err);
+    return null;
+  }
+}
+
+// Get customer loyalty info
+async function getCustomerLoyalty(phone, restaurantId) {
+  if (!phone || !restaurantId) return null;
+
+  const normalizedPhone = normalizePhoneNumber(phone).e164;
+
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?customer_phone=eq.${encodeURIComponent(normalizedPhone)}&restaurant_id=eq.${restaurantId}&limit=1`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data[0] || null;
+  } catch (err) {
+    console.error('getCustomerLoyalty error:', err);
+    return null;
+  }
+}
+
+// Create new loyalty member
+async function createLoyaltyMember(phone, restaurantId, name = null) {
+  const normalizedPhone = normalizePhoneNumber(phone).e164;
+
+  // Get settings for welcome bonus
+  const settings = await getLoyaltySettings(restaurantId);
+  const welcomeBonus = settings?.welcome_bonus || 50;
+
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        restaurant_id: restaurantId,
+        customer_phone: normalizedPhone,
+        customer_name: name,
+        points: welcomeBonus,
+        lifetime_points: welcomeBonus,
+        tier: 'bronze'
+      })
+    });
+
+    if (!response.ok) throw new Error('Failed to create member');
+    const data = await response.json();
+
+    // Log welcome bonus transaction
+    if (welcomeBonus > 0) {
+      await addLoyaltyTransaction(data[0].id, restaurantId, 'bonus', welcomeBonus, 'Velkomstbonus');
+    }
+
+    return data[0];
+  } catch (err) {
+    console.error('createLoyaltyMember error:', err);
+    return null;
+  }
+}
+
+// Add points to customer
+async function addLoyaltyPoints(phone, restaurantId, orderAmount, orderId = null) {
+  const normalizedPhone = normalizePhoneNumber(phone).e164;
+
+  // Get or create loyalty member
+  let member = await getCustomerLoyalty(normalizedPhone, restaurantId);
+  if (!member) {
+    member = await createLoyaltyMember(normalizedPhone, restaurantId);
+    if (!member) return null;
+  }
+
+  // Get settings
+  const settings = await getLoyaltySettings(restaurantId);
+  if (!settings?.enabled) return member;
+
+  // Check minimum order
+  if (orderAmount < (settings.min_order_for_points || 0)) {
+    return member;
+  }
+
+  // Calculate points with tier multiplier
+  let multiplier = 1;
+  if (member.tier === 'silver') multiplier = settings.silver_multiplier || 1.25;
+  else if (member.tier === 'gold') multiplier = settings.gold_multiplier || 1.5;
+  else if (member.tier === 'platinum') multiplier = settings.platinum_multiplier || 2.0;
+
+  const basePoints = Math.floor(orderAmount * (settings.points_per_kr || 1));
+  const earnedPoints = Math.floor(basePoints * multiplier);
+
+  // Update member points
+  const newPoints = member.points + earnedPoints;
+  const newLifetime = member.lifetime_points + earnedPoints;
+  const newTier = calculateTier(newLifetime, settings);
+
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?id=eq.${member.id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          points: newPoints,
+          lifetime_points: newLifetime,
+          tier: newTier,
+          updated_at: new Date().toISOString()
+        })
+      }
+    );
+
+    if (!response.ok) throw new Error('Failed to update points');
+    const data = await response.json();
+
+    // Log transaction
+    await addLoyaltyTransaction(
+      member.id,
+      restaurantId,
+      'earn',
+      earnedPoints,
+      `Ordre: ${orderAmount} kr (${multiplier}x bonus)`,
+      orderId
+    );
+
+    // Check for tier upgrade
+    if (newTier !== member.tier) {
+      await addLoyaltyTransaction(
+        member.id,
+        restaurantId,
+        'bonus',
+        0,
+        `Opgraderet til ${LOYALTY_TIERS[newTier].name}!`
+      );
+    }
+
+    return data[0];
+  } catch (err) {
+    console.error('addLoyaltyPoints error:', err);
+    return null;
+  }
+}
+
+// Calculate tier based on lifetime points
+function calculateTier(lifetimePoints, settings) {
+  if (lifetimePoints >= (settings?.tier_platinum_min || 5000)) return 'platinum';
+  if (lifetimePoints >= (settings?.tier_gold_min || 1500)) return 'gold';
+  if (lifetimePoints >= (settings?.tier_silver_min || 500)) return 'silver';
+  return 'bronze';
+}
+
+// Add loyalty transaction
+async function addLoyaltyTransaction(loyaltyId, restaurantId, type, points, description, orderId = null) {
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_transactions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        loyalty_id: loyaltyId,
+        restaurant_id: restaurantId,
+        type,
+        points,
+        description,
+        order_id: orderId
+      })
+    });
+  } catch (err) {
+    console.error('addLoyaltyTransaction error:', err);
+  }
+}
+
+// Get loyalty rewards
+async function getLoyaltyRewards(restaurantId) {
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_rewards?restaurant_id=eq.${restaurantId}&active=eq.true&order=points_required.asc`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) return [];
+    loyaltyRewards = await response.json();
+    return loyaltyRewards;
+  } catch (err) {
+    console.error('getLoyaltyRewards error:', err);
+    return [];
+  }
+}
+
+// Redeem loyalty reward
+async function redeemLoyaltyReward(phone, restaurantId, rewardId) {
+  const member = await getCustomerLoyalty(phone, restaurantId);
+  if (!member) return { success: false, error: 'Kunde ikke fundet' };
+
+  const rewards = await getLoyaltyRewards(restaurantId);
+  const reward = rewards.find(r => r.id === rewardId);
+  if (!reward) return { success: false, error: 'Belønning ikke fundet' };
+
+  if (member.points < reward.points_required) {
+    return { success: false, error: `Du mangler ${reward.points_required - member.points} points` };
+  }
+
+  // Deduct points
+  const newPoints = member.points - reward.points_required;
+
+  try {
+    await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?id=eq.${member.id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          points: newPoints,
+          updated_at: new Date().toISOString()
+        })
+      }
+    );
+
+    // Update reward redemption count
+    await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_rewards?id=eq.${rewardId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          current_redemptions: (reward.current_redemptions || 0) + 1
+        })
+      }
+    );
+
+    // Log transaction
+    await addLoyaltyTransaction(
+      member.id,
+      restaurantId,
+      'redeem',
+      -reward.points_required,
+      `Indløst: ${reward.name}`
+    );
+
+    return {
+      success: true,
+      reward: reward,
+      newPoints: newPoints,
+      message: `Du har indløst "${reward.name}"!`
+    };
+  } catch (err) {
+    console.error('redeemLoyaltyReward error:', err);
+    return { success: false, error: 'Fejl ved indløsning' };
+  }
+}
+
+// Get available rewards for customer
+async function getAvailableRewards(phone, restaurantId) {
+  const member = await getCustomerLoyalty(phone, restaurantId);
+  if (!member) return [];
+
+  const rewards = await getLoyaltyRewards(restaurantId);
+  return rewards.map(r => ({
+    ...r,
+    canRedeem: member.points >= r.points_required,
+    pointsNeeded: Math.max(0, r.points_required - member.points)
+  }));
+}
+
+// Format loyalty message for SMS
+function formatLoyaltyMessage(member, earnedPoints = 0) {
+  const tier = LOYALTY_TIERS[member.tier] || LOYALTY_TIERS.bronze;
+  let msg = `${tier.icon} `;
+
+  if (earnedPoints > 0) {
+    msg += `Du har optjent ${earnedPoints} points! `;
+  }
+
+  msg += `Total: ${member.points} points (${tier.name})`;
+  return msg;
+}
+
+// Render loyalty admin page
+async function renderLoyaltyPage() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) {
+    document.getElementById('main-content').innerHTML = '<div class="empty-state"><p>Vælg en restaurant først</p></div>';
+    return;
+  }
+
+  // Get settings or create defaults
+  let settings = await getLoyaltySettings(restaurantId);
+  if (!settings) {
+    settings = await createLoyaltySettings(restaurantId);
+  }
+
+  // Get rewards and members
+  const rewards = await getLoyaltyRewards(restaurantId);
+  const membersResponse = await fetch(
+    `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?restaurant_id=eq.${restaurantId}&order=lifetime_points.desc&limit=100`,
+    {
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    }
+  );
+  const members = await membersResponse.json();
+
+  // Calculate stats
+  const totalMembers = members.length;
+  const totalPoints = members.reduce((sum, m) => sum + m.points, 0);
+  const tierCounts = { bronze: 0, silver: 0, gold: 0, platinum: 0 };
+  members.forEach(m => tierCounts[m.tier]++);
+
+  const html = `
+    <div class="page-header">
+      <h1>🎁 Loyalty Program</h1>
+      <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">${totalMembers}</div>
+        <div class="stat-label">Medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalPoints.toLocaleString('da-DK')}</div>
+        <div class="stat-label">Aktive points</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${tierCounts.gold + tierCounts.platinum}</div>
+        <div class="stat-label">VIP medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${rewards.length}</div>
+        <div class="stat-label">Aktive belønninger</div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>⚙️ Indstillinger</h3>
+        <label class="switch">
+          <input type="checkbox" id="loyalty-enabled" ${settings?.enabled ? 'checked' : ''} onchange="toggleLoyaltyEnabled()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+          <div class="form-group">
+            <label class="form-label">Points pr. krone</label>
+            <input type="number" class="input" id="loyalty-points-per-kr" value="${settings?.points_per_kr || 1}" step="0.1" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min. ordre for points</label>
+            <input type="number" class="input" id="loyalty-min-order" value="${settings?.min_order_for_points || 50}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Velkomstbonus</label>
+            <input type="number" class="input" id="loyalty-welcome-bonus" value="${settings?.welcome_bonus || 50}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fødselsdagsbonus</label>
+            <input type="number" class="input" id="loyalty-birthday-bonus" value="${settings?.birthday_bonus || 100}" min="0">
+          </div>
+        </div>
+
+        <h4 style="margin:24px 0 16px">Tier-grænser</h4>
+        <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+          <div class="form-group">
+            <label class="form-label">🥉 Sølv fra</label>
+            <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🥇 Guld fra</label>
+            <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">💎 Platin fra</label>
+            <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
+          </div>
+        </div>
+
+        <h4 style="margin:24px 0 16px">Tier-bonusser</h4>
+        <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
+          <div class="form-group">
+            <label class="form-label">🥈 Sølv multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">🥇 Guld multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">💎 Platin multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="margin-top:16px" onclick="saveLoyaltySettings()">Gem indstillinger</button>
+      </div>
+    </div>
+
+    <!-- Rewards -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>🎁 Belønninger</h3>
+        <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
+      </div>
+      <div class="card-body">
+        ${rewards.length === 0 ? '<p class="text-secondary">Ingen belønninger oprettet endnu</p>' : `
+          <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+            ${rewards.map(r => `
+              <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+                  <h4 style="margin:0">${r.name}</h4>
+                  <span class="badge" style="background:var(--accent);color:white">${r.points_required} pts</span>
+                </div>
+                <p class="text-secondary" style="font-size:13px;margin-bottom:12px">${r.description || ''}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="text-secondary" style="font-size:12px">${r.current_redemptions || 0} indløst</span>
+                  <div>
+                    <button class="btn btn-sm" onclick="editReward('${r.id}')">Rediger</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReward('${r.id}')">Slet</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
+    </div>
+
+    <!-- Members -->
+    <div class="card">
+      <div class="card-header">
+        <h3>👥 Medlemmer</h3>
+        <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterLoyaltyMembers(this.value)">
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table class="data-table" id="loyalty-members-table">
+            <thead>
+              <tr>
+                <th>Kunde</th>
+                <th>Telefon</th>
+                <th>Tier</th>
+                <th>Points</th>
+                <th>Lifetime</th>
+                <th>Handlinger</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${members.map(m => `
+                <tr data-phone="${m.customer_phone}" data-name="${m.customer_name || ''}">
+                  <td>${m.customer_name || '<span class="text-secondary">Ukendt</span>'}</td>
+                  <td>${m.customer_phone}</td>
+                  <td>
+                    <span class="tier-badge tier-${m.tier}">
+                      ${LOYALTY_TIERS[m.tier]?.icon || '🥉'} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
+                    </span>
+                  </td>
+                  <td><strong>${m.points.toLocaleString('da-DK')}</strong></td>
+                  <td>${m.lifetime_points.toLocaleString('da-DK')}</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="showMemberDetails('${m.id}')">Detaljer</button>
+                    <button class="btn btn-sm" onclick="adjustMemberPoints('${m.id}')">+/- Points</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// Save loyalty settings
+async function saveLoyaltySettings() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const settings = {
+    enabled: document.getElementById('loyalty-enabled')?.checked ?? true,
+    points_per_kr: parseFloat(document.getElementById('loyalty-points-per-kr')?.value) || 1,
+    min_order_for_points: parseFloat(document.getElementById('loyalty-min-order')?.value) || 50,
+    welcome_bonus: parseInt(document.getElementById('loyalty-welcome-bonus')?.value) || 50,
+    birthday_bonus: parseInt(document.getElementById('loyalty-birthday-bonus')?.value) || 100,
+    tier_silver_min: parseInt(document.getElementById('loyalty-tier-silver')?.value) || 500,
+    tier_gold_min: parseInt(document.getElementById('loyalty-tier-gold')?.value) || 1500,
+    tier_platinum_min: parseInt(document.getElementById('loyalty-tier-platinum')?.value) || 5000,
+    silver_multiplier: parseFloat(document.getElementById('loyalty-mult-silver')?.value) || 1.25,
+    gold_multiplier: parseFloat(document.getElementById('loyalty-mult-gold')?.value) || 1.5,
+    platinum_multiplier: parseFloat(document.getElementById('loyalty-mult-platinum')?.value) || 2.0,
+    updated_at: new Date().toISOString()
+  };
+
+  try {
+    await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_settings?restaurant_id=eq.${restaurantId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(settings)
+      }
+    );
+
+    loyaltySettings = { ...loyaltySettings, ...settings };
+    toast('Indstillinger gemt', 'success');
+  } catch (err) {
+    console.error('saveLoyaltySettings error:', err);
+    toast('Fejl ved gem', 'error');
+  }
+}
+
+// Toggle loyalty enabled
+async function toggleLoyaltyEnabled() {
+  const enabled = document.getElementById('loyalty-enabled')?.checked;
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  try {
+    await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_settings?restaurant_id=eq.${restaurantId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ enabled, updated_at: new Date().toISOString() })
+      }
+    );
+
+    toast(enabled ? 'Loyalty aktiveret' : 'Loyalty deaktiveret', 'success');
+  } catch (err) {
+    toast('Fejl', 'error');
+  }
+}
+
+// Filter loyalty members
+function filterLoyaltyMembers(query) {
+  const rows = document.querySelectorAll('#loyalty-members-table tbody tr');
+  const q = query.toLowerCase();
+
+  rows.forEach(row => {
+    const phone = row.dataset.phone?.toLowerCase() || '';
+    const name = row.dataset.name?.toLowerCase() || '';
+    row.style.display = (phone.includes(q) || name.includes(q)) ? '' : 'none';
+  });
+}
+
+// Show add reward modal
+function showAddRewardModal(reward = null) {
+  const isEdit = !!reward;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'reward-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h3>${isEdit ? 'Rediger' : 'Tilføj'} belønning</h3>
+        <button class="modal-close" onclick="closeRewardModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Navn *</label>
+          <input type="text" class="input" id="reward-name" value="${reward?.name || ''}" placeholder="F.eks. Gratis dessert">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Beskrivelse</label>
+          <textarea class="input" id="reward-description" rows="2" placeholder="Valgfri beskrivelse">${reward?.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Points krævet *</label>
+          <input type="number" class="input" id="reward-points" value="${reward?.points_required || 100}" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Belønningstype</label>
+          <select class="input" id="reward-type">
+            <option value="discount_percent" ${reward?.reward_type === 'discount_percent' ? 'selected' : ''}>Rabat i procent</option>
+            <option value="discount_amount" ${reward?.reward_type === 'discount_amount' ? 'selected' : ''}>Rabat i kroner</option>
+            <option value="free_item" ${reward?.reward_type === 'free_item' ? 'selected' : ''}>Gratis produkt</option>
+            <option value="free_delivery" ${reward?.reward_type === 'free_delivery' ? 'selected' : ''}>Gratis levering</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Værdi (procent eller kroner)</label>
+          <input type="number" class="input" id="reward-value" value="${reward?.reward_value || ''}" placeholder="F.eks. 10 for 10% eller 50 kr">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRewardModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveReward('${reward?.id || ''}')">${isEdit ? 'Gem' : 'Opret'}</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+// Close reward modal
+function closeRewardModal() {
+  document.getElementById('reward-modal')?.remove();
+}
+
+// Save reward
+async function saveReward(rewardId = null) {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const name = document.getElementById('reward-name')?.value?.trim();
+  const description = document.getElementById('reward-description')?.value?.trim();
+  const points_required = parseInt(document.getElementById('reward-points')?.value) || 100;
+  const reward_type = document.getElementById('reward-type')?.value || 'discount_percent';
+  const reward_value = parseFloat(document.getElementById('reward-value')?.value) || null;
+
+  if (!name) {
+    toast('Indtast et navn', 'error');
+    return;
+  }
+
+  const data = {
+    restaurant_id: restaurantId,
+    name,
+    description,
+    points_required,
+    reward_type,
+    reward_value,
+    active: true
+  };
+
+  try {
+    if (rewardId) {
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_rewards?id=eq.${rewardId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(data)
+      });
+    } else {
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_rewards`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(data)
+      });
+    }
+
+    toast(rewardId ? 'Belønning opdateret' : 'Belønning oprettet', 'success');
+    closeRewardModal();
+    renderLoyaltyPage();
+  } catch (err) {
+    console.error('saveReward error:', err);
+    toast('Fejl ved gem', 'error');
+  }
+}
+
+// Edit reward
+async function editReward(rewardId) {
+  const rewards = await getLoyaltyRewards(document.getElementById('test-restaurant')?.value);
+  const reward = rewards.find(r => r.id === rewardId);
+  if (reward) {
+    showAddRewardModal(reward);
+  }
+}
+
+// Delete reward
+async function deleteReward(rewardId) {
+  if (!confirm('Er du sikker på du vil slette denne belønning?')) return;
+
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/loyalty_rewards?id=eq.${rewardId}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    toast('Belønning slettet', 'success');
+    renderLoyaltyPage();
+  } catch (err) {
+    toast('Fejl ved sletning', 'error');
+  }
+}
+
+// Adjust member points
+function adjustMemberPoints(memberId) {
+  const adjustment = prompt('Indtast antal points (negativt tal trækker fra):');
+  if (!adjustment) return;
+
+  const points = parseInt(adjustment);
+  if (isNaN(points)) {
+    toast('Ugyldigt tal', 'error');
+    return;
+  }
+
+  // TODO: Implement point adjustment
+  toast('Point justering kommer snart', 'info');
+}
+
+// Show member details
+function showMemberDetails(memberId) {
+  // TODO: Show member transaction history modal
+  toast('Detaljer kommer snart', 'info');
+}
+
+// Export loyalty functions
+window.renderLoyaltyPage = renderLoyaltyPage;
+window.saveLoyaltySettings = saveLoyaltySettings;
+window.toggleLoyaltyEnabled = toggleLoyaltyEnabled;
+window.filterLoyaltyMembers = filterLoyaltyMembers;
+window.showAddRewardModal = showAddRewardModal;
+window.closeRewardModal = closeRewardModal;
+window.saveReward = saveReward;
+window.editReward = editReward;
+window.deleteReward = deleteReward;
+window.adjustMemberPoints = adjustMemberPoints;
+window.showMemberDetails = showMemberDetails;
+window.getCustomerLoyalty = getCustomerLoyalty;
+window.addLoyaltyPoints = addLoyaltyPoints;
+window.redeemLoyaltyReward = redeemLoyaltyReward;
+window.getAvailableRewards = getAvailableRewards;
+window.formatLoyaltyMessage = formatLoyaltyMessage;
+
+
+// ===== MARKETING CAMPAIGNS =====
+
+// Campaign data cache
+let campaigns = [];
+let campaignSends = [];
+
+// Campaign trigger types
+const CAMPAIGN_TRIGGERS = {
+  manual: { name: 'Manuel', icon: '👆', description: 'Send manuelt når du vil' },
+  birthday: { name: 'Fødselsdag', icon: '🎂', description: 'Automatisk på kundens fødselsdag' },
+  inactive: { name: 'Inaktiv', icon: '😴', description: 'Når kunden ikke har bestilt i X dage' },
+  loyalty_tier: { name: 'Loyalty Tier', icon: '🏆', description: 'Når kunden opnår et nyt tier' },
+  first_order: { name: 'Første ordre', icon: '🎉', description: 'Efter kundens første ordre' },
+  scheduled: { name: 'Planlagt', icon: '📅', description: 'På et bestemt tidspunkt' }
+};
+
+// Get campaigns for restaurant
+async function getCampaigns(restaurantId) {
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns?restaurant_id=eq.${restaurantId}&order=created_at.desc`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) return [];
+    campaigns = await response.json();
+    return campaigns;
+  } catch (err) {
+    console.error('getCampaigns error:', err);
+    return [];
+  }
+}
+
+// Render campaigns page
+async function renderCampaignsPage() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  const content = document.getElementById('campaigns-content') || document.getElementById('main-content');
+
+  if (!restaurantId) {
+    content.innerHTML = '<div class="empty-state"><p>Vælg en restaurant først</p></div>';
+    return;
+  }
+
+  const campaignList = await getCampaigns(restaurantId);
+
+  // Calculate stats
+  const activeCampaigns = campaignList.filter(c => c.active).length;
+  const totalSent = campaignList.reduce((sum, c) => sum + (c.total_sent || 0), 0);
+
+  const html = `
+    <div class="page-header">
+      <h1>📣 Marketing Kampagner</h1>
+      <p class="text-secondary">Automatisér din kundekommunikation</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">${campaignList.length}</div>
+        <div class="stat-label">Kampagner</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${activeCampaigns}</div>
+        <div class="stat-label">Aktive</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalSent.toLocaleString('da-DK')}</div>
+        <div class="stat-label">Beskeder sendt</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>⚡ Hurtige kampagner</h3>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+          <button class="btn btn-secondary" onclick="createQuickCampaign('inactive')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
+            <span style="font-size:32px;margin-bottom:8px">😴</span>
+            <span style="font-weight:600">Inaktive kunder</span>
+            <span class="text-secondary" style="font-size:12px">Genaktiver kunder</span>
+          </button>
+          <button class="btn btn-secondary" onclick="createQuickCampaign('birthday')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
+            <span style="font-size:32px;margin-bottom:8px">🎂</span>
+            <span style="font-weight:600">Fødselsdagshilsen</span>
+            <span class="text-secondary" style="font-size:12px">Automatisk hilsen</span>
+          </button>
+          <button class="btn btn-secondary" onclick="createQuickCampaign('first_order')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
+            <span style="font-size:32px;margin-bottom:8px">🎉</span>
+            <span style="font-weight:600">Velkomstbesked</span>
+            <span class="text-secondary" style="font-size:12px">Efter første ordre</span>
+          </button>
+          <button class="btn btn-primary" onclick="showCreateCampaignModal()" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
+            <span style="font-size:32px;margin-bottom:8px">➕</span>
+            <span style="font-weight:600">Opret kampagne</span>
+            <span style="font-size:12px;opacity:0.8">Tilpasset kampagne</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Campaigns List -->
+    <div class="card">
+      <div class="card-header">
+        <h3>📋 Dine kampagner</h3>
+      </div>
+      <div class="card-body">
+        ${campaignList.length === 0 ? '<p class="text-secondary">Ingen kampagner oprettet endnu. Brug knapperne ovenfor for at komme i gang.</p>' : `
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Kampagne</th>
+                  <th>Type</th>
+                  <th>Trigger</th>
+                  <th>Sendt</th>
+                  <th>Status</th>
+                  <th>Handlinger</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${campaignList.map(c => `
+                  <tr>
+                    <td>
+                      <strong>${c.name}</strong>
+                      ${c.description ? `<br><span class="text-secondary" style="font-size:12px">${c.description}</span>` : ''}
+                    </td>
+                    <td><span class="badge">${c.type === 'sms' ? '📱 SMS' : '📧 Email'}</span></td>
+                    <td>
+                      <span>${CAMPAIGN_TRIGGERS[c.trigger_type]?.icon || '📣'}</span>
+                      ${CAMPAIGN_TRIGGERS[c.trigger_type]?.name || c.trigger_type}
+                      ${c.trigger_days ? `<br><span class="text-secondary" style="font-size:11px">${c.trigger_days} dage</span>` : ''}
+                    </td>
+                    <td>${(c.total_sent || 0).toLocaleString('da-DK')}</td>
+                    <td>
+                      <label class="switch switch-sm">
+                        <input type="checkbox" ${c.active ? 'checked' : ''} onchange="toggleCampaign('${c.id}', this.checked)">
+                        <span class="slider"></span>
+                      </label>
+                    </td>
+                    <td>
+                      <button class="btn btn-sm" onclick="editCampaign('${c.id}')">Rediger</button>
+                      ${c.trigger_type === 'manual' ? `<button class="btn btn-sm btn-primary" onclick="sendCampaign('${c.id}')">Send nu</button>` : ''}
+                      <button class="btn btn-sm btn-danger" onclick="deleteCampaign('${c.id}')">Slet</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  content.innerHTML = html;
+}
+
+// Create quick campaign with preset
+async function createQuickCampaign(type) {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const presets = {
+    inactive: {
+      name: 'Genaktivér inaktive kunder',
+      description: 'Automatisk SMS til kunder der ikke har bestilt i 30 dage',
+      trigger_type: 'inactive',
+      trigger_days: 30,
+      message_template: 'Hej {navn}! Vi savner dig hos {restaurant}. Bestil i dag og få 10% rabat med koden SAVNER10 🍕'
+    },
+    birthday: {
+      name: 'Fødselsdagshilsen',
+      description: 'Automatisk fødselsdagshilsen med tilbud',
+      trigger_type: 'birthday',
+      message_template: 'Tillykke med fødselsdagen {navn}! 🎂 Som gave fra {restaurant} får du 15% rabat på din næste ordre. Brug koden FØDSELSDAG15'
+    },
+    first_order: {
+      name: 'Velkomstbesked',
+      description: 'Tak for første ordre',
+      trigger_type: 'first_order',
+      message_template: 'Tak for din første ordre hos {restaurant}, {navn}! 🎉 Vi håber du nød maden. Næste gang får du 10% rabat med koden VELKOMMEN10'
+    }
+  };
+
+  const preset = presets[type];
+  if (!preset) return;
+
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        restaurant_id: restaurantId,
+        name: preset.name,
+        description: preset.description,
+        type: 'sms',
+        trigger_type: preset.trigger_type,
+        trigger_days: preset.trigger_days || null,
+        message_template: preset.message_template,
+        active: true
+      })
+    });
+
+    toast('Kampagne oprettet!', 'success');
+    renderCampaignsPage();
+  } catch (err) {
+    console.error('createQuickCampaign error:', err);
+    toast('Fejl ved oprettelse', 'error');
+  }
+}
+
+// Show create campaign modal
+function showCreateCampaignModal(campaign = null) {
+  const isEdit = !!campaign;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'campaign-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:600px">
+      <div class="modal-header">
+        <h3>${isEdit ? 'Rediger' : 'Opret'} kampagne</h3>
+        <button class="modal-close" onclick="closeCampaignModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Navn *</label>
+          <input type="text" class="input" id="campaign-name" value="${campaign?.name || ''}" placeholder="F.eks. Sommerrabat">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Beskrivelse</label>
+          <input type="text" class="input" id="campaign-description" value="${campaign?.description || ''}" placeholder="Kort beskrivelse">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="input" id="campaign-type">
+              <option value="sms" ${campaign?.type === 'sms' ? 'selected' : ''}>SMS</option>
+              <option value="email" ${campaign?.type === 'email' ? 'selected' : ''}>Email</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Trigger</label>
+            <select class="input" id="campaign-trigger" onchange="toggleTriggerOptions()">
+              ${Object.entries(CAMPAIGN_TRIGGERS).map(([key, val]) => `
+                <option value="${key}" ${campaign?.trigger_type === key ? 'selected' : ''}>${val.icon} ${val.name}</option>
+              `).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group" id="trigger-days-group" style="${campaign?.trigger_type === 'inactive' ? '' : 'display:none'}">
+          <label class="form-label">Dage uden ordre</label>
+          <input type="number" class="input" id="campaign-trigger-days" value="${campaign?.trigger_days || 30}" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besked *</label>
+          <textarea class="input" id="campaign-message" rows="4" placeholder="Brug {navn} for kundens navn, {restaurant} for restaurantnavn">${campaign?.message_template || ''}</textarea>
+          <p class="text-secondary" style="font-size:12px;margin-top:4px">Variabler: {navn}, {restaurant}, {points}, {tier}</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCampaignModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveCampaign('${campaign?.id || ''}')">${isEdit ? 'Gem' : 'Opret'}</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+// Toggle trigger options visibility
+function toggleTriggerOptions() {
+  const trigger = document.getElementById('campaign-trigger')?.value;
+  const daysGroup = document.getElementById('trigger-days-group');
+  if (daysGroup) {
+    daysGroup.style.display = trigger === 'inactive' ? '' : 'none';
+  }
+}
+
+// Close campaign modal
+function closeCampaignModal() {
+  document.getElementById('campaign-modal')?.remove();
+}
+
+// Save campaign
+async function saveCampaign(campaignId = null) {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const name = document.getElementById('campaign-name')?.value?.trim();
+  const description = document.getElementById('campaign-description')?.value?.trim();
+  const type = document.getElementById('campaign-type')?.value || 'sms';
+  const trigger_type = document.getElementById('campaign-trigger')?.value || 'manual';
+  const trigger_days = parseInt(document.getElementById('campaign-trigger-days')?.value) || null;
+  const message_template = document.getElementById('campaign-message')?.value?.trim();
+
+  if (!name || !message_template) {
+    toast('Udfyld navn og besked', 'error');
+    return;
+  }
+
+  const data = {
+    restaurant_id: restaurantId,
+    name,
+    description,
+    type,
+    trigger_type,
+    trigger_days: trigger_type === 'inactive' ? trigger_days : null,
+    message_template,
+    active: true
+  };
+
+  try {
+    if (campaignId) {
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns?id=eq.${campaignId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(data)
+      });
+    } else {
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(data)
+      });
+    }
+
+    toast(campaignId ? 'Kampagne opdateret' : 'Kampagne oprettet', 'success');
+    closeCampaignModal();
+    renderCampaignsPage();
+  } catch (err) {
+    console.error('saveCampaign error:', err);
+    toast('Fejl ved gem', 'error');
+  }
+}
+
+// Edit campaign
+async function editCampaign(campaignId) {
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (campaign) {
+    showCreateCampaignModal(campaign);
+  }
+}
+
+// Toggle campaign active status
+async function toggleCampaign(campaignId, active) {
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns?id=eq.${campaignId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({ active, updated_at: new Date().toISOString() })
+    });
+
+    toast(active ? 'Kampagne aktiveret' : 'Kampagne deaktiveret', 'success');
+  } catch (err) {
+    toast('Fejl', 'error');
+  }
+}
+
+// Delete campaign
+async function deleteCampaign(campaignId) {
+  if (!confirm('Er du sikker på du vil slette denne kampagne?')) return;
+
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/marketing_campaigns?id=eq.${campaignId}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    toast('Kampagne slettet', 'success');
+    renderCampaignsPage();
+  } catch (err) {
+    toast('Fejl ved sletning', 'error');
+  }
+}
+
+// Send manual campaign
+async function sendCampaign(campaignId) {
+  toast('Manuel kampagne-send kommer snart', 'info');
+  // TODO: Implement manual campaign send with segment selection
+}
+
+// Export campaign functions
+window.renderCampaignsPage = renderCampaignsPage;
+window.createQuickCampaign = createQuickCampaign;
+window.showCreateCampaignModal = showCreateCampaignModal;
+window.closeCampaignModal = closeCampaignModal;
+window.saveCampaign = saveCampaign;
+window.editCampaign = editCampaign;
+window.toggleCampaign = toggleCampaign;
+window.deleteCampaign = deleteCampaign;
+window.sendCampaign = sendCampaign;
+window.toggleTriggerOptions = toggleTriggerOptions;
+
+
+// ===== CUSTOMER SEGMENTS =====
+
+// Segment data cache
+let customerSegments = [];
+
+// Default segment icons and colors
+const SEGMENT_TYPES = {
+  vip: { icon: '👑', color: '#f59e0b', name: 'VIP Kunder' },
+  new: { icon: '🆕', color: '#10b981', name: 'Nye Kunder' },
+  inactive: { icon: '😴', color: '#ef4444', name: 'Inaktive' },
+  high_value: { icon: '💎', color: '#8b5cf6', name: 'Højværdi' },
+  at_risk: { icon: '⚠️', color: '#f97316', name: 'At Risk' },
+  loyal: { icon: '❤️', color: '#ec4899', name: 'Loyale' },
+  custom: { icon: '🏷️', color: '#6366f1', name: 'Tilpasset' }
+};
+
+// Get segments for restaurant
+async function getSegments(restaurantId) {
+  try {
+    const response = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/customer_segments?restaurant_id=eq.${restaurantId}&order=segment_type.asc`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+
+    if (!response.ok) return [];
+    customerSegments = await response.json();
+    return customerSegments;
+  } catch (err) {
+    console.error('getSegments error:', err);
+    return [];
+  }
+}
+
+// Create default segments for restaurant
+async function createDefaultSegments(restaurantId) {
+  const defaults = [
+    { segment_type: 'vip', name: 'VIP Kunder', description: 'Kunder med mere end 10 ordrer', filter_rules: { min_orders: 10 } },
+    { segment_type: 'new', name: 'Nye Kunder', description: 'Kunder med kun 1 ordre', filter_rules: { max_orders: 1, days_since_first: 30 } },
+    { segment_type: 'inactive', name: 'Inaktive Kunder', description: 'Ingen ordre i 30+ dage', filter_rules: { days_inactive: 30 } },
+    { segment_type: 'high_value', name: 'Højværdi Kunder', description: 'Gennemsnitlig ordre over 300 kr', filter_rules: { min_avg_order: 300 } },
+    { segment_type: 'at_risk', name: 'At Risk', description: 'Aktive kunder uden ordre i 14-30 dage', filter_rules: { days_inactive_min: 14, days_inactive_max: 30, min_orders: 2 } },
+    { segment_type: 'loyal', name: 'Loyale Kunder', description: 'Gold eller Platinum loyalty tier', filter_rules: { tier: ['gold', 'platinum'] } }
+  ];
+
+  for (const seg of defaults) {
+    try {
+      await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/customer_segments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          restaurant_id: restaurantId,
+          ...seg,
+          color: SEGMENT_TYPES[seg.segment_type]?.color || '#6366f1',
+          icon: SEGMENT_TYPES[seg.segment_type]?.icon || '🏷️'
+        })
+      });
+    } catch (err) {
+      console.error('createDefaultSegments error:', err);
+    }
+  }
+}
+
+// Render segments page
+async function renderSegmentsPage() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  const content = document.getElementById('segments-content') || document.getElementById('main-content');
+
+  if (!restaurantId) {
+    content.innerHTML = '<div class="empty-state"><p>Vælg en restaurant først</p></div>';
+    return;
+  }
+
+  let segments = await getSegments(restaurantId);
+
+  // Create defaults if none exist
+  if (segments.length === 0) {
+    await createDefaultSegments(restaurantId);
+    segments = await getSegments(restaurantId);
+  }
+
+  const totalCustomers = segments.reduce((sum, s) => sum + (s.customer_count || 0), 0);
+
+  const html = `
+    <div class="page-header">
+      <h1>👥 Kundesegmenter</h1>
+      <p class="text-secondary">Gruppér kunder for målrettet kommunikation</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">${segments.length}</div>
+        <div class="stat-label">Segmenter</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalCustomers}</div>
+        <div class="stat-label">Kunder i segmenter</div>
+      </div>
+    </div>
+
+    <!-- Segments Grid -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>📊 Dine segmenter</h3>
+        <button class="btn btn-primary btn-sm" onclick="showCreateSegmentModal()">+ Tilpasset segment</button>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+          ${segments.map(s => `
+            <div class="segment-card" style="background:var(--card2);border-radius:12px;padding:20px;border:2px solid ${s.color || '#6366f1'}20;position:relative">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <div style="width:48px;height:48px;border-radius:12px;background:${s.color || '#6366f1'}20;display:flex;align-items:center;justify-content:center;font-size:24px">
+                  ${SEGMENT_TYPES[s.segment_type]?.icon || '🏷️'}
+                </div>
+                <div>
+                  <h4 style="margin:0;font-size:16px">${s.name}</h4>
+                  <p class="text-secondary" style="margin:0;font-size:12px">${s.description || ''}</p>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)">
+                <div>
+                  <span style="font-size:24px;font-weight:700">${s.customer_count || 0}</span>
+                  <span class="text-secondary" style="font-size:13px"> kunder</span>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm" onclick="viewSegmentCustomers('${s.id}')" title="Se kunder">👁️</button>
+                  <button class="btn btn-sm" onclick="sendToSegment('${s.id}')" title="Send SMS">📱</button>
+                  ${s.segment_type === 'custom' ? `<button class="btn btn-sm btn-danger" onclick="deleteSegment('${s.id}')" title="Slet">🗑️</button>` : ''}
+                </div>
+              </div>
+              ${s.last_updated ? `<p class="text-secondary" style="font-size:11px;margin-top:8px">Opdateret: ${new Date(s.last_updated).toLocaleDateString('da-DK')}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Segment Explanation -->
+    <div class="card">
+      <div class="card-header">
+        <h3>ℹ️ Sådan virker segmenter</h3>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:24px">
+          <div>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">👑 VIP Kunder</h4>
+            <p class="text-secondary" style="font-size:13px">Kunder med mange ordrer. Beløn dem med eksklusive tilbud.</p>
+          </div>
+          <div>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">😴 Inaktive</h4>
+            <p class="text-secondary" style="font-size:13px">Kunder der ikke har bestilt i 30+ dage. Genaktiver dem med rabatkoder.</p>
+          </div>
+          <div>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">⚠️ At Risk</h4>
+            <p class="text-secondary" style="font-size:13px">Kunder på vej til at blive inaktive. Handl hurtigt!</p>
+          </div>
+          <div>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">💎 Højværdi</h4>
+            <p class="text-secondary" style="font-size:13px">Kunder med høj gennemsnitlig ordre. Tilbyd premium-service.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  content.innerHTML = html;
+}
+
+// Show create segment modal
+function showCreateSegmentModal() {
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'segment-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Opret tilpasset segment</h3>
+        <button class="modal-close" onclick="closeSegmentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Navn *</label>
+          <input type="text" class="input" id="segment-name" placeholder="F.eks. Fredag-kunder">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Beskrivelse</label>
+          <input type="text" class="input" id="segment-description" placeholder="Kort beskrivelse">
+        </div>
+        <h4 style="margin:20px 0 12px">Filterregler</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">Min. antal ordrer</label>
+            <input type="number" class="input" id="segment-min-orders" min="0" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max antal ordrer</label>
+            <input type="number" class="input" id="segment-max-orders" min="0" placeholder="Ubegrænset">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Dage inaktiv (min)</label>
+            <input type="number" class="input" id="segment-days-inactive" min="0" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min. gennemsnitsordre (kr)</label>
+            <input type="number" class="input" id="segment-min-avg" min="0" placeholder="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Loyalty tier</label>
+          <select class="input" id="segment-tier">
+            <option value="">Alle tiers</option>
+            <option value="bronze">Bronze</option>
+            <option value="silver">Sølv</option>
+            <option value="gold">Guld</option>
+            <option value="platinum">Platin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeSegmentModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveSegment()">Opret</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+}
+
+// Close segment modal
+function closeSegmentModal() {
+  document.getElementById('segment-modal')?.remove();
+}
+
+// Save segment
+async function saveSegment() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const name = document.getElementById('segment-name')?.value?.trim();
+  const description = document.getElementById('segment-description')?.value?.trim();
+
+  if (!name) {
+    toast('Indtast et navn', 'error');
+    return;
+  }
+
+  const filter_rules = {};
+  const minOrders = parseInt(document.getElementById('segment-min-orders')?.value);
+  const maxOrders = parseInt(document.getElementById('segment-max-orders')?.value);
+  const daysInactive = parseInt(document.getElementById('segment-days-inactive')?.value);
+  const minAvg = parseInt(document.getElementById('segment-min-avg')?.value);
+  const tier = document.getElementById('segment-tier')?.value;
+
+  if (!isNaN(minOrders) && minOrders > 0) filter_rules.min_orders = minOrders;
+  if (!isNaN(maxOrders)) filter_rules.max_orders = maxOrders;
+  if (!isNaN(daysInactive) && daysInactive > 0) filter_rules.days_inactive = daysInactive;
+  if (!isNaN(minAvg) && minAvg > 0) filter_rules.min_avg_order = minAvg;
+  if (tier) filter_rules.tier = [tier];
+
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/customer_segments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        restaurant_id: restaurantId,
+        name,
+        description,
+        segment_type: 'custom',
+        filter_rules,
+        color: '#6366f1',
+        icon: '🏷️'
+      })
+    });
+
+    toast('Segment oprettet', 'success');
+    closeSegmentModal();
+    renderSegmentsPage();
+  } catch (err) {
+    console.error('saveSegment error:', err);
+    toast('Fejl ved oprettelse', 'error');
+  }
+}
+
+// Delete segment
+async function deleteSegment(segmentId) {
+  if (!confirm('Er du sikker på du vil slette dette segment?')) return;
+
+  try {
+    await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/customer_segments?id=eq.${segmentId}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    toast('Segment slettet', 'success');
+    renderSegmentsPage();
+  } catch (err) {
+    toast('Fejl ved sletning', 'error');
+  }
+}
+
+// View customers in segment
+function viewSegmentCustomers(segmentId) {
+  toast('Kunde-visning kommer snart', 'info');
+  // TODO: Show modal with customers matching segment
+}
+
+// Send SMS to segment
+function sendToSegment(segmentId) {
+  toast('SMS til segment kommer snart', 'info');
+  // TODO: Open campaign modal with segment pre-selected
+}
+
+// Export segment functions
+window.renderSegmentsPage = renderSegmentsPage;
+window.showCreateSegmentModal = showCreateSegmentModal;
+window.closeSegmentModal = closeSegmentModal;
+window.saveSegment = saveSegment;
+window.deleteSegment = deleteSegment;
+window.viewSegmentCustomers = viewSegmentCustomers;
+window.sendToSegment = sendToSegment;

@@ -2,10 +2,12 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-twilio-signature",
 }
 
 function normalizePhone(raw: string): string {
+  // Keep the + if present, otherwise add it
+  if (raw.startsWith("+")) return raw
   let digits = raw.replace(/[^0-9]/g, "")
   if (!digits) return ""
   if (digits.startsWith("00")) {
@@ -20,38 +22,38 @@ function normalizePhone(raw: string): string {
   return `+${digits}`
 }
 
-function parseTimestamp(value: unknown): string | null {
-  if (typeof value !== "string" || value.trim() === "") return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toISOString()
-}
+async function parsePayload(req: Request): Promise<Record<string, string>> {
+  const contentType = req.headers.get("content-type") || ""
 
-async function parsePayload(req: Request): Promise<Record<string, unknown>> {
-  if (req.method === "GET") {
-    const params = new URL(req.url).searchParams
-    return Object.fromEntries(params.entries())
+  // Twilio sends application/x-www-form-urlencoded
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    const text = await req.text()
+    const params = new URLSearchParams(text)
+    const payload: Record<string, string> = {}
+    for (const [key, value] of params.entries()) {
+      payload[key] = value
+    }
+    return payload
   }
 
-  const contentType = req.headers.get("content-type") || ""
+  // Also support JSON for testing
   if (contentType.includes("application/json")) {
     const json = await req.json()
     return json && typeof json === "object" ? json : {}
   }
 
-  if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
-    const form = await req.formData()
-    const payload: Record<string, unknown> = {}
-    for (const [key, value] of form.entries()) {
-      payload[key] = String(value)
+  // Fallback: try to parse as form data
+  const text = await req.text()
+  if (text) {
+    const params = new URLSearchParams(text)
+    const payload: Record<string, string> = {}
+    for (const [key, value] of params.entries()) {
+      payload[key] = value
     }
     return payload
   }
 
-  const text = await req.text()
-  if (!text) return {}
-  const params = new URLSearchParams(text)
-  return Object.fromEntries(params.entries())
+  return {}
 }
 
 serve(async (req) => {
@@ -62,35 +64,40 @@ serve(async (req) => {
   try {
     const payload = await parsePayload(req)
 
-    const webhookSecret = Deno.env.get("WEBHOOK_SECRET")
-    if (webhookSecret) {
-      const headerSecret = req.headers.get("x-webhook-secret")
-      const querySecret = new URL(req.url).searchParams.get("secret")
-      const bodySecret = payload.secret
-      if (headerSecret !== webhookSecret && querySecret !== webhookSecret && bodySecret !== webhookSecret) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        )
-      }
+    // Log payload for debugging
+    console.log("Received Twilio webhook payload:", JSON.stringify(payload))
+
+    // Twilio status callback (delivery reports)
+    if (payload.MessageStatus) {
+      console.log("Received Twilio status callback:", payload.MessageStatus)
+      // Return empty TwiML
+      return new Response(
+        '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+        { headers: { ...corsHeaders, "Content-Type": "text/xml" } }
+      )
     }
 
-    // GatewayAPI sender msisdn og receiver som TAL, ikke strenge
-    const message = String(payload.message || payload.text || payload.body || payload.content || "")
-    const sender = String(payload.msisdn || payload.sender || payload.from || payload.phone || payload.originator || "")
-    const receiver = String(payload.receiver || payload.to || payload.recipient || "")
+    // Parse Twilio incoming SMS format
+    // From = sender phone number
+    // Body = message content
+    // To = your Twilio number
+    const sender = payload.From || ""
+    const message = payload.Body || ""
+    const receiver = payload.To || ""
+    const messageSid = payload.MessageSid || ""
+
+    console.log("Parsed Twilio SMS - From:", sender, "Body:", message, "To:", receiver, "SID:", messageSid)
 
     if (!message || !sender) {
+      console.log("Missing required fields, returning empty TwiML")
+      // Return empty TwiML (Twilio expects XML response)
       return new Response(
-        JSON.stringify({ error: "Missing required fields: sender, message" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+        { headers: { ...corsHeaders, "Content-Type": "text/xml" } }
       )
     }
 
     const phone = normalizePhone(sender)
-    // GatewayAPI bruger senttime (Unix timestamp i sekunder)
-    const sentTime = payload.senttime ? new Date(Number(payload.senttime) * 1000).toISOString() : null
-    const createdAt = sentTime || parseTimestamp(payload.timestamp) || parseTimestamp(payload.time) || null
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") ||
@@ -98,21 +105,28 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")
 
     if (!supabaseUrl || !serviceRoleKey) {
+      console.error("Supabase env vars missing")
       return new Response(
-        JSON.stringify({ error: "Supabase env vars missing" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+        { headers: { ...corsHeaders, "Content-Type": "text/xml" } }
       )
     }
+
+    const serverNow = new Date().toISOString()
 
     const insertPayload = {
       phone,
       direction: "inbound",
       content: message,
-      provider: "gatewayapi",
-      receiver,
+      provider: "twilio",
+      receiver: normalizePhone(receiver),
+      twilio_sid: messageSid,
       raw_payload: payload,
-      created_at: createdAt || new Date().toISOString(),
+      created_at: serverNow,
+      inserted_at: serverNow,
     }
+
+    console.log("Inserting message:", JSON.stringify(insertPayload))
 
     const insertResponse = await fetch(`${supabaseUrl}/rest/v1/messages`, {
       method: "POST",
@@ -127,20 +141,23 @@ serve(async (req) => {
 
     if (!insertResponse.ok) {
       const errorText = await insertResponse.text()
-      return new Response(
-        JSON.stringify({ error: "Failed to insert message", details: errorText }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      )
+      console.error("Insert failed:", errorText)
+    } else {
+      const insertedData = await insertResponse.json()
+      console.log("Message inserted successfully:", JSON.stringify(insertedData))
     }
 
+    // Always return empty TwiML to acknowledge receipt
     return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+      { headers: { ...corsHeaders, "Content-Type": "text/xml" } }
     )
   } catch (error) {
+    console.error("Webhook error:", error)
+    // Return empty TwiML even on error
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
+      { headers: { ...corsHeaders, "Content-Type": "text/xml" } }
     )
   }
 })

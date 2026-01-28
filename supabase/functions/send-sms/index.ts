@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { to, message, sender, token } = await req.json()
+    const { to, message, from, accountSid, authToken } = await req.json()
 
     if (!to || !message) {
       return new Response(
@@ -21,54 +21,80 @@ serve(async (req) => {
       )
     }
 
-    // Use provided token or environment variable
-    const apiToken = token || Deno.env.get('GATEWAYAPI_TOKEN')
+    // Use provided credentials or environment variables
+    const twilioAccountSid = accountSid || Deno.env.get('TWILIO_ACCOUNT_SID')
+    const twilioAuthToken = authToken || Deno.env.get('TWILIO_AUTH_TOKEN')
+    const twilioFromNumber = from || Deno.env.get('TWILIO_PHONE_NUMBER') || '+4552512921'
 
-    if (!apiToken) {
+    if (!twilioAccountSid || !twilioAuthToken) {
       return new Response(
-        JSON.stringify({ error: 'GatewayAPI token not configured' }),
+        JSON.stringify({ error: 'Twilio credentials not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Format phone number (remove spaces, +, ensure 45 prefix)
-    let phoneNumber = to.replace(/\s/g, '').replace('+', '')
-    if (!phoneNumber.startsWith('45')) {
-      phoneNumber = '45' + phoneNumber
+    // Format phone number to E.164
+    let phoneNumber = to.replace(/\s/g, '')
+    if (!phoneNumber.startsWith('+')) {
+      // Assume Danish number if no country code
+      if (phoneNumber.startsWith('45')) {
+        phoneNumber = '+' + phoneNumber
+      } else if (phoneNumber.length === 8) {
+        phoneNumber = '+45' + phoneNumber
+      } else {
+        phoneNumber = '+' + phoneNumber
+      }
     }
 
-    // Send via GatewayAPI
-    const response = await fetch('https://gatewayapi.com/rest/mtsms', {
+    // Create Basic Auth header for Twilio
+    const basicAuth = btoa(`${twilioAccountSid}:${twilioAuthToken}`)
+
+    // Send via Twilio REST API
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
+
+    const formData = new URLSearchParams()
+    formData.append('To', phoneNumber)
+    formData.append('From', twilioFromNumber)
+    formData.append('Body', message)
+
+    console.log('Sending SMS via Twilio:', { to: phoneNumber, from: twilioFromNumber, bodyLength: message.length })
+
+    const response = await fetch(twilioUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Token ${apiToken}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Basic ${basicAuth}`,
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
-      body: JSON.stringify({
-        message: message,
-        sender: sender || 'OrderFlow',
-        recipients: [{ msisdn: parseInt(phoneNumber) }]
-      })
+      body: formData.toString()
     })
 
     const result = await response.json()
 
-    if (result.ids && result.ids.length > 0) {
+    console.log('Twilio response:', JSON.stringify(result))
+
+    if (response.ok) {
       return new Response(
         JSON.stringify({
           success: true,
-          sid: result.ids[0],
-          cost: result.usage?.total_cost
+          sid: result.sid,
+          status: result.status,
+          to: result.to,
+          from: result.from
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     } else {
       return new Response(
-        JSON.stringify({ error: result.message || 'Failed to send SMS' }),
+        JSON.stringify({
+          error: result.message || 'Failed to send SMS',
+          code: result.code,
+          details: result
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
   } catch (error) {
+    console.error('Send SMS error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
