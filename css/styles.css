@@ -2196,6 +2196,57 @@
     .api-config-card.disabled .api-config-name{color:var(--muted)}
     .api-config-card.disabled .api-status-indicator{background:var(--muted)!important}
 
+    /* Role Management */
+    .roles-container{display:grid;grid-template-columns:1fr 1fr;gap:24px;min-height:400px}
+    .roles-list-column,.roles-users-column{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column}
+    .roles-list-header,.roles-users-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+    .roles-list-header h3,.roles-users-header h3{font-size:14px;font-weight:600;color:var(--text);margin:0}
+    .roles-list{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto}
+    .role-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:var(--radius-md);cursor:pointer;transition:all .15s;border:1px solid transparent}
+    .role-item:hover{background:var(--bg3)}
+    .role-item.active{background:rgba(45,212,191,0.1);border-color:var(--accent)}
+    .role-item-info{display:flex;align-items:center;gap:10px}
+    .role-color-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .role-item-name{font-size:14px;font-weight:500;color:var(--text)}
+    .role-system-badge{font-size:10px;color:var(--muted);background:var(--bg3);padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.5px}
+    .btn-icon-sm{width:28px;height:28px;border-radius:var(--radius-sm);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+    .btn-danger-ghost:hover{background:rgba(239,68,68,0.1);color:var(--danger)}
+    .role-item-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+    .role-item:hover .role-item-actions{opacity:1}
+    .role-item-delete{width:28px;height:28px;border-radius:var(--radius-sm);background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
+    .role-item-delete:hover{background:rgba(239,68,68,0.1);color:var(--danger)}
+    .role-item-loading{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+    .roles-users-content{flex:1;overflow-y:auto}
+    .roles-users-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--muted);text-align:center}
+    .roles-users-empty p{font-size:13px;margin:0}
+    .role-user-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--radius-md);transition:background .15s}
+    .role-user-item:hover{background:var(--bg3)}
+    .role-user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff}
+    .role-user-info{flex:1}
+    .role-user-name{font-size:13px;font-weight:500;color:var(--text)}
+    .role-user-email{font-size:11px;color:var(--muted)}
+
+    /* Color Picker */
+    .color-picker-grid{display:flex;gap:8px;flex-wrap:wrap}
+    .color-option{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s}
+    .color-option:hover{transform:scale(1.1)}
+    .color-option.selected{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+
+    /* Permissions Grid */
+    .permissions-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .permission-checkbox{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--bg3);border-radius:var(--radius-md);cursor:pointer;transition:background .15s;border:1px solid transparent}
+    .permission-checkbox:hover{background:var(--bg2)}
+    .permission-checkbox:has(input:checked){background:rgba(45,212,191,0.1);border-color:var(--accent)}
+    .permission-checkbox input{margin-top:2px;accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}
+    .permission-info{display:flex;flex-direction:column;gap:2px}
+    .permission-label{font-size:13px;font-weight:500;color:var(--text)}
+    .permission-desc{font-size:11px;color:var(--muted)}
+
+    @media(max-width:768px){
+      .roles-container{grid-template-columns:1fr}
+      .permissions-grid{grid-template-columns:1fr}
+    }
+
     /* Settings Nav Tabs */
     .settings-nav-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--radius-md);transition:color .15s,background .15s,border-color .15s}
     .settings-nav-tab:hover{background:rgba(255,255,255,0.03);color:var(--text);border-color:var(--border)}

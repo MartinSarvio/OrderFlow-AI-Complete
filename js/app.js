@@ -18842,6 +18842,11 @@ function switchSettingsTab(tab) {
   if (tab === 'users') {
     loadTrustedDevices();
   }
+
+  // Load roles when roles tab is opened
+  if (tab === 'roles') {
+    loadRolesPage();
+  }
 }
 
 // Sync sidebar highlight with settings tab
@@ -23179,3 +23184,310 @@ window.saveSegment = saveSegment;
 window.deleteSegment = deleteSegment;
 window.viewSegmentCustomers = viewSegmentCustomers;
 window.sendToSegment = sendToSegment;
+
+// =====================================================
+// ROLE MANAGEMENT
+// =====================================================
+
+const AVAILABLE_PERMISSIONS = [
+  { id: 'customers', label: 'Kunder', desc: 'Se og rediger kunder' },
+  { id: 'customers_read', label: 'Kunder (læs)', desc: 'Kun se kunder' },
+  { id: 'workflow', label: 'Workflow', desc: 'Administrer workflows' },
+  { id: 'reports', label: 'Rapporter', desc: 'Se rapporter og statistik' },
+  { id: 'leads', label: 'Leads', desc: 'Administrer leads' },
+  { id: 'settings', label: 'Indstillinger', desc: 'Ændre indstillinger' },
+  { id: 'users', label: 'Brugere', desc: 'Administrer brugere' },
+  { id: 'billing', label: 'Fakturering', desc: 'Se fakturering' },
+];
+
+const ROLE_COLORS = [
+  '#2dd4bf', '#22c55e', '#f97316', '#ef4444', '#8b5cf6',
+  '#ec4899', '#3b82f6', '#eab308', '#6b7280', '#14b8a6'
+];
+
+let selectedRoleId = null;
+let selectedRoleColor = '#6b7280';
+
+// Load roles page
+async function loadRolesPage() {
+  const rolesList = document.getElementById('roles-list');
+  if (!rolesList) return;
+
+  rolesList.innerHTML = '<div class="role-item-loading">Indlæser roller...</div>';
+
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/custom_roles?order=is_system.desc,name.asc`, {
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!response.ok) throw new Error('Kunne ikke hente roller');
+
+    const roles = await response.json();
+
+    if (roles.length === 0) {
+      rolesList.innerHTML = '<div class="roles-users-empty">Ingen roller fundet</div>';
+      return;
+    }
+
+    rolesList.innerHTML = roles.map(role => `
+      <div class="role-item ${selectedRoleId === role.id ? 'active' : ''}"
+           onclick="selectRole('${role.id}')"
+           data-role-id="${role.id}">
+        <div class="role-item-info">
+          <span class="role-color-dot" style="background:${role.color || '#6b7280'}"></span>
+          <span class="role-item-name">${role.name}</span>
+          ${role.is_system ? '<span class="role-system-badge">System</span>' : ''}
+        </div>
+        ${!role.is_system ? `
+          <button class="btn-icon-sm btn-danger-ghost" onclick="event.stopPropagation(); deleteRole('${role.id}', '${role.name}')" title="Slet rolle">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+    `).join('');
+
+  } catch (err) {
+    console.error('loadRolesPage error:', err);
+    rolesList.innerHTML = '<div class="roles-users-empty">Fejl ved indlæsning af roller</div>';
+  }
+}
+
+// Select a role and show users
+async function selectRole(roleId) {
+  selectedRoleId = roleId;
+
+  // Update active state in list
+  document.querySelectorAll('.role-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.roleId === roleId);
+  });
+
+  const usersContent = document.getElementById('role-users-content');
+  const usersTitle = document.getElementById('role-users-title');
+
+  if (!usersContent) return;
+
+  usersContent.innerHTML = '<div class="role-item-loading">Indlæser brugere...</div>';
+
+  try {
+    // First get the role name
+    const roleResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/custom_roles?id=eq.${roleId}`, {
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+    const roleData = await roleResponse.json();
+    const roleName = roleData[0]?.name || 'Ukendt';
+
+    if (usersTitle) {
+      usersTitle.textContent = `Brugere med "${roleName}"`;
+    }
+
+    // Get users with this role
+    const usersResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/user_roles?custom_role_id=eq.${roleId}&select=user_id,profiles(id,email,full_name,avatar_url)`, {
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!usersResponse.ok) {
+      // Fallback: get users by role name
+      const fallbackResponse = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/user_roles?role=eq.${roleName.toLowerCase()}&select=user_id,profiles(id,email,full_name,avatar_url)`, {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      });
+      const users = await fallbackResponse.json();
+      renderRoleUsers(users, usersContent);
+      return;
+    }
+
+    const users = await usersResponse.json();
+    renderRoleUsers(users, usersContent);
+
+  } catch (err) {
+    console.error('selectRole error:', err);
+    usersContent.innerHTML = '<div class="roles-users-empty">Fejl ved indlæsning af brugere</div>';
+  }
+}
+
+function renderRoleUsers(users, container) {
+  if (!users || users.length === 0) {
+    container.innerHTML = '<div class="roles-users-empty">Ingen brugere med denne rolle</div>';
+    return;
+  }
+
+  container.innerHTML = users.map(u => {
+    const profile = u.profiles || {};
+    const name = profile.full_name || profile.email || 'Ukendt bruger';
+    const email = profile.email || '';
+    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+    return `
+      <div class="role-user-item">
+        <div class="role-user-avatar">${initials}</div>
+        <div class="role-user-info">
+          <div class="role-user-name">${name}</div>
+          <div class="role-user-email">${email}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Show add role modal
+function showAddRoleModal() {
+  const modal = document.getElementById('add-role-modal');
+  if (!modal) return;
+
+  // Reset form
+  document.getElementById('new-role-name').value = '';
+  selectedRoleColor = '#6b7280';
+
+  // Setup color picker
+  const colorGrid = document.getElementById('role-color-picker');
+  if (colorGrid) {
+    colorGrid.innerHTML = ROLE_COLORS.map(color => `
+      <div class="color-option ${color === selectedRoleColor ? 'selected' : ''}"
+           style="background:${color}"
+           data-color="${color}"
+           onclick="selectRoleColor('${color}')"></div>
+    `).join('');
+  }
+
+  // Setup permissions checkboxes
+  const permGrid = document.getElementById('permissions-grid');
+  if (permGrid) {
+    permGrid.innerHTML = AVAILABLE_PERMISSIONS.map(perm => `
+      <label class="permission-checkbox">
+        <input type="checkbox" value="${perm.id}">
+        <div class="permission-info">
+          <span class="permission-label">${perm.label}</span>
+          <span class="permission-desc">${perm.desc}</span>
+        </div>
+      </label>
+    `).join('');
+  }
+
+  modal.classList.add('active');
+}
+
+// Select role color
+function selectRoleColor(color) {
+  selectedRoleColor = color;
+  document.querySelectorAll('.color-option').forEach(opt => {
+    opt.classList.toggle('selected', opt.dataset.color === color);
+  });
+}
+
+// Close add role modal
+function closeAddRoleModal() {
+  const modal = document.getElementById('add-role-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+// Save new role
+async function saveNewRole() {
+  const nameInput = document.getElementById('new-role-name');
+  const name = nameInput?.value?.trim();
+
+  if (!name) {
+    toast('Indtast et rollenavn', 'error');
+    return;
+  }
+
+  // Get selected permissions
+  const permissions = [];
+  document.querySelectorAll('#permissions-grid input[type="checkbox"]:checked').forEach(cb => {
+    permissions.push(cb.value);
+  });
+
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/custom_roles`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`,
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        name,
+        color: selectedRoleColor,
+        permissions: permissions,
+        is_system: false
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      if (err.includes('duplicate') || err.includes('unique')) {
+        toast('En rolle med dette navn findes allerede', 'error');
+      } else {
+        toast('Kunne ikke oprette rolle', 'error');
+      }
+      return;
+    }
+
+    toast('Rolle oprettet', 'success');
+    closeAddRoleModal();
+    loadRolesPage();
+
+  } catch (err) {
+    console.error('saveNewRole error:', err);
+    toast('Fejl ved oprettelse af rolle', 'error');
+  }
+}
+
+// Delete role
+async function deleteRole(roleId, roleName) {
+  if (!confirm(`Er du sikker på du vil slette rollen "${roleName}"?`)) return;
+
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/custom_roles?id=eq.${roleId}&is_system=eq.false`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!response.ok) {
+      toast('Kunne ikke slette rolle', 'error');
+      return;
+    }
+
+    toast('Rolle slettet', 'success');
+
+    // Reset selection if deleted role was selected
+    if (selectedRoleId === roleId) {
+      selectedRoleId = null;
+      const usersContent = document.getElementById('role-users-content');
+      const usersTitle = document.getElementById('role-users-title');
+      if (usersContent) usersContent.innerHTML = '<div class="roles-users-empty">Vælg en rolle for at se tilknyttede brugere</div>';
+      if (usersTitle) usersTitle.textContent = 'Brugere';
+    }
+
+    loadRolesPage();
+
+  } catch (err) {
+    console.error('deleteRole error:', err);
+    toast('Fejl ved sletning af rolle', 'error');
+  }
+}
+
+// Export role management functions
+window.loadRolesPage = loadRolesPage;
+window.selectRole = selectRole;
+window.showAddRoleModal = showAddRoleModal;
+window.selectRoleColor = selectRoleColor;
+window.closeAddRoleModal = closeAddRoleModal;
+window.saveNewRole = saveNewRole;
+window.deleteRole = deleteRole;
