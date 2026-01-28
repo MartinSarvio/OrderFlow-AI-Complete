@@ -185,8 +185,8 @@
     .export-dropdown-item:hover{background:var(--bg3)}
     
     /* Inputs - Swiftmesh style */
-    .input,.form-input{width:100%;padding:12px 16px;font-size:14px;color:var(--text);background:var(--bg3);border:none;border-radius:var(--radius-md);outline:none;font-family:inherit;transition:all .2s;box-sizing:border-box}
-    .input:focus,.form-input:focus{background:var(--card)}
+    .input,.form-input{width:100%;padding:12px 16px;font-size:14px;color:var(--text);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:var(--radius-md);outline:none;font-family:inherit;transition:all .2s;box-sizing:border-box}
+    .input:focus,.form-input:focus{background:rgba(255,255,255,0.08);border-color:var(--accent)}
     .input::placeholder,.form-input::placeholder{color:var(--muted)}
     .input:disabled,.form-input:disabled{opacity:0.5;cursor:not-allowed;background:var(--bg2)}
     select.input,select.form-input{cursor:pointer;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
