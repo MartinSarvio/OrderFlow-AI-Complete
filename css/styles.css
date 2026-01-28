@@ -2187,13 +2187,14 @@
     .api-config-actions{display:flex;align-items:center;gap:var(--space-2)}
     .api-config-fields{padding-top:var(--space-4);margin-top:var(--space-4);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:var(--space-3)}
 
-    /* API Toggle Button */
-    .btn-toggle{width:52px;height:28px;padding:2px;border-radius:14px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background .2s}
-    .btn-toggle .toggle-icon{display:block;width:24px;height:24px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform .2s}
-    .btn-toggle.enabled{background:var(--green)}
-    .btn-toggle.enabled .toggle-icon{transform:translateX(24px)}
-    .btn-toggle:hover{opacity:0.9}
-    .api-config-card.disabled{opacity:0.6}
+    /* API Toggle Button - iOS style */
+    .btn-toggle{width:44px;height:24px;padding:2px;border-radius:12px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;position:relative;transition:all .3s ease;flex-shrink:0}
+    .btn-toggle .toggle-icon{display:block;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.2);transition:transform .3s cubic-bezier(0.4,0,0.2,1)}
+    .btn-toggle.enabled{background:var(--accent)}
+    .btn-toggle.enabled .toggle-icon{transform:translateX(20px)}
+    .btn-toggle:hover{background:rgba(255,255,255,0.15)}
+    .btn-toggle.enabled:hover{background:var(--accent);filter:brightness(1.1)}
+    .api-config-card.disabled{opacity:0.5}
     .api-config-card.disabled .api-config-name{color:var(--muted)}
     .api-config-card.disabled .api-status-indicator{background:var(--muted)!important}
 
