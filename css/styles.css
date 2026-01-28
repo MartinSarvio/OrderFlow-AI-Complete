@@ -1897,13 +1897,13 @@
     }
     .live-badge.active{display:inline;background:var(--accent);animation:none}
     
-    /* Toggle Switch - Complete Fix */
+    /* Toggle Switch - iOS style with visible off state */
     .toggle{
       position:relative;
       display:inline-flex;
       align-items:center;
-      width:44px;
-      height:24px;
+      width:48px;
+      height:28px;
       cursor:pointer;
       flex-shrink:0;
     }
@@ -1916,31 +1916,29 @@
     .toggle-slider{
       position:absolute;
       inset:0;
-      background:var(--bg3);
-      border:1px solid var(--border);
-      border-radius:6px;
-      transition:all .2s ease;
+      background:#3a3f47;
+      border:none;
+      border-radius:14px;
+      transition:all .3s ease;
       overflow:visible;
     }
     .toggle-slider::before{
       content:'';
       position:absolute;
-      top:2px;
-      left:2px;
-      width:18px;
-      height:18px;
-      background:var(--muted);
+      top:3px;
+      left:3px;
+      width:22px;
+      height:22px;
+      background:#fff;
       border-radius:50%;
-      transition:all .2s ease;
-      box-shadow:0 1px 3px rgba(0,0,0,0.3);
+      transition:all .3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 2px 4px rgba(0,0,0,0.3);
     }
     .toggle input:checked + .toggle-slider{
       background:var(--accent);
-      border-color:var(--accent);
     }
     .toggle input:checked + .toggle-slider::before{
       transform:translateX(20px);
-      background:#fff;
     }
     .toggle input:focus + .toggle-slider{
       box-shadow:0 0 0 2px rgba(45,212,191,0.2);
@@ -2187,12 +2185,12 @@
     .api-config-actions{display:flex;align-items:center;gap:var(--space-2)}
     .api-config-fields{padding-top:var(--space-4);margin-top:var(--space-4);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:var(--space-3)}
 
-    /* API Toggle Button - Compact iOS style */
-    .btn-toggle{width:28px;height:16px;padding:2px;border-radius:8px;background:rgba(255,255,255,0.1);border:none;cursor:pointer;position:relative;transition:all .3s ease;flex-shrink:0}
-    .btn-toggle .toggle-icon{display:block;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.2);transition:transform .3s cubic-bezier(0.4,0,0.2,1)}
+    /* API Toggle Button - Compact iOS style with visible off state */
+    .btn-toggle{width:32px;height:18px;padding:2px;border-radius:9px;background:#3a3f47;border:none;cursor:pointer;position:relative;transition:all .3s ease;flex-shrink:0}
+    .btn-toggle .toggle-icon{display:block;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.3);transition:transform .3s cubic-bezier(0.4,0,0.2,1)}
     .btn-toggle.enabled{background:var(--accent)}
-    .btn-toggle.enabled .toggle-icon{transform:translateX(12px)}
-    .btn-toggle:hover{background:rgba(255,255,255,0.15)}
+    .btn-toggle.enabled .toggle-icon{transform:translateX(14px)}
+    .btn-toggle:hover{background:#4a4f57}
     .btn-toggle.enabled:hover{background:var(--accent);filter:brightness(1.1)}
     .api-config-card.disabled{opacity:0.5}
     .api-config-card.disabled .api-config-name{color:var(--muted)}
