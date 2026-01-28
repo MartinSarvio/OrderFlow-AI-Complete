@@ -15606,51 +15606,108 @@ async function sendSMS(to, message, restaurant) {
       return;
     }
 
-    // Get Twilio credentials
-    const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
-    const authToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
-    const fromNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
+    // Determine active SMS provider
+    const provider = getActiveSmsProvider();
 
-    if (!accountSid || !authToken) {
-      addLog(`❌ Twilio credentials mangler - tjek Indstillinger`, 'error');
-      return;
-    }
-
-    addLog(`📤 Sender SMS via Twilio til ${phoneNumber}...`, 'info');
-
-    try {
-      // Send via Supabase Edge Function (Twilio)
-      const supabaseUrl = CONFIG.SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
-          to: phoneNumber,
-          message: message,
-          from: fromNumber,
-          accountSid: accountSid,
-          authToken: authToken
-        })
-      });
-
-      const result = await response.json();
-      console.log('SMS response:', result);
-
-      if (result.success || result.sid) {
-        addLog(`✅ SMS sendt! ID: ${result.sid}`, 'success');
-      } else {
-        addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
-      }
-    } catch (err) {
-      console.error('SMS error:', err);
-      addLog(`❌ SMS fejl: ${err.message}`, 'error');
+    if (provider === 'gatewayapi') {
+      await sendSMSViaGatewayAPI(phoneNumber, message);
+    } else {
+      await sendSMSViaTwilio(phoneNumber, message);
     }
   }
 
   await sleep(300);
+}
+
+// Send SMS via Twilio
+async function sendSMSViaTwilio(phoneNumber, message) {
+  // Get Twilio credentials
+  const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
+  const authToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
+  const fromNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
+
+  if (!accountSid || !authToken) {
+    addLog(`❌ Twilio credentials mangler - tjek Indstillinger`, 'error');
+    return;
+  }
+
+  addLog(`📤 Sender SMS via Twilio til ${phoneNumber}...`, 'info');
+
+  try {
+    // Send via Supabase Edge Function (Twilio)
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        to: phoneNumber,
+        message: message,
+        from: fromNumber,
+        accountSid: accountSid,
+        authToken: authToken
+      })
+    });
+
+    const result = await response.json();
+    console.log('SMS response:', result);
+
+    if (result.success || result.sid) {
+      addLog(`✅ SMS sendt via Twilio! ID: ${result.sid}`, 'success');
+    } else {
+      addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
+    }
+  } catch (err) {
+    console.error('SMS error:', err);
+    addLog(`❌ SMS fejl: ${err.message}`, 'error');
+  }
+}
+
+// Send SMS via GatewayAPI
+async function sendSMSViaGatewayAPI(phoneNumber, message) {
+  // Get GatewayAPI credentials
+  const apiToken = localStorage.getItem('gatewayapi_token');
+  const sender = localStorage.getItem('gatewayapi_sender') || 'OrderFlow';
+
+  if (!apiToken) {
+    addLog(`❌ GatewayAPI token mangler - tjek Indstillinger`, 'error');
+    return;
+  }
+
+  addLog(`📤 Sender SMS via GatewayAPI til ${phoneNumber}...`, 'info');
+
+  try {
+    // Send via Supabase Edge Function (GatewayAPI)
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms-gatewayapi`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        to: phoneNumber,
+        message: message,
+        sender: sender,
+        apiToken: apiToken
+      })
+    });
+
+    const result = await response.json();
+    console.log('GatewayAPI response:', result);
+
+    if (result.success || result.ids) {
+      const ids = result.ids ? result.ids.join(', ') : 'OK';
+      addLog(`✅ SMS sendt via GatewayAPI! ID: ${ids}`, 'success');
+    } else {
+      addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
+    }
+  } catch (err) {
+    console.error('GatewayAPI error:', err);
+    addLog(`❌ SMS fejl: ${err.message}`, 'error');
+  }
 }
 
 function addMessage(text, dir, showApproval = false) {
@@ -18205,6 +18262,7 @@ function saveOpenAIKey() {
 function updateApiStatus() {
   const twilioOk = (localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID) &&
                    (localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN);
+  const gatewayapiOk = localStorage.getItem('gatewayapi_token');
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
@@ -18220,6 +18278,7 @@ function updateApiStatus() {
   const indicators = {
     'openai-indicator': openaiOk,
     'twilio-indicator': twilioOk,
+    'gatewayapi-indicator': gatewayapiOk,
     'google-indicator': googleOk,
     'trustpilot-indicator': trustpilotOk
   };
@@ -18230,6 +18289,118 @@ function updateApiStatus() {
       el.className = 'api-status-indicator' + (isConnected ? ' connected' : '');
     }
   });
+
+  // Update toggle button states and card disabled states
+  updateApiToggles();
+}
+
+// Update toggle button states based on localStorage
+function updateApiToggles() {
+  const apis = ['openai', 'twilio', 'gatewayapi', 'google', 'trustpilot', 'webhook'];
+
+  apis.forEach(api => {
+    const toggle = document.getElementById(`${api}-toggle`);
+    const card = document.getElementById(`api-card-${api}`);
+    const isEnabled = localStorage.getItem(`api_${api}_enabled`) !== 'false'; // Default to enabled
+
+    if (toggle) {
+      toggle.classList.toggle('enabled', isEnabled);
+    }
+    if (card) {
+      card.classList.toggle('disabled', !isEnabled);
+    }
+  });
+}
+
+// Toggle API enabled/disabled state
+function toggleApiEnabled(api) {
+  const currentState = localStorage.getItem(`api_${api}_enabled`) !== 'false';
+  const newState = !currentState;
+
+  // Special handling for SMS providers - only one can be enabled at a time
+  if (api === 'twilio' || api === 'gatewayapi') {
+    if (newState) {
+      // Disable the other SMS provider when enabling one
+      const other = api === 'twilio' ? 'gatewayapi' : 'twilio';
+      localStorage.setItem(`api_${other}_enabled`, 'false');
+    }
+  }
+
+  localStorage.setItem(`api_${api}_enabled`, newState.toString());
+  updateApiToggles();
+
+  // Save to Supabase
+  saveApiEnabledStates();
+
+  const statusText = newState ? 'aktiveret' : 'deaktiveret';
+  const apiNames = {
+    'openai': 'OpenAI',
+    'twilio': 'Twilio SMS',
+    'gatewayapi': 'GatewayAPI SMS',
+    'google': 'Google Reviews',
+    'trustpilot': 'Trustpilot',
+    'webhook': 'Webhook Sikkerhed'
+  };
+  toast(`${apiNames[api] || api} ${statusText}`, newState ? 'success' : 'info');
+}
+
+// Save API enabled states to Supabase
+async function saveApiEnabledStates() {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const enabledStates = {};
+      ['openai', 'twilio', 'gatewayapi', 'google', 'trustpilot', 'webhook'].forEach(api => {
+        enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
+      });
+
+      await window.supabaseClient
+        .from('user_settings')
+        .upsert({
+          user_id: currentUser.id,
+          settings_type: 'api_enabled_states',
+          settings_data: enabledStates,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,settings_type' });
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not save API enabled states:', err.message);
+  }
+}
+
+// Load API enabled states from Supabase
+async function loadApiEnabledStates() {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { data, error } = await window.supabaseClient
+        .from('user_settings')
+        .select('settings_data')
+        .eq('user_id', currentUser.id)
+        .eq('settings_type', 'api_enabled_states')
+        .single();
+
+      if (!error && data?.settings_data) {
+        Object.entries(data.settings_data).forEach(([api, enabled]) => {
+          localStorage.setItem(`api_${api}_enabled`, enabled.toString());
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Could not load API enabled states');
+  }
+  updateApiToggles();
+}
+
+// Get the active SMS provider
+function getActiveSmsProvider() {
+  const twilioEnabled = localStorage.getItem('api_twilio_enabled') !== 'false';
+  const gatewayEnabled = localStorage.getItem('api_gatewayapi_enabled') !== 'false';
+
+  // If both enabled (shouldn't happen), prefer Twilio
+  if (twilioEnabled) return 'twilio';
+  if (gatewayEnabled) return 'gatewayapi';
+
+  // Default to Twilio if none enabled
+  return 'twilio';
 }
 
 // Toggle API config fields visibility
@@ -18252,6 +18423,8 @@ async function saveAllApiSettings() {
     twilio_account_sid: document.getElementById('twilio-account-sid')?.value.trim() || '',
     twilio_auth_token: document.getElementById('twilio-auth-token')?.value.trim() || '',
     twilio_phone_number: document.getElementById('twilio-phone-number')?.value.trim() || '+4552512921',
+    gatewayapi_token: document.getElementById('gatewayapi-token')?.value.trim() || '',
+    gatewayapi_sender: document.getElementById('gatewayapi-sender')?.value.trim() || '',
     google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
     google_api_key: document.getElementById('google-api-key')?.value.trim() || '',
     trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
@@ -18315,7 +18488,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  const localKeys = ['openai_key', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'gatewayapi_token', 'gatewayapi_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -18327,6 +18500,8 @@ async function loadAllApiSettings() {
     'twilio-account-sid': 'twilio_account_sid',
     'twilio-auth-token': 'twilio_auth_token',
     'twilio-phone-number': 'twilio_phone_number',
+    'gatewayapi-token': 'gatewayapi_token',
+    'gatewayapi-sender': 'gatewayapi_sender',
     'google-place-id': 'google_place_id',
     'google-api-key': 'google_api_key',
     'trustpilot-business-id': 'trustpilot_business_id',
@@ -18339,6 +18514,9 @@ async function loadAllApiSettings() {
       el.value = settings[settingKey];
     }
   });
+
+  // Load API enabled states
+  await loadApiEnabledStates();
 
   updateApiStatus();
 }

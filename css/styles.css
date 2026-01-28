@@ -2184,8 +2184,19 @@
     .api-config-details{display:flex;flex-direction:column;gap:2px}
     .api-config-name{font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:var(--text)}
     .api-config-desc{font-size:var(--font-size-sm);color:var(--muted)}
+    .api-config-actions{display:flex;align-items:center;gap:var(--space-2)}
     .api-config-fields{padding-top:var(--space-4);margin-top:var(--space-4);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:var(--space-3)}
-    
+
+    /* API Toggle Button */
+    .btn-toggle{width:52px;height:28px;padding:2px;border-radius:14px;background:var(--border);border:none;cursor:pointer;position:relative;transition:background .2s}
+    .btn-toggle .toggle-icon{display:block;width:24px;height:24px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,0.2);transition:transform .2s}
+    .btn-toggle.enabled{background:var(--green)}
+    .btn-toggle.enabled .toggle-icon{transform:translateX(24px)}
+    .btn-toggle:hover{opacity:0.9}
+    .api-config-card.disabled{opacity:0.6}
+    .api-config-card.disabled .api-config-name{color:var(--muted)}
+    .api-config-card.disabled .api-status-indicator{background:var(--muted)!important}
+
     /* Settings Nav Tabs */
     .settings-nav-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;background:transparent;border:1px solid transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--radius-md);transition:color .15s,background .15s,border-color .15s}
     .settings-nav-tab:hover{background:rgba(255,255,255,0.03);color:var(--text);border-color:var(--border)}
