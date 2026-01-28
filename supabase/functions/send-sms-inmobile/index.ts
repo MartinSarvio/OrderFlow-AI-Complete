@@ -38,11 +38,14 @@ serve(async (req) => {
       phoneNumber = '45' + phoneNumber
     }
 
-    // InMobile V4 API - uses APIKEY header for authentication
+    // InMobile V4 API - uses HTTP Basic Auth with empty username and API key as password
+    // Format: Authorization: Basic base64(:apiKey)
+    const basicAuth = btoa(':' + inmobileApiKey)
+
     const response = await fetch('https://api.inmobile.com/v4/sms/outgoing', {
       method: 'POST',
       headers: {
-        'APIKEY': inmobileApiKey,
+        'Authorization': `Basic ${basicAuth}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
