@@ -12,6 +12,7 @@ function toggleTheme() {
 
   html.setAttribute('data-theme', newTheme);
   localStorage.setItem('theme', newTheme);
+  updateThemeToggleTooltip(newTheme);
 
   // Update meta theme-color for mobile browsers
   const metaTheme = document.querySelector('meta[name="theme-color"]');
@@ -37,6 +38,16 @@ function updateLogos(theme) {
   });
 }
 
+// Update theme toggle button tooltip
+function updateThemeToggleTooltip(theme) {
+  const themeBtn = document.querySelector('.theme-toggle-btn');
+  if (themeBtn) {
+    themeBtn.title = theme === 'light'
+      ? 'Skift til mørk tilstand'
+      : 'Skift til lys tilstand';
+  }
+}
+
 // Initialize theme on page load
 function initTheme() {
   const savedTheme = localStorage.getItem('theme');
@@ -51,11 +62,15 @@ function initTheme() {
     metaTheme.setAttribute('content', theme === 'light' ? '#ffffff' : '#0a0a0a');
   }
 
-  // Update logos when DOM is ready
+  // Update logos and tooltip when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => updateLogos(theme));
+    document.addEventListener('DOMContentLoaded', () => {
+      updateLogos(theme);
+      updateThemeToggleTooltip(theme);
+    });
   } else {
     updateLogos(theme);
+    updateThemeToggleTooltip(theme);
   }
 
   console.log('Theme initialized:', theme);
@@ -3495,7 +3510,11 @@ function showApp() {
     if (topbarAvatar) topbarAvatar.textContent = name.charAt(0).toUpperCase();
     if (dropdownName) dropdownName.textContent = name;
     if (dropdownEmail) dropdownEmail.textContent = currentUser?.email || '';
-    
+
+    // Set tooltip on profile element with user's full name
+    const topbarProfile = document.querySelector('.topbar-profile');
+    if (topbarProfile) topbarProfile.title = name;
+
     // Load data with error handling
     // VIGTIGT: Kun load admin dashboard for admin/employee - ikke for demo/kunde
     const isCustomerOrDemo = currentUser?.role && [ROLES.DEMO, ROLES.CUSTOMER].includes(currentUser.role);
@@ -12916,6 +12935,81 @@ function saveMenuFromEditor(restaurantId) {
 // =====================================================
 // WORKFLOW
 // =====================================================
+
+// Workflow Module System
+let currentWorkflowModule = localStorage.getItem('workflow_module') || 'restaurant';
+
+const workflowModules = {
+  restaurant: {
+    name: 'Restaurant / Takeaway',
+    title: 'Restaurant Order Flow',
+    icon: '🍕',
+    description: 'Workflows til madbestillinger, bordreservationer og kundeservice',
+    templates: [
+      { id: 'order-food', name: '📦 Bestilling', description: 'Madbestillinger (take-away/levering)' },
+      { id: 'book-table', name: '🍽️ Bordreservation', description: 'Håndter bordreservationer' },
+      { id: 'complaint', name: '😞 Klage', description: 'Klagehåndtering' }
+    ]
+  },
+  haandvaerker: {
+    name: 'Håndværker',
+    title: 'Håndværker Workflow',
+    icon: '🔧',
+    description: 'Workflows til tilbud, tidsbestilling og opfølgning',
+    templates: [
+      { id: 'tilbud-request', name: '📋 Tilbudsforespørgsel', description: 'Modtag og besvar tilbudsanmodninger' },
+      { id: 'haandvaerker-booking', name: '📅 Tidsbestilling', description: 'Book tid til opgave' },
+      { id: 'followup', name: '🔄 Opfølgning', description: 'Følg op på afgivne tilbud' }
+    ]
+  }
+};
+
+function switchWorkflowModule(module) {
+  if (module === 'coming-soon' || !workflowModules[module]) {
+    toast('Modul kommer snart', 'info');
+    return;
+  }
+
+  currentWorkflowModule = module;
+
+  // Update tab styling
+  document.querySelectorAll('.workflow-module-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.module === module);
+  });
+
+  // Update title
+  const titleEl = document.getElementById('workflow-module-title');
+  if (titleEl) {
+    titleEl.textContent = workflowModules[module].title;
+  }
+
+  // Save preference
+  localStorage.setItem('workflow_module', module);
+
+  // Show toast
+  toast(`Skiftet til ${workflowModules[module].name}`, 'success');
+
+  console.log('Switched workflow module to:', module);
+}
+
+function initWorkflowModule() {
+  const savedModule = localStorage.getItem('workflow_module') || 'restaurant';
+
+  // Update tabs
+  document.querySelectorAll('.workflow-module-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.module === savedModule);
+  });
+
+  // Update title
+  const titleEl = document.getElementById('workflow-module-title');
+  if (titleEl && workflowModules[savedModule]) {
+    titleEl.textContent = workflowModules[savedModule].title;
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initWorkflowModule);
+
 let workflowNodes = [
   // ============================================
   // LAYOUT KONSTANTER: Col spacing=220px, Row spacing=150px
@@ -18592,33 +18686,66 @@ async function loadAllApiSettings() {
 // =====================================================
 let leads = [];
 
-function showAddLeadModal() {
-  const name = prompt('Navn på lead:');
-  if (!name) return;
+function toggleLeadsSetup() {
+  const section = document.getElementById('leads-setup-section');
+  if (!section) return;
 
-  const company = prompt('Firma (valgfrit):') || '';
-  const phone = prompt('Telefon:') || '';
-  const email = prompt('Email:') || '';
-  const source = prompt('Kilde (website, referral, cold-call):') || 'website';
-  const value = parseFloat(prompt('Forventet værdi (DKK):') || '0');
+  const isVisible = section.style.display !== 'none';
+  section.style.display = isVisible ? 'none' : 'block';
+
+  // Clear form when closing
+  if (isVisible) {
+    clearLeadForm();
+  }
+}
+
+function clearLeadForm() {
+  ['lead-name', 'lead-company', 'lead-phone', 'lead-email', 'lead-source', 'lead-value', 'lead-notes']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+}
+
+function saveNewLead() {
+  const name = document.getElementById('lead-name')?.value.trim();
+  const phone = document.getElementById('lead-phone')?.value.trim();
+
+  if (!name) {
+    toast('Navn er påkrævet', 'error');
+    document.getElementById('lead-name')?.focus();
+    return;
+  }
+
+  if (!phone) {
+    toast('Telefon er påkrævet', 'error');
+    document.getElementById('lead-phone')?.focus();
+    return;
+  }
 
   const lead = {
     id: 'lead-' + Date.now(),
-    name,
-    company,
-    phone,
-    email,
-    source,
-    value,
+    name: name,
+    company: document.getElementById('lead-company')?.value.trim() || '',
+    phone: phone,
+    email: document.getElementById('lead-email')?.value.trim() || '',
+    source: document.getElementById('lead-source')?.value || 'workflow',
+    value: parseInt(document.getElementById('lead-value')?.value) || 0,
     stage: 'new',
-    notes: '',
+    notes: document.getElementById('lead-notes')?.value.trim() || '',
     created_at: new Date().toISOString()
   };
 
   leads.push(lead);
   saveLeads();
+  toggleLeadsSetup();
   loadLeadsPage();
   toast('Lead tilføjet', 'success');
+}
+
+// Legacy function for backwards compatibility
+function showAddLeadModal() {
+  toggleLeadsSetup();
 }
 
 function saveLeads() {
@@ -23497,3 +23624,133 @@ window.selectRoleColor = selectRoleColor;
 window.closeAddRoleModal = closeAddRoleModal;
 window.saveNewRole = saveNewRole;
 window.deleteRole = deleteRole;
+
+// =====================================================
+// VERSION & CACHE MANAGEMENT
+// =====================================================
+
+/**
+ * Update version display in System Status
+ */
+function updateSystemVersion() {
+  const versionEl = document.getElementById('system-version');
+  if (versionEl && window.VERSION_CONFIG) {
+    versionEl.textContent = VERSION_CONFIG.getDisplayVersion();
+  }
+}
+
+/**
+ * Clear Service Worker cache and reload
+ * Preserves: theme, session
+ */
+async function clearAppCache() {
+  const confirmed = confirm('Er du sikker på at du vil rydde cachen? Siden vil genindlæses.');
+  if (!confirmed) return;
+
+  toast('Rydder cache...', 'info');
+
+  try {
+    // Clear Service Worker caches
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(cacheName => caches.delete(cacheName))
+      );
+      console.log('Service Worker caches cleared');
+    }
+
+    // Unregister Service Workers to force fresh install
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+      console.log('Service Workers unregistered');
+    }
+
+    toast('Cache ryddet! Genindlæser...', 'success');
+
+    // Force hard reload after short delay
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 1000);
+
+  } catch (error) {
+    console.error('Error clearing cache:', error);
+    toast('Fejl ved rydning af cache', 'error');
+  }
+}
+
+/**
+ * Clear all app data including localStorage (except session and theme)
+ */
+async function clearAppCacheAndData() {
+  const confirmed = confirm(
+    'ADVARSEL: Dette vil slette alle lokale data!\n\n' +
+    'Din session og tema-indstilling bevares, men alt andet nulstilles.\n\n' +
+    'Fortsæt?'
+  );
+  if (!confirmed) return;
+
+  toast('Rydder alle data...', 'info');
+
+  try {
+    // Preserve these keys
+    const preserveKeys = ['theme', 'orderflow_session'];
+    const preserved = {};
+
+    // Save preserved values
+    preserveKeys.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value) preserved[key] = value;
+    });
+
+    // Clear localStorage
+    localStorage.clear();
+
+    // Restore preserved values
+    Object.entries(preserved).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+
+    console.log('localStorage cleared (preserved: theme, session)');
+
+    // Clear Service Worker caches
+    if ('caches' in window) {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(cacheName => caches.delete(cacheName))
+      );
+    }
+
+    // Unregister Service Workers
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        await registration.unregister();
+      }
+    }
+
+    toast('Alle data ryddet! Genindlæser...', 'success');
+
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 1000);
+
+  } catch (error) {
+    console.error('Error clearing data:', error);
+    toast('Fejl ved rydning af data', 'error');
+  }
+}
+
+// Export cache management functions
+window.clearAppCache = clearAppCache;
+window.clearAppCacheAndData = clearAppCacheAndData;
+window.updateSystemVersion = updateSystemVersion;
+
+// Initialize version display when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateSystemVersion);
+} else {
+  updateSystemVersion();
+}

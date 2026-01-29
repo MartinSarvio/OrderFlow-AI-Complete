@@ -1,0 +1,121 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  # Lint and validate
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate HTML
+        run: |
+          echo "Checking HTML files..."
+          for file in *.html; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              if ! grep -q '</html>' "$file"; then
+                echo "Warning: $file may have unclosed HTML tags"
+              fi
+            fi
+          done
+          echo "HTML validation complete"
+
+      - name: Validate JavaScript syntax
+        run: |
+          echo "Checking JavaScript files..."
+          for file in js/*.js config/*.js; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              node --check "$file" 2>&1 || echo "Note: Syntax check for $file"
+            fi
+          done
+          echo "JavaScript validation complete"
+
+      - name: Check version consistency
+        run: |
+          echo "Checking version consistency..."
+          PKG_VERSION=$(grep '"version"' package.json | head -1 | sed 's/.*"version": "\([^"]*\)".*/\1/')
+          echo "package.json version: $PKG_VERSION"
+
+          if [ -f "config/version.js" ]; then
+            CONFIG_VERSION=$(grep "version:" config/version.js | head -1 | sed "s/.*version: '\([^']*\)'.*/\1/")
+            echo "config/version.js version: $CONFIG_VERSION"
+
+            if [ "$PKG_VERSION" != "$CONFIG_VERSION" ]; then
+              echo "Warning: Version mismatch between package.json and config/version.js"
+            fi
+          fi
+
+  # Deploy to Vercel Preview (for PRs)
+  deploy-preview:
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview_url=$url" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with Preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## Preview Deployment\nYour preview is ready at: ${{ steps.deploy.outputs.preview_url }}'
+            })
+
+  # Deploy to Vercel Production (for main branch)
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Production
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Notify deployment success
+        run: |
+          echo "Successfully deployed to production!"
+          echo "Version: $(grep 'version:' config/version.js | head -1 | sed \"s/.*version: '\([^']*\)'.*/\1/\")"

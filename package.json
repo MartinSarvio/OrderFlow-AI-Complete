@@ -1,6 +1,6 @@
 {
   "name": "orderflow-v137",
-  "version": "1.0.0",
+  "version": "1.3.7",
   "devDependencies": {
     "supabase": "^2.72.9"
   }
