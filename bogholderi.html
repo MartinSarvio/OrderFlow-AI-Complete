@@ -4,83 +4,88 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bogholderi Hero Banner</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-tokens.css">
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
+
     body {
-      background: #f5f5f5;
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      font-family: var(--font-family-base);
+      color: var(--color-text);
     }
-    
+
     .hero-section {
-      background: #E1E7FD;
-      padding: 60px 0 0 0;
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      padding: var(--space-8) 0 0 0;
       width: 50%;
-      margin: 40px auto;
-      border-radius: 24px;
+      margin: var(--space-7) auto;
+      border-radius: var(--radius-2xl);
       overflow: hidden;
+      box-shadow: var(--shadow-lg);
     }
     
     .hero-container {
       max-width: 900px;
       margin: 0 auto;
       text-align: center;
-      padding: 0 20px 40px 20px;
+      padding: 0 var(--space-5) var(--space-7) var(--space-5);
     }
-    
+
     .category-label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1a1a2e;
-      margin-bottom: 16px;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-primary);
+      margin-bottom: var(--space-4);
       letter-spacing: 0.5px;
+      text-transform: uppercase;
     }
-    
+
     .headline {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: var(--font-family-base);
       font-size: clamp(28px, 4vw, 48px);
-      font-weight: 800;
-      color: #0a0a0a;
-      margin-bottom: 24px;
-      line-height: 1.05;
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin-bottom: var(--space-5);
+      line-height: var(--line-height-tight);
       letter-spacing: -1px;
       text-transform: uppercase;
     }
-    
+
     .description {
-      font-size: 16px;
-      line-height: 1.6;
-      color: #4a4a5a;
-      margin: 0 auto 32px auto;
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-relaxed);
+      color: var(--color-text-secondary);
+      margin: 0 auto var(--space-6) auto;
       max-width: 540px;
     }
     
     .cta-button {
       display: inline-block;
-      background: #0a0a0a;
-      color: #ffffff;
-      padding: 16px 32px;
-      border-radius: 100px;
-      font-size: 15px;
-      font-weight: 600;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-active));
+      color: var(--color-bg);
+      padding: var(--space-4) var(--space-6);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
       text-decoration: none;
-      transition: all 0.2s ease;
-      margin-bottom: 20px;
+      transition: var(--transition-fast);
+      margin-bottom: var(--space-5);
+      box-shadow: var(--shadow-glow);
     }
-    
+
     .cta-button:hover {
-      background: #2a2a2a;
       transform: translateY(-1px);
+      box-shadow: var(--shadow-glow-lg);
     }
-    
+
     .trust-text {
-      font-size: 13px;
-      color: #6a6a7a;
+      font-size: var(--font-size-xs);
+      color: var(--color-text-muted);
     }
     
     .hero-image {
@@ -110,40 +115,40 @@
     /* Digital bogføring section */
     .info-section {
       max-width: 900px;
-      margin: 60px auto;
-      padding: 0 20px;
+      margin: var(--space-8) auto;
+      padding: 0 var(--space-5);
       text-align: center;
     }
-    
+
     .info-section h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      color: #0a0a0a;
-      margin-bottom: 20px;
+      font-family: var(--font-family-base);
+      font-size: var(--font-size-3xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin-bottom: var(--space-5);
     }
-    
+
     .info-section p {
-      font-size: 16px;
-      line-height: 1.7;
-      color: #4a4a5a;
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-relaxed);
+      color: var(--color-text-secondary);
       max-width: 800px;
       margin: 0 auto;
     }
-    
+
     /* Programs section */
     .programs-section {
       max-width: 1100px;
-      margin: 60px auto;
-      padding: 0 20px;
+      margin: var(--space-8) auto;
+      padding: 0 var(--space-5);
     }
-    
+
     .programs-section h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 24px;
-      font-weight: 700;
-      color: #0a0a0a;
-      margin-bottom: 32px;
+      font-family: var(--font-family-base);
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text);
+      margin-bottom: var(--space-6);
       text-align: center;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -152,34 +157,37 @@
     .programs-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 24px;
+      gap: var(--space-5);
     }
-    
+
     .program-card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 24px;
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-5);
       text-align: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition-fast);
     }
-    
+
     .program-card:hover {
+      background: var(--color-card-hover);
       transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-border-light);
     }
-    
+
     .program-card img {
       width: 80px;
       height: 80px;
       object-fit: contain;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-3);
     }
-    
+
     .program-card span {
-      font-size: 14px;
-      font-weight: 500;
-      color: #333;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text);
     }
   </style>
 </head>
