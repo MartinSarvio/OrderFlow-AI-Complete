@@ -18686,17 +18686,30 @@ async function loadAllApiSettings() {
 // =====================================================
 let leads = [];
 
-function toggleLeadsSetup() {
-  const section = document.getElementById('leads-setup-section');
-  if (!section) return;
+// Leads View Switching
+function showLeadsAddView() {
+  document.getElementById('leads-list-view').style.display = 'none';
+  document.getElementById('leads-add-view').style.display = 'block';
+  clearLeadForm();
+}
 
-  const isVisible = section.style.display !== 'none';
-  section.style.display = isVisible ? 'none' : 'block';
+function showLeadsListView() {
+  document.getElementById('leads-add-view').style.display = 'none';
+  document.getElementById('leads-list-view').style.display = 'block';
+  clearLeadForm();
+}
 
-  // Clear form when closing
-  if (isVisible) {
-    clearLeadForm();
-  }
+// Pipeline View Switching
+function showPipelineAddView() {
+  document.getElementById('pipeline-kanban-view').style.display = 'none';
+  document.getElementById('pipeline-add-view').style.display = 'block';
+  clearPipelineLeadForm();
+}
+
+function showPipelineKanbanView() {
+  document.getElementById('pipeline-add-view').style.display = 'none';
+  document.getElementById('pipeline-kanban-view').style.display = 'block';
+  clearPipelineLeadForm();
 }
 
 function clearLeadForm() {
@@ -18704,6 +18717,21 @@ function clearLeadForm() {
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
+    });
+}
+
+function clearPipelineLeadForm() {
+  ['pipeline-lead-name', 'pipeline-lead-company', 'pipeline-lead-phone', 'pipeline-lead-email',
+   'pipeline-lead-source', 'pipeline-lead-value', 'pipeline-lead-notes', 'pipeline-lead-stage']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (el.tagName === 'SELECT') {
+          el.selectedIndex = 0;
+        } else {
+          el.value = '';
+        }
+      }
     });
 }
 
@@ -18738,14 +18766,54 @@ function saveNewLead() {
 
   leads.push(lead);
   saveLeads();
-  toggleLeadsSetup();
+  showLeadsListView();
   loadLeadsPage();
+  toast('Lead tilføjet', 'success');
+}
+
+function saveNewLeadFromPipeline() {
+  const name = document.getElementById('pipeline-lead-name')?.value.trim();
+  const phone = document.getElementById('pipeline-lead-phone')?.value.trim();
+
+  if (!name) {
+    toast('Navn er påkrævet', 'error');
+    document.getElementById('pipeline-lead-name')?.focus();
+    return;
+  }
+
+  if (!phone) {
+    toast('Telefon er påkrævet', 'error');
+    document.getElementById('pipeline-lead-phone')?.focus();
+    return;
+  }
+
+  const lead = {
+    id: 'lead-' + Date.now(),
+    name: name,
+    company: document.getElementById('pipeline-lead-company')?.value.trim() || '',
+    phone: phone,
+    email: document.getElementById('pipeline-lead-email')?.value.trim() || '',
+    source: document.getElementById('pipeline-lead-source')?.value || 'workflow',
+    value: parseInt(document.getElementById('pipeline-lead-value')?.value) || 0,
+    stage: document.getElementById('pipeline-lead-stage')?.value || 'new',
+    notes: document.getElementById('pipeline-lead-notes')?.value.trim() || '',
+    created_at: new Date().toISOString()
+  };
+
+  leads.push(lead);
+  saveLeads();
+  showPipelineKanbanView();
+  loadPipelinePage();
   toast('Lead tilføjet', 'success');
 }
 
 // Legacy function for backwards compatibility
 function showAddLeadModal() {
-  toggleLeadsSetup();
+  showLeadsAddView();
+}
+
+function toggleLeadsSetup() {
+  showLeadsAddView();
 }
 
 function saveLeads() {
@@ -18935,7 +19003,8 @@ function switchSettingsTab(tab) {
     'billing': 'Abonnement',
     'notifications': 'Notifikationer',
     'passwords': 'Adgangskoder',
-    'support': 'Support'
+    'support': 'Support',
+    'maintenance': 'Systemvedligeholdelse'
   };
   
   // Update dynamic page title
