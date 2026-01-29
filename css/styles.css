@@ -323,8 +323,7 @@
     .nav-dropdown-toggle svg{width:20px;height:20px;opacity:.5;flex-shrink:0;stroke-width:1.5;transition:all 0.3s ease-in-out}
     .nav-dropdown-toggle:hover{background:rgba(255,255,255,0.03);color:var(--text)}
     .nav-dropdown-toggle:hover svg{opacity:.7}
-    .nav-dropdown-toggle .nav-arrow{width:16px;height:16px;margin-left:auto;transition:transform .2s}
-    .nav-dropdown.open .nav-dropdown-toggle .nav-arrow{transform:rotate(180deg)}
+    .nav-dropdown-toggle .nav-arrow{display:none}
     .nav-dropdown.open .nav-dropdown-toggle{color:var(--text)}
     .nav-dropdown.open .nav-dropdown-toggle svg:first-child{opacity:.8}
     .sidebar .nav-dropdown-menu{display:none;padding:4px 0 4px 20px}
