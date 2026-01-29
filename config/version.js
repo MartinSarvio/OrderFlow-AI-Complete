@@ -1,9 +1,9 @@
 // OrderFlow Version Configuration
 // Single source of truth for version information
 const VERSION_CONFIG = {
-  version: '1.3.9',
-  build: 139,
-  cacheName: 'orderflow-v139',
+  version: '1.4.0',
+  build: 140,
+  cacheName: 'orderflow-v140',
   releaseDate: '2026-01-29',
 
   getDisplayVersion() {
