@@ -14313,6 +14313,25 @@ function applyZoom() {
     if (grid) {
       grid.style.transform = `scale(${currentZoom})`;
       grid.style.transformOrigin = '0 0';
+
+      // Dynamically adjust dot size and opacity for visibility at all zoom levels
+      const baseDotSize = 1;
+      const baseOpacity = 0.3;
+
+      // Compensate dot size inversely to zoom level
+      // This ensures dots appear ~1px on screen regardless of zoom
+      const compensatedDotSize = Math.max(1, Math.round(baseDotSize / currentZoom));
+
+      // Boost opacity at low zoom levels for better visibility
+      let compensatedOpacity = baseOpacity;
+      if (currentZoom < 0.5) {
+        // At 0.25x zoom: opacity becomes ~0.4
+        // At 0.4x zoom: opacity becomes ~0.34
+        compensatedOpacity = Math.min(0.5, baseOpacity + (0.5 - currentZoom) * 0.4);
+      }
+
+      // Apply dynamic background with compensated values
+      grid.style.backgroundImage = `radial-gradient(circle, rgba(100, 116, 139, ${compensatedOpacity}) ${compensatedDotSize}px, transparent ${compensatedDotSize}px)`;
     }
   }
   
