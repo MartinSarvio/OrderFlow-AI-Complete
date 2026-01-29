@@ -223,6 +223,7 @@ Eskaleringsbesked: "Jeg sætter dig i kontakt med vores personale, som kan hjæl
   workflowTemplates: {
     orderFood: {
       id: 'order-food-template',
+      module: 'restaurant',
       name: '📦 Bestilling Workflow',
       description: 'Håndter madbestillinger (take-away/levering)',
       nodes: [
@@ -240,6 +241,7 @@ Eskaleringsbesked: "Jeg sætter dig i kontakt med vores personale, som kan hjæl
     },
     bookTable: {
       id: 'book-table-template',
+      module: 'restaurant',
       name: '🍽️ Bordreservation Workflow',
       description: 'Håndter bordreservationer',
       nodes: [
@@ -255,6 +257,7 @@ Eskaleringsbesked: "Jeg sætter dig i kontakt med vores personale, som kan hjæl
     },
     complaint: {
       id: 'complaint-template',
+      module: 'restaurant',
       name: '😞 Klage Håndtering',
       description: 'Håndter kundeserviceklager',
       nodes: [
@@ -264,6 +267,61 @@ Eskaleringsbesked: "Jeg sætter dig i kontakt med vores personale, som kan hjæl
         { type: 'choice', label: 'Løsning', data: { options: ['Refundering', 'Ny Levering', 'Rabat på Næste'] } },
         { type: 'escalate', label: 'Eskalér til Manager', data: { contact: '{{manager_kontakt}}' } },
         { type: 'message', label: 'Afslutning', data: { text: 'Tak for din tålmodighed. Vi kontakter dig snarest!' } }
+      ]
+    },
+
+    // =====================================================
+    // HÅNDVÆRKER MODULE TEMPLATES
+    // =====================================================
+    'tilbud-request': {
+      id: 'tilbud-request-template',
+      module: 'haandvaerker',
+      name: '📋 Tilbudsforespørgsel',
+      description: 'Modtag og besvar tilbudsanmodninger automatisk',
+      nodes: [
+        { type: 'trigger', label: 'Ny Henvendelse', data: { trigger: 'QUOTE_REQUEST' } },
+        { type: 'message', label: 'Velkomst', data: { text: 'Hej! 👋 Tak for din henvendelse til {{company_name}}. Hvad kan vi hjælpe med?' } },
+        { type: 'collect', label: 'Opgavetype', data: { field: 'job_type', prompt: 'Hvilken type opgave drejer det sig om? (f.eks. VVS, el, tømrer, maler)' } },
+        { type: 'collect', label: 'Beskrivelse', data: { field: 'description', prompt: 'Beskriv opgaven kort - hvad skal laves?' } },
+        { type: 'collect', label: 'Adresse', data: { field: 'address', prompt: 'Hvad er adressen hvor arbejdet skal udføres?' } },
+        { type: 'collect', label: 'Ønsket tidspunkt', data: { field: 'preferred_time', prompt: 'Hvornår ønsker du arbejdet udført? (f.eks. hurtigst muligt, inden for 2 uger)' } },
+        { type: 'collect', label: 'Kontaktinfo', data: { field: 'contact', prompt: 'Hvad er dit navn og telefonnummer?' } },
+        { type: 'message', label: 'Bekræftelse', data: { text: '✅ Tak for din forespørgsel! Vi vender tilbage med et tilbud inden for 24 timer. Du vil modtage en SMS når tilbuddet er klar.' } }
+      ]
+    },
+    'haandvaerker-booking': {
+      id: 'haandvaerker-booking-template',
+      module: 'haandvaerker',
+      name: '📅 Tidsbestilling',
+      description: 'Book tid til opgaveudførelse',
+      nodes: [
+        { type: 'trigger', label: 'Booking Start', data: { trigger: 'BOOKING' } },
+        { type: 'message', label: 'Velkomst', data: { text: 'Hej! 📅 Lad os finde en tid der passer til din opgave hos {{company_name}}.' } },
+        { type: 'collect', label: 'Opgavetype', data: { field: 'job_type', prompt: 'Hvilken type arbejde skal udføres?' } },
+        { type: 'collect', label: 'Foretrukken dato', data: { field: 'preferred_date', prompt: 'Hvilken dag passer bedst? (f.eks. mandag d. 15., i næste uge)' } },
+        { type: 'collect', label: 'Tidsrum', data: { field: 'timeframe', prompt: 'Foretrækker du formiddag (8-12) eller eftermiddag (12-16)?' } },
+        { type: 'collect', label: 'Adresse', data: { field: 'address', prompt: 'Hvad er adressen?' } },
+        { type: 'collect', label: 'Kontaktinfo', data: { field: 'contact', prompt: 'Dit navn og telefonnummer?' } },
+        { type: 'message', label: 'Bekræftelse', data: { text: '✅ Perfekt! Vi har noteret din ønskede tid. Du vil modtage en bekræftelse inden for få timer. Vi ses!' } }
+      ]
+    },
+    'followup': {
+      id: 'followup-template',
+      module: 'haandvaerker',
+      name: '🔄 Opfølgning',
+      description: 'Automatisk opfølgning på afgivne tilbud',
+      nodes: [
+        { type: 'trigger', label: 'Opfølgning Trigger', data: { trigger: 'FOLLOWUP', delay: '3 days' } },
+        { type: 'message', label: 'Opfølgning', data: { text: 'Hej {{customer_name}}! 👋 Vi sendte dig et tilbud for et par dage siden. Har du haft mulighed for at kigge på det? Vi står klar til at svare på eventuelle spørgsmål.' } },
+        { type: 'wait', label: 'Vent på svar', data: { timeout: 24, unit: 'hours' } },
+        { type: 'condition', label: 'Svar modtaget?', data: { field: 'response_received' }, branches: [
+          { label: 'Ja - interesseret', next: 'book_meeting' },
+          { label: 'Ja - ikke interesseret', next: 'close_politely' },
+          { label: 'Intet svar', next: 'final_followup' }
+        ]},
+        { type: 'message', label: 'Book møde', id: 'book_meeting', data: { text: 'Fantastisk! Skal vi aftale et tidspunkt hvor vi kan komme forbi og se på opgaven?' } },
+        { type: 'message', label: 'Afslut høfligt', id: 'close_politely', data: { text: 'Det forstår vi godt. Tak fordi du overvejede os - hav en god dag! 😊' } },
+        { type: 'message', label: 'Sidste opfølgning', id: 'final_followup', data: { text: 'Bare en venlig påmindelse om vores tilbud. Skriv endelig hvis du har spørgsmål - vi er her for at hjælpe! 🔧' } }
       ]
     }
   }
