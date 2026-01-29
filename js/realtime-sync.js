@@ -189,6 +189,7 @@ const RealtimeSync = {
       eventType: payload.eventType,
       direction: payload.new?.direction,
       phone: payload.new?.phone,
+      provider: payload.new?.provider,
       content: payload.new?.content?.substring(0, 50),
       hasResolver: typeof window.resolveWorkflowReply === 'function',
       timestamp: new Date().toISOString()
@@ -210,9 +211,41 @@ const RealtimeSync = {
       const convPhone = document.getElementById('conv-phone');
       if (convPhone) convPhone.textContent = message.phone;
 
-      // 4. Display the message in the messages container
+      // 4. CRITICAL: Display the message in the messages container
+      // Check if container exists first
+      const messagesContainer = document.getElementById('messages');
+      if (!messagesContainer) {
+        console.error('❌ Messages container not found!');
+        return;
+      }
+
       if (typeof addMessage === 'function') {
-        addMessage(message.content, 'in');
+        console.log('✅ Adding inbound message to UI:', {
+          content: message.content.substring(0, 50),
+          containerExists: !!messagesContainer,
+          containerChildren: messagesContainer.children.length
+        });
+
+        const msgElement = addMessage(message.content, 'in');
+
+        // Verify message was added
+        if (msgElement) {
+          console.log('✅ Message element created and added to DOM');
+
+          // Ensure message is visible
+          if (msgElement.style) {
+            msgElement.style.display = 'block';
+            msgElement.style.visibility = 'visible';
+            msgElement.style.opacity = '1';
+          }
+
+          // Scroll to show new message
+          msgElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        } else {
+          console.error('❌ addMessage returned null/undefined');
+        }
+      } else {
+        console.error('❌ addMessage function not available');
       }
 
       // 5. Log the incoming SMS
@@ -239,7 +272,7 @@ const RealtimeSync = {
         console.warn('⚠️ No workflow resolver waiting - message not routed to workflow');
       }
 
-      console.log('✅ Inbound SMS displayed:', message.phone);
+      console.log('✅ Inbound SMS handled:', message.phone);
     }
   },
 

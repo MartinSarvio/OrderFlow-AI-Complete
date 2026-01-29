@@ -42,24 +42,41 @@ serve(async (req) => {
     // Format: Authorization: Basic base64(:apiKey)
     const basicAuth = btoa(':' + inmobileApiKey)
 
+    // InMobile requires numeric sender (shortcode) - NOT text like "OrderFlow"
+    const senderNumber = sender || Deno.env.get('INMOBILE_SENDER') || '54540109'
+
+    const requestBody = {
+      messages: [{
+        to: phoneNumber,
+        text: message,
+        from: senderNumber,
+        respectBlacklist: true
+      }]
+    }
+
+    console.log('InMobile API Request:', {
+      url: 'https://api.inmobile.com/v4/sms/outgoing',
+      phoneNumber,
+      sender: senderNumber,
+      apiKeyPrefix: inmobileApiKey.substring(0, 8) + '...',
+      authHeaderLength: basicAuth.length
+    })
+
     const response = await fetch('https://api.inmobile.com/v4/sms/outgoing', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${basicAuth}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        messages: [{
-          to: phoneNumber,
-          text: message,
-          from: sender || Deno.env.get('INMOBILE_SENDER') || 'OrderFlow',
-          respectBlacklist: true
-        }]
-      })
+      body: JSON.stringify(requestBody)
     })
 
     const result = await response.json()
-    console.log('InMobile response:', JSON.stringify(result))
+    console.log('InMobile response:', {
+      status: response.status,
+      statusText: response.statusText,
+      result: JSON.stringify(result)
+    })
 
     // Check for successful response
     if (response.ok && result.results && result.results.length > 0 && result.results[0].messageId) {
