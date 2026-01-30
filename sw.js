@@ -1,5 +1,5 @@
 // OrderFlow Service Worker
-const CACHE_NAME = 'orderflow-v170';
+const CACHE_NAME = 'orderflow-v180';
 
 // Install event - cache basic assets
 self.addEventListener('install', (event) => {

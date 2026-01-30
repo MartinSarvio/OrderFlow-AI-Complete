@@ -23814,6 +23814,110 @@ function handleAppBuilderLogoUpload(input) {
   reader.readAsDataURL(file);
 }
 
+// Handle App Builder banner upload
+function handleAppBuilderBannerUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  // Validate file size (3MB max for banner)
+  const maxSize = 3 * 1024 * 1024; // 3MB
+  if (file.size > maxSize) {
+    alert('Filen er for stor. Maksimal størrelse er 3MB.');
+    input.value = '';
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Ugyldig filtype. Tilladte formater: PNG, JPG.');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const bannerUrl = e.target.result;
+
+    // Update upload zone with preview
+    const uploadZone = document.getElementById('banner-upload-zone');
+    if (uploadZone) {
+      uploadZone.innerHTML = `
+        <img src="${bannerUrl}"
+             style="width:100%;height:auto;max-height:160px;object-fit:cover;border-radius:var(--radius-md);box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+      `;
+      uploadZone.classList.add('has-file');
+    }
+
+    // Show remove button
+    const removeBtn = document.getElementById('remove-banner-btn');
+    if (removeBtn) {
+      removeBtn.style.display = 'block';
+    }
+
+    // Send to iframe
+    const previewFrame = document.getElementById('pwa-preview-frame');
+    if (previewFrame) {
+      previewFrame.contentWindow.postMessage({
+        type: 'UPDATE_CONFIG',
+        config: {
+          bannerUrl: bannerUrl
+        }
+      }, '*');
+    }
+
+    // Show saved badge
+    showSavedBadge('banner');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remove App Builder banner
+function removeAppBuilderBanner() {
+  // Reset upload zone to default state
+  const uploadZone = document.getElementById('banner-upload-zone');
+  if (uploadZone) {
+    uploadZone.innerHTML = `
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;color:var(--muted)">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <p style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">
+        Klik for at uploade banner billede
+      </p>
+      <p style="font-size:12px;color:var(--muted)">
+        PNG eller JPG. Anbefalet: 1200x400px. Max 3MB
+      </p>
+    `;
+    uploadZone.classList.remove('has-file');
+    uploadZone.onclick = () => document.getElementById('appbuilder-banner-input').click();
+  }
+
+  // Hide remove button
+  const removeBtn = document.getElementById('remove-banner-btn');
+  if (removeBtn) {
+    removeBtn.style.display = 'none';
+  }
+
+  // Clear file input
+  const fileInput = document.getElementById('appbuilder-banner-input');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+
+  // Send removal to iframe
+  const previewFrame = document.getElementById('pwa-preview-frame');
+  if (previewFrame) {
+    previewFrame.contentWindow.postMessage({
+      type: 'UPDATE_CONFIG',
+      config: {
+        bannerUrl: null  // Remove banner, revert to gradient
+      }
+    }, '*');
+  }
+}
+
 // Update App Builder preview name
 function updateAppBuilderPreviewName() {
   const nameInput = document.getElementById('appbuilder-app-name');
