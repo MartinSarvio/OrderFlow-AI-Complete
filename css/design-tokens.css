@@ -226,56 +226,44 @@
 
 /* ==================== LIGHT MODE ==================== */
 [data-theme="light"] {
-  /* Base Colors - WCAG AA Compliant Contrast */
+  /* Base Colors - Optimized for contrast */
   --color-bg: #ffffff;           /* Pure white background */
   --color-bg-2: #f8fafc;         /* Slightly off-white */
-  --color-bg-3: #e2e8f0;         /* Medium gray - increased contrast */
-  --color-nav-bg: #f1f5f9;       /* Light gray sidebar */
+  --color-bg-3: #f1f5f9;         /* Light gray */
+  --color-nav-bg: #f1f5f9;       /* Light gray sidebar for contrast */
   --color-content-bg: #ffffff;   /* White content area */
-  --color-card: #ffffff;         /* White cards with shadow */
+  --color-card: #ffffff;         /* White cards */
   --color-card-hover: #f8fafc;   /* Subtle hover */
   --color-card-elevated: #ffffff; /* Elevated cards */
 
-  /* Borders - Improved visibility */
-  --color-border: #cbd5e1;       /* Darker for better visibility */
-  --color-border-light: #e2e8f0; /* Lighter variant */
+  /* Borders */
+  --color-border: #e2e8f0;
+  --color-border-light: #cbd5e1;
 
-  /* Text Colors - WCAG AA Compliant (4.5:1 minimum) */
-  --color-text: #0f172a;         /* Very dark - 15.8:1 contrast */
-  --color-text-secondary: #334155; /* Darker gray - 8.3:1 contrast */
-  --color-text-muted: #475569;   /* Medium gray - 7.0:1 contrast */
-  --color-text-disabled: rgba(15, 23, 42, 0.38); /* 3:1 contrast for disabled */
+  /* Text Colors */
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-disabled: rgba(15, 23, 42, 0.4);
 
-  /* Brand Colors - Darker for better contrast on white */
-  --color-primary: #0d9488;      /* Teal - 4.6:1 contrast */
+  /* Brand Colors */
+  --color-primary: #0d9488;
   --color-primary-hover: #14b8a6;
-  --color-primary-active: #0f766e; /* Darker for active state */
-  --color-primary-dim: rgba(13, 148, 136, 0.12);
-  --color-primary-glow: rgba(13, 148, 136, 0.25);
+  --color-primary-active: #0f766e;
+  --color-primary-dim: rgba(13, 148, 136, 0.1);
+  --color-primary-glow: rgba(13, 148, 136, 0.2);
 
-  /* Semantic Colors - WCAG AA Compliant */
-  --color-danger: #dc2626;       /* Red - 4.9:1 contrast */
-  --color-danger-dim: rgba(220, 38, 38, 0.12);
-  --color-danger-border: rgba(220, 38, 38, 0.25);
+  /* Semantic Colors */
+  --color-danger: #dc2626;
+  --color-danger-dim: rgba(220, 38, 38, 0.1);
+  --color-danger-border: rgba(220, 38, 38, 0.2);
 
-  --color-warning: #b45309;      /* Darker orange - 5.5:1 contrast */
-  --color-warning-dim: rgba(180, 83, 9, 0.12);
+  --color-warning: #d97706;
+  --color-warning-dim: rgba(217, 119, 6, 0.1);
 
-  --color-success: #16a34a;      /* Green - 4.5:1 contrast */
-  --color-success-dim: rgba(22, 163, 74, 0.12);
+  --color-success: #059669;
+  --color-success-dim: rgba(5, 150, 105, 0.1);
 
-  --color-info: #2563eb;         /* Blue - 5.1:1 contrast */
-  --color-info-dim: rgba(37, 99, 235, 0.12);
-
-  /* Additional colors for light mode */
-  --color-accent: #db2777;       /* Pink accent - better contrast */
-  --color-purple: #9333ea;       /* Darker purple */
-  --color-orange: #ea580c;       /* Darker orange */
-
-  /* Shadows - More visible in light mode */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.15);
+  --color-info: #2563eb;
+  --color-info-dim: rgba(37, 99, 235, 0.1);
 }
