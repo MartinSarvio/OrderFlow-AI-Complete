@@ -276,7 +276,7 @@
     /* Main content adjustment */
     .main{margin-left:260px;transition:margin-left 0.3s ease-in-out}
     .sidebar.collapsed ~ .main{margin-left:72px}
-    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:70px;scrollbar-width:none;-ms-overflow-style:none}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:100px;scrollbar-width:none;-ms-overflow-style:none}
     .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
     .nav-section{margin-bottom:32px;transition:all 0.3s ease-in-out}
     .nav-section-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 13px;margin-bottom:3px;opacity:0.6;transition:all 0.3s ease-in-out}
@@ -481,7 +481,7 @@
     .page-title-sub{font-size:13px;color:var(--muted);font-weight:400;margin-top:4px}
     
     /* Sidebar Search */
-    .sidebar-search{position:relative;margin-top:12px;margin-bottom:4px}
+    .sidebar-search{position:relative;margin-top:44px;margin-bottom:4px}
     .sidebar-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;z-index:1}
     .sidebar-search-input{width:100%;padding:10px 40px 10px 36px;background:rgba(255,255,255,0.03);border:none;border-radius:var(--radius-md);font-size:13px;color:var(--text);transition:background .15s}
     .sidebar-search-input:focus{outline:none;background:rgba(255,255,255,0.05)}
