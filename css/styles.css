@@ -229,7 +229,7 @@
     .sidebar.collapsed{width:72px}
 
     /* Header zone */
-    .sidebar-header{padding:20px 20px 24px;transition:all 0.3s ease-in-out;position:fixed;top:0;left:0;width:260px;z-index:210;background:var(--nav-bg)}
+    .sidebar-header{padding:20px 20px 4px;transition:all 0.3s ease-in-out;position:fixed;top:0;left:0;width:260px;z-index:210;background:var(--nav-bg)}
     .sidebar.collapsed .sidebar-header{padding:20px 12px 20px;width:72px}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
