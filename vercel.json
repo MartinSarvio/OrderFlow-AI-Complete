@@ -3,8 +3,12 @@
   "outputDirectory": ".",
   "functions": {
     "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0"
+      "runtime": "@vercel/node@3.0.0",
+      "maxDuration": 10
     }
+  },
+  "env": {
+    "NODE_VERSION": "18"
   },
   "rewrites": [
     {
