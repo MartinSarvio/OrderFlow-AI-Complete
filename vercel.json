@@ -1,51 +1,7 @@
 {
   "buildCommand": "",
   "outputDirectory": ".",
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0",
-      "maxDuration": 10
-    }
-  },
-  "env": {
-    "NODE_VERSION": "18"
-  },
   "rewrites": [
-    {
-      "source": "/",
-      "destination": "/landing.html"
-    },
-    {
-      "source": "/how-it-works",
-      "destination": "/how-it-works.html"
-    },
-    {
-      "source": "/pricing",
-      "destination": "/pricing.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/about.html"
-    },
-    {
-      "source": "/resources",
-      "destination": "/resources.html"
-    },
-    {
-      "source": "/blog",
-      "destination": "/blog.html"
-    },
-    {
-      "source": "/help",
-      "destination": "/help.html"
-    },
-    {
-      "source": "/cases",
-      "destination": "/cases.html"
-    },
-    {
-      "source": "/support",
-      "destination": "/support.html"
-    }
+    { "source": "/", "destination": "/landing.html" }
   ]
 }
