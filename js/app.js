@@ -23725,34 +23725,28 @@ function showAppBuilderPage(page) {
 
 // Update App Builder color
 function updateAppBuilderColor(type, color) {
-  // Update preview
+  // Update preview swatch
   const preview = document.getElementById(`appbuilder-${type}-preview`);
   if (preview) {
     preview.style.background = color;
   }
-  
+
   // Update value display
   const valueEl = document.getElementById(`appbuilder-${type}-value`);
   if (valueEl) {
     valueEl.textContent = color.toUpperCase();
   }
-  
-  // Update phone preview if primary color
-  if (type === 'primary') {
-    const appHeader = document.querySelector('.app-header');
-    if (appHeader) {
-      appHeader.style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
-    }
-    
-    // Update price colors
-    document.querySelectorAll('.app-menu-price').forEach(el => {
-      el.style.color = color;
-    });
-    
-    // Update active nav item
-    document.querySelectorAll('.app-nav-item.active').forEach(el => {
-      el.style.color = color;
-    });
+
+  // Send to iframe
+  const previewFrame = document.getElementById('pwa-preview-frame');
+  if (previewFrame) {
+    const config = {};
+    config[type + 'Color'] = color;
+
+    previewFrame.contentWindow.postMessage({
+      type: 'UPDATE_CONFIG',
+      config: config
+    }, '*');
   }
 }
 
@@ -23788,26 +23782,30 @@ function handleAppBuilderLogoUpload(input) {
 
   const reader = new FileReader();
   reader.onload = function(e) {
-    // Update preview in phone mockup
-    const logoPreview = document.getElementById('appbuilder-preview-logo');
-    if (logoPreview) {
-      logoPreview.style.backgroundImage = `url(${e.target.result})`;
-      logoPreview.style.backgroundSize = 'cover';
-      logoPreview.style.backgroundPosition = 'center';
-      logoPreview.textContent = '';
-    }
+    const logoUrl = e.target.result;
 
     // Update upload area with preview
     const uploadZone = document.querySelector('.logo-upload-zone');
     if (uploadZone) {
       uploadZone.innerHTML = `
-        <img src="${e.target.result}"
+        <img src="${logoUrl}"
              style="max-width:120px;max-height:120px;border-radius:var(--radius-lg);margin-bottom:12px;">
         <p style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">Klik for at ændre</p>
         <p style="font-size:12px;color:var(--muted)">${file.name}</p>
       `;
       uploadZone.classList.add('has-file');
       uploadZone.onclick = () => input.click();
+    }
+
+    // Send to iframe
+    const previewFrame = document.getElementById('pwa-preview-frame');
+    if (previewFrame) {
+      previewFrame.contentWindow.postMessage({
+        type: 'UPDATE_CONFIG',
+        config: {
+          logoUrl: logoUrl
+        }
+      }, '*');
     }
 
     // Show saved badge
@@ -23819,29 +23817,36 @@ function handleAppBuilderLogoUpload(input) {
 // Update App Builder preview name
 function updateAppBuilderPreviewName() {
   const nameInput = document.getElementById('appbuilder-app-name');
-  const previewName = document.getElementById('preview-app-name');
-  if (nameInput && previewName) {
-    const value = nameInput.value.trim();
-    previewName.textContent = value || 'Din Restaurant';
+  const previewFrame = document.getElementById('pwa-preview-frame');
 
-    // Update logo initials if no uploaded logo
-    const logoPreview = document.getElementById('appbuilder-preview-logo');
-    if (logoPreview && !logoPreview.style.backgroundImage) {
-      const words = value.split(' ').filter(w => w.length > 0);
-      const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'DR';
-      logoPreview.textContent = initials;
-    }
+  if (nameInput && previewFrame) {
+    const value = nameInput.value.trim() || 'Din Restaurant';
+
+    // Send message to iframe
+    previewFrame.contentWindow.postMessage({
+      type: 'UPDATE_CONFIG',
+      config: {
+        appName: value
+      }
+    }, '*');
   }
 }
 
 // Update App Builder preview tagline
 function updateAppBuilderPreviewTagline() {
   const taglineInput = document.getElementById('appbuilder-tagline');
-  const previewTagline = document.getElementById('preview-app-tagline');
-  if (taglineInput && previewTagline) {
-    const value = taglineInput.value.trim();
-    previewTagline.textContent = value || 'Ægte italiensk pizza siden 1985';
-    previewTagline.style.opacity = value ? '0.85' : '0.5';
+  const previewFrame = document.getElementById('pwa-preview-frame');
+
+  if (taglineInput && previewFrame) {
+    const value = taglineInput.value.trim() || 'Ægte italiensk pizza siden 1985';
+
+    // Send message to iframe
+    previewFrame.contentWindow.postMessage({
+      type: 'UPDATE_CONFIG',
+      config: {
+        tagline: value
+      }
+    }, '*');
   }
 }
 
@@ -23871,7 +23876,28 @@ function showSavedBadge(section) {
 // Initialize App Builder event listeners
 function initAppBuilder() {
   // Initialize preview with default values on page load
-  updateAppBuilderPreviewTagline();
+  const previewFrame = document.getElementById('pwa-preview-frame');
+
+  if (previewFrame) {
+    // Wait for iframe to load
+    previewFrame.addEventListener('load', () => {
+      // Send initial configuration
+      const nameInput = document.getElementById('appbuilder-app-name');
+      const taglineInput = document.getElementById('appbuilder-tagline');
+      const primaryColorInput = document.getElementById('appbuilder-primary-color');
+      const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
+
+      previewFrame.contentWindow.postMessage({
+        type: 'UPDATE_CONFIG',
+        config: {
+          appName: nameInput?.value || 'Din Restaurant',
+          tagline: taglineInput?.value || 'Ægte italiensk pizza siden 1985',
+          primaryColor: primaryColorInput?.value || '#D4380D',
+          secondaryColor: secondaryColorInput?.value || '#FFF7E6'
+        }
+      }, '*');
+    });
+  }
 
   // The event handlers are already attached via oninput attributes in HTML
   // This function can be extended if we need additional initialization

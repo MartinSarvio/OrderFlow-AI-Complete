@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="var(--brand-primary)">
+  <title>PWA Preview</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Brand Colors - Injected from config */
+      --brand-primary: #D4380D;
+      --brand-primary-dark: #B91C1C;
+      --brand-secondary: #FFF7E6;
+      --brand-accent: #F59E0B;
+
+      /* System Colors */
+      --white: #FFFFFF;
+      --black: #0A0A0A;
+      --gray-50: #FAFAFA;
+      --gray-100: #F4F4F5;
+      --gray-200: #E4E4E7;
+      --gray-300: #D4D4D8;
+      --gray-400: #A1A1AA;
+      --gray-500: #71717A;
+      --gray-600: #52525B;
+      --gray-700: #3F3F46;
+      --gray-800: #27272A;
+      --gray-900: #18181B;
+
+      /* Semantic */
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+
+      /* Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+      --shadow-xl: 0 24px 60px rgba(0,0,0,0.16);
+
+      /* Safe areas for notch */
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--white);
+      position: relative;
+    }
+
+    .status-bar-space {
+      height: var(--safe-top, 44px);
+      min-height: 44px;
+      background: var(--white);
+    }
+
+    .app-header {
+      padding: var(--space-md) var(--space-lg);
+      background: var(--white);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .brand-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 800;
+      font-size: 16px;
+      box-shadow: var(--shadow-md);
+      background-size: cover;
+      background-position: center;
+    }
+
+    .brand-info h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+      background: var(--gray-200);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-700);
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      min-width: 18px;
+      height: 18px;
+      background: var(--brand-primary);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 5px;
+    }
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--gray-100);
+      border-radius: var(--radius-lg);
+    }
+
+    .search-bar svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-400);
+      flex-shrink: 0;
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--gray-900);
+    }
+
+    .search-bar input::placeholder {
+      color: var(--gray-400);
+    }
+
+    .search-bar input:focus {
+      outline: none;
+    }
+
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(80px + var(--safe-bottom, 20px));
+    }
+
+    .hero-banner {
+      margin: var(--space-md) var(--space-lg);
+      padding: var(--space-xl);
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      border-radius: var(--radius-xl);
+      color: var(--white);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -30%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 50%;
+    }
+
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -20%;
+      width: 150px;
+      height: 150px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: var(--space-md);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: var(--space-sm);
+      letter-spacing: -0.3px;
+    }
+
+    .hero-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: var(--space-lg);
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--white);
+      color: var(--brand-primary);
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .hero-btn:active {
+      transform: scale(0.97);
+    }
+
+    .hero-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .loyalty-card {
+      margin: var(--space-md) var(--space-lg);
+      padding: var(--space-lg);
+      background: var(--gray-900);
+      border-radius: var(--radius-xl);
+      color: var(--white);
+    }
+
+    .loyalty-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .loyalty-label {
+      font-size: 12px;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .loyalty-points {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .loyalty-points-value {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .loyalty-points-label {
+      font-size: 14px;
+      color: var(--gray-400);
+    }
+
+    .loyalty-progress {
+      margin-bottom: var(--space-md);
+    }
+
+    .loyalty-progress-bar {
+      height: 8px;
+      background: var(--gray-700);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .loyalty-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand-accent) 0%, #FBBF24 100%);
+      border-radius: var(--radius-full);
+      transition: width 0.5s ease;
+    }
+
+    .loyalty-progress-text {
+      display: flex;
+      justify-content: space-between;
+      margin-top: var(--space-sm);
+      font-size: 12px;
+      color: var(--gray-400);
+    }
+
+    .categories {
+      padding: var(--space-md) 0;
+    }
+
+    .categories-scroll {
+      display: flex;
+      gap: var(--space-sm);
+      overflow-x: auto;
+      padding: 0 var(--space-lg);
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .categories-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category-chip {
+      flex-shrink: 0;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--gray-100);
+      border: none;
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .category-chip.active {
+      background: var(--gray-900);
+      color: var(--white);
+    }
+
+    .category-chip:active {
+      transform: scale(0.97);
+    }
+
+    .section {
+      padding: var(--space-lg);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .section-link {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-primary);
+      text-decoration: none;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+    }
+
+    .menu-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-100);
+      transition: all 0.2s ease;
+    }
+
+    .menu-card:active {
+      transform: scale(0.98);
+      box-shadow: var(--shadow-md);
+    }
+
+    .menu-card-image {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
+      position: relative;
+    }
+
+    .menu-card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .menu-card-badge {
+      position: absolute;
+      top: var(--space-sm);
+      left: var(--space-sm);
+      padding: 4px 10px;
+      background: var(--brand-primary);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+    }
+
+    .menu-card-content {
+      padding: var(--space-md);
+    }
+
+    .menu-card-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .menu-card-desc {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: var(--space-sm);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .menu-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .menu-card-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .add-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--gray-900);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .add-btn:active {
+      transform: scale(0.9);
+      background: var(--brand-primary);
+    }
+
+    .add-btn svg {
+      width: 16px;
+      height: 16px;
+      color: var(--white);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--white);
+      border-top: 1px solid var(--gray-100);
+      padding: var(--space-sm) var(--space-md);
+      padding-bottom: calc(var(--space-sm) + var(--safe-bottom, 8px));
+      display: flex;
+      justify-content: space-around;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: var(--space-sm) var(--space-md);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border-radius: var(--radius-md);
+    }
+
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+      color: var(--gray-400);
+      transition: all 0.2s ease;
+    }
+
+    .nav-item span {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-400);
+      transition: all 0.2s ease;
+    }
+
+    .nav-item.active svg {
+      color: var(--brand-primary);
+    }
+
+    .nav-item.active span {
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .nav-item:active {
+      background: var(--gray-100);
+    }
+
+    .nav-order {
+      position: relative;
+      top: -20px;
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-full);
+      background: var(--brand-primary);
+      border: 4px solid var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-order svg {
+      width: 24px;
+      height: 24px;
+      color: var(--white);
+    }
+
+    .nav-order:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .hero-banner {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .loyalty-card {
+      animation: fadeInUp 0.5s ease 0.1s forwards;
+      opacity: 0;
+    }
+
+    .menu-card {
+      animation: fadeInUp 0.4s ease forwards;
+      opacity: 0;
+    }
+
+    .menu-card:nth-child(1) { animation-delay: 0.1s; }
+    .menu-card:nth-child(2) { animation-delay: 0.15s; }
+    .menu-card:nth-child(3) { animation-delay: 0.2s; }
+    .menu-card:nth-child(4) { animation-delay: 0.25s; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="status-bar-space"></div>
+
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-logo">PR</div>
+          <div class="brand-info">
+            <h1>Pizzeria Roma</h1>
+            <div class="brand-status">
+              <span class="status-dot"></span>
+              Åben nu · Lukker 22:00
+            </div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+          </button>
+          <button class="icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+            </svg>
+            <span class="cart-badge">2</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Søg i menuen...">
+      </div>
+    </header>
+
+    <main class="app-content">
+      <div class="hero-banner">
+        <div class="hero-content">
+          <div class="hero-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Dagens tilbud
+          </div>
+          <h2 class="hero-title">2 pizzaer for 149 kr.</h2>
+          <p class="hero-subtitle">Gælder alle hverdage mellem 15-18</p>
+          <button class="hero-btn">
+            Se tilbud
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="loyalty-card">
+        <div class="loyalty-header">
+          <span class="loyalty-label">Dine point</span>
+          <div class="loyalty-points">
+            <span class="loyalty-points-value">847</span>
+            <span class="loyalty-points-label">point</span>
+          </div>
+        </div>
+        <div class="loyalty-progress">
+          <div class="loyalty-progress-bar">
+            <div class="loyalty-progress-fill" style="width: 84.7%;"></div>
+          </div>
+          <div class="loyalty-progress-text">
+            <span>153 point til gratis pizza</span>
+            <span>1000 point</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="categories">
+        <div class="categories-scroll">
+          <button class="category-chip active">Alle</button>
+          <button class="category-chip">🍕 Pizza</button>
+          <button class="category-chip">🥗 Salater</button>
+          <button class="category-chip">🍝 Pasta</button>
+          <button class="category-chip">🍰 Dessert</button>
+          <button class="category-chip">🥤 Drikkevarer</button>
+        </div>
+      </div>
+
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">Populære retter</h2>
+          <a href="#" class="section-link">Se alle</a>
+        </div>
+
+        <div class="menu-grid">
+          <div class="menu-card">
+            <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);">
+              <span class="menu-card-badge">Bestseller</span>
+            </div>
+            <div class="menu-card-content">
+              <h3 class="menu-card-name">Margherita</h3>
+              <p class="menu-card-desc">Tomatsauce, mozzarella, frisk basilikum</p>
+              <div class="menu-card-footer">
+                <span class="menu-card-price">89 kr.</span>
+                <button class="add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-card">
+            <div class="menu-card-image" style="background: linear-gradient(135deg, #FECACA 0%, #F87171 100%);"></div>
+            <div class="menu-card-content">
+              <h3 class="menu-card-name">Pepperoni</h3>
+              <p class="menu-card-desc">Tomatsauce, mozzarella, pepperoni</p>
+              <div class="menu-card-footer">
+                <span class="menu-card-price">109 kr.</span>
+                <button class="add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-card">
+            <div class="menu-card-image" style="background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%);"></div>
+            <div class="menu-card-content">
+              <h3 class="menu-card-name">Vegetar</h3>
+              <p class="menu-card-desc">Grøntsager, mozzarella, oliven</p>
+              <div class="menu-card-footer">
+                <span class="menu-card-price">99 kr.</span>
+                <button class="add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="menu-card">
+            <div class="menu-card-image" style="background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 100%);"></div>
+            <div class="menu-card-content">
+              <h3 class="menu-card-name">Quattro Formaggi</h3>
+              <p class="menu-card-desc">Fire slags ost, hvidløg</p>
+              <div class="menu-card-footer">
+                <span class="menu-card-price">119 kr.</span>
+                <button class="add-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9,22 9,12 15,12 15,22"/>
+        </svg>
+        <span>Hjem</span>
+      </button>
+
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <span>Søg</span>
+      </button>
+
+      <button class="nav-order">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+      </button>
+
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+        <span>Point</span>
+      </button>
+
+      <button class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Profil</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // Listen for configuration updates from parent window
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'UPDATE_CONFIG') {
+        const config = event.data.config;
+
+        // Update CSS variables for theme colors
+        if (config.primaryColor) {
+          document.documentElement.style.setProperty('--brand-primary', config.primaryColor);
+
+          // Calculate darker shade for gradient
+          const darkerShade = adjustColorBrightness(config.primaryColor, -20);
+          document.documentElement.style.setProperty('--brand-primary-dark', darkerShade);
+        }
+
+        if (config.secondaryColor) {
+          document.documentElement.style.setProperty('--brand-secondary', config.secondaryColor);
+        }
+
+        // Update app name
+        if (config.appName) {
+          const nameElement = document.querySelector('.brand-info h1');
+          if (nameElement) {
+            nameElement.textContent = config.appName;
+          }
+        }
+
+        // Update tagline (brand status)
+        if (config.tagline) {
+          const statusElement = document.querySelector('.brand-status');
+          if (statusElement) {
+            statusElement.innerHTML = `
+              <span class="status-dot"></span>
+              ${config.tagline}
+            `;
+          }
+        }
+
+        // Update logo
+        if (config.logoUrl) {
+          const logo = document.querySelector('.brand-logo');
+          if (logo) {
+            logo.style.backgroundImage = `url(${config.logoUrl})`;
+            logo.style.backgroundSize = 'cover';
+            logo.style.backgroundPosition = 'center';
+            logo.textContent = '';
+          }
+        } else if (config.appName) {
+          // Show initials if no logo
+          const logo = document.querySelector('.brand-logo');
+          if (logo && !config.logoUrl) {
+            const words = config.appName.split(' ').filter(w => w.length > 0);
+            const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PR';
+            logo.textContent = initials;
+            logo.style.backgroundImage = '';
+          }
+        }
+      }
+    });
+
+    // Helper function to adjust color brightness
+    function adjustColorBrightness(color, amount) {
+      const hex = color.replace('#', '');
+      const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+      const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+      const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    // Category selection
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+
+    // Add to cart animation
+    document.querySelectorAll('.add-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const badge = document.querySelector('.cart-badge');
+        const count = parseInt(badge.textContent) + 1;
+        badge.textContent = count;
+        badge.style.animation = 'pulse 0.3s ease';
+        setTimeout(() => badge.style.animation = '', 300);
+      });
+    });
+  </script>
+</body>
+</html>
