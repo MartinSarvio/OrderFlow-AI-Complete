@@ -224,8 +224,8 @@
     .app{display:none;height:100vh;overflow:hidden}
     .app.active{display:flex}
 
-    /* Fixed App Logo - locked in place, positioned in open sidebar width (260px) */
-    .app-logo{position:fixed;top:20px;left:20px;width:220px;display:flex;justify-content:flex-start;z-index:300}
+    /* Fixed App Logo - positioned in sidebar */
+    .app-logo{position:fixed;top:20px;left:16px;display:flex;align-items:center;z-index:300;background:transparent}
 
     /* Sidebar - Swiftmesh style with smooth transitions */
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200}
