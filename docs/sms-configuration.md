@@ -2,6 +2,8 @@
 
 > Tilpas automatiske SMS-beskeder til dine kunder og optimer din kommunikation.
 
+> **📱 SMS Provider:** OrderFlow bruger InMobile til at sende SMS'er. Du kan konfigurere din InMobile API nøgle under **Indstillinger** → **API Konfiguration**.
+
 ---
 
 ## Oversigt

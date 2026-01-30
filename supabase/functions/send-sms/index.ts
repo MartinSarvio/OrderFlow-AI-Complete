@@ -6,13 +6,12 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { to, message, from, accountSid, authToken } = await req.json()
+    const { to, message, sender, apiKey } = await req.json()
 
     if (!to || !message) {
       return new Response(
@@ -21,80 +20,79 @@ serve(async (req) => {
       )
     }
 
-    // Use provided credentials or environment variables
-    const twilioAccountSid = accountSid || Deno.env.get('TWILIO_ACCOUNT_SID')
-    const twilioAuthToken = authToken || Deno.env.get('TWILIO_AUTH_TOKEN')
-    const twilioFromNumber = from || Deno.env.get('TWILIO_PHONE_NUMBER') || '+4552512921'
+    const inmobileApiKey = apiKey || Deno.env.get('INMOBILE_API_KEY')
 
-    if (!twilioAccountSid || !twilioAuthToken) {
+    if (!inmobileApiKey) {
       return new Response(
-        JSON.stringify({ error: 'Twilio credentials not configured' }),
+        JSON.stringify({ error: 'InMobile API key not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Format phone number to E.164
+    // Format phone number: remove spaces, keep + prefix, ensure country code
     let phoneNumber = to.replace(/\s/g, '')
-    if (!phoneNumber.startsWith('+')) {
-      // Assume Danish number if no country code
-      if (phoneNumber.startsWith('45')) {
-        phoneNumber = '+' + phoneNumber
-      } else if (phoneNumber.length === 8) {
-        phoneNumber = '+45' + phoneNumber
-      } else {
-        phoneNumber = '+' + phoneNumber
-      }
+    if (phoneNumber.startsWith('+')) {
+      phoneNumber = phoneNumber.slice(1) // Remove + for API
+    }
+    if (!phoneNumber.startsWith('45') && phoneNumber.length === 8) {
+      phoneNumber = '45' + phoneNumber
     }
 
-    // Create Basic Auth header for Twilio
-    const basicAuth = btoa(`${twilioAccountSid}:${twilioAuthToken}`)
+    // InMobile V4 API - uses HTTP Basic Auth with empty username and API key as password
+    // Format: Authorization: Basic base64(:apiKey)
+    const basicAuth = btoa(':' + inmobileApiKey)
 
-    // Send via Twilio REST API
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`
+    // InMobile requires numeric sender (shortcode) - NOT text like "OrderFlow"
+    const senderNumber = sender || Deno.env.get('INMOBILE_SENDER') || '54540109'
 
-    const formData = new URLSearchParams()
-    formData.append('To', phoneNumber)
-    formData.append('From', twilioFromNumber)
-    formData.append('Body', message)
+    const requestBody = {
+      messages: [{
+        to: phoneNumber,
+        text: message,
+        from: senderNumber,
+        respectBlacklist: true
+      }]
+    }
 
-    console.log('Sending SMS via Twilio:', { to: phoneNumber, from: twilioFromNumber, bodyLength: message.length })
+    console.log('InMobile API Request:', {
+      url: 'https://api.inmobile.com/v4/sms/outgoing',
+      phoneNumber,
+      sender: senderNumber,
+      apiKeyPrefix: inmobileApiKey.substring(0, 8) + '...',
+      authHeaderLength: basicAuth.length
+    })
 
-    const response = await fetch(twilioUrl, {
+    const response = await fetch('https://api.inmobile.com/v4/sms/outgoing', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${basicAuth}`,
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       },
-      body: formData.toString()
+      body: JSON.stringify(requestBody)
     })
 
     const result = await response.json()
+    console.log('InMobile response:', {
+      status: response.status,
+      statusText: response.statusText,
+      result: JSON.stringify(result)
+    })
 
-    console.log('Twilio response:', JSON.stringify(result))
-
-    if (response.ok) {
+    // Check for successful response
+    if (response.ok && result.results && result.results.length > 0 && result.results[0].messageId) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          sid: result.sid,
-          status: result.status,
-          to: result.to,
-          from: result.from
-        }),
+        JSON.stringify({ success: true, sid: result.results[0].messageId, provider: 'inmobile' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     } else {
+      const errorMsg = result.errorMessage || result.results?.[0]?.errorMessage || 'Failed to send SMS'
       return new Response(
-        JSON.stringify({
-          error: result.message || 'Failed to send SMS',
-          code: result.code,
-          details: result
-        }),
+        JSON.stringify({ error: errorMsg, details: result }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
   } catch (error) {
-    console.error('Send SMS error:', error)
+    console.error('InMobile error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

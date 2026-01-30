@@ -79,6 +79,22 @@ function initTheme() {
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
+// Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
+(function cleanupOldSmsProviders() {
+  const oldKeys = [
+    'twilio_account_sid',
+    'twilio_auth_token',
+    'twilio_phone_number',
+    'api_twilio_enabled',
+    'gatewayapi_token',
+    'gatewayapi_sender',
+    'api_gatewayapi_enabled',
+    'api_inmobile_enabled' // Not needed anymore since InMobile is the only provider
+  ];
+
+  oldKeys.forEach(key => localStorage.removeItem(key));
+})();
+
 // =====================================================
 // DEVICE DETECTION & TRUSTED DEVICES
 // =====================================================
@@ -15741,129 +15757,30 @@ async function sendSMS(to, message, restaurant) {
       return;
     }
 
-    // Determine active SMS provider
-    const provider = getActiveSmsProvider();
-
-    if (provider === 'gatewayapi') {
-      await sendSMSViaGatewayAPI(phoneNumber, message);
-    } else if (provider === 'inmobile') {
-      await sendSMSViaInMobile(phoneNumber, message);
-    } else {
-      await sendSMSViaTwilio(phoneNumber, message);
-    }
+    // Send SMS via InMobile
+    await sendSMS(phoneNumber, message);
   }
 
   await sleep(300);
 }
 
-// Send SMS via Twilio
-async function sendSMSViaTwilio(phoneNumber, message) {
-  // Get Twilio credentials
-  const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
-  const authToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
-  const fromNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
-
-  if (!accountSid || !authToken) {
-    addLog(`❌ Twilio credentials mangler - tjek Indstillinger`, 'error');
-    return;
-  }
-
-  addLog(`📤 Sender SMS via Twilio til ${phoneNumber}...`, 'info');
-
-  try {
-    // Send via Supabase Edge Function (Twilio)
-    const supabaseUrl = CONFIG.SUPABASE_URL;
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-      },
-      body: JSON.stringify({
-        to: phoneNumber,
-        message: message,
-        from: fromNumber,
-        accountSid: accountSid,
-        authToken: authToken
-      })
-    });
-
-    const result = await response.json();
-    console.log('SMS response:', result);
-
-    if (result.success || result.sid) {
-      addLog(`✅ SMS sendt via Twilio! ID: ${result.sid}`, 'success');
-    } else {
-      addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
-    }
-  } catch (err) {
-    console.error('SMS error:', err);
-    addLog(`❌ SMS fejl: ${err.message}`, 'error');
-  }
-}
-
-// Send SMS via GatewayAPI
-async function sendSMSViaGatewayAPI(phoneNumber, message) {
-  // Get GatewayAPI credentials
-  const apiToken = localStorage.getItem('gatewayapi_token');
-  const sender = localStorage.getItem('gatewayapi_sender') || 'OrderFlow';
-
-  if (!apiToken) {
-    addLog(`❌ GatewayAPI token mangler - tjek Indstillinger`, 'error');
-    return;
-  }
-
-  addLog(`📤 Sender SMS via GatewayAPI til ${phoneNumber}...`, 'info');
-
-  try {
-    // Send via Supabase Edge Function (GatewayAPI)
-    const supabaseUrl = CONFIG.SUPABASE_URL;
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms-gatewayapi`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-      },
-      body: JSON.stringify({
-        to: phoneNumber,
-        message: message,
-        sender: sender,
-        apiToken: apiToken
-      })
-    });
-
-    const result = await response.json();
-    console.log('GatewayAPI response:', result);
-
-    if (result.success || result.ids) {
-      const ids = result.ids ? result.ids.join(', ') : 'OK';
-      addLog(`✅ SMS sendt via GatewayAPI! ID: ${ids}`, 'success');
-    } else {
-      addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
-    }
-  } catch (err) {
-    console.error('GatewayAPI error:', err);
-    addLog(`❌ SMS fejl: ${err.message}`, 'error');
-  }
-}
-
 // Send SMS via InMobile
-async function sendSMSViaInMobile(phoneNumber, message) {
+async function sendSMS(phoneNumber, message) {
   // Get InMobile credentials
   const apiKey = localStorage.getItem('inmobile_api_key');
   const sender = localStorage.getItem('inmobile_sender') || 'OrderFlow';
 
   if (!apiKey) {
-    addLog(`❌ InMobile API key mangler - tjek Indstillinger`, 'error');
+    addLog(`❌ SMS API key mangler - tjek Indstillinger`, 'error');
     return;
   }
 
-  addLog(`📤 Sender SMS via InMobile til ${phoneNumber}...`, 'info');
+  addLog(`📤 Sender SMS til ${phoneNumber}...`, 'info');
 
   try {
     // Send via Supabase Edge Function (InMobile)
     const supabaseUrl = CONFIG.SUPABASE_URL;
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms-inmobile`, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-sms`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -15878,15 +15795,15 @@ async function sendSMSViaInMobile(phoneNumber, message) {
     });
 
     const result = await response.json();
-    console.log('InMobile response:', result);
+    console.log('SMS response:', result);
 
     if (result.success || result.sid) {
-      addLog(`✅ SMS sendt via InMobile! ID: ${result.sid}`, 'success');
+      addLog(`✅ SMS sendt! ID: ${result.sid}`, 'success');
     } else {
       addLog(`❌ SMS fejl: ${result.error || 'Ukendt fejl'}`, 'error');
     }
   } catch (err) {
-    console.error('InMobile error:', err);
+    console.error('SMS error:', err);
     addLog(`❌ SMS fejl: ${err.message}`, 'error');
   }
 }
@@ -18369,38 +18286,37 @@ function loadConfig() {
   updateApiStatus();
 }
 
-function saveTwilioSettings() {
-  const accountSid = document.getElementById('twilio-account-sid')?.value.trim();
-  const authToken = document.getElementById('twilio-auth-token')?.value.trim();
-  const phoneNumber = document.getElementById('twilio-phone-number')?.value.trim();
+function saveSmsConfig() {
+  const apiKey = document.getElementById('inmobile-api-key')?.value.trim();
+  const sender = document.getElementById('inmobile-sender')?.value.trim();
 
-  if (!accountSid || !authToken) {
-    toast('Indtast Twilio Account SID og Auth Token', 'error');
+  if (!apiKey) {
+    toast('Indtast InMobile API Key', 'error');
     return;
   }
 
-  localStorage.setItem('twilio_account_sid', accountSid);
-  localStorage.setItem('twilio_auth_token', authToken);
-  if (phoneNumber) {
-    localStorage.setItem('twilio_phone_number', phoneNumber);
+  if (!sender) {
+    toast('Indtast afsender / shortcode', 'error');
+    return;
   }
 
-  toast('Twilio indstillinger gemt', 'success');
+  localStorage.setItem('inmobile_api_key', apiKey);
+  localStorage.setItem('inmobile_sender', sender);
+
+  toast('SMS indstillinger gemt', 'success');
+  closeModal('sms-config');
   updateApiStatus();
 }
 
-function loadTwilioSettings() {
-  const accountSid = localStorage.getItem('twilio_account_sid');
-  const authToken = localStorage.getItem('twilio_auth_token');
-  const phoneNumber = localStorage.getItem('twilio_phone_number') || '+4552512921';
+function loadSmsConfig() {
+  const apiKey = localStorage.getItem('inmobile_api_key');
+  const sender = localStorage.getItem('inmobile_sender') || '';
 
-  const sidInput = document.getElementById('twilio-account-sid');
-  const tokenInput = document.getElementById('twilio-auth-token');
-  const phoneInput = document.getElementById('twilio-phone-number');
+  const apiKeyInput = document.getElementById('inmobile-api-key');
+  const senderInput = document.getElementById('inmobile-sender');
 
-  if (sidInput && accountSid) sidInput.value = accountSid;
-  if (tokenInput && authToken) tokenInput.value = authToken;
-  if (phoneInput) phoneInput.value = phoneNumber;
+  if (apiKeyInput && apiKey) apiKeyInput.value = apiKey;
+  if (senderInput) senderInput.value = sender;
 }
 
 function saveOpenAIConfig() {
@@ -18441,27 +18357,23 @@ function saveOpenAIKey() {
 }
 
 function updateApiStatus() {
-  const twilioOk = (localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID) &&
-                   (localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN);
-  const gatewayapiOk = localStorage.getItem('gatewayapi_token');
-  const inmobileOk = localStorage.getItem('inmobile_api_key');
+  const smsOk = localStorage.getItem('inmobile_api_key') && localStorage.getItem('inmobile_sender');
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
 
-  // Legacy status elements
-  const smsStatusEl = document.getElementById('status-twilio') || document.getElementById('status-sms');
+  // Status elements
+  const smsStatusEl = document.getElementById('status-sms');
   const openaiStatusEl = document.getElementById('status-openai');
 
-  if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (twilioOk ? 'ok' : 'missing');
+  if (smsStatusEl) smsStatusEl.className = 'api-key-status ' + (smsOk ? 'ok' : 'missing');
   if (openaiStatusEl) openaiStatusEl.className = 'api-key-status ' + (openaiOk ? 'ok' : 'missing');
 
   // New indicator elements
   const indicators = {
     'openai-indicator': openaiOk,
-    'twilio-indicator': twilioOk,
-    'gatewayapi-indicator': gatewayapiOk,
-    'inmobile-indicator': inmobileOk,
+    'sms-indicator': smsOk,
+    'inmobile-indicator': smsOk,
     'google-indicator': googleOk,
     'trustpilot-indicator': trustpilotOk
   };
@@ -18479,7 +18391,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'twilio', 'gatewayapi', 'inmobile', 'google', 'trustpilot', 'webhook'];
+  const apis = ['openai', 'google', 'trustpilot', 'webhook'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -18499,19 +18411,6 @@ function updateApiToggles() {
 function toggleApiEnabled(api) {
   const toggle = document.getElementById(`${api}-toggle`);
   const newState = toggle ? toggle.checked : false;
-
-  // Special handling for SMS providers - only one can be enabled at a time
-  const smsProviders = ['twilio', 'gatewayapi', 'inmobile'];
-  if (smsProviders.includes(api)) {
-    if (newState) {
-      // Disable all other SMS providers when enabling one
-      smsProviders.forEach(provider => {
-        if (provider !== api) {
-          localStorage.setItem(`api_${provider}_enabled`, 'false');
-        }
-      });
-    }
-  }
 
   localStorage.setItem(`api_${api}_enabled`, newState.toString());
   updateApiToggles();
@@ -18567,19 +18466,6 @@ async function loadApiEnabledStates() {
 }
 
 // Get the active SMS provider
-function getActiveSmsProvider() {
-  const twilioEnabled = localStorage.getItem('api_twilio_enabled') !== 'false';
-  const gatewayEnabled = localStorage.getItem('api_gatewayapi_enabled') !== 'false';
-  const inmobileEnabled = localStorage.getItem('api_inmobile_enabled') !== 'false';
-
-  // Priority: Check which one is explicitly enabled
-  if (twilioEnabled) return 'twilio';
-  if (gatewayEnabled) return 'gatewayapi';
-  if (inmobileEnabled) return 'inmobile';
-
-  // Default to Twilio if none enabled
-  return 'twilio';
-}
 
 // Toggle API config fields visibility
 function toggleApiConfig(api) {

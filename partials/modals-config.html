@@ -1,26 +1,25 @@
-  <div class="modal-overlay" id="modal-twilio-config">
+  <div class="modal-overlay" id="modal-sms-config">
     <div class="modal">
       <div class="modal-header">
-        <div class="modal-title">Twilio Konfiguration</div>
-        <button class="modal-close" onclick="closeModal('twilio-config')">×</button>
+        <div class="modal-title">SMS Konfiguration</div>
+        <button class="modal-close" onclick="closeModal('sms-config')">×</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">Account SID</label>
-          <input type="text" class="input" id="twilio-sid" placeholder="ACxxxxxxxx">
+          <label class="form-label">InMobile API Key</label>
+          <input type="password" class="input" id="inmobile-api-key" placeholder="Din InMobile API nøgle">
         </div>
         <div class="form-group">
-          <label class="form-label">Auth Token</label>
-          <input type="password" class="input" id="twilio-token" placeholder="••••••••">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Telefonnummer</label>
-          <input type="tel" class="input" id="twilio-number" placeholder="+1xxxxxxxxxx">
+          <label class="form-label">Afsender / Shortcode</label>
+          <input type="text" class="input" id="inmobile-sender" placeholder="54540109">
+          <small style="display:block;margin-top:4px;color:var(--muted);font-size:12px">
+            Numerisk shortcode fra InMobile (f.eks. 54540109)
+          </small>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('twilio-config')">Annuller</button>
-        <button class="btn btn-primary" onclick="saveTwilioConfig()">Gem</button>
+        <button class="btn btn-secondary" onclick="closeModal('sms-config')">Annuller</button>
+        <button class="btn btn-primary" onclick="saveSmsConfig()">Gem</button>
       </div>
     </div>
   </div>
