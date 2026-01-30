@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sådan virker det - OrderFlow Restaurant Analyse</title>
+  <meta name="description" content="Få en gratis AI-drevet analyse af din restaurant. Se din score, konkurrentanalyse, og få anbefalinger til forbedringer.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-gray-100: #f8f9fa;
+      --color-gray-200: #e9ecef;
+      --color-gray-400: #787a7d;
+      --color-gray-600: #495057;
+      --section-radius: 2.4rem;
+      --section-overlap: -2.4rem;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 62.5%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.6rem;
+      line-height: 1.6;
+      color: var(--color-dark);
+      background: var(--color-white);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .nav.scrolled {
+      border-color: var(--color-gray-200);
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .nav-container {
+      width: 100%;
+      max-width: 128rem;
+      margin: 0 auto;
+      padding: 1.6rem 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 4rem;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      color: #0f172a;
+    }
+
+    .nav-logo {
+      height: 2.4rem;
+      width: auto;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 3.2rem;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: #0f172a;
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      transition: color 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: #0d9488;
+    }
+
+    .nav-link.active {
+      color: var(--color-primary);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .nav-login {
+      text-decoration: none;
+      color: #0f172a;
+      font-size: 1.5rem;
+      font-weight: 500;
+      padding: 0.8rem 0;
+      transition: color 0.2s ease;
+    }
+
+    .nav-login:hover {
+      color: #0d9488;
+    }
+
+    .nav-actions .btn-primary {
+      background: #0f172a;
+      color: #ffffff;
+      padding: 1.2rem 2rem;
+      border-radius: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .nav-actions .btn-primary:hover {
+      background: #1e293b;
+    }
+
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.8rem;
+    }
+
+    .mobile-menu-btn svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 16rem 2.4rem 8rem;
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero-container {
+      max-width: 80rem;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(1, 91, 248, 0.1);
+      color: var(--color-primary);
+      padding: 0.8rem 1.6rem;
+      border-radius: 10rem;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin-bottom: 2.4rem;
+    }
+
+    .hero-badge-dot {
+      width: 0.8rem;
+      height: 0.8rem;
+      background: var(--color-primary);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero-title {
+      font-size: 5.6rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 2.4rem;
+      color: var(--color-dark);
+    }
+
+    .hero-title span {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #0d9488 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 2rem;
+      color: var(--color-gray-600);
+      max-width: 60rem;
+      margin: 0 auto 4rem;
+      line-height: 1.6;
+    }
+
+    /* Search Section */
+    .search-section {
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 2px solid var(--color-gray-200);
+      border-radius: 1.6rem;
+      padding: 0.8rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-input-wrapper:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 30px rgba(1, 91, 248, 0.15);
+    }
+
+    .search-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      margin-left: 1.6rem;
+      color: var(--color-gray-400);
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 1.8rem;
+      padding: 1.6rem;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .search-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .search-btn {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 1.6rem 3.2rem;
+      border-radius: 1.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .search-btn:hover {
+      background: var(--color-primary-hover);
+    }
+
+    .search-btn:disabled {
+      background: var(--color-gray-400);
+      cursor: not-allowed;
+    }
+
+    /* Autocomplete Dropdown */
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--color-gray-200);
+      border-radius: 1.2rem;
+      margin-top: 0.8rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+      display: none;
+      z-index: 100;
+      max-height: 40rem;
+      overflow-y: auto;
+    }
+
+    .autocomplete-dropdown.active {
+      display: block;
+    }
+
+    .autocomplete-item {
+      padding: 1.6rem 2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background: var(--color-gray-100);
+    }
+
+    .autocomplete-icon {
+      width: 4rem;
+      height: 4rem;
+      background: var(--color-gray-100);
+      border-radius: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+    }
+
+    .autocomplete-icon svg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .autocomplete-content {
+      flex: 1;
+    }
+
+    .autocomplete-name {
+      font-weight: 600;
+      color: var(--color-dark);
+      font-size: 1.5rem;
+    }
+
+    .autocomplete-address {
+      font-size: 1.3rem;
+      color: var(--color-gray-400);
+      margin-top: 0.2rem;
+    }
+
+    .autocomplete-type {
+      font-size: 1.2rem;
+      color: var(--color-primary);
+      background: rgba(1, 91, 248, 0.1);
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.4rem;
+    }
+
+    /* Loading Section */
+    .loading-section {
+      display: none;
+      padding: 8rem 2.4rem;
+      text-align: center;
+    }
+
+    .loading-section.active {
+      display: block;
+    }
+
+    .loading-container {
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+
+    .loading-animation {
+      width: 12rem;
+      height: 12rem;
+      margin: 0 auto 3.2rem;
+      position: relative;
+    }
+
+    .loading-circle {
+      width: 100%;
+      height: 100%;
+      border: 4px solid var(--color-gray-200);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .loading-subtext {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+    }
+
+    .loading-timer {
+      font-size: 4.8rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loading-steps {
+      margin-top: 4rem;
+      text-align: left;
+      max-width: 40rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .loading-step {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 0;
+      color: var(--color-gray-400);
+      transition: all 0.3s ease;
+    }
+
+    .loading-step.active {
+      color: var(--color-dark);
+    }
+
+    .loading-step.completed {
+      color: var(--color-success);
+    }
+
+    .loading-step-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      background: var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .loading-step.active .loading-step-icon {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .loading-step.completed .loading-step-icon {
+      background: var(--color-success);
+      color: white;
+    }
+
+    .loading-step-icon svg {
+      width: 1.4rem;
+      height: 1.4rem;
+    }
+
+    /* Report Section */
+    .report-section {
+      display: none;
+      padding: 4rem 2.4rem 8rem;
+    }
+
+    .report-section.active {
+      display: block;
+    }
+
+    .report-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+
+    .report-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .report-business-name {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+
+    .report-business-address {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+    }
+
+    /* Score Card */
+    .score-card {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #0d9488 100%);
+      border-radius: 2.4rem;
+      padding: 4rem;
+      color: white;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .score-label {
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+      margin-bottom: 1.6rem;
+    }
+
+    .score-value {
+      font-size: 9.6rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 1.6rem;
+    }
+
+    .score-max {
+      font-size: 2.4rem;
+      opacity: 0.6;
+    }
+
+    .score-description {
+      font-size: 1.8rem;
+      opacity: 0.9;
+      max-width: 50rem;
+      margin: 0 auto;
+    }
+
+    /* Report Grid */
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.4rem;
+      margin-bottom: 4rem;
+    }
+
+    .report-card {
+      background: white;
+      border: 1px solid var(--color-gray-200);
+      border-radius: 1.6rem;
+      padding: 2.4rem;
+    }
+
+    .report-card-header {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .report-card-icon {
+      width: 4.8rem;
+      height: 4.8rem;
+      background: rgba(1, 91, 248, 0.1);
+      border-radius: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+    }
+
+    .report-card-icon svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    .report-card-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+
+    .report-card-content {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.7;
+    }
+
+    .report-list {
+      list-style: none;
+    }
+
+    .report-list li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--color-gray-100);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .report-list li:last-child {
+      border-bottom: none;
+    }
+
+    .report-list-icon {
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+
+    .report-list-icon.success {
+      color: var(--color-success);
+    }
+
+    .report-list-icon.warning {
+      color: var(--color-warning);
+    }
+
+    .report-list-icon.danger {
+      color: var(--color-danger);
+    }
+
+    /* Recommendations */
+    .recommendations-section {
+      background: var(--color-gray-100);
+      border-radius: 1.6rem;
+      padding: 3.2rem;
+      margin-bottom: 4rem;
+    }
+
+    .recommendations-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 2.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .recommendations-title svg {
+      width: 3.2rem;
+      height: 3.2rem;
+      color: var(--color-primary);
+    }
+
+    .recommendation-item {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      margin-bottom: 1.6rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.6rem;
+    }
+
+    .recommendation-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .recommendation-number {
+      width: 3.2rem;
+      height: 3.2rem;
+      background: var(--color-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .recommendation-content h4 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .recommendation-content p {
+      font-size: 1.4rem;
+      color: var(--color-gray-600);
+    }
+
+    /* CTA Section */
+    .report-cta {
+      background: var(--color-dark);
+      border-radius: 2.4rem;
+      padding: 4rem;
+      text-align: center;
+      color: white;
+    }
+
+    .report-cta h3 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 1.6rem;
+    }
+
+    .report-cta p {
+      font-size: 1.6rem;
+      opacity: 0.8;
+      margin-bottom: 2.4rem;
+      max-width: 50rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .report-cta .btn {
+      background: white;
+      color: var(--color-dark);
+      padding: 1.6rem 3.2rem;
+      border-radius: 1.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: all 0.2s ease;
+    }
+
+    .report-cta .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--color-dark);
+      color: white;
+      padding: 6.4rem 2.4rem 3.2rem;
+    }
+
+    .footer-container {
+      max-width: 128rem;
+      margin: 0 auto;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 4rem;
+      margin-bottom: 4rem;
+    }
+
+    .footer-brand p {
+      margin-top: 1.6rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1.4rem;
+      line-height: 1.7;
+    }
+
+    .footer-column h4 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .footer-column ul {
+      list-style: none;
+    }
+
+    .footer-column li {
+      margin-bottom: 1rem;
+    }
+
+    .footer-column a {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+      font-size: 1.4rem;
+      transition: color 0.2s ease;
+    }
+
+    .footer-column a:hover {
+      color: white;
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 3.2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-bottom p {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 1.4rem;
+    }
+
+    .footer-social {
+      display: flex;
+      gap: 1.6rem;
+    }
+
+    .footer-social a {
+      color: rgba(255, 255, 255, 0.6);
+      transition: color 0.2s ease;
+    }
+
+    .footer-social a:hover {
+      color: white;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .nav-menu {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+      }
+
+      .hero {
+        padding: 12rem 2rem 6rem;
+      }
+
+      .hero-title {
+        font-size: 3.6rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.6rem;
+      }
+
+      .search-input-wrapper {
+        flex-direction: column;
+        padding: 1.2rem;
+      }
+
+      .search-input {
+        width: 100%;
+        text-align: center;
+      }
+
+      .search-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .report-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 3.2rem;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 1.6rem;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav" id="nav">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="/landing.html" class="nav-brand">
+          <img src="images/FLOW-logo-sort-4K.png" alt="FLOW" class="nav-logo">
+        </a>
+        <div class="nav-menu">
+          <a href="/landing.html#product" class="nav-link">Produkt</a>
+          <a href="/pricing" class="nav-link">Priser</a>
+          <a href="/how-it-works.html" class="nav-link active">Sådan virker det</a>
+          <a href="/about" class="nav-link">Om os</a>
+          <a href="/resources" class="nav-link">Ressourcer</a>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <a href="index.html" class="nav-login">Log ind</a>
+        <a href="index.html" class="btn btn-primary">Kom i gang</a>
+      </div>
+      <button class="mobile-menu-btn" aria-label="Menu">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero Section with Search -->
+  <section class="hero" id="heroSection">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <span>Gratis AI-drevet analyse</span>
+      </div>
+      <h1 class="hero-title">
+        Få en gratis analyse af<br>
+        <span>din restaurant</span>
+      </h1>
+      <p class="hero-subtitle">
+        Indtast din restaurants navn og få en komplet AI-analyse med score, 
+        konkurrentanalyse, review-opsummering og anbefalinger til forbedringer.
+      </p>
+
+      <div class="search-section">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input 
+              type="text" 
+              class="search-input" 
+              id="searchInput" 
+              placeholder="Søg efter din restaurant..." 
+              autocomplete="off"
+            >
+            <button class="search-btn" id="searchBtn" disabled>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              Analysér
+            </button>
+          </div>
+          <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading Section -->
+  <section class="loading-section" id="loadingSection">
+    <div class="loading-container">
+      <div class="loading-animation">
+        <div class="loading-circle"></div>
+      </div>
+      <h2 class="loading-text">Analyserer din restaurant...</h2>
+      <p class="loading-subtext">Dette tager cirka 23 sekunder</p>
+      <div class="loading-timer" id="loadingTimer">23</div>
+
+      <div class="loading-steps">
+        <div class="loading-step" id="step1">
+          <div class="loading-step-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <span>Finder din restaurant online...</span>
+        </div>
+        <div class="loading-step" id="step2">
+          <div class="loading-step-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </div>
+          <span>Analyserer konkurrenter...</span>
+        </div>
+        <div class="loading-step" id="step3">
+          <div class="loading-step-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+          </div>
+          <span>Læser anmeldelser...</span>
+        </div>
+        <div class="loading-step" id="step4">
+          <div class="loading-step-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+            </svg>
+          </div>
+          <span>Genererer anbefalinger...</span>
+        </div>
+        <div class="loading-step" id="step5">
+          <div class="loading-step-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <span>Færdiggør rapport...</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Report Section -->
+  <section class="report-section" id="reportSection">
+    <div class="report-container">
+      <div class="report-header">
+        <h1 class="report-business-name" id="reportBusinessName">Restaurant Navn</h1>
+        <p class="report-business-address" id="reportBusinessAddress">Adresse</p>
+      </div>
+
+      <!-- Score Card -->
+      <div class="score-card">
+        <p class="score-label">Din OrderFlow Score</p>
+        <div class="score-value">
+          <span id="reportScore">72</span><span class="score-max">/100</span>
+        </div>
+        <p class="score-description" id="scoreDescription">
+          Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.
+        </p>
+      </div>
+
+      <!-- Report Grid -->
+      <div class="report-grid">
+        <!-- Local Listings -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+            </div>
+            <h3 class="report-card-title">Lokal Listings Analyse</h3>
+          </div>
+          <div class="report-card-content">
+            <ul class="report-list" id="listingsAnalysis">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Competitor Analysis -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+            <h3 class="report-card-title">Konkurrentanalyse</h3>
+          </div>
+          <div class="report-card-content">
+            <ul class="report-list" id="competitorAnalysis">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Review Summary -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+              </svg>
+            </div>
+            <h3 class="report-card-title">Review Opsummering</h3>
+          </div>
+          <div class="report-card-content">
+            <ul class="report-list" id="reviewSummary">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Website Analysis -->
+        <div class="report-card">
+          <div class="report-card-header">
+            <div class="report-card-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+              </svg>
+            </div>
+            <h3 class="report-card-title">Website Analyse</h3>
+          </div>
+          <div class="report-card-content">
+            <ul class="report-list" id="websiteAnalysis">
+              <!-- Populated by JS -->
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="recommendations-section">
+        <h2 class="recommendations-title">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+          Anbefalinger til forbedring
+        </h2>
+        <div id="recommendations">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="report-cta">
+        <h3>Klar til at forbedre din restaurant?</h3>
+        <p>OrderFlow kan hjælpe dig med at implementere alle disse forbedringer automatisk og øge din omsætning.</p>
+        <a href="index.html" class="btn">
+          Start gratis nu
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="nav-brand" style="color: white;">
+            <img src="images/FLOW-logo-hvid-4K.png" alt="FLOW" class="nav-logo">
+          </a>
+          <p>
+            Den komplette platform til restaurant automatisering. Gør det nemt at drive en succesfuld restaurant.
+          </p>
+        </div>
+        <div class="footer-column">
+          <h4>Produkt</h4>
+          <ul>
+            <li><a href="#features">Funktioner</a></li>
+            <li><a href="#product">Workflow</a></li>
+            <li><a href="/pricing">Priser</a></li>
+            <li><a href="#">Integrationer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Virksomhed</h4>
+          <ul>
+            <li><a href="#">Om os</a></li>
+            <li><a href="#">Karriere</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Kontakt</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>Support</h4>
+          <ul>
+            <li><a href="#">Hjælp</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Status</a></li>
+            <li><a href="#">Privatlivspolitik</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2024 OrderFlow. Alle rettigheder forbeholdes.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // State
+    let selectedPlace = null;
+    let searchTimeout = null;
+
+    // DOM Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+    const heroSection = document.getElementById('heroSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const reportSection = document.getElementById('reportSection');
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Navbar scroll effect
+      const nav = document.getElementById('nav');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+      });
+
+      // Search input handler
+      searchInput.addEventListener('input', handleSearchInput);
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.length >= 2) {
+          autocompleteDropdown.classList.add('active');
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+          autocompleteDropdown.classList.remove('active');
+        }
+      });
+
+      // Search button handler
+      searchBtn.addEventListener('click', startAnalysis);
+    });
+
+    // Handle search input
+    function handleSearchInput(e) {
+      const query = e.target.value.trim();
+
+      if (query.length < 2) {
+        autocompleteDropdown.classList.remove('active');
+        searchBtn.disabled = true;
+        selectedPlace = null;
+        return;
+      }
+
+      // Debounce search
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchPlaces(query);
+      }, 300);
+    }
+
+    // Search for places (simulated - in production use Google Places API)
+    async function searchPlaces(query) {
+      // Show loading state
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-item"><span>Søger...</span></div>';
+      autocompleteDropdown.classList.add('active');
+
+      try {
+        // Call our API endpoint
+        const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          renderAutocomplete(data.results);
+        } else {
+          // Fallback: Show the search query as a manual entry option
+          renderAutocomplete([{
+            place_id: 'manual_' + Date.now(),
+            name: query,
+            address: 'Indtast adresse manuelt',
+            type: 'Restaurant'
+          }]);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        // Fallback: Allow manual entry
+        renderAutocomplete([{
+          place_id: 'manual_' + Date.now(),
+          name: query,
+          address: 'Klik for at analysere',
+          type: 'Restaurant'
+        }]);
+      }
+    }
+
+    // Render autocomplete results
+    function renderAutocomplete(results) {
+      autocompleteDropdown.innerHTML = results.map(place => `
+        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}"> 
+          <div class="autocomplete-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div class="autocomplete-content">
+            <div class="autocomplete-name">${place.name}</div>
+            <div class="autocomplete-address">${place.address || 'Danmark'}</div>
+          </div>
+          <span class="autocomplete-type">${place.type || 'Restaurant'}</span>
+        </div>
+      `).join('')
+
+      // Add click handlers
+      autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('click', () => selectPlace(item));
+      });
+    }
+
+    // Select a place
+    function selectPlace(item) {
+      selectedPlace = {
+        place_id: item.dataset.placeId,
+        name: item.dataset.name,
+        address: item.dataset.address
+      };
+
+      searchInput.value = selectedPlace.name;
+      autocompleteDropdown.classList.remove('active');
+      searchBtn.disabled = false;
+    }
+
+    // Start analysis
+    async function startAnalysis() {
+      if (!selectedPlace && searchInput.value.trim().length < 2) return;
+
+      // If no place selected, use the input value
+      if (!selectedPlace) {
+        selectedPlace = {
+          place_id: 'manual_' + Date.now(),
+          name: searchInput.value.trim(),
+          address: 'Danmark'
+        };
+      }
+
+      // Show loading section
+      heroSection.style.display = 'none';
+      loadingSection.classList.add('active');
+      reportSection.classList.remove('active');
+
+      // Start countdown and steps animation
+      startLoadingAnimation();
+
+      try {
+        // Call analysis API
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            place_id: selectedPlace.place_id,
+            name: selectedPlace.name,
+            address: selectedPlace.address
+          })
+        });
+
+        const data = await response.json();
+
+        // Wait for animation to complete (minimum 23 seconds)
+        await waitForAnimation();
+
+        // Show report
+        showReport(data);
+      } catch (error) {
+        console.error('Analysis error:', error);
+        // Show demo report on error
+        await waitForAnimation();
+        showReport(generateDemoReport(selectedPlace.name, selectedPlace.address));
+      }
+    }
+
+    // Loading animation
+    let animationStartTime;
+    const ANIMATION_DURATION = 23000; // 23 seconds
+
+    function startLoadingAnimation() {
+      animationStartTime = Date.now();
+      const timerEl = document.getElementById('loadingTimer');
+      const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+
+      // Update timer
+      const timerInterval = setInterval(() => {
+        const elapsed = Date.now() - animationStartTime;
+        const remaining = Math.max(0, Math.ceil((ANIMATION_DURATION - elapsed) / 1000));
+        timerEl.textContent = remaining;
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+        }
+      }, 100);
+
+      // Animate steps
+      steps.forEach((stepId, index) => {
+        const stepEl = document.getElementById(stepId);
+        const delay = (index * ANIMATION_DURATION / steps.length);
+
+        setTimeout(() => {
+          // Mark previous steps as completed
+          steps.slice(0, index).forEach(prevId => {
+            document.getElementById(prevId).classList.remove('active');
+            document.getElementById(prevId).classList.add('completed');
+          });
+          // Mark current step as active
+          stepEl.classList.add('active');
+        }, delay);
+      });
+
+      // Complete all steps at the end
+      setTimeout(() => {
+        steps.forEach(stepId => {
+          document.getElementById(stepId).classList.remove('active');
+          document.getElementById(stepId).classList.add('completed');
+        });
+      }, ANIMATION_DURATION);
+    }
+
+    function waitForAnimation() {
+      return new Promise(resolve => {
+        const elapsed = Date.now() - animationStartTime;
+        const remaining = Math.max(0, ANIMATION_DURATION - elapsed);
+        setTimeout(resolve, remaining);
+      });
+    }
+
+    // Show report
+    function showReport(data) {
+      loadingSection.classList.remove('active');
+      reportSection.classList.add('active');
+
+      // Populate report
+      document.getElementById('reportBusinessName').textContent = data.business_name;
+      document.getElementById('reportBusinessAddress').textContent = data.address;
+      document.getElementById('reportScore').textContent = data.score;
+      document.getElementById('scoreDescription').textContent = data.score_description;
+
+      // Listings analysis
+      document.getElementById('listingsAnalysis').innerHTML = data.listings.map(item => `
+        <li>
+          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${item.status === 'success' 
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+              : item.status === 'warning'
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
+            }
+          </svg>
+          <span>${item.text}</span>
+        </li>
+      `).join('')
+
+      // Competitor analysis
+      document.getElementById('competitorAnalysis').innerHTML = data.competitors.map(item => `
+        <li>
+          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${item.status === 'success' 
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+              : item.status === 'warning'
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
+            }
+          </svg>
+          <span>${item.text}</span>
+        </li>
+      `).join('')
+
+      // Review summary
+      document.getElementById('reviewSummary').innerHTML = data.reviews.map(item => `
+        <li>
+          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${item.status === 'success' 
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+              : item.status === 'warning'
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
+            }
+          </svg>
+          <span>${item.text}</span>
+        </li>
+      `).join('')
+
+      // Website analysis
+      document.getElementById('websiteAnalysis').innerHTML = data.website.map(item => `
+        <li>
+          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${item.status === 'success' 
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
+              : item.status === 'warning'
+              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
+              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
+            }
+          </svg>
+          <span>${item.text}</span>
+        </li>
+      `).join('')
+
+      // Recommendations
+      document.getElementById('recommendations').innerHTML = data.recommendations.map((rec, index) => `
+        <div class="recommendation-item">
+          <div class="recommendation-number">${index + 1}</div>
+          <div class="recommendation-content">
+            <h4>${rec.title}</h4>
+            <p>${rec.description}</p>
+          </div>
+        </div>
+      `).join('')
+
+      // Scroll to top of report
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Generate demo report (fallback)
+    function generateDemoReport(name, address) {
+      return {
+        business_name: name,
+        address: address || 'Danmark',
+        score: Math.floor(Math.random() * 30) + 55, // 55-85
+        score_description: 'Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.',
+        listings: [
+          { text: 'Google My Business profil fundet', status: 'success' },
+          { text: 'Åbningstider mangler på nogle platforme', status: 'warning' },
+          { text: 'Billeder kunne opdateres (ældre end 6 måneder)', status: 'warning' },
+          { text: 'Kontaktinformation er konsistent', status: 'success' }
+        ],
+        competitors: [
+          { text: '3 konkurrenter inden for 500m radius', status: 'warning' },
+          { text: 'Din gennemsnitlige rating er over områdets gennemsnit', status: 'success' },
+          { text: 'Konkurrenter har flere online anmeldelser', status: 'danger' },
+          { text: 'Din menu har flere unikke retter', status: 'success' }
+        ],
+        reviews: [
+          { text: '4.2 gennemsnitlig rating på Google', status: 'success' },
+          { text: 'Positiv feedback på mad kvalitet', status: 'success' },
+          { text: 'Nogle klager over ventetid', status: 'warning' },
+          { text: 'Kun 23% af anmeldelser besvaret', status: 'danger' }
+        ],
+        website: [
+          { text: 'Website er mobilvenlig', status: 'success' },
+          { text: 'Mangler online bestillingssystem', status: 'danger' },
+          { text: 'Langsom indlæsningstid (4.2s)', status: 'warning' },
+          { text: 'Menu er tilgængelig online', status: 'success' }
+        ],
+        recommendations: [
+          {
+            title: 'Implementér online bestilling',
+            description: 'Tilføj et online bestillingssystem for at øge omsætningen med op til 30%. OrderFlow kan hjælpe dig med dette.'
+          },
+          {
+            title: 'Besvar alle anmeldelser',
+            description: 'Svar på alle Google anmeldelser inden for 24 timer. Dette øger kundeloyalitet og forbedrer din synlighed.'
+          },
+          {
+            title: 'Opdater billeder månedligt',
+            description: 'Upload nye, professionelle billeder af dine retter hver måned for at holde din profil frisk og tiltalende.'
+          },
+          {
+            title: 'Optimer website hastighed',
+            description: 'Reducer indlæsningstiden til under 3 sekunder. Hurtigere websites konverterer bedre og rangerer højere på Google.'
+          },
+          {
+            title: 'Start SMS marketing',
+            description: 'Brug SMS til at sende tilbud og påmindelser. SMS har 98% åbningsrate sammenlignet med 20% for email.'
+          }
+        ]
+      };
+    }
+  </script>
+</body>
+</html>
