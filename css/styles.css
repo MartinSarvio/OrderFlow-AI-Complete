@@ -225,7 +225,7 @@
     .app.active{display:flex}
 
     /* Fixed App Logo - centered in sidebar */
-    .app-logo{position:fixed;top:18px;left:0;width:260px;display:flex;justify-content:center;align-items:center;z-index:400;background:none}
+    .app-logo{position:fixed;top:18px;left:20px;width:220px;display:flex;justify-content:center;align-items:center;z-index:400;background:none}
 
     /* Sidebar - Swiftmesh style with smooth transitions */
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200}
