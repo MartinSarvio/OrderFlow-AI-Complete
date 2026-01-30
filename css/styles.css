@@ -224,6 +224,26 @@
     .app{display:none;height:100vh;overflow:hidden}
     .app.active{display:flex}
 
+    /* ═══════════════════════════════════════════════════════════════
+       🔒 SIDEBAR TEMPLATE STYLES - AUTHORIZATION REQUIRED
+       ═══════════════════════════════════════════════════════════════
+       Template Version: 1.6.6 (build 166)
+
+       ⚠️  PROTECTED VALUES - DO NOT MODIFY WITHOUT AUTHORIZATION
+
+       Locked CSS Values:
+       - Sidebar width open: 260px
+       - Sidebar width closed: 72px
+       - Logo position: fixed, top: 20px, width: 260px
+       - Logo height: 32px
+       - Search margin-top: 44px
+       - Navigation margin-top: 100px
+       - Category spacing: 4px
+       - Section spacing: 32px
+
+       See SIDEBAR-TEMPLATE.md for complete specification.
+       ═══════════════════════════════════════════════════════════════ */
+
     /* Sidebar - Swiftmesh style with smooth transitions */
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200}
     .sidebar.collapsed{width:72px}
@@ -343,7 +363,7 @@
     .subpage-header{margin-bottom:var(--space-5);padding-bottom:var(--space-4);border-bottom:1px solid var(--border)}
     .subpage-header h2{font-size:20px;font-weight:600;margin-bottom:4px}
     .subpage-header p{font-size:14px;color:var(--muted)}
-    .card-title{font-size:16px;font-weight:600;margin-bottom:20px;color:var(--text)}
+    .card-title{font-size:18px;font-weight:600;margin-bottom:20px;color:var(--text)}
 
     /* Customer Section Containers - Dashboard-style */
     .customer-section{background:transparent;border:none;border-radius:var(--radius-lg);padding:var(--space-5);margin-bottom:var(--space-5)}
@@ -5852,5 +5872,61 @@ input.flatpickr-input:focus {
 
 [data-theme="light"] input.flatpickr-input:focus {
   border-color: #d9534f;
+}
+
+/* ===================================================================
+   APP BUILDER RESPONSIVE LAYOUT
+   =================================================================== */
+
+.appbuilder-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+@media (max-width: 1200px) {
+  .appbuilder-layout {
+    grid-template-columns: 1fr 350px;
+  }
+}
+
+@media (max-width: 900px) {
+  .appbuilder-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .appbuilder-preview {
+    order: -1;
+    margin-bottom: 24px;
+  }
+
+  .phone-mockup {
+    max-width: 375px;
+    margin: 0 auto;
+  }
+}
+
+.appbuilder-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.appbuilder-preview {
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+}
+
+@media (max-width: 768px) {
+  .appbuilder-preview {
+    position: static;
+  }
+
+  .phone-mockup {
+    max-width: 100%;
+    padding: 12px;
+  }
 }
 

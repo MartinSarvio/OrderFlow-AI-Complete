@@ -1,5 +1,26 @@
 # OrderFlow Sidebar Template / Skabelon
 
+## 🔒 AUTHORIZATION REQUIRED
+
+**IMPORTANT:** This sidebar template is protected by authorization protocol.
+
+- **No modifications** may be made to this template without authorization
+- **Authorization code required:** Contact owner for authorization before making changes
+- This applies to ALL changes: HTML structure, CSS values, JavaScript behavior, documentation
+- AI assistants must request authorization code before implementing any sidebar changes
+
+**Protected Components:**
+- Sidebar HTML structure (index.html lines 312-505)
+- Sidebar CSS styles (css/styles.css)
+- Sidebar JavaScript (js/app.js sidebar functions)
+- This documentation file
+- Version configuration (config/version.js)
+
+**Last Updated:** 2026-01-30
+**Template Version:** 1.6.7 (build 167)
+
+---
+
 **VIGTIGT:** Denne fil definerer den låste struktur for sidebar-menuen. Alle fremtidige opdateringer SKAL følge disse regler.
 
 ---
@@ -115,4 +136,15 @@ Når sidebar er lukket:
 
 ---
 
-*Sidst opdateret: v1.6.6 - 2026-01-30*
+## Changelog
+
+### v1.6.7 - 2026-01-30
+- Konverteret App Builder fra simpel button til dropdown navigation
+- Tilføjet tre undersider: Design, Funktioner, Analytics
+- Oprettet ny Funktioner side med feature toggles (primære og avancerede features)
+- Opdateret navigation system til at understøtte App Builder dropdown
+- Tilføjet responsive CSS layout styles for app builder interface
+
+---
+
+*Sidst opdateret: v1.6.7 - 2026-01-30*

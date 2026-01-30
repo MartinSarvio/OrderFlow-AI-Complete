@@ -3548,6 +3548,22 @@ function showApp() {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 🔒 SIDEBAR TEMPLATE FUNCTIONS - AUTHORIZATION REQUIRED
+// ═══════════════════════════════════════════════════════════════
+// Template Version: 1.6.6 (build 166)
+//
+// ⚠️  PROTECTED FUNCTIONS - DO NOT MODIFY WITHOUT AUTHORIZATION
+//
+// Protected sidebar functions:
+// - toggleSidebar()
+// - initSidebarState()
+// - toggleNavDropdown()
+// - applyRoleBasedSidebar()
+//
+// See SIDEBAR-TEMPLATE.md for complete specification.
+// ═══════════════════════════════════════════════════════════════
+
 // =====================================================
 // SMART SIDEBAR - Toggle collapsed state
 // =====================================================
@@ -23843,15 +23859,31 @@ function showAppBuilderPage(page) {
     pageEl.classList.add('active');
   }
 
-  // Update sidebar active state - clear all nav buttons and dropdown items
+  // Clear all active states
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
   document.querySelectorAll('.nav-dropdown-toggle').forEach(t => t.classList.remove('active'));
 
-  // Activate the App Builder nav button
-  const appBuilderBtn = document.querySelector('.nav-btn[onclick="showPage(\'appbuilder\')"]');
-  if (appBuilderBtn) {
-    appBuilderBtn.classList.add('active');
+  // Activate the App Builder dropdown
+  const appBuilderDropdown = document.getElementById('nav-appbuilder');
+  if (appBuilderDropdown) {
+    // Activate toggle
+    const toggle = appBuilderDropdown.querySelector('.nav-dropdown-toggle');
+    if (toggle) toggle.classList.add('active');
+
+    // Activate specific dropdown item
+    const items = appBuilderDropdown.querySelectorAll('.nav-dropdown-item');
+    items.forEach(item => {
+      const onclick = item.getAttribute('onclick');
+      if (onclick && onclick.includes(`'${page}'`)) {
+        item.classList.add('active');
+      }
+    });
+
+    // Ensure dropdown is open
+    if (!appBuilderDropdown.classList.contains('open')) {
+      appBuilderDropdown.classList.add('open');
+    }
   }
 
   // Close sidebar on mobile
