@@ -224,17 +224,13 @@
     .app{display:none;height:100vh;overflow:hidden}
     .app.active{display:flex}
 
-    /* Fixed App Logo - centered in sidebar */
-    .app-logo{position:fixed;top:18px;left:0;width:260px;display:flex;justify-content:center;z-index:400}
-    .app-logo img{max-width:200px;height:auto}
-
     /* Sidebar - Swiftmesh style with smooth transitions */
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200}
     .sidebar.collapsed{width:72px}
-    
-    /* Header zone - adjusted padding to account for fixed logo above */
-    .sidebar-header{padding:70px 20px 24px;transition:all 0.3s ease-in-out;position:fixed;top:0;left:0;width:260px;z-index:210;background:var(--nav-bg)}
-    .sidebar.collapsed .sidebar-header{padding:70px 12px 20px;width:72px}
+
+    /* Header zone */
+    .sidebar-header{padding:20px 20px 24px;transition:all 0.3s ease-in-out;position:fixed;top:0;left:0;width:260px;z-index:210;background:var(--nav-bg)}
+    .sidebar.collapsed .sidebar-header{padding:20px 12px 20px;width:72px}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
     .sidebar-toggle{position:absolute;bottom:24px;left:20px;width:32px;height:32px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.3s ease-in-out;z-index:250}
