@@ -90,6 +90,16 @@
       width: auto;
     }
 
+    /* Logo F rotation on hover */
+    .logo-f {
+      display: inline-block;
+      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    .nav-logo:hover .logo-f {
+      transform: rotate(360deg);
+    }
+
     .nav-links {
       display: flex;
       align-items: center;
@@ -890,7 +900,7 @@
     <div class="nav-container">
       <div class="nav-left">
         <a href="/landing.html" class="nav-logo">
-          <img src="images/FLOW-logo-hvid-4K.png" alt="FLOW" style="height:32px;width:auto;">
+          <img src="images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
         </a>
         <div class="nav-links">
           <a href="/landing.html#produkt" class="nav-link">Produkt</a>
