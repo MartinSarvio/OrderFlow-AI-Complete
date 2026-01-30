@@ -776,7 +776,7 @@
   border-top: 1px solid var(--color-border);
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: var(--space-3);  /* 12px */
 }
 
@@ -1133,4 +1133,25 @@
 .icon-32 {
   width: 32px;
   height: 32px;
+}
+
+/* ==================== BUTTON POSITIONING UTILITIES (Left-aligned) ==================== */
+
+/* Button container - Gem til venstre */
+.button-group-left {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Form actions - Gem til venstre, status til højre */
+.form-actions-left {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-actions-left button {
+  order: -1; /* Gem button kommer først */
 }
