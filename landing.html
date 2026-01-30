@@ -1367,6 +1367,16 @@
       nav.classList.remove('scrolled');
     }
   });
+
+  // Force video autoplay
+  document.addEventListener('DOMContentLoaded', function() {
+    const video = document.querySelector('.hero-video-bg video');
+    if (video) {
+      video.play().catch(function(error) {
+        console.log('Autoplay prevented:', error);
+      });
+    }
+  });
 </script>
 </body>
 </html>
