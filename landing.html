@@ -170,6 +170,26 @@
       background: var(--color-gray-800);
     }
 
+    .button.button-white {
+      background: var(--color-white);
+      color: var(--color-dark);
+      border: none;
+    }
+
+    .button.button-white:hover {
+      background: var(--color-gray-100);
+    }
+
+    .button.button-outline {
+      background: transparent;
+      color: var(--color-white);
+      border: 2px solid var(--color-white);
+    }
+
+    .button.button-outline:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
     /* ==================== NAVIGATION ==================== */
     .nav-wrapper {
       position: fixed;
@@ -394,7 +414,7 @@
 
     .hero-content h1 {
       font-size: 5.6rem;
-      font-weight: 700;
+      font-weight: 900;
       color: var(--color-white);
       line-height: 1.1;
       margin-bottom: 2rem;
@@ -922,11 +942,11 @@
         </video>
       </div>
       <div class="hero-content">
-        <h1>Restaurant automation bygget til at øge dit salg.</h1>
+        <h1>Automation bygget til at øge salg</h1>
         <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger. Automatiser din marketing, håndter ordrer og øg dit salg.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få en gratis demo</a>
-          <a href="#priser" class="button is-secondary" style="background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.3);">Se priser</a>
+          <a href="#demo" class="button button-white">Få en gratis demo</a>
+          <a href="#priser" class="button button-outline">Se priser</a>
         </div>
       </div>
     </section>
