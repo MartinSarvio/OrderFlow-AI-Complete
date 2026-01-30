@@ -269,10 +269,9 @@
     /* Sidebar search - hidden when collapsed */
     .sidebar.collapsed .sidebar-search{display:none}
 
-    /* Logo stays visible when collapsed */
-    .sidebar-header>div:first-child{transition:all 0.3s ease-in-out}
-    .sidebar.collapsed .sidebar-header>div:first-child{text-align:center;margin-bottom:0}
-    .sidebar.collapsed .sidebar-header>div:first-child img{height:24px}
+    /* Logo stays fixed in exact same position when collapsed */
+    .sidebar-header>div:first-child{position:fixed;top:20px;left:20px;z-index:220;margin-bottom:0}
+    .sidebar-header>div:first-child img{height:32px;width:auto}
     
     /* Main content adjustment */
     .main{margin-left:260px;transition:margin-left 0.3s ease-in-out}
