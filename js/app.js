@@ -333,11 +333,6 @@ const CONFIG = {
   SUPABASE_URL: 'https://qymtjhzgtcittohutmay.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTcyMzM2NiwiZXhwIjoyMDY3Mjk5MzY2fQ.th8EBi8r6JtR4nP0Q1FZoLiLT5-COohX4HvJ15Xd7G8',
   
-  // Twilio SMS
-  TWILIO_ACCOUNT_SID: '',  // Indtastes i Indstillinger
-  TWILIO_AUTH_TOKEN: '',   // Indtastes i Indstillinger
-  TWILIO_PHONE_NUMBER: '+4552512921',  // Dit Twilio nummer
-  
   // OpenAI (indtastes i Indstillinger → API Adgang)
   OPENAI_API_KEY: '',
   
@@ -11953,7 +11948,6 @@ const commandItems = [
   { type: 'page', id: 'orders', name: 'Ordrer', hint: 'Alle ordrer', keywords: ['ordrer', 'ordre', 'bestillinger'] },
   { type: 'page', id: 'workflow', name: 'Workflow', hint: 'Automatisering', keywords: ['workflow', 'flow', 'automatisering', 'automation'] },
   { type: 'page', id: 'settings', name: 'Indstillinger', hint: 'Konfiguration', keywords: ['indstillinger', 'settings', 'config'] },
-  { type: 'setting', id: 'twilio', name: 'Twilio Integration', hint: 'SMS', keywords: ['twilio', 'sms', 'telefon', 'beskeder'] },
   { type: 'setting', id: 'openai', name: 'OpenAI API', hint: 'AI', keywords: ['openai', 'ai', 'gpt', 'api'] },
   { type: 'setting', id: 'beskeder', name: 'Beskeder', hint: 'Templates', keywords: ['beskeder', 'messages', 'templates', 'skabeloner'] },
   { type: 'report', id: 'kpi', name: 'KPI Oversigt', hint: 'Analytics', keywords: ['kpi', 'analytics', 'statistik', 'data'] },
@@ -12042,7 +12036,6 @@ function getCommandIcon(id) {
     'orders': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg>',
     'workflow': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
     'settings': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/></svg>',
-    'twilio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>',
     'openai': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42"/></svg>',
     'beskeder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     'kpi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
@@ -14733,11 +14726,11 @@ async function startTest(type) {
 
   // LIVE MODE PRE-FLIGHT CHECKS
   if (liveMode) {
-    const accountSid = localStorage.getItem('twilio_account_sid') || CONFIG?.TWILIO_ACCOUNT_SID;
-    const authToken = localStorage.getItem('twilio_auth_token') || CONFIG?.TWILIO_AUTH_TOKEN;
-    if (!accountSid || !authToken) {
-      toast('Fejl: Twilio credentials ikke konfigureret', 'error');
-      addLog('❌ Twilio Account SID eller Auth Token mangler - gå til Indstillinger → API', 'error');
+    const apiKey = localStorage.getItem('inmobile_api_key');
+    const sender = localStorage.getItem('inmobile_sender');
+    if (!apiKey || !sender) {
+      toast('Fejl: InMobile credentials ikke konfigureret', 'error');
+      addLog('❌ InMobile API key eller sender mangler - gå til Indstillinger → SMS', 'error');
       return;
     }
 
@@ -16862,16 +16855,9 @@ function saveOrderToModule(orderData) {
 // Hjælpefunktion til at sende SMS til kunde (bruger eksisterende sendSMS)
 async function sendSMSToCustomer(phone, message, restaurant) {
   try {
-    // Brug eksisterende Twilio funktion
-    const response = await fetch(CONFIG.TWILIO_FUNCTION_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: phone,
-        message: message
-      })
-    });
-    return response.ok;
+    // Use our InMobile SMS function
+    await sendSMS(phone, message);
+    return true;
   } catch (err) {
     console.error('SMS error:', err);
     return false;
@@ -17408,32 +17394,18 @@ function rejectAiResponse(msgId) {
 
 // Send SMS immediately
 async function sendSMSNow(to, message) {
-  const functionUrl = CONFIG.TWILIO_FUNCTION_URL;
   const normalized = normalizePhoneNumber(to);
   let phoneNumber = normalized.e164;
   if (!phoneNumber) {
     addLog('❌ Ugyldigt telefonnummer', 'error');
     return;
   }
-  
+
+  // Use our InMobile SMS function
   try {
-    const response = await fetch(functionUrl, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ to: phoneNumber, message: message })
-    });
-    
-    const result = await response.json();
-    if (result.success) {
-      addMessage(message, 'out');
-      addLog(`✅ SMS sendt!`, 'success');
-    } else {
-      addLog(`❌ SMS fejl: ${result.error}`, 'error');
-    }
+    await sendSMS(phoneNumber, message);
+    addMessage(message, 'out');
+    addLog(`✅ SMS sendt!`, 'success');
   } catch (err) {
     addLog(`❌ Fejl: ${err.message}`, 'error');
   }
@@ -18039,7 +18011,7 @@ async function debugCheckMessages() {
 
     if (messages.length === 0) {
       addLog('⚠️ Ingen indgående beskeder fundet i databasen', 'warn');
-      addLog('💡 Twilio webhook sender muligvis ikke til korrekt URL', 'info');
+      addLog('💡 InMobile webhook sender muligvis ikke til korrekt URL', 'info');
     } else {
       addLog(`✅ Fandt ${messages.length} indgående beskeder:`, 'success');
       messages.slice(0, 5).forEach((m, i) => {
@@ -18260,23 +18232,6 @@ function sleep(ms) {
 function loadConfig() {
   // Brug CONFIG værdier som defaults hvis localStorage er tom
 
-  // Twilio SMS
-  const twilioAccountSid = localStorage.getItem('twilio_account_sid') || CONFIG.TWILIO_ACCOUNT_SID;
-  const twilioAuthToken = localStorage.getItem('twilio_auth_token') || CONFIG.TWILIO_AUTH_TOKEN;
-  const twilioPhoneNumber = localStorage.getItem('twilio_phone_number') || CONFIG.TWILIO_PHONE_NUMBER || '+4552512921';
-
-  if (twilioAccountSid) localStorage.setItem('twilio_account_sid', twilioAccountSid);
-  if (twilioAuthToken) localStorage.setItem('twilio_auth_token', twilioAuthToken);
-  if (twilioPhoneNumber) localStorage.setItem('twilio_phone_number', twilioPhoneNumber);
-
-  // Populate input fields if they exist
-  const sidInput = document.getElementById('twilio-account-sid');
-  const tokenInput = document.getElementById('twilio-auth-token');
-  const phoneInput = document.getElementById('twilio-phone-number');
-  if (sidInput && twilioAccountSid) sidInput.value = twilioAccountSid;
-  if (tokenInput && twilioAuthToken) tokenInput.value = twilioAuthToken;
-  if (phoneInput) phoneInput.value = twilioPhoneNumber;
-
   // OpenAI
   const openaiKey = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   if (openaiKey) {
@@ -18424,7 +18379,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'twilio', 'gatewayapi', 'inmobile', 'google', 'trustpilot', 'webhook'].forEach(api => {
+      ['openai', 'google', 'trustpilot', 'webhook'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -18484,11 +18439,6 @@ async function saveAllApiSettings() {
   // Collect all API settings
   const settings = {
     openai_key: document.getElementById('openai-api-key-input')?.value.trim() || '',
-    twilio_account_sid: document.getElementById('twilio-account-sid')?.value.trim() || '',
-    twilio_auth_token: document.getElementById('twilio-auth-token')?.value.trim() || '',
-    twilio_phone_number: document.getElementById('twilio-phone-number')?.value.trim() || '+4552512921',
-    gatewayapi_token: document.getElementById('gatewayapi-token')?.value.trim() || '',
-    gatewayapi_sender: document.getElementById('gatewayapi-sender')?.value.trim() || '',
     inmobile_api_key: document.getElementById('inmobile-api-key')?.value.trim() || '',
     inmobile_sender: document.getElementById('inmobile-sender')?.value.trim() || '',
     google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
@@ -18554,7 +18504,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'twilio_account_sid', 'twilio_auth_token', 'twilio_phone_number', 'gatewayapi_token', 'gatewayapi_sender', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -18563,11 +18513,6 @@ async function loadAllApiSettings() {
   // Populate form fields
   const fieldMappings = {
     'openai-api-key-input': 'openai_key',
-    'twilio-account-sid': 'twilio_account_sid',
-    'twilio-auth-token': 'twilio_auth_token',
-    'twilio-phone-number': 'twilio_phone_number',
-    'gatewayapi-token': 'gatewayapi_token',
-    'gatewayapi-sender': 'gatewayapi_sender',
     'inmobile-api-key': 'inmobile_api_key',
     'inmobile-sender': 'inmobile_sender',
     'google-place-id': 'google_place_id',
