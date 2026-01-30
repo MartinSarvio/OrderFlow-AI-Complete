@@ -23938,9 +23938,26 @@ function adjustColor(color, amount) {
 function handleAppBuilderLogoUpload(input) {
   const file = input.files[0];
   if (!file) return;
-  
+
+  // Validate file size (2MB max)
+  const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+  if (file.size > maxSize) {
+    alert('Filen er for stor. Maksimal størrelse er 2MB.');
+    input.value = '';
+    return;
+  }
+
+  // Validate file type
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Ugyldig filtype. Tilladte formater: PNG, JPG, SVG.');
+    input.value = '';
+    return;
+  }
+
   const reader = new FileReader();
   reader.onload = function(e) {
+    // Update preview in phone mockup
     const logoPreview = document.getElementById('appbuilder-preview-logo');
     if (logoPreview) {
       logoPreview.style.backgroundImage = `url(${e.target.result})`;
@@ -23948,32 +23965,39 @@ function handleAppBuilderLogoUpload(input) {
       logoPreview.style.backgroundPosition = 'center';
       logoPreview.textContent = '';
     }
-    
-    // Update upload area
-    const uploadArea = input.closest('.logo-upload-area');
-    if (uploadArea) {
-      uploadArea.innerHTML = `
-        <img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: 12px;">
-        <div class="logo-upload-text" style="margin-top: 12px;">Klik for at ændre</div>
+
+    // Update upload area with preview
+    const uploadZone = document.querySelector('.logo-upload-zone');
+    if (uploadZone) {
+      uploadZone.innerHTML = `
+        <img src="${e.target.result}"
+             style="max-width:120px;max-height:120px;border-radius:var(--radius-lg);margin-bottom:12px;">
+        <p style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px">Klik for at ændre</p>
+        <p style="font-size:12px;color:var(--muted)">${file.name}</p>
       `;
-      uploadArea.onclick = () => input.click();
+      uploadZone.classList.add('has-file');
+      uploadZone.onclick = () => input.click();
     }
+
+    // Show saved badge
+    showSavedBadge('branding');
   };
   reader.readAsDataURL(file);
 }
 
 // Update App Builder preview name
 function updateAppBuilderPreviewName() {
-  const nameInput = document.getElementById('appbuilder-restaurant-name');
-  const previewName = document.getElementById('appbuilder-preview-name');
+  const nameInput = document.getElementById('appbuilder-app-name');
+  const previewName = document.getElementById('preview-app-name');
   if (nameInput && previewName) {
-    previewName.textContent = nameInput.value || 'Din Restaurant';
-    
-    // Update logo initials
+    const value = nameInput.value.trim();
+    previewName.textContent = value || 'Din Restaurant';
+
+    // Update logo initials if no uploaded logo
     const logoPreview = document.getElementById('appbuilder-preview-logo');
     if (logoPreview && !logoPreview.style.backgroundImage) {
-      const words = nameInput.value.split(' ');
-      const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PR';
+      const words = value.split(' ').filter(w => w.length > 0);
+      const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'DR';
       logoPreview.textContent = initials;
     }
   }
@@ -23982,31 +24006,43 @@ function updateAppBuilderPreviewName() {
 // Update App Builder preview tagline
 function updateAppBuilderPreviewTagline() {
   const taglineInput = document.getElementById('appbuilder-tagline');
-  const previewTagline = document.getElementById('appbuilder-preview-tagline');
+  const previewTagline = document.getElementById('preview-app-tagline');
   if (taglineInput && previewTagline) {
-    previewTagline.textContent = taglineInput.value || 'Din tagline her';
+    const value = taglineInput.value.trim();
+    previewTagline.textContent = value || 'Ægte italiensk pizza siden 1985';
+    previewTagline.style.opacity = value ? '0.85' : '0.5';
   }
+}
+
+// Show saved badge with auto-hide
+let badgeTimeouts = {};
+
+function showSavedBadge(section) {
+  const badgeId = `${section}-status-badge`;
+  const badge = document.getElementById(badgeId);
+
+  if (!badge) return;
+
+  // Clear existing timeout for this badge
+  if (badgeTimeouts[badgeId]) {
+    clearTimeout(badgeTimeouts[badgeId]);
+  }
+
+  // Show badge with animation
+  badge.style.display = 'inline-flex';
+
+  // Auto-hide after 2 seconds
+  badgeTimeouts[badgeId] = setTimeout(() => {
+    badge.style.display = 'none';
+  }, 2000);
 }
 
 // Initialize App Builder event listeners
 function initAppBuilder() {
-  // Name input
-  const nameInput = document.getElementById('appbuilder-restaurant-name');
-  if (nameInput) {
-    nameInput.addEventListener('input', updateAppBuilderPreviewName);
-  }
-  
-  // Tagline input
-  const taglineInput = document.getElementById('appbuilder-tagline');
-  if (taglineInput) {
-    taglineInput.addEventListener('input', updateAppBuilderPreviewTagline);
-  }
-}
+  // Initialize preview with default values on page load
+  updateAppBuilderPreviewTagline();
 
-// Call init on DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initAppBuilder);
-} else {
-  initAppBuilder();
+  // The event handlers are already attached via oninput attributes in HTML
+  // This function can be extended if we need additional initialization
 }
 

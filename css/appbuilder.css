@@ -273,6 +273,89 @@
   margin-top: 4px;
 }
 
+/* ==================== ENHANCED COLOR PICKER ==================== */
+
+.color-swatch-large {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  border: 2px solid var(--border);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.color-swatch-large:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.color-swatch-large:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.color-picker-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.color-info-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Logo Upload Enhanced */
+.logo-upload-zone {
+  cursor: pointer;
+  padding: 32px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all 0.2s ease;
+  background: var(--bg2);
+}
+
+.logo-upload-zone:hover {
+  border-color: var(--accent);
+  background: var(--bg3);
+  border-style: solid;
+}
+
+.logo-upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+/* Badge Animation */
+.card-header .badge {
+  animation: fadeInBadge 0.3s ease-out;
+}
+
+@keyframes fadeInBadge {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card Title Flex Header Pattern */
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* Feature List */
 .feature-list {
   display: flex;
@@ -646,8 +729,24 @@
   .phone-screen {
     height: 580px;
   }
-  
+
   .menu-items-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Stack color swatches on mobile */
+  .color-picker-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .color-swatch-large {
+    width: 64px;
+    height: 64px;
+  }
+
+  .logo-upload-zone {
+    padding: 24px;
   }
 }
