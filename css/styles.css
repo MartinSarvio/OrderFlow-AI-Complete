@@ -477,7 +477,7 @@
     .page-title-sub{font-size:13px;color:var(--muted);font-weight:400;margin-top:4px}
     
     /* Sidebar Search */
-    .sidebar-search{position:relative;margin-top:16px;margin-bottom:4px}
+    .sidebar-search{position:relative;margin-top:40px;margin-bottom:4px}
     .sidebar-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;z-index:1}
     .sidebar-search-input{width:100%;padding:10px 40px 10px 36px;background:rgba(255,255,255,0.03);border:none;border-radius:var(--radius-md);font-size:13px;color:var(--text);transition:background .15s}
     .sidebar-search-input:focus{outline:none;background:rgba(255,255,255,0.05)}
