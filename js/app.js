@@ -23823,3 +23823,161 @@ if (document.readyState === 'loading') {
 } else {
   updateSystemVersion();
 }
+
+// ==================== APP BUILDER FUNCTIONS ====================
+
+// Show App Builder page
+function showAppBuilderPage(page) {
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  
+  // Show the requested App Builder page
+  const pageEl = document.getElementById('page-appbuilder-' + page);
+  if (pageEl) {
+    pageEl.classList.add('active');
+  }
+  
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-link, .sidebar-dropdown-link').forEach(link => {
+    link.classList.remove('active');
+  });
+  
+  // Find and activate the correct link
+  const activeLink = document.querySelector(`[onclick*="showAppBuilderPage('${page}')"]`);
+  if (activeLink) {
+    activeLink.classList.add('active');
+  }
+  
+  // Expand App Builder dropdown if collapsed
+  const appBuilderDropdown = document.querySelector('.sidebar-dropdown-content');
+  if (appBuilderDropdown) {
+    const parentItem = appBuilderDropdown.closest('.sidebar-dropdown');
+    if (parentItem) {
+      parentItem.classList.add('open');
+    }
+  }
+  
+  // Close sidebar on mobile
+  if (window.innerWidth < 1024) {
+    document.querySelector('.sidebar')?.classList.remove('open');
+  }
+}
+
+// Update App Builder color
+function updateAppBuilderColor(type, color) {
+  // Update preview
+  const preview = document.getElementById(`appbuilder-${type}-preview`);
+  if (preview) {
+    preview.style.background = color;
+  }
+  
+  // Update value display
+  const valueEl = document.getElementById(`appbuilder-${type}-value`);
+  if (valueEl) {
+    valueEl.textContent = color.toUpperCase();
+  }
+  
+  // Update phone preview if primary color
+  if (type === 'primary') {
+    const appHeader = document.querySelector('.app-header');
+    if (appHeader) {
+      appHeader.style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+    }
+    
+    // Update price colors
+    document.querySelectorAll('.app-menu-price').forEach(el => {
+      el.style.color = color;
+    });
+    
+    // Update active nav item
+    document.querySelectorAll('.app-nav-item.active').forEach(el => {
+      el.style.color = color;
+    });
+  }
+}
+
+// Adjust color brightness
+function adjustColor(color, amount) {
+  const hex = color.replace('#', '');
+  const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+  const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+  const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// Handle App Builder logo upload
+function handleAppBuilderLogoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const logoPreview = document.getElementById('appbuilder-preview-logo');
+    if (logoPreview) {
+      logoPreview.style.backgroundImage = `url(${e.target.result})`;
+      logoPreview.style.backgroundSize = 'cover';
+      logoPreview.style.backgroundPosition = 'center';
+      logoPreview.textContent = '';
+    }
+    
+    // Update upload area
+    const uploadArea = input.closest('.logo-upload-area');
+    if (uploadArea) {
+      uploadArea.innerHTML = `
+        <img src="${e.target.result}" style="max-width: 120px; max-height: 120px; border-radius: 12px;">
+        <div class="logo-upload-text" style="margin-top: 12px;">Klik for at ændre</div>
+      `;
+      uploadArea.onclick = () => input.click();
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Update App Builder preview name
+function updateAppBuilderPreviewName() {
+  const nameInput = document.getElementById('appbuilder-restaurant-name');
+  const previewName = document.getElementById('appbuilder-preview-name');
+  if (nameInput && previewName) {
+    previewName.textContent = nameInput.value || 'Din Restaurant';
+    
+    // Update logo initials
+    const logoPreview = document.getElementById('appbuilder-preview-logo');
+    if (logoPreview && !logoPreview.style.backgroundImage) {
+      const words = nameInput.value.split(' ');
+      const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PR';
+      logoPreview.textContent = initials;
+    }
+  }
+}
+
+// Update App Builder preview tagline
+function updateAppBuilderPreviewTagline() {
+  const taglineInput = document.getElementById('appbuilder-tagline');
+  const previewTagline = document.getElementById('appbuilder-preview-tagline');
+  if (taglineInput && previewTagline) {
+    previewTagline.textContent = taglineInput.value || 'Din tagline her';
+  }
+}
+
+// Initialize App Builder event listeners
+function initAppBuilder() {
+  // Name input
+  const nameInput = document.getElementById('appbuilder-restaurant-name');
+  if (nameInput) {
+    nameInput.addEventListener('input', updateAppBuilderPreviewName);
+  }
+  
+  // Tagline input
+  const taglineInput = document.getElementById('appbuilder-tagline');
+  if (taglineInput) {
+    taglineInput.addEventListener('input', updateAppBuilderPreviewTagline);
+  }
+}
+
+// Call init on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAppBuilder);
+} else {
+  initAppBuilder();
+}
+
