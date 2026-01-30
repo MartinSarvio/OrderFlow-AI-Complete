@@ -12,10 +12,11 @@
       --color-primary-hover: #0047cc;
       --color-dark: #090a0b;
       --color-white: #ffffff;
-      --color-gray-100: #f8f9fa;
+      --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
       --color-gray-400: #787a7d;
       --color-gray-600: #495057;
+      --color-gray-800: #212529;
       --section-radius: 2.4rem;
       --section-overlap: -2.4rem;
       --color-success: #10b981;
@@ -44,107 +45,96 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Navigation */
-    .nav {
+    /* Navigation - matches landing.html */
+    .nav-wrapper {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1000;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid transparent;
-      transition: all 0.3s ease;
+      background: var(--color-white);
+      border-bottom: none;
+      transition: background 0.3s ease, backdrop-filter 0.3s ease;
     }
 
-    .nav.scrolled {
-      border-color: var(--color-gray-200);
-      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+    .nav-wrapper.scrolled {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .nav-container {
-      width: 100%;
-      max-width: 128rem;
-      margin: 0 auto;
-      padding: 1.6rem 2.4rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 1.2rem 4rem;
+      width: 100%;
     }
 
     .nav-left {
       display: flex;
       align-items: center;
-      gap: 4rem;
-    }
-
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      text-decoration: none;
-      color: #0f172a;
-    }
-
-    .nav-logo {
-      height: 2.4rem;
-      width: auto;
-    }
-
-    .nav-menu {
-      display: flex;
-      align-items: center;
-      gap: 3.2rem;
-    }
-
-    .nav-link {
-      text-decoration: none;
-      color: #0f172a;
-      font-size: 1.5rem;
-      font-weight: 500;
-      letter-spacing: -0.01em;
-      transition: color 0.2s ease;
-    }
-
-    .nav-link:hover {
-      color: #0d9488;
-    }
-
-    .nav-link.active {
-      color: var(--color-primary);
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
       gap: 1.2rem;
     }
 
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+
+    .nav-logo img {
+      height: 3.2rem;
+      width: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .nav-link {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      padding: 0.8rem 1.2rem;
+      border-radius: 0.6rem;
+      transition: background 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-link:hover {
+      background: var(--color-gray-100);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.6rem;
+    }
+
     .nav-login {
-      text-decoration: none;
-      color: #0f172a;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 500;
-      padding: 0.8rem 0;
-      transition: color 0.2s ease;
+      color: var(--color-dark);
+      text-decoration: none;
     }
 
-    .nav-login:hover {
-      color: #0d9488;
-    }
-
-    .nav-actions .btn-primary {
-      background: #0f172a;
-      color: #ffffff;
-      padding: 1.2rem 2rem;
+    .nav-cta {
+      background: var(--color-dark);
+      color: var(--color-white);
+      padding: 1rem 1.8rem;
       border-radius: 0.8rem;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 500;
+      transition: background 0.2s ease;
       text-decoration: none;
-      transition: all 0.2s ease;
     }
 
-    .nav-actions .btn-primary:hover {
+    .nav-cta:hover {
       background: #1e293b;
     }
 
@@ -828,12 +818,16 @@
 
     /* Mobile Responsive */
     @media (max-width: 768px) {
-      .nav-menu {
+      .nav-links {
         display: none;
       }
 
       .mobile-menu-btn {
         display: block;
+      }
+
+      .nav-container {
+        padding: 1.2rem 2rem;
       }
 
       .hero {
@@ -881,24 +875,24 @@
   </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="nav" id="nav">
+  <!-- Navigation - matches landing.html -->
+  <nav class="nav-wrapper" id="nav">
     <div class="nav-container">
       <div class="nav-left">
-        <a href="/landing.html" class="nav-brand">
-          <img src="images/FLOW-logo-sort-4K.png" alt="FLOW" class="nav-logo">
+        <a href="/landing.html" class="nav-logo">
+          <img src="images/FLOW-logo-sort-4K.png" alt="Flow">
         </a>
-        <div class="nav-menu">
-          <a href="/landing.html#product" class="nav-link">Produkt</a>
-          <a href="/pricing" class="nav-link">Priser</a>
-          <a href="/how-it-works.html" class="nav-link active">Sådan virker det</a>
-          <a href="/about" class="nav-link">Om os</a>
-          <a href="/resources" class="nav-link">Ressourcer</a>
+        <div class="nav-links">
+          <a href="/landing.html#produkt" class="nav-link">Produkt</a>
+          <a href="/landing.html#priser" class="nav-link">Priser</a>
+          <a href="/how-it-works.html" class="nav-link">Sådan virker det</a>
+          <a href="/landing.html#om" class="nav-link">Om os</a>
+          <a href="/landing.html#ressourcer" class="nav-link">Ressourcer</a>
         </div>
       </div>
-      <div class="nav-actions">
-        <a href="index.html" class="nav-login">Log ind</a>
-        <a href="index.html" class="btn btn-primary">Kom i gang</a>
+      <div class="nav-right">
+        <a href="index.html" class="nav-login">Login</a>
+        <a href="index.html" class="nav-cta">Kom i gang</a>
       </div>
       <button class="mobile-menu-btn" aria-label="Menu">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1202,7 +1196,7 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
       // Navbar scroll effect
-      const nav = document.getElementById('nav');
+      const nav = document.querySelector('.nav-wrapper');
       window.addEventListener('scroll', () => {
         if (window.scrollY > 50) {
           nav.classList.add('scrolled');
