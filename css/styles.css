@@ -269,8 +269,8 @@
     /* Sidebar search - hidden when collapsed */
     .sidebar.collapsed .sidebar-search{display:none}
 
-    /* Logo stays fixed in exact same position when collapsed */
-    .sidebar-header>div:first-child{position:fixed;top:20px;left:20px;z-index:220;margin-bottom:0}
+    /* Logo stays fixed and centered in sidebar top */
+    .sidebar-header>div:first-child{position:fixed;top:20px;left:0;width:260px;z-index:220;margin-bottom:0;text-align:center}
     .sidebar-header>div:first-child img{height:32px;width:auto}
     
     /* Main content adjustment */
