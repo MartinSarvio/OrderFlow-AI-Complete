@@ -288,8 +288,8 @@
     .sidebar.collapsed ~ .main{margin-left:72px}
     .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:100px;scrollbar-width:none;-ms-overflow-style:none}
     .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
-    .nav-section{margin-bottom:24px;transition:all 0.3s ease-in-out}
-    .nav-section-title{font-size:8px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 13px;margin-bottom:3px;opacity:0.6;transition:all 0.3s ease-in-out}
+    .nav-section{margin-bottom:32px;transition:all 0.3s ease-in-out}
+    .nav-section-title{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:6px 13px;margin-bottom:3px;opacity:0.6;transition:all 0.3s ease-in-out}
     .nav-btn{width:100%;display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:12px;font-weight:500;background:transparent;border:none;border-radius:var(--radius-md);color:var(--text2);cursor:pointer;text-align:left;margin-bottom:4px;transition:all 0.3s ease-in-out;position:relative}
     .nav-btn svg{width:16px;height:16px;opacity:.5;flex-shrink:0;stroke-width:1.5;transition:all 0.3s ease-in-out}
     .nav-btn:hover{background:rgba(255,255,255,0.03);color:var(--text)}

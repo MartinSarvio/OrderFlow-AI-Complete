@@ -53,13 +53,13 @@
       left: 0;
       right: 0;
       z-index: 1000;
-      background: var(--color-white);
+      background: var(--color-dark);
       border-bottom: none;
       transition: background 0.3s ease, backdrop-filter 0.3s ease;
     }
 
     .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(9, 10, 11, 0.95);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
@@ -100,7 +100,7 @@
       font-family: 'Inter', sans-serif;
       font-size: 1.4rem;
       font-weight: 500;
-      color: var(--color-dark);
+      color: var(--color-white);
       padding: 0.8rem 1.2rem;
       border-radius: 0.6rem;
       transition: background 0.2s ease;
@@ -108,7 +108,7 @@
     }
 
     .nav-link:hover {
-      background: var(--color-gray-100);
+      background: rgba(255, 255, 255, 0.1);
     }
 
     .nav-right {
@@ -120,13 +120,13 @@
     .nav-login {
       font-size: 1.4rem;
       font-weight: 500;
-      color: var(--color-dark);
+      color: var(--color-white);
       text-decoration: none;
     }
 
     .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
+      background: var(--color-white);
+      color: var(--color-dark);
       padding: 1rem 1.8rem;
       border-radius: 0.8rem;
       font-size: 1.4rem;
@@ -136,7 +136,7 @@
     }
 
     .nav-cta:hover {
-      background: #1e293b;
+      background: var(--color-gray-100);
     }
 
     /* Mobile menu button */
@@ -146,6 +146,7 @@
       border: none;
       cursor: pointer;
       padding: 0.8rem;
+      color: var(--color-white);
     }
 
     .mobile-menu-btn svg {
@@ -889,7 +890,7 @@
     <div class="nav-container">
       <div class="nav-left">
         <a href="/landing.html" class="nav-logo">
-          <img src="images/FLOW-logo-sort-4K.png" alt="Flow">
+          <img src="images/FLOW-logo-hvid-4K.png" alt="FLOW" style="height:32px;width:auto;">
         </a>
         <div class="nav-links">
           <a href="/landing.html#produkt" class="nav-link">Produkt</a>

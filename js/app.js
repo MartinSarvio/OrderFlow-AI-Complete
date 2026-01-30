@@ -3769,6 +3769,12 @@ function showPage(page) {
     renderSegmentsPage();
   }
 
+  // Load App Builder page
+  if (page === 'appbuilder') {
+    showAppBuilderPage('design');
+    return;
+  }
+
   // Refresh dashboard data
   if (page === 'dashboard') {
     refreshRestaurantsFromDB().then(() => loadDashboard());
@@ -23830,33 +23836,24 @@ if (document.readyState === 'loading') {
 function showAppBuilderPage(page) {
   // Hide all pages
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  
+
   // Show the requested App Builder page
   const pageEl = document.getElementById('page-appbuilder-' + page);
   if (pageEl) {
     pageEl.classList.add('active');
   }
-  
-  // Update sidebar active state
-  document.querySelectorAll('.sidebar-link, .sidebar-dropdown-link').forEach(link => {
-    link.classList.remove('active');
-  });
-  
-  // Find and activate the correct link
-  const activeLink = document.querySelector(`[onclick*="showAppBuilderPage('${page}')"]`);
-  if (activeLink) {
-    activeLink.classList.add('active');
+
+  // Update sidebar active state - clear all nav buttons and dropdown items
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-toggle').forEach(t => t.classList.remove('active'));
+
+  // Activate the App Builder nav button
+  const appBuilderBtn = document.querySelector('.nav-btn[onclick="showPage(\'appbuilder\')"]');
+  if (appBuilderBtn) {
+    appBuilderBtn.classList.add('active');
   }
-  
-  // Expand App Builder dropdown if collapsed
-  const appBuilderDropdown = document.querySelector('.sidebar-dropdown-content');
-  if (appBuilderDropdown) {
-    const parentItem = appBuilderDropdown.closest('.sidebar-dropdown');
-    if (parentItem) {
-      parentItem.classList.add('open');
-    }
-  }
-  
+
   // Close sidebar on mobile
   if (window.innerWidth < 1024) {
     document.querySelector('.sidebar')?.classList.remove('open');
