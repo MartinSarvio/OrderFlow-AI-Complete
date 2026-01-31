@@ -23977,6 +23977,27 @@ function showSavedBadge(section) {
   }, 2000);
 }
 
+// Send initial config to App Builder preview - called directly from iframe onload
+function sendInitialAppBuilderConfig() {
+  const previewFrame = document.getElementById('pwa-preview-frame');
+  if (!previewFrame) return;
+
+  const nameInput = document.getElementById('appbuilder-app-name');
+  const taglineInput = document.getElementById('appbuilder-tagline');
+  const primaryColorInput = document.getElementById('appbuilder-primary-color');
+  const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
+
+  previewFrame.contentWindow.postMessage({
+    type: 'UPDATE_CONFIG',
+    config: {
+      appName: nameInput?.value || 'Din Restaurant',
+      tagline: taglineInput?.value || 'Ægte italiensk pizza siden 1985',
+      primaryColor: primaryColorInput?.value || '#D4380D',
+      secondaryColor: secondaryColorInput?.value || '#FFF7E6'
+    }
+  }, '*');
+}
+
 // Initialize App Builder event listeners
 function initAppBuilder() {
   // Initialize preview with default values on page load
@@ -23985,21 +24006,7 @@ function initAppBuilder() {
   if (previewFrame) {
     // Wait for iframe to load
     previewFrame.addEventListener('load', () => {
-      // Send initial configuration
-      const nameInput = document.getElementById('appbuilder-app-name');
-      const taglineInput = document.getElementById('appbuilder-tagline');
-      const primaryColorInput = document.getElementById('appbuilder-primary-color');
-      const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
-
-      previewFrame.contentWindow.postMessage({
-        type: 'UPDATE_CONFIG',
-        config: {
-          appName: nameInput?.value || 'Din Restaurant',
-          tagline: taglineInput?.value || 'Ægte italiensk pizza siden 1985',
-          primaryColor: primaryColorInput?.value || '#D4380D',
-          secondaryColor: secondaryColorInput?.value || '#FFF7E6'
-        }
-      }, '*');
+      sendInitialAppBuilderConfig();
     });
   }
 

@@ -122,6 +122,7 @@
       min-height: var(--header-image-height);
       overflow: hidden;
       flex-shrink: 0;
+      transition: height 0.05s ease-out, min-height 0.05s ease-out, opacity 0.1s ease-out;
     }
 
     .hero-header-image {
@@ -469,6 +470,7 @@
       padding-top: calc(var(--safe-top, 44px));
       overflow-y: auto;
       flex: 1;
+      padding-bottom: calc(100px + var(--safe-bottom, 20px));
     }
 
     .points-header {
@@ -512,6 +514,7 @@
 
     .points-content {
       padding: var(--space-lg);
+      padding-bottom: var(--space-2xl);
     }
 
     .rewards-grid {
@@ -538,6 +541,31 @@
 
     .reward-card.locked {
       opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .reward-card.available {
+      border-color: var(--success);
+      cursor: pointer;
+    }
+
+    .reward-card.available:active {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.05);
+      transform: scale(0.98);
+    }
+
+    .reward-status {
+      font-size: 10px;
+      margin-top: var(--space-xs);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    .reward-status.available-text {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      font-weight: 600;
     }
 
     .reward-emoji {
@@ -561,6 +589,7 @@
       background: var(--gray-50);
       border-radius: var(--radius-lg);
       padding: var(--space-lg);
+      margin-bottom: var(--space-xl);
     }
 
     .history-item {
@@ -698,6 +727,149 @@
       color: var(--error);
     }
 
+    /* Offers View */
+    .offers-view {
+      padding-top: calc(var(--safe-top, 44px));
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .offers-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--white);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .offers-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .offers-back {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .offers-back svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-700);
+    }
+
+    .offers-content {
+      padding: var(--space-lg);
+      padding-bottom: calc(100px + var(--safe-bottom, 20px));
+    }
+
+    .offer-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--gray-100);
+    }
+
+    .offer-card-header {
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      padding: var(--space-lg);
+      color: var(--white);
+    }
+
+    .offer-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    .offer-card-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .offer-card-subtitle {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .offer-card-content {
+      padding: var(--space-lg);
+    }
+
+    .offer-card-details {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .offer-card-prices {
+      display: flex;
+      align-items: baseline;
+      gap: var(--space-sm);
+    }
+
+    .offer-original-price {
+      font-size: 16px;
+      color: var(--gray-400);
+      text-decoration: line-through;
+    }
+
+    .offer-sale-price {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .offer-card-conditions {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: var(--space-lg);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+    }
+
+    .offer-add-btn {
+      width: 100%;
+      padding: var(--space-md);
+      background: var(--brand-primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .offer-add-btn:active {
+      background: var(--brand-primary-dark);
+      transform: scale(0.98);
+    }
+
     /* Cart View */
     .cart-view {
       padding-top: calc(var(--safe-top, 44px));
@@ -784,6 +956,21 @@
       font-size: 14px;
       color: var(--brand-primary);
       font-weight: 600;
+    }
+
+    .cart-item-customization {
+      font-size: 11px;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .cart-item-customization.removed {
+      color: var(--gray-500);
+      font-style: italic;
+    }
+
+    .cart-item-customization.added {
+      color: var(--success);
     }
 
     .cart-item-qty {
@@ -1041,6 +1228,129 @@
       color: var(--gray-700);
     }
 
+    /* Toggleable ingredients */
+    .ingredient-tag.toggleable {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .ingredient-tag.toggleable:active {
+      transform: scale(0.95);
+    }
+
+    .ingredient-tag.removed {
+      background: var(--gray-200);
+      color: var(--gray-400);
+      text-decoration: line-through;
+    }
+
+    .ingredient-check {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--gray-400);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .ingredient-tag:not(.removed) .ingredient-check {
+      background: var(--success);
+      border-color: var(--success);
+    }
+
+    .ingredient-check svg {
+      width: 10px;
+      height: 10px;
+      color: var(--white);
+    }
+
+    .ingredient-tag.removed .ingredient-check svg {
+      display: none;
+    }
+
+    /* Extras/Tilbehør section */
+    .product-modal-extras {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .extra-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .extra-item:active {
+      transform: scale(0.98);
+    }
+
+    .extra-item.selected {
+      background: var(--brand-secondary);
+      border: 2px solid var(--brand-primary);
+    }
+
+    .extra-item:not(.selected) {
+      border: 2px solid transparent;
+    }
+
+    .extra-item-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .extra-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--gray-300);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .extra-item.selected .extra-checkbox {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+    }
+
+    .extra-checkbox svg {
+      width: 12px;
+      height: 12px;
+      color: var(--white);
+      opacity: 0;
+    }
+
+    .extra-item.selected .extra-checkbox svg {
+      opacity: 1;
+    }
+
+    .extra-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-800);
+    }
+
+    .extra-price {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-primary);
+    }
+
     /* Quantity selector */
     .quantity-selector {
       display: flex;
@@ -1123,6 +1433,269 @@
     .add-to-cart-btn svg {
       width: 20px;
       height: 20px;
+    }
+
+    /* Redeem Modal */
+    .redeem-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 3000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+    }
+
+    .redeem-modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .redeem-modal {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+      position: relative;
+    }
+
+    .redeem-modal-overlay.visible .redeem-modal {
+      transform: scale(1);
+    }
+
+    .redeem-modal-close {
+      position: absolute;
+      top: var(--space-md);
+      right: var(--space-md);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .redeem-modal-close svg {
+      width: 18px;
+      height: 18px;
+      color: var(--gray-600);
+    }
+
+    .redeem-modal-emoji {
+      font-size: 60px;
+      margin-bottom: var(--space-md);
+    }
+
+    .redeem-modal-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .redeem-modal-desc {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: var(--space-lg);
+    }
+
+    .redeem-modal-cost,
+    .redeem-modal-after {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 14px;
+    }
+
+    .redeem-modal-cost span:last-child,
+    .redeem-modal-after span:last-child {
+      font-weight: 600;
+    }
+
+    .redeem-modal-buttons {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+    }
+
+    .redeem-cancel-btn,
+    .redeem-confirm-btn {
+      flex: 1;
+      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .redeem-cancel-btn {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: none;
+    }
+
+    .redeem-confirm-btn {
+      background: var(--success);
+      color: var(--white);
+      border: none;
+    }
+
+    .redeem-confirm-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* History Detail Modal */
+    .history-detail-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 3000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-lg);
+    }
+
+    .history-detail-modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .history-detail-modal {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      max-width: 340px;
+      width: 100%;
+      position: relative;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+
+    .history-detail-modal-overlay.visible .history-detail-modal {
+      transform: scale(1);
+    }
+
+    .history-detail-close {
+      position: absolute;
+      top: var(--space-md);
+      right: var(--space-md);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .history-detail-close svg {
+      width: 18px;
+      height: 18px;
+      color: var(--gray-600);
+    }
+
+    #historyDetailContent h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .history-detail-date {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: var(--space-lg);
+    }
+
+    .history-detail-items {
+      margin-bottom: var(--space-lg);
+    }
+
+    .history-detail-items h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    .history-detail-items ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .history-detail-items li {
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 14px;
+    }
+
+    .history-detail-reward {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: var(--space-lg);
+      padding: var(--space-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+
+    .history-detail-points {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: var(--space-lg);
+      text-align: center;
+    }
+
+    .history-detail-points.positive {
+      color: var(--success);
+    }
+
+    .history-detail-points.negative {
+      color: var(--gray-500);
+    }
+
+    .history-reorder-btn,
+    .history-close-btn {
+      width: 100%;
+      padding: var(--space-md);
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .history-reorder-btn {
+      background: var(--brand-primary);
+      color: var(--white);
+    }
+
+    .history-close-btn {
+      background: var(--gray-100);
+      color: var(--gray-700);
     }
 
     /* Search Bar */
@@ -1957,7 +2530,7 @@
           </div>
 
           <!-- Promo Banner -->
-          <div class="promo-banner" data-section="tilbud">
+          <div class="promo-banner" data-section="tilbud" onclick="switchView('offersView')" style="cursor: pointer;">
             <div class="promo-content">
               <div class="promo-label">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -1971,7 +2544,7 @@
           </div>
 
           <!-- Loyalty Card -->
-          <div class="loyalty-card" data-section="loyalty">
+          <div class="loyalty-card" data-section="loyalty" onclick="switchView('pointsView')" style="cursor: pointer;">
             <div class="loyalty-header">
               <span class="loyalty-label">Dine point</span>
               <div class="loyalty-points">
@@ -2009,7 +2582,7 @@
               <a href="#" class="section-link">Se alle</a>
             </div>
             <div class="menu-grid">
-              <div class="menu-card" onclick="openProductModal({name: 'Margherita', desc: 'Tomatsauce, mozzarella, frisk basilikum', price: 89, emoji: '🍕', badge: 'Bestseller', ingredients: ['Tomatsauce', 'Mozzarella', 'Basilikum', 'Olivenolie']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Margherita', desc: 'Tomatsauce, mozzarella, frisk basilikum', price: 89, emoji: '🍕', badge: 'Bestseller', category: 'pizza', ingredients: ['Tomatsauce', 'Mozzarella', 'Basilikum', 'Olivenolie']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍕
                   <span class="menu-card-badge">Bestseller</span>
@@ -2028,7 +2601,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Pepperoni', desc: 'Tomatsauce, mozzarella, pepperoni', price: 109, emoji: '🍕', ingredients: ['Tomatsauce', 'Mozzarella', 'Pepperoni']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Pepperoni', desc: 'Tomatsauce, mozzarella, pepperoni', price: 109, emoji: '🍕', category: 'pizza', ingredients: ['Tomatsauce', 'Mozzarella', 'Pepperoni']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #FECACA 0%, #F87171 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍕
                 </div>
@@ -2046,7 +2619,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Quattro Formaggi', desc: 'Fire slags ost, hvidløg', price: 119, emoji: '🧀', ingredients: ['Mozzarella', 'Gorgonzola', 'Parmesan', 'Fontina', 'Hvidløg']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Quattro Formaggi', desc: 'Fire slags ost, hvidløg', price: 119, emoji: '🧀', category: 'pizza', ingredients: ['Mozzarella', 'Gorgonzola', 'Parmesan', 'Fontina', 'Hvidløg']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🧀
                 </div>
@@ -2064,7 +2637,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Vegetar', desc: 'Grøntsager, mozzarella, oliven', price: 99, emoji: '🥬', ingredients: ['Tomatsauce', 'Mozzarella', 'Paprika', 'Løg', 'Oliven', 'Champignon']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Vegetar', desc: 'Grøntsager, mozzarella, oliven', price: 99, emoji: '🥬', category: 'pizza', ingredients: ['Tomatsauce', 'Mozzarella', 'Paprika', 'Løg', 'Oliven', 'Champignon']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🥬
                 </div>
@@ -2091,7 +2664,7 @@
               <a href="#" class="section-link">Se alle</a>
             </div>
             <div class="menu-grid">
-              <div class="menu-card" onclick="openProductModal({name: 'Caesar Salat', desc: 'Romaine, kylling, parmesan, croutoner', price: 89, emoji: '🥗', ingredients: ['Romaine salat', 'Kylling', 'Parmesan', 'Croutoner', 'Caesar dressing']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Caesar Salat', desc: 'Romaine, kylling, parmesan, croutoner', price: 89, emoji: '🥗', category: 'salater', ingredients: ['Romaine salat', 'Kylling', 'Parmesan', 'Croutoner', 'Caesar dressing']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🥗
                 </div>
@@ -2109,7 +2682,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Græsk Salat', desc: 'Tomat, agurk, feta, oliven', price: 79, emoji: '🥗', ingredients: ['Tomat', 'Agurk', 'Feta', 'Oliven', 'Rødløg', 'Oregano']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Græsk Salat', desc: 'Tomat, agurk, feta, oliven', price: 79, emoji: '🥗', category: 'salater', ingredients: ['Tomat', 'Agurk', 'Feta', 'Oliven', 'Rødløg', 'Oregano']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #CFFAFE 0%, #67E8F9 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🥗
                 </div>
@@ -2136,7 +2709,7 @@
               <a href="#" class="section-link">Se alle</a>
             </div>
             <div class="menu-grid">
-              <div class="menu-card" onclick="openProductModal({name: 'Spaghetti Carbonara', desc: 'Bacon, æg, parmesan, fløde', price: 99, emoji: '🍝', ingredients: ['Spaghetti', 'Bacon', 'Æg', 'Parmesan', 'Fløde', 'Peber']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Spaghetti Carbonara', desc: 'Bacon, æg, parmesan, fløde', price: 99, emoji: '🍝', category: 'pasta', ingredients: ['Spaghetti', 'Bacon', 'Æg', 'Parmesan', 'Fløde', 'Peber']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍝
                 </div>
@@ -2154,7 +2727,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Lasagne', desc: 'Kødsauce, bechamel, ost', price: 109, emoji: '🍝', ingredients: ['Pastaplader', 'Kødsauce', 'Bechamel', 'Mozzarella', 'Parmesan']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Lasagne', desc: 'Kødsauce, bechamel, ost', price: 109, emoji: '🍝', category: 'pasta', ingredients: ['Pastaplader', 'Kødsauce', 'Bechamel', 'Mozzarella', 'Parmesan']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #FECDD3 0%, #FB7185 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍝
                 </div>
@@ -2181,7 +2754,7 @@
               <a href="#" class="section-link">Se alle</a>
             </div>
             <div class="menu-grid">
-              <div class="menu-card" onclick="openProductModal({name: 'Tiramisu', desc: 'Mascarpone, kaffe, kakao', price: 59, emoji: '🍰', ingredients: ['Mascarpone', 'Ladyfingers', 'Espresso', 'Kakao', 'Amaretto']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Tiramisu', desc: 'Mascarpone, kaffe, kakao', price: 59, emoji: '🍰', category: 'dessert', ingredients: ['Mascarpone', 'Ladyfingers', 'Espresso', 'Kakao', 'Amaretto']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #F5D0FE 0%, #E879F9 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍰
                 </div>
@@ -2199,7 +2772,7 @@
                 </div>
               </div>
 
-              <div class="menu-card" onclick="openProductModal({name: 'Panna Cotta', desc: 'Vanille, jordbærcoulis', price: 49, emoji: '🍮', ingredients: ['Fløde', 'Vanille', 'Gelatine', 'Jordbær']})">
+              <div class="menu-card" onclick="openProductModal({name: 'Panna Cotta', desc: 'Vanille, jordbærcoulis', price: 49, emoji: '🍮', category: 'dessert', ingredients: ['Fløde', 'Vanille', 'Gelatine', 'Jordbær']})">
                 <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7E2 0%, #F472B6 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
                   🍮
                 </div>
@@ -2293,52 +2866,13 @@
 
         <div class="points-content">
           <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Tilgængelige belønninger</h3>
-          <div class="rewards-grid">
-            <div class="reward-card">
-              <div class="reward-emoji">🍕</div>
-              <div class="reward-name">Gratis Pizza</div>
-              <div class="reward-points">1000 point</div>
-            </div>
-            <div class="reward-card">
-              <div class="reward-emoji">🥤</div>
-              <div class="reward-name">Gratis Sodavand</div>
-              <div class="reward-points">250 point</div>
-            </div>
-            <div class="reward-card">
-              <div class="reward-emoji">🍰</div>
-              <div class="reward-name">Gratis Dessert</div>
-              <div class="reward-points">500 point</div>
-            </div>
-            <div class="reward-card locked">
-              <div class="reward-emoji">🎉</div>
-              <div class="reward-name">VIP Status</div>
-              <div class="reward-points">5000 point</div>
-            </div>
+          <div class="rewards-grid" id="rewardsGrid">
+            <!-- Rewards will be rendered by JavaScript -->
           </div>
 
           <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Point historik</h3>
-          <div class="points-history">
-            <div class="history-item">
-              <div class="history-info">
-                <h4>Ordre #1234</h4>
-                <span>I går, 19:30</span>
-              </div>
-              <span class="history-points positive">+47 point</span>
-            </div>
-            <div class="history-item">
-              <div class="history-info">
-                <h4>Ordre #1233</h4>
-                <span>3 dage siden</span>
-              </div>
-              <span class="history-points positive">+85 point</span>
-            </div>
-            <div class="history-item">
-              <div class="history-info">
-                <h4>Indløst belønning</h4>
-                <span>1 uge siden</span>
-              </div>
-              <span class="history-points negative">-250 point</span>
-            </div>
+          <div class="points-history" id="pointsHistoryList">
+            <!-- History will be rendered by JavaScript -->
           </div>
         </div>
       </div>
@@ -2476,6 +3010,27 @@
     </div>
 
     <!-- ========================================
+         OFFERS VIEW
+    ======================================== -->
+    <div class="app-view" id="offersView">
+      <div class="offers-view">
+        <div class="offers-header">
+          <button class="offers-back" onclick="switchView('homeView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Tilbud</h2>
+          <div style="width: 40px;"></div>
+        </div>
+
+        <div class="offers-content" id="offersContent">
+          <!-- Offer cards will be rendered here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
          BOTTOM NAVIGATION
     ======================================== -->
     <nav class="bottom-nav" id="bottomNav">
@@ -2539,11 +3094,18 @@
           <p class="product-modal-desc" id="productModalDesc">Tomatsauce, mozzarella, frisk basilikum</p>
 
           <div class="product-modal-section">
-            <h3 class="product-modal-section-title">Ingredienser</h3>
+            <h3 class="product-modal-section-title">Ingredienser (tryk for at fravælge)</h3>
             <div class="product-modal-ingredients" id="productModalIngredients">
               <span class="ingredient-tag">Tomatsauce</span>
               <span class="ingredient-tag">Mozzarella</span>
               <span class="ingredient-tag">Basilikum</span>
+            </div>
+          </div>
+
+          <div class="product-modal-section" id="extrasSection">
+            <h3 class="product-modal-section-title">Tilbehør</h3>
+            <div class="product-modal-extras" id="productModalExtras">
+              <!-- Extras will be rendered by JavaScript -->
             </div>
           </div>
 
@@ -2576,6 +3138,52 @@
       </div>
     </div>
 
+    <!-- ========================================
+         REDEEM CONFIRMATION MODAL
+    ======================================== -->
+    <div class="redeem-modal-overlay" id="redeemModal">
+      <div class="redeem-modal">
+        <button class="redeem-modal-close" onclick="closeRedeemModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="redeem-modal-emoji" id="redeemRewardEmoji">🍕</div>
+        <h2 class="redeem-modal-title" id="redeemRewardName">Gratis Pizza</h2>
+        <p class="redeem-modal-desc" id="redeemRewardDesc">Vælg en pizza fra menuen</p>
+        <div class="redeem-modal-cost">
+          <span>Pris:</span>
+          <span id="redeemRewardCost">1000 point</span>
+        </div>
+        <div class="redeem-modal-after">
+          <span>Point efter indløsning:</span>
+          <span id="redeemPointsAfter">0 point</span>
+        </div>
+        <div class="redeem-modal-buttons">
+          <button class="redeem-cancel-btn" onclick="closeRedeemModal()">Annuller</button>
+          <button class="redeem-confirm-btn" onclick="confirmRedeem()">Indløs nu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
+         HISTORY DETAIL MODAL
+    ======================================== -->
+    <div class="history-detail-modal-overlay" id="historyDetailModal">
+      <div class="history-detail-modal">
+        <button class="history-detail-close" onclick="closeHistoryDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div id="historyDetailContent">
+          <!-- Content will be rendered by JavaScript -->
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -2585,6 +3193,95 @@
     let cart = [];
     let currentProduct = null;
     let modalQuantity = 1;
+    let modalRemovedIngredients = [];
+    let modalSelectedExtras = [];
+
+    // ========================================
+    // CATEGORY EXTRAS DATA
+    // ========================================
+    const categoryExtras = {
+      pizza: [
+        { name: 'Ekstra ost', price: 10 },
+        { name: 'Bacon', price: 15 },
+        { name: 'Champignon', price: 10 },
+        { name: 'Pepperoni', price: 15 },
+        { name: 'Oliven', price: 10 },
+        { name: 'Jalapenos', price: 10 },
+        { name: 'Skinke', price: 15 }
+      ],
+      salater: [
+        { name: 'Ekstra kylling', price: 20 },
+        { name: 'Ekstra feta', price: 15 },
+        { name: 'Croutoner', price: 10 },
+        { name: 'Ekstra dressing', price: 5 }
+      ],
+      pasta: [
+        { name: 'Ekstra kød', price: 20 },
+        { name: 'Ekstra ost', price: 15 },
+        { name: 'Hvidløgsbrød', price: 15 }
+      ],
+      dessert: [
+        { name: 'Ekstra flødeskum', price: 10 },
+        { name: 'Chokoladesauce', price: 10 },
+        { name: 'Is kugle', price: 15 }
+      ]
+    };
+
+    // ========================================
+    // POINTS & REWARDS DATA
+    // ========================================
+    let userPoints = 847;
+
+    const rewards = [
+      { id: 1, name: 'Gratis Pizza', emoji: '🍕', cost: 1000, description: 'Vælg en pizza fra menuen' },
+      { id: 2, name: 'Gratis Sodavand', emoji: '🥤', cost: 250, description: '33cl sodavand valgfrit' },
+      { id: 3, name: 'Gratis Dessert', emoji: '🍰', cost: 500, description: 'Vælg en dessert fra menuen' },
+      { id: 4, name: 'VIP Status', emoji: '🎉', cost: 5000, description: 'Dobbelt point i 3 måneder' }
+    ];
+
+    const pointsHistory = [
+      { id: 1234, date: 'I går, 19:30', points: 47, type: 'earned', items: ['Margherita', 'Cola'] },
+      { id: 1233, date: '3 dage siden', points: 85, type: 'earned', items: ['Pepperoni', 'Tiramisu'] },
+      { id: null, date: '1 uge siden', points: -250, type: 'redeemed', reward: 'Gratis Sodavand' },
+      { id: 1230, date: '2 uger siden', points: 120, type: 'earned', items: ['Quattro Formaggi', 'Caesar Salat', 'Panna Cotta'] },
+      { id: 1225, date: '3 uger siden', points: 65, type: 'earned', items: ['Vegetar Pizza'] }
+    ];
+
+    // ========================================
+    // OFFERS DATA
+    // ========================================
+    const offers = [
+      {
+        id: 1,
+        title: '2 pizzaer for 149 kr.',
+        subtitle: 'Spar 29 kr.',
+        description: 'Vælg 2 valgfrie pizzaer fra menuen',
+        conditions: 'Gælder alle hverdage mellem 15-18',
+        originalPrice: 178,
+        salePrice: 149,
+        emoji: '🍕'
+      },
+      {
+        id: 2,
+        title: 'Familiemenu',
+        subtitle: 'Spar 50 kr.',
+        description: '2 pizzaer + 2 sodavand + 1 dessert',
+        conditions: 'Gælder hele ugen',
+        originalPrice: 299,
+        salePrice: 249,
+        emoji: '👨‍👩‍👧‍👦'
+      },
+      {
+        id: 3,
+        title: 'Frokosttilbud',
+        subtitle: 'Kun 69 kr.',
+        description: 'Pizza slice + sodavand',
+        conditions: 'Hverdage 11-14',
+        originalPrice: 89,
+        salePrice: 69,
+        emoji: '🌞'
+      }
+    ];
 
     // ========================================
     // VIEW SWITCHING
@@ -2609,9 +3306,9 @@
         }
       });
 
-      // Show/hide bottom nav for cart view
+      // Show/hide bottom nav for cart and offers view
       const bottomNav = document.getElementById('bottomNav');
-      if (viewId === 'cartView') {
+      if (viewId === 'cartView' || viewId === 'offersView') {
         bottomNav.style.display = 'none';
       } else {
         bottomNav.style.display = 'flex';
@@ -2621,6 +3318,13 @@
       const miniHeader = document.getElementById('miniHeader');
       if (viewId !== 'homeView') {
         miniHeader.classList.remove('visible');
+      }
+
+      // Reset scroll state when switching to homeView
+      if (viewId === 'homeView') {
+        setTimeout(() => {
+          initializeScrollState();
+        }, 50);
       }
     }
 
@@ -2648,11 +3352,18 @@
           miniHeaderSection.classList.remove('visible');
         }
 
-        // Fade hero header
+        // Fade and collapse hero header
         const fadeStart = 0;
         const fadeEnd = 200;
         const opacity = Math.max(0, 1 - (scrollTop - fadeStart) / (fadeEnd - fadeStart));
         heroHeader.style.opacity = opacity;
+
+        // Collapse hero header height as we scroll
+        const headerHeight = 280;
+        const minHeight = 0;
+        const newHeight = Math.max(minHeight, headerHeight - scrollTop * 0.8);
+        heroHeader.style.height = newHeight + 'px';
+        heroHeader.style.minHeight = newHeight + 'px';
 
         // Update section indicator
         updateSectionIndicator();
@@ -2717,7 +3428,23 @@
     // CART FUNCTIONS
     // ========================================
     function addToCart(item) {
-      const existingItem = cart.find(i => i.name === item.name);
+      // Check for existing item with same name AND same customizations
+      const existingItem = cart.find(i => {
+        if (i.name !== item.name) return false;
+
+        // Compare removed ingredients
+        const removed1 = (i.removedIngredients || []).sort().join(',');
+        const removed2 = (item.removedIngredients || []).sort().join(',');
+        if (removed1 !== removed2) return false;
+
+        // Compare extras
+        const extras1 = (i.extras || []).map(e => e.name).sort().join(',');
+        const extras2 = (item.extras || []).map(e => e.name).sort().join(',');
+        if (extras1 !== extras2) return false;
+
+        return true;
+      });
+
       if (existingItem) {
         existingItem.qty++;
       } else {
@@ -2776,22 +3503,34 @@
         cartEmptyEl.style.display = 'none';
         cartFooterEl.style.display = 'block';
 
-        cartItemsEl.innerHTML = cart.map((item, index) => `
-          <div class="cart-item">
-            <div class="cart-item-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);">
-              ${item.emoji || '🍕'}
-            </div>
-            <div class="cart-item-info">
-              <h3 class="cart-item-name">${item.name}</h3>
-              <p class="cart-item-price">${item.price} kr.</p>
-              <div class="cart-item-qty">
-                <button onclick="updateItemQty(${index}, -1)">-</button>
-                <span>${item.qty}</span>
-                <button onclick="updateItemQty(${index}, 1)">+</button>
+        cartItemsEl.innerHTML = cart.map((item, index) => {
+          // Build customizations text
+          let customizations = '';
+          if (item.removedIngredients && item.removedIngredients.length > 0) {
+            customizations += `<div class="cart-item-customization removed">Uden: ${item.removedIngredients.join(', ')}</div>`;
+          }
+          if (item.extras && item.extras.length > 0) {
+            customizations += `<div class="cart-item-customization added">+ ${item.extras.map(e => e.name).join(', ')}</div>`;
+          }
+
+          return `
+            <div class="cart-item">
+              <div class="cart-item-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);">
+                ${item.emoji || '🍕'}
+              </div>
+              <div class="cart-item-info">
+                <h3 class="cart-item-name">${item.name}</h3>
+                ${customizations}
+                <p class="cart-item-price">${item.price} kr.</p>
+                <div class="cart-item-qty">
+                  <button onclick="updateItemQty(${index}, -1)">-</button>
+                  <span>${item.qty}</span>
+                  <button onclick="updateItemQty(${index}, 1)">+</button>
+                </div>
               </div>
             </div>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
@@ -2811,13 +3550,14 @@
     function openProductModal(product) {
       currentProduct = product;
       modalQuantity = 1;
+      modalRemovedIngredients = [];
+      modalSelectedExtras = [];
 
       document.getElementById('productModalName').textContent = product.name;
       document.getElementById('productModalPrice').textContent = product.price + ' kr.';
       document.getElementById('productModalDesc').textContent = product.desc;
       document.getElementById('productModalEmoji').textContent = product.emoji || '🍕';
       document.getElementById('modalQuantity').textContent = modalQuantity;
-      document.getElementById('addToCartBtnText').textContent = `Tilføj til kurv - ${product.price} kr.`;
 
       // Badge
       const badge = document.getElementById('productModalBadge');
@@ -2828,16 +3568,99 @@
         badge.style.display = 'none';
       }
 
-      // Ingredients
+      // Toggleable Ingredients
       const ingredientsEl = document.getElementById('productModalIngredients');
       if (product.ingredients && product.ingredients.length > 0) {
         ingredientsEl.innerHTML = product.ingredients.map(ing =>
-          `<span class="ingredient-tag">${ing}</span>`
+          `<span class="ingredient-tag toggleable" onclick="toggleIngredient('${ing}')">
+            <span class="ingredient-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </span>
+            ${ing}
+          </span>`
         ).join('');
       }
 
+      // Extras section
+      const extrasEl = document.getElementById('productModalExtras');
+      const extrasSection = document.getElementById('extrasSection');
+      const extras = categoryExtras[product.category] || [];
+      if (extras.length > 0) {
+        extrasEl.innerHTML = extras.map(extra =>
+          `<div class="extra-item" onclick="toggleExtra('${extra.name}', ${extra.price})">
+            <div class="extra-item-left">
+              <span class="extra-checkbox">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </span>
+              <span class="extra-name">${extra.name}</span>
+            </div>
+            <span class="extra-price">+${extra.price} kr.</span>
+          </div>`
+        ).join('');
+        extrasSection.style.display = 'block';
+      } else {
+        extrasSection.style.display = 'none';
+      }
+
+      updateModalPrice();
       document.getElementById('productModal').classList.add('visible');
       document.body.style.overflow = 'hidden';
+    }
+
+    function toggleIngredient(ingredient) {
+      const index = modalRemovedIngredients.indexOf(ingredient);
+      if (index > -1) {
+        modalRemovedIngredients.splice(index, 1);
+      } else {
+        modalRemovedIngredients.push(ingredient);
+      }
+
+      // Update UI
+      const ingredientTags = document.querySelectorAll('.ingredient-tag.toggleable');
+      ingredientTags.forEach(tag => {
+        const tagName = tag.textContent.trim();
+        if (modalRemovedIngredients.includes(tagName)) {
+          tag.classList.add('removed');
+        } else {
+          tag.classList.remove('removed');
+        }
+      });
+    }
+
+    function toggleExtra(extraName, extraPrice) {
+      const existingIndex = modalSelectedExtras.findIndex(e => e.name === extraName);
+      if (existingIndex > -1) {
+        modalSelectedExtras.splice(existingIndex, 1);
+      } else {
+        modalSelectedExtras.push({ name: extraName, price: extraPrice });
+      }
+
+      // Update UI
+      const extraItems = document.querySelectorAll('.extra-item');
+      extraItems.forEach(item => {
+        const itemName = item.querySelector('.extra-name').textContent;
+        if (modalSelectedExtras.some(e => e.name === itemName)) {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+
+      updateModalPrice();
+    }
+
+    function updateModalPrice() {
+      if (!currentProduct) return;
+
+      const extrasTotal = modalSelectedExtras.reduce((sum, e) => sum + e.price, 0);
+      const itemPrice = currentProduct.price + extrasTotal;
+      const total = itemPrice * modalQuantity;
+
+      document.getElementById('addToCartBtnText').textContent = `Tilføj til kurv - ${total} kr.`;
     }
 
     function closeProductModal() {
@@ -2845,6 +3668,8 @@
       document.body.style.overflow = '';
       currentProduct = null;
       modalQuantity = 1;
+      modalRemovedIngredients = [];
+      modalSelectedExtras = [];
     }
 
     function changeModalQuantity(delta) {
@@ -2852,15 +3677,29 @@
       document.getElementById('modalQuantity').textContent = modalQuantity;
 
       if (currentProduct) {
-        const total = currentProduct.price * modalQuantity;
+        const extrasTotal = modalSelectedExtras.reduce((sum, e) => sum + e.price, 0);
+        const total = (currentProduct.price + extrasTotal) * modalQuantity;
         document.getElementById('addToCartBtnText').textContent = `Tilføj til kurv - ${total} kr.`;
       }
     }
 
     function addFromModal() {
       if (currentProduct) {
+        // Calculate price including extras
+        const extrasTotal = modalSelectedExtras.reduce((sum, e) => sum + e.price, 0);
+        const itemPrice = currentProduct.price + extrasTotal;
+
+        // Create customized product
+        const customizedProduct = {
+          ...currentProduct,
+          price: itemPrice,
+          basePrice: currentProduct.price,
+          removedIngredients: [...modalRemovedIngredients],
+          extras: [...modalSelectedExtras]
+        };
+
         for (let i = 0; i < modalQuantity; i++) {
-          addToCart(currentProduct);
+          addToCart(customizedProduct);
         }
         closeProductModal();
       }
@@ -2958,12 +3797,264 @@
     }
 
     // ========================================
+    // OFFERS FUNCTIONS
+    // ========================================
+    function renderOffers() {
+      const container = document.getElementById('offersContent');
+      if (!container) return;
+
+      container.innerHTML = offers.map(offer => `
+        <div class="offer-card">
+          <div class="offer-card-header">
+            <div class="offer-card-badge">
+              <span>${offer.emoji}</span>
+              ${offer.subtitle}
+            </div>
+            <h3 class="offer-card-title">${offer.title}</h3>
+            <p class="offer-card-subtitle">${offer.description}</p>
+          </div>
+          <div class="offer-card-content">
+            <div class="offer-card-prices">
+              <span class="offer-original-price">${offer.originalPrice} kr.</span>
+              <span class="offer-sale-price">${offer.salePrice} kr.</span>
+            </div>
+            <div class="offer-card-conditions">
+              ${offer.conditions}
+            </div>
+            <button class="offer-add-btn" onclick="addOfferToCart(${offer.id})">
+              Tilføj til kurv - ${offer.salePrice} kr.
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addOfferToCart(offerId) {
+      const offer = offers.find(o => o.id === offerId);
+      if (offer) {
+        addToCart({
+          name: offer.title,
+          price: offer.salePrice,
+          emoji: offer.emoji,
+          isOffer: true
+        });
+        // Show feedback
+        alert(`${offer.title} er tilføjet til din kurv!`);
+      }
+    }
+
+    // ========================================
+    // REWARDS FUNCTIONS
+    // ========================================
+    function renderRewards() {
+      const container = document.getElementById('rewardsGrid');
+      if (!container) return;
+
+      container.innerHTML = rewards.map(reward => {
+        const isAvailable = userPoints >= reward.cost;
+        const statusClass = isAvailable ? 'available' : 'locked';
+
+        return `
+          <div class="reward-card ${statusClass}" onclick="${isAvailable ? `openRedeemModal(${reward.id})` : ''}">
+            <div class="reward-emoji">${reward.emoji}</div>
+            <div class="reward-name">${reward.name}</div>
+            <div class="reward-points">${reward.cost} point</div>
+            ${isAvailable ? '<div class="reward-status available-text">Tilgængelig</div>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updatePointsDisplay() {
+      // Update all points displays
+      const pointsValueLarge = document.querySelector('.points-value-large');
+      const loyaltyPointsValue = document.querySelector('.loyalty-points-value');
+
+      if (pointsValueLarge) pointsValueLarge.textContent = userPoints;
+      if (loyaltyPointsValue) loyaltyPointsValue.textContent = userPoints;
+
+      // Update progress bars
+      const progressPercent = Math.min((userPoints / 1000) * 100, 100);
+      const progressFills = document.querySelectorAll('.points-progress-large-fill, .loyalty-progress-fill');
+      progressFills.forEach(fill => {
+        fill.style.width = progressPercent + '%';
+      });
+
+      // Update progress text
+      const pointsToGo = Math.max(0, 1000 - userPoints);
+      const progressTexts = document.querySelectorAll('.points-progress-text span:first-child');
+      progressTexts.forEach(text => {
+        text.textContent = pointsToGo > 0 ? `${pointsToGo} point til gratis pizza` : 'Du kan indløse en gratis pizza!';
+      });
+
+      // Re-render rewards to update available/locked states
+      renderRewards();
+    }
+
+    let currentReward = null;
+
+    function openRedeemModal(rewardId) {
+      currentReward = rewards.find(r => r.id === rewardId);
+      if (!currentReward || userPoints < currentReward.cost) return;
+
+      const modal = document.getElementById('redeemModal');
+      const pointsAfter = userPoints - currentReward.cost;
+
+      document.getElementById('redeemRewardName').textContent = currentReward.name;
+      document.getElementById('redeemRewardEmoji').textContent = currentReward.emoji;
+      document.getElementById('redeemRewardCost').textContent = currentReward.cost + ' point';
+      document.getElementById('redeemRewardDesc').textContent = currentReward.description;
+      document.getElementById('redeemPointsAfter').textContent = pointsAfter + ' point';
+
+      modal.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeRedeemModal() {
+      const modal = document.getElementById('redeemModal');
+      modal.classList.remove('visible');
+      document.body.style.overflow = '';
+      currentReward = null;
+    }
+
+    function confirmRedeem() {
+      if (!currentReward || userPoints < currentReward.cost) return;
+
+      // Deduct points
+      userPoints -= currentReward.cost;
+
+      // Add reward to cart as free item
+      addToCart({
+        name: currentReward.name,
+        price: 0,
+        emoji: currentReward.emoji,
+        isReward: true,
+        originalCost: currentReward.cost
+      });
+
+      // Update UI
+      updatePointsDisplay();
+      closeRedeemModal();
+
+      // Show success message
+      setTimeout(() => {
+        alert(`${currentReward.name} er tilføjet til din kurv!`);
+      }, 300);
+    }
+
+    // ========================================
+    // POINTS HISTORY FUNCTIONS
+    // ========================================
+    function renderPointsHistory() {
+      const container = document.getElementById('pointsHistoryList');
+      if (!container) return;
+
+      container.innerHTML = pointsHistory.map(item => {
+        const isPositive = item.points > 0;
+        const pointsClass = isPositive ? 'positive' : 'negative';
+        const pointsText = isPositive ? `+${item.points} point` : `${item.points} point`;
+
+        let title = '';
+        if (item.type === 'earned') {
+          title = `Ordre #${item.id}`;
+        } else {
+          title = 'Indløst belønning';
+        }
+
+        return `
+          <div class="history-item" onclick="openHistoryDetail(${item.id || 'null'}, '${item.type}')" style="cursor: pointer;">
+            <div class="history-info">
+              <h4>${title}</h4>
+              <span>${item.date}</span>
+            </div>
+            <span class="history-points ${pointsClass}">${pointsText}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openHistoryDetail(orderId, type) {
+      const item = pointsHistory.find(h => h.id === orderId || (h.type === type && h.id === null));
+      if (!item) return;
+
+      let content = '';
+      if (item.type === 'earned') {
+        content = `
+          <h3>Ordre #${item.id}</h3>
+          <p class="history-detail-date">${item.date}</p>
+          <div class="history-detail-items">
+            <h4>Bestilte varer:</h4>
+            <ul>
+              ${item.items.map(i => `<li>${i}</li>`).join('')}
+            </ul>
+          </div>
+          <div class="history-detail-points positive">+${item.points} point optjent</div>
+          <button class="history-reorder-btn" onclick="closeHistoryDetail()">Bestil igen</button>
+        `;
+      } else {
+        content = `
+          <h3>Indløst belønning</h3>
+          <p class="history-detail-date">${item.date}</p>
+          <div class="history-detail-reward">${item.reward}</div>
+          <div class="history-detail-points negative">${item.points} point brugt</div>
+          <button class="history-close-btn" onclick="closeHistoryDetail()">Luk</button>
+        `;
+      }
+
+      const modal = document.getElementById('historyDetailModal');
+      document.getElementById('historyDetailContent').innerHTML = content;
+      modal.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeHistoryDetail() {
+      const modal = document.getElementById('historyDetailModal');
+      modal.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    // ========================================
     // INITIALIZATION
     // ========================================
     document.addEventListener('DOMContentLoaded', function() {
       updateCartUI();
+      renderOffers();
+      renderRewards();
+      renderPointsHistory();
       switchView('homeView');
+
+      // Initialize scroll state - ensure hero header is visible
+      initializeScrollState();
     });
+
+    // Reset scroll state to ensure correct initial display
+    function initializeScrollState() {
+      const appContent = document.getElementById('appContent');
+      const heroHeader = document.getElementById('heroHeader');
+      const miniHeader = document.getElementById('miniHeader');
+      const miniHeaderSection = document.getElementById('miniHeaderSection');
+
+      if (appContent) {
+        // Reset scroll to top
+        appContent.scrollTop = 0;
+      }
+
+      if (heroHeader) {
+        // Ensure hero header is fully visible
+        heroHeader.style.opacity = '1';
+        heroHeader.style.height = '280px';
+        heroHeader.style.minHeight = '280px';
+      }
+
+      if (miniHeader) {
+        // Ensure mini header is hidden
+        miniHeader.classList.remove('visible');
+      }
+
+      if (miniHeaderSection) {
+        miniHeaderSection.classList.remove('visible');
+      }
+    }
   </script>
 </body>
 </html>
