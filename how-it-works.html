@@ -2000,9 +2000,8 @@
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
       searchInput.addEventListener('focus', () => {
-        if (searchInput.value.length >= 2) {
-          autocompleteDropdown.classList.add('active');
-        }
+        // Open business scanner in new tab when search field is clicked
+        window.open('https://flow-lime-rho.vercel.app/business-scanner-demo.html', '_blank');
       });
 
       // Close dropdown when clicking outside
