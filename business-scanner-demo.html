@@ -27,28 +27,29 @@
 
     /* Findings Feed Styles */
     .findings-feed { display: flex; flex-direction: column; gap: 16px; }
-    .module-status-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px; background: white; border-radius: 12px; margin-bottom: 16px; }
-    .module-indicator { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; background: #f5f5f5; transition: all 0.3s; }
-    .module-indicator--running { background: #ede9fe; color: #667eea; }
-    .module-indicator--completed { background: #d1fae5; color: #059669; }
-    .module-indicator--error { background: #fee2e2; color: #dc2626; }
-    .module-indicator__count { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .module-status-bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px; background: #f9fafb; border-radius: 8px; margin-bottom: 16px; }
+    .module-indicator { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; font-size: 12px; background: white; border: 1px solid #e5e7eb; transition: all 0.2s; color: #6b7280; }
+    .module-indicator--running { border-color: #015bf8; color: #015bf8; background: #f0f7ff; }
+    .module-indicator--completed { border-color: #d1fae5; color: #059669; background: white; }
+    .module-indicator--error { border-color: #fecaca; color: #dc2626; background: white; }
+    .module-indicator__count { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: 10px; font-weight: 500; margin-left: 2px; }
     .findings-stream { max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 8px; }
     .findings-stream::-webkit-scrollbar { width: 6px; }
     .findings-stream::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
     .findings-stream::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
-    .finding-card { padding: 16px; border-radius: 12px; border-left: 4px solid; transition: all 0.3s; }
-    .finding-card--highlighted { animation: slideInRight 0.3s ease, pulseGlow 1.5s ease-in-out; }
-    .finding-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .finding-card__module { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
-    .finding-card__title { font-weight: 600; color: #1a1a1a; margin-bottom: 4px; font-size: 14px; }
+    .finding-card { padding: 16px; border-radius: 8px; border-left: 3px solid; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s; }
+    .finding-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .finding-card--highlighted { animation: slideInRight 0.3s ease; }
+    .finding-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .finding-card__module { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; font-weight: 500; }
+    .finding-card__title { font-weight: 500; color: #1a1a1a; margin-bottom: 4px; font-size: 14px; }
     .finding-card__description { font-size: 13px; color: #6b7280; line-height: 1.5; }
     .finding-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; }
     .finding-card__source { color: #9ca3af; }
-    .confidence-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; }
-    .confidence-confirmed { background: #d1fae5; color: #059669; }
-    .confidence-indicator { background: #fef3c7; color: #d97706; }
-    .confidence-not_found { background: #f3f4f6; color: #6b7280; }
+    .confidence-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
+    .confidence-confirmed { background: #f0fdf4; color: #059669; }
+    .confidence-indicator { background: #fefce8; color: #ca8a04; }
+    .confidence-not_found { background: #f9fafb; color: #6b7280; }
 
     /* Search Page Styles */
     .search-container {
@@ -1453,12 +1454,10 @@
           {module.status === 'running' ? (
             <Spinner size="small" />
           ) : module.status === 'completed' ? (
-            <Icon name="CheckCircle" size={12} color="#059669" />
+            <Icon name="Check" size={12} color="#059669" />
           ) : module.status === 'error' ? (
-            <Icon name="XCircle" size={12} color="#dc2626" />
-          ) : (
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#d1d5db' }} />
-          )}
+            <Icon name="X" size={12} color="#dc2626" />
+          ) : null}
           <span>{module.name}</span>
           {module.findingsCount > 0 && (
             <span className="module-indicator__count">{module.findingsCount}</span>
@@ -1889,30 +1888,33 @@
                     <div key={step.id} style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 14,
-                      padding: '14px 0',
-                      borderBottom: '1px solid #f5f5f5',
+                      gap: 12,
+                      padding: '12px 0',
+                      borderBottom: '1px solid #f0f0f0',
                     }}>
                       <div style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
+                        width: 20,
+                        height: 20,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: isCompleted ? '#d1fae5' : isCurrent ? '#ede9fe' : '#f5f5f5',
                       }}>
                         {isCompleted ? (
-                          <Icon name="CheckCircle" size={18} color="#059669" />
+                          <Icon name="Check" size={16} color="#059669" />
                         ) : (
-                          <Icon name={step.icon} size={18} color={isCurrent ? '#667eea' : '#9ca3af'} />
+                          <div style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: isCurrent ? '#015bf8' : '#d1d5db',
+                          }} />
                         )}
                       </div>
                       <div style={{ flex: 1 }}>
                         <span style={{
                           fontSize: 14,
-                          color: isCompleted ? '#059669' : isCurrent ? '#667eea' : '#9ca3af',
-                          fontWeight: isCurrent ? 600 : 400
+                          color: isCompleted ? '#059669' : isCurrent ? '#1a1a1a' : '#9ca3af',
+                          fontWeight: isCurrent ? 500 : 400
                         }}>
                           {step.name}
                         </span>
@@ -2042,61 +2044,39 @@
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}>
-                    <div style={{
-                      width: 70,
-                      height: 70,
-                      background: '#d1fae5',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 20px',
-                    }}>
-                      <Icon name="CheckCircle" size={36} color="#059669" />
+                    <div style={{ margin: '0 auto 16px' }}>
+                      <Icon name="Check" size={32} color="#059669" />
                     </div>
-                    <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700 }}>Analyse færdig!</h2>
-                    <p style={{ margin: '0 0 24px', color: '#6b7280', fontSize: 14 }}>
+                    <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 600 }}>Analyse færdig!</h2>
+                    <p style={{ margin: '0 0 8px', color: '#6b7280', fontSize: 14 }}>
                       {analysisSteps.length} områder analyseret
                     </p>
 
-                    {/* Summary Stats */}
-                    <div style={{ display: 'flex', gap: 16, marginBottom: 24, width: '100%' }}>
-                      <div style={{ flex: 1, background: '#f0fdf4', padding: 12, borderRadius: 10 }}>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#059669' }}>
-                          {findings.filter(f => f.category === 'positive').length}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#6b7280' }}>Positive</div>
-                      </div>
-                      <div style={{ flex: 1, background: '#fef3c7', padding: 12, borderRadius: 10 }}>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#d97706' }}>
-                          {findings.filter(f => f.category === 'warning').length}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#6b7280' }}>Advarsler</div>
-                      </div>
-                      <div style={{ flex: 1, background: '#fee2e2', padding: 12, borderRadius: 10 }}>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}>
-                          {findings.filter(f => f.category === 'critical').length}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#6b7280' }}>Kritiske</div>
-                      </div>
-                    </div>
+                    {/* Summary Stats - Inline */}
+                    <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
+                      <span style={{ color: '#059669', fontWeight: 500 }}>{findings.filter(f => f.category === 'positive').length} positive</span>
+                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
+                      <span style={{ color: '#d97706', fontWeight: 500 }}>{findings.filter(f => f.category === 'warning').length} advarsler</span>
+                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
+                      <span style={{ color: '#dc2626', fontWeight: 500 }}>{findings.filter(f => f.category === 'critical').length} kritiske</span>
+                    </p>
 
                     <button
                       onClick={() => setShowReport(true)}
                       style={{
                         padding: '14px 32px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        background: '#015bf8',
                         color: 'white',
                         border: 'none',
-                        borderRadius: 12,
+                        borderRadius: 8,
                         fontSize: 15,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                         width: '100%',
                       }}
-                      onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                      onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                      onMouseOver={(e) => { e.target.style.background = '#0047cc'; }}
+                      onMouseOut={(e) => { e.target.style.background = '#015bf8'; }}
                     >
                       Se fuld rapport
                     </button>
