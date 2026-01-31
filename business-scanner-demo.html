@@ -353,6 +353,59 @@
     };
 
     // =============================================================================
+    // SERPER API CONFIGURATION
+    // =============================================================================
+    const SERPER_CONFIG = {
+      reviews: {
+        url: 'https://google.serper.dev/reviews',
+        apiKey: '238621b449ced86740e16a0707be5b8999b87c9e'
+      },
+      images: {
+        url: 'https://google.serper.dev/images',
+        apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba'
+      },
+      maps: {
+        url: 'https://google.serper.dev/maps',
+        apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e'
+      },
+      defaultParams: {
+        gl: 'dk',
+        hl: 'da'
+      }
+    };
+
+    const fetchSerperAPI = async (endpoint, query, options = {}) => {
+      const config = SERPER_CONFIG[endpoint];
+      if (!config) throw new Error(`Unknown Serper endpoint: ${endpoint}`);
+
+      const body = {
+        q: query,
+        ...SERPER_CONFIG.defaultParams,
+        ...options
+      };
+
+      // Remove gl param for maps endpoint (it doesn't use it)
+      if (endpoint === 'maps') {
+        delete body.gl;
+      }
+
+      const response = await fetch(config.url, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': config.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    };
+
+    // =============================================================================
     // ENHANCED API SERVICE - Faktisk Datahentning
     // =============================================================================
     const AnalysisService = {
@@ -483,6 +536,24 @@
 
       // Hent og analyser anmeldelser
       async getReviewAnalysis(placeId, businessName) {
+        // Try Serper Reviews API first
+        try {
+          console.log('Fetching reviews from Serper API for:', businessName);
+          const serperData = await fetchSerperAPI('reviews', businessName);
+
+          if (serperData?.reviews && serperData.reviews.length > 0) {
+            console.log('Serper Reviews API returned', serperData.reviews.length, 'reviews');
+            const parsedReviews = this.parseSerperReviews(serperData.reviews);
+            const analysis = this.analyzeReviews(parsedReviews);
+            analysis.dataSource = 'serper_reviews';
+            analysis.confidence = 'confirmed';
+            return analysis;
+          }
+        } catch (error) {
+          console.log('Serper Reviews API failed, trying backend API:', error.message);
+        }
+
+        // Fallback to backend API
         try {
           const response = await fetch(`/api/places/reviews?place_id=${encodeURIComponent(placeId)}`);
           if (response.ok) {
@@ -490,14 +561,66 @@
             return this.analyzeReviews(data.reviews);
           }
         } catch (error) {
-          console.log('Using enhanced mock review data');
+          console.log('Backend API failed, using mock data:', error.message);
         }
 
+        // Final fallback to mock data
         await delay(3000);
-
-        // Simuleret analyse baseret på faktiske mønstre
         const reviews = this.generateRealisticReviewData(businessName);
-        return this.analyzeReviews(reviews);
+        const analysis = this.analyzeReviews(reviews);
+        analysis.dataSource = 'demo_data';
+        analysis.confidence = 'indicator';
+        return analysis;
+      },
+
+      // Parse Serper reviews to our format
+      parseSerperReviews(serperReviews) {
+        return serperReviews.map((review, index) => {
+          const parsedDate = this.parseRelativeDate(review.date);
+          return {
+            rating: review.rating || 5,
+            time: parsedDate.toISOString(),
+            text: review.snippet || review.title || '',
+            authorName: review.source || `Bruger ${index + 1}`,
+            hasOwnerResponse: false,
+            responseTime: null,
+            source: review.source,
+            link: review.link
+          };
+        });
+      },
+
+      // Parse relative dates like "2 months ago"
+      parseRelativeDate(dateString) {
+        if (!dateString) return new Date();
+
+        const now = new Date();
+        const lower = dateString.toLowerCase();
+
+        const match = lower.match(/(\d+)\s*(day|week|month|year)s?\s*ago/i);
+        if (match) {
+          const amount = parseInt(match[1], 10);
+          const unit = match[2].toLowerCase();
+
+          switch (unit) {
+            case 'day':
+              now.setDate(now.getDate() - amount);
+              break;
+            case 'week':
+              now.setDate(now.getDate() - amount * 7);
+              break;
+            case 'month':
+              now.setMonth(now.getMonth() - amount);
+              break;
+            case 'year':
+              now.setFullYear(now.getFullYear() - amount);
+              break;
+          }
+          return now;
+        }
+
+        const parsed = new Date(dateString);
+        return isNaN(parsed.getTime()) ? new Date() : parsed;
       },
 
       generateRealisticReviewData(businessName) {
@@ -903,48 +1026,370 @@
 
       // SERP Synlighedsanalyse
       async getSERPVisibility(businessName, address, category) {
-        await delay(2500);
-
         const searchArea = address?.city || 'Aarhus';
-        return {
-          directSearch: {
-            query: `${businessName} ${searchArea}`,
-            rank: 1,
-            inLocalPack: true,
-            knowledgePanel: true,
+
+        try {
+          console.log('Fetching SERP visibility from Serper Maps API for:', businessName);
+
+          // Perform three searches in parallel using Serper Maps API
+          const [directSearchData, categorySearchData, localSearchData] = await Promise.all([
+            fetchSerperAPI('maps', `${businessName} ${searchArea}`),
+            fetchSerperAPI('maps', `${category} ${searchArea}`),
+            fetchSerperAPI('maps', `${category} i nærheden af ${searchArea}`)
+          ]);
+
+          // Parse direct search results
+          const directSearch = this.parseMapSearchResult(directSearchData, businessName, 'direct');
+
+          // Parse category search results
+          const categorySearch = this.parseMapSearchResult(categorySearchData, businessName, 'category');
+
+          // Parse local intent search results
+          const localIntentSearch = this.parseMapSearchResult(localSearchData, businessName, 'local');
+
+          // Calculate visibility score
+          const visibilityScore = this.calculateVisibilityScore(directSearch, categorySearch, localIntentSearch);
+
+          // Generate findings based on real data
+          const findings = this.generateSERPFindings(directSearch, categorySearch, localIntentSearch, businessName);
+
+          console.log('Serper Maps API returned visibility score:', visibilityScore);
+
+          return {
+            directSearch: {
+              query: `${businessName} ${searchArea}`,
+              rank: directSearch.rank,
+              inLocalPack: directSearch.inLocalPack,
+              knowledgePanel: directSearch.rank === 1,
+              confidence: directSearch.found ? 'confirmed' : 'not_found',
+            },
+            categorySearch: {
+              query: `${category} ${searchArea}`,
+              rank: categorySearch.rank,
+              inLocalPack: categorySearch.inLocalPack,
+              totalResults: categorySearchData?.places?.length || 0,
+              confidence: categorySearch.found ? 'confirmed' : 'indicator',
+            },
+            localIntentSearch: {
+              query: `${category} i nærheden`,
+              rank: localIntentSearch.rank,
+              inLocalPack: localIntentSearch.inLocalPack,
+              confidence: localIntentSearch.found ? 'confirmed' : 'indicator',
+            },
+            searchFeatures: this.extractSearchFeatures(directSearchData),
+            missingFeatures: this.identifyMissingFeatures(directSearchData),
+            estimatedMonthlySearches: {
+              brandTerms: 320,
+              categoryTerms: 4800,
+            },
+            visibility: {
+              score: visibilityScore,
+              status: calculateSignalStrength(visibilityScore, { excellent: 80, good: 60, warning: 40 }),
+            },
+            findings,
+            dataSource: 'serper_maps',
             confidence: 'confirmed',
-          },
-          categorySearch: {
-            query: `${category} ${searchArea}`,
-            rank: 8,
-            inLocalPack: false,
-            totalResults: 47,
+          };
+        } catch (error) {
+          console.log('Serper Maps API failed, using mock data:', error.message);
+
+          // Fallback to mock data
+          await delay(2500);
+          return {
+            directSearch: {
+              query: `${businessName} ${searchArea}`,
+              rank: 1,
+              inLocalPack: true,
+              knowledgePanel: true,
+              confidence: 'indicator',
+            },
+            categorySearch: {
+              query: `${category} ${searchArea}`,
+              rank: 8,
+              inLocalPack: false,
+              totalResults: 47,
+              confidence: 'indicator',
+            },
+            localIntentSearch: {
+              query: `${category} i nærheden`,
+              rank: 12,
+              inLocalPack: false,
+              confidence: 'indicator',
+            },
+            searchFeatures: ['reviews', 'hours', 'phone', 'website', 'directions'],
+            missingFeatures: ['menu', 'booking', 'popular_times'],
+            estimatedMonthlySearches: {
+              brandTerms: 320,
+              categoryTerms: 4800,
+            },
+            visibility: {
+              score: 62,
+              status: calculateSignalStrength(62, { excellent: 80, good: 60, warning: 40 }),
+            },
+            findings: [
+              { type: 'positive', title: 'God synlighed på brand-søgninger', description: 'Rangerer #1 på direkte søgninger efter virksomhedsnavnet.' },
+              { type: 'warning', title: 'Lav synlighed på kategori-søgninger', description: 'Rangerer kun #8 på "restaurant Aarhus" søgninger.' },
+              { type: 'opportunity', title: 'Mangler i Local Pack', description: 'Vises ikke i top 3 lokale resultater for kategori-søgninger.' },
+            ],
+            dataSource: 'demo_data',
             confidence: 'indicator',
-          },
-          localIntentSearch: {
-            query: `${category} i nærheden`,
-            rank: 12,
-            inLocalPack: false,
-            confidence: 'indicator',
-          },
-          searchFeatures: ['reviews', 'hours', 'phone', 'website', 'directions'],
-          missingFeatures: ['menu', 'booking', 'popular_times'],
-          estimatedMonthlySearches: {
-            brandTerms: 320,
-            categoryTerms: 4800,
-          },
-          visibility: {
-            score: 62,
-            status: calculateSignalStrength(62, { excellent: 80, good: 60, warning: 40 }),
-          },
-          findings: [
-            { type: 'positive', title: 'God synlighed på brand-søgninger', description: 'Rangerer #1 på direkte søgninger efter virksomhedsnavnet.' },
-            { type: 'warning', title: 'Lav synlighed på kategori-søgninger', description: 'Rangerer kun #8 på "restaurant Aarhus" søgninger.' },
-            { type: 'opportunity', title: 'Mangler i Local Pack', description: 'Vises ikke i top 3 lokale resultater for kategori-søgninger.' },
-          ],
-          dataSource: 'demo_data',
-          confidence: 'indicator',
+          };
+        }
+      },
+
+      // Helper: Parse Serper Maps search result
+      parseMapSearchResult(mapData, businessName, searchType) {
+        if (!mapData?.places || mapData.places.length === 0) {
+          return { rank: 99, inLocalPack: false, found: false, data: null };
+        }
+
+        const normalizedTarget = businessName.toLowerCase().trim();
+        let rank = 99;
+        let found = false;
+        let matchedPlace = null;
+
+        for (let i = 0; i < mapData.places.length; i++) {
+          const place = mapData.places[i];
+          const normalizedTitle = (place.title || '').toLowerCase().trim();
+
+          if (normalizedTitle === normalizedTarget ||
+              normalizedTitle.includes(normalizedTarget) ||
+              normalizedTarget.includes(normalizedTitle)) {
+            rank = i + 1;
+            found = true;
+            matchedPlace = place;
+            break;
+          }
+        }
+
+        return {
+          rank,
+          inLocalPack: rank <= 3,
+          found,
+          data: matchedPlace,
+          totalResults: mapData.places.length
         };
+      },
+
+      // Helper: Calculate visibility score
+      calculateVisibilityScore(directSearch, categorySearch, localIntentSearch) {
+        let score = 0;
+
+        // Direct search (40 points max)
+        if (directSearch.found) {
+          if (directSearch.rank === 1) score += 40;
+          else if (directSearch.rank <= 3) score += 30;
+          else if (directSearch.rank <= 5) score += 20;
+          else score += 10;
+        }
+
+        // Category search (35 points max)
+        if (categorySearch.found) {
+          if (categorySearch.inLocalPack) score += 35;
+          else if (categorySearch.rank <= 5) score += 25;
+          else if (categorySearch.rank <= 10) score += 15;
+          else score += 5;
+        }
+
+        // Local intent search (25 points max)
+        if (localIntentSearch.found) {
+          if (localIntentSearch.inLocalPack) score += 25;
+          else if (localIntentSearch.rank <= 5) score += 18;
+          else if (localIntentSearch.rank <= 10) score += 10;
+          else score += 5;
+        }
+
+        return score;
+      },
+
+      // Helper: Extract search features from map data
+      extractSearchFeatures(mapData) {
+        const features = [];
+        if (!mapData?.places?.[0]) return features;
+
+        const firstPlace = mapData.places[0];
+        if (firstPlace.rating) features.push('reviews');
+        if (firstPlace.phoneNumber) features.push('phone');
+        if (firstPlace.website) features.push('website');
+        if (firstPlace.address) features.push('directions');
+        features.push('hours');
+
+        return features;
+      },
+
+      // Helper: Identify missing features
+      identifyMissingFeatures(mapData) {
+        const missing = [];
+        if (!mapData?.places?.[0]) {
+          return ['menu', 'booking', 'popular_times', 'reviews', 'phone', 'website'];
+        }
+
+        const firstPlace = mapData.places[0];
+        if (!firstPlace.rating) missing.push('reviews');
+        if (!firstPlace.phoneNumber) missing.push('phone');
+        if (!firstPlace.website) missing.push('website');
+
+        missing.push('menu', 'booking', 'popular_times');
+        return missing;
+      },
+
+      // Helper: Generate SERP findings
+      generateSERPFindings(directSearch, categorySearch, localIntentSearch, businessName) {
+        const findings = [];
+
+        // Direct search findings
+        if (directSearch.found && directSearch.rank === 1) {
+          findings.push({
+            type: 'positive',
+            title: 'Fremragende synlighed på brand-søgninger',
+            description: `"${businessName}" rangerer #1 på direkte søgninger. Kunder finder jer nemt.`
+          });
+        } else if (directSearch.found) {
+          findings.push({
+            type: 'warning',
+            title: 'Kan forbedre brand-synlighed',
+            description: `Rangerer #${directSearch.rank} på direkte søgninger. Overvej at optimere Google Business Profile.`
+          });
+        } else {
+          findings.push({
+            type: 'critical',
+            title: 'Ikke fundet på brand-søgninger',
+            description: 'Virksomheden vises ikke i top-resultater for direkte navnesøgninger.'
+          });
+        }
+
+        // Category search findings
+        if (categorySearch.inLocalPack) {
+          findings.push({
+            type: 'positive',
+            title: 'Vises i Local Pack',
+            description: `Rangerer #${categorySearch.rank} på kategori-søgninger og vises i top 3 lokale resultater.`
+          });
+        } else if (categorySearch.found) {
+          findings.push({
+            type: 'opportunity',
+            title: 'Potentiale for Local Pack',
+            description: `Rangerer #${categorySearch.rank} på kategori-søgninger. Fokuser på flere anmeldelser for top 3 placering.`
+          });
+        } else {
+          findings.push({
+            type: 'warning',
+            title: 'Lav kategori-synlighed',
+            description: 'Vises ikke i top-resultater for kategori-søgninger i området.'
+          });
+        }
+
+        // Local intent findings
+        if (localIntentSearch.inLocalPack) {
+          findings.push({
+            type: 'positive',
+            title: 'Stærk lokal tilstedeværelse',
+            description: 'Vises i top 3 for "i nærheden" søgninger - vigtig for mobil trafik.'
+          });
+        }
+
+        return findings;
+      },
+
+      // Billede Analyse via Serper Images API
+      async getBusinessImages(businessName) {
+        try {
+          console.log('Fetching images from Serper API for:', businessName);
+          const serperData = await fetchSerperAPI('images', businessName);
+
+          if (serperData?.images && serperData.images.length > 0) {
+            console.log('Serper Images API returned', serperData.images.length, 'images');
+
+            return {
+              totalImages: serperData.images.length,
+              images: serperData.images.slice(0, 12).map((img, index) => ({
+                id: index,
+                url: img.imageUrl,
+                thumbnailUrl: img.thumbnailUrl,
+                title: img.title,
+                width: img.imageWidth,
+                height: img.imageHeight,
+                source: img.source || img.domain,
+                sourceUrl: img.link,
+                isOwnerImage: false
+              })),
+              sources: this.categorizeImageSources(serperData.images),
+              hasLogo: serperData.images.some(img =>
+                (img.title || '').toLowerCase().includes('logo')
+              ),
+              hasExteriorPhotos: serperData.images.some(img =>
+                (img.title || '').toLowerCase().match(/exterior|facade|building|outside|bygning|facade/)
+              ),
+              hasInteriorPhotos: serperData.images.some(img =>
+                (img.title || '').toLowerCase().match(/interior|inside|indendørs/)
+              ),
+              hasFoodPhotos: serperData.images.some(img =>
+                (img.title || '').toLowerCase().match(/food|mad|dish|ret|menu/)
+              ),
+              dataSource: 'serper_images',
+              confidence: 'confirmed',
+              findings: this.generateImageFindings(serperData.images, businessName)
+            };
+          }
+        } catch (error) {
+          console.log('Serper Images API failed:', error.message);
+        }
+
+        // Fallback to mock data
+        await delay(1500);
+        return {
+          totalImages: 0,
+          images: [],
+          sources: {},
+          hasLogo: false,
+          hasExteriorPhotos: false,
+          hasInteriorPhotos: false,
+          hasFoodPhotos: false,
+          dataSource: 'demo_data',
+          confidence: 'not_found',
+          findings: [{
+            type: 'warning',
+            title: 'Ingen billeder fundet',
+            description: 'Kunne ikke hente billeder for denne virksomhed.'
+          }]
+        };
+      },
+
+      // Helper: Categorize image sources
+      categorizeImageSources(images) {
+        const sources = {};
+        images.forEach(img => {
+          const domain = img.domain || img.source || 'unknown';
+          sources[domain] = (sources[domain] || 0) + 1;
+        });
+        return sources;
+      },
+
+      // Helper: Generate image findings
+      generateImageFindings(images, businessName) {
+        const findings = [];
+
+        if (images.length >= 10) {
+          findings.push({
+            type: 'positive',
+            title: 'God billedtilstedeværelse online',
+            description: `Fundet ${images.length} billeder relateret til "${businessName}" på tværs af forskellige kilder.`
+          });
+        } else if (images.length > 0) {
+          findings.push({
+            type: 'opportunity',
+            title: 'Potentiale for flere billeder',
+            description: `Kun ${images.length} billeder fundet. Overvej at uploade flere billeder til Google Business Profile.`
+          });
+        } else {
+          findings.push({
+            type: 'warning',
+            title: 'Manglende billedtilstedeværelse',
+            description: 'Ingen billeder fundet online. Upload billeder for at øge synlighed og engagement.'
+          });
+        }
+
+        return findings;
       },
 
       // Citation Presence Analyse
@@ -1756,6 +2201,35 @@
         }
       }
 
+      if (moduleId === 'images' && result) {
+        if (result.totalImages === 0) {
+          findings.push({
+            id: `${moduleId}_missing_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'warning',
+            title: 'Ingen online billeder',
+            description: 'Virksomheden har ingen synlige billeder på nettet. Dette påvirker troværdighed.',
+            impact: 'medium',
+            confidence: result.confidence || 'indicator',
+            dataSource: 'Serper Images API',
+          });
+        }
+        if (result.totalImages > 0 && !result.hasFoodPhotos && !result.hasInteriorPhotos) {
+          findings.push({
+            id: `${moduleId}_variety_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'opportunity',
+            title: 'Mangler varierede billeder',
+            description: 'Overvej at tilføje billeder af mad/produkter og interiør for bedre engagement.',
+            impact: 'low',
+            confidence: result.confidence || 'indicator',
+            dataSource: 'Serper Images API',
+          });
+        }
+      }
+
       if (moduleId === 'napConsistency' && result) {
         const issues = result.issues?.filter(i => i.severity === 'high') || [];
         if (issues.length > 0) {
@@ -1922,6 +2396,7 @@
       const analysisSteps = useMemo(() => [
         { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin' },
         { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star' },
+        { id: 'images', name: 'Billeder & Medier', icon: 'Image' },
         { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search' },
         { id: 'citations', name: 'Citationer', icon: 'Link' },
         { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target' },
@@ -1951,6 +2426,9 @@
                     business.place_id,
                     business.name
                   );
+                  break;
+                case 'images':
+                  result = await AnalysisService.getBusinessImages(business.name);
                   break;
                 case 'serpVisibility':
                   result = await AnalysisService.getSERPVisibility(
