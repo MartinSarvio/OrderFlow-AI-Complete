@@ -7,6 +7,7 @@
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -20,6 +21,34 @@
     @keyframes scanHorizontal { 0% { left: 5%; } 50% { left: 90%; } 100% { left: 5%; } }
     @keyframes floatUp { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(0.5); } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); } 50% { box-shadow: 0 0 15px 3px rgba(102, 126, 234, 0.3); } }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    /* Findings Feed Styles */
+    .findings-feed { display: flex; flex-direction: column; gap: 16px; }
+    .module-status-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px; background: white; border-radius: 12px; margin-bottom: 16px; }
+    .module-indicator { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; background: #f5f5f5; transition: all 0.3s; }
+    .module-indicator--running { background: #ede9fe; color: #667eea; }
+    .module-indicator--completed { background: #d1fae5; color: #059669; }
+    .module-indicator--error { background: #fee2e2; color: #dc2626; }
+    .module-indicator__count { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+    .findings-stream { max-height: 450px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 8px; }
+    .findings-stream::-webkit-scrollbar { width: 6px; }
+    .findings-stream::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+    .findings-stream::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    .finding-card { padding: 16px; border-radius: 12px; border-left: 4px solid; transition: all 0.3s; }
+    .finding-card--highlighted { animation: slideInRight 0.3s ease, pulseGlow 1.5s ease-in-out; }
+    .finding-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .finding-card__module { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
+    .finding-card__title { font-weight: 600; color: #1a1a1a; margin-bottom: 4px; font-size: 14px; }
+    .finding-card__description { font-size: 13px; color: #6b7280; line-height: 1.5; }
+    .finding-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; }
+    .finding-card__source { color: #9ca3af; }
+    .confidence-badge { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; }
+    .confidence-confirmed { background: #d1fae5; color: #059669; }
+    .confidence-indicator { background: #fef3c7; color: #d97706; }
+    .confidence-not_found { background: #f3f4f6; color: #6b7280; }
 
     /* Search Page Styles */
     .search-container {
@@ -871,6 +900,145 @@
         };
       },
 
+      // SERP Synlighedsanalyse
+      async getSERPVisibility(businessName, address, category) {
+        await delay(2500);
+
+        const searchArea = address?.city || 'Aarhus';
+        return {
+          directSearch: {
+            query: `${businessName} ${searchArea}`,
+            rank: 1,
+            inLocalPack: true,
+            knowledgePanel: true,
+            confidence: 'confirmed',
+          },
+          categorySearch: {
+            query: `${category} ${searchArea}`,
+            rank: 8,
+            inLocalPack: false,
+            totalResults: 47,
+            confidence: 'indicator',
+          },
+          localIntentSearch: {
+            query: `${category} i nærheden`,
+            rank: 12,
+            inLocalPack: false,
+            confidence: 'indicator',
+          },
+          searchFeatures: ['reviews', 'hours', 'phone', 'website', 'directions'],
+          missingFeatures: ['menu', 'booking', 'popular_times'],
+          estimatedMonthlySearches: {
+            brandTerms: 320,
+            categoryTerms: 4800,
+          },
+          visibility: {
+            score: 62,
+            status: calculateSignalStrength(62, { excellent: 80, good: 60, warning: 40 }),
+          },
+          findings: [
+            { type: 'positive', title: 'God synlighed på brand-søgninger', description: 'Rangerer #1 på direkte søgninger efter virksomhedsnavnet.' },
+            { type: 'warning', title: 'Lav synlighed på kategori-søgninger', description: 'Rangerer kun #8 på "restaurant Aarhus" søgninger.' },
+            { type: 'opportunity', title: 'Mangler i Local Pack', description: 'Vises ikke i top 3 lokale resultater for kategori-søgninger.' },
+          ],
+          dataSource: 'demo_data',
+          confidence: 'indicator',
+        };
+      },
+
+      // Citation Presence Analyse
+      async getCitationPresence(businessName, address, phone) {
+        await delay(2000);
+
+        const citationSources = [
+          { name: 'Krak.dk', priority: 'high', found: true, complete: true, lastUpdated: '2024-11-15' },
+          { name: 'De Gule Sider', priority: 'high', found: true, complete: false, issues: ['Mangler åbningstider'] },
+          { name: 'Eniro', priority: 'medium', found: true, complete: true, lastUpdated: '2024-09-20' },
+          { name: 'Yelp', priority: 'medium', found: false, complete: false },
+          { name: 'TripAdvisor', priority: 'high', found: true, complete: true, rating: 4.0, reviews: 45 },
+          { name: 'Trustpilot', priority: 'high', found: false, complete: false },
+          { name: 'Apple Maps', priority: 'medium', found: true, complete: true },
+          { name: 'Bing Places', priority: 'low', found: true, complete: false, issues: ['Forældet adresse'] },
+          { name: 'Foursquare', priority: 'low', found: false, complete: false },
+        ];
+
+        const foundCount = citationSources.filter(s => s.found).length;
+        const completeCount = citationSources.filter(s => s.complete).length;
+        const highPriorityMissing = citationSources.filter(s => s.priority === 'high' && !s.found).map(s => s.name);
+
+        return {
+          sources: citationSources,
+          totalChecked: citationSources.length,
+          totalFound: foundCount,
+          totalComplete: completeCount,
+          coverageScore: Math.round((foundCount / citationSources.length) * 100),
+          completenessScore: Math.round((completeCount / foundCount) * 100),
+          highPriorityMissing,
+          findings: [
+            foundCount >= 6
+              ? { type: 'positive', title: 'God citation-dækning', description: `Fundet på ${foundCount} af ${citationSources.length} platforme.` }
+              : { type: 'warning', title: 'Lav citation-dækning', description: `Kun fundet på ${foundCount} af ${citationSources.length} platforme.` },
+            highPriorityMissing.length > 0
+              ? { type: 'critical', title: 'Mangler vigtige citations', description: `Ikke registreret på: ${highPriorityMissing.join(', ')}` }
+              : { type: 'positive', title: 'Alle vigtige citations på plads', description: 'Registreret på alle high-priority platforme.' },
+          ],
+          recommendations: highPriorityMissing.map(name => `Opret profil på ${name}`),
+          dataSource: 'demo_data',
+          confidence: 'indicator',
+        };
+      },
+
+      // Schema Markup Detection
+      async detectSchemaMarkup(websiteUrl) {
+        await delay(1500);
+
+        if (!websiteUrl) {
+          return {
+            hasWebsite: false,
+            schemaFound: false,
+            findings: [
+              { type: 'critical', title: 'Ingen hjemmeside', description: 'Kan ikke analysere schema markup uden hjemmeside.' }
+            ],
+            dataSource: 'demo_data',
+            confidence: 'not_found',
+          };
+        }
+
+        return {
+          hasWebsite: true,
+          url: websiteUrl,
+          schemaTypes: {
+            LocalBusiness: { found: false, fields: [] },
+            Restaurant: { found: false, fields: [] },
+            Organization: { found: true, fields: ['name', 'url'] },
+            WebSite: { found: true, fields: ['name', 'url', 'potentialAction'] },
+          },
+          openGraph: {
+            found: true,
+            tags: ['og:title', 'og:description', 'og:image', 'og:url'],
+            missingTags: ['og:type', 'og:locale'],
+          },
+          twitterCards: {
+            found: false,
+            tags: [],
+          },
+          structuredDataScore: 35,
+          recommendations: [
+            'Tilføj LocalBusiness schema markup',
+            'Tilføj Restaurant schema med menu og åbningstider',
+            'Tilføj Twitter Card meta tags',
+            'Udfyld manglende Open Graph tags',
+          ],
+          findings: [
+            { type: 'critical', title: 'Mangler LocalBusiness schema', description: 'Ingen lokal virksomheds-markup fundet. Dette reducerer synlighed i lokale søgeresultater.' },
+            { type: 'warning', title: 'Ufuldstændige Open Graph tags', description: 'Mangler og:type og og:locale tags.' },
+            { type: 'positive', title: 'Basis schema på plads', description: 'Organization og WebSite schema er implementeret.' },
+          ],
+          dataSource: 'demo_data',
+          confidence: 'indicator',
+        };
+      },
+
       // Samlet Score Beregning
       calculateOverallScore(analysisResults) {
         const weights = {
@@ -948,6 +1116,123 @@
         <polyline points="17 18 23 18 23 12"></polyline>
       </svg>
     );
+
+    // =============================================================================
+    // SVG ICON LIBRARY
+    // =============================================================================
+    const Icons = {
+      MapPin: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      ),
+      Star: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ),
+      Target: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+      ),
+      Link: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+      ),
+      Globe: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      ),
+      Share: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+      ),
+      Search: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      ),
+      Code: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+      ),
+      CheckCircle: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      ),
+      AlertTriangle: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ),
+      XCircle: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+      ),
+      Lightbulb: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M9 18h6"/><path d="M10 22h4"/>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/>
+        </svg>
+      ),
+      Download: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      ),
+      FileText: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+      ),
+      Users: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+      BarChart: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
+        </svg>
+      ),
+    };
+
+    const Icon = ({ name, size = 24, color = 'currentColor', className = '', ...props }) => {
+      const IconComponent = Icons[name];
+      if (!IconComponent) {
+        console.warn(`Icon "${name}" not found`);
+        return <span className={className} style={{ fontSize: size * 0.6 }}>[{name}]</span>;
+      }
+      return <IconComponent width={size} height={size} style={{ color }} className={className} {...props} />;
+    };
+
+    // Module icon mapping
+    const moduleIconMap = {
+      googleProfile: 'MapPin',
+      reviews: 'Star',
+      serpVisibility: 'Search',
+      citations: 'Link',
+      competitors: 'Target',
+      napConsistency: 'CheckCircle',
+      website: 'Globe',
+      schemaMarkup: 'Code',
+      social: 'Share',
+    };
 
     const Spinner = ({ size = 'small' }) => {
       const dotSize = size === 'small' ? 4 : 6;
@@ -1097,6 +1382,228 @@
     };
 
     // =============================================================================
+    // LIVE FINDINGS FEED COMPONENTS
+    // =============================================================================
+
+    const ConfidenceBadge = ({ confidence }) => {
+      const labels = { confirmed: 'Bekræftet', indicator: 'Indikator', not_found: 'Ikke fundet' };
+      return (
+        <span className={`confidence-badge confidence-${confidence}`}>
+          {labels[confidence] || confidence}
+        </span>
+      );
+    };
+
+    const ImpactBadge = ({ impact }) => {
+      const colors = { high: '#dc2626', medium: '#d97706', low: '#059669' };
+      const labels = { high: 'Høj effekt', medium: 'Medium effekt', low: 'Lav effekt' };
+      return (
+        <span style={{
+          padding: '2px 8px',
+          borderRadius: 10,
+          fontSize: 10,
+          fontWeight: 500,
+          background: `${colors[impact]}15`,
+          color: colors[impact],
+        }}>
+          {labels[impact]}
+        </span>
+      );
+    };
+
+    const FindingCard = ({ finding, isHighlighted }) => {
+      const categoryStyles = {
+        positive: { bg: '#d1fae5', border: '#059669', icon: 'CheckCircle' },
+        warning: { bg: '#fef3c7', border: '#d97706', icon: 'AlertTriangle' },
+        critical: { bg: '#fee2e2', border: '#dc2626', icon: 'XCircle' },
+        opportunity: { bg: '#dbeafe', border: '#2563eb', icon: 'Lightbulb' },
+      };
+      const style = categoryStyles[finding.category] || categoryStyles.warning;
+
+      return (
+        <div
+          className={`finding-card ${isHighlighted ? 'finding-card--highlighted' : ''}`}
+          style={{ background: style.bg, borderLeftColor: style.border }}
+        >
+          <div className="finding-card__header">
+            <Icon name={style.icon} size={16} color={style.border} />
+            <span className="finding-card__module">{finding.moduleName}</span>
+            <ConfidenceBadge confidence={finding.confidence} />
+          </div>
+          <div className="finding-card__title">{finding.title}</div>
+          <div className="finding-card__description">{finding.description}</div>
+          <div className="finding-card__footer">
+            <span className="finding-card__source">Kilde: {finding.dataSource}</span>
+            {finding.impact && <ImpactBadge impact={finding.impact} />}
+          </div>
+        </div>
+      );
+    };
+
+    const ModuleStatusIndicator = ({ module }) => {
+      const statusClasses = {
+        pending: '',
+        running: 'module-indicator--running',
+        completed: 'module-indicator--completed',
+        error: 'module-indicator--error',
+      };
+
+      return (
+        <div className={`module-indicator ${statusClasses[module.status]}`}>
+          {module.status === 'running' ? (
+            <Spinner size="small" />
+          ) : module.status === 'completed' ? (
+            <Icon name="CheckCircle" size={12} color="#059669" />
+          ) : module.status === 'error' ? (
+            <Icon name="XCircle" size={12} color="#dc2626" />
+          ) : (
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#d1d5db' }} />
+          )}
+          <span>{module.name}</span>
+          {module.findingsCount > 0 && (
+            <span className="module-indicator__count">{module.findingsCount}</span>
+          )}
+        </div>
+      );
+    };
+
+    const LiveFindingsFeed = ({ findings, highlightedId, moduleStatuses }) => {
+      const feedRef = useRef(null);
+
+      useEffect(() => {
+        if (feedRef.current && highlightedId) {
+          feedRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }, [highlightedId]);
+
+      return (
+        <div className="findings-feed">
+          <div className="module-status-bar">
+            {moduleStatuses.map(module => (
+              <ModuleStatusIndicator key={module.id} module={module} />
+            ))}
+          </div>
+          <div className="findings-stream" ref={feedRef}>
+            {findings.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: '#6b7280' }}>
+                <Icon name="Search" size={32} color="#d1d5db" />
+                <p style={{ marginTop: 12, fontSize: 14 }}>Venter på fund...</p>
+              </div>
+            ) : (
+              findings.map(finding => (
+                <FindingCard
+                  key={finding.id}
+                  finding={finding}
+                  isHighlighted={finding.id === highlightedId}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // Helper function to extract findings from module results
+    const extractFindings = (moduleId, moduleName, result) => {
+      const findings = [];
+
+      // Extract findings based on module type
+      if (result?.findings) {
+        result.findings.forEach((f, i) => {
+          findings.push({
+            id: `${moduleId}_${i}_${Date.now()}`,
+            module: moduleId,
+            moduleName: moduleName,
+            category: f.type || 'warning',
+            title: f.title,
+            description: f.description,
+            impact: f.impact || 'medium',
+            confidence: result.confidence || 'indicator',
+            dataSource: result.dataSource || 'demo_data',
+          });
+        });
+      }
+
+      // Module-specific finding extraction
+      if (moduleId === 'googleProfile' && result) {
+        if (result.rating >= 4.0) {
+          findings.push({
+            id: `${moduleId}_rating_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'positive',
+            title: 'God Google rating',
+            description: `Rating på ${result.rating} stjerner baseret på ${result.totalReviews} anmeldelser.`,
+            impact: 'high',
+            confidence: 'confirmed',
+            dataSource: 'Google Places API',
+          });
+        }
+        if (result.profileCompleteness?.score < 80) {
+          findings.push({
+            id: `${moduleId}_incomplete_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'warning',
+            title: 'Ufuldstændig profil',
+            description: `Profilen er kun ${result.profileCompleteness.score}% komplet. Mangler: ${result.profileCompleteness.missing?.slice(0,2).join(', ')}.`,
+            impact: 'medium',
+            confidence: 'confirmed',
+            dataSource: 'Google Places API',
+          });
+        }
+      }
+
+      if (moduleId === 'reviews' && result) {
+        if (result.responseMetrics?.responseRate < 50) {
+          findings.push({
+            id: `${moduleId}_response_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'warning',
+            title: 'Lav svarrate på anmeldelser',
+            description: `Kun ${result.responseMetrics.responseRate}% af anmeldelser besvaret. Anbefalet: > 50%.`,
+            impact: 'high',
+            confidence: 'confirmed',
+            dataSource: 'Google Reviews',
+          });
+        }
+        if (result.velocity?.monthlyAverage < 4) {
+          findings.push({
+            id: `${moduleId}_velocity_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'opportunity',
+            title: 'Potentiale for flere anmeldelser',
+            description: `Gennemsnit på ${result.velocity.monthlyAverage} anmeldelser/måned. Overvej aktiv opfordring.`,
+            impact: 'medium',
+            confidence: 'indicator',
+            dataSource: 'Google Reviews',
+          });
+        }
+      }
+
+      if (moduleId === 'napConsistency' && result) {
+        const issues = result.issues?.filter(i => i.severity === 'high') || [];
+        if (issues.length > 0) {
+          findings.push({
+            id: `${moduleId}_issues_${Date.now()}`,
+            module: moduleId,
+            moduleName,
+            category: 'critical',
+            title: 'Inkonsistente virksomhedsoplysninger',
+            description: `${issues.length} kritiske problemer fundet: ${issues.map(i => i.platform).join(', ')}.`,
+            impact: 'high',
+            confidence: 'indicator',
+            dataSource: 'Multi-platform check',
+          });
+        }
+      }
+
+      return findings;
+    };
+
+    // =============================================================================
     // SEARCH COMPONENT
     // =============================================================================
     const BusinessSearch = ({ onBusinessSelect }) => {
@@ -1219,14 +1726,26 @@
       const [analysisResults, setAnalysisResults] = useState({});
       const [isComplete, setIsComplete] = useState(false);
       const [showReport, setShowReport] = useState(false);
+      const [findings, setFindings] = useState([]);
+      const [highlightedFindingId, setHighlightedFindingId] = useState(null);
+
+      const addFindings = useCallback((newFindings) => {
+        if (newFindings.length === 0) return;
+        setFindings(prev => [...newFindings, ...prev]);
+        setHighlightedFindingId(newFindings[0]?.id);
+        setTimeout(() => setHighlightedFindingId(null), 2000);
+      }, []);
 
       const analysisSteps = useMemo(() => [
-        { id: 'googleProfile', name: 'Google Business Profile', icon: '📍' },
-        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: '⭐' },
-        { id: 'competitors', name: 'Konkurrentanalyse', icon: '🎯' },
-        { id: 'napConsistency', name: 'NAP Konsistens', icon: '🔗' },
-        { id: 'website', name: 'Website & Mobil', icon: '📱' },
-        { id: 'social', name: 'Social Media', icon: '📣' },
+        { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin' },
+        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star' },
+        { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search' },
+        { id: 'citations', name: 'Citationer', icon: 'Link' },
+        { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target' },
+        { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle' },
+        { id: 'website', name: 'Website & Mobil', icon: 'Globe' },
+        { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code' },
+        { id: 'social', name: 'Social Media', icon: 'Share' },
       ], []);
 
       useEffect(() => {
@@ -1250,6 +1769,20 @@
                     business.name
                   );
                   break;
+                case 'serpVisibility':
+                  result = await AnalysisService.getSERPVisibility(
+                    business.name,
+                    analysisResults.googleProfile?.address || business.address,
+                    'restaurant'
+                  );
+                  break;
+                case 'citations':
+                  result = await AnalysisService.getCitationPresence(
+                    business.name,
+                    business.address,
+                    analysisResults.googleProfile?.phone || '+45 86 12 34 56'
+                  );
+                  break;
                 case 'competitors':
                   result = await AnalysisService.getCompetitorAnalysis(
                     business.name,
@@ -1270,6 +1803,10 @@
                     profile?.website || business.website
                   );
                   break;
+                case 'schemaMarkup':
+                  const websiteUrl = analysisResults.googleProfile?.website || business.website;
+                  result = await AnalysisService.detectSchemaMarkup(websiteUrl);
+                  break;
                 case 'social':
                   result = await AnalysisService.analyzeSocialPresence(business.name);
                   break;
@@ -1277,9 +1814,25 @@
 
               setAnalysisResults(prev => ({ ...prev, [step.id]: result }));
               setCompletedSteps(prev => [...prev, step.id]);
+
+              // Extract and add findings
+              const newFindings = extractFindings(step.id, step.name, result);
+              if (newFindings.length > 0) {
+                addFindings(newFindings);
+              }
             } catch (error) {
               console.error(`Error in ${step.id}:`, error);
               setCompletedSteps(prev => [...prev, step.id]);
+              addFindings([{
+                id: `${step.id}_error_${Date.now()}`,
+                module: step.id,
+                moduleName: step.name,
+                category: 'warning',
+                title: 'Kunne ikke hente data',
+                description: 'Modulet blev sprunget over pga. en fejl. Analysen fortsætter.',
+                confidence: 'not_found',
+                dataSource: 'System',
+              }]);
             }
           }
 
@@ -1287,7 +1840,7 @@
         };
 
         runAnalysis();
-      }, [business, analysisSteps]);
+      }, [business, analysisSteps, addFindings]);
 
       const progress = (completedSteps.length / analysisSteps.length) * 100;
 
@@ -1297,6 +1850,7 @@
             results={analysisResults}
             business={business}
             onNewScan={onBack}
+            findings={findings}
           />
         );
       }
@@ -1346,10 +1900,13 @@
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 18,
                         background: isCompleted ? '#d1fae5' : isCurrent ? '#ede9fe' : '#f5f5f5',
                       }}>
-                        {isCompleted ? <CheckIcon size={16} /> : step.icon}
+                        {isCompleted ? (
+                          <Icon name="CheckCircle" size={18} color="#059669" />
+                        ) : (
+                          <Icon name={step.icon} size={18} color={isCurrent ? '#667eea' : '#9ca3af'} />
+                        )}
                       </div>
                       <div style={{ flex: 1 }}>
                         <span style={{
@@ -1396,12 +1953,12 @@
 
             {/* Main Content */}
             <div style={{
-              padding: 48,
+              padding: 32,
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              flexDirection: 'column',
               position: 'relative',
               background: 'linear-gradient(135deg, #f5f5f7 0%, #e5e5ea 100%)',
+              overflow: 'hidden',
             }}>
               <ScanningBeam
                 isScanning={!isComplete}
@@ -1409,83 +1966,162 @@
               />
 
               {!isComplete ? (
-                <div style={{
-                  background: 'white',
-                  borderRadius: 20,
-                  padding: 48,
-                  textAlign: 'center',
-                  boxShadow: '0 25px 80px rgba(0,0,0,0.1)',
-                  zIndex: 10,
-                  maxWidth: 500,
-                }}>
-                  <div style={{ position: 'relative', display: 'inline-block', marginBottom: 32 }}>
-                    <ProgressRing progress={progress} size={120} />
+                <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
+                  {/* Progress Card */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: 20,
+                    padding: 32,
+                    textAlign: 'center',
+                    boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
+                    width: 280,
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: 24 }}>
+                      <ProgressRing progress={progress} size={100} />
+                      <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 24,
+                        fontWeight: 700,
+                        color: '#1a1a1a',
+                      }}>
+                        {Math.round(progress)}%
+                      </div>
+                    </div>
+                    <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600 }}>
+                      {analysisSteps[currentStep]?.name || 'Analyserer...'}
+                    </h2>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>
+                      {completedSteps.length} af {analysisSteps.length} trin færdige
+                    </p>
+                  </div>
+
+                  {/* Live Findings Feed */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 15px 50px rgba(0,0,0,0.08)', height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                        <Icon name="FileText" size={20} color="#667eea" />
+                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Live Fund</h3>
+                        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>{findings.length} fund</span>
+                      </div>
+                      <LiveFindingsFeed
+                        findings={findings}
+                        highlightedId={highlightedFindingId}
+                        moduleStatuses={analysisSteps.map(step => ({
+                          id: step.id,
+                          name: step.name,
+                          status: completedSteps.includes(step.id) ? 'completed' : currentStep === analysisSteps.findIndex(s => s.id === step.id) ? 'running' : 'pending',
+                          findingsCount: findings.filter(f => f.module === step.id).length,
+                        }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
+                  {/* Completion Card */}
+                  <div style={{
+                    background: 'white',
+                    borderRadius: 20,
+                    padding: 32,
+                    textAlign: 'center',
+                    boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
+                    width: 320,
+                    flexShrink: 0,
+                    animation: 'slideIn 0.4s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
                     <div style={{
-                      position: 'absolute',
-                      inset: 0,
+                      width: 70,
+                      height: 70,
+                      background: '#d1fae5',
+                      borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 28,
-                      fontWeight: 700,
-                      color: '#1a1a1a',
+                      margin: '0 auto 20px',
                     }}>
-                      {Math.round(progress)}%
+                      <Icon name="CheckCircle" size={36} color="#059669" />
+                    </div>
+                    <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 700 }}>Analyse færdig!</h2>
+                    <p style={{ margin: '0 0 24px', color: '#6b7280', fontSize: 14 }}>
+                      {analysisSteps.length} områder analyseret
+                    </p>
+
+                    {/* Summary Stats */}
+                    <div style={{ display: 'flex', gap: 16, marginBottom: 24, width: '100%' }}>
+                      <div style={{ flex: 1, background: '#f0fdf4', padding: 12, borderRadius: 10 }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#059669' }}>
+                          {findings.filter(f => f.category === 'positive').length}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>Positive</div>
+                      </div>
+                      <div style={{ flex: 1, background: '#fef3c7', padding: 12, borderRadius: 10 }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#d97706' }}>
+                          {findings.filter(f => f.category === 'warning').length}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>Advarsler</div>
+                      </div>
+                      <div style={{ flex: 1, background: '#fee2e2', padding: 12, borderRadius: 10 }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: '#dc2626' }}>
+                          {findings.filter(f => f.category === 'critical').length}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#6b7280' }}>Kritiske</div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setShowReport(true)}
+                      style={{
+                        padding: '14px 32px',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 12,
+                        fontSize: 15,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        width: '100%',
+                      }}
+                      onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                      onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                      Se fuld rapport
+                    </button>
+                  </div>
+
+                  {/* Final Findings Overview */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 15px 50px rgba(0,0,0,0.08)', height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                        <Icon name="FileText" size={20} color="#667eea" />
+                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Alle fund</h3>
+                        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>{findings.length} fund</span>
+                      </div>
+                      <LiveFindingsFeed
+                        findings={findings}
+                        highlightedId={null}
+                        moduleStatuses={analysisSteps.map(step => ({
+                          id: step.id,
+                          name: step.name,
+                          status: 'completed',
+                          findingsCount: findings.filter(f => f.module === step.id).length,
+                        }))}
+                      />
                     </div>
                   </div>
-                  <h2 style={{ margin: '0 0 8px', fontSize: 24 }}>
-                    {analysisSteps[currentStep]?.name || 'Analyserer...'}
-                  </h2>
-                  <p style={{ margin: 0, color: '#6b7280' }}>
-                    Indsamler og analyserer data fra flere kilder
-                  </p>
-                </div>
-              ) : (
-                <div style={{
-                  background: 'white',
-                  borderRadius: 20,
-                  padding: 48,
-                  textAlign: 'center',
-                  boxShadow: '0 25px 80px rgba(0,0,0,0.1)',
-                  zIndex: 10,
-                  animation: 'slideIn 0.4s ease',
-                }}>
-                  <div style={{
-                    width: 80,
-                    height: 80,
-                    background: '#d1fae5',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 24px',
-                    color: '#059669',
-                    fontSize: 32,
-                  }}>
-                    <CheckIcon size={32} />
-                  </div>
-                  <h2 style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 700 }}>Analyse færdig</h2>
-                  <p style={{ margin: '0 0 32px', color: '#6b7280' }}>
-                    {analysisSteps.length} områder analyseret med {Object.keys(analysisResults).length} datapunkter
-                  </p>
-                  <button
-                    onClick={() => setShowReport(true)}
-                    style={{
-                      padding: '16px 40px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: 12,
-                      fontSize: 16,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                    }}
-                    onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                    onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                  >
-                    Se din rapport
-                  </button>
                 </div>
               )}
             </div>
@@ -1495,9 +2131,303 @@
     };
 
     // =============================================================================
+    // PDF REPORT GENERATOR
+    // =============================================================================
+    class ScannerReportGenerator {
+      constructor() {
+        this.primaryColor = [102, 126, 234];
+        this.secondaryColor = [118, 75, 162];
+        this.darkColor = [26, 26, 46];
+        this.successColor = [5, 150, 105];
+        this.warningColor = [217, 119, 6];
+        this.dangerColor = [220, 38, 38];
+        this.textColor = [51, 51, 51];
+        this.mutedColor = [107, 114, 128];
+        this.lightGray = [249, 250, 251];
+        this.pageWidth = 210;
+        this.pageHeight = 297;
+        this.margin = 20;
+        this.contentWidth = this.pageWidth - 2 * this.margin;
+      }
+
+      formatDate(date) {
+        return new Date(date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+
+      getScoreColor(score) {
+        if (score >= 75) return this.successColor;
+        if (score >= 50) return this.warningColor;
+        return this.dangerColor;
+      }
+
+      generate(reportData) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        this.addCoverPage(doc, reportData);
+        this.addExecutiveSummary(doc, reportData);
+        this.addScorecards(doc, reportData);
+        this.addActionPlan(doc, reportData);
+
+        return doc;
+      }
+
+      addCoverPage(doc, data) {
+        // Header gradient simulation
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(0, 0, this.pageWidth, 100, 'F');
+
+        // Title
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(28);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Digital Synlighedsrapport', this.pageWidth / 2, 40, { align: 'center' });
+
+        // Business name
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'normal');
+        doc.text(data.business.name, this.pageWidth / 2, 55, { align: 'center' });
+
+        // Date and location
+        doc.setFontSize(11);
+        doc.text(data.business.address || '', this.pageWidth / 2, 70, { align: 'center' });
+        doc.text(`Genereret: ${this.formatDate(data.scanDate)}`, this.pageWidth / 2, 82, { align: 'center' });
+
+        // Overall Score Circle
+        const centerX = this.pageWidth / 2;
+        const centerY = 160;
+        const radius = 35;
+
+        doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
+        doc.circle(centerX, centerY, radius + 5, 'F');
+
+        const scoreColor = this.getScoreColor(data.overallScore);
+        doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+        doc.circle(centerX, centerY, radius, 'F');
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(36);
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(data.overallScore), centerX, centerY + 5, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text('af 100', centerX, centerY + 18, { align: 'center' });
+
+        // Score Label
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(14);
+        const label = data.overallScore >= 75 ? 'God digital tilstedeværelse' :
+                     data.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
+        doc.text(label, centerX, centerY + 55, { align: 'center' });
+
+        // Key Stats
+        let yPos = 230;
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+
+        const stats = [
+          { label: 'Rating', value: data.results.googleProfile?.rating || 'N/A' },
+          { label: 'Anmeldelser', value: data.results.reviews?.totalReviews || 0 },
+          { label: 'Fund', value: data.findingsCount || 0 },
+        ];
+
+        const statWidth = this.contentWidth / 3;
+        stats.forEach((stat, i) => {
+          const x = this.margin + statWidth * i + statWidth / 2;
+          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+          doc.text(stat.label, x, yPos, { align: 'center' });
+          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+          doc.setFont('helvetica', 'bold');
+          doc.text(String(stat.value), x, yPos + 8, { align: 'center' });
+          doc.setFont('helvetica', 'normal');
+        });
+
+        // Footer
+        doc.setFontSize(9);
+        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+        doc.text('Powered by OrderFlow Business Scanner', centerX, 280, { align: 'center' });
+      }
+
+      addExecutiveSummary(doc, data) {
+        doc.addPage();
+        let yPos = this.margin;
+
+        // Section Header
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Resumé - Top 5 Vigtigste Fund', this.margin + 5, yPos + 7);
+        yPos += 20;
+
+        // Top findings
+        const topFindings = (data.findings || [])
+          .filter(f => f.category === 'critical' || f.category === 'warning')
+          .slice(0, 5);
+
+        if (topFindings.length === 0) {
+          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Ingen kritiske fund.', this.margin, yPos + 10);
+          yPos += 30;
+        } else {
+          topFindings.forEach((finding, i) => {
+            const color = finding.category === 'critical' ? this.dangerColor : this.warningColor;
+
+            // Number badge
+            doc.setFillColor(color[0], color[1], color[2]);
+            doc.circle(this.margin + 8, yPos + 5, 8, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(String(i + 1), this.margin + 8, yPos + 8, { align: 'center' });
+
+            // Finding text
+            doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+            doc.setFontSize(11);
+            doc.text(finding.title, this.margin + 22, yPos + 6);
+
+            doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            const desc = finding.description?.substring(0, 100) + (finding.description?.length > 100 ? '...' : '');
+            doc.text(desc, this.margin + 22, yPos + 14);
+
+            yPos += 28;
+          });
+        }
+      }
+
+      addScorecards(doc, data) {
+        doc.addPage();
+        let yPos = this.margin;
+
+        // Section Header
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Scorekort', this.margin + 5, yPos + 7);
+        yPos += 25;
+
+        const scores = [
+          { name: 'Google Business Profile', score: data.results.googleProfile?.profileCompleteness?.score || 0 },
+          { name: 'Anmeldelser', score: Math.round((data.results.reviews?.averageRating / 5) * 100) || 0 },
+          { name: 'NAP Konsistens', score: data.results.napConsistency?.consistencyScore || 0 },
+          { name: 'Website', score: data.results.website?.scores?.mobile || 0 },
+          { name: 'Social Media', score: data.results.social?.overallScore || 0 },
+        ];
+
+        const cardWidth = (this.contentWidth - 10) / 2;
+        const cardHeight = 35;
+
+        scores.forEach((card, i) => {
+          const col = i % 2;
+          const row = Math.floor(i / 2);
+          const x = this.margin + col * (cardWidth + 10);
+          const y = yPos + row * (cardHeight + 10);
+
+          // Card background
+          doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
+          doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'F');
+
+          // Score
+          const scoreColor = this.getScoreColor(card.score);
+          doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+          doc.setFontSize(22);
+          doc.setFont('helvetica', 'bold');
+          doc.text(String(card.score), x + 12, y + 22);
+
+          // Label
+          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.text(card.name, x + 35, y + 15);
+
+          // Score bar
+          const barWidth = cardWidth - 50;
+          const barX = x + 35;
+          const barY = y + 22;
+
+          doc.setFillColor(224, 224, 224);
+          doc.roundedRect(barX, barY, barWidth, 5, 2, 2, 'F');
+
+          doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+          doc.roundedRect(barX, barY, barWidth * (card.score / 100), 5, 2, 2, 'F');
+        });
+      }
+
+      addActionPlan(doc, data) {
+        doc.addPage();
+        let yPos = this.margin;
+
+        // Section Header
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Prioriteret Handlingsplan', this.margin + 5, yPos + 7);
+        yPos += 20;
+
+        const actions = [
+          { title: 'Svar på flere anmeldelser', priority: 'high', impact: 'Høj', effort: 'Lav' },
+          { title: 'Opdater Google Business profil', priority: 'high', impact: 'Høj', effort: 'Lav' },
+          { title: 'Tilføj LocalBusiness schema markup', priority: 'high', impact: 'Høj', effort: 'Medium' },
+          { title: 'Opret manglende citationer', priority: 'medium', impact: 'Medium', effort: 'Medium' },
+          { title: 'Optimer mobil hastighed', priority: 'medium', impact: 'Medium', effort: 'Høj' },
+          { title: 'Øg social media aktivitet', priority: 'low', impact: 'Lav', effort: 'Medium' },
+        ];
+
+        actions.forEach((action, i) => {
+          const color = action.priority === 'high' ? this.dangerColor :
+                       action.priority === 'medium' ? this.warningColor : this.successColor;
+
+          // Priority badge
+          doc.setFillColor(color[0], color[1], color[2]);
+          doc.roundedRect(this.margin, yPos, 18, 18, 3, 3, 'F');
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text(String(i + 1), this.margin + 9, yPos + 12, { align: 'center' });
+
+          // Action text
+          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+          doc.setFontSize(11);
+          doc.text(action.title, this.margin + 25, yPos + 8);
+
+          // Impact/Effort
+          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.text(`Effekt: ${action.impact} | Indsats: ${action.effort}`, this.margin + 25, yPos + 16);
+
+          yPos += 25;
+        });
+
+        // Footer
+        yPos += 20;
+        doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
+        doc.roundedRect(this.margin, yPos, this.contentWidth, 30, 3, 3, 'F');
+        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Næste skridt', this.margin + 10, yPos + 12);
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Start med de 3 højprioriterede handlinger for at opnå størst effekt hurtigt.', this.margin + 10, yPos + 22);
+      }
+    }
+
+    // Global PDF generator instance
+    const pdfGenerator = new ScannerReportGenerator();
+
+    // =============================================================================
     // ANALYSIS REPORT COMPONENT
     // =============================================================================
-    const AnalysisReport = ({ results, business, onNewScan }) => {
+    const AnalysisReport = ({ results, business, onNewScan, findings = [] }) => {
       const overallScore = AnalysisService.calculateOverallScore(results);
 
       const getScoreColor = (score) => {
@@ -2530,12 +3460,26 @@
                   fontWeight: 600,
                   cursor: 'pointer',
                   marginRight: 16,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
                 }}
               >
+                <Icon name="Search" size={18} color="#667eea" />
                 Ny analyse
               </button>
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  const doc = pdfGenerator.generate({
+                    business: business,
+                    scanDate: new Date(),
+                    overallScore: overallScore,
+                    results: results,
+                    findings: findings || [],
+                    findingsCount: findings?.length || 0,
+                  });
+                  doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                }}
                 style={{
                   padding: '16px 40px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -2545,9 +3489,13 @@
                   fontSize: 16,
                   fontWeight: 600,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
                 }}
               >
-                Download rapport (PDF)
+                <Icon name="Download" size={18} color="white" />
+                Download PDF
               </button>
             </div>
           </div>
