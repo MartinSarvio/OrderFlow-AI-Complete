@@ -3,13 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="var(--brand-primary)">
-  <title>PWA Preview</title>
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <title>Pizzeria Roma</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
+    /* ========================================
+       FLOW PWA TEMPLATE v2.0
+       Med header billede support
+    ======================================== */
+
     :root {
       /* Brand Colors - Injected from config */
       --brand-primary: #D4380D;
@@ -60,6 +72,9 @@
       /* Safe areas for notch */
       --safe-top: env(safe-area-inset-top);
       --safe-bottom: env(safe-area-inset-bottom);
+
+      /* Header height */
+      --header-image-height: 280px;
     }
 
     * {
@@ -76,11 +91,15 @@
 
     body {
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--gray-50);
+      background: var(--white);
       color: var(--gray-900);
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* ========================================
+       APP SHELL
+    ======================================== */
 
     .app {
       display: flex;
@@ -90,81 +109,276 @@
       margin: 0 auto;
       background: var(--white);
       position: relative;
+      overflow: hidden;
     }
 
-    .status-bar-space {
-      height: var(--safe-top, 44px);
-      min-height: 44px;
-      background: var(--white);
+    /* ========================================
+       HERO HEADER WITH IMAGE
+    ======================================== */
+
+    .hero-header {
+      position: relative;
+      height: var(--header-image-height);
+      min-height: var(--header-image-height);
+      overflow: hidden;
+      flex-shrink: 0;
     }
 
-    .app-header {
-      padding: var(--space-md) var(--space-lg);
-      background: var(--white);
-      position: sticky;
+    .hero-header-image {
+      position: absolute;
       top: 0;
-      z-index: 100;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
     }
 
-    .header-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: var(--space-md);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: var(--space-md);
-    }
-
-    .brand-logo {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-md);
+    .hero-header-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--white);
-      font-weight: 800;
-      font-size: 16px;
-      box-shadow: var(--shadow-md);
-      background-size: cover;
-      background-position: center;
+      font-size: 80px;
     }
 
-    .brand-info h1 {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
+    /* Gradient overlay for readability */
+    .hero-header-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.25) 0%,
+        rgba(0, 0, 0, 0) 25%,
+        rgba(0, 0, 0, 0) 45%,
+        rgba(0, 0, 0, 0.15) 65%,
+        rgba(0, 0, 0, 0.3) 75%,
+        rgba(255, 255, 255, 0.5) 88%,
+        rgba(255, 255, 255, 0.85) 94%,
+        rgba(255, 255, 255, 1) 100%
+      );
+      pointer-events: none;
     }
 
-    .brand-status {
+    /* Extra soft fade at bottom of header */
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 1) 100%
+      );
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* Top navigation on image */
+    .hero-header-nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: var(--space-md) var(--space-lg);
+      padding-top: calc(var(--safe-top, 44px) + var(--space-md));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: none;
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: var(--gray-500);
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-md);
     }
 
-    .status-dot {
+    .header-btn:active {
+      transform: scale(0.95);
+    }
+
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-800);
+    }
+
+    .header-btn-group {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .header-btn.has-badge {
+      position: relative;
+    }
+
+    .header-btn .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 20px;
+      height: 20px;
+      background: var(--brand-primary);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border: 2px solid var(--white);
+    }
+
+    /* Restaurant info overlay on image */
+    .hero-header-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: var(--space-lg);
+      padding-bottom: calc(var(--space-xl) + 20px);
+      z-index: 10;
+    }
+
+    .restaurant-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: var(--space-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .restaurant-badge .dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: var(--success);
     }
 
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
+    .restaurant-name {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.5px;
+      margin-bottom: var(--space-xs);
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
 
-    .icon-btn {
-      width: 44px;
-      height: 44px;
+    .restaurant-tagline {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.9);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    /* ========================================
+       CONTENT AREA
+    ======================================== */
+
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(80px + var(--safe-bottom, 20px));
+      background: transparent;
+      position: relative;
+      z-index: 20;
+
+      /* Hide scrollbar */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .app-content::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Content wrapper with white background */
+    .content-wrapper {
+      background: var(--white);
+      min-height: 100%;
+      position: relative;
+    }
+
+    /* ========================================
+       HIDE ALL SCROLLBARS
+    ======================================== */
+
+    * {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+
+    *::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    /* ========================================
+       APP VIEWS / PAGES
+    ======================================== */
+
+    .app-view {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .app-view.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    /* Search View */
+    .search-view {
+      padding: var(--space-lg);
+      padding-top: calc(var(--safe-top, 44px) + var(--space-lg));
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .search-view-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .search-view-back {
+      width: 40px;
+      height: 40px;
       border-radius: var(--radius-full);
       background: var(--gray-100);
       border: none;
@@ -172,36 +386,749 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
     }
 
-    .icon-btn:active {
-      transform: scale(0.95);
-      background: var(--gray-200);
-    }
-
-    .icon-btn svg {
+    .search-view-back svg {
       width: 20px;
       height: 20px;
       color: var(--gray-700);
     }
 
-    .cart-badge {
-      position: absolute;
-      top: -2px;
-      right: -2px;
-      min-width: 18px;
-      height: 18px;
+    .search-view-input {
+      flex: 1;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--gray-100);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .search-view-input:focus {
+      outline: none;
+      background: var(--gray-200);
+    }
+
+    .search-recent {
+      margin-bottom: var(--space-xl);
+    }
+
+    .search-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-md);
+    }
+
+    .search-recent-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--gray-100);
+      cursor: pointer;
+    }
+
+    .search-recent-item svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-400);
+    }
+
+    .search-recent-item span {
+      flex: 1;
+      font-size: 15px;
+      color: var(--gray-700);
+    }
+
+    .search-popular-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .search-tag {
+      padding: var(--space-sm) var(--space-md);
+      background: var(--gray-100);
+      border-radius: var(--radius-full);
+      font-size: 14px;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .search-tag:active {
       background: var(--brand-primary);
       color: var(--white);
-      font-size: 10px;
-      font-weight: 700;
+    }
+
+    /* Points/Loyalty View */
+    .points-view {
+      padding-top: calc(var(--safe-top, 44px));
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .points-header {
+      padding: var(--space-xl) var(--space-lg);
+      background: linear-gradient(135deg, var(--gray-900) 0%, var(--gray-800) 100%);
+      color: var(--white);
+      text-align: center;
+    }
+
+    .points-value-large {
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      margin-bottom: var(--space-xs);
+    }
+
+    .points-label {
+      font-size: 16px;
+      color: var(--gray-400);
+      margin-bottom: var(--space-lg);
+    }
+
+    .points-progress-large {
+      background: var(--gray-700);
+      height: 8px;
       border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: var(--space-sm);
+    }
+
+    .points-progress-large-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand-accent) 0%, #FBBF24 100%);
+      border-radius: var(--radius-full);
+    }
+
+    .points-progress-text {
+      font-size: 13px;
+      color: var(--gray-400);
+    }
+
+    .points-content {
+      padding: var(--space-lg);
+    }
+
+    .rewards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .reward-card {
+      background: var(--white);
+      border: 2px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .reward-card:active {
+      border-color: var(--brand-primary);
+      transform: scale(0.98);
+    }
+
+    .reward-card.locked {
+      opacity: 0.5;
+    }
+
+    .reward-emoji {
+      font-size: 40px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .reward-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: var(--space-xs);
+    }
+
+    .reward-points {
+      font-size: 12px;
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .points-history {
+      background: var(--gray-50);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-info h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .history-info span {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .history-points {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .history-points.positive {
+      color: var(--success);
+    }
+
+    .history-points.negative {
+      color: var(--gray-500);
+    }
+
+    /* Profile View */
+    .profile-view {
+      padding-top: calc(var(--safe-top, 44px));
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .profile-header {
+      padding: var(--space-xl) var(--space-lg);
+      text-align: center;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 5px;
+      margin: 0 auto var(--space-md);
+      font-size: 32px;
+      color: var(--white);
+      font-weight: 700;
+    }
+
+    .profile-name {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .profile-email {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    .profile-stats {
+      display: flex;
+      justify-content: center;
+      gap: var(--space-xl);
+      margin-top: var(--space-lg);
+    }
+
+    .profile-stat {
+      text-align: center;
+    }
+
+    .profile-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--brand-primary);
+    }
+
+    .profile-stat-label {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .profile-menu {
+      padding: var(--space-lg);
+    }
+
+    .profile-menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--gray-100);
+      cursor: pointer;
+    }
+
+    .profile-menu-item svg {
+      width: 22px;
+      height: 22px;
+      color: var(--gray-500);
+    }
+
+    .profile-menu-item span {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .profile-menu-item .chevron {
+      width: 18px;
+      height: 18px;
+      color: var(--gray-400);
+    }
+
+    .profile-menu-item.danger span {
+      color: var(--error);
+    }
+
+    .profile-menu-item.danger svg {
+      color: var(--error);
+    }
+
+    /* Cart View */
+    .cart-view {
+      padding-top: calc(var(--safe-top, 44px));
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .cart-header {
+      padding: var(--space-lg);
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cart-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .cart-back {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .cart-back svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-700);
+    }
+
+    .cart-clear {
+      font-size: 14px;
+      color: var(--brand-primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-lg);
+    }
+
+    .cart-item {
+      display: flex;
+      gap: var(--space-md);
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .cart-item-image {
+      width: 70px;
+      height: 70px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      background: var(--gray-100);
+    }
+
+    .cart-item-info {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .cart-item-price {
+      font-size: 14px;
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .cart-item-qty {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+
+    .cart-item-qty button {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .cart-item-qty span {
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .cart-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-xl);
+    }
+
+    .cart-empty-icon {
+      font-size: 60px;
+      margin-bottom: var(--space-lg);
+      opacity: 0.5;
+    }
+
+    .cart-empty h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    .cart-empty p {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    .cart-footer {
+      padding: var(--space-lg);
+      border-top: 1px solid var(--gray-100);
+      background: var(--white);
+    }
+
+    .cart-subtotal {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-sm);
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: var(--space-lg);
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .cart-checkout {
+      width: 100%;
+      padding: var(--space-md);
+      background: var(--brand-primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .cart-checkout:active {
+      background: var(--brand-primary-dark);
+      transform: scale(0.98);
+    }
+
+    /* ========================================
+       PRODUCT MODAL
+    ======================================== */
+
+    .product-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .product-modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .product-modal {
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      background: var(--white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-modal-overlay.visible .product-modal {
+      transform: translateY(0);
+    }
+
+    .product-modal-image {
+      width: 100%;
+      height: 250px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .product-modal-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-modal-image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 80px;
+      background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
+    }
+
+    .product-modal-close {
+      position: absolute;
+      top: var(--space-md);
+      right: var(--space-md);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      background: var(--white);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      z-index: 10;
+    }
+
+    .product-modal-close svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-700);
+    }
+
+    .product-modal-badge {
+      position: absolute;
+      top: var(--space-md);
+      left: var(--space-md);
+      padding: 6px 12px;
+      background: var(--brand-primary);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      text-transform: uppercase;
+    }
+
+    .product-modal-content {
+      padding: var(--space-lg);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .product-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-md);
+    }
+
+    .product-modal-name {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--gray-900);
+    }
+
+    .product-modal-price {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--brand-primary);
+      white-space: nowrap;
+    }
+
+    .product-modal-desc {
+      font-size: 15px;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: var(--space-lg);
+    }
+
+    .product-modal-section {
+      margin-bottom: var(--space-lg);
+    }
+
+    .product-modal-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: var(--space-sm);
+    }
+
+    .product-modal-ingredients {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .ingredient-tag {
+      padding: 6px 12px;
+      background: var(--gray-100);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      color: var(--gray-700);
+    }
+
+    /* Quantity selector */
+    .quantity-selector {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      padding: var(--space-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--space-lg);
+    }
+
+    .quantity-selector label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-700);
+      flex: 1;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+
+    .quantity-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      border: 2px solid var(--gray-200);
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quantity-btn:active {
+      background: var(--gray-100);
+      transform: scale(0.95);
+    }
+
+    .quantity-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--gray-700);
+    }
+
+    .quantity-value {
+      font-size: 18px;
+      font-weight: 700;
+      min-width: 30px;
+      text-align: center;
+    }
+
+    /* Add to cart button */
+    .add-to-cart-btn {
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--brand-primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      transition: all 0.2s ease;
+    }
+
+    .add-to-cart-btn:active {
+      transform: scale(0.98);
+      background: var(--brand-primary-dark);
+    }
+
+    .add-to-cart-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Search Bar */
+    .search-section {
+      padding: var(--space-lg) var(--space-lg);
+      padding-top: var(--space-sm);
     }
 
     .search-bar {
@@ -237,17 +1164,53 @@
       outline: none;
     }
 
-    .app-content {
-      flex: 1;
-      overflow-y: auto;
-      overflow-x: hidden;
+    /* Quick Info Row */
+    .quick-info {
+      display: flex;
+      gap: var(--space-sm);
+      padding: 0 var(--space-lg);
+      margin-bottom: var(--space-lg);
+      overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: calc(80px + var(--safe-bottom, 20px));
+      scrollbar-width: none;
     }
 
-    .hero-banner {
-      margin: var(--space-md) var(--space-lg);
-      padding: var(--space-xl);
+    .quick-info::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-info-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--gray-50);
+      border-radius: var(--radius-full);
+      font-size: 13px;
+      color: var(--gray-600);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .quick-info-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--gray-400);
+    }
+
+    .quick-info-item.highlight {
+      background: var(--brand-secondary);
+      color: var(--brand-primary);
+    }
+
+    .quick-info-item.highlight svg {
+      color: var(--brand-primary);
+    }
+
+    /* Promo Banner */
+    .promo-banner {
+      margin: 0 var(--space-lg) var(--space-lg);
+      padding: var(--space-lg);
       background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
       border-radius: var(--radius-xl);
       color: var(--white);
@@ -255,7 +1218,7 @@
       overflow: hidden;
     }
 
-    .hero-banner::before {
+    .promo-banner::before {
       content: '';
       position: absolute;
       top: -50%;
@@ -266,75 +1229,37 @@
       border-radius: 50%;
     }
 
-    .hero-banner::after {
-      content: '';
-      position: absolute;
-      bottom: -30%;
-      left: -20%;
-      width: 150px;
-      height: 150px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 50%;
-    }
-
-    .hero-content {
+    .promo-content {
       position: relative;
       z-index: 1;
     }
 
-    .hero-label {
+    .promo-label {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
+      padding: 4px 10px;
       background: rgba(255,255,255,0.2);
       border-radius: var(--radius-full);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
-      margin-bottom: var(--space-md);
-      backdrop-filter: blur(10px);
-    }
-
-    .hero-title {
-      font-size: 22px;
-      font-weight: 700;
       margin-bottom: var(--space-sm);
-      letter-spacing: -0.3px;
     }
 
-    .hero-subtitle {
-      font-size: 14px;
+    .promo-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+    }
+
+    .promo-subtitle {
+      font-size: 13px;
       opacity: 0.9;
-      margin-bottom: var(--space-lg);
     }
 
-    .hero-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-md) var(--space-lg);
-      background: var(--white);
-      color: var(--brand-primary);
-      border: none;
-      border-radius: var(--radius-full);
-      font-size: 14px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .hero-btn:active {
-      transform: scale(0.97);
-    }
-
-    .hero-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-
+    /* Loyalty Card */
     .loyalty-card {
-      margin: var(--space-md) var(--space-lg);
+      margin: 0 var(--space-lg) var(--space-lg);
       padding: var(--space-lg);
       background: var(--gray-900);
       border-radius: var(--radius-xl);
@@ -345,7 +1270,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: var(--space-lg);
+      margin-bottom: var(--space-md);
     }
 
     .loyalty-label {
@@ -362,22 +1287,22 @@
     }
 
     .loyalty-points-value {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 800;
       letter-spacing: -1px;
     }
 
     .loyalty-points-label {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--gray-400);
     }
 
     .loyalty-progress {
-      margin-bottom: var(--space-md);
+      margin-bottom: var(--space-sm);
     }
 
     .loyalty-progress-bar {
-      height: 8px;
+      height: 6px;
       background: var(--gray-700);
       border-radius: var(--radius-full);
       overflow: hidden;
@@ -394,10 +1319,11 @@
       display: flex;
       justify-content: space-between;
       margin-top: var(--space-sm);
-      font-size: 12px;
+      font-size: 11px;
       color: var(--gray-400);
     }
 
+    /* Categories */
     .categories {
       padding: var(--space-md) 0;
     }
@@ -417,7 +1343,7 @@
 
     .category-chip {
       flex-shrink: 0;
-      padding: var(--space-md) var(--space-lg);
+      padding: var(--space-sm) var(--space-lg);
       background: var(--gray-100);
       border: none;
       border-radius: var(--radius-full);
@@ -439,6 +1365,7 @@
       transform: scale(0.97);
     }
 
+    /* Section */
     .section {
       padding: var(--space-lg);
     }
@@ -463,12 +1390,14 @@
       text-decoration: none;
     }
 
+    /* Menu Grid */
     .menu-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--space-md);
     }
 
+    /* Menu Card */
     .menu-card {
       background: var(--white);
       border-radius: var(--radius-lg);
@@ -476,6 +1405,7 @@
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--gray-100);
       transition: all 0.2s ease;
+      cursor: pointer;
     }
 
     .menu-card:active {
@@ -487,6 +1417,7 @@
       aspect-ratio: 1;
       background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);
       position: relative;
+      overflow: hidden;
     }
 
     .menu-card-image img {
@@ -567,6 +1498,10 @@
       color: var(--white);
     }
 
+    /* ========================================
+       BOTTOM NAVIGATION
+    ======================================== */
+
     .bottom-nav {
       position: fixed;
       bottom: 0;
@@ -576,35 +1511,11 @@
       max-width: 480px;
       background: var(--white);
       border-top: 1px solid var(--gray-100);
-      padding: 12px 16px;
-      padding-bottom: calc(12px + env(safe-area-inset-bottom, 8px));
+      padding: var(--space-sm) var(--space-md);
+      padding-bottom: calc(var(--space-sm) + var(--safe-bottom, 8px));
       display: flex;
       justify-content: space-around;
-      align-items: center;
       z-index: 1000;
-    }
-
-    /* Cutout curved edges for FAB */
-    .bottom-nav::before,
-    .bottom-nav::after {
-      content: '';
-      position: absolute;
-      top: -20px;
-      width: 20px;
-      height: 20px;
-      background: transparent;
-    }
-
-    .bottom-nav::before {
-      left: calc(50% - 48px);
-      border-bottom-right-radius: 20px;
-      box-shadow: 8px 8px 0 8px var(--white);
-    }
-
-    .bottom-nav::after {
-      right: calc(50% - 48px);
-      border-bottom-left-radius: 20px;
-      box-shadow: -8px 8px 0 8px var(--white);
     }
 
     .nav-item {
@@ -647,6 +1558,7 @@
       background: var(--gray-100);
     }
 
+    /* Order Button */
     .nav-order {
       position: relative;
       top: -20px;
@@ -673,6 +1585,180 @@
       transform: scale(0.95);
     }
 
+    .nav-order .order-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 20px;
+      height: 20px;
+      background: var(--gray-900);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      border: 2px solid var(--white);
+    }
+
+    /* ========================================
+       MINI HEADER
+    ======================================== */
+
+    .mini-header {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--white);
+      padding: var(--space-sm) var(--space-lg);
+      padding-top: calc(var(--safe-top, 44px) + var(--space-sm));
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+      z-index: 1000;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.3s ease;
+    }
+
+    .mini-header.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .mini-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mini-header-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .mini-header-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 700;
+      font-size: 12px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .mini-header-name {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .mini-header-actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .mini-header-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      background: var(--gray-100);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .mini-header-btn svg {
+      width: 18px;
+      height: 18px;
+      color: var(--gray-700);
+    }
+
+    .mini-header-btn .badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      min-width: 18px;
+      height: 18px;
+      background: var(--brand-primary);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Section indicator inside mini header */
+    .mini-header-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: 6px var(--space-md);
+      background: var(--gray-100);
+      border-radius: var(--radius-full);
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      margin-top: 0;
+    }
+
+    .mini-header-section.visible {
+      opacity: 1;
+      max-height: 40px;
+      margin-top: var(--space-sm);
+    }
+
+    .mini-header-section .emoji {
+      font-size: 14px;
+    }
+
+    .mini-header-section .text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    /* Section dots */
+    .section-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .section-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--gray-300);
+      transition: all 0.3s ease;
+    }
+
+    .section-dot.active {
+      width: 20px;
+      border-radius: 3px;
+      background: var(--brand-primary);
+    }
+
+    /* ========================================
+       ANIMATIONS
+    ======================================== */
+
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -689,12 +1775,34 @@
       50% { transform: scale(1.05); }
     }
 
-    .hero-banner {
-      animation: fadeInUp 0.5s ease forwards;
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero-header-info {
+      animation: fadeInUp 0.6s ease 0.2s forwards;
+      opacity: 0;
+    }
+
+    .search-section {
+      animation: fadeInUp 0.5s ease 0.3s forwards;
+      opacity: 0;
+    }
+
+    .promo-banner {
+      animation: fadeInUp 0.5s ease 0.4s forwards;
+      opacity: 0;
     }
 
     .loyalty-card {
-      animation: fadeInUp 0.5s ease 0.1s forwards;
+      animation: fadeInUp 0.5s ease 0.5s forwards;
       opacity: 0;
     }
 
@@ -703,548 +1811,1072 @@
       opacity: 0;
     }
 
-    .menu-card:nth-child(1) { animation-delay: 0.1s; }
-    .menu-card:nth-child(2) { animation-delay: 0.15s; }
-    .menu-card:nth-child(3) { animation-delay: 0.2s; }
-    .menu-card:nth-child(4) { animation-delay: 0.25s; }
-
-    /* Tab content views */
-    .tab-views {
-      flex: 1;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .tab-content {
-      display: none;
-      min-height: 100%;
-      padding-bottom: 80px;
-    }
-
-    .tab-content.active {
-      display: block;
-      animation: fadeIn 0.2s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* FAB button - sits in the cutout notch */
-    .nav-item-fab {
-      background: transparent;
-      border: none;
-      padding: 0;
-      margin: 0 8px;
-      cursor: pointer;
-      position: relative;
-      top: -18px;
-    }
-
-    .fab-button {
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      border: 4px solid var(--white);
-      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
-      transition: all 0.2s;
-    }
-
-    .fab-button:active {
-      transform: scale(0.95);
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
-    }
-
-    /* Cart Modal */
-    .cart-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 1000;
-      display: none;
-      align-items: flex-end;
-    }
-
-    .cart-modal.active {
-      display: flex;
-    }
-
-    .cart-modal-backdrop {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      animation: fadeIn 0.2s ease-out;
-    }
-
-    .cart-modal-content {
-      position: relative;
-      z-index: 1;
-      background: white;
-      border-radius: 24px 24px 0 0;
-      width: 100%;
-      max-height: 70vh;
-      display: flex;
-      flex-direction: column;
-      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes slideUp {
-      from {
-        transform: translateY(100%);
-      }
-      to {
-        transform: translateY(0);
-      }
-    }
-
-    .cart-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 24px;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .cart-modal-header h2 {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .cart-modal-close {
-      background: transparent;
-      border: none;
-      padding: 8px;
-      cursor: pointer;
-      color: #9ca3af;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      transition: all 0.2s;
-    }
-
-    .cart-modal-close:hover {
-      background: #f5f5f5;
-      color: #1f2937;
-    }
-
-    .cart-modal-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px 24px;
-    }
-
-    .cart-modal-footer {
-      padding: 20px 24px;
-      border-top: 1px solid #e5e7eb;
-      background: white;
-    }
+    .menu-card:nth-child(1) { animation-delay: 0.5s; }
+    .menu-card:nth-child(2) { animation-delay: 0.55s; }
+    .menu-card:nth-child(3) { animation-delay: 0.6s; }
+    .menu-card:nth-child(4) { animation-delay: 0.65s; }
   </style>
 </head>
 <body>
   <div class="app">
-    <div class="status-bar-space"></div>
 
-    <header class="app-header">
-      <div class="header-top">
-        <div class="brand">
-          <div class="brand-logo">PR</div>
-          <div class="brand-info">
-            <h1>Pizzeria Roma</h1>
-            <div class="brand-status">
-              <span class="status-dot"></span>
-              Åben nu · Lukker 22:00
-            </div>
+    <!-- ========================================
+         HOME VIEW
+    ======================================== -->
+    <div class="app-view active" id="homeView">
+
+      <!-- Mini Header - Appears when scrolled -->
+      <div class="mini-header" id="miniHeader">
+        <div class="mini-header-top">
+          <div class="mini-header-brand">
+            <div class="mini-header-logo" id="miniHeaderLogo">PR</div>
+            <span class="mini-header-name" id="miniHeaderName">Pizzeria Roma</span>
           </div>
-        </div>
-        <div class="header-actions">
-          <button class="icon-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 01-3.46 0"/>
-            </svg>
-          </button>
-          <button class="icon-btn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-            </svg>
-            <span class="cart-badge">2</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="search-bar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <path d="M21 21l-4.35-4.35"/>
-        </svg>
-        <input type="text" placeholder="Søg i menuen...">
-      </div>
-    </header>
-
-    <div class="tab-views">
-      <!-- HOME TAB -->
-      <div id="tab-home" class="tab-content active">
-        <div class="hero-banner">
-          <div class="hero-content">
-            <div class="hero-label">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              Dagens tilbud
-            </div>
-            <h2 class="hero-title">2 pizzaer for 149 kr.</h2>
-            <p class="hero-subtitle">Gælder alle hverdage mellem 15-18</p>
-            <button class="hero-btn">
-              Se tilbud
+          <div class="mini-header-actions">
+            <button class="mini-header-btn" onclick="switchView('searchView')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
               </svg>
+            </button>
+            <button class="mini-header-btn" onclick="switchView('cartView')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+              </svg>
+              <span class="badge" id="miniCartBadge">0</span>
             </button>
           </div>
         </div>
-
-        <div class="loyalty-card">
-          <div class="loyalty-header">
-            <span class="loyalty-label">Dine point</span>
-            <div class="loyalty-points">
-              <span class="loyalty-points-value">847</span>
-              <span class="loyalty-points-label">point</span>
-            </div>
-          </div>
-          <div class="loyalty-progress">
-            <div class="loyalty-progress-bar">
-              <div class="loyalty-progress-fill" style="width: 84.7%;"></div>
-            </div>
-            <div class="loyalty-progress-text">
-              <span>153 point til gratis pizza</span>
-              <span>1000 point</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="categories">
-          <div class="categories-scroll">
-            <button class="category-chip active">Alle</button>
-            <button class="category-chip">🍕 Pizza</button>
-            <button class="category-chip">🥗 Salater</button>
-            <button class="category-chip">🍝 Pasta</button>
-            <button class="category-chip">🍰 Dessert</button>
-            <button class="category-chip">🥤 Drikkevarer</button>
-          </div>
-        </div>
-
-        <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">Populære retter</h2>
-            <a href="#" class="section-link">Se alle</a>
-          </div>
-
-          <div class="menu-grid">
-            <div class="menu-card">
-              <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);">
-                <span class="menu-card-badge">Bestseller</span>
-              </div>
-              <div class="menu-card-content">
-                <h3 class="menu-card-name">Margherita</h3>
-                <p class="menu-card-desc">Tomatsauce, mozzarella, frisk basilikum</p>
-                <div class="menu-card-footer">
-                  <span class="menu-card-price">89 kr.</span>
-                  <button class="add-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="menu-card">
-              <div class="menu-card-image" style="background: linear-gradient(135deg, #FECACA 0%, #F87171 100%);"></div>
-              <div class="menu-card-content">
-                <h3 class="menu-card-name">Pepperoni</h3>
-                <p class="menu-card-desc">Tomatsauce, mozzarella, pepperoni</p>
-                <div class="menu-card-footer">
-                  <span class="menu-card-price">109 kr.</span>
-                  <button class="add-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="menu-card">
-              <div class="menu-card-image" style="background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%);"></div>
-              <div class="menu-card-content">
-                <h3 class="menu-card-name">Vegetar</h3>
-                <p class="menu-card-desc">Grøntsager, mozzarella, oliven</p>
-                <div class="menu-card-footer">
-                  <span class="menu-card-price">99 kr.</span>
-                  <button class="add-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="menu-card">
-              <div class="menu-card-image" style="background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 100%);"></div>
-              <div class="menu-card-content">
-                <h3 class="menu-card-name">Quattro Formaggi</h3>
-                <p class="menu-card-desc">Fire slags ost, hvidløg</p>
-                <div class="menu-card-footer">
-                  <span class="menu-card-price">119 kr.</span>
-                  <button class="add-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                      <path d="M12 5v14M5 12h14"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- SEARCH TAB -->
-      <div id="tab-search" class="tab-content">
-        <div class="search-view" style="padding:24px">
-          <div class="search-expanded">
-            <input type="text" placeholder="Søg efter retter eller kategorier..." style="width:100%;padding:16px;border:1px solid var(--border);border-radius:12px;font-size:16px">
-          </div>
-          <div style="margin-top:24px">
-            <h3 style="font-size:18px;font-weight:600;margin-bottom:16px">Populære søgninger</h3>
-            <div style="display:flex;flex-wrap:wrap;gap:8px">
-              <span style="padding:8px 16px;background:var(--gray-100);border-radius:20px;font-size:14px">Pizza</span>
-              <span style="padding:8px 16px;background:var(--gray-100);border-radius:20px;font-size:14px">Pasta</span>
-              <span style="padding:8px 16px;background:var(--gray-100);border-radius:20px;font-size:14px">Burger</span>
-              <span style="padding:8px 16px;background:var(--gray-100);border-radius:20px;font-size:14px">Salat</span>
-            </div>
-          </div>
-          <div style="margin-top:32px">
-            <h3 style="font-size:18px;font-weight:600;margin-bottom:16px">Seneste søgninger</h3>
-            <p style="color:var(--gray-500);font-size:14px;text-align:center;padding:40px 20px">Ingen søgninger endnu</p>
+        <!-- Section indicator in header -->
+        <div class="mini-header-section" id="miniHeaderSection">
+          <span class="emoji" id="miniSectionEmoji">🍕</span>
+          <span class="text" id="miniSectionName">Pizza</span>
+          <div class="section-dots" id="sectionDots">
+            <span class="section-dot" data-section="tilbud"></span>
+            <span class="section-dot" data-section="loyalty"></span>
+            <span class="section-dot" data-section="pizza"></span>
+            <span class="section-dot" data-section="salater"></span>
+            <span class="section-dot" data-section="pasta"></span>
+            <span class="section-dot" data-section="dessert"></span>
           </div>
         </div>
       </div>
 
-      <!-- POINTS TAB -->
-      <div id="tab-points" class="tab-content">
-        <div class="points-hero" style="background:linear-gradient(135deg,var(--brand-primary),var(--brand-primary-dark));padding:40px 24px;color:white;text-align:center;margin-bottom:24px">
-          <div style="font-size:48px;font-weight:700;margin-bottom:8px">★ 150</div>
-          <p style="font-size:16px;opacity:0.9">Dine point</p>
-          <div style="margin-top:24px">
-            <div style="background:rgba(255,255,255,0.3);height:8px;border-radius:4px;overflow:hidden">
-              <div style="background:white;width:60%;height:100%;border-radius:4px"></div>
-            </div>
-            <p style="font-size:13px;margin-top:8px;opacity:0.85">100 point til næste belønning</p>
-          </div>
-        </div>
-        <div style="padding:0 24px">
-          <h3 style="font-size:18px;font-weight:600;margin-bottom:16px">Tilgængelige belønninger</h3>
-          <div style="background:var(--gray-50);padding:16px;border-radius:12px;margin-bottom:12px;border:1px solid var(--gray-100)">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:48px;height:48px;background:rgba(212,56,13,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">🍕</div>
-              <div style="flex:1">
-                <div style="font-weight:600;margin-bottom:4px">Gratis Pizza</div>
-                <div style="font-size:13px;color:var(--gray-500)">250 point</div>
-              </div>
-              <button style="padding:8px 16px;background:var(--brand-primary);color:white;border:none;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer">Indløs</button>
-            </div>
-          </div>
-          <div style="background:var(--gray-50);padding:16px;border-radius:12px;border:1px solid var(--gray-100)">
-            <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:48px;height:48px;background:rgba(212,56,13,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">🥤</div>
-              <div style="flex:1">
-                <div style="font-weight:600;margin-bottom:4px">Gratis Drikkevare</div>
-                <div style="font-size:13px;color:var(--gray-500)">100 point</div>
-              </div>
-              <button style="padding:8px 16px;background:var(--brand-primary);color:white;border:none;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer">Indløs</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Hero Header with Image -->
+      <header class="hero-header" id="heroHeader">
+        <!-- Restaurant Header Image - Placeholder gradient if no image -->
+        <div class="hero-header-placeholder" id="heroPlaceholder">🍕</div>
+        <img
+          src=""
+          alt="Restaurant header"
+          class="hero-header-image"
+          id="heroHeaderImage"
+          style="display: none;"
+          onerror="this.style.display='none'; document.getElementById('heroPlaceholder').style.display='flex';"
+        >
 
-      <!-- PROFILE TAB -->
-      <div id="tab-profile" class="tab-content">
-        <div style="padding:24px">
-          <div style="background:linear-gradient(135deg,var(--brand-primary),var(--brand-primary-dark));padding:32px 24px;border-radius:20px;color:white;text-align:center;margin-bottom:24px">
-            <div style="width:80px;height:80px;background:rgba(255,255,255,0.2);border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700">JD</div>
-            <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">John Doe</h2>
-            <p style="font-size:14px;opacity:0.85">john.doe@example.com</p>
+        <!-- Gradient overlay for text readability -->
+        <div class="hero-header-overlay"></div>
+
+        <!-- Top navigation buttons -->
+        <nav class="hero-header-nav">
+          <button class="header-btn" style="visibility: hidden;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <div class="header-btn-group">
+            <button class="header-btn" onclick="switchView('searchView')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </button>
+            <button class="header-btn has-badge" onclick="switchView('cartView')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+              </svg>
+              <span class="badge" id="headerCartBadge">0</span>
+            </button>
           </div>
-          <div style="display:flex;align-items:center;padding:16px;background:var(--gray-50);border-radius:12px;margin-bottom:8px;border:1px solid var(--gray-100)">
-            <div style="width:40px;height:40px;background:rgba(212,56,13,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-right:12px">📋</div>
-            <div style="flex:1">
-              <div style="font-weight:600;margin-bottom:2px">Mine Ordrer</div>
-              <div style="font-size:12px;color:var(--gray-500)">Se din ordre historik</div>
+        </nav>
+
+        <!-- Restaurant info at bottom of hero -->
+        <div class="hero-header-info">
+          <div class="restaurant-badge">
+            <span class="dot"></span>
+            <span>Åben nu</span>
+          </div>
+          <h1 class="restaurant-name" id="restaurantName">Pizzeria Roma</h1>
+          <p class="restaurant-tagline" id="restaurantTagline">Autentisk italiensk pizza siden 1985</p>
+        </div>
+      </header>
+
+      <!-- Scrollable content area -->
+      <main class="app-content" id="appContent">
+        <div class="content-wrapper">
+
+          <!-- Search Bar -->
+          <div class="search-section" data-section="search">
+            <div class="search-bar" onclick="switchView('searchView')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" placeholder="Søg i menuen..." readonly>
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div style="display:flex;align-items:center;padding:16px;background:var(--gray-50);border-radius:12px;margin-bottom:8px;border:1px solid var(--gray-100)">
-            <div style="width:40px;height:40px;background:rgba(212,56,13,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-right:12px">⚙️</div>
-            <div style="flex:1">
-              <div style="font-weight:600;margin-bottom:2px">Indstillinger</div>
-              <div style="font-size:12px;color:var(--gray-500)">Notifikationer, betalinger, mm.</div>
+
+          <!-- Quick Info Row -->
+          <div class="quick-info">
+            <div class="quick-info-item highlight">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              4.8 (324)
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </div>
-          <div style="display:flex;align-items:center;padding:16px;background:var(--gray-50);border-radius:12px;margin-bottom:8px;border:1px solid var(--gray-100)">
-            <div style="width:40px;height:40px;background:rgba(212,56,13,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-right:12px">❓</div>
-            <div style="flex:1">
-              <div style="font-weight:600;margin-bottom:2px">Hjælp & Support</div>
-              <div style="font-size:12px;color:var(--gray-500)">FAQ og kontakt</div>
+            <div class="quick-info-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+              </svg>
+              20-30 min
             </div>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            <div class="quick-info-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              1.2 km
+            </div>
+            <div class="quick-info-item">
+              Min. 75 kr
+            </div>
           </div>
-          <button style="width:100%;padding:16px;background:transparent;border:2px solid var(--gray-200);border-radius:12px;font-weight:600;color:var(--gray-900);margin-top:24px;cursor:pointer">Log ud</button>
+
+          <!-- Promo Banner -->
+          <div class="promo-banner" data-section="tilbud">
+            <div class="promo-content">
+              <div class="promo-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Dagens tilbud
+              </div>
+              <h3 class="promo-title">2 pizzaer for 149 kr.</h3>
+              <p class="promo-subtitle">Gælder alle hverdage mellem 15-18</p>
+            </div>
+          </div>
+
+          <!-- Loyalty Card -->
+          <div class="loyalty-card" data-section="loyalty">
+            <div class="loyalty-header">
+              <span class="loyalty-label">Dine point</span>
+              <div class="loyalty-points">
+                <span class="loyalty-points-value">847</span>
+                <span class="loyalty-points-label">point</span>
+              </div>
+            </div>
+            <div class="loyalty-progress">
+              <div class="loyalty-progress-bar">
+                <div class="loyalty-progress-fill" style="width: 84.7%;"></div>
+              </div>
+              <div class="loyalty-progress-text">
+                <span>153 point til gratis pizza</span>
+                <span>1000 point</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Categories -->
+          <div class="categories">
+            <div class="categories-scroll">
+              <button class="category-chip active" data-category="all">Alle</button>
+              <button class="category-chip" data-category="pizza">🍕 Pizza</button>
+              <button class="category-chip" data-category="salater">🥗 Salater</button>
+              <button class="category-chip" data-category="pasta">🍝 Pasta</button>
+              <button class="category-chip" data-category="dessert">🍰 Dessert</button>
+              <button class="category-chip" data-category="drikkevarer">🥤 Drikkevarer</button>
+            </div>
+          </div>
+
+          <!-- Pizza Section -->
+          <section class="section" data-section="pizza">
+            <div class="section-header">
+              <h2 class="section-title">🍕 Pizza</h2>
+              <a href="#" class="section-link">Se alle</a>
+            </div>
+            <div class="menu-grid">
+              <div class="menu-card" onclick="openProductModal({name: 'Margherita', desc: 'Tomatsauce, mozzarella, frisk basilikum', price: 89, emoji: '🍕', badge: 'Bestseller', ingredients: ['Tomatsauce', 'Mozzarella', 'Basilikum', 'Olivenolie']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍕
+                  <span class="menu-card-badge">Bestseller</span>
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Margherita</h3>
+                  <p class="menu-card-desc">Tomatsauce, mozzarella, frisk basilikum</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">89 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Margherita', price: 89, emoji: '🍕'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Pepperoni', desc: 'Tomatsauce, mozzarella, pepperoni', price: 109, emoji: '🍕', ingredients: ['Tomatsauce', 'Mozzarella', 'Pepperoni']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #FECACA 0%, #F87171 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍕
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Pepperoni</h3>
+                  <p class="menu-card-desc">Tomatsauce, mozzarella, pepperoni</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">109 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Pepperoni', price: 109, emoji: '🍕'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Quattro Formaggi', desc: 'Fire slags ost, hvidløg', price: 119, emoji: '🧀', ingredients: ['Mozzarella', 'Gorgonzola', 'Parmesan', 'Fontina', 'Hvidløg']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #DDD6FE 0%, #A78BFA 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🧀
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Quattro Formaggi</h3>
+                  <p class="menu-card-desc">Fire slags ost, hvidløg</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">119 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Quattro Formaggi', price: 119, emoji: '🧀'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Vegetar', desc: 'Grøntsager, mozzarella, oliven', price: 99, emoji: '🥬', ingredients: ['Tomatsauce', 'Mozzarella', 'Paprika', 'Løg', 'Oliven', 'Champignon']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #BBF7D0 0%, #4ADE80 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🥬
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Vegetar</h3>
+                  <p class="menu-card-desc">Grøntsager, mozzarella, oliven</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">99 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Vegetar', price: 99, emoji: '🥬'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Salater Section -->
+          <section class="section" data-section="salater">
+            <div class="section-header">
+              <h2 class="section-title">🥗 Salater</h2>
+              <a href="#" class="section-link">Se alle</a>
+            </div>
+            <div class="menu-grid">
+              <div class="menu-card" onclick="openProductModal({name: 'Caesar Salat', desc: 'Romaine, kylling, parmesan, croutoner', price: 89, emoji: '🥗', ingredients: ['Romaine salat', 'Kylling', 'Parmesan', 'Croutoner', 'Caesar dressing']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #D1FAE5 0%, #6EE7B7 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🥗
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Caesar Salat</h3>
+                  <p class="menu-card-desc">Romaine, kylling, parmesan, croutoner</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">89 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Caesar Salat', price: 89, emoji: '🥗'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Græsk Salat', desc: 'Tomat, agurk, feta, oliven', price: 79, emoji: '🥗', ingredients: ['Tomat', 'Agurk', 'Feta', 'Oliven', 'Rødløg', 'Oregano']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #CFFAFE 0%, #67E8F9 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🥗
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Græsk Salat</h3>
+                  <p class="menu-card-desc">Tomat, agurk, feta, oliven</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">79 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Græsk Salat', price: 79, emoji: '🥗'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pasta Section -->
+          <section class="section" data-section="pasta">
+            <div class="section-header">
+              <h2 class="section-title">🍝 Pasta</h2>
+              <a href="#" class="section-link">Se alle</a>
+            </div>
+            <div class="menu-grid">
+              <div class="menu-card" onclick="openProductModal({name: 'Spaghetti Carbonara', desc: 'Bacon, æg, parmesan, fløde', price: 99, emoji: '🍝', ingredients: ['Spaghetti', 'Bacon', 'Æg', 'Parmesan', 'Fløde', 'Peber']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍝
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Spaghetti Carbonara</h3>
+                  <p class="menu-card-desc">Bacon, æg, parmesan, fløde</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">99 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Spaghetti Carbonara', price: 99, emoji: '🍝'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Lasagne', desc: 'Kødsauce, bechamel, ost', price: 109, emoji: '🍝', ingredients: ['Pastaplader', 'Kødsauce', 'Bechamel', 'Mozzarella', 'Parmesan']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #FECDD3 0%, #FB7185 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍝
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Lasagne</h3>
+                  <p class="menu-card-desc">Kødsauce, bechamel, ost</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">109 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Lasagne', price: 109, emoji: '🍝'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Dessert Section -->
+          <section class="section" data-section="dessert">
+            <div class="section-header">
+              <h2 class="section-title">🍰 Dessert</h2>
+              <a href="#" class="section-link">Se alle</a>
+            </div>
+            <div class="menu-grid">
+              <div class="menu-card" onclick="openProductModal({name: 'Tiramisu', desc: 'Mascarpone, kaffe, kakao', price: 59, emoji: '🍰', ingredients: ['Mascarpone', 'Ladyfingers', 'Espresso', 'Kakao', 'Amaretto']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #F5D0FE 0%, #E879F9 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍰
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Tiramisu</h3>
+                  <p class="menu-card-desc">Mascarpone, kaffe, kakao</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">59 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Tiramisu', price: 59, emoji: '🍰'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="menu-card" onclick="openProductModal({name: 'Panna Cotta', desc: 'Vanille, jordbærcoulis', price: 49, emoji: '🍮', ingredients: ['Fløde', 'Vanille', 'Gelatine', 'Jordbær']})">
+                <div class="menu-card-image" style="background: linear-gradient(135deg, #FED7E2 0%, #F472B6 100%); display: flex; align-items: center; justify-content: center; font-size: 50px;">
+                  🍮
+                </div>
+                <div class="menu-card-content">
+                  <h3 class="menu-card-name">Panna Cotta</h3>
+                  <p class="menu-card-desc">Vanille, jordbærcoulis</p>
+                  <div class="menu-card-footer">
+                    <span class="menu-card-price">49 kr.</span>
+                    <button class="add-btn" onclick="event.stopPropagation(); addToCart({name: 'Panna Cotta', price: 49, emoji: '🍮'})">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 5v14M5 12h14"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </main>
+
+    </div>
+
+    <!-- ========================================
+         SEARCH VIEW
+    ======================================== -->
+    <div class="app-view" id="searchView">
+      <div class="search-view">
+        <div class="search-view-header">
+          <button class="search-view-back" onclick="switchView('homeView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <input type="text" class="search-view-input" placeholder="Søg efter retter..." autofocus>
+        </div>
+
+        <div class="search-recent">
+          <h3 class="search-section-title">Seneste søgninger</h3>
+          <div class="search-recent-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Margherita</span>
+          </div>
+          <div class="search-recent-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Carbonara</span>
+          </div>
+          <div class="search-recent-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Tiramisu</span>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="search-section-title">Populære søgninger</h3>
+          <div class="search-popular-tags">
+            <span class="search-tag">🍕 Pizza</span>
+            <span class="search-tag">🍝 Pasta</span>
+            <span class="search-tag">🥗 Salat</span>
+            <span class="search-tag">🍰 Dessert</span>
+            <span class="search-tag">🧀 Ost</span>
+            <span class="search-tag">🌶️ Krydret</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <nav class="bottom-nav">
-      <button class="nav-item active" data-tab="home" onclick="switchTab('home')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <!-- ========================================
+         POINTS VIEW
+    ======================================== -->
+    <div class="app-view" id="pointsView">
+      <div class="points-view">
+        <div class="points-header">
+          <div class="points-value-large">847</div>
+          <div class="points-label">point optjent</div>
+          <div class="points-progress-large">
+            <div class="points-progress-large-fill" style="width: 84.7%"></div>
+          </div>
+          <div class="points-progress-text">153 point til gratis pizza</div>
+        </div>
+
+        <div class="points-content">
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Tilgængelige belønninger</h3>
+          <div class="rewards-grid">
+            <div class="reward-card">
+              <div class="reward-emoji">🍕</div>
+              <div class="reward-name">Gratis Pizza</div>
+              <div class="reward-points">1000 point</div>
+            </div>
+            <div class="reward-card">
+              <div class="reward-emoji">🥤</div>
+              <div class="reward-name">Gratis Sodavand</div>
+              <div class="reward-points">250 point</div>
+            </div>
+            <div class="reward-card">
+              <div class="reward-emoji">🍰</div>
+              <div class="reward-name">Gratis Dessert</div>
+              <div class="reward-points">500 point</div>
+            </div>
+            <div class="reward-card locked">
+              <div class="reward-emoji">🎉</div>
+              <div class="reward-name">VIP Status</div>
+              <div class="reward-points">5000 point</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Point historik</h3>
+          <div class="points-history">
+            <div class="history-item">
+              <div class="history-info">
+                <h4>Ordre #1234</h4>
+                <span>I går, 19:30</span>
+              </div>
+              <span class="history-points positive">+47 point</span>
+            </div>
+            <div class="history-item">
+              <div class="history-info">
+                <h4>Ordre #1233</h4>
+                <span>3 dage siden</span>
+              </div>
+              <span class="history-points positive">+85 point</span>
+            </div>
+            <div class="history-item">
+              <div class="history-info">
+                <h4>Indløst belønning</h4>
+                <span>1 uge siden</span>
+              </div>
+              <span class="history-points negative">-250 point</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
+         PROFILE VIEW
+    ======================================== -->
+    <div class="app-view" id="profileView">
+      <div class="profile-view">
+        <div class="profile-header">
+          <div class="profile-avatar">JD</div>
+          <h2 class="profile-name">John Doe</h2>
+          <p class="profile-email">john.doe@example.com</p>
+          <div class="profile-stats">
+            <div class="profile-stat">
+              <div class="profile-stat-value">847</div>
+              <div class="profile-stat-label">Point</div>
+            </div>
+            <div class="profile-stat">
+              <div class="profile-stat-value">23</div>
+              <div class="profile-stat-label">Ordrer</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-menu">
+          <div class="profile-menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+            <span>Mine oplysninger</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="profile-menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+            <span>Betalingsmetoder</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="profile-menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>Leveringsadresser</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="profile-menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 01-3.46 0"/>
+            </svg>
+            <span>Notifikationer</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="profile-menu-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+            <span>Indstillinger</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+          <div class="profile-menu-item danger">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Log ud</span>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
+         CART VIEW
+    ======================================== -->
+    <div class="app-view" id="cartView">
+      <div class="cart-view">
+        <div class="cart-header">
+          <button class="cart-back" onclick="switchView('homeView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Din kurv</h2>
+          <button class="cart-clear" onclick="clearCart()">Ryd</button>
+        </div>
+
+        <div class="cart-items" id="cartItems">
+          <!-- Cart items will be rendered here by JavaScript -->
+        </div>
+
+        <div class="cart-empty" id="cartEmpty" style="display: none;">
+          <div class="cart-empty-icon">🛒</div>
+          <h3>Din kurv er tom</h3>
+          <p>Tilføj lækre retter fra menuen</p>
+        </div>
+
+        <div class="cart-footer" id="cartFooter">
+          <div class="cart-subtotal">
+            <span>Subtotal</span>
+            <span id="cartSubtotal">0 kr.</span>
+          </div>
+          <div class="cart-subtotal">
+            <span>Levering</span>
+            <span>29 kr.</span>
+          </div>
+          <div class="cart-total">
+            <span>Total</span>
+            <span id="cartTotal">29 kr.</span>
+          </div>
+          <button class="cart-checkout">Gå til betaling</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
+         BOTTOM NAVIGATION
+    ======================================== -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-item active" data-view="homeView" onclick="switchView('homeView')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
         <span>Hjem</span>
       </button>
-      <button class="nav-item" data-tab="search" onclick="switchTab('search')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="nav-item" data-view="searchView" onclick="switchView('searchView')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="11" cy="11" r="8"/>
-          <path d="m21 21-4.35-4.35"/>
+          <path d="M21 21l-4.35-4.35"/>
         </svg>
         <span>Søg</span>
       </button>
-      <button class="nav-item-fab" onclick="showOrderModal()">
-        <div class="fab-button">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="9" cy="21" r="1"/>
-            <circle cx="20" cy="21" r="1"/>
-            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-          </svg>
-        </div>
+      <button class="nav-order" onclick="switchView('cartView')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        <span class="order-badge" id="navCartBadge">0</span>
       </button>
-      <button class="nav-item" data-tab="points" onclick="switchTab('points')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="nav-item" data-view="pointsView" onclick="switchView('pointsView')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
         </svg>
         <span>Point</span>
       </button>
-      <button class="nav-item" data-tab="profile" onclick="switchTab('profile')">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <button class="nav-item" data-view="profileView" onclick="switchView('profileView')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
           <circle cx="12" cy="7" r="4"/>
         </svg>
         <span>Profil</span>
       </button>
     </nav>
 
-    <!-- Cart Modal -->
-    <div id="cart-modal" class="cart-modal">
-      <div class="cart-modal-backdrop" onclick="closeCartModal()"></div>
-      <div class="cart-modal-content">
-        <div class="cart-modal-header">
-          <h2>Din Kurv</h2>
-          <button class="cart-modal-close" onclick="closeCartModal()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <!-- ========================================
+         PRODUCT MODAL
+    ======================================== -->
+    <div class="product-modal-overlay" id="productModal">
+      <div class="product-modal">
+        <div class="product-modal-image">
+          <div class="product-modal-image-placeholder" id="productModalEmoji">🍕</div>
+          <button class="product-modal-close" onclick="closeProductModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
+          <span class="product-modal-badge" id="productModalBadge" style="display: none;">Bestseller</span>
         </div>
-        <div class="cart-modal-body">
-          <div class="cart-item" style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--gray-100);border-radius:12px">
-            <div style="width:60px;height:60px;background:#e5e7eb;border-radius:8px"></div>
-            <div style="flex:1">
-              <div style="font-weight:600;font-size:14px;margin-bottom:4px">Margherita Pizza</div>
-              <div style="font-size:14px;color:var(--brand-primary);font-weight:600">89 kr</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;background:white;border-radius:8px;padding:4px 8px">
-              <button style="width:28px;height:28px;border-radius:6px;border:none;background:var(--gray-100);font-size:16px;cursor:pointer">-</button>
-              <span>1</span>
-              <button style="width:28px;height:28px;border-radius:6px;border:none;background:var(--gray-100);font-size:16px;cursor:pointer">+</button>
+        <div class="product-modal-content">
+          <div class="product-modal-header">
+            <h2 class="product-modal-name" id="productModalName">Margherita</h2>
+            <span class="product-modal-price" id="productModalPrice">89 kr.</span>
+          </div>
+          <p class="product-modal-desc" id="productModalDesc">Tomatsauce, mozzarella, frisk basilikum</p>
+
+          <div class="product-modal-section">
+            <h3 class="product-modal-section-title">Ingredienser</h3>
+            <div class="product-modal-ingredients" id="productModalIngredients">
+              <span class="ingredient-tag">Tomatsauce</span>
+              <span class="ingredient-tag">Mozzarella</span>
+              <span class="ingredient-tag">Basilikum</span>
             </div>
           </div>
-        </div>
-        <div class="cart-modal-footer">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:16px">
-            <span>Subtotal</span>
-            <span style="font-weight:700;font-size:20px">89 kr</span>
+
+          <div class="quantity-selector">
+            <label>Antal</label>
+            <div class="quantity-controls">
+              <button class="quantity-btn" onclick="changeModalQuantity(-1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+              <span class="quantity-value" id="modalQuantity">1</span>
+              <button class="quantity-btn" onclick="changeModalQuantity(1)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+            </div>
           </div>
-          <button style="width:100%;padding:16px;background:var(--brand-primary);color:white;border:none;border-radius:12px;font-weight:600;font-size:16px;cursor:pointer">Gå til kassen</button>
+
+          <button class="add-to-cart-btn" onclick="addFromModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+            </svg>
+            <span id="addToCartBtnText">Tilføj til kurv - 89 kr.</span>
+          </button>
         </div>
       </div>
     </div>
+
   </div>
 
   <script>
-    // Tab switching functionality
-    function switchTab(tabName) {
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
+    // ========================================
+    // CART STATE
+    // ========================================
+    let cart = [];
+    let currentProduct = null;
+    let modalQuantity = 1;
+
+    // ========================================
+    // VIEW SWITCHING
+    // ========================================
+    function switchView(viewId) {
+      // Hide all views
+      document.querySelectorAll('.app-view').forEach(view => {
+        view.classList.remove('active');
       });
+
+      // Show selected view
+      const selectedView = document.getElementById(viewId);
+      if (selectedView) {
+        selectedView.classList.add('active');
+      }
+
+      // Update nav items
       document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
+        if (item.dataset.view === viewId) {
+          item.classList.add('active');
+        }
       });
-      const selectedTab = document.getElementById(`tab-${tabName}`);
-      if (selectedTab) {
-        selectedTab.classList.add('active');
+
+      // Show/hide bottom nav for cart view
+      const bottomNav = document.getElementById('bottomNav');
+      if (viewId === 'cartView') {
+        bottomNav.style.display = 'none';
+      } else {
+        bottomNav.style.display = 'flex';
       }
-      const selectedNavItem = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
-      if (selectedNavItem) {
-        selectedNavItem.classList.add('active');
+
+      // Show/hide mini header for non-home views
+      const miniHeader = document.getElementById('miniHeader');
+      if (viewId !== 'homeView') {
+        miniHeader.classList.remove('visible');
       }
     }
 
-    // Cart modal functions
-    function showOrderModal() {
-      const cartModal = document.getElementById('cart-modal');
-      if (cartModal) {
-        cartModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+    // ========================================
+    // SCROLL HANDLING
+    // ========================================
+    const appContent = document.getElementById('appContent');
+    const miniHeader = document.getElementById('miniHeader');
+    const miniHeaderSection = document.getElementById('miniHeaderSection');
+    const heroHeader = document.getElementById('heroHeader');
+
+    let lastScrollTop = 0;
+    let scrollThreshold = 200;
+
+    if (appContent) {
+      appContent.addEventListener('scroll', function() {
+        const scrollTop = this.scrollTop;
+
+        // Show/hide mini header based on scroll
+        if (scrollTop > scrollThreshold) {
+          miniHeader.classList.add('visible');
+          miniHeaderSection.classList.add('visible');
+        } else {
+          miniHeader.classList.remove('visible');
+          miniHeaderSection.classList.remove('visible');
+        }
+
+        // Fade hero header
+        const fadeStart = 0;
+        const fadeEnd = 200;
+        const opacity = Math.max(0, 1 - (scrollTop - fadeStart) / (fadeEnd - fadeStart));
+        heroHeader.style.opacity = opacity;
+
+        // Update section indicator
+        updateSectionIndicator();
+
+        lastScrollTop = scrollTop;
+      });
+    }
+
+    // ========================================
+    // SECTION INDICATOR
+    // ========================================
+    const sections = {
+      'tilbud': { emoji: '⭐', name: 'Tilbud' },
+      'loyalty': { emoji: '🎁', name: 'Point' },
+      'pizza': { emoji: '🍕', name: 'Pizza' },
+      'salater': { emoji: '🥗', name: 'Salater' },
+      'pasta': { emoji: '🍝', name: 'Pasta' },
+      'dessert': { emoji: '🍰', name: 'Dessert' }
+    };
+
+    function updateSectionIndicator() {
+      const scrollTop = appContent.scrollTop;
+      const sectionElements = document.querySelectorAll('[data-section]');
+      let currentSection = null;
+
+      sectionElements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        const appRect = appContent.getBoundingClientRect();
+        if (rect.top <= appRect.top + 150) {
+          currentSection = el.dataset.section;
+        }
+      });
+
+      if (currentSection && sections[currentSection]) {
+        document.getElementById('miniSectionEmoji').textContent = sections[currentSection].emoji;
+        document.getElementById('miniSectionName').textContent = sections[currentSection].name;
+
+        // Update dots
+        document.querySelectorAll('.section-dot').forEach(dot => {
+          dot.classList.remove('active');
+          if (dot.dataset.section === currentSection) {
+            dot.classList.add('active');
+          }
+        });
       }
     }
 
-    function closeCartModal() {
-      const cartModal = document.getElementById('cart-modal');
-      if (cartModal) {
-        cartModal.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    }
+    // ========================================
+    // CATEGORY SELECTION
+    // ========================================
+    document.querySelectorAll('.category-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
 
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', () => {
-      switchTab('home');
+        const category = this.dataset.category;
+        // TODO: Filter menu items by category
+      });
     });
 
-    // Listen for configuration updates from parent window
-    window.addEventListener('message', (event) => {
+    // ========================================
+    // CART FUNCTIONS
+    // ========================================
+    function addToCart(item) {
+      const existingItem = cart.find(i => i.name === item.name);
+      if (existingItem) {
+        existingItem.qty++;
+      } else {
+        cart.push({ ...item, qty: 1 });
+      }
+      updateCartUI();
+
+      // Animate badge
+      animateCartBadge();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index, 1);
+      updateCartUI();
+    }
+
+    function updateItemQty(index, delta) {
+      cart[index].qty += delta;
+      if (cart[index].qty <= 0) {
+        removeFromCart(index);
+      } else {
+        updateCartUI();
+      }
+    }
+
+    function clearCart() {
+      cart = [];
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+      const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const delivery = 29;
+      const total = subtotal + delivery;
+
+      // Update badges
+      document.getElementById('headerCartBadge').textContent = totalItems;
+      document.getElementById('miniCartBadge').textContent = totalItems;
+      document.getElementById('navCartBadge').textContent = totalItems;
+
+      // Update cart totals
+      document.getElementById('cartSubtotal').textContent = subtotal + ' kr.';
+      document.getElementById('cartTotal').textContent = total + ' kr.';
+
+      // Render cart items
+      const cartItemsEl = document.getElementById('cartItems');
+      const cartEmptyEl = document.getElementById('cartEmpty');
+      const cartFooterEl = document.getElementById('cartFooter');
+
+      if (cart.length === 0) {
+        cartItemsEl.innerHTML = '';
+        cartEmptyEl.style.display = 'flex';
+        cartFooterEl.style.display = 'none';
+      } else {
+        cartEmptyEl.style.display = 'none';
+        cartFooterEl.style.display = 'block';
+
+        cartItemsEl.innerHTML = cart.map((item, index) => `
+          <div class="cart-item">
+            <div class="cart-item-image" style="background: linear-gradient(135deg, #FED7AA 0%, #FDBA74 100%);">
+              ${item.emoji || '🍕'}
+            </div>
+            <div class="cart-item-info">
+              <h3 class="cart-item-name">${item.name}</h3>
+              <p class="cart-item-price">${item.price} kr.</p>
+              <div class="cart-item-qty">
+                <button onclick="updateItemQty(${index}, -1)">-</button>
+                <span>${item.qty}</span>
+                <button onclick="updateItemQty(${index}, 1)">+</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function animateCartBadge() {
+      const badges = document.querySelectorAll('.badge, .order-badge');
+      badges.forEach(badge => {
+        badge.style.animation = 'pulse 0.3s ease';
+        setTimeout(() => {
+          badge.style.animation = '';
+        }, 300);
+      });
+    }
+
+    // ========================================
+    // PRODUCT MODAL
+    // ========================================
+    function openProductModal(product) {
+      currentProduct = product;
+      modalQuantity = 1;
+
+      document.getElementById('productModalName').textContent = product.name;
+      document.getElementById('productModalPrice').textContent = product.price + ' kr.';
+      document.getElementById('productModalDesc').textContent = product.desc;
+      document.getElementById('productModalEmoji').textContent = product.emoji || '🍕';
+      document.getElementById('modalQuantity').textContent = modalQuantity;
+      document.getElementById('addToCartBtnText').textContent = `Tilføj til kurv - ${product.price} kr.`;
+
+      // Badge
+      const badge = document.getElementById('productModalBadge');
+      if (product.badge) {
+        badge.textContent = product.badge;
+        badge.style.display = 'block';
+      } else {
+        badge.style.display = 'none';
+      }
+
+      // Ingredients
+      const ingredientsEl = document.getElementById('productModalIngredients');
+      if (product.ingredients && product.ingredients.length > 0) {
+        ingredientsEl.innerHTML = product.ingredients.map(ing =>
+          `<span class="ingredient-tag">${ing}</span>`
+        ).join('');
+      }
+
+      document.getElementById('productModal').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.remove('visible');
+      document.body.style.overflow = '';
+      currentProduct = null;
+      modalQuantity = 1;
+    }
+
+    function changeModalQuantity(delta) {
+      modalQuantity = Math.max(1, modalQuantity + delta);
+      document.getElementById('modalQuantity').textContent = modalQuantity;
+
+      if (currentProduct) {
+        const total = currentProduct.price * modalQuantity;
+        document.getElementById('addToCartBtnText').textContent = `Tilføj til kurv - ${total} kr.`;
+      }
+    }
+
+    function addFromModal() {
+      if (currentProduct) {
+        for (let i = 0; i < modalQuantity; i++) {
+          addToCart(currentProduct);
+        }
+        closeProductModal();
+      }
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('productModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeProductModal();
+      }
+    });
+
+    // ========================================
+    // CONFIGURATION UPDATE (postMessage)
+    // ========================================
+    window.addEventListener('message', function(event) {
       if (event.data.type === 'UPDATE_CONFIG') {
         const config = event.data.config;
 
@@ -1263,56 +2895,54 @@
 
         // Update app name
         if (config.appName) {
-          const nameElement = document.querySelector('.brand-info h1');
-          if (nameElement) {
-            nameElement.textContent = config.appName;
-          }
+          const restaurantName = document.getElementById('restaurantName');
+          const miniHeaderName = document.getElementById('miniHeaderName');
+
+          if (restaurantName) restaurantName.textContent = config.appName;
+          if (miniHeaderName) miniHeaderName.textContent = config.appName;
+
+          // Update document title
+          document.title = config.appName;
         }
 
-        // Update tagline (brand status)
+        // Update tagline
         if (config.tagline) {
-          const statusElement = document.querySelector('.brand-status');
-          if (statusElement) {
-            statusElement.innerHTML = `
-              <span class="status-dot"></span>
-              ${config.tagline}
-            `;
-          }
+          const restaurantTagline = document.getElementById('restaurantTagline');
+          if (restaurantTagline) restaurantTagline.textContent = config.tagline;
         }
 
         // Update logo
         if (config.logoUrl) {
-          const logo = document.querySelector('.brand-logo');
-          if (logo) {
-            logo.style.backgroundImage = `url(${config.logoUrl})`;
-            logo.style.backgroundSize = 'cover';
-            logo.style.backgroundPosition = 'center';
-            logo.textContent = '';
+          const miniHeaderLogo = document.getElementById('miniHeaderLogo');
+          if (miniHeaderLogo) {
+            miniHeaderLogo.style.backgroundImage = `url(${config.logoUrl})`;
+            miniHeaderLogo.style.backgroundSize = 'cover';
+            miniHeaderLogo.style.backgroundPosition = 'center';
+            miniHeaderLogo.textContent = '';
           }
         } else if (config.appName) {
           // Show initials if no logo
-          const logo = document.querySelector('.brand-logo');
-          if (logo && !config.logoUrl) {
+          const miniHeaderLogo = document.getElementById('miniHeaderLogo');
+          if (miniHeaderLogo && !config.logoUrl) {
             const words = config.appName.split(' ').filter(w => w.length > 0);
             const initials = words.slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'PR';
-            logo.textContent = initials;
-            logo.style.backgroundImage = '';
+            miniHeaderLogo.textContent = initials;
+            miniHeaderLogo.style.backgroundImage = '';
           }
         }
 
-        // Handle banner image
+        // Handle banner/header image
         if (config.hasOwnProperty('bannerUrl')) {
-          const heroBanner = document.querySelector('.hero-banner');
-          if (heroBanner) {
-            if (config.bannerUrl) {
-              heroBanner.style.backgroundImage = `url(${config.bannerUrl})`;
-              heroBanner.style.backgroundSize = 'cover';
-              heroBanner.style.backgroundPosition = 'center';
-            } else {
-              heroBanner.style.backgroundImage = `linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%)`;
-              heroBanner.style.backgroundSize = 'auto';
-              heroBanner.style.backgroundPosition = 'initial';
-            }
+          const heroHeaderImage = document.getElementById('heroHeaderImage');
+          const heroPlaceholder = document.getElementById('heroPlaceholder');
+
+          if (config.bannerUrl) {
+            heroHeaderImage.src = config.bannerUrl;
+            heroHeaderImage.style.display = 'block';
+            heroPlaceholder.style.display = 'none';
+          } else {
+            heroHeaderImage.style.display = 'none';
+            heroPlaceholder.style.display = 'flex';
           }
         }
       }
@@ -1327,24 +2957,12 @@
       return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 
-    // Category selection
-    document.querySelectorAll('.category-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-      });
-    });
-
-    // Add to cart animation
-    document.querySelectorAll('.add-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const badge = document.querySelector('.cart-badge');
-        const count = parseInt(badge.textContent) + 1;
-        badge.textContent = count;
-        badge.style.animation = 'pulse 0.3s ease';
-        setTimeout(() => badge.style.animation = '', 300);
-      });
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    document.addEventListener('DOMContentLoaded', function() {
+      updateCartUI();
+      switchView('homeView');
     });
   </script>
 </body>
