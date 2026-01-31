@@ -1316,7 +1316,8 @@
     /* Timeline Line - LEFT SIDE like Owner.com */
     .how-timeline {
       position: absolute;
-      left: 17rem;
+      left: 50%;
+      transform: translateX(-50%);
       top: 0;
       bottom: 0;
       width: 1px;
@@ -1345,6 +1346,14 @@
       align-items: center;
       padding: 8rem 0;
       position: relative;
+    }
+
+    .how-step-row.reverse {
+      direction: rtl;
+    }
+
+    .how-step-row.reverse > * {
+      direction: ltr;
     }
 
     /* Step Content Side */
@@ -1850,7 +1859,7 @@
         </div>
 
         <!-- Step 2: Øg dit online salg -->
-        <div class="how-step-row">
+        <div class="how-step-row reverse">
           <div class="how-step-content">
             <div class="how-step-number">02.</div>
             <h3>Øg dit salg med den nemmeste online bestilling</h3>
@@ -1928,7 +1937,7 @@
         </div>
 
         <!-- Step 4: Hold gæster engageret -->
-        <div class="how-step-row">
+        <div class="how-step-row reverse">
           <div class="how-step-content">
             <div class="how-step-number">04.</div>
             <h3>Hold gæster engageret med automatisk marketing</h3>
