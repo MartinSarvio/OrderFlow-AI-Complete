@@ -1211,6 +1211,16 @@
           <line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>
         </svg>
       ),
+      Check: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      ),
+      X: (props) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      ),
     };
 
     const Icon = ({ name, size = 24, color = 'currentColor', className = '', ...props }) => {
@@ -2256,8 +2266,8 @@
     // =============================================================================
     class ScannerReportGenerator {
       constructor() {
-        this.primaryColor = [102, 126, 234];
-        this.secondaryColor = [118, 75, 162];
+        this.primaryColor = [1, 91, 248];  // #015bf8 - primary blue
+        this.secondaryColor = [1, 91, 248]; // Same blue for consistency
         this.darkColor = [26, 26, 46];
         this.successColor = [5, 150, 105];
         this.warningColor = [217, 119, 6];
@@ -2294,54 +2304,73 @@
       }
 
       addCoverPage(doc, data) {
-        // Header gradient simulation
+        // Clean header bar
         doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(0, 0, this.pageWidth, 100, 'F');
+        doc.rect(0, 0, this.pageWidth, 8, 'F');
 
         // Title
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(28);
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(32);
         doc.setFont('helvetica', 'bold');
-        doc.text('Digital Synlighedsrapport', this.pageWidth / 2, 40, { align: 'center' });
+        doc.text('Digital Synlighedsrapport', this.pageWidth / 2, 45, { align: 'center' });
+
+        // Subtitle
+        doc.setFontSize(12);
+        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Komplet analyse af din digitale tilstedeværelse', this.pageWidth / 2, 58, { align: 'center' });
 
         // Business name
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'normal');
-        doc.text(data.business.name, this.pageWidth / 2, 55, { align: 'center' });
+        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text(data.business.name, this.pageWidth / 2, 85, { align: 'center' });
 
         // Date and location
+        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
         doc.setFontSize(11);
-        doc.text(data.business.address || '', this.pageWidth / 2, 70, { align: 'center' });
-        doc.text(`Genereret: ${this.formatDate(data.scanDate)}`, this.pageWidth / 2, 82, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.text(data.business.address || '', this.pageWidth / 2, 98, { align: 'center' });
+        doc.text(`Genereret: ${this.formatDate(data.scanDate)}`, this.pageWidth / 2, 108, { align: 'center' });
 
-        // Overall Score Circle
+        // Overall Score - Clean horizontal bar style
         const centerX = this.pageWidth / 2;
-        const centerY = 160;
-        const radius = 35;
+        const centerY = 150;
 
-        doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
-        doc.circle(centerX, centerY, radius + 5, 'F');
-
+        // Score circle with ring
+        const radius = 32;
         const scoreColor = this.getScoreColor(data.overallScore);
-        doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.circle(centerX, centerY, radius, 'F');
 
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(36);
+        // Outer ring
+        doc.setDrawColor(240, 240, 240);
+        doc.setLineWidth(4);
+        doc.circle(centerX, centerY, radius, 'S');
+
+        // Colored arc (approximated with circle for simplicity)
+        doc.setDrawColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+        doc.setLineWidth(4);
+        doc.circle(centerX, centerY, radius, 'S');
+
+        // Score number
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(32);
         doc.setFont('helvetica', 'bold');
-        doc.text(String(data.overallScore), centerX, centerY + 5, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text('af 100', centerX, centerY + 18, { align: 'center' });
+        doc.text(String(data.overallScore), centerX, centerY + 4, { align: 'center' });
+        doc.setFontSize(10);
+        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
+        doc.setFont('helvetica', 'normal');
+        doc.text('af 100', centerX, centerY + 14, { align: 'center' });
 
         // Score Label
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(14);
+        doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
+        doc.setFontSize(13);
+        doc.setFont('helvetica', 'bold');
         const label = data.overallScore >= 75 ? 'God digital tilstedeværelse' :
                      data.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
-        doc.text(label, centerX, centerY + 55, { align: 'center' });
+        doc.text(label, centerX, centerY + 48, { align: 'center' });
 
         // Key Stats
-        let yPos = 230;
+        let yPos = 220;
         doc.setFontSize(11);
         doc.setFont('helvetica', 'normal');
 
@@ -2372,14 +2401,17 @@
         doc.addPage();
         let yPos = this.margin;
 
-        // Section Header
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
+        // Clean section header
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('Resumé - Top 5 Vigtigste Fund', this.margin + 5, yPos + 7);
-        yPos += 20;
+        doc.text('Top 5 Vigtigste Fund', this.margin, yPos + 5);
+        yPos += 10;
+
+        // Accent line
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, 40, 2, 'F');
+        yPos += 15;
 
         // Top findings
         const topFindings = (data.findings || [])
@@ -2423,14 +2455,17 @@
         doc.addPage();
         let yPos = this.margin;
 
-        // Section Header
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
+        // Clean section header
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('Scorekort', this.margin + 5, yPos + 7);
-        yPos += 25;
+        doc.text('Scorekort', this.margin, yPos + 5);
+        yPos += 10;
+
+        // Accent line
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, 40, 2, 'F');
+        yPos += 20;
 
         const scores = [
           { name: 'Google Business Profile', score: data.results.googleProfile?.profileCompleteness?.score || 0 },
@@ -2483,14 +2518,17 @@
         doc.addPage();
         let yPos = this.margin;
 
-        // Section Header
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, this.contentWidth, 10, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(12);
+        // Clean section header
+        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+        doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        doc.text('Prioriteret Handlingsplan', this.margin + 5, yPos + 7);
-        yPos += 20;
+        doc.text('Prioriteret Handlingsplan', this.margin, yPos + 5);
+        yPos += 10;
+
+        // Accent line
+        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.rect(this.margin, yPos, 40, 2, 'F');
+        yPos += 15;
 
         const actions = [
           { title: 'Svar på flere anmeldelser', priority: 'high', impact: 'Høj', effort: 'Lav' },
@@ -2527,18 +2565,19 @@
           yPos += 25;
         });
 
-        // Footer
-        yPos += 20;
-        doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
-        doc.roundedRect(this.margin, yPos, this.contentWidth, 30, 3, 3, 'F');
+        // Call-to-action box
+        yPos += 25;
+        doc.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(this.margin, yPos, this.contentWidth, 35, 3, 3, 'S');
         doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setFontSize(11);
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text('Næste skridt', this.margin + 10, yPos + 12);
+        doc.text('Næste skridt', this.margin + 10, yPos + 14);
         doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        doc.text('Start med de 3 højprioriterede handlinger for at opnå størst effekt hurtigt.', this.margin + 10, yPos + 22);
+        doc.text('Start med de 3 højprioriterede handlinger for at opnå størst effekt hurtigt.', this.margin + 10, yPos + 26);
       }
     }
 
@@ -2564,133 +2603,148 @@
       };
 
       return (
-        <div style={{ minHeight: '100vh', background: '#f5f5f7' }}>
+        <div style={{ minHeight: '100vh', background: '#fafafa' }}>
           <div className="report-container">
-            {/* Header */}
-            <div className="report-header">
-              <h1 style={{ margin: '0 0 8px', fontSize: 36, fontWeight: 700 }}>
-                Digital Synlighedsrapport
+            {/* Header - Minimalist */}
+            <div className="report-header" style={{ textAlign: 'center', paddingBottom: 24 }}>
+              <p style={{ margin: '0 0 8px', color: '#9ca3af', fontSize: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Digital Analyse
+              </p>
+              <h1 style={{ margin: '0 0 4px', fontSize: 28, fontWeight: 600, color: '#1a1a1a' }}>
+                {business.name}
               </h1>
-              <p style={{ margin: 0, color: '#6b7280', fontSize: 18 }}>
-                {business.name} • {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
+                {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
             </div>
 
-            {/* Overall Score */}
+            {/* Overall Score - Clean Design */}
             <div className="report-card" style={{
-              background: 'linear-gradient(135deg, #1a1a2e, #16213e)',
-              color: 'white',
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              textAlign: 'center',
+              padding: '48px 32px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <h2 style={{ margin: '0 0 8px', fontSize: 28 }}>Samlet Digital Score</h2>
-                  <p style={{ margin: '0 0 16px', color: 'rgba(255,255,255,0.7)' }}>
-                    {getScoreLabel(overallScore)}
-                  </p>
-                  <div style={{ display: 'flex', gap: 24 }}>
-                    <div>
-                      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>Rating</div>
-                      <div style={{ fontSize: 20, fontWeight: 600 }}>
-                        {results.googleProfile?.rating || 'N/A'} ⭐
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>Anmeldelser</div>
-                      <div style={{ fontSize: 20, fontWeight: 600 }}>
-                        {results.reviews?.totalReviews || 0}
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>Lokal Ranking</div>
-                      <div style={{ fontSize: 20, fontWeight: 600 }}>
-                        #{results.competitors?.ranking?.overall || 'N/A'}
-                      </div>
-                    </div>
-                  </div>
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: 24 }}>
+                <ProgressRing progress={overallScore} size={160} strokeWidth={8} color={getScoreColor(overallScore)} />
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{ fontSize: 48, fontWeight: 700, color: '#1a1a1a' }}>{overallScore}</span>
+                  <span style={{ fontSize: 14, color: '#9ca3af' }}>af 100</span>
                 </div>
-                <div style={{ position: 'relative' }}>
-                  <ProgressRing progress={overallScore} size={140} strokeWidth={10} color={getScoreColor(overallScore)} />
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <span style={{ fontSize: 42, fontWeight: 700 }}>{overallScore}</span>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>af 100</span>
+              </div>
+              <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 500, color: '#1a1a1a' }}>
+                {getScoreLabel(overallScore)}
+              </h2>
+              <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
+                Baseret på {Object.keys(results).length} analysepunkter
+              </p>
+
+              {/* Inline stats */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 32,
+                marginTop: 24,
+                paddingTop: 24,
+                borderTop: '1px solid #f3f4f6'
+              }}>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a' }}>
+                    {results.googleProfile?.rating || '-'}
                   </div>
+                  <div style={{ fontSize: 12, color: '#9ca3af' }}>Rating</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a' }}>
+                    {results.reviews?.totalReviews || 0}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9ca3af' }}>Anmeldelser</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a' }}>
+                    #{results.competitors?.ranking?.overall || '-'}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9ca3af' }}>Lokal Ranking</div>
                 </div>
               </div>
             </div>
 
             {/* Google Business Profile */}
             {results.googleProfile && (
-              <div className="report-card">
-                <div className="report-card-header">
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 20 }}>📍 Google Business Profile</h3>
-                    <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
-                      Hvordan din virksomhed vises i Google søgning og Maps
-                    </p>
+              <div className="report-card" style={{ background: 'white', border: '1px solid #e5e7eb' }}>
+                <div className="report-card-header" style={{ borderBottom: '1px solid #f3f4f6', paddingBottom: 16, marginBottom: 24 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon name="MapPin" size={20} color="#6b7280" />
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Google Business Profile</h3>
+                      <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 13 }}>
+                        Synlighed i Google søgning og Maps
+                      </p>
+                    </div>
                   </div>
                   <StatusBadge
                     status={calculateSignalStrength(results.googleProfile.profileCompleteness?.score || 0, { excellent: 85, good: 70, warning: 50 })}
-                    text={`${results.googleProfile.profileCompleteness?.score || 0}% komplet`}
+                    text={`${results.googleProfile.profileCompleteness?.score || 0}%`}
                   />
                 </div>
 
-                <div className="metric-grid" style={{ marginBottom: 24 }}>
-                  <div className="metric-card">
-                    <div className="metric-value">{results.googleProfile.rating}</div>
-                    <div className="metric-label">Rating</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 600, color: '#1a1a1a' }}>{results.googleProfile.rating}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Rating</div>
                   </div>
-                  <div className="metric-card">
-                    <div className="metric-value">{results.googleProfile.totalReviews}</div>
-                    <div className="metric-label">Anmeldelser</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 600, color: '#1a1a1a' }}>{results.googleProfile.totalReviews}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Anmeldelser</div>
                   </div>
-                  <div className="metric-card">
-                    <div className="metric-value">{results.googleProfile.photos?.total || 0}</div>
-                    <div className="metric-label">Billeder</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 600, color: '#1a1a1a' }}>{results.googleProfile.photos?.total || 0}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Billeder</div>
                   </div>
-                  <div className="metric-card">
-                    <div className="metric-value">{results.googleProfile.postsActivity?.postsLast90Days || 0}</div>
-                    <div className="metric-label">Opslag (90 dage)</div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 28, fontWeight: 600, color: '#1a1a1a' }}>{results.googleProfile.postsActivity?.postsLast90Days || 0}</div>
+                    <div style={{ fontSize: 12, color: '#9ca3af' }}>Opslag</div>
                   </div>
                 </div>
 
                 {results.googleProfile.profileCompleteness?.missing?.length > 0 && (
-                  <>
-                    <h4 style={{ margin: '0 0 12px', fontSize: 14, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                      Manglende Elementer
+                  <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 20 }}>
+                    <h4 style={{ margin: '0 0 12px', fontSize: 13, color: '#9ca3af', fontWeight: 500 }}>
+                      Manglende elementer
                     </h4>
-                    {results.googleProfile.profileCompleteness.missing.map((item, i) => (
-                      <div key={i} className="signal-item">
-                        <div className="signal-icon" style={{ background: '#fef3c7' }}>⚠️</div>
-                        <div className="signal-content">
-                          <div className="signal-title">{item}</div>
-                          <div className="signal-description">
-                            Tilføj dette for at forbedre din profils synlighed i lokale søgeresultater.
-                          </div>
-                          <span className="signal-impact status-warning">Påvirker lokal ranking</span>
-                        </div>
-                      </div>
-                    ))}
-                  </>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {results.googleProfile.profileCompleteness.missing.map((item, i) => (
+                        <span key={i} style={{
+                          padding: '6px 12px',
+                          background: '#fef3c7',
+                          color: '#92400e',
+                          fontSize: 13,
+                          borderRadius: 6,
+                        }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
                 <div style={{
-                  marginTop: 24,
+                  marginTop: 20,
                   padding: 16,
-                  background: '#f0f9ff',
-                  borderRadius: 12,
-                  border: '1px solid #bae6fd'
+                  background: '#f9fafb',
+                  borderRadius: 8,
                 }}>
-                  <strong style={{ color: '#0369a1' }}>Sådan påvirker dette din ranking:</strong>
-                  <p style={{ margin: '8px 0 0', color: '#0369a1', fontSize: 14 }}>
-                    Google prioriterer komplette profiler. En profil med alle felter udfyldt, regelmæssige opslag,
-                    og mange billeder har op til 70% større chance for at vises i "Local Pack" (top 3 resultater).
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: 13, lineHeight: 1.6 }}>
+                    <strong style={{ color: '#374151' }}>Tip:</strong> En komplet profil har op til 70% større chance for at vises i Google's "Local Pack" (top 3 resultater).
                   </p>
                 </div>
               </div>
@@ -2701,7 +2755,12 @@
               <div className="report-card">
                 <div className="report-card-header">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 20 }}>⭐ Anmeldelsesanalyse</h3>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="Star" size={20} color="#6b7280" />
+                      </div>
+                      Anmeldelsesanalyse
+                    </h3>
                     <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
                       Detaljeret analyse af dine Google anmeldelser
                     </p>
@@ -2823,7 +2882,12 @@
               <div className="report-card">
                 <div className="report-card-header">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 20 }}>🎯 Konkurrentanalyse</h3>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="Target" size={20} color="#6b7280" />
+                      </div>
+                      Konkurrentanalyse
+                    </h3>
                     <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
                       Din position sammenlignet med {results.competitors.directCompetitors} nærmeste konkurrenter inden for {results.competitors.searchRadius}
                     </p>
@@ -2893,7 +2957,12 @@
               <div className="report-card">
                 <div className="report-card-header">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 20 }}>🔗 NAP Konsistens</h3>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="Link" size={20} color="#6b7280" />
+                      </div>
+                      NAP Konsistens
+                    </h3>
                     <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
                       Navn, Adresse og Telefon på tværs af online platforme
                     </p>
@@ -2974,7 +3043,12 @@
               <div className="report-card">
                 <div className="report-card-header">
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 20 }}>📱 Website & Mobil Oplevelse</h3>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="Globe" size={20} color="#6b7280" />
+                      </div>
+                      Website & Mobil Oplevelse
+                    </h3>
                     <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
                       {results.website.hasWebsite ? results.website.url : 'Ingen hjemmeside registreret'}
                     </p>
@@ -3500,7 +3574,7 @@
             <div className="report-card" style={{ background: 'linear-gradient(135deg, #667eea08 0%, #764ba208 100%)' }}>
               <div className="report-card-header">
                 <div>
-                  <h3 style={{ margin: 0, fontSize: 20 }}>🎯 Prioriteret Handlingsplan</h3>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Prioriteret Handlingsplan</h3>
                   <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
                     Konkrete tiltag for at forbedre din digitale synlighed
                   </p>
