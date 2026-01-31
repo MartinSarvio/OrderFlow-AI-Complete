@@ -1383,6 +1383,170 @@
     };
 
     // =============================================================================
+    // BROWSER WINDOW PREVIEW COMPONENTS
+    // =============================================================================
+
+    const BrowserWindow = ({ children, url }) => (
+      <div style={{
+        background: 'white',
+        borderRadius: 12,
+        boxShadow: '0 25px 80px rgba(0,0,0,0.15)',
+        overflow: 'hidden',
+        maxWidth: 600,
+        width: '100%',
+        animation: 'slideIn 0.6s ease',
+      }}>
+        <div style={{
+          background: '#f6f6f6',
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          borderBottom: '1px solid #e5e5e5'
+        }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f57' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28ca41' }} />
+          </div>
+          {url && (
+            <div style={{
+              flex: 1,
+              background: 'white',
+              borderRadius: 6,
+              padding: '6px 12px',
+              fontSize: 12,
+              color: '#666',
+              marginLeft: 8,
+              border: '1px solid #e5e5e5',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <Icon name="Search" size={12} color="#9ca3af" />
+              {url}
+            </div>
+          )}
+        </div>
+        <div style={{ minHeight: 280 }}>{children}</div>
+      </div>
+    );
+
+    // Map preview with embedded Google Maps
+    const MapPreview = ({ business }) => {
+      const query = encodeURIComponent((business?.name || '') + ' ' + (business?.address || ''));
+      return (
+        <div style={{ height: 280, position: 'relative', background: '#f0f0f0' }}>
+          <iframe
+            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBMJxtAMiQBrCLPGmZhVB8b7tj7dTMzfKE&q=${query}&zoom=15`}
+            style={{ width: '100%', height: '100%', border: 0 }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </div>
+      );
+    };
+
+    // Business card preview
+    const BusinessCardPreview = ({ business, data }) => {
+      const query = encodeURIComponent((business?.name || '') + ' ' + (business?.address || ''));
+      return (
+        <div style={{ padding: 24 }}>
+          <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', background: 'white' }}>
+            <div style={{ height: 140, position: 'relative' }}>
+              <iframe
+                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBMJxtAMiQBrCLPGmZhVB8b7tj7dTMzfKE&q=${query}&zoom=16`}
+                style={{ width: '100%', height: '100%', border: 0 }}
+                loading="lazy"
+              />
+            </div>
+            <div style={{ padding: 16 }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600 }}>{business?.name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#666' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  {[1,2,3,4,5].map(i => (
+                    <span key={i} style={{ color: i <= Math.round(data?.rating || 0) ? '#fbbf24' : '#e5e5e5', fontSize: 14 }}>★</span>
+                  ))}
+                </div>
+                <span>{data?.rating || '...'}</span>
+                <span style={{ color: '#d1d5db' }}>|</span>
+                <span>{data?.types?.[0] || 'Restaurant'}</span>
+              </div>
+              {!data?.description && (
+                <div style={{ marginTop: 12, color: '#d97706', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon name="AlertTriangle" size={14} color="#d97706" />
+                  No description found
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Review preview
+    const ReviewPreview = ({ reviews }) => {
+      const review = reviews?.[0];
+      return (
+        <div style={{ padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 48,
+                height: 48,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontWeight: 600,
+                fontSize: 18,
+              }}>
+                {review?.author?.charAt(0) || 'U'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500 }}>{review?.author || 'Loading...'}</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 months ago'}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 2 }}>
+                {[1,2,3,4,5].map(i => (
+                  <span key={i} style={{ color: i <= (review?.rating || 4) ? '#fbbf24' : '#e5e5e5', fontSize: 16 }}>★</span>
+                ))}
+              </div>
+            </div>
+            {review?.text && (
+              <p style={{ margin: '16px 0 0', fontSize: 14, color: '#374151', lineHeight: 1.5 }}>
+                {review.text}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // Photo gallery preview
+    const PhotoPreview = ({ photos }) => (
+      <div style={{ padding: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {(photos || [1,2,3,4,5,6]).slice(0, 6).map((_, i) => (
+            <div key={i} style={{
+              aspectRatio: '1',
+              background: `linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)`,
+              borderRadius: 8,
+              animation: 'pulse 2s ease-in-out infinite',
+              animationDelay: `${i * 0.1}s`,
+            }} />
+          ))}
+        </div>
+      </div>
+    );
+
+    // =============================================================================
     // LIVE FINDINGS FEED COMPONENTS
     // =============================================================================
 
@@ -1727,6 +1891,16 @@
       const [showReport, setShowReport] = useState(false);
       const [findings, setFindings] = useState([]);
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
+      const [secondsRemaining, setSecondsRemaining] = useState(45);
+
+      // Countdown timer
+      useEffect(() => {
+        if (isComplete) return;
+        const interval = setInterval(() => {
+          setSecondsRemaining(prev => Math.max(prev - 1, 0));
+        }, 1000);
+        return () => clearInterval(interval);
+      }, [isComplete]);
 
       const addFindings = useCallback((newFindings) => {
         if (newFindings.length === 0) return;
@@ -1939,16 +2113,18 @@
                     transition: 'width 0.3s ease'
                   }} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>
-                      {isComplete ? 'Analyse færdig!' : 'Analyserer...'}
-                    </div>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {completedSteps.length} af {analysisSteps.length} trin
-                    </div>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {!isComplete && <Spinner />}
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>
+                      {isComplete ? 'Analyse færdig!' : 'Running...'}
+                    </div>
+                    {!isComplete && (
+                      <div style={{ fontSize: 13, color: '#6b7280' }}>
+                        {secondsRemaining} seconds remaining
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1968,64 +2144,29 @@
               />
 
               {!isComplete ? (
-                <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
-                  {/* Progress Card */}
-                  <div style={{
-                    background: 'white',
-                    borderRadius: 20,
-                    padding: 32,
-                    textAlign: 'center',
-                    boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
-                    width: 280,
-                    flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <div style={{ position: 'relative', display: 'inline-block', marginBottom: 24 }}>
-                      <ProgressRing progress={progress} size={100} />
-                      <div style={{
-                        position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 24,
-                        fontWeight: 700,
-                        color: '#1a1a1a',
-                      }}>
-                        {Math.round(progress)}%
-                      </div>
-                    </div>
-                    <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 600 }}>
-                      {analysisSteps[currentStep]?.name || 'Analyserer...'}
-                    </h2>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>
-                      {completedSteps.length} af {analysisSteps.length} trin færdige
-                    </p>
-                  </div>
-
-                  {/* Live Findings Feed */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 15px 50px rgba(0,0,0,0.08)', height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <Icon name="FileText" size={20} color="#667eea" />
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Live Fund</h3>
-                        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>{findings.length} fund</span>
-                      </div>
-                      <LiveFindingsFeed
-                        findings={findings}
-                        highlightedId={highlightedFindingId}
-                        moduleStatuses={analysisSteps.map(step => ({
-                          id: step.id,
-                          name: step.name,
-                          status: completedSteps.includes(step.id) ? 'completed' : currentStep === analysisSteps.findIndex(s => s.id === step.id) ? 'running' : 'pending',
-                          findingsCount: findings.filter(f => f.module === step.id).length,
-                        }))}
-                      />
-                    </div>
-                  </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  zIndex: 10,
+                  padding: 40,
+                }}>
+                  <BrowserWindow url={
+                    currentStep === 0 ? `${business.name} in ${business.address?.split(',').pop()?.trim() || 'Denmark'}` :
+                    currentStep === 1 ? `google.com/business/${business.name}` :
+                    currentStep === 2 ? `google.com/reviews/${business.name}` :
+                    currentStep === 3 ? `google.com/photos/${business.name}` :
+                    currentStep === 4 ? `facebook.com/${business.name?.toLowerCase().replace(/\s/g, '')}` :
+                    `pagespeed.web.dev/${business.name}`
+                  }>
+                    {currentStep === 0 && <MapPreview business={business} />}
+                    {currentStep === 1 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
+                    {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.topReviews} />}
+                    {currentStep === 3 && <PhotoPreview photos={analysisResults.photos} />}
+                    {currentStep === 4 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
+                    {currentStep >= 5 && <MapPreview business={business} />}
+                  </BrowserWindow>
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
