@@ -4025,6 +4025,11 @@
 
       // Initialize scroll state - ensure hero header is visible
       initializeScrollState();
+
+      // Notify parent when PWA preview is ready
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'PWA_READY' }, '*');
+      }
     });
 
     // Reset scroll state to ensure correct initial display
@@ -4035,15 +4040,23 @@
       const miniHeaderSection = document.getElementById('miniHeaderSection');
 
       if (appContent) {
-        // Reset scroll to top
-        appContent.scrollTop = 0;
+        // Reset scroll to top with requestAnimationFrame for better timing
+        requestAnimationFrame(() => {
+          appContent.scrollTop = 0;
+        });
       }
 
       if (heroHeader) {
         // Ensure hero header is fully visible
+        heroHeader.style.transition = 'none'; // Prevent animation on init
         heroHeader.style.opacity = '1';
         heroHeader.style.height = '280px';
         heroHeader.style.minHeight = '280px';
+
+        // Re-enable transitions after initial state
+        setTimeout(() => {
+          heroHeader.style.transition = '';
+        }, 50);
       }
 
       if (miniHeader) {
@@ -4055,6 +4068,13 @@
         miniHeaderSection.classList.remove('visible');
       }
     }
+
+    // Listen for reset commands from parent
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'RESET_SCROLL') {
+        initializeScrollState();
+      }
+    });
   </script>
 </body>
 </html>

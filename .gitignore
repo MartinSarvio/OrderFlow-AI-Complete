@@ -1,4 +1,6 @@
 .vercel
+.DS_Store
+node_modules/
 
 # Backup filer med mulige secrets
 *.backup

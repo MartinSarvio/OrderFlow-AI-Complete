@@ -191,6 +191,38 @@
           </div>
         </div>
 
+        <div class="nav-section">
+          <div class="nav-section-title">System</div>
+          <button class="nav-btn" onclick="showPage('workflow')" data-tooltip="Workflow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Workflow</span></button>
+        </div>
+
+        <!-- WEB BUILDER SECTION -->
+        <div class="nav-section">
+          <div class="nav-section-title">Web Builder</div>
+          <div class="nav-dropdown" id="nav-webbuilder">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('webbuilder')" data-tooltip="Web Builder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span>Web Builder</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('branding')">Branding</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('farver')">Farver</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('billeder')">Billeder</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('menu')">Menu</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('timer')">Åbningstider</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('kontakt')">Kontakt</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('levering')">Levering</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('funktioner')">Funktioner</button>
+              <button class="nav-dropdown-item" onclick="showWebBuilderPage('social')">Sociale Medier</button>
+            </div>
+          </div>
+        </div>
+
         <!-- APP BUILDER SECTION -->
         <div class="nav-section">
           <div class="nav-section-title">App Builder</div>
@@ -202,10 +234,9 @@
             <span>App Builder</span>
           </button>
         </div>
-        
+
         <div class="nav-section">
-          <div class="nav-section-title">System</div>
-          <button class="nav-btn" onclick="showPage('workflow')" data-tooltip="Workflow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Workflow</span></button>
+          <div class="nav-section-title">Indstillinger</div>
           
           <!-- Indstillinger Dropdown -->
           <div class="nav-dropdown" id="nav-indstillinger">

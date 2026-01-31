@@ -11943,15 +11943,30 @@ document.addEventListener('click', (e) => {
 
 // Command search data
 const commandItems = [
+  // Pages
   { type: 'page', id: 'dashboard', name: 'Dashboard', hint: 'Overblik', keywords: ['dashboard', 'overblik', 'hjem', 'start'] },
   { type: 'page', id: 'kunder', name: 'Kunder', hint: 'CRM', keywords: ['restauranter', 'kunder', 'crm', 'kunde'] },
-  { type: 'page', id: 'orders', name: 'Ordrer', hint: 'Alle ordrer', keywords: ['ordrer', 'ordre', 'bestillinger'] },
+  { type: 'page', id: 'orders', name: 'Ordrer', hint: 'Alle ordrer', keywords: ['ordrer', 'ordre', 'bestillinger', 'salg'] },
   { type: 'page', id: 'workflow', name: 'Workflow', hint: 'Automatisering', keywords: ['workflow', 'flow', 'automatisering', 'automation'] },
   { type: 'page', id: 'settings', name: 'Indstillinger', hint: 'Konfiguration', keywords: ['indstillinger', 'settings', 'config'] },
+  { type: 'page', id: 'salgsoversigt', name: 'Salgsoversigt', hint: 'Salg', keywords: ['salg', 'omsaetning', 'revenue', 'oversigt'] },
+  { type: 'page', id: 'loyalty', name: 'Loyalty Program', hint: 'Marketing', keywords: ['loyalty', 'point', 'stamkunde', 'bonus'] },
+  { type: 'page', id: 'campaigns', name: 'Kampagner', hint: 'Marketing', keywords: ['kampagne', 'tilbud', 'marketing', 'rabat'] },
+  { type: 'page', id: 'appbuilder-design', name: 'App Builder', hint: 'PWA', keywords: ['app', 'builder', 'pwa', 'mobil', 'design'] },
+  { type: 'page', id: 'leads', name: 'Leads', hint: 'Salg', keywords: ['leads', 'prospekter', 'potentielle', 'kunder'] },
+  // Account
+  { type: 'account', id: 'mine-oplysninger', name: 'Mine oplysninger', hint: 'Profil', keywords: ['profil', 'oplysninger', 'konto', 'bruger', 'mig'] },
+  { type: 'account', id: 'ordrehistorik', name: 'Ordre historik', hint: 'Historik', keywords: ['ordre', 'historik', 'tidligere', 'bestillinger', 'genbestil'] },
+  { type: 'account', id: 'betalingsmetoder', name: 'Betalingsmetoder', hint: 'Kort', keywords: ['betaling', 'kort', 'kreditkort', 'faktura', 'visa', 'mastercard'] },
+  { type: 'account', id: 'leveringsadresser', name: 'Leveringsadresser', hint: 'Adresser', keywords: ['adresse', 'levering', 'delivery', 'hjem', 'arbejde'] },
+  // Settings
   { type: 'setting', id: 'openai', name: 'OpenAI API', hint: 'AI', keywords: ['openai', 'ai', 'gpt', 'api'] },
   { type: 'setting', id: 'beskeder', name: 'Beskeder', hint: 'Templates', keywords: ['beskeder', 'messages', 'templates', 'skabeloner'] },
+  { type: 'setting', id: 'notifications', name: 'Notifikationer', hint: 'Advarsler', keywords: ['notifikationer', 'alerts', 'beskeder', 'push'] },
+  { type: 'setting', id: 'users', name: 'Brugerindstillinger', hint: 'Profil', keywords: ['bruger', 'profil', 'konto', 'team'] },
+  // Reports
   { type: 'report', id: 'kpi', name: 'KPI Oversigt', hint: 'Analytics', keywords: ['kpi', 'analytics', 'statistik', 'data'] },
-  { type: 'report', id: 'monthly', name: 'Månedsrapport', hint: 'PDF', keywords: ['rapport', 'månedlig', 'pdf', 'export'] }
+  { type: 'report', id: 'monthly', name: 'Månedsrapport', hint: 'PDF', keywords: ['rapport', 'maanedlig', 'pdf', 'export'] }
 ];
 
 // Handle command search
@@ -11984,11 +11999,12 @@ function handleCommandSearch(query) {
 // Build command results HTML
 function buildCommandResultsHTML(items) {
   const pages = items.filter(i => i.type === 'page');
+  const account = items.filter(i => i.type === 'account');
   const settings = items.filter(i => i.type === 'setting');
   const reports = items.filter(i => i.type === 'report');
-  
+
   let html = '';
-  
+
   if (pages.length) {
     html += '<div class="command-group"><div class="command-group-title">Sider</div>';
     pages.forEach(item => {
@@ -12000,7 +12016,19 @@ function buildCommandResultsHTML(items) {
     });
     html += '</div>';
   }
-  
+
+  if (account.length) {
+    html += '<div class="command-group"><div class="command-group-title">Min konto</div>';
+    account.forEach(item => {
+      html += `<div class="command-item" onclick="navigateCommand('account', '${item.id}')">
+        ${getCommandIcon(item.id)}
+        <span class="command-item-text">${item.name}</span>
+        <span class="command-item-hint">${item.hint}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
   if (settings.length) {
     html += '<div class="command-group"><div class="command-group-title">Indstillinger</div>';
     settings.forEach(item => {
@@ -12012,7 +12040,7 @@ function buildCommandResultsHTML(items) {
     });
     html += '</div>';
   }
-  
+
   if (reports.length) {
     html += '<div class="command-group"><div class="command-group-title">Rapporter</div>';
     reports.forEach(item => {
@@ -12024,7 +12052,7 @@ function buildCommandResultsHTML(items) {
     });
     html += '</div>';
   }
-  
+
   return html;
 }
 
@@ -12039,7 +12067,20 @@ function getCommandIcon(id) {
     'openai': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42"/></svg>',
     'beskeder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
     'kpi': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>',
-    'monthly': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>'
+    'monthly': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    // Account icons
+    'mine-oplysninger': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    'ordrehistorik': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>',
+    'betalingsmetoder': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+    'leveringsadresser': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+    // Additional page icons
+    'salgsoversigt': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+    'loyalty': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+    'campaigns': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    'appbuilder-design': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    'leads': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>',
+    'notifications': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+    'users': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
   };
   return icons[id] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/></svg>';
 }
@@ -12057,16 +12098,28 @@ function showCommandResults() {
 function navigateCommand(page, sub) {
   const results = document.getElementById('command-results');
   const input = document.getElementById('command-search');
-  
+
   if (results) results.classList.remove('active');
   if (input) input.value = '';
-  
-  showPage(page);
-  
-  // Handle sub-navigation silently
-  if (sub && page === 'settings') {
-    // Switch to relevant settings tab
+
+  // Handle account navigation
+  if (page === 'account' && sub) {
+    showAccountPage(sub);
+    return;
   }
+
+  // Handle settings navigation
+  if (page === 'settings' && sub) {
+    showPage('settings');
+    setTimeout(() => {
+      if (typeof showSettingsPage === 'function') {
+        showSettingsPage(sub);
+      }
+    }, 50);
+    return;
+  }
+
+  showPage(page);
 }
 
 // Global keyboard shortcut for command search (Cmd/Ctrl + K)
@@ -23980,37 +24033,1136 @@ function showSavedBadge(section) {
 // Send initial config to App Builder preview - called directly from iframe onload
 function sendInitialAppBuilderConfig() {
   const previewFrame = document.getElementById('pwa-preview-frame');
-  if (!previewFrame) return;
+  if (!previewFrame || !previewFrame.contentWindow) {
+    console.warn('PWA preview frame not available');
+    return;
+  }
 
-  const nameInput = document.getElementById('appbuilder-app-name');
-  const taglineInput = document.getElementById('appbuilder-tagline');
-  const primaryColorInput = document.getElementById('appbuilder-primary-color');
-  const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
+  // Wait for iframe to be fully loaded
+  setTimeout(() => {
+    try {
+      const nameInput = document.getElementById('appbuilder-app-name');
+      const taglineInput = document.getElementById('appbuilder-tagline');
+      const primaryColorInput = document.getElementById('appbuilder-primary-color');
+      const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
 
-  previewFrame.contentWindow.postMessage({
-    type: 'UPDATE_CONFIG',
-    config: {
-      appName: nameInput?.value || 'Din Restaurant',
-      tagline: taglineInput?.value || 'Ægte italiensk pizza siden 1985',
-      primaryColor: primaryColorInput?.value || '#D4380D',
-      secondaryColor: secondaryColorInput?.value || '#FFF7E6'
+      const config = {
+        appName: nameInput?.value || 'Din Restaurant',
+        tagline: taglineInput?.value || 'Autentisk smag siden 1985',
+        primaryColor: primaryColorInput?.value || '#D4380D',
+        secondaryColor: secondaryColorInput?.value || '#FFF7E6'
+      };
+
+      previewFrame.contentWindow.postMessage({
+        type: 'UPDATE_CONFIG',
+        config: config
+      }, '*');
+
+      // Also send scroll reset command
+      previewFrame.contentWindow.postMessage({
+        type: 'RESET_SCROLL'
+      }, '*');
+
+    } catch (err) {
+      console.warn('Error sending PWA config:', err);
     }
-  }, '*');
+  }, 100);
 }
 
 // Initialize App Builder event listeners
 function initAppBuilder() {
-  // Initialize preview with default values on page load
   const previewFrame = document.getElementById('pwa-preview-frame');
 
   if (previewFrame) {
-    // Wait for iframe to load
+    // Handle iframe load event
     previewFrame.addEventListener('load', () => {
-      sendInitialAppBuilderConfig();
+      // Small delay to ensure iframe content is ready
+      setTimeout(() => {
+        sendInitialAppBuilderConfig();
+      }, 150);
+    });
+
+    // Handle messages from iframe
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'PWA_READY') {
+        sendInitialAppBuilderConfig();
+      }
     });
   }
-
-  // The event handlers are already attached via oninput attributes in HTML
-  // This function can be extended if we need additional initialization
 }
+
+// =====================================================
+// ACCOUNT PAGE FUNCTIONS
+// =====================================================
+
+// Navigate to account page
+function showAccountPage(page) {
+  // Close profile dropdown
+  const dropdown = document.getElementById('profile-dropdown');
+  if (dropdown) dropdown.classList.remove('active');
+
+  // Hide all pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  // Show requested page
+  const targetPage = document.getElementById('page-' + page);
+  if (targetPage) {
+    targetPage.classList.add('active');
+
+    // Load data based on page
+    switch(page) {
+      case 'mine-oplysninger':
+        loadAccountInfo();
+        break;
+      case 'betalingsmetoder':
+        loadPaymentMethods();
+        break;
+      case 'leveringsadresser':
+        loadDeliveryAddresses();
+        break;
+      case 'ordrehistorik':
+        loadOrderHistory();
+        break;
+    }
+  }
+}
+
+// ========== Mine Oplysninger ==========
+
+function loadAccountInfo() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_user_profile') || '{}');
+
+  const firstnameEl = document.getElementById('account-firstname');
+  const lastnameEl = document.getElementById('account-lastname');
+  const emailEl = document.getElementById('account-email');
+  const phoneEl = document.getElementById('account-phone');
+
+  if (firstnameEl) firstnameEl.value = profile.firstName || '';
+  if (lastnameEl) lastnameEl.value = profile.lastName || '';
+  if (emailEl) emailEl.value = profile.email || (currentUser?.email || '');
+  if (phoneEl) phoneEl.value = profile.phone || '';
+}
+
+function saveAccountInfo() {
+  const profile = {
+    firstName: document.getElementById('account-firstname')?.value || '',
+    lastName: document.getElementById('account-lastname')?.value || '',
+    email: document.getElementById('account-email')?.value || '',
+    phone: document.getElementById('account-phone')?.value || ''
+  };
+
+  localStorage.setItem('orderflow_user_profile', JSON.stringify(profile));
+
+  // Update topbar display
+  updateProfileDropdownDisplay(profile);
+
+  const statusEl = document.getElementById('account-save-status');
+  if (statusEl) {
+    statusEl.textContent = 'Gemt!';
+    setTimeout(() => { statusEl.textContent = ''; }, 2000);
+  }
+  toast('Oplysninger gemt', 'success');
+}
+
+function updateProfileDropdownDisplay(profile) {
+  const nameEl = document.getElementById('dropdown-name');
+  const emailEl = document.getElementById('dropdown-email');
+  const avatarEl = document.getElementById('topbar-avatar');
+
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'Bruger';
+
+  if (nameEl) nameEl.textContent = fullName;
+  if (emailEl) emailEl.textContent = profile.email || '';
+  if (avatarEl) avatarEl.textContent = (profile.firstName?.[0] || 'B').toUpperCase();
+}
+
+function changeAccountPassword() {
+  const current = document.getElementById('account-current-password')?.value;
+  const newPass = document.getElementById('account-new-password')?.value;
+  const confirm = document.getElementById('account-confirm-password')?.value;
+
+  if (!current || !newPass || !confirm) {
+    toast('Udfyld alle felter', 'error');
+    return;
+  }
+
+  if (newPass !== confirm) {
+    toast('Adgangskoderne matcher ikke', 'error');
+    return;
+  }
+
+  if (newPass.length < 6) {
+    toast('Adgangskoden skal være mindst 6 tegn', 'error');
+    return;
+  }
+
+  // In a real implementation, this would call an API
+  toast('Adgangskode ændret', 'success');
+
+  // Clear fields
+  document.getElementById('account-current-password').value = '';
+  document.getElementById('account-new-password').value = '';
+  document.getElementById('account-confirm-password').value = '';
+}
+
+// ========== Betalingsmetoder ==========
+
+function loadPaymentMethods() {
+  const methods = JSON.parse(localStorage.getItem('orderflow_payment_methods') || '[]');
+  const container = document.getElementById('payment-methods-list');
+
+  if (!container) return;
+
+  if (methods.length === 0) {
+    container.innerHTML = `
+      <div class="empty" style="padding:40px;text-align:center">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+            <line x1="1" y1="10" x2="23" y2="10"/>
+          </svg>
+        </div>
+        <div style="margin-top:12px">Ingen betalingsmetoder tilføjet</div>
+        <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">
+          Tilføj et kort for hurtigere betaling
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = methods.map((method, index) => `
+    <div class="setting-card" style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-4)">
+      <div style="display:flex;align-items:center;gap:var(--space-4)">
+        <div style="width:48px;height:32px;background:var(--bg3);border-radius:4px;display:flex;align-items:center;justify-content:center">
+          ${getCardTypeIcon(method.type)}
+        </div>
+        <div>
+          <div style="font-weight:500">${method.type} •••• ${method.lastFour}</div>
+          <div style="font-size:var(--font-size-sm);color:var(--muted)">Udløber ${method.expiry}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-2)">
+        ${method.isDefault ? '<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">Standard</span>' : ''}
+        <button class="btn btn-secondary" style="padding:6px 12px" onclick="deletePaymentMethod(${index})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getCardTypeIcon(type) {
+  const icons = {
+    'Visa': '<svg width="32" height="20" viewBox="0 0 32 20"><rect fill="#1A1F71" width="32" height="20" rx="2"/><text x="16" y="13" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">VISA</text></svg>',
+    'Mastercard': '<svg width="32" height="20" viewBox="0 0 32 20"><rect fill="#000" width="32" height="20" rx="2"/><circle cx="12" cy="10" r="6" fill="#EB001B"/><circle cx="20" cy="10" r="6" fill="#F79E1B"/></svg>',
+    'MobilePay': '<svg width="32" height="20" viewBox="0 0 32 20"><rect fill="#5A78FF" width="32" height="20" rx="2"/><text x="16" y="13" text-anchor="middle" fill="#fff" font-size="6" font-weight="bold">MobilePay</text></svg>'
+  };
+  return icons[type] || '<svg width="32" height="20" viewBox="0 0 32 20"><rect fill="#666" width="32" height="20" rx="2"/></svg>';
+}
+
+function showAddPaymentMethodModal() {
+  let modal = document.getElementById('payment-method-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'payment-method-modal';
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closePaymentMethodModal()"></div>
+    <div class="modal-content" style="max-width:400px">
+      <div class="modal-header">
+        <h3>Tilføj betalingsmetode</h3>
+        <button class="modal-close" onclick="closePaymentMethodModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:var(--space-5)">
+        <div class="form-group">
+          <label class="form-label">Korttype</label>
+          <select class="input" id="new-card-type">
+            <option value="Visa">Visa</option>
+            <option value="Mastercard">Mastercard</option>
+            <option value="MobilePay">MobilePay</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:var(--space-4)">
+          <label class="form-label">Kortnummer</label>
+          <input type="text" class="input" id="new-card-number" placeholder="1234 5678 9012 3456" maxlength="19">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-4)">
+          <div class="form-group">
+            <label class="form-label">Udløbsdato</label>
+            <input type="text" class="input" id="new-card-expiry" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CVV</label>
+            <input type="text" class="input" id="new-card-cvv" placeholder="123" maxlength="4">
+          </div>
+        </div>
+        <div style="margin-top:var(--space-4)">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="new-card-default">
+            <span style="font-size:var(--font-size-sm)">Gør til standardkort</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:var(--space-4);display:flex;gap:var(--space-3);justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closePaymentMethodModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="addPaymentMethod()">Tilføj kort</button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+}
+
+function closePaymentMethodModal() {
+  const modal = document.getElementById('payment-method-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function addPaymentMethod() {
+  const type = document.getElementById('new-card-type')?.value;
+  const number = document.getElementById('new-card-number')?.value.replace(/\s/g, '');
+  const expiry = document.getElementById('new-card-expiry')?.value;
+  const isDefault = document.getElementById('new-card-default')?.checked;
+
+  if (!number || number.length < 12) {
+    toast('Indtast gyldigt kortnummer', 'error');
+    return;
+  }
+
+  if (!expiry || expiry.length < 5) {
+    toast('Indtast gyldig udløbsdato', 'error');
+    return;
+  }
+
+  const methods = JSON.parse(localStorage.getItem('orderflow_payment_methods') || '[]');
+
+  // If this is default, remove default from others
+  if (isDefault) {
+    methods.forEach(m => m.isDefault = false);
+  }
+
+  methods.push({
+    type: type,
+    lastFour: number.slice(-4),
+    expiry: expiry,
+    isDefault: isDefault || methods.length === 0
+  });
+
+  localStorage.setItem('orderflow_payment_methods', JSON.stringify(methods));
+
+  closePaymentMethodModal();
+  loadPaymentMethods();
+  toast('Betalingsmetode tilføjet', 'success');
+}
+
+function deletePaymentMethod(index) {
+  if (!confirm('Er du sikker på du vil fjerne denne betalingsmetode?')) return;
+
+  const methods = JSON.parse(localStorage.getItem('orderflow_payment_methods') || '[]');
+  methods.splice(index, 1);
+  localStorage.setItem('orderflow_payment_methods', JSON.stringify(methods));
+
+  loadPaymentMethods();
+  toast('Betalingsmetode fjernet', 'success');
+}
+
+// ========== Leveringsadresser ==========
+
+function loadDeliveryAddresses() {
+  const addresses = JSON.parse(localStorage.getItem('orderflow_delivery_addresses') || '[]');
+  const container = document.getElementById('delivery-addresses-list');
+
+  if (!container) return;
+
+  if (addresses.length === 0) {
+    container.innerHTML = `
+      <div class="empty" style="padding:40px;text-align:center">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+        </div>
+        <div style="margin-top:12px">Ingen adresser tilføjet</div>
+        <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">
+          Tilføj en adresse for hurtigere levering
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = addresses.map((addr, index) => `
+    <div class="setting-card" style="padding:var(--space-4)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:500;margin-bottom:4px">${addr.label || 'Adresse'}</div>
+          <div style="color:var(--text2)">${addr.street}</div>
+          <div style="color:var(--muted);font-size:var(--font-size-sm)">${addr.postalCode} ${addr.city}</div>
+          ${addr.note ? `<div style="color:var(--muted);font-size:var(--font-size-sm);margin-top:4px">${addr.note}</div>` : ''}
+        </div>
+        <div style="display:flex;gap:var(--space-2);align-items:center">
+          ${addr.isDefault ? '<span style="background:var(--accent);color:#fff;padding:2px 8px;border-radius:4px;font-size:12px">Standard</span>' : ''}
+          <button class="btn btn-secondary" style="padding:6px 12px" onclick="editAddress(${index})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button class="btn btn-secondary" style="padding:6px 12px" onclick="deleteAddress(${index})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showAddAddressModal(editIndex = null) {
+  const addresses = JSON.parse(localStorage.getItem('orderflow_delivery_addresses') || '[]');
+  const addr = editIndex !== null ? addresses[editIndex] : {};
+  const isEdit = editIndex !== null;
+
+  let modal = document.getElementById('address-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'address-modal';
+    modal.className = 'modal';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="closeAddressModal()"></div>
+    <div class="modal-content" style="max-width:450px">
+      <div class="modal-header">
+        <h3>${isEdit ? 'Rediger adresse' : 'Tilføj adresse'}</h3>
+        <button class="modal-close" onclick="closeAddressModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:var(--space-5)">
+        <div class="form-group">
+          <label class="form-label">Betegnelse</label>
+          <input type="text" class="input" id="address-label" placeholder="F.eks. Hjem, Arbejde" value="${addr.label || ''}">
+        </div>
+        <div class="form-group" style="margin-top:var(--space-4)">
+          <label class="form-label">Adresse</label>
+          <input type="text" class="input" id="address-street" placeholder="Gadenavn og nummer" value="${addr.street || ''}">
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1fr;gap:var(--space-4);margin-top:var(--space-4)">
+          <div class="form-group">
+            <label class="form-label">Postnummer</label>
+            <input type="text" class="input" id="address-postal" placeholder="2100" maxlength="4" value="${addr.postalCode || ''}">
+          </div>
+          <div class="form-group">
+            <label class="form-label">By</label>
+            <input type="text" class="input" id="address-city" placeholder="København" value="${addr.city || ''}">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:var(--space-4)">
+          <label class="form-label">Note (valgfri)</label>
+          <input type="text" class="input" id="address-note" placeholder="F.eks. Ring på døren" value="${addr.note || ''}">
+        </div>
+        <div style="margin-top:var(--space-4)">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="address-default" ${addr.isDefault ? 'checked' : ''}>
+            <span style="font-size:var(--font-size-sm)">Gør til standardadresse</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:var(--space-4);display:flex;gap:var(--space-3);justify-content:flex-end">
+        <button class="btn btn-secondary" onclick="closeAddressModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveAddress(${editIndex})">${isEdit ? 'Gem' : 'Tilføj'}</button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('active');
+}
+
+function closeAddressModal() {
+  const modal = document.getElementById('address-modal');
+  if (modal) modal.classList.remove('active');
+}
+
+function editAddress(index) {
+  showAddAddressModal(index);
+}
+
+function saveAddress(editIndex) {
+  const label = document.getElementById('address-label')?.value.trim();
+  const street = document.getElementById('address-street')?.value.trim();
+  const postalCode = document.getElementById('address-postal')?.value.trim();
+  const city = document.getElementById('address-city')?.value.trim();
+  const note = document.getElementById('address-note')?.value.trim();
+  const isDefault = document.getElementById('address-default')?.checked;
+
+  if (!street || !postalCode || !city) {
+    toast('Udfyld adresse, postnummer og by', 'error');
+    return;
+  }
+
+  const addresses = JSON.parse(localStorage.getItem('orderflow_delivery_addresses') || '[]');
+
+  if (isDefault) {
+    addresses.forEach(a => a.isDefault = false);
+  }
+
+  const newAddr = { label, street, postalCode, city, note, isDefault: isDefault || addresses.length === 0 };
+
+  if (editIndex !== null) {
+    addresses[editIndex] = newAddr;
+  } else {
+    addresses.push(newAddr);
+  }
+
+  localStorage.setItem('orderflow_delivery_addresses', JSON.stringify(addresses));
+
+  closeAddressModal();
+  loadDeliveryAddresses();
+  toast(editIndex !== null ? 'Adresse opdateret' : 'Adresse tilføjet', 'success');
+}
+
+function deleteAddress(index) {
+  if (!confirm('Er du sikker på du vil fjerne denne adresse?')) return;
+
+  const addresses = JSON.parse(localStorage.getItem('orderflow_delivery_addresses') || '[]');
+  addresses.splice(index, 1);
+  localStorage.setItem('orderflow_delivery_addresses', JSON.stringify(addresses));
+
+  loadDeliveryAddresses();
+  toast('Adresse fjernet', 'success');
+}
+
+// ========== Ordre Historik ==========
+
+let orderHistoryPage = 1;
+const ORDERS_PER_PAGE = 10;
+
+function loadOrderHistory() {
+  // Get orders from the orders_module (existing system) and mark completed ones
+  const allOrders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  const historyOrders = JSON.parse(localStorage.getItem('orderflow_order_history') || '[]');
+
+  // Combine completed orders from active orders + history
+  const completedFromActive = allOrders.filter(o =>
+    o.status === 'Færdig' || o.status === 'Afvist' || o.status === 'Annulleret'
+  );
+
+  // Merge without duplicates (by ID)
+  const existingIds = new Set(historyOrders.map(o => o.id));
+  completedFromActive.forEach(order => {
+    if (!existingIds.has(order.id)) {
+      historyOrders.push({
+        ...order,
+        completedAt: order.completedAt || new Date().toISOString()
+      });
+    }
+  });
+
+  // Sort by date (newest first)
+  historyOrders.sort((a, b) => new Date(b.completedAt || b.timestamp) - new Date(a.completedAt || a.timestamp));
+
+  // Save merged history
+  localStorage.setItem('orderflow_order_history', JSON.stringify(historyOrders));
+
+  // Apply filters and render
+  filterOrderHistory();
+}
+
+function filterOrderHistory() {
+  const fromDate = document.getElementById('history-from-date')?.value;
+  const toDate = document.getElementById('history-to-date')?.value;
+  const statusFilter = document.getElementById('history-status-filter')?.value;
+
+  let orders = JSON.parse(localStorage.getItem('orderflow_order_history') || '[]');
+
+  // Apply filters
+  if (fromDate) {
+    const from = new Date(fromDate);
+    orders = orders.filter(o => new Date(o.completedAt || o.timestamp) >= from);
+  }
+
+  if (toDate) {
+    const to = new Date(toDate);
+    to.setHours(23, 59, 59);
+    orders = orders.filter(o => new Date(o.completedAt || o.timestamp) <= to);
+  }
+
+  if (statusFilter) {
+    orders = orders.filter(o => o.status === statusFilter);
+  }
+
+  renderOrderHistory(orders);
+}
+
+function renderOrderHistory(orders) {
+  const container = document.getElementById('order-history-list');
+  const paginationContainer = document.getElementById('order-history-pagination');
+
+  if (!container) return;
+
+  if (orders.length === 0) {
+    container.innerHTML = `
+      <div class="empty" style="padding:60px;text-align:center">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+        </div>
+        <div style="margin-top:12px">Ingen ordrer fundet</div>
+        <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">
+          Dine gennemførte ordrer vises her
+        </div>
+      </div>
+    `;
+    if (paginationContainer) paginationContainer.innerHTML = '';
+    return;
+  }
+
+  // Pagination
+  const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
+  const startIndex = (orderHistoryPage - 1) * ORDERS_PER_PAGE;
+  const pageOrders = orders.slice(startIndex, startIndex + ORDERS_PER_PAGE);
+
+  container.innerHTML = pageOrders.map(order => {
+    const statusColors = {
+      'Færdig': { bg: 'rgba(52,211,153,0.15)', color: '#34d399', text: 'Gennemført' },
+      'Afvist': { bg: 'rgba(248,113,113,0.15)', color: '#f87171', text: 'Afvist' },
+      'Annulleret': { bg: 'rgba(156,163,175,0.15)', color: '#9ca3af', text: 'Annulleret' }
+    };
+    const status = statusColors[order.status] || statusColors['Færdig'];
+
+    const orderDate = new Date(order.completedAt || order.timestamp);
+    const formattedDate = orderDate.toLocaleDateString('da-DK', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+    const formattedTime = orderDate.toLocaleTimeString('da-DK', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return `
+      <div class="setting-card" style="padding:var(--space-4)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-3)">
+          <div>
+            <div style="font-weight:600;font-size:var(--font-size-base)">Ordre #${order.id}</div>
+            <div style="font-size:var(--font-size-sm);color:var(--muted)">${formattedDate} kl. ${formattedTime}</div>
+          </div>
+          <span style="background:${status.bg};color:${status.color};padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500">
+            ${status.text}
+          </span>
+        </div>
+
+        <div style="background:var(--bg3);padding:var(--space-3);border-radius:var(--radius-sm);margin-bottom:var(--space-3)">
+          <div style="font-size:var(--font-size-sm);color:var(--text2)">${order.items || 'Ingen varer angivet'}</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span style="font-size:var(--font-size-sm);color:var(--muted)">${order.orderType || 'Pickup'}</span>
+            ${order.address ? `<span style="font-size:var(--font-size-sm);color:var(--muted)"> - ${order.address}</span>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3)">
+            <span style="font-weight:600">${formatOrderPrice(order.total || 0)} kr</span>
+            ${order.status === 'Færdig' ? `
+              <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="reorder('${order.id}')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M1 20v-6h6"/>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                </svg>
+                Genbestil
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render pagination
+  if (paginationContainer && totalPages > 1) {
+    let paginationHTML = '';
+
+    if (orderHistoryPage > 1) {
+      paginationHTML += `<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToHistoryPage(${orderHistoryPage - 1})">←</button>`;
+    }
+
+    for (let i = 1; i <= totalPages; i++) {
+      const isActive = i === orderHistoryPage;
+      paginationHTML += `
+        <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}"
+                style="padding:6px 12px;min-width:36px"
+                onclick="goToHistoryPage(${i})">${i}</button>
+      `;
+    }
+
+    if (orderHistoryPage < totalPages) {
+      paginationHTML += `<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToHistoryPage(${orderHistoryPage + 1})">→</button>`;
+    }
+
+    paginationContainer.innerHTML = paginationHTML;
+  } else if (paginationContainer) {
+    paginationContainer.innerHTML = '';
+  }
+}
+
+function goToHistoryPage(page) {
+  orderHistoryPage = page;
+  filterOrderHistory();
+
+  // Scroll to top of list
+  document.getElementById('order-history-list')?.scrollIntoView({ behavior: 'smooth' });
+}
+
+function reorder(orderId) {
+  const history = JSON.parse(localStorage.getItem('orderflow_order_history') || '[]');
+  const order = history.find(o => String(o.id) === String(orderId));
+
+  if (!order) {
+    toast('Ordre ikke fundet', 'error');
+    return;
+  }
+
+  // Create new order based on previous
+  const newOrder = {
+    id: Date.now().toString(),
+    phone: order.phone,
+    customerName: order.customerName,
+    orderType: order.orderType,
+    address: order.address,
+    items: order.items,
+    total: order.total,
+    restaurantId: order.restaurantId,
+    status: 'Ny',
+    timestamp: new Date().toISOString()
+  };
+
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  orders.unshift(newOrder);
+  localStorage.setItem('orders_module', JSON.stringify(orders));
+
+  toast('Ordre genbestilt!', 'success');
+
+  // Navigate to orders page
+  showPage('orders');
+}
+
+function formatOrderPrice(price) {
+  return new Intl.NumberFormat('da-DK').format(price);
+}
+
+// =====================================================
+// WEB BUILDER FUNCTIONS
+// =====================================================
+
+// Default Web Builder configuration
+const defaultWebBuilderConfig = {
+  branding: {
+    name: 'Din Restaurant',
+    slogan: 'Autentisk smag siden 1985',
+    description: 'Velkommen til vores restaurant. Vi serverer de bedste retter med friske ingredienser.',
+    logo: '',
+    colors: {
+      primary: '#D4380D',
+      secondary: '#FFF7E6',
+      accent: '#FFA940',
+      text: '#1A1A1A'
+    },
+    fonts: {
+      heading: 'Playfair Display',
+      body: 'Inter'
+    }
+  },
+  contact: {
+    address: '',
+    postalCode: '',
+    city: '',
+    phone: '',
+    email: '',
+    socialMedia: {
+      facebook: '',
+      instagram: '',
+      tiktok: ''
+    }
+  },
+  businessHours: {
+    monday: { open: '11:00', close: '22:00', closed: false },
+    tuesday: { open: '11:00', close: '22:00', closed: false },
+    wednesday: { open: '11:00', close: '22:00', closed: false },
+    thursday: { open: '11:00', close: '22:00', closed: false },
+    friday: { open: '11:00', close: '23:00', closed: false },
+    saturday: { open: '12:00', close: '23:00', closed: false },
+    sunday: { open: '12:00', close: '21:00', closed: false }
+  },
+  delivery: {
+    enabled: true,
+    fee: 35,
+    minimumOrder: 150,
+    freeDeliveryThreshold: 300,
+    estimatedTime: 45
+  },
+  features: {
+    ordering: true,
+    loyalty: true,
+    pickup: true,
+    delivery: true,
+    customerAccounts: false,
+    pushNotifications: false
+  },
+  menu: {
+    currency: 'DKK',
+    taxRate: 25
+  },
+  images: {
+    hero: '',
+    featured: ''
+  }
+};
+
+let webBuilderConfig = null;
+
+// Navigate to Web Builder page with specific section
+function showWebBuilderPage(section) {
+  showPage('webbuilder');
+
+  // Open the webbuilder dropdown in sidebar
+  const dropdown = document.getElementById('nav-webbuilder');
+  if (dropdown) dropdown.classList.add('open');
+
+  // Switch to the correct tab
+  setTimeout(() => {
+    switchWebBuilderTab(section);
+  }, 50);
+}
+
+// Switch Web Builder tab
+function switchWebBuilderTab(tab) {
+  // Update tab buttons
+  document.querySelectorAll('#webbuilder-tabs .settings-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`#webbuilder-tabs .settings-tab[onclick*="'${tab}'"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  // Update content
+  document.querySelectorAll('.webbuilder-tab-content').forEach(c => c.classList.remove('active'));
+  const content = document.getElementById('webbuilder-content-' + tab);
+  if (content) content.classList.add('active');
+
+  // Special handling for hours tab
+  if (tab === 'timer') {
+    renderBusinessHoursGrid();
+  }
+}
+
+// Load Web Builder config from localStorage
+function loadWebBuilderConfig() {
+  const saved = localStorage.getItem('orderflow_webbuilder_config');
+  if (saved) {
+    try {
+      webBuilderConfig = JSON.parse(saved);
+    } catch (e) {
+      webBuilderConfig = { ...defaultWebBuilderConfig };
+    }
+  } else {
+    webBuilderConfig = { ...defaultWebBuilderConfig };
+  }
+
+  // Populate form fields
+  populateWebBuilderForms();
+}
+
+// Populate form fields from config
+function populateWebBuilderForms() {
+  if (!webBuilderConfig) return;
+
+  // Branding
+  const nameEl = document.getElementById('wb-name');
+  const sloganEl = document.getElementById('wb-slogan');
+  const descEl = document.getElementById('wb-description');
+  const logoEl = document.getElementById('wb-logo');
+
+  if (nameEl) nameEl.value = webBuilderConfig.branding?.name || '';
+  if (sloganEl) sloganEl.value = webBuilderConfig.branding?.slogan || '';
+  if (descEl) descEl.value = webBuilderConfig.branding?.description || '';
+  if (logoEl) logoEl.value = webBuilderConfig.branding?.logo || '';
+
+  // Colors
+  const colors = webBuilderConfig.branding?.colors || {};
+  ['primary', 'secondary', 'accent', 'text'].forEach(c => {
+    const colorEl = document.getElementById('wb-color-' + c);
+    const textEl = document.getElementById('wb-color-' + c + '-text');
+    if (colorEl) colorEl.value = colors[c] || defaultWebBuilderConfig.branding.colors[c];
+    if (textEl) textEl.value = colors[c] || defaultWebBuilderConfig.branding.colors[c];
+  });
+
+  // Fonts
+  const headingEl = document.getElementById('wb-font-heading');
+  const bodyEl = document.getElementById('wb-font-body');
+  if (headingEl) headingEl.value = webBuilderConfig.branding?.fonts?.heading || 'Playfair Display';
+  if (bodyEl) bodyEl.value = webBuilderConfig.branding?.fonts?.body || 'Inter';
+
+  // Images
+  const heroEl = document.getElementById('wb-hero-image');
+  const featuredEl = document.getElementById('wb-featured-image');
+  if (heroEl) heroEl.value = webBuilderConfig.images?.hero || '';
+  if (featuredEl) featuredEl.value = webBuilderConfig.images?.featured || '';
+
+  // Menu
+  const currencyEl = document.getElementById('wb-currency');
+  const taxEl = document.getElementById('wb-tax-rate');
+  if (currencyEl) currencyEl.value = webBuilderConfig.menu?.currency || 'DKK';
+  if (taxEl) taxEl.value = webBuilderConfig.menu?.taxRate || 25;
+
+  // Contact
+  const addressEl = document.getElementById('wb-address');
+  const postalEl = document.getElementById('wb-postal');
+  const cityEl = document.getElementById('wb-city');
+  const phoneEl = document.getElementById('wb-phone');
+  const emailEl = document.getElementById('wb-email');
+  if (addressEl) addressEl.value = webBuilderConfig.contact?.address || '';
+  if (postalEl) postalEl.value = webBuilderConfig.contact?.postalCode || '';
+  if (cityEl) cityEl.value = webBuilderConfig.contact?.city || '';
+  if (phoneEl) phoneEl.value = webBuilderConfig.contact?.phone || '';
+  if (emailEl) emailEl.value = webBuilderConfig.contact?.email || '';
+
+  // Delivery
+  const deliveryEnabledEl = document.getElementById('wb-delivery-enabled');
+  const feeEl = document.getElementById('wb-delivery-fee');
+  const minOrderEl = document.getElementById('wb-min-order');
+  const freeDeliveryEl = document.getElementById('wb-free-delivery');
+  const deliveryTimeEl = document.getElementById('wb-delivery-time');
+  if (deliveryEnabledEl) deliveryEnabledEl.checked = webBuilderConfig.delivery?.enabled !== false;
+  if (feeEl) feeEl.value = webBuilderConfig.delivery?.fee || 35;
+  if (minOrderEl) minOrderEl.value = webBuilderConfig.delivery?.minimumOrder || 150;
+  if (freeDeliveryEl) freeDeliveryEl.value = webBuilderConfig.delivery?.freeDeliveryThreshold || 300;
+  if (deliveryTimeEl) deliveryTimeEl.value = webBuilderConfig.delivery?.estimatedTime || 45;
+
+  // Features
+  const feats = webBuilderConfig.features || {};
+  const featOrderingEl = document.getElementById('wb-feat-ordering');
+  const featLoyaltyEl = document.getElementById('wb-feat-loyalty');
+  const featPickupEl = document.getElementById('wb-feat-pickup');
+  const featDeliveryEl = document.getElementById('wb-feat-delivery');
+  const featAccountsEl = document.getElementById('wb-feat-accounts');
+  const featPushEl = document.getElementById('wb-feat-push');
+  if (featOrderingEl) featOrderingEl.checked = feats.ordering !== false;
+  if (featLoyaltyEl) featLoyaltyEl.checked = feats.loyalty !== false;
+  if (featPickupEl) featPickupEl.checked = feats.pickup !== false;
+  if (featDeliveryEl) featDeliveryEl.checked = feats.delivery !== false;
+  if (featAccountsEl) featAccountsEl.checked = feats.customerAccounts === true;
+  if (featPushEl) featPushEl.checked = feats.pushNotifications === true;
+
+  // Social Media
+  const fbEl = document.getElementById('wb-facebook');
+  const igEl = document.getElementById('wb-instagram');
+  const ttEl = document.getElementById('wb-tiktok');
+  if (fbEl) fbEl.value = webBuilderConfig.contact?.socialMedia?.facebook || '';
+  if (igEl) igEl.value = webBuilderConfig.contact?.socialMedia?.instagram || '';
+  if (ttEl) ttEl.value = webBuilderConfig.contact?.socialMedia?.tiktok || '';
+}
+
+// Render business hours grid
+function renderBusinessHoursGrid() {
+  const container = document.getElementById('wb-hours-grid');
+  if (!container) return;
+
+  const days = [
+    { key: 'monday', label: 'Mandag' },
+    { key: 'tuesday', label: 'Tirsdag' },
+    { key: 'wednesday', label: 'Onsdag' },
+    { key: 'thursday', label: 'Torsdag' },
+    { key: 'friday', label: 'Fredag' },
+    { key: 'saturday', label: 'Lørdag' },
+    { key: 'sunday', label: 'Søndag' }
+  ];
+
+  const hours = webBuilderConfig?.businessHours || defaultWebBuilderConfig.businessHours;
+
+  container.innerHTML = days.map(day => {
+    const h = hours[day.key] || { open: '11:00', close: '22:00', closed: false };
+    return `
+      <div style="display:grid;grid-template-columns:100px 1fr 1fr 80px;gap:12px;align-items:center;margin-bottom:12px">
+        <span style="font-weight:500">${day.label}</span>
+        <input type="time" class="input" id="wb-hours-${day.key}-open" value="${h.open}" ${h.closed ? 'disabled' : ''} onchange="updateWebBuilderPreview()">
+        <input type="time" class="input" id="wb-hours-${day.key}-close" value="${h.close}" ${h.closed ? 'disabled' : ''} onchange="updateWebBuilderPreview()">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px">
+          <input type="checkbox" id="wb-hours-${day.key}-closed" ${h.closed ? 'checked' : ''} onchange="toggleDayClosed('${day.key}')">
+          Lukket
+        </label>
+      </div>
+    `;
+  }).join('');
+}
+
+// Toggle day closed
+function toggleDayClosed(day) {
+  const closedEl = document.getElementById('wb-hours-' + day + '-closed');
+  const openEl = document.getElementById('wb-hours-' + day + '-open');
+  const closeEl = document.getElementById('wb-hours-' + day + '-close');
+
+  if (closedEl && openEl && closeEl) {
+    const isClosed = closedEl.checked;
+    openEl.disabled = isClosed;
+    closeEl.disabled = isClosed;
+  }
+
+  updateWebBuilderPreview();
+}
+
+// Sync color picker with text input
+function syncColorInput(type) {
+  const textEl = document.getElementById('wb-color-' + type + '-text');
+  const colorEl = document.getElementById('wb-color-' + type);
+
+  if (textEl && colorEl) {
+    const value = textEl.value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      colorEl.value = value;
+      updateWebBuilderPreview();
+    }
+  }
+}
+
+// Collect form data into config object
+function collectWebBuilderFormData() {
+  const config = { ...defaultWebBuilderConfig };
+
+  // Branding
+  config.branding = {
+    name: document.getElementById('wb-name')?.value || '',
+    slogan: document.getElementById('wb-slogan')?.value || '',
+    description: document.getElementById('wb-description')?.value || '',
+    logo: document.getElementById('wb-logo')?.value || '',
+    colors: {
+      primary: document.getElementById('wb-color-primary')?.value || '#D4380D',
+      secondary: document.getElementById('wb-color-secondary')?.value || '#FFF7E6',
+      accent: document.getElementById('wb-color-accent')?.value || '#FFA940',
+      text: document.getElementById('wb-color-text')?.value || '#1A1A1A'
+    },
+    fonts: {
+      heading: document.getElementById('wb-font-heading')?.value || 'Playfair Display',
+      body: document.getElementById('wb-font-body')?.value || 'Inter'
+    }
+  };
+
+  // Images
+  config.images = {
+    hero: document.getElementById('wb-hero-image')?.value || '',
+    featured: document.getElementById('wb-featured-image')?.value || ''
+  };
+
+  // Menu
+  config.menu = {
+    currency: document.getElementById('wb-currency')?.value || 'DKK',
+    taxRate: parseInt(document.getElementById('wb-tax-rate')?.value) || 25
+  };
+
+  // Contact
+  config.contact = {
+    address: document.getElementById('wb-address')?.value || '',
+    postalCode: document.getElementById('wb-postal')?.value || '',
+    city: document.getElementById('wb-city')?.value || '',
+    phone: document.getElementById('wb-phone')?.value || '',
+    email: document.getElementById('wb-email')?.value || '',
+    socialMedia: {
+      facebook: document.getElementById('wb-facebook')?.value || '',
+      instagram: document.getElementById('wb-instagram')?.value || '',
+      tiktok: document.getElementById('wb-tiktok')?.value || ''
+    }
+  };
+
+  // Business Hours
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  config.businessHours = {};
+  days.forEach(day => {
+    config.businessHours[day] = {
+      open: document.getElementById('wb-hours-' + day + '-open')?.value || '11:00',
+      close: document.getElementById('wb-hours-' + day + '-close')?.value || '22:00',
+      closed: document.getElementById('wb-hours-' + day + '-closed')?.checked || false
+    };
+  });
+
+  // Delivery
+  config.delivery = {
+    enabled: document.getElementById('wb-delivery-enabled')?.checked || false,
+    fee: parseInt(document.getElementById('wb-delivery-fee')?.value) || 35,
+    minimumOrder: parseInt(document.getElementById('wb-min-order')?.value) || 150,
+    freeDeliveryThreshold: parseInt(document.getElementById('wb-free-delivery')?.value) || 300,
+    estimatedTime: parseInt(document.getElementById('wb-delivery-time')?.value) || 45
+  };
+
+  // Features
+  config.features = {
+    ordering: document.getElementById('wb-feat-ordering')?.checked || false,
+    loyalty: document.getElementById('wb-feat-loyalty')?.checked || false,
+    pickup: document.getElementById('wb-feat-pickup')?.checked || false,
+    delivery: document.getElementById('wb-feat-delivery')?.checked || false,
+    customerAccounts: document.getElementById('wb-feat-accounts')?.checked || false,
+    pushNotifications: document.getElementById('wb-feat-push')?.checked || false
+  };
+
+  return config;
+}
+
+// Save Web Builder config
+function saveWebBuilderConfig() {
+  webBuilderConfig = collectWebBuilderFormData();
+  localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(webBuilderConfig));
+  toast('Web Builder konfiguration gemt', 'success');
+  updateWebBuilderPreview();
+}
+
+// Update Web Builder preview
+function updateWebBuilderPreview() {
+  const config = collectWebBuilderFormData();
+  sendConfigToWebBuilderPreview(config);
+}
+
+// Send config to preview iframe
+function sendConfigToWebBuilderPreview(config) {
+  const previewFrame = document.getElementById('webbuilder-preview-frame');
+  if (!previewFrame || !previewFrame.contentWindow) return;
+
+  try {
+    previewFrame.contentWindow.postMessage({
+      type: 'UPDATE_RESTAURANT_CONFIG',
+      config: config
+    }, '*');
+  } catch (err) {
+    console.warn('Error sending config to Web Builder preview:', err);
+  }
+}
+
+// Initialize Web Builder preview
+function initWebBuilderPreview() {
+  loadWebBuilderConfig();
+
+  setTimeout(() => {
+    updateWebBuilderPreview();
+  }, 500);
+}
+
+// Open Web Builder preview in fullscreen
+function openWebBuilderPreviewFullscreen() {
+  const previewUrl = './Website builder/dist/index.html';
+  window.open(previewUrl, '_blank');
+}
+
+// Listen for messages from Web Builder preview
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'WEBBUILDER_READY') {
+    updateWebBuilderPreview();
+  }
+});
 
