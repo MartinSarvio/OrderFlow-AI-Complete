@@ -584,6 +584,29 @@
       z-index: 1000;
     }
 
+    /* Cutout curved edges for FAB */
+    .bottom-nav::before,
+    .bottom-nav::after {
+      content: '';
+      position: absolute;
+      top: -20px;
+      width: 20px;
+      height: 20px;
+      background: transparent;
+    }
+
+    .bottom-nav::before {
+      left: calc(50% - 48px);
+      border-bottom-right-radius: 20px;
+      box-shadow: 8px 8px 0 8px var(--white);
+    }
+
+    .bottom-nav::after {
+      right: calc(50% - 48px);
+      border-bottom-left-radius: 20px;
+      box-shadow: -8px 8px 0 8px var(--white);
+    }
+
     .nav-item {
       display: flex;
       flex-direction: column;
@@ -714,8 +737,7 @@
       }
     }
 
-    /* FAB button uses first .nav-item definition at line 586 */
-    /* FAB button */
+    /* FAB button - sits in the cutout notch */
     .nav-item-fab {
       background: transparent;
       border: none;
@@ -723,7 +745,7 @@
       margin: 0 8px;
       cursor: pointer;
       position: relative;
-      top: -12px;
+      top: -18px;
     }
 
     .fab-button {
@@ -735,7 +757,8 @@
       align-items: center;
       justify-content: center;
       color: white;
-      box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+      border: 4px solid var(--white);
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
       transition: all 0.2s;
     }
 
