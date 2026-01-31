@@ -1,5 +1,5 @@
 // api/places/search.js
-// Vercel Serverless Function for Google Places Autocomplete
+// Vercel Serverless Function for Serper.dev Places Search
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -18,67 +18,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Use Google Places API if key is available
-    const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+    const SERPER_API_KEY = process.env.SERPER_API_KEY || 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62';
 
-    if (GOOGLE_API_KEY) {
-      const googleResponse = await fetch(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&types=establishment&components=country:dk&language=da&key=${GOOGLE_API_KEY}`
-      );
-      const googleData = await googleResponse.json();
+    const response = await fetch('https://google.serper.dev/places', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': SERPER_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: query,
+        gl: 'dk',
+        hl: 'da',
+        location: 'Denmark',
+        num: 10
+      })
+    });
 
-      if (googleData.predictions && googleData.predictions.length > 0) {
-        const results = googleData.predictions.map(prediction => ({
-          place_id: prediction.place_id,
-          name: prediction.structured_formatting?.main_text || prediction.description,
-          address: prediction.structured_formatting?.secondary_text || '',
-          type: 'Restaurant'
-        }));
+    const data = await response.json();
 
-        return res.status(200).json({ results });
-      }
-    }
+    // Map Serper results to expected format
+    const results = (data.places || []).map(place => ({
+      place_id: place.cid || `serper_${Date.now()}`,
+      name: place.title,
+      address: place.address || '',
+      type: place.category || 'Virksomhed',
+      rating: place.rating,
+      reviews: place.ratingCount,
+      phone: place.phoneNumber,
+      website: place.website
+    }));
 
-    // Fallback: Return simulated results for demo
-    const simulatedResults = generateSimulatedResults(query);
-    return res.status(200).json({ results: simulatedResults });
+    return res.status(200).json({ results });
 
   } catch (error) {
-    console.error('Places API error:', error);
-    // Return simulated results on error
-    const simulatedResults = generateSimulatedResults(query);
-    return res.status(200).json({ results: simulatedResults });
+    console.error('Serper API error:', error);
+    // Return empty results on error - NO fake data
+    return res.status(200).json({ results: [] });
   }
-}
-
-function generateSimulatedResults(query) {
-  const queryLower = query.toLowerCase();
-
-  // Common Danish restaurant types and names
-  const restaurantTypes = ['Restaurant', 'Pizzeria', 'Café', 'Takeaway', 'Grill', 'Sushi', 'Thai', 'Burger'];
-  const areas = ['København', 'Aarhus', 'Odense', 'Aalborg', 'Frederiksberg', 'Helsingør', 'Roskilde'];
-
-  // Generate 3-5 results based on query
-  const results = [];
-  const numResults = Math.min(5, Math.max(3, Math.floor(Math.random() * 3) + 3));
-
-  for (let i = 0; i < numResults; i++) {
-    const type = restaurantTypes[Math.floor(Math.random() * restaurantTypes.length)];
-    const area = areas[Math.floor(Math.random() * areas.length)];
-    const streetNum = Math.floor(Math.random() * 150) + 1;
-    const streets = ['Vestergade', 'Østergade', 'Nørregade', 'Søndergade', 'Hovedgaden', 'Strandvejen', 'Amagerbrogade'];
-    const street = streets[Math.floor(Math.random() * streets.length)];
-
-    // Capitalize first letter of query for name
-    const capitalizedQuery = query.charAt(0).toUpperCase() + query.slice(1);
-
-    results.push({
-      place_id: `sim_${Date.now()}_${i}`,
-      name: i === 0 ? capitalizedQuery : `${capitalizedQuery} ${type}`,
-      address: `${street} ${streetNum}, ${area}`,
-      type: type
-    });
-  }
-
-  return results;
 }
