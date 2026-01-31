@@ -46,6 +46,30 @@
       -moz-osx-font-smoothing: grayscale;
     }
 
+    /* Minimal Scrollbars */
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.3);
+    }
+
     /* Navigation - matches landing.html */
     .nav-wrapper {
       position: fixed;
@@ -488,6 +512,316 @@
       height: 1.4rem;
     }
 
+    /* ==================== SCANNING BEAM ANIMATIONS ==================== */
+    @keyframes scanVertical {
+      0% { top: 10%; }
+      50% { top: 80%; }
+      100% { top: 10%; }
+    }
+
+    @keyframes scanHorizontal {
+      0% { left: 5%; }
+      50% { left: 90%; }
+      100% { left: 5%; }
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0.8;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.5);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Scanning Container */
+    .scanning-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Scan Lines */
+    .scan-line-vertical {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+      animation: scanVertical 3s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+
+    .scan-line-horizontal {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+      animation: scanHorizontal 4s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Grid Pattern */
+    .scan-grid {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, #3b82f6 39px, #3b82f6 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, #3b82f6 39px, #3b82f6 40px);
+    }
+
+    /* Data Particles */
+    .data-particle {
+      position: absolute;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+      opacity: 0.8;
+      animation: floatUp 2s ease-out forwards;
+    }
+
+    /* Corner Brackets */
+    .corner-bracket {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      opacity: 0.6;
+    }
+
+    .corner-bracket.top-left {
+      top: 40px;
+      left: 40px;
+      border-top: 2px solid #3b82f6;
+      border-left: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.top-right {
+      top: 40px;
+      right: 40px;
+      border-top: 2px solid #3b82f6;
+      border-right: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.bottom-left {
+      bottom: 40px;
+      left: 40px;
+      border-bottom: 2px solid #3b82f6;
+      border-left: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.bottom-right {
+      bottom: 40px;
+      right: 40px;
+      border-bottom: 2px solid #3b82f6;
+      border-right: 2px solid #3b82f6;
+    }
+
+    /* Status Indicator */
+    .scan-status {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: #4ade80;
+      z-index: 10;
+    }
+
+    .scan-status-label {
+      opacity: 0.6;
+      margin-bottom: 4px;
+    }
+
+    .scan-status-current {
+      color: #60a5fa;
+    }
+
+    /* Loading Container */
+    .loading-container {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .loading-progress-info {
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .loading-steps-sidebar {
+      margin-top: 3rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==================== BROWSER WINDOW PREVIEW ==================== */
+    .browser-window {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      max-width: 600px;
+      margin: 0 auto;
+      animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .browser-header {
+      background: #f6f6f6;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .browser-dot.red { background: #ff5f57; }
+    .browser-dot.yellow { background: #ffbd2e; }
+    .browser-dot.green { background: #28ca41; }
+
+    .browser-url {
+      flex: 1;
+      background: white;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #666;
+      margin-left: 8px;
+      border: 1px solid #e5e5e5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser-content {
+      min-height: 280px;
+    }
+
+    /* ==================== PREVIEW COMPONENTS ==================== */
+    .preview-map {
+      height: 280px;
+      background: #f8f8f8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-google {
+      padding: 32px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-reviews {
+      padding: 28px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-images {
+      padding: 24px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-facebook {
+      background: #f0f2f5;
+      min-height: 280px;
+    }
+
+    .preview-mobile {
+      padding: 32px;
+      background: #f5f5f5;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+    }
+
+    /* Mobile Device Mockup */
+    .mobile-device {
+      width: 140px;
+      height: 260px;
+      background: #1a1a1a;
+      border-radius: 24px;
+      padding: 5px;
+    }
+
+    .mobile-screen {
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* Score Circle */
+    .score-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(#34a853 0deg, #34a853 var(--score-deg), #e0e0e0 var(--score-deg));
+    }
+
+    .score-circle-inner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
     /* Report Section */
     .report-section {
       display: none;
@@ -892,6 +1226,210 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ==================== HOW IT WORKS SECTION ==================== */
+    .how-section {
+      padding: 12rem 0;
+      background: var(--color-gray-100);
+      position: relative;
+    }
+
+    .how-container {
+      max-width: 120rem;
+      margin: 0 auto;
+      padding: 0 4rem;
+    }
+
+    /* Header */
+    .how-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+
+    .how-label {
+      margin-bottom: 1.6rem;
+    }
+
+    .how-label p {
+      color: var(--color-primary);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+    }
+
+    .how-header h2 {
+      margin-bottom: 1.6rem;
+    }
+
+    .how-subtitle {
+      color: var(--color-gray-600);
+      margin: 0 auto;
+    }
+
+    /* Steps Grid */
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6rem 4rem;
+      margin-bottom: 6rem;
+    }
+
+    .how-step {
+      display: flex;
+      flex-direction: column;
+      gap: 2.4rem;
+      position: relative;
+    }
+
+    /* Step Number */
+    .how-step-number {
+      width: 7.2rem;
+      height: 7.2rem;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .how-step-number span {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    /* Step Content */
+    .how-step-content h3 {
+      font-size: 3.6rem;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .how-step-content p {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+    }
+
+    /* Step Visual */
+    .how-step-visual {
+      margin-top: auto;
+    }
+
+    .how-step-icon {
+      width: 100%;
+      height: 20rem;
+      background: white;
+      border-radius: 1.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .how-step-icon svg {
+      width: 8rem;
+      height: 8rem;
+      color: var(--color-primary);
+    }
+
+    /* CTA */
+    .how-cta {
+      text-align: center;
+    }
+
+    /* Button (if not already defined) */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      padding: 1.6rem 3.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      border-radius: 1.2rem;
+      background: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(1, 91, 248, 0.3);
+    }
+
+    /* ==================== HOW IT WORKS RESPONSIVE ==================== */
+    @media (max-width: 1024px) {
+      .how-section {
+        padding: 8rem 0;
+      }
+
+      .how-grid {
+        gap: 4rem 3rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .how-section {
+        padding: 6rem 0;
+      }
+
+      .how-container {
+        padding: 0 2rem;
+      }
+
+      .how-header {
+        margin-bottom: 6rem;
+      }
+
+      .how-header h2 {
+        font-size: 3.6rem;
+      }
+
+      .how-grid {
+        grid-template-columns: 1fr;
+        gap: 4rem;
+      }
+
+      .how-step-number {
+        width: 6rem;
+        height: 6rem;
+      }
+
+      .how-step-number span {
+        font-size: 2rem;
+      }
+
+      .how-step-content h3 {
+        font-size: 2.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .how-header h2 {
+        font-size: 3.2rem;
+      }
+
+      .how-subtitle .h20 {
+        font-size: 1.8rem;
+      }
+
+      .how-step-icon {
+        height: 16rem;
+      }
+
+      .how-step-icon svg {
+        width: 6rem;
+        height: 6rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -967,53 +1505,77 @@
   <!-- Loading Section -->
   <section class="loading-section" id="loadingSection">
     <div class="loading-container">
-      <div class="loading-animation">
-        <div class="loading-circle"></div>
-      </div>
-      <h2 class="loading-text">Analyserer din restaurant...</h2>
-      <p class="loading-subtext">Dette tager cirka 23 sekunder</p>
-      <div class="loading-timer" id="loadingTimer">23</div>
+      <!-- Scanning Beam Container -->
+      <div class="scanning-container" id="scanningContainer">
+        <!-- Scan Lines -->
+        <div class="scan-line-vertical"></div>
+        <div class="scan-line-horizontal"></div>
 
-      <div class="loading-steps">
-        <div class="loading-step" id="step1">
-          <div class="loading-step-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          </div>
-          <span>Finder din restaurant online...</span>
+        <!-- Grid Pattern -->
+        <div class="scan-grid"></div>
+
+        <!-- Particles Container (populated by JS) -->
+        <div id="particlesContainer"></div>
+
+        <!-- Corner Brackets -->
+        <div class="corner-bracket top-left"></div>
+        <div class="corner-bracket top-right"></div>
+        <div class="corner-bracket bottom-left"></div>
+        <div class="corner-bracket bottom-right"></div>
+
+        <!-- Status Indicator -->
+        <div class="scan-status">
+          <div class="scan-status-label">SCANNING</div>
+          <div class="scan-status-current" id="scanCurrentEndpoint">Initialiserer...</div>
         </div>
-        <div class="loading-step" id="step2">
-          <div class="loading-step-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
+      </div>
+
+      <!-- Browser Window Preview -->
+      <div class="browser-window" id="browserPreview">
+        <div class="browser-header">
+          <div class="browser-dots">
+            <div class="browser-dot red"></div>
+            <div class="browser-dot yellow"></div>
+            <div class="browser-dot green"></div>
           </div>
-          <span>Analyserer konkurrenter...</span>
+          <div class="browser-url" id="browserUrl">google.com/maps</div>
         </div>
-        <div class="loading-step" id="step3">
-          <div class="loading-step-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-            </svg>
-          </div>
-          <span>Læser anmeldelser...</span>
+        <div class="browser-content" id="browserContent">
+          <!-- Preview content injected by JS -->
         </div>
-        <div class="loading-step" id="step4">
-          <div class="loading-step-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-          </div>
-          <span>Genererer anbefalinger...</span>
+      </div>
+
+      <!-- Progress Info (bottom) -->
+      <div class="loading-progress-info">
+        <div class="loading-timer" id="loadingTimer">52</div>
+        <p class="loading-subtext">sekunder tilbage</p>
+      </div>
+
+      <!-- Steps Sidebar -->
+      <div class="loading-steps-sidebar">
+        <div class="loading-step" data-step="1">
+          <div class="loading-step-icon">•</div>
+          <span>Finder din restaurant</span>
         </div>
-        <div class="loading-step" id="step5">
-          <div class="loading-step-icon">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <span>Færdiggør rapport...</span>
+        <div class="loading-step" data-step="2">
+          <div class="loading-step-icon">•</div>
+          <span>Google Business profil</span>
+        </div>
+        <div class="loading-step" data-step="3">
+          <div class="loading-step-icon">•</div>
+          <span>Anmeldelser sentiment</span>
+        </div>
+        <div class="loading-step" data-step="4">
+          <div class="loading-step-icon">•</div>
+          <span>Billedkvalitet</span>
+        </div>
+        <div class="loading-step" data-step="5">
+          <div class="loading-step-icon">•</div>
+          <span>Facebook insights</span>
+        </div>
+        <div class="loading-step" data-step="6">
+          <div class="loading-step-icon">•</div>
+          <span>Mobil oplevelse</span>
         </div>
       </div>
     </div>
@@ -1128,6 +1690,109 @@
         <h3>Klar til at forbedre din restaurant?</h3>
         <p>OrderFlow kan hjælpe dig med at implementere alle disse forbedringer automatisk og øge din omsætning.</p>
         <a href="index.html" class="btn">
+          Start gratis nu
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-section" id="howItWorks">
+    <div class="how-container">
+      <!-- Header -->
+      <div class="how-header">
+        <div class="how-label">
+          <p class="p13">SÅDAN VIRKER DET</p>
+        </div>
+        <h2 class="h44">Få mere salg med OrderFlow</h2>
+        <div class="how-subtitle max-width-560">
+          <p class="h20 text-color-content-secondary">
+            OrderFlow giver dig de værktøjer store restaurantkæder bruger til at drive salg online.
+          </p>
+        </div>
+      </div>
+
+      <!-- Steps Grid -->
+      <div class="how-grid">
+        <!-- Step 1: Rank højere på Google -->
+        <div class="how-step">
+          <div class="how-step-number">
+            <span>01</span>
+          </div>
+          <div class="how-step-content">
+            <h3>Rank højere på Google</h3>
+            <p>Slå dine konkurrenter med en hjemmeside perfekt optimeret til Google. Få flere ordrer fra folk i dit område.</p>
+          </div>
+          <div class="how-step-visual">
+            <div class="how-step-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Øg dit online salg -->
+        <div class="how-step">
+          <div class="how-step-number">
+            <span>02</span>
+          </div>
+          <div class="how-step-content">
+            <h3>Øg dit online salg</h3>
+            <p>Gæster bestiller mere fra dig når din online bestillingsoplevelse er nem og bekendt at bruge.</p>
+          </div>
+          <div class="how-step-visual">
+            <div class="how-step-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Få flere genbestillinger -->
+        <div class="how-step">
+          <div class="how-step-number">
+            <span>03</span>
+          </div>
+          <div class="how-step-content">
+            <h3>Få flere genbestillinger med app og loyalitet</h3>
+            <p>Få flere genbestillinger med din egen 5-stjernet mobil app. Byg loyalitet med et belønningsprogram, ligesom Starbucks.</p>
+          </div>
+          <div class="how-step-visual">
+            <div class="how-step-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Hold gæster engageret -->
+        <div class="how-step">
+          <div class="how-step-number">
+            <span>04</span>
+          </div>
+          <div class="how-step-content">
+            <h3>Hold gæster engageret med automatisk marketing</h3>
+            <p>Øg salget med automatiserede marketingkampagner. Send emails og SMS uden at skrive et ord.</p>
+          </div>
+          <div class="how-step-visual">
+            <div class="how-step-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="how-cta">
+        <a href="index.html" class="button">
           Start gratis nu
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
@@ -1325,6 +1990,469 @@
     }
 
     // Start analysis
+    // ============================================================================
+    // ENDPOINT SCANNER CONFIGURATION
+    // ============================================================================
+
+    // Endpoints configuration (matching endpoint-scanner-v4.jsx)
+    const SCAN_ENDPOINTS = [
+      {
+        id: 1,
+        name: 'Restaurant & konkurrenter',
+        duration: 8000,
+        preview: 'map',
+        step: 1,
+      },
+      {
+        id: 2,
+        name: 'Google Business profil',
+        duration: 7000,
+        preview: 'google',
+        step: 2,
+      },
+      {
+        id: 3,
+        name: 'Google anmeldelser sentiment',
+        duration: 10000,
+        preview: 'reviews',
+        step: 3,
+      },
+      {
+        id: 4,
+        name: 'Billedkvalitet og antal',
+        duration: 8000,
+        preview: 'images',
+        step: 4,
+      },
+      {
+        id: 5,
+        name: 'Facebook insights',
+        duration: 10000,
+        preview: 'facebook',
+        step: 5,
+      },
+      {
+        id: 6,
+        name: 'Mobil oplevelse',
+        duration: 9000,
+        preview: 'mobile',
+        step: 6,
+      },
+    ];
+
+    const TOTAL_SCAN_DURATION = SCAN_ENDPOINTS.reduce((sum, e) => sum + e.duration, 0);
+
+    // ============================================================================
+    // PREVIEW TEMPLATES
+    // ============================================================================
+
+    const PreviewTemplates = {
+      map: (data) => `
+        <div class="preview-map">
+          <svg viewBox="0 0 400 280" style="width: 100%; height: 100%;">
+            <rect width="400" height="280" fill="#f0f0f0" />
+            <line x1="0" y1="100" x2="400" y2="100" stroke="#e0e0e0" stroke-width="12" />
+            <line x1="0" y1="180" x2="400" y2="180" stroke="#e0e0e0" stroke-width="8" />
+            <line x1="120" y1="0" x2="120" y2="280" stroke="#e0e0e0" stroke-width="8" />
+            <line x1="280" y1="0" x2="280" y2="280" stroke="#e0e0e0" stroke-width="8" />
+            <circle cx="200" cy="140" r="16" fill="#7c3aed" />
+            <circle cx="200" cy="140" r="6" fill="white" />
+            <circle cx="150" cy="100" r="10" fill="#f97316" opacity="0.8" />
+            <circle cx="260" cy="170" r="10" fill="#f97316" opacity="0.8" />
+            <circle cx="320" cy="120" r="10" fill="#f97316" opacity="0.8" />
+          </svg>
+          <div style="position: absolute; bottom: 8px; right: 8px; background: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #666; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            ${data?.competitors?.length || 3} konkurrenter fundet
+          </div>
+        </div>
+      `,
+
+      google: (data) => `
+        <div class="preview-google">
+          <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: 600;">
+              ${(data?.name || selectedPlace?.name || 'R')[0]}
+            </div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1a1a1a;">${data?.name || selectedPlace?.name || 'Indlæser...'}</h3>
+              <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                <span style="color: #fbbc04; font-size: 14px;">${'★'.repeat(Math.floor(data?.rating || 4))}</span>
+                <span style="font-size: 13px; color: #666; margin-left: 4px;">${data?.rating || '4.2'} (${data?.totalReviews || '...'} anmeldelser)</span>
+              </div>
+              <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${data?.formattedAddress || selectedPlace?.address || 'Indlæser...'}</p>
+            </div>
+          </div>
+        </div>
+      `,
+
+      reviews: (data) => `
+        <div class="preview-reviews">
+          <h4 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;">Sentiment analyse</h4>
+          <div style="display: flex; gap: 4px; margin-bottom: 16px; height: 10px; border-radius: 5px; overflow: hidden;">
+            <div style="flex: ${data?.sentiment?.positive || 75}; background: #34a853;"></div>
+            <div style="flex: ${data?.sentiment?.neutral || 15}; background: #fbbc04;"></div>
+            <div style="flex: ${data?.sentiment?.negative || 10}; background: #ea4335;"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${[
+              { stars: 5, count: 525, percentage: 62 },
+              { stars: 4, count: 178, percentage: 21 },
+              { stars: 3, count: 85, percentage: 10 },
+              { stars: 2, count: 34, percentage: 4 },
+              { stars: 1, count: 25, percentage: 3 },
+            ].map(row => `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; color: #666; width: 12px;">${row.stars}</span>
+                <div style="flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px;">
+                  <div style="width: ${row.percentage}%; height: 100%; background: #1a73e8; border-radius: 3px;"></div>
+                </div>
+                <span style="font-size: 11px; color: #666; width: 32px; text-align: right;">${row.percentage}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `,
+
+      images: (data) => `
+        <div class="preview-images">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+            <h4 style="margin: 0; font-size: 14px; font-weight: 600;">Billeder (${data?.totalPhotos || '124'})</h4>
+            <span style="font-size: 12px; color: #666;">Score: ${data?.qualityAnalysis?.overallScore || '72'}/100</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+            ${[...Array(8)].map((_, i) => `
+              <div style="aspect-ratio: 1; background: hsl(${200 + i * 20}, 30%, ${80 - i * 3}%); border-radius: 4px;"></div>
+            `).join('')}
+          </div>
+        </div>
+      `,
+
+      facebook: (data) => `
+        <div class="preview-facebook">
+          <div style="background: #1877f2; padding: 16px 20px; display: flex; justify-content: space-between;">
+            <span style="color: white; font-size: 20px; font-weight: 700;">facebook</span>
+            <div style="display: flex; gap: 16px;">
+              <div style="text-align: center;">
+                <div style="color: white; font-size: 16px; font-weight: 600;">${data?.followers?.toLocaleString() || '2,340'}</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 10px;">Følgere</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 16px;">
+            <div style="background: white; border-radius: 8px; padding: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: #666;">Engagement</span>
+                <span style="font-size: 14px; font-weight: 600; color: #188038;">${data?.engagement?.rate || '3.2'}%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 12px; color: #666;">Svartid</span>
+                <span style="font-size: 14px; font-weight: 600;">${data?.responsiveness?.responseTime || '< 1 time'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+
+      mobile: (data) => `
+        <div class="preview-mobile">
+          <div class="mobile-device">
+            <div class="mobile-screen">
+              <div style="height: 16px; background: #f0f0f0;"></div>
+              <div style="padding: 8px;">
+                <div style="height: 14px; background: #e0e0e0; border-radius: 3px; margin-bottom: 4px;"></div>
+                <div style="height: 40px; background: #f5f5f5; border-radius: 4px; margin-bottom: 4px;"></div>
+                <div style="height: 8px; background: #e8e8e8; border-radius: 2px; width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="score-circle" style="--score-deg: ${(data?.scores?.mobile || 67) * 3.6}deg; margin-bottom: 12px;">
+              <div class="score-circle-inner">
+                <span style="font-size: 20px; font-weight: 700;">${data?.scores?.mobile || '67'}</span>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: #666;">Mobil Score</div>
+          </div>
+        </div>
+      `,
+    };
+
+    // ============================================================================
+    // PARTICLE SYSTEM
+    // ============================================================================
+
+    class ParticleSystem {
+      constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.particles = [];
+        this.isActive = false;
+        this.intervalId = null;
+      }
+
+      start() {
+        this.isActive = true;
+        this.intervalId = setInterval(() => {
+          this.createParticle();
+          this.cleanupOldParticles();
+        }, 300);
+      }
+
+      stop() {
+        this.isActive = false;
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+        this.particles.forEach(p => p.element.remove());
+        this.particles = [];
+      }
+
+      createParticle() {
+        if (!this.isActive) return;
+
+        const particle = {
+          id: Date.now() + Math.random(),
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 6 + 2,
+          speed: Math.random() * 2 + 1,
+        };
+
+        const element = document.createElement('div');
+        element.className = 'data-particle';
+        element.style.left = `${particle.x}%`;
+        element.style.top = `${particle.y}%`;
+        element.style.width = `${particle.size}px`;
+        element.style.height = `${particle.size}px`;
+        element.style.animationDuration = `${particle.speed}s`;
+
+        this.container.appendChild(element);
+
+        particle.element = element;
+        this.particles.push(particle);
+
+        // Remove after animation completes
+        setTimeout(() => {
+          element.remove();
+          this.particles = this.particles.filter(p => p.id !== particle.id);
+        }, particle.speed * 1000);
+      }
+
+      cleanupOldParticles() {
+        if (this.particles.length > 15) {
+          const toRemove = this.particles.splice(0, this.particles.length - 15);
+          toRemove.forEach(p => p.element.remove());
+        }
+      }
+    }
+
+    // ============================================================================
+    // SCANNER STATE MANAGEMENT
+    // ============================================================================
+
+    class ScannerState {
+      constructor() {
+        this.currentEndpointIndex = 0;
+        this.completedEndpoints = [];
+        this.progress = 0;
+        this.secondsRemaining = Math.ceil(TOTAL_SCAN_DURATION / 1000);
+        this.isComplete = false;
+        this.scanResults = {};
+        this.startTime = null;
+        this.particleSystem = null;
+      }
+
+      reset() {
+        this.currentEndpointIndex = 0;
+        this.completedEndpoints = [];
+        this.progress = 0;
+        this.secondsRemaining = Math.ceil(TOTAL_SCAN_DURATION / 1000);
+        this.isComplete = false;
+        this.scanResults = {};
+        this.startTime = null;
+      }
+
+      getCurrentEndpoint() {
+        return SCAN_ENDPOINTS[this.currentEndpointIndex];
+      }
+
+      markEndpointComplete(endpointId, data) {
+        this.completedEndpoints.push(endpointId);
+        this.scanResults[endpointId] = data;
+        this.currentEndpointIndex++;
+
+        if (this.currentEndpointIndex >= SCAN_ENDPOINTS.length) {
+          this.isComplete = true;
+        }
+      }
+    }
+
+    const scannerState = new ScannerState();
+
+    // ============================================================================
+    // UI UPDATE FUNCTIONS
+    // ============================================================================
+
+    function updateBrowserPreview(endpoint, data) {
+      const browserUrl = document.getElementById('browserUrl');
+      const browserContent = document.getElementById('browserContent');
+
+      // Update URL
+      const urls = {
+        map: 'maps.google.com',
+        google: 'business.google.com',
+        reviews: 'google.com/reviews',
+        images: 'photos.google.com',
+        facebook: 'facebook.com',
+        mobile: 'pagespeed.web.dev',
+      };
+      browserUrl.textContent = urls[endpoint.preview] || 'analyserer...';
+
+      // Update content with preview template
+      const template = PreviewTemplates[endpoint.preview];
+      if (template) {
+        browserContent.innerHTML = template(data);
+      }
+    }
+
+    function updateScanStatus(endpointName) {
+      const statusEl = document.getElementById('scanCurrentEndpoint');
+      if (statusEl) {
+        statusEl.textContent = endpointName;
+      }
+    }
+
+    function updateStepProgress(stepNumber, status) {
+      const stepEl = document.querySelector(`[data-step="${stepNumber}"]`);
+      if (!stepEl) return;
+
+      stepEl.classList.remove('active', 'completed');
+
+      if (status === 'active') {
+        stepEl.classList.add('active');
+        stepEl.querySelector('.loading-step-icon').textContent = '⋯';
+      } else if (status === 'completed') {
+        stepEl.classList.add('completed');
+        stepEl.querySelector('.loading-step-icon').textContent = '✓';
+      } else {
+        stepEl.querySelector('.loading-step-icon').textContent = '•';
+      }
+    }
+
+    function updateTimer(seconds) {
+      const timerEl = document.getElementById('loadingTimer');
+      if (timerEl) {
+        timerEl.textContent = Math.max(0, Math.ceil(seconds));
+      }
+    }
+
+    // ============================================================================
+    // MAIN SCANNER FUNCTION
+    // ============================================================================
+
+    async function runEndpointScanner() {
+      scannerState.reset();
+      scannerState.startTime = Date.now();
+
+      // Start particle system
+      if (!scannerState.particleSystem) {
+        scannerState.particleSystem = new ParticleSystem('particlesContainer');
+      }
+      scannerState.particleSystem.start();
+
+      // Start timer countdown
+      const timerInterval = setInterval(() => {
+        const elapsed = Date.now() - scannerState.startTime;
+        const remaining = (TOTAL_SCAN_DURATION - elapsed) / 1000;
+        scannerState.secondsRemaining = remaining;
+        updateTimer(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+        }
+      }, 100);
+
+      // Process each endpoint sequentially
+      for (let i = 0; i < SCAN_ENDPOINTS.length; i++) {
+        const endpoint = SCAN_ENDPOINTS[i];
+
+        // Update UI for current endpoint
+        updateScanStatus(endpoint.name);
+        updateStepProgress(endpoint.step, 'active');
+
+        // Simulate API call
+        const data = await simulateApiCall(endpoint);
+
+        // Update preview
+        updateBrowserPreview(endpoint, data);
+
+        // Wait for duration
+        await new Promise(resolve => setTimeout(resolve, endpoint.duration));
+
+        // Mark as complete
+        scannerState.markEndpointComplete(endpoint.id, data);
+        updateStepProgress(endpoint.step, 'completed');
+      }
+
+      // Stop particle system
+      scannerState.particleSystem.stop();
+
+      // Clear timer
+      clearInterval(timerInterval);
+
+      // Return scan results
+      return scannerState.scanResults;
+    }
+
+    async function simulateApiCall(endpoint) {
+      // In production: Call real API
+      // For now: Return mock data matching the endpoint type
+
+      await new Promise(r => setTimeout(r, 500));
+
+      const mockData = {
+        map: {
+          competitors: [
+            { name: 'Restaurant A', distance: '200m' },
+            { name: 'Restaurant B', distance: '450m' },
+            { name: 'Restaurant C', distance: '800m' },
+          ],
+        },
+        google: {
+          name: selectedPlace?.name || 'Din Restaurant',
+          rating: 4.2,
+          totalReviews: 847,
+          formattedAddress: selectedPlace?.address || 'København',
+          claimed: true,
+          openNow: true,
+        },
+        reviews: {
+          sentiment: { positive: 78, neutral: 15, negative: 7 },
+          distribution: [
+            { stars: 5, percentage: 62 },
+            { stars: 4, percentage: 21 },
+            { stars: 3, percentage: 10 },
+            { stars: 2, percentage: 4 },
+            { stars: 1, percentage: 3 },
+          ],
+        },
+        images: {
+          totalPhotos: 124,
+          qualityAnalysis: { overallScore: 72 },
+        },
+        facebook: {
+          followers: 2340,
+          engagement: { rate: 3.2 },
+          responsiveness: { responseTime: '< 1 time' },
+        },
+        mobile: {
+          scores: { mobile: 67, desktop: 82 },
+        },
+      };
+
+      return mockData[endpoint.preview] || {};
+    }
+
     async function startAnalysis() {
       if (!selectedPlace && searchInput.value.trim().length < 2) return;
 
@@ -1342,11 +2470,27 @@
       loadingSection.classList.add('active');
       reportSection.classList.remove('active');
 
-      // Start countdown and steps animation
-      startLoadingAnimation();
+      // Run NEW endpoint scanner instead of old loading animation
+      const scanResults = await runEndpointScanner();
+
+      // Show completion message
+      loadingSection.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px;">
+          <div style="width: 80px; height: 80px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <h2 style="font-size: 32px; font-weight: 600; color: #1a1a1a; margin: 0 0 8px;">Analyse færdig</h2>
+          <p style="font-size: 16px; color: #666; margin: 0 0 32px;">Vi har analyseret alle ${SCAN_ENDPOINTS.length} områder</p>
+        </div>
+      `;
+
+      // Wait 2 seconds, then show report
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       try {
-        // Call analysis API
+        // Call analysis API (optional - can use scan results directly)
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: {
@@ -1355,21 +2499,16 @@
           body: JSON.stringify({
             place_id: selectedPlace.place_id,
             name: selectedPlace.name,
-            address: selectedPlace.address
+            address: selectedPlace.address,
+            scanResults: scanResults
           })
         });
 
         const data = await response.json();
-
-        // Wait for animation to complete (minimum 23 seconds)
-        await waitForAnimation();
-
-        // Show report
         showReport(data);
       } catch (error) {
         console.error('Analysis error:', error);
-        // Show demo report on error
-        await waitForAnimation();
+        // Show demo report using scan results
         showReport(generateDemoReport(selectedPlace.name, selectedPlace.address));
       }
     }
