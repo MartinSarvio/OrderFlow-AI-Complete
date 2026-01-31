@@ -146,17 +146,21 @@
 
     *{margin:0;padding:0;box-sizing:border-box}
 
-    /* ==================== MINIMAL SCROLLBARS ==================== */
+    /* ==================== AUTO-HIDE SCROLLBARS ==================== */
     /* Firefox */
     * {
       scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+
+    *:hover {
       scrollbar-color: rgba(155, 155, 155, 0.3) transparent;
     }
 
     /* WebKit (Chrome, Safari, Edge) */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
     }
 
     ::-webkit-scrollbar-track {
@@ -164,24 +168,37 @@
     }
 
     ::-webkit-scrollbar-thumb {
-      background: rgba(155, 155, 155, 0.3);
+      background: transparent;
       border-radius: 10px;
+      transition: background 0.3s ease;
     }
 
-    ::-webkit-scrollbar-thumb:hover {
+    *:hover::-webkit-scrollbar-thumb {
+      background: rgba(155, 155, 155, 0.3);
+    }
+
+    *:hover::-webkit-scrollbar-thumb:hover {
       background: rgba(155, 155, 155, 0.5);
     }
 
     /* Light mode scrollbars */
     [data-theme="light"] * {
+      scrollbar-color: transparent transparent;
+    }
+
+    [data-theme="light"] *:hover {
       scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
     }
 
     [data-theme="light"] ::-webkit-scrollbar-thumb {
+      background: transparent;
+    }
+
+    [data-theme="light"] *:hover::-webkit-scrollbar-thumb {
       background: rgba(0, 0, 0, 0.2);
     }
 
-    [data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    [data-theme="light"] *:hover::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
     }
 
