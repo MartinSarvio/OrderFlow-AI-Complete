@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Scanner Demo</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f7;
+      min-height: 100vh;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(30px) rotate(-1deg); } to { opacity: 1; transform: translateY(0) rotate(-1deg); } }
+    @keyframes scanVertical { 0% { top: 10%; } 50% { top: 80%; } 100% { top: 10%; } }
+    @keyframes scanHorizontal { 0% { left: 5%; } 50% { left: 90%; } 100% { left: 5%; } }
+    @keyframes floatUp { 0% { opacity: 0.8; transform: translateY(0) scale(1); } 100% { opacity: 0; transform: translateY(-50px) scale(0.5); } }
+    
+    /* Search Page Styles */
+    .search-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: #f5f5f7;
+    }
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    .search-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+    .search-subtitle {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 32px;
+    }
+    .search-input-wrapper {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 16px;
+      border: 2px solid #e5e5e5;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: #3b82f6;
+    }
+    .search-button {
+      width: 100%;
+      padding: 16px 24px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .search-button:hover {
+      background: #2563eb;
+    }
+    .search-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .search-results {
+      margin-top: 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 12px;
+      overflow: hidden;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .search-result-item {
+      padding: 16px 20px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      transition: background 0.15s;
+    }
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+    .search-result-item:hover {
+      background: #f9fafb;
+    }
+    .search-result-name {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+    .search-result-address {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    .search-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      gap: 8px;
+      color: #6b7280;
+    }
+    .search-error {
+      padding: 16px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      color: #dc2626;
+      font-size: 14px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef, useMemo } = React;
+
+    // =============================================================================
+    // CONFIGURATION
+    // =============================================================================
+    const BUSINESS_CONFIG = {
+      name: 'Restaurant Nordlys',
+      searchQuery: 'Restaurant Nordlys Aarhus',
+      website: 'https://restaurantnordlys.dk',
+      facebookPageId: '',
+      googlePlaceId: '',
+    };
+
+    const API_KEYS = {
+      google: 'DIN_GOOGLE_API_KEY',
+    };
+
+    const API_CONFIG = {
+      retryAttempts: 3,
+      retryDelay: 1000,
+      timeout: 30000,
+      cacheDuration: 5 * 60 * 1000,
+      rateLimitDelay: 200,
+    };
+
+    // =============================================================================
+    // UTILITY FUNCTIONS
+    // =============================================================================
+
+    async function withRetry(asyncFn, options = {}) {
+      const { attempts = API_CONFIG.retryAttempts, delay = API_CONFIG.retryDelay } = options;
+      let lastError;
+
+      for (let i = 0; i < attempts; i++) {
+        try {
+          return await asyncFn();
+        } catch (error) {
+          lastError = error;
+          if (error.status >= 400 && error.status < 500) throw error;
+          if (i < attempts - 1) {
+            const backoffDelay = delay * Math.pow(2, i);
+            await new Promise(resolve => setTimeout(resolve, backoffDelay));
+          }
+        }
+      }
+      throw lastError;
+    }
+
+    class ApiError extends Error {
+      constructor(message, status, code, details = {}) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        this.code = code;
+        this.details = details;
+        this.timestamp = new Date().toISOString();
+      }
+    }
+
+    // =============================================================================
+    // REAL API SERVICE
+    // =============================================================================
+    const RealApiService = {
+      async searchBusiness(query) {
+        const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+        if (!response.ok) throw new Error('Search failed');
+        const data = await response.json();
+        return data.results || [];
+      },
+
+      async analyzeBusiness(placeId, name, address) {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ place_id: placeId, name, address })
+        });
+        if (!response.ok) throw new Error('Analysis failed');
+        return await response.json();
+      },
+
+      async searchBusinessAndCompetitors(query) {
+        await new Promise(r => setTimeout(r, 2000));
+        return {
+          business: { 
+            id: 'mock-place-1',
+            name: BUSINESS_CONFIG.name, 
+            lat: 56.1629, 
+            lng: 10.2039, 
+            formattedAddress: 'Vestergade 12, 8000 Aarhus C',
+            rating: 4.2,
+            reviewCount: 847,
+          },
+          competitors: [
+            { id: 'mock-comp-1', name: 'Café Smagløs', distance: 120, rating: 4.1, reviews: 234 },
+            { id: 'mock-comp-2', name: 'Bistro Midtby', distance: 350, rating: 4.4, reviews: 567 },
+            { id: 'mock-comp-3', name: 'Den Grønne Gaffel', distance: 500, rating: 4.0, reviews: 189 },
+          ],
+        };
+      },
+
+      async getBusinessDetails() {
+        await new Promise(r => setTimeout(r, 1500));
+        return {
+          name: BUSINESS_CONFIG.name,
+          rating: 4.2,
+          totalReviews: 847,
+          formattedAddress: 'Vestergade 12, 8000 Aarhus C',
+          formattedPhone: '+45 86 12 34 56',
+          website: BUSINESS_CONFIG.website,
+          openNow: true,
+          weekdayHours: ['Man-Tor: 11:00-22:00', 'Fre-Lør: 11:00-23:00', 'Søn: 12:00-21:00'],
+        };
+      },
+
+      async getReviewsWithSentiment() {
+        await new Promise(r => setTimeout(r, 3000));
+        return {
+          totalReviews: 847,
+          averageRating: 4.2,
+          sentiment: { positive: 78, neutral: 15, negative: 7 },
+          distribution: [
+            { stars: 5, count: 525, percentage: 62 },
+            { stars: 4, count: 178, percentage: 21 },
+            { stars: 3, count: 85, percentage: 10 },
+            { stars: 2, count: 34, percentage: 4 },
+            { stars: 1, count: 25, percentage: 3 },
+          ],
+          topKeywords: [
+            { term: 'god mad', count: 234, sentiment: 'positive' },
+            { term: 'hyggelig', count: 189, sentiment: 'positive' },
+            { term: 'venlig service', count: 156, sentiment: 'positive' },
+          ],
+        };
+      },
+
+      async analyzePhotos() {
+        await new Promise(r => setTimeout(r, 2500));
+        return {
+          totalPhotos: 124,
+          breakdown: { ownerUploaded: 45, userUploaded: 79 },
+          qualityAnalysis: { overallScore: 72 },
+        };
+      },
+
+      async getFacebookInsights() {
+        await new Promise(r => setTimeout(r, 2000));
+        return {
+          page: { name: BUSINESS_CONFIG.name, username: 'restaurantnordlys' },
+          followers: 2340,
+          likes: 2189,
+          rating: 4.4,
+          engagement: { rate: 3.2, impressions: 4500 },
+        };
+      },
+
+      async getMobileExperience(url) {
+        await new Promise(r => setTimeout(r, 3500));
+        return {
+          url: url,
+          scores: { mobile: 67, desktop: 82, performance: 65, accessibility: 78, bestPractices: 85, seo: 72 },
+          coreWebVitals: {
+            LCP: { value: '2.8s', rating: 'needs-improvement' },
+            FID: { value: '120ms', rating: 'good' },
+            CLS: { value: '0.15', rating: 'needs-improvement' },
+          },
+        };
+      },
+    };
+
+    const ApiService = RealApiService;
+
+    // =============================================================================
+    // ENDPOINT DEFINITIONS
+    // =============================================================================
+    const createEndpoints = (config) => [
+      {
+        id: 1,
+        name: `${config.name} & konkurrenter`,
+        duration: 8000,
+        preview: 'map',
+        apiCall: () => ApiService.searchBusinessAndCompetitors(config.searchQuery),
+      },
+      {
+        id: 2,
+        name: 'Google Business profil',
+        duration: 7000,
+        preview: 'google',
+        apiCall: () => ApiService.getBusinessDetails(),
+      },
+      {
+        id: 3,
+        name: 'Google anmeldelser sentiment',
+        duration: 10000,
+        preview: 'reviews',
+        apiCall: () => ApiService.getReviewsWithSentiment(),
+      },
+      {
+        id: 4,
+        name: 'Billedkvalitet og antal',
+        duration: 8000,
+        preview: 'images',
+        apiCall: () => ApiService.analyzePhotos(),
+      },
+      {
+        id: 5,
+        name: config.facebookUrl || 'Facebook side',
+        duration: 10000,
+        preview: 'facebook',
+        apiCall: () => ApiService.getFacebookInsights(),
+      },
+      {
+        id: 6,
+        name: 'Mobil oplevelse',
+        duration: 12000,
+        preview: 'mobile',
+        apiCall: () => ApiService.getMobileExperience(config.website),
+      },
+    ];
+
+    // =============================================================================
+    // UI COMPONENTS
+    // =============================================================================
+
+    const CheckIcon = () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    );
+
+    const Spinner = () => (
+      <div style={{ display: 'flex', gap: 2 }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: '#666', animation: `pulse 1s ease-in-out ${i * 0.15}s infinite` }} />
+        ))}
+      </div>
+    );
+
+    const ScanningBeam = ({ scanData, isScanning }) => {
+      const [particles, setParticles] = useState([]);
+
+      useEffect(() => {
+        if (!isScanning) return;
+        const interval = setInterval(() => {
+          setParticles(prev => [...prev, { 
+            id: Date.now(), 
+            x: Math.random() * 100, 
+            y: Math.random() * 100, 
+            size: Math.random() * 6 + 2, 
+            speed: Math.random() * 2 + 1 
+          }].slice(-15));
+        }, 300);
+        return () => clearInterval(interval);
+      }, [isScanning]);
+
+      return (
+        <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+          <div style={{ 
+            position: 'absolute', 
+            left: 0, 
+            right: 0, 
+            height: 2, 
+            background: 'linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent)', 
+            animation: isScanning ? 'scanVertical 3s ease-in-out infinite' : 'none', 
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' 
+          }} />
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            bottom: 0, 
+            width: 2, 
+            background: 'linear-gradient(180deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent)', 
+            animation: isScanning ? 'scanHorizontal 4s ease-in-out infinite' : 'none', 
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.5)' 
+          }} />
+          {particles.map(p => (
+            <div key={p.id} style={{ 
+              position: 'absolute', 
+              left: `${p.x}%`, 
+              top: `${p.y}%`, 
+              width: p.size, 
+              height: p.size, 
+              borderRadius: '50%', 
+              background: '#3b82f6', 
+              boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)', 
+              animation: `floatUp ${p.speed}s ease-out forwards`, 
+              opacity: 0.8 
+            }} />
+          ))}
+          {scanData && isScanning && (
+            <div style={{ 
+              position: 'absolute', 
+              top: 20, 
+              right: 20, 
+              background: 'rgba(0,0,0,0.75)', 
+              padding: '10px 14px', 
+              borderRadius: 8, 
+              fontSize: 11, 
+              fontFamily: 'monospace', 
+              color: '#4ade80' 
+            }}>
+              <div style={{ opacity: 0.6, marginBottom: 4 }}>SCANNING</div>
+              <div style={{ color: '#60a5fa' }}>{scanData.current}</div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const BrowserWindow = ({ children, url }) => (
+      <div style={{ 
+        background: 'white', 
+        borderRadius: 12, 
+        boxShadow: '0 25px 80px rgba(0,0,0,0.15)', 
+        overflow: 'hidden', 
+        transform: 'rotate(-1deg)', 
+        animation: 'slideIn 0.6s ease', 
+        maxWidth: 600, 
+        position: 'relative', 
+        zIndex: 10 
+      }}>
+        <div style={{ 
+          background: '#f6f6f6', 
+          padding: '12px 16px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 8, 
+          borderBottom: '1px solid #e5e5e5' 
+        }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ff5f57' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e' }} />
+            <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28ca41' }} />
+          </div>
+          {url && (
+            <div style={{ 
+              flex: 1, 
+              background: 'white', 
+              borderRadius: 6, 
+              padding: '6px 12px', 
+              fontSize: 12, 
+              color: '#666', 
+              marginLeft: 8, 
+              border: '1px solid #e5e5e5', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis', 
+              whiteSpace: 'nowrap' 
+            }}>
+              {url}
+            </div>
+          )}
+        </div>
+        <div>{children}</div>
+      </div>
+    );
+
+    const MapPreview = ({ data }) => (
+      <div style={{ 
+        height: 280, 
+        background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        flexDirection: 'column',
+        color: '#4338ca' 
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+        <div style={{ fontSize: 16, fontWeight: 500 }}>
+          {data?.business?.name ? `Scanning: ${data.business.name}` : 'Scanning lokation...'}
+        </div>
+        {data?.competitors && (
+          <div style={{ fontSize: 14, marginTop: 8, opacity: 0.8 }}>
+            {data.competitors.length} konkurrenter fundet
+          </div>
+        )}
+      </div>
+    );
+
+    const GooglePreview = ({ data }) => (
+      <div style={{ padding: 32, background: 'white' }}>
+        <h3 style={{ margin: '0 0 8px', fontSize: 20 }}>
+          {data?.name || 'Henter profil...'}
+        </h3>
+        <p style={{ color: '#666', margin: '8px 0 0', fontSize: 14 }}>
+          {data?.rating ? (
+            <>
+              <span style={{ color: '#fbbf24' }}>★</span> {data.rating} 
+              <span style={{ color: '#9ca3af', marginLeft: 4 }}>
+                ({data.totalReviews || '...'} anmeldelser)
+              </span>
+            </>
+          ) : 'Indlæser rating...'}
+        </p>
+      </div>
+    );
+
+    const ReviewsPreview = ({ data }) => (
+      <div style={{ padding: 28, background: 'white' }}>
+        <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>Sentiment Analyse</h4>
+        {data?.sentiment ? (
+          <div>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 12, 
+              marginBottom: 12 
+            }}>
+              <div style={{ 
+                width: 60, 
+                height: 60, 
+                borderRadius: '50%', 
+                background: '#22c55e',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: 18,
+                fontWeight: 'bold',
+              }}>
+                {data.sentiment.positive}%
+              </div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Positivt</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>
+                  {data.totalReviews} anmeldelser
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ color: '#9ca3af' }}>Analyserer...</div>
+        )}
+      </div>
+    );
+
+    const ImagesPreview = ({ data }) => (
+      <div style={{ padding: 24, background: 'white' }}>
+        <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>Billedanalyse</h4>
+        {data?.totalPhotos ? (
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 'bold', color: '#3b82f6' }}>
+              {data.totalPhotos}
+            </div>
+            <div style={{ fontSize: 14, color: '#6b7280' }}>billeder</div>
+          </div>
+        ) : (
+          <div style={{ color: '#9ca3af' }}>Tæller...</div>
+        )}
+      </div>
+    );
+
+    const FacebookPreview = ({ data }) => (
+      <div style={{ padding: 24, background: '#1877f2', color: 'white' }}>
+        <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>Facebook</h4>
+        {data?.followers !== undefined ? (
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 'bold' }}>
+              {data.followers.toLocaleString('da-DK')}
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>følgere</div>
+          </div>
+        ) : (
+          <div style={{ opacity: 0.8 }}>Indlæser...</div>
+        )}
+      </div>
+    );
+
+    const MobilePreview = ({ data }) => (
+      <div style={{ padding: 24, background: '#f5f5f5' }}>
+        <h4 style={{ margin: '0 0 16px', fontSize: 16 }}>Mobil Score</h4>
+        {data?.scores ? (
+          <div style={{ display: 'flex', gap: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                width: 50, 
+                height: 50, 
+                borderRadius: '50%', 
+                background: data.scores.mobile >= 70 ? '#22c55e' : '#fbbf24',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 'bold',
+              }}>
+                {data.scores.mobile}
+              </div>
+              <div style={{ fontSize: 12, marginTop: 4, color: '#6b7280' }}>Mobil</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                width: 50, 
+                height: 50, 
+                borderRadius: '50%', 
+                background: data.scores.desktop >= 70 ? '#22c55e' : '#fbbf24',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 'bold',
+              }}>
+                {data.scores.desktop}
+              </div>
+              <div style={{ fontSize: 12, marginTop: 4, color: '#6b7280' }}>Desktop</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ color: '#9ca3af' }}>Tester...</div>
+        )}
+      </div>
+    );
+
+    const previewComponents = { 
+      map: MapPreview, 
+      google: GooglePreview, 
+      reviews: ReviewsPreview, 
+      images: ImagesPreview, 
+      facebook: FacebookPreview, 
+      mobile: MobilePreview 
+    };
+
+    const Report = ({ data, businessName, onNewScan }) => {
+      const getScoreColor = (score) => {
+        if (score >= 75) return '#22c55e';
+        if (score >= 50) return '#fbbf24';
+        return '#ef4444';
+      };
+
+      const overallScore = Math.round(
+        ((data[2]?.rating || 4) / 5 * 100 + 
+         (data[3]?.sentiment?.positive || 70) + 
+         (data[4]?.qualityAnalysis?.overallScore || 70) + 
+         (data[6]?.scores?.mobile || 60)) / 4
+      );
+
+      return (
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: 40 }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <h1 style={{ margin: '0 0 8px', fontSize: 32, fontWeight: 700 }}>Digital Analyse Rapport</h1>
+            <p style={{ margin: 0, color: '#666' }}>{businessName} • {new Date().toLocaleDateString('da-DK')}</p>
+          </div>
+          
+          <div style={{ 
+            background: 'linear-gradient(135deg, #1a1a2e, #16213e)', 
+            borderRadius: 16, 
+            padding: 40, 
+            marginBottom: 32, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between' 
+          }}>
+            <div>
+              <h2 style={{ margin: 0, color: 'white' }}>Samlet Score</h2>
+              <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.7)' }}>{Object.keys(data).length} analysepunkter</p>
+            </div>
+            <div style={{ 
+              width: 100, 
+              height: 100, 
+              borderRadius: '50%', 
+              background: `conic-gradient(${getScoreColor(overallScore)} ${overallScore * 3.6}deg, rgba(255,255,255,0.1) 0deg)`, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center' 
+            }}>
+              <div style={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                background: '#1a1a2e', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <span style={{ fontSize: 28, fontWeight: 700, color: 'white' }}>{overallScore}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <button 
+              onClick={onNewScan}
+              style={{ 
+                padding: '14px 32px', 
+                background: '#3b82f6', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: 8, 
+                fontSize: 16, 
+                fontWeight: 500, 
+                cursor: 'pointer'
+              }}
+            >
+              🔄 Ny scanning
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // =============================================================================
+    // SEARCH COMPONENT
+    // =============================================================================
+    const BusinessSearch = ({ onBusinessSelect }) => {
+      const [query, setQuery] = useState('');
+      const [results, setResults] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState(null);
+      const [showResults, setShowResults] = useState(false);
+      const debounceRef = useRef(null);
+
+      useEffect(() => {
+        if (query.length < 2) {
+          setResults([]);
+          setShowResults(false);
+          return;
+        }
+
+        if (debounceRef.current) {
+          clearTimeout(debounceRef.current);
+        }
+
+        debounceRef.current = setTimeout(async () => {
+          setLoading(true);
+          setError(null);
+          try {
+            const searchResults = await ApiService.searchBusiness(query);
+            setResults(searchResults);
+            setShowResults(true);
+          } catch (err) {
+            setError('Kunne ikke søge. Prøv igen.');
+            setResults([]);
+          } finally {
+            setLoading(false);
+          }
+        }, 300);
+
+        return () => {
+          if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+          }
+        };
+      }, [query]);
+
+      const handleSelect = (business) => {
+        onBusinessSelect(business);
+        setQuery(business.name);
+        setShowResults(false);
+      };
+
+      return (
+        <div className="search-container">
+          <div className="search-box">
+            <h1 className="search-title">Business Scanner</h1>
+            <p className="search-subtitle">Indtast din virksomhed for at få en gratis digital analyse</p>
+            
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                className="search-input"
+                placeholder="Søg efter restaurant, café, butik..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+
+            {loading && (
+              <div className="search-loading">
+                <Spinner />
+                <span>Søger...</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="search-error">{error}</div>
+            )}
+
+            {showResults && results.length > 0 && (
+              <div className="search-results">
+                {results.map((result, index) => (
+                  <div
+                    key={result.place_id || index}
+                    className="search-result-item"
+                    onClick={() => handleSelect(result)}
+                  >
+                    <div className="search-result-name">{result.name}</div>
+                    <div className="search-result-address">{result.address}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showResults && results.length === 0 && query.length >= 2 && !loading && (
+              <div className="search-results">
+                <div className="search-result-item" style={{ textAlign: 'center', color: '#6b7280' }}>
+                  Ingen resultater fundet
+                </div>
+              </div>
+            )}
+
+            <button 
+              className="search-button"
+              onClick={() => {
+                if (results.length > 0) {
+                  handleSelect(results[0]);
+                }
+              }}
+              disabled={results.length === 0}
+            >
+              Start analyse →
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // =============================================================================
+    // SCANNER COMPONENT
+    // =============================================================================
+    function EndpointScanner({ business, onBack }) {
+      const [currentEndpoint, setCurrentEndpoint] = useState(0);
+      const [completedEndpoints, setCompletedEndpoints] = useState([]);
+      const [progress, setProgress] = useState(0);
+      const [secondsRemaining, setSecondsRemaining] = useState(0);
+      const [isComplete, setIsComplete] = useState(false);
+      const [showReport, setShowReport] = useState(false);
+      const [scanResults, setScanResults] = useState({});
+      const [currentScanData, setCurrentScanData] = useState(null);
+      const [errors, setErrors] = useState({});
+
+      const config = useMemo(() => ({
+        name: business?.name || BUSINESS_CONFIG.name,
+        searchQuery: business?.name || BUSINESS_CONFIG.searchQuery,
+        website: business?.website || BUSINESS_CONFIG.website,
+        facebookUrl: business?.facebookUrl || '',
+      }), [business]);
+
+      const endpoints = useMemo(() => createEndpoints(config), [config]);
+      const totalDuration = useMemo(() => endpoints.reduce((sum, e) => sum + e.duration, 0), [endpoints]);
+
+      useEffect(() => {
+        setSecondsRemaining(Math.ceil(totalDuration / 1000));
+      }, [totalDuration]);
+
+      useEffect(() => {
+        if (currentEndpoint >= endpoints.length) {
+          setIsComplete(true);
+          return;
+        }
+
+        const endpoint = endpoints[currentEndpoint];
+        setCurrentScanData({ current: endpoint.name });
+
+        const fetchData = async () => {
+          try {
+            console.log(`Fetching: ${endpoint.name}`);
+            const result = await endpoint.apiCall();
+            console.log(`Result for ${endpoint.name}:`, result);
+            setScanResults(prev => ({ ...prev, [endpoint.id]: result }));
+          } catch (error) {
+            console.error(`Error fetching ${endpoint.name}:`, error);
+            setErrors(prev => ({ ...prev, [endpoint.id]: error.message }));
+          }
+        };
+        fetchData();
+
+        const timer = setTimeout(() => {
+          setCompletedEndpoints(prev => [...prev, endpoint.id]);
+          setCurrentEndpoint(prev => prev + 1);
+        }, endpoint.duration);
+
+        return () => clearTimeout(timer);
+      }, [currentEndpoint, endpoints]);
+
+      useEffect(() => {
+        if (isComplete) return;
+        const interval = setInterval(() => {
+          setProgress(prev => Math.min(prev + (100 / (totalDuration / 100)), 100));
+          setSecondsRemaining(prev => Math.max(Math.ceil(prev - 0.1), 0));
+        }, 100);
+        return () => clearInterval(interval);
+      }, [isComplete, totalDuration]);
+
+      if (showReport) {
+        return (
+          <div style={{ minHeight: '100vh', background: '#f5f5f7' }}>
+            <Report 
+              data={scanResults} 
+              businessName={config.name} 
+              onNewScan={onBack}
+            />
+          </div>
+        );
+      }
+
+      const PreviewComponent = !isComplete && currentEndpoint < endpoints.length 
+        ? previewComponents[endpoints[currentEndpoint].preview] 
+        : null;
+      const currentData = currentEndpoint < endpoints.length 
+        ? scanResults[endpoints[currentEndpoint].id] 
+        : null;
+
+      return (
+        <div style={{ minHeight: '100vh', background: '#f5f5f7' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', minHeight: '100vh' }}>
+            <div style={{ 
+              background: 'white', 
+              borderRight: '1px solid #e5e5e5', 
+              padding: '32px 24px', 
+              display: 'flex', 
+              flexDirection: 'column' 
+            }}>
+              <h1 style={{ margin: '0 0 32px', fontSize: 28, fontWeight: 600 }}>Scanning...</h1>
+              
+              <div style={{ flex: 1 }}>
+                {endpoints.map((endpoint, index) => {
+                  const isCompleted = completedEndpoints.includes(endpoint.id);
+                  const isCurrent = index === currentEndpoint && !isComplete;
+                  const hasError = errors[endpoint.id];
+                  
+                  return (
+                    <div key={endpoint.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0' }}>
+                      <div style={{ 
+                        width: 22, 
+                        height: 22, 
+                        borderRadius: '50%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        background: hasError ? '#ef4444' : isCompleted ? '#3b82f6' : 'transparent', 
+                        border: !isCompleted && !isCurrent ? '2px solid #d1d5db' : 'none' 
+                      }}>
+                        {isCompleted && !hasError && <CheckIcon />}
+                        {hasError && <span style={{ color: 'white', fontSize: 12 }}>!</span>}
+                        {isCurrent && <Spinner />}
+                      </div>
+                      <span style={{ 
+                        fontSize: 14, 
+                        color: isCompleted ? '#1a1a1a' : isCurrent ? '#1a1a1a' : '#9ca3af', 
+                        fontWeight: isCurrent ? 500 : 400 
+                      }}>
+                        {endpoint.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div style={{ paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
+                <div style={{ height: 4, background: '#e5e5e5', borderRadius: 2, marginBottom: 16 }}>
+                  <div style={{ 
+                    height: '100%', 
+                    width: `${progress}%`, 
+                    background: isComplete ? '#22c55e' : '#1a1a1a', 
+                    borderRadius: 2,
+                    transition: 'width 0.1s linear'
+                  }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {!isComplete && <Spinner />}
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{isComplete ? 'Færdig!' : 'Scanner...'}</div>
+                    {!isComplete && <div style={{ fontSize: 13, color: '#666' }}>{secondsRemaining}s tilbage</div>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ 
+              padding: 40, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              position: 'relative', 
+              overflow: 'hidden' 
+            }}>
+              <ScanningBeam scanData={currentScanData} isScanning={!isComplete} />
+              
+              {!isComplete && PreviewComponent && (
+                <BrowserWindow url="demo-mode">
+                  <PreviewComponent data={currentData} />
+                </BrowserWindow>
+              )}
+              
+              {isComplete && (
+                <div style={{ textAlign: 'center', zIndex: 10 }}>
+                  <div style={{ 
+                    width: 80, 
+                    height: 80, 
+                    background: '#22c55e', 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    margin: '0 auto 24px' 
+                  }}>
+                    <CheckIcon />
+                  </div>
+                  <h2 style={{ margin: '0 0 8px', fontSize: 32, fontWeight: 600 }}>Analyse færdig</h2>
+                  <p style={{ margin: '0 0 32px', color: '#666' }}>{endpoints.length} områder analyseret</p>
+                  <button 
+                    onClick={() => setShowReport(true)} 
+                    style={{ 
+                      padding: '14px 32px', 
+                      background: '#3b82f6', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: 8, 
+                      fontSize: 16, 
+                      fontWeight: 500, 
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Se din rapport →
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =============================================================================
+    // MAIN APP
+    // =============================================================================
+    function App() {
+      const [selectedBusiness, setSelectedBusiness] = useState(null);
+
+      const handleBusinessSelect = (business) => {
+        setSelectedBusiness(business);
+      };
+
+      const handleBack = () => {
+        setSelectedBusiness(null);
+      };
+
+      if (selectedBusiness) {
+        return <EndpointScanner business={selectedBusiness} onBack={handleBack} />;
+      }
+
+      return <BusinessSearch onBusinessSelect={handleBusinessSelect} />;
+    }
+
+    // Render
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

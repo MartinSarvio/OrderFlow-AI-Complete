@@ -3,6 +3,7 @@
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/", "destination": "/landing.html" },
-    { "source": "/how-it-works", "destination": "/how-it-works.html" }
+    { "source": "/how-it-works", "destination": "/how-it-works.html" },
+    { "source": "/business-scanner", "destination": "/business-scanner-demo.html" }
   ]
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sådan virker det - OrderFlow Restaurant Analyse</title>
+  <title>Sådan virker det - Flow Restaurant Analyse</title>
   <meta name="description" content="Få en gratis AI-drevet analyse af din restaurant. Se din score, konkurrentanalyse, og få anbefalinger til forbedringer.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -1237,9 +1237,10 @@
     }
 
     /* ==================== HOW IT WORKS SECTION ==================== */
+    /* ==================== HOW IT WORKS - OWNER.COM STYLE ==================== */
     .how-section {
-      padding: 12rem 0;
-      background: var(--color-gray-100);
+      padding: 8rem 0;
+      background: white;
       position: relative;
     }
 
@@ -1247,110 +1248,146 @@
       max-width: 120rem;
       margin: 0 auto;
       padding: 0 4rem;
-    }
-
-    /* Header */
-    .how-header {
-      text-align: center;
-      margin-bottom: 8rem;
-    }
-
-    .how-label {
-      margin-bottom: 1.6rem;
-    }
-
-    .how-label p {
-      color: var(--color-primary);
-      font-weight: 600;
-      letter-spacing: 0.1em;
-    }
-
-    .how-header h2 {
-      margin-bottom: 1.6rem;
-    }
-
-    .how-subtitle {
-      color: var(--color-gray-600);
-      margin: 0 auto;
-    }
-
-    /* Steps Grid */
-    .how-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 6rem 4rem;
-      margin-bottom: 6rem;
-    }
-
-    .how-step {
-      display: flex;
-      flex-direction: column;
-      gap: 2.4rem;
       position: relative;
     }
 
-    /* Step Number */
-    .how-step-number {
-      width: 7.2rem;
-      height: 7.2rem;
-      border-radius: 50%;
-      background: white;
+    /* Timeline Line - LEFT SIDE like Owner.com */
+    .how-timeline {
+      position: absolute;
+      left: 17rem;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: repeating-linear-gradient(
+        to bottom,
+        #e0e0e0 0,
+        #e0e0e0 8px,
+        transparent 8px,
+        transparent 16px
+      );
+    }
+
+    /* Steps Container */
+    .how-steps {
       display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding-left: 4rem;
+    }
+
+    /* Single Step Row - ALWAYS text left, image right */
+    .how-step-row {
+      display: grid;
+      grid-template-columns: 45% 55%;
+      gap: 6rem;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 8rem 0;
+      position: relative;
     }
 
-    .how-step-number span {
-      font-size: 2.4rem;
-      font-weight: 700;
-      color: var(--color-primary);
+    /* Step Content Side */
+    .how-step-content {
+      padding: 0 2rem 0 0;
     }
 
-    /* Step Content */
+    .how-step-number {
+      font-size: 4.2rem;
+      font-weight: 400;
+      color: #c4c4c4;
+      margin-bottom: 1.6rem;
+      line-height: 1;
+    }
+
     .how-step-content h3 {
       font-size: 3.6rem;
       font-weight: 600;
       line-height: 1.2;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.02em;
       color: var(--color-dark);
-      margin-bottom: 1.2rem;
+      margin-bottom: 1.6rem;
     }
 
     .how-step-content p {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       color: var(--color-gray-600);
-      line-height: 1.6;
+      line-height: 1.7;
+      margin-bottom: 2.4rem;
+      max-width: 42rem;
     }
 
-    /* Step Visual */
-    .how-step-visual {
-      margin-top: auto;
-    }
-
-    .how-step-icon {
-      width: 100%;
-      height: 20rem;
-      background: white;
-      border-radius: 1.6rem;
-      display: flex;
+    /* Learn More Button */
+    .how-learn-more {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+      gap: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      text-decoration: none;
+      padding: 1.2rem 2rem;
+      background: #f5f5f5;
+      border-radius: 3rem;
+      transition: all 0.2s ease;
     }
 
-    .how-step-icon svg {
-      width: 8rem;
-      height: 8rem;
-      color: var(--color-primary);
+    .how-learn-more:hover {
+      background: #e8e8e8;
+    }
+
+    .how-learn-more svg {
+      width: 1.6rem;
+      height: 1.6rem;
+      transition: transform 0.2s ease;
+    }
+
+    .how-learn-more:hover svg {
+      transform: translateX(4px);
+    }
+
+    /* Step Image Side */
+    .how-step-image {
+      position: relative;
+      border-radius: 1.6rem;
+      overflow: hidden;
+      background: #f8f8f8;
+      aspect-ratio: 16/11;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .how-step-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Floating UI Mockup over image */
+    .how-mockup {
+      position: absolute;
+      background: white;
+      border-radius: 1.2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+      padding: 1.6rem;
+      max-width: 75%;
+    }
+
+    .how-mockup.center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .how-mockup.bottom-right {
+      bottom: 2rem;
+      right: 2rem;
     }
 
     /* CTA */
     .how-cta {
       text-align: center;
+      padding-top: 4rem;
     }
 
-    /* Button (if not already defined) */
+    /* Button */
     .button {
       display: inline-flex;
       align-items: center;
@@ -1377,66 +1414,54 @@
     /* ==================== HOW IT WORKS RESPONSIVE ==================== */
     @media (max-width: 1024px) {
       .how-section {
-        padding: 8rem 0;
+        padding: 6rem 0;
       }
 
-      .how-grid {
-        gap: 4rem 3rem;
+      .how-step-row {
+        gap: 4rem;
+        padding: 4rem 0;
+      }
+
+      .how-step-content h3 {
+        font-size: 3rem;
+      }
+
+      .how-timeline {
+        display: none;
       }
     }
 
     @media (max-width: 768px) {
-      .how-section {
-        padding: 6rem 0;
-      }
-
-      .how-container {
-        padding: 0 2rem;
-      }
-
-      .how-header {
-        margin-bottom: 6rem;
-      }
-
-      .how-header h2 {
-        font-size: 3.6rem;
-      }
-
-      .how-grid {
+      .how-step-row {
         grid-template-columns: 1fr;
-        gap: 4rem;
+        gap: 3rem;
       }
 
-      .how-step-number {
-        width: 6rem;
-        height: 6rem;
+      .how-step-content {
+        order: 1;
+        padding: 0;
       }
 
-      .how-step-number span {
-        font-size: 2rem;
+      .how-step-image {
+        order: 2;
       }
 
       .how-step-content h3 {
         font-size: 2.8rem;
       }
+
+      .how-container {
+        padding: 0 2rem;
+      }
     }
 
     @media (max-width: 480px) {
-      .how-header h2 {
-        font-size: 3.2rem;
+      .how-step-number {
+        font-size: 3.6rem;
       }
 
-      .how-subtitle .h20 {
-        font-size: 1.8rem;
-      }
-
-      .how-step-icon {
-        height: 16rem;
-      }
-
-      .how-step-icon svg {
-        width: 6rem;
-        height: 6rem;
+      .how-step-content h3 {
+        font-size: 2.4rem;
       }
     }
   </style>
@@ -1600,7 +1625,7 @@
 
       <!-- Score Card -->
       <div class="score-card">
-        <p class="score-label">Din OrderFlow Score</p>
+        <p class="score-label">Din Flow Score</p>
         <div class="score-value">
           <span id="reportScore">72</span><span class="score-max">/100</span>
         </div>
@@ -1697,7 +1722,7 @@
       <!-- CTA -->
       <div class="report-cta">
         <h3>Klar til at forbedre din restaurant?</h3>
-        <p>OrderFlow kan hjælpe dig med at implementere alle disse forbedringer automatisk og øge din omsætning.</p>
+        <p>Flow kan hjælpe dig med at implementere alle disse forbedringer automatisk og øge din omsætning.</p>
         <a href="index.html" class="btn">
           Start gratis nu
           <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1711,92 +1736,173 @@
   <!-- How It Works Section -->
   <section class="how-section" id="howItWorks">
     <div class="how-container">
-      <!-- Header -->
-      <div class="how-header">
-        <div class="how-label">
-          <p class="p13">SÅDAN VIRKER DET</p>
-        </div>
-        <h2 class="h44">Få mere salg med OrderFlow</h2>
-        <div class="how-subtitle max-width-560">
-          <p class="h20 text-color-content-secondary">
-            OrderFlow giver dig de værktøjer store restaurantkæder bruger til at drive salg online.
-          </p>
-        </div>
-      </div>
+      <!-- Timeline -->
+      <div class="how-timeline"></div>
 
-      <!-- Steps Grid -->
-      <div class="how-grid">
+      <!-- Steps -->
+      <div class="how-steps">
+
         <!-- Step 1: Rank højere på Google -->
-        <div class="how-step">
-          <div class="how-step-number">
-            <span>01</span>
-          </div>
+        <div class="how-step-row">
           <div class="how-step-content">
-            <h3>Rank højere på Google</h3>
+            <div class="how-step-number">01.</div>
+            <h3>Vis dig øverst på Google</h3>
             <p>Slå dine konkurrenter med en hjemmeside perfekt optimeret til Google. Få flere ordrer fra folk i dit område.</p>
-          </div>
-          <div class="how-step-visual">
-            <div class="how-step-icon">
+            <a href="#" class="how-learn-more">
+              Læs mere
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80" alt="Restaurant mad">
+            <!-- Google Search Mockup -->
+            <div class="how-mockup center">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #f8f9fa; border-radius: 24px; margin-bottom: 16px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <span style="color: #5f6368; font-size: 14px;">restauranter i nærheden</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px;"></div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px; color: #1a1a1a;">Din restaurant</div>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <span style="color: #fbbc04; font-size: 12px;">4.4</span>
+                    <span style="color: #fbbc04;">★★★★</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Step 2: Øg dit online salg -->
-        <div class="how-step">
-          <div class="how-step-number">
-            <span>02</span>
-          </div>
+        <div class="how-step-row">
           <div class="how-step-content">
-            <h3>Øg dit online salg</h3>
-            <p>Gæster bestiller mere fra dig når din online bestillingsoplevelse er nem og bekendt at bruge.</p>
-          </div>
-          <div class="how-step-visual">
-            <div class="how-step-icon">
+            <div class="how-step-number">02.</div>
+            <h3>Øg dit salg med den nemmeste online bestilling</h3>
+            <p>Gæster bestiller mere fra dig når din online bestillingsoplevelse føles nem og bekendt at bruge.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80" alt="Pizza mad">
+            <!-- Menu Mockup -->
+            <div class="how-mockup center" style="padding: 0; overflow: hidden; max-width: 85%;">
+              <div style="background: white; padding: 12px 16px; border-bottom: 1px solid #eee;">
+                <div style="display: flex; gap: 16px; font-size: 12px;">
+                  <span style="font-weight: 600; color: #1a1a1a;">Italian</span>
+                  <span style="color: #888;">Home</span>
+                  <span style="padding: 4px 12px; background: #f5f5f5; border-radius: 16px; font-weight: 500;">Menu</span>
+                  <span style="color: #888;">Catering</span>
+                </div>
+              </div>
+              <div style="padding: 16px;">
+                <div style="font-weight: 600; font-size: 14px; margin-bottom: 12px;">Most Popular</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <div style="background: #f8f8f8; border-radius: 8px; padding: 8px;">
+                    <div style="width: 100%; height: 50px; background: linear-gradient(135deg, #ff6b6b, #ffa502); border-radius: 6px; margin-bottom: 6px;"></div>
+                    <div style="font-size: 11px; font-weight: 500;">Pasta Bolognese</div>
+                    <div style="font-size: 10px; color: #888;">99 kr</div>
+                  </div>
+                  <div style="background: #f8f8f8; border-radius: 8px; padding: 8px;">
+                    <div style="width: 100%; height: 50px; background: linear-gradient(135deg, #ffa502, #ff6348); border-radius: 6px; margin-bottom: 6px;"></div>
+                    <div style="font-size: 11px; font-weight: 500;">Presto Pizza</div>
+                    <div style="font-size: 10px; color: #888;">119 kr</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Step 3: Få flere genbestillinger -->
-        <div class="how-step">
-          <div class="how-step-number">
-            <span>03</span>
-          </div>
+        <div class="how-step-row">
           <div class="how-step-content">
-            <h3>Få flere genbestillinger med app og loyalitet</h3>
+            <div class="how-step-number">03.</div>
+            <h3>Få flere genbestillinger med din mobil app og belønninger</h3>
             <p>Få flere genbestillinger med din egen 5-stjernet mobil app. Byg loyalitet med et belønningsprogram, ligesom Starbucks.</p>
-          </div>
-          <div class="how-step-visual">
-            <div class="how-step-icon">
+            <a href="#" class="how-learn-more">
+              Læs mere
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80" alt="Sund mad">
+            <!-- Mobile App Mockup -->
+            <div class="how-mockup center" style="padding: 0; background: #1a1a1a; border-radius: 28px; width: 160px;">
+              <div style="padding: 8px;">
+                <div style="background: white; border-radius: 22px; overflow: hidden;">
+                  <div style="height: 14px; background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                  <div style="padding: 12px;">
+                    <div style="font-size: 11px; font-weight: 600; margin-bottom: 4px;">Manhattan Bistro</div>
+                    <div style="font-size: 9px; color: #888; margin-bottom: 8px;">Pickup at 11:35am</div>
+                    <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                      <div style="background: #34a853; color: white; font-size: 8px; padding: 3px 6px; border-radius: 4px;">★ 150</div>
+                    </div>
+                    <div style="background: #f97316; color: white; font-size: 10px; padding: 8px; border-radius: 8px; text-align: center; font-weight: 500;">Order now</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Step 4: Hold gæster engageret -->
-        <div class="how-step">
-          <div class="how-step-number">
-            <span>04</span>
-          </div>
+        <div class="how-step-row">
           <div class="how-step-content">
+            <div class="how-step-number">04.</div>
             <h3>Hold gæster engageret med automatisk marketing</h3>
-            <p>Øg salget med automatiserede marketingkampagner. Send emails og SMS uden at skrive et ord.</p>
-          </div>
-          <div class="how-step-visual">
-            <div class="how-step-icon">
+            <p>Øg salget med beviste, automatiserede marketingkampagner. Send pengeskabende emails og SMS uden at skrive et ord.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
               </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" alt="Restaurant stemning">
+            <!-- Marketing Automation Mockup -->
+            <div class="how-mockup center" style="max-width: 85%;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                <span style="font-size: 12px; color: #888;">Back</span>
+                <span style="font-size: 13px; font-weight: 600; margin-left: 8px;">🏈 Superbowl</span>
+                <span style="font-size: 10px; color: #888; background: #f5f5f5; padding: 2px 8px; border-radius: 4px;">Automated</span>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-bottom: 12px;">Vind gæster med uslåelige game-day tilbud garanteret at glæde.</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fffbeb; border-radius: 8px;">
+                  <span style="font-size: 14px;">⚡</span>
+                  <div>
+                    <div style="font-size: 11px; font-weight: 500;">Every January 29</div>
+                    <div style="font-size: 9px; color: #888;">Trigger</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f5f5f5; border-radius: 8px;">
+                  <span style="font-size: 14px;">✉️</span>
+                  <div>
+                    <div style="font-size: 11px; font-weight: 500;">Superbowl Reminder</div>
+                    <div style="font-size: 9px; color: #888;">Sent on January 29</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
+
       </div>
 
       <!-- CTA -->
@@ -2695,7 +2801,7 @@
         recommendations: [
           {
             title: 'Implementér online bestilling',
-            description: 'Tilføj et online bestillingssystem for at øge omsætningen med op til 30%. OrderFlow kan hjælpe dig med dette.'
+            description: 'Tilføj et online bestillingssystem for at øge omsætningen med op til 30%. Flow kan hjælpe dig med dette.'
           },
           {
             title: 'Besvar alle anmeldelser',
