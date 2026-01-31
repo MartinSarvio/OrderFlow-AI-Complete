@@ -1313,21 +1313,9 @@
       position: relative;
     }
 
-    /* Timeline Line - LEFT SIDE like Owner.com */
+    /* Skjul gammel timeline */
     .how-timeline {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      top: 0;
-      bottom: 0;
-      width: 1px;
-      background: repeating-linear-gradient(
-        to bottom,
-        #e0e0e0 0,
-        #e0e0e0 8px,
-        transparent 8px,
-        transparent 16px
-      );
+      display: none;
     }
 
     /* Steps Container */
@@ -1354,6 +1342,76 @@
 
     .how-step-row.reverse > * {
       direction: ltr;
+    }
+
+    /* Zigzag Timeline - Vertikal linje ned til knækpunkt */
+    .how-step-row::before {
+      content: '';
+      position: absolute;
+      top: -4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: calc(50% + 4rem);
+      background: repeating-linear-gradient(
+        to bottom,
+        #e0e0e0 0, #e0e0e0 8px,
+        transparent 8px, transparent 16px
+      );
+      z-index: 1;
+    }
+
+    /* Første row: start fra toppen */
+    .how-step-row:first-child::before {
+      top: 0;
+      height: 50%;
+    }
+
+    /* Zigzag Timeline - Horisontal linje til venstre (normal rows) */
+    .how-step-row::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 22.5%;
+      width: 27.5%;
+      height: 1px;
+      background: repeating-linear-gradient(
+        to right,
+        #e0e0e0 0, #e0e0e0 8px,
+        transparent 8px, transparent 16px
+      );
+      z-index: 1;
+    }
+
+    /* Reversed rows: horisontal til højre side */
+    .how-step-row.reverse::after {
+      left: 50%;
+      width: 27.5%;
+    }
+
+    /* Nedadgående segment fra knæk til næste sektion */
+    .timeline-down {
+      position: absolute;
+      top: 50%;
+      left: 22.5%;
+      width: 1px;
+      height: calc(50% + 4rem);
+      background: repeating-linear-gradient(
+        to bottom,
+        #e0e0e0 0, #e0e0e0 8px,
+        transparent 8px, transparent 16px
+      );
+      z-index: 1;
+    }
+
+    .how-step-row.reverse .timeline-down {
+      left: auto;
+      right: 22.5%;
+    }
+
+    /* Sidste row: kortere nedadgående */
+    .how-step-row:last-child .timeline-down {
+      height: 50%;
     }
 
     /* Step Content Side */
@@ -1498,6 +1556,12 @@
       }
 
       .how-timeline {
+        display: none;
+      }
+
+      .how-step-row::before,
+      .how-step-row::after,
+      .timeline-down {
         display: none;
       }
     }
@@ -1823,6 +1887,7 @@
 
         <!-- Step 1: Rank højere på Google -->
         <div class="how-step-row">
+          <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">01.</div>
             <h3>Vis dig øverst på Google</h3>
@@ -1860,6 +1925,7 @@
 
         <!-- Step 2: Øg dit online salg -->
         <div class="how-step-row reverse">
+          <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">02.</div>
             <h3>Øg dit salg med den nemmeste online bestilling</h3>
@@ -1904,6 +1970,7 @@
 
         <!-- Step 3: Få flere genbestillinger -->
         <div class="how-step-row">
+          <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">03.</div>
             <h3>Få flere genbestillinger med din mobil app og belønninger</h3>
@@ -1938,6 +2005,7 @@
 
         <!-- Step 4: Hold gæster engageret -->
         <div class="how-step-row reverse">
+          <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">04.</div>
             <h3>Hold gæster engageret med automatisk marketing</h3>
