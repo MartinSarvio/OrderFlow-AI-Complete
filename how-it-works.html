@@ -1497,18 +1497,10 @@
   <!-- Hero Section with Search -->
   <section class="hero" id="heroSection">
     <div class="hero-container">
-      <div class="hero-badge">
-        <span class="hero-badge-dot"></span>
-        <span>Gratis AI-drevet analyse</span>
-      </div>
-      <h1 class="hero-title">
+      <h1 class="hero-title" style="color: #000;">
         Få en gratis analyse af<br>
         <span>din restaurant</span>
       </h1>
-      <p class="hero-subtitle">
-        Indtast din restaurants navn og få en komplet AI-analyse med score, 
-        konkurrentanalyse, review-opsummering og anbefalinger til forbedringer.
-      </p>
 
       <div class="search-section">
         <div class="search-container">
@@ -2000,8 +1992,10 @@
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
       searchInput.addEventListener('focus', () => {
-        // Open business scanner in new tab when search field is clicked
-        window.open('https://flow-lime-rho.vercel.app/business-scanner-demo.html', '_blank');
+        // Only open business scanner if a valid place is selected
+        if (selectedPlace && selectedPlace.place_id && !selectedPlace.place_id.startsWith('manual_')) {
+          window.open('https://flow-lime-rho.vercel.app/business-scanner-demo.html', '_blank');
+        }
       });
 
       // Close dropdown when clicking outside
@@ -2092,8 +2086,16 @@
 
     // Select a place
     function selectPlace(item) {
+      const placeId = item.dataset.placeId;
+      
+      // Only allow selection if it's a real place (not manual entry)
+      if (placeId.startsWith('manual_')) {
+        // Don't select manual entries - require real validation
+        return;
+      }
+      
       selectedPlace = {
-        place_id: item.dataset.placeId,
+        place_id: placeId,
         name: item.dataset.name,
         address: item.dataset.address
       };
@@ -2101,6 +2103,9 @@
       searchInput.value = selectedPlace.name;
       autocompleteDropdown.classList.remove('active');
       searchBtn.disabled = false;
+      
+      // Auto-open business scanner in new tab when valid place is selected
+      window.open('https://flow-lime-rho.vercel.app/business-scanner-demo.html', '_blank');
     }
 
     // Start analysis
