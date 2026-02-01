@@ -1347,113 +1347,134 @@
     }
 
     /* ==================== ZIGZAG TIMELINE (DASHED) ==================== */
+    /* Linjer går UDEN OM indholdet - aldrig gennem tekst eller billeder */
 
-    /* Skjul ::before og ::after - vi bruger .timeline-* elementer i stedet */
+    /* Skjul alle timeline elementer - vi bruger kun ::before og ::after på .how-steps */
     .how-step-row::before,
-    .how-step-row::after {
-      display: none;
-    }
-
-    /* Basis for alle timeline elementer */
+    .how-step-row::after,
     .timeline-vertical,
     .timeline-horizontal,
     .timeline-down {
-      position: absolute;
-      z-index: 1;
-    }
-
-    /* Vertikale stiplede linjer */
-    .timeline-vertical,
-    .timeline-down {
-      width: 0;
-      border-left: 2px dashed #d0d0d0;
-    }
-
-    /* Horisontale stiplede linjer */
-    .timeline-horizontal {
-      height: 0;
-      border-top: 2px dashed #d0d0d0;
-    }
-
-    /* ===== SEKTION 1: Tekst venstre ===== */
-    /* Vertikal linje ned fra toppen på YDERSTE venstre side */
-    .how-step-row:nth-child(1) .timeline-vertical {
-      top: 0;
-      left: -2rem;
-      height: calc(100% + 3rem);
-    }
-    /* Horisontal knæk til højre (under sektionen, i gap) */
-    .how-step-row:nth-child(1) .timeline-horizontal {
-      bottom: -3rem;
-      left: -2rem;
-      width: calc(45% + 2rem);
-    }
-    /* Skjul timeline-down for sektion 1 */
-    .how-step-row:nth-child(1) .timeline-down {
       display: none;
     }
 
-    /* ===== SEKTION 2: Tekst højre (reverse) ===== */
-    /* Vertikal linje ned fra knækpunktet (venstre side, fra sektion 1) */
-    .how-step-row:nth-child(2) .timeline-vertical {
-      top: -3rem;
-      left: 45%;
-      height: calc(50% + 3rem);
-    }
-    /* Horisontal linje til højre (midt på sektionen) */
-    .how-step-row:nth-child(2) .timeline-horizontal {
-      top: 50%;
-      left: 45%;
-      width: calc(55% + 2rem);
-    }
-    /* Vertikal ned på højre side (til næste sektion) */
-    .how-step-row:nth-child(2) .timeline-down {
-      top: 50%;
-      right: -2rem;
-      left: auto;
-      height: calc(50% + 3rem);
+    /* Tegn hele timeline som én sammenhængende SVG-lignende struktur */
+    .how-steps::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -3rem;
+      width: 2px;
+      height: 100%;
+      background:
+        /* Sektion 1: vertikal ned på venstre */
+        repeating-linear-gradient(to bottom, #d0d0d0 0, #d0d0d0 8px, transparent 8px, transparent 16px);
+      z-index: 1;
     }
 
-    /* ===== SEKTION 3: Tekst venstre ===== */
-    /* Vertikal linje ned fra toppen (højre side, fra sektion 2) */
-    .how-step-row:nth-child(3) .timeline-vertical {
-      top: -3rem;
-      right: -2rem;
-      left: auto;
-      height: calc(50% + 3rem);
-    }
-    /* Horisontal linje til venstre (midt på sektionen) */
-    .how-step-row:nth-child(3) .timeline-horizontal {
-      top: 50%;
-      left: -2rem;
-      width: calc(100% + 4rem);
-    }
-    /* Vertikal ned på venstre side (til næste sektion) */
-    .how-step-row:nth-child(3) .timeline-down {
-      top: 50%;
-      left: -2rem;
-      height: calc(50% + 3rem);
+    /* Brug separate divs for hver linje-segment */
+    /* Vi gør dette med CSS custom properties og beregninger */
+
+    /* Container til timeline */
+    .how-steps {
+      --timeline-color: #d0d0d0;
+      --dash-size: 8px;
+      --gap-size: 8px;
     }
 
-    /* ===== SEKTION 4: Tekst højre (reverse) ===== */
-    /* Vertikal linje ned fra toppen (venstre side, fra sektion 3) */
-    .how-step-row:nth-child(4) .timeline-vertical {
+    /* Sektion 1: Kun vertikal linje på venstre side */
+    .how-step-row:nth-child(1) {
+      position: relative;
+    }
+    .how-step-row:nth-child(1)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: -3rem;
+      top: 0;
+      bottom: -3rem;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
+    }
+    /* Horisontal linje UNDER sektion 1 (i gap-området) */
+    .how-step-row:nth-child(1)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: -3rem;
+      bottom: -3rem;
+      height: 0;
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
+    }
+
+    /* Sektion 2: Vertikal linje på højre side */
+    .how-step-row:nth-child(2)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      right: -3rem;
       top: -3rem;
-      left: -2rem;
-      height: calc(50% + 3rem);
+      bottom: -3rem;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
     }
-    /* Horisontal linje til højre (midt på sektionen) */
-    .how-step-row:nth-child(4) .timeline-horizontal {
-      top: 50%;
-      left: -2rem;
-      width: calc(55% + 2rem);
+    /* Horisontal linje UNDER sektion 2 (i gap-området) */
+    .how-step-row:nth-child(2)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: -3rem;
+      bottom: -3rem;
+      height: 0;
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
     }
-    /* Vertikal ned på højre side (kort, sidste sektion) */
-    .how-step-row:nth-child(4) .timeline-down {
-      top: 50%;
-      right: 45%;
-      left: auto;
-      height: 50%;
+
+    /* Sektion 3: Vertikal linje på venstre side */
+    .how-step-row:nth-child(3)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: -3rem;
+      top: -3rem;
+      bottom: -3rem;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
+    }
+    /* Horisontal linje UNDER sektion 3 (i gap-området) */
+    .how-step-row:nth-child(3)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: -3rem;
+      bottom: -3rem;
+      height: 0;
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
+    }
+
+    /* Sektion 4: Vertikal linje på højre side (kun ned) */
+    .how-step-row:nth-child(4)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      right: -3rem;
+      top: -3rem;
+      height: calc(100% + 3rem);
+      width: 0;
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      z-index: 1;
+    }
+    /* Ingen horisontal linje efter sektion 4 */
+    .how-step-row:nth-child(4)::after {
+      display: none;
     }
 
     /* Step Content Side */
