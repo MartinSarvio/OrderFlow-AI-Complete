@@ -13,8 +13,10 @@
 
 ## Ved opgave-fuldførelse
 1. Giv kort status på hvad der blev ændret
-2. Commit til git med beskrivende besked
-3. Push til GitHub (auto-deploy til Vercel)
+2. Opdater version i `config/version.js` (version, build, cacheName, releaseDate, sidebarTemplate)
+3. Opdater version i `index.html` (Template Version kommentar + script cache `?v=XXX`)
+4. Commit til git med beskrivende besked
+5. Push til GitHub (auto-deploy til Vercel)
 
 ## Billede-matching
 Når der gives et billede at matche: Implementer 100% match - samme spacing, farver, typografi
