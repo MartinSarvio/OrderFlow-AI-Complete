@@ -457,13 +457,40 @@ let sessionTimeoutId = null;
 let warningTimeoutId = null;
 let countdownInterval = null;
 
-// Hent session duration baseret på brugerrolle
+// Hent session duration baseret på brugerindstilling eller rolle
 function getSessionDuration() {
+  // Check for user-saved timeout setting
+  const savedTimeout = localStorage.getItem('orderflow_session_timeout');
+  if (savedTimeout) {
+    const timeout = parseInt(savedTimeout, 10);
+    if (timeout > 0) return timeout;
+  }
+  // Fallback to role-based defaults
   const role = currentUser?.role;
   if (role === 'admin' || role === 'employee') {
     return SESSION_DURATION_ADMIN;
   }
   return SESSION_DURATION_CUSTOMER;
+}
+
+// Save session timeout setting
+function saveSessionTimeoutSetting() {
+  const select = document.getElementById('session-timeout-setting');
+  if (select) {
+    const value = select.value;
+    localStorage.setItem('orderflow_session_timeout', value);
+    resetSessionTimeout();
+    showToast('Session timeout gemt', 'success');
+  }
+}
+
+// Load session timeout setting into select element
+function loadSessionTimeoutSetting() {
+  const select = document.getElementById('session-timeout-setting');
+  const saved = localStorage.getItem('orderflow_session_timeout');
+  if (select && saved) {
+    select.value = saved;
+  }
 }
 
 function persistSession(user) {
@@ -565,11 +592,11 @@ function showInactivityWarning() {
     modal = document.createElement('div');
     modal.id = 'inactivity-modal';
     modal.innerHTML = `
-      <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:99999;display:flex;align-items:center;justify-content:center;">
+      <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:99999;display:flex;align-items:center;justify-content:center;">
         <div style="background:var(--card-bg, #1a1a2e);padding:2rem;border-radius:16px;text-align:center;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
           <h3 style="margin-bottom:1rem;color:var(--text-primary, #fff);font-size:1.25rem;">Er du stadig der?</h3>
-          <p style="margin-bottom:1.5rem;color:var(--text-secondary, #aaa);">Du vil blive logget ud om <span id="inactivity-countdown" style="font-weight:bold;color:var(--primary, #6366f1);">30</span> sekunder.</p>
-          <button onclick="dismissInactivityWarning()" style="padding:0.75rem 2rem;background:var(--primary, #6366f1);color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:500;transition:transform 0.2s;">Ja, jeg er her</button>
+          <p style="margin-bottom:1.5rem;color:var(--text-secondary, #aaa);">Du vil blive logget ud om <span id="inactivity-countdown" style="font-weight:bold;color:var(--accent, #2dd4bf);">30</span> sekunder.</p>
+          <button onclick="dismissInactivityWarning()" style="padding:0.75rem 2rem;background:var(--accent, #2dd4bf);color:#000;border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:500;transition:transform 0.2s;">Ja, jeg er her</button>
         </div>
       </div>
     `;
@@ -606,6 +633,10 @@ function startInactivityCountdown() {
     if (seconds <= 0) {
       clearInterval(countdownInterval);
       countdownInterval = null;
+      // Auto-logout when countdown reaches 0
+      hideInactivityWarning();
+      console.log('⏰ Session expired - logging out');
+      handleLogout();
     }
   }, 1000);
 }
@@ -18942,6 +18973,11 @@ function switchSettingsTab(tab) {
     initNotificationEmailField();
   }
 
+  // Load session timeout setting when users tab is opened
+  if (tab === 'users') {
+    loadSessionTimeoutSetting();
+  }
+
   // Initialize 2FA settings when password tab is opened
   if (tab === 'passwords') {
     init2FASettings();
@@ -25228,17 +25264,22 @@ function updateWebBuilderPreview() {
 
 // Send config to preview iframe
 function sendConfigToWebBuilderPreview(config) {
-  const previewFrame = document.getElementById('webbuilder-preview-frame');
-  if (!previewFrame || !previewFrame.contentWindow) return;
+  // Send to both embedded and fullscreen preview iframes
+  const frameIds = ['webbuilder-preview-frame', 'wb-fullscreen-preview-frame'];
 
-  try {
-    previewFrame.contentWindow.postMessage({
-      type: 'UPDATE_RESTAURANT_CONFIG',
-      config: config
-    }, '*');
-  } catch (err) {
-    console.warn('Error sending config to Web Builder preview:', err);
-  }
+  frameIds.forEach(id => {
+    const frame = document.getElementById(id);
+    if (frame?.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({
+          type: 'UPDATE_RESTAURANT_CONFIG',
+          config: config
+        }, '*');
+      } catch (err) {
+        console.warn('Error sending config to preview frame ' + id + ':', err);
+      }
+    }
+  });
 }
 
 // Initialize Web Builder preview
@@ -25248,6 +25289,11 @@ function initWebBuilderPreview() {
   setTimeout(() => {
     updateWebBuilderPreview();
   }, 500);
+}
+
+// Open the full website in a new tab
+function openFullWebsite() {
+  window.open('./Website%20builder/index.html', '_blank');
 }
 
 // Open Web Builder preview in fullscreen modal with device selector
