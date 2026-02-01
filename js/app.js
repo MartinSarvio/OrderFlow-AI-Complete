@@ -24905,6 +24905,37 @@ function showWebBuilderPage(section) {
   }
 }
 
+// Navigate to Flow landing page (opens in new window)
+function showFlowPage(slug) {
+  // Map slugs to HTML file names
+  const pageMap = {
+    'landing': 'landing.html',
+    'restaurant-hjemmeside': 'restaurant-hjemmeside.html',
+    'online-bestilling': 'online-bestilling.html',
+    'custom-mobile-app': 'custom-mobile-app.html',
+    'zero-commission-delivery': 'zero-commission-delivery.html',
+    'loyalitetsprogram': 'loyalitetsprogram.html',
+    'automatiseret-marketing': 'automatiseret-marketing.html',
+    'case-studies': 'case-studies.html',
+    'restaurant-marketing-guide': 'restaurant-marketing-guide.html',
+    'seo-for-restauranter': 'seo-for-restauranter.html',
+    'restaurant-email-marketing': 'restaurant-email-marketing.html',
+    'restaurant-mobile-app': 'restaurant-mobile-app.html',
+    'online-bestillingssystemer': 'online-bestillingssystemer.html',
+    'om-os': 'om-os.html',
+    'karriere': 'karriere.html',
+    'ledelse': 'ledelse.html',
+    'presse': 'presse.html',
+    'partner': 'partner.html',
+    'priser': 'landing.html#priser',
+    'how-it-works': 'how-it-works.html',
+    'blog': 'blog.html'
+  };
+
+  const pagePath = pageMap[slug] || slug + '.html';
+  window.open(pagePath, '_blank');
+}
+
 // Switch Farver tab (Tilpasset/Forudindstillinger)
 function switchFarverTab(tab) {
   document.querySelectorAll('#page-wb-farver .settings-tab').forEach(t => t.classList.remove('active'));

@@ -336,16 +336,62 @@
           </div>
         </div>
 
-        <!-- Chapter 2 -->
+        <!-- Chapter 2: Struktureret data og lokale sider (NY) -->
         <div class="guide-chapter">
-          <h3><span class="chapter-number">2</span>Anmeldelser afgør din placering</h3>
-          <p>Antal anmeldelser og gennemsnitsrating er to af de vigtigste faktorer for lokal placering. Og det handler ikke kun om at få flere - det handler om at håndtere dem du har.</p>
+          <h3><span class="chapter-number">2</span>Struktureret data og lokale sider</h3>
+          <p>Google bruger struktureret data (schema) til at forstå din restaurant. Implementér restaurant-, menu-, åbningstider- og event-schema så søgemaskiner kan vise dine retter, åbningstider og tilbud direkte i søgeresultaterne. Hvis du har flere lokationer, skal hver restaurant have sin egen underside med unik adresse, telefonnummer og kort - det kan øge synligheden med op til 107%.</p>
           <ul>
-            <li>Svar på ALLE anmeldelser inden for 24 timer - også de gode</li>
-            <li>Negative anmeldelser: Sig undskyld, tilbyd løsning, inviter dem tilbage</li>
-            <li>Bed aldrig om 5-stjernede anmeldelser (Google straffer det)</li>
-            <li>Gør det nemt: QR-kode på bordet der går direkte til anmeldelsessiden</li>
-            <li>Timing: Bed om anmeldelse 1-2 timer efter besøget via SMS/email</li>
+            <li>Implementér JSON-LD schema på alle sider (restaurant, menu, event og anmeldelser)</li>
+            <li>Opret en unik side for hver fysisk restaurant med dens egen NAP (Navn, Adresse, Telefonnummer) og en indlejret Google Map</li>
+            <li>Opdater dine åbningstider og menu både i schema og på GBP</li>
+          </ul>
+          <div class="guide-tip">
+            <h4>Flow gør det nemt</h4>
+            <p>Flow genererer automatisk schema markup til dine sider og håndterer menu- og event-data, så du slipper for at kode. Vi understøtter også fler-lokationsrestauranter med unikke undersider og Google Maps integration.</p>
+          </div>
+        </div>
+
+        <!-- Chapter 3: Billeder, video og struktur (NY) -->
+        <div class="guide-chapter">
+          <h3><span class="chapter-number">3</span>Billeder, video og struktur</h3>
+          <p>Højkvalitetsfotos og videoer forbedrer både synlighed og konvertering. Professionelle billeder får gæster til at huske dig bedre, og videoindhold står for 75% af al internettrafik - sider med videoer har større sandsynlighed for at rangere. Husk at komprimere billeder og skrive beskrivende alt-tekster. Brug overskrifter i korrekt hierarki så Google forstår dit indhold.</p>
+          <ul>
+            <li>Upload egne fotos af dine retter og omgivelser (undgå stock-billeder)</li>
+            <li>Tilføj korte videoer af madlavning eller stemning - placer dem højt på siden</li>
+            <li>Komprimér billeder og videoer og angiv alt-tekst der beskriver retten og inkluderer søgeord</li>
+            <li>Brug en logisk heading-struktur for at hjælpe søgemaskiner med at forstå siden</li>
+          </ul>
+          <div class="guide-tip">
+            <h4>Tip fra Flow</h4>
+            <p>I Flow CMS kan du nemt skifte billeder og videoer uden at ødelægge layoutet, og vores billedoptimering sørger for hurtige loadtider. Du kan også indlejre korte videoer direkte fra vores bibliotek.</p>
+          </div>
+        </div>
+
+        <!-- Chapter 4: Hastighed og mobilvenlighed (OPDATERET) -->
+        <div class="guide-chapter">
+          <h3><span class="chapter-number">4</span>Hastighed og mobilvenlighed</h3>
+          <p>83% af trafikken er mobil, så din hjemmeside skal loade på under 3 sekunder. Langsomme sider straffer SEO og konvertering. Hold designet simpelt, fjern tunge animationer og sørg for at knappen "Bestil nu" er synlig uden scroll.</p>
+          <ul>
+            <li>Test hastighed med PageSpeed Insights - optimer til mindst 90/100</li>
+            <li>Komprimér billeder og CSS/JS og brug lazy loading</li>
+            <li>Brug responsive designs og undgå pop-ups der dækker skærmen</li>
+            <li>Sørg for at bestillingsknapper er synlige med det samme</li>
+          </ul>
+          <div class="guide-tip">
+            <h4>Flow gør arbejdet</h4>
+            <p>Flow leverer serveroptimerede sider med indbygget caching og automatisk billedkomprimering. Vores mobilvenlige skabeloner sikrer høje scores i PageSpeed tests.</p>
+          </div>
+        </div>
+
+        <!-- Chapter 5: Anmeldelser og konsistens (NY) -->
+        <div class="guide-chapter">
+          <h3><span class="chapter-number">5</span>Anmeldelser og konsistens</h3>
+          <p>Anmeldelser påvirker direkte din placering i lokale søgninger. Svar på alle anmeldelser hurtigt og høfligt, og gør det let for gæster at anmelde dig via QR-koder og automatiske email-udsendelser. Sørg også for at navn, adresse og telefonnummer er ens på alle platforme.</p>
+          <ul>
+            <li>Svar på både positive og negative anmeldelser inden for 24 timer</li>
+            <li>Brug QR-koder på bordet til at indsamle anmeldelser</li>
+            <li>Hold dine NAP-oplysninger ens på Google, Facebook, Instagram og dit website</li>
+            <li>Brug Flow til at automatisere email-påmindelser om anmeldelser</li>
           </ul>
           <div class="guide-tip">
             <h4>Dansk kontekst</h4>
@@ -353,46 +399,32 @@
           </div>
         </div>
 
-        <!-- Chapter 3 -->
+        <!-- Chapter 6: Hvad du kan ignorere (OPDATERET) -->
         <div class="guide-chapter">
-          <h3><span class="chapter-number">3</span>Din hjemmeside: Hastighed slår alt</h3>
-          <p>For de fleste restauranter betyder hjemmesidens indhold næsten ingenting for SEO. Men hastigheden betyder alt. En langsom side mister kunder før de overhovedet ser menuen.</p>
+          <h3><span class="chapter-number">6</span>Hvad du kan ignorere</h3>
+          <p>Du behøver ikke investere tid i gængse SEO-taktikker som linkbuilding, generiske blogindlæg og dyre SEO-værktøjer. Lokal SEO handler om din GBP, schema, billeder, hastighed og anmeldelser. Brug tiden på at forbedre din service og marketing i stedet.</p>
           <ul>
-            <li>Test din side på PageSpeed Insights - mål mod 90+ på mobil</li>
-            <li>Komprimer billeder - det er næsten altid problemet</li>
-            <li>Fjern plugins, animationer og alt der gør siden langsom</li>
-            <li>Brug ikke PDF-menuer - de er langsomme og ulæselige på mobil</li>
-            <li>Sørg for at "Bestil" knappen er synlig uden at scrolle</li>
+            <li>Du behøver ikke købe eksterne links - fokusér på lokal relevans</li>
+            <li>Blogindlæg med generelle opskrifter giver sjældent nye kunder</li>
+            <li>Drop metabeskrivelser og tags - Google omskriver dem alligevel</li>
+            <li>Brug gratis værktøjer som Search Console i stedet for dyre SEO-tools</li>
           </ul>
         </div>
 
-        <!-- Chapter 4 -->
+        <!-- Chapter 7: Handlingsplan (NY) -->
         <div class="guide-chapter">
-          <h3><span class="chapter-number">4</span>Hvad du kan ignorere</h3>
-          <p>Der er mange ting SEO-bureauer forsøger at sælge til restauranter. Det meste er spild af penge. Her er hvad du trygt kan springe over:</p>
+          <h3><span class="chapter-number">7</span>Handlingsplan</h3>
+          <p>Opsummering af de vigtigste trin for at rangere højt og tiltrække flere gæster:</p>
           <ul>
-            <li>Linkbuilding: Hjælper ikke for lokal SEO</li>
-            <li>Blogindlæg: Ingen søger "opskrift på carbonara" og ender på din restaurant</li>
-            <li>Meta-descriptions: Google skriver ofte sine egne alligevel</li>
-            <li>Struktureret data (Schema): Nice-to-have, ikke need-to-have</li>
-            <li>Dyre SEO-værktøjer: Du behøver kun Google Search Console (gratis)</li>
-          </ul>
-        </div>
-
-        <!-- Chapter 5 -->
-        <div class="guide-chapter">
-          <h3><span class="chapter-number">5</span>Hvad du faktisk skal gøre (rækkefølge)</h3>
-          <p>Her er den prioriterede liste. Gør ikke punkt 2 før punkt 1 er færdigt.</p>
-          <ul>
-            <li>1. Claim og fuldfør din Google Business Profile (2 timer)</li>
-            <li>2. Upload 20+ billeder af dine retter (1 time)</li>
-            <li>3. Svar på alle eksisterende anmeldelser (30 min)</li>
-            <li>4. Sæt QR-kode op til anmeldelser ved kassen (15 min)</li>
-            <li>5. Tjek din hjemmesides hastighed og fix problemer (1-4 timer)</li>
+            <li>Opdater og kompletér din Google Business Profile</li>
+            <li>Implementér schema markup og opret lokationssider</li>
+            <li>Upload egne billeder og videoer, optimér alt-tekster og overskrifter</li>
+            <li>Test din side på mobil, optimer hastighed og gør bestilling synlig</li>
+            <li>Håndtér anmeldelser aktivt og hold dine kontaktoplysninger konsistente</li>
           </ul>
           <div class="guide-tip">
-            <h4>Det tager 5 timer</h4>
-            <p>Ingen månedlige SEO-pakker. Ingen dyre bureauer. 5 timers arbejde og du har gjort 90% af det der faktisk flytter nålen.</p>
+            <h4>Sådan hjælper Flow</h4>
+            <p>Alle disse trin er integreret i Flow: vi tilbyder et komplet website med struktureret data, hastighedsoptimering, billedoptimering, og automatiserede email- og SMS-kampagner. Du kan koncentrere dig om maden - vi tager os af teknikken.</p>
           </div>
         </div>
       </div>
