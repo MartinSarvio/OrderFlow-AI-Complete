@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vilkår og betingelser - Flow</title>
-  <meta name="description" content="Læs vilkår og betingelser for brug af Flows hjemmeside og tjenester.">
+  <meta name="description" content="Læs vilkår og betingelser for brug af Flow-platformen. Vilkårene regulerer dit forhold til Flow og brugen af vores tjenester.">
   <meta property="og:title" content="Vilkår og betingelser - Flow">
-  <meta property="og:description" content="Læs vilkår og betingelser for brug af Flows hjemmeside og tjenester.">
+  <meta property="og:description" content="Læs vilkår og betingelser for brug af Flow-platformen. Vilkårene regulerer dit forhold til Flow og brugen af vores tjenester.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -78,11 +78,22 @@
     .dropdown-cards .dropdown-card { min-height: 11rem; }
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
-    .legal-content { padding: 12rem 4rem 8rem; max-width: 80rem; margin: 0 auto; }
+
+    /* Legal Page Layout with Sidebar */
+    .legal-page { display: flex; max-width: 120rem; margin: 0 auto; padding: 12rem 4rem 8rem; gap: 6rem; }
+    .legal-sidebar { width: 24rem; flex-shrink: 0; position: sticky; top: 10rem; height: fit-content; }
+    .legal-nav { list-style: none; padding: 0; margin: 0; }
+    .legal-nav li { margin-bottom: 0.8rem; }
+    .legal-nav a { display: block; font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; transition: color 0.2s; border-bottom: 1px solid transparent; }
+    .legal-nav a:hover { color: var(--color-primary); }
+    .legal-nav a.active { color: var(--color-primary); font-weight: 600; }
+    .legal-content { flex: 1; max-width: 80rem; }
+
     .legal-header { margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-gray-200); }
     .legal-header h1 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
     .legal-header .last-updated { font-size: 1.4rem; color: var(--color-gray-500); }
     .legal-body h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-top: 4rem; margin-bottom: 1.6rem; }
+    .legal-body h2:first-child { margin-top: 0; }
     .legal-body h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-top: 3rem; margin-bottom: 1.2rem; }
     .legal-body p { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 1.6rem; }
     .legal-body ul, .legal-body ol { margin-left: 2rem; margin-bottom: 1.6rem; list-style: disc; }
@@ -90,6 +101,11 @@
     .legal-body li { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 0.8rem; }
     .legal-body a { color: var(--color-primary); text-decoration: underline; }
     .legal-body a:hover { color: var(--color-primary-hover); }
+    .legal-body table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
+    .legal-body th, .legal-body td { padding: 1.2rem; text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: 1.5rem; }
+    .legal-body th { font-weight: 600; color: var(--color-dark); background: var(--color-gray-50); }
+    .legal-body td { color: var(--color-gray-600); }
+
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -102,10 +118,18 @@
     .footer-legal { display: flex; gap: 2.4rem; }
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 968px) {
+      .legal-page { flex-direction: column; padding: 10rem 2rem 6rem; gap: 3rem; }
+      .legal-sidebar { width: 100%; position: static; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 2rem; }
+      .legal-nav { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .legal-nav li { margin-bottom: 0; }
+      .legal-nav a { padding: 0.6rem 1.2rem; background: var(--color-gray-50); border-radius: 0.6rem; font-size: 1.4rem; }
+      .legal-nav a.active { background: var(--color-primary); color: white; }
+    }
     @media (max-width: 768px) {
       .nav-links { display: none; }
       .nav-container { padding: 1.2rem 2rem; }
-      .legal-content { padding: 10rem 2rem 6rem; }
       .legal-header h1 { font-size: 3.2rem; }
       .footer { padding: 4rem 2rem 2rem; }
       .footer-content { grid-template-columns: 1fr 1fr; }
@@ -161,93 +185,388 @@
       </div>
     </nav>
 
-    <main class="legal-content">
-      <div class="legal-header">
-        <h1>Vilkår og betingelser</h1>
-        <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
-      </div>
-
-      <div class="legal-body">
-        <h2>1. Introduktion</h2>
-        <p>Disse vilkår og betingelser ("Vilkår") gælder for din brug af Flow ApS' hjemmeside og tjenester ("Tjenesterne"). Ved at tilgå eller bruge Tjenesterne accepterer du at være bundet af disse Vilkår.</p>
-        <p>Læs venligst disse Vilkår omhyggeligt, før du bruger vores Tjenester. Hvis du ikke accepterer alle Vilkår, må du ikke bruge Tjenesterne.</p>
-
-        <h2>2. Definitioner</h2>
-        <ul>
-          <li><strong>"Flow", "vi", "os", "vores"</strong> refererer til Flow ApS, CVR-nummer 12345678</li>
-          <li><strong>"Du", "dig", "din"</strong> refererer til brugeren af Tjenesterne</li>
-          <li><strong>"Tjenesterne"</strong> inkluderer vores hjemmeside, software, apps og relaterede tjenester</li>
-          <li><strong>"Indhold"</strong> inkluderer tekst, billeder, video, data og andre materialer</li>
+    <main class="legal-page">
+      <aside class="legal-sidebar">
+        <ul class="legal-nav">
+          <li><a href="privacy.html">Privatlivspolitik</a></li>
+          <li><a href="cookie-settings.html">Cookie-indstillinger</a></li>
+          <li><a href="terms.html" class="active">Vilkår og betingelser</a></li>
+          <li><a href="disclaimer.html">Ansvarsfraskrivelse</a></li>
+          <li><a href="restaurant-agreement.html">Restaurant Aftale</a></li>
+          <li><a href="platform-terms.html">Platform Vilkår</a></li>
+          <li><a href="accessibility.html">Tilgængelighed</a></li>
         </ul>
+      </aside>
 
-        <h2>3. Brug af tjenesterne</h2>
-        <h3>3.1 Adgangskrav</h3>
-        <p>For at bruge vores Tjenester skal du:</p>
-        <ul>
-          <li>Være mindst 18 år gammel eller have forældres/værges samtykke</li>
-          <li>Give nøjagtige og fuldstændige oplysninger ved registrering</li>
-          <li>Holde dine loginoplysninger fortrolige</li>
-          <li>Være ansvarlig for al aktivitet på din konto</li>
-        </ul>
+      <article class="legal-content">
+        <div class="legal-header">
+          <h1>Vilkår og betingelser</h1>
+          <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
+        </div>
 
-        <h3>3.2 Acceptabel brug</h3>
-        <p>Du accepterer at bruge Tjenesterne i overensstemmelse med gældende lovgivning og ikke til at:</p>
-        <ul>
-          <li>Krænke andres rettigheder eller privatliv</li>
-          <li>Distribuere skadeligt eller ulovligt indhold</li>
-          <li>Forsøge at få uautoriseret adgang til systemer</li>
-          <li>Forstyrre eller skade Tjenesternes drift</li>
-          <li>Bruge automatiserede systemer uden tilladelse</li>
-        </ul>
+        <div class="legal-body">
+          <h2>1. Introduktion og accept af vilkår</h2>
+          <p>Velkommen til Flow. Disse vilkår og betingelser ("Vilkårene") udgør en juridisk bindende aftale mellem dig ("Brugeren", "du" eller "dig") og Flow ApS ("Flow", "vi", "os" eller "vores") vedrørende din adgang til og brug af Flow-platformen, herunder vores hjemmeside, softwareplatform, mobile applikationer og alle tilknyttede tjenester (samlet benævnt "Tjenesterne").</p>
+          <p>Ved at oprette en konto, tilgå eller bruge Flow-platformen bekræfter du, at du har læst, forstået og accepterer at være bundet af disse Vilkår samt vores <a href="privacy.html">Privatlivspolitik</a>. Hvis du ikke accepterer disse Vilkår i deres helhed, må du ikke tilgå eller bruge vores Tjenester.</p>
+          <p>Hvis du accepterer disse Vilkår på vegne af en virksomhed, organisation eller anden juridisk enhed, erklærer og garanterer du, at du har den nødvendige bemyndigelse til at binde denne enhed til disse Vilkår. I så fald vil "du" og "din" i disse Vilkår referere til denne juridiske enhed.</p>
+          <p>Vi forbeholder os ret til at afvise adgang til Tjenesterne til enhver person eller enhed og til at ændre adgangskriterierne når som helst uden forudgående varsel.</p>
 
-        <h2>4. Intellektuel ejendomsret</h2>
-        <p>Alt indhold på vores Tjenester, herunder men ikke begrænset til tekst, grafik, logoer, ikoner, billeder, lydklip, digitale downloads og software, er ejet af Flow eller vores licensgivere og er beskyttet af dansk og international ophavsretslovgivning.</p>
-        <p>Du må ikke:</p>
-        <ul>
-          <li>Kopiere, modificere eller distribuere vores indhold uden tilladelse</li>
-          <li>Bruge vores varemærker uden skriftlig tilladelse</li>
-          <li>Fjerne copyright- eller andre ejendomsretlige meddelelser</li>
-        </ul>
+          <h2>2. Definitioner</h2>
+          <p>I disse Vilkår anvendes følgende definitioner, medmindre andet fremgår af konteksten:</p>
+          <ul>
+            <li><strong>"Flow", "vi", "os", "vores"</strong> refererer til Flow ApS, CVR-nummer 12345678, med hjemsted på Vestergade 1, 1456 København K, Danmark.</li>
+            <li><strong>"Brugeren", "du", "dig", "din"</strong> refererer til den fysiske eller juridiske person, der tilgår eller bruger Tjenesterne, herunder restaurantejere, restaurantmedarbejdere og deres autoriserede repræsentanter.</li>
+            <li><strong>"Tjenesterne"</strong> omfatter Flow-softwareplatformen, herunder alle websteder, mobile applikationer, API'er, widgets og andre digitale produkter og tjenester, der leveres af Flow.</li>
+            <li><strong>"Platformen"</strong> betyder Flow's SaaS-platform til restaurantautomatisering, inklusiv online bestillingssystem, hjemmesideværktøjer, loyalitetsprogrammer, marketingautomatisering og tilknyttede funktioner.</li>
+            <li><strong>"Slutbrugere"</strong> betyder de kunder, der bestiller mad eller interagerer med restauranter via Flow-platformen.</li>
+            <li><strong>"Brugerindhold"</strong> betyder alle data, oplysninger, tekst, billeder, menuer, priser og andet materiale, som Brugeren uploader, indtaster eller på anden måde gør tilgængeligt via Platformen.</li>
+            <li><strong>"Abonnement"</strong> betyder den betalte adgang til Platformen i henhold til den valgte abonnementsplan og tilhørende servicevilkår.</li>
+            <li><strong>"Fortrolige Oplysninger"</strong> betyder alle ikke-offentlige oplysninger af enhver art, der udveksles mellem parterne i forbindelse med disse Vilkår eller brugen af Tjenesterne.</li>
+          </ul>
 
-        <h2>5. Abonnementer og betaling</h2>
-        <h3>5.1 Priser og betaling</h3>
-        <p>Priser for vores Tjenester fremgår af vores hjemmeside. Alle priser er i danske kroner og eksklusive moms, medmindre andet er angivet.</p>
+          <h2>3. Brug af Flow-platformen</h2>
 
-        <h3>5.2 Automatisk fornyelse</h3>
-        <p>Abonnementer fornyes automatisk ved periodens udløb, medmindre du opsiger inden fornyelsesdatoen.</p>
+          <h3>3.1 Adgangskrav</h3>
+          <p>For at oprette en konto og bruge Flow-platformen skal du opfylde følgende krav:</p>
+          <ul>
+            <li>Du skal være mindst 18 år gammel eller have opnået myndighedsalderen i din jurisdiktion</li>
+            <li>Du skal have juridisk kapacitet til at indgå bindende aftaler i dit land</li>
+            <li>Du skal have tilladelse til at drive fødevarevirksomhed i henhold til gældende lovgivning</li>
+            <li>Du skal oprette en konto med korrekte, aktuelle og fuldstændige oplysninger</li>
+            <li>Du skal opretholde og omgående opdatere dine kontooplysninger for at sikre deres rigtighed</li>
+            <li>Du skal overholde alle gældende love, regler og bestemmelser i forbindelse med din brug af Platformen</li>
+          </ul>
 
-        <h3>5.3 Opsigelse</h3>
-        <p>Du kan opsige dit abonnement når som helst. Opsigelsen træder i kraft ved udgangen af den aktuelle faktureringsperiode.</p>
+          <h3>3.2 Acceptabel brug</h3>
+          <p>Du accepterer at bruge Platformen udelukkende til lovlige forretningsformål og i overensstemmelse med disse Vilkår. Du forpligter dig til at:</p>
+          <ul>
+            <li>Kun bruge Platformen til at drive og promovere din restaurantvirksomhed</li>
+            <li>Sikre at al information, du leverer, er sand, nøjagtig og ikke vildledende</li>
+            <li>Overholde alle gældende fødevaresikkerheds- og hygiejneforskrifter</li>
+            <li>Respektere tredjeparters intellektuelle ejendomsrettigheder</li>
+            <li>Beskytte slutbrugernes personoplysninger i overensstemmelse med gældende databeskyttelseslovgivning</li>
+            <li>Ikke bruge Platformen på en måde, der kan skade Flows omdømme eller forretning</li>
+          </ul>
 
-        <h2>6. Ansvarsbegrænsning</h2>
-        <p>I det omfang gældende lovgivning tillader det:</p>
-        <ul>
-          <li>Leveres Tjenesterne "som de er" uden garantier af nogen art</li>
-          <li>Fraskriver vi os ansvar for indirekte skader, følgeskader eller tab af data</li>
-          <li>Er vores samlede ansvar begrænset til det beløb, du har betalt for Tjenesterne i de seneste 12 måneder</li>
-        </ul>
+          <h3>3.3 Forbudte aktiviteter</h3>
+          <p>Følgende aktiviteter er strengt forbudt og kan medføre øjeblikkelig opsigelse af din konto:</p>
+          <ul>
+            <li>Reverse engineering, dekompilering, disassemblering eller på anden måde forsøge at udlede kildekoden til Platformen</li>
+            <li>Kopiering, modificering, tilpasning eller distribution af Platformens software, design eller indhold</li>
+            <li>Brug af automatiserede systemer, bots, crawlers eller scrapers uden forudgående skriftlig tilladelse</li>
+            <li>Forsøg på at omgå, deaktivere eller på anden måde interferere med sikkerhedsforanstaltninger eller adgangskontroller</li>
+            <li>Videreoverdragelse, udlejning, udlån eller videresalg af din konto eller adgangsrettigheder til tredjeparter</li>
+            <li>Brug af Platformen til at sende spam, phishing-forsøg eller andet uønsket indhold</li>
+            <li>Upload af indhold, der er ulovligt, ærekrænkende, truende, chikanerende eller på anden måde stødende</li>
+            <li>Distribution af malware, vira eller anden skadelig software via Platformen</li>
+            <li>Forsøg på at få uautoriseret adgang til andre brugeres konti, data eller systemer</li>
+            <li>Brug af Platformen til svindel, hvidvaskning af penge eller andre ulovlige aktiviteter</li>
+          </ul>
 
-        <h2>7. Skadesløsholdelse</h2>
-        <p>Du accepterer at skadesløsholde Flow, vores direktører, medarbejdere og partnere fra ethvert krav, tab eller skade, der opstår som følge af din brug af Tjenesterne eller overtrædelse af disse Vilkår.</p>
+          <h2>4. Oprettelse og administration af konto</h2>
 
-        <h2>8. Ændringer af vilkår</h2>
-        <p>Vi forbeholder os retten til at ændre disse Vilkår til enhver tid. Ved væsentlige ændringer vil vi give dig besked via e-mail eller en meddelelse på vores hjemmeside mindst 30 dage før ændringerne træder i kraft.</p>
+          <h3>4.1 Kontooprettelse</h3>
+          <p>For at bruge Flow's Tjenester skal du oprette en konto ved at give de krævede oplysninger, herunder virksomhedsnavn, CVR-nummer, kontaktperson, e-mailadresse og andre relevante forretningsoplysninger. Du garanterer, at alle oplysninger er korrekte, aktuelle og fuldstændige.</p>
+          <p>Vi forbeholder os ret til at verificere de oplysninger, du giver, og kan anmode om yderligere dokumentation for at bekræfte din identitet og virksomhed. Vi kan afvise enhver ansøgning om kontooprettelse efter eget skøn.</p>
 
-        <h2>9. Ophør</h2>
-        <p>Vi kan suspendere eller ophæve din adgang til Tjenesterne, hvis du overtræder disse Vilkår, uden varsel og uden ansvar over for dig.</p>
+          <h3>4.2 Kontosikkerhed</h3>
+          <p>Du er eneansvarlig for at opretholde fortroligheden og sikkerheden af dine loginoplysninger. Du forpligter dig til:</p>
+          <ul>
+            <li>At vælge en stærk, unik adgangskode og opbevare den sikkert</li>
+            <li>At aktivere tofaktorgodkendelse, når det er tilgængeligt og anbefalet</li>
+            <li>Ikke at dele dine loginoplysninger med uautoriserede personer</li>
+            <li>Straks at underrette os om enhver uautoriseret brug af din konto eller sikkerhedsbrud</li>
+            <li>At logge ud af din konto efter hver session, især på delte enheder</li>
+          </ul>
+          <p>Du accepterer, at du er ansvarlig for alle aktiviteter, der foretages via din konto, uanset om de er autoriseret af dig. Flow er ikke ansvarlig for tab eller skade som følge af manglende overholdelse af disse sikkerhedsforpligtelser.</p>
 
-        <h2>10. Lovvalg og værneting</h2>
-        <p>Disse Vilkår er underlagt dansk ret. Eventuelle tvister skal afgøres ved de danske domstole med København som værneting.</p>
+          <h3>4.3 Brugerroller og adgangsniveauer</h3>
+          <p>Flow tilbyder forskellige brugerroller med varierende adgangsniveauer til Platformens funktioner. Som kontoadministrator er du ansvarlig for:</p>
+          <ul>
+            <li>At oprette og administrere brugerkonti for dine medarbejdere</li>
+            <li>At tildele passende roller og adgangsrettigheder baseret på arbejdsopgaver</li>
+            <li>At sikre at brugere kun har adgang til de funktioner og data, de har brug for</li>
+            <li>At deaktivere adgang for medarbejdere, der forlader virksomheden</li>
+            <li>At føre tilsyn med alle aktiviteter, der udføres af brugere under din konto</li>
+          </ul>
 
-        <h2>11. Kontakt</h2>
-        <p>Har du spørgsmål til disse vilkår, er du velkommen til at kontakte os:</p>
-        <ul>
-          <li>Flow ApS</li>
-          <li>Vestergade 1, 1456 København K</li>
-          <li>E-mail: <a href="mailto:legal@flow.dk">legal@flow.dk</a></li>
-          <li>Telefon: +45 70 12 34 56</li>
-        </ul>
-      </div>
+          <h2>5. Abonnementer, priser og betaling</h2>
+
+          <h3>5.1 Abonnementsplaner</h3>
+          <p>Flow tilbyder forskellige abonnementsplaner med varierende funktioner, supportniveauer og priser. De aktuelle abonnementsplaner, priser og inkluderede funktioner er tilgængelige på vores hjemmeside eller kan rekvireres ved henvendelse til vores salgsteam.</p>
+          <p>Vi forbeholder os ret til at ændre, tilføje eller fjerne abonnementsplaner eller funktioner med rimeligt varsel. Eksisterende abonnenter vil modtage mindst 30 dages varsel om væsentlige ændringer, der påvirker deres nuværende plan.</p>
+
+          <h3>5.2 Priser og gebyrer</h3>
+          <p>Alle priser angives i danske kroner (DKK) og er eksklusive moms, medmindre andet tydeligt fremgår. Udover det faste abonnementsgebyr kan der forekomme følgende yderligere gebyrer:</p>
+          <ul>
+            <li>Transaktionsgebyrer på online betalinger (procentdel af ordreværdi)</li>
+            <li>Gebyrer for SMS-notifikationer ud over inkluderet kvote</li>
+            <li>Gebyrer for yderligere brugere ud over inkluderet antal</li>
+            <li>Gebyrer for premium-funktioner og tilkøbsmoduler</li>
+            <li>Eventuelle opsætnings- eller implementeringsgebyrer</li>
+          </ul>
+
+          <h3>5.3 Betalingsbetingelser</h3>
+          <p>Abonnementsgebyrer faktureres på forhånd i henhold til den valgte faktureringsperiode (månedlig eller årlig). Ved at oprette et abonnement autoriserer du Flow til at opkræve det gældende gebyr via den angivne betalingsmetode.</p>
+          <ul>
+            <li>Fakturering sker automatisk ved begyndelsen af hver faktureringsperiode</li>
+            <li>Betalingsfristen er 8 dage fra fakturadato, medmindre andet er aftalt</li>
+            <li>Ved forsinket betaling tilskrives morarenter i henhold til renteloven</li>
+            <li>Ved manglende betaling ud over 14 dage kan vi suspendere adgangen til Platformen</li>
+            <li>Gentagne betalingsproblemer kan medføre krav om forudbetaling eller opsigelse</li>
+          </ul>
+
+          <h3>5.4 Automatisk fornyelse</h3>
+          <p>Alle abonnementer fornyes automatisk ved udløb af den aktuelle faktureringsperiode til den da gældende pris, medmindre du opsiger abonnementet inden fornyelsesdatoen. Du vil modtage en påmindelse om den forestående fornyelse mindst 14 dage før fornyelsesdatoen.</p>
+
+          <h3>5.5 Prisændringer</h3>
+          <p>Vi forbeholder os ret til at justere vores priser. Ved prisændringer vil vi give dig mindst 30 dages varsel via e-mail til den registrerede e-mailadresse. Prisændringer træder i kraft ved begyndelsen af den næste faktureringsperiode efter varslingsperiodens udløb.</p>
+          <p>Hvis du ikke accepterer prisændringen, har du ret til at opsige dit abonnement med virkning fra udgangen af den aktuelle faktureringsperiode.</p>
+
+          <h3>5.6 Refusion</h3>
+          <p>Abonnementsgebyrer er som udgangspunkt ikke refunderbare. Følgende undtagelser gælder:</p>
+          <ul>
+            <li>Ved væsentlig misligholdelse fra Flows side kan forholdsmæssig refusion ske</li>
+            <li>Ved fejlopkrævning vil det fejlagtigt opkrævede beløb blive refunderet</li>
+            <li>Særlige refusionsanmodninger vurderes individuelt efter skriftlig henvendelse</li>
+          </ul>
+
+          <h2>6. Intellektuel ejendomsret</h2>
+
+          <h3>6.1 Flows ejendomsret</h3>
+          <p>Flow og dets licensgivere ejer og bevarer alle rettigheder, titler og interesser i og til Tjenesterne, herunder men ikke begrænset til:</p>
+          <ul>
+            <li>Al software, kildekode, objektkode, algoritmer og tekniske løsninger</li>
+            <li>Brugergrænseflader, design, layout, "look and feel" og brugeroplevelse</li>
+            <li>Varemærker, logoer, handelsnavne og andre virksomhedskendetegn</li>
+            <li>Dokumentation, træningsmaterialer, vejledninger og supportindhold</li>
+            <li>Databaser, datastrukturer og alle aggregerede eller anonymiserede data</li>
+            <li>Alle forbedringer, opdateringer, afledte værker og nye funktioner</li>
+          </ul>
+          <p>Intet i disse Vilkår skal fortolkes som en overdragelse af intellektuel ejendomsret fra Flow til dig.</p>
+
+          <h3>6.2 Begrænset licens til Brugeren</h3>
+          <p>Med forbehold for din overholdelse af disse Vilkår og rettidig betaling af alle skyldige gebyrer, giver Flow dig en begrænset, ikke-eksklusiv, ikke-overdragelig, genkaldelig licens til at tilgå og bruge Platformen udelukkende til dine interne forretningsformål i abonnementsperioden.</p>
+          <p>Denne licens omfatter ikke ret til at:</p>
+          <ul>
+            <li>Underlicensere, overdrage eller på anden måde overføre rettigheder til tredjeparter</li>
+            <li>Modificere, tilpasse, oversætte eller skabe afledte værker baseret på Platformen</li>
+            <li>Fjerne, ændre eller skjule meddelelser om ophavsret, varemærker eller andre ejendomsretlige meddelelser</li>
+            <li>Bruge Flows varemærker eller logoer uden forudgående skriftlig tilladelse</li>
+          </ul>
+
+          <h3>6.3 Feedback og forslag</h3>
+          <p>Hvis du giver feedback, forslag, idéer eller anbefalinger vedrørende Tjenesterne ("Feedback"), giver du hermed Flow en ubegrænset, verdensomspændende, royaltyfri, uigenkaldelig licens til at bruge, modificere, offentliggøre, distribuere og på anden måde udnytte sådan Feedback uden forpligtelse over for dig.</p>
+
+          <h2>7. Brugerindhold og licens</h2>
+
+          <h3>7.1 Dit ejerskab</h3>
+          <p>Du bevarer alle ejendomsrettigheder til det Brugerindhold, du uploader, opretter eller på anden måde gør tilgængeligt via Platformen, herunder menuer, billeder, restaurantbeskrivelser og kundedata. Flow gør ikke krav på ejerskab over dit Brugerindhold.</p>
+
+          <h3>7.2 Licens til Flow</h3>
+          <p>Ved at uploade eller indtaste Brugerindhold i Platformen giver du Flow en begrænset, verdensomspændende, royaltyfri, ikke-eksklusiv licens til at:</p>
+          <ul>
+            <li>Opbevare, behandle og vise dit Brugerindhold som nødvendigt for at levere Tjenesterne</li>
+            <li>Tage backup af dit Brugerindhold for at sikre datatilgængelighed og -integritet</li>
+            <li>Vise dit Brugerindhold på bestillingssider, mobile apps og andre kundevendte flader</li>
+            <li>Bruge anonymiserede og aggregerede data afledt af dit Brugerindhold til at forbedre Platformen</li>
+            <li>Dele dit Brugerindhold med underdatabehandlere som nødvendigt for at levere Tjenesterne</li>
+          </ul>
+          <p>Denne licens ophører, når du sletter dit Brugerindhold eller opsiger dit abonnement, med undtagelse af backup-kopier, der slettes i overensstemmelse med vores opbevaringspolitik.</p>
+
+          <h3>7.3 Dit ansvar for Brugerindhold</h3>
+          <p>Du er eneansvarlig for dit Brugerindhold og erklærer og garanterer, at:</p>
+          <ul>
+            <li>Du har alle nødvendige rettigheder til at uploade og bruge Brugerindholdet</li>
+            <li>Dit Brugerindhold ikke krænker tredjeparters intellektuelle ejendomsrettigheder</li>
+            <li>Dit Brugerindhold er sandt, nøjagtigt og ikke vildledende</li>
+            <li>Dit Brugerindhold ikke indeholder ulovligt, stødende eller skadeligt materiale</li>
+            <li>Du overholder alle gældende love vedrørende markedsføring, prismærkning og produktoplysninger</li>
+          </ul>
+
+          <h2>8. Fortrolighed og tavshedspligt</h2>
+
+          <h3>8.1 Definition af Fortrolige Oplysninger</h3>
+          <p>Fortrolige Oplysninger omfatter alle ikke-offentlige oplysninger af enhver art, der videregives af en part ("Afslørende Part") til den anden part ("Modtagende Part") i forbindelse med disse Vilkår, herunder:</p>
+          <ul>
+            <li>Forretningshemmeligheder, knowhow og proprietære metoder</li>
+            <li>Kundedata, leverandøroplysninger og forretningsforbindelser</li>
+            <li>Tekniske specifikationer, softwarekode og systemarkitektur</li>
+            <li>Finansielle oplysninger, priser og forretningsplaner</li>
+            <li>Aftalevilkår og forhandlingspositioner</li>
+          </ul>
+
+          <h3>8.2 Fortrolighedsforpligtelser</h3>
+          <p>Begge parter forpligter sig til at:</p>
+          <ul>
+            <li>Behandle Fortrolige Oplysninger med mindst samme omhu som egne fortrolige oplysninger og under ingen omstændigheder med mindre end rimelig omhu</li>
+            <li>Kun bruge Fortrolige Oplysninger til opfyldelse af forpligtelserne i disse Vilkår</li>
+            <li>Ikke videregive Fortrolige Oplysninger til tredjeparter uden forudgående skriftligt samtykke</li>
+            <li>Begrænse adgangen til Fortrolige Oplysninger til medarbejdere og repræsentanter med et legitimt behov for viden</li>
+            <li>Sikre at modtagere af Fortrolige Oplysninger er bundet af tilsvarende fortrolighedsforpligtelser</li>
+          </ul>
+
+          <h3>8.3 Undtagelser fra fortrolighed</h3>
+          <p>Fortrolighedsforpligtelserne gælder ikke for oplysninger, som den Modtagende Part kan dokumentere:</p>
+          <ul>
+            <li>Er eller bliver offentligt tilgængelige uden brud på disse Vilkår</li>
+            <li>Var lovligt i Modtagende Parts besiddelse før modtagelsen fra Afslørende Part</li>
+            <li>Er modtaget fra en tredjepart, der lovligt kan videregive oplysningerne</li>
+            <li>Er uafhængigt udviklet af Modtagende Part uden brug af Fortrolige Oplysninger</li>
+            <li>Skal videregives i henhold til lov, domstolskendelse eller myndighedspåbud</li>
+          </ul>
+
+          <h3>8.4 Varighed</h3>
+          <p>Fortrolighedsforpligtelserne gælder i abonnementsperioden og i en periode på 3 år efter aftalens ophør. For forretningshemmeligheder gælder forpligtelserne så længe, oplysningerne udgør forretningshemmeligheder i henhold til gældende lovgivning.</p>
+
+          <h2>9. Serviceniveau og oppetid</h2>
+
+          <h3>9.1 Tilgængelighed</h3>
+          <p>Flow bestræber sig på at opretholde en oppetid for Platformen på mindst 99,5% målt på månedsbasis, beregnet som: (Samlet antal minutter i måneden - nedetid) / Samlet antal minutter i måneden × 100.</p>
+          <p>Følgende tæller ikke som nedetid ved beregning af oppetid:</p>
+          <ul>
+            <li>Planlagt vedligeholdelse, der er varslet mindst 48 timer i forvejen</li>
+            <li>Force majeure-begivenheder som defineret i afsnit 14</li>
+            <li>Problemer forårsaget af Brugerens udstyr, software eller internetforbindelse</li>
+            <li>Problemer med tredjepartstjenester uden for Flows kontrol</li>
+            <li>Nedlukning eller begrænsning som følge af Brugerens overtrædelse af disse Vilkår</li>
+          </ul>
+
+          <h3>9.2 Planlagt vedligeholdelse</h3>
+          <p>Flow vil så vidt muligt udføre planlagt vedligeholdelse i tidsrummet mellem kl. 02:00 og 06:00 dansk tid på hverdage. Vedligeholdelse varsles via e-mail og/eller systemmeddelelse mindst 48 timer i forvejen, undtagen i nødsituationer, hvor kortere varsel kan forekomme.</p>
+
+          <h3>9.3 Support</h3>
+          <p>Flow tilbyder kundesupport i henhold til den valgte abonnementsplan. Supportniveauer, responstider og supportkanaler er beskrevet i den gældende servicebeskrivelse for din abonnementsplan.</p>
+
+          <h2>10. Ansvarsbegrænsning</h2>
+
+          <h3>10.1 Ansvarsfraskrivelse for garantier</h3>
+          <p>I det videst mulige omfang gældende lov tillader, leveres Tjenesterne "som de er" og "som tilgængelige" uden garantier af nogen art, hverken udtrykkelige eller stiltiende, herunder men ikke begrænset til stiltiende garantier for salgbarhed, egnethed til et bestemt formål, ikke-krænkelse eller tilfredsstillende kvalitet.</p>
+          <p>Flow garanterer ikke, at:</p>
+          <ul>
+            <li>Tjenesterne vil være uafbrudte, fejlfri eller sikre</li>
+            <li>Resultater opnået ved brug af Tjenesterne vil være nøjagtige eller pålidelige</li>
+            <li>Tjenesterne vil opfylde dine specifikke krav eller forventninger</li>
+            <li>Eventuelle fejl i Tjenesterne vil blive rettet inden for en bestemt tidsramme</li>
+          </ul>
+
+          <h3>10.2 Begrænsning af erstatningsansvar</h3>
+          <p>I det videst mulige omfang gældende lov tillader:</p>
+          <ul>
+            <li>Flow er under ingen omstændigheder ansvarlig for indirekte tab, følgeskader, tilfældige skader, særlige skader, pønale erstatninger, tabt fortjeneste, tabte data, tab af goodwill, driftstab eller forretningsmuligheder, uanset om sådanne tab var forudsigelige.</li>
+            <li>Flows samlede kumulative ansvar over for dig for alle krav, der opstår i forbindelse med disse Vilkår eller din brug af Tjenesterne, er under alle omstændigheder begrænset til det samlede beløb, du faktisk har betalt til Flow i de 12 måneder umiddelbart forud for den hændelse, der gav anledning til kravet.</li>
+            <li>Disse begrænsninger gælder uanset erstatningsgrundlag og uanset om Flow er blevet informeret om muligheden for sådanne skader.</li>
+          </ul>
+          <p>Ovenstående begrænsninger gælder ikke i tilfælde af forsætlig skadeforvoldelse eller grov uagtsomhed fra Flows side eller i det omfang, ansvarsbegrænsninger er ugyldige i henhold til ufravigelig lovgivning.</p>
+
+          <h3>10.3 Tredjepartstjenester</h3>
+          <p>Platformen kan integrere med eller linke til tredjepartstjenester og -hjemmesider, herunder betalingsudbydere, leveringstjenester og sociale medier. Flow er ikke ansvarlig for sådanne tredjepartstjenesters tilgængelighed, indhold, sikkerhed, politikker eller praksis. Din brug af tredjepartstjenester er underlagt den pågældende tredjeparts vilkår og betingelser.</p>
+
+          <h2>11. Skadesløsholdelse</h2>
+          <p>Du accepterer at skadesløsholde, forsvare og holde Flow, dets datterselskaber, associerede selskaber, direktører, ledere, medarbejdere, agenter, licensgivere og tjenesteudbydere skadesløse fra og mod alle krav, ansvar, tab, skader, omkostninger og udgifter (herunder rimelige advokatomkostninger og sagsomkostninger), der opstår som følge af eller i forbindelse med:</p>
+          <ul>
+            <li>Din brug eller misbrug af Tjenesterne</li>
+            <li>Dit Brugerindhold, herunder krav om krænkelse af tredjeparters rettigheder</li>
+            <li>Din overtrædelse af disse Vilkår</li>
+            <li>Din krænkelse af tredjeparters rettigheder, herunder intellektuelle ejendomsrettigheder</li>
+            <li>Din overtrædelse af gældende love, regler eller bestemmelser</li>
+            <li>Tvister mellem dig og dine kunder eller slutbrugere</li>
+            <li>Dine medarbejderes eller agenters handlinger eller undladelser</li>
+          </ul>
+          <p>Flow vil underrette dig om ethvert sådant krav og samarbejde med dig om forsvaret, forudsat at du bærer alle omkostninger og udgifter i forbindelse hermed.</p>
+
+          <h2>12. Ophør og opsigelse</h2>
+
+          <h3>12.1 Opsigelse af dig</h3>
+          <p>Du kan til enhver tid opsige dit abonnement ved at:</p>
+          <ul>
+            <li>Benytte opsigelsesmulighederne i din kontoadministration på Platformen</li>
+            <li>Sende skriftlig opsigelse til os via e-mail til <a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <p>Opsigelsen træder i kraft ved udgangen af den aktuelle faktureringsperiode. Du vil fortsat have adgang til Tjenesterne indtil periodens udløb, og der ydes ikke refusion for ubrugt tid.</p>
+
+          <h3>12.2 Opsigelse af Flow</h3>
+          <p>Flow kan opsige eller suspendere din adgang til Tjenesterne:</p>
+          <ul>
+            <li>Med øjeblikkelig virkning ved væsentlig misligholdelse af disse Vilkår, herunder manglende betaling, krænkelse af intellektuelle ejendomsrettigheder eller forbudte aktiviteter</li>
+            <li>Med øjeblikkelig virkning hvis din brug udgør en sikkerhedsrisiko, er ulovlig eller skader andre brugere eller Flow</li>
+            <li>Med 30 dages skriftligt varsel af enhver årsag eller ingen årsag</li>
+            <li>Øjeblikkeligt hvis du indgiver konkursbegæring eller er genstand for insolvensbehandling</li>
+          </ul>
+
+          <h3>12.3 Virkninger af ophør</h3>
+          <p>Ved aftalens ophør, uanset årsag:</p>
+          <ul>
+            <li>Ophører din ret til at tilgå og bruge Tjenesterne øjeblikkeligt (eller ved periodens udløb ved almindelig opsigelse)</li>
+            <li>Alle udestående beløb forfalder til øjeblikkelig betaling</li>
+            <li>Du skal ophøre med at bruge Flows varemærker, logoer og andet materiale</li>
+            <li>Flow vil opbevare dit Brugerindhold i en overgangsperiode på 30 dage, hvor du kan eksportere data</li>
+            <li>Efter overgangsperioden vil dit Brugerindhold blive slettet, medmindre lovgivningen kræver længere opbevaring</li>
+            <li>Bestemmelserne om fortrolighed, ansvarsbegrænsning, skadesløsholdelse, lovvalg og andre bestemmelser, der efter deres natur bør overleve, forbliver i kraft</li>
+          </ul>
+
+          <h2>13. Force majeure</h2>
+          <p>Ingen af parterne er ansvarlig for forsinkelse eller manglende opfyldelse af forpligtelser i henhold til disse Vilkår (undtagen betalingsforpligtelser), hvis og i det omfang sådan forsinkelse eller manglende opfyldelse skyldes omstændigheder uden for den pågældende parts rimelige kontrol ("Force Majeure"), herunder men ikke begrænset til:</p>
+          <ul>
+            <li>Naturkatastrofer, herunder jordskælv, oversvømmelser, storme og andre naturbegivenheder</li>
+            <li>Krig, terrorhandlinger, borgerlige uroligheder, optøjer eller sabotage</li>
+            <li>Epidemier, pandemier eller andre alvorlige sundhedskriser</li>
+            <li>Statslige handlinger, embargoer, sanktioner eller lovændringer</li>
+            <li>Generelle strømafbrydelser, internetudfald eller telekommunikationsfejl</li>
+            <li>Cyberangreb, DDoS-angreb eller sikkerhedsbrud, der ikke skyldes partens forsømmelighed</li>
+            <li>Strejker, lockouter eller andre arbejdskonflikter (undtagen hos parten selv)</li>
+          </ul>
+          <p>Den part, der påberåber sig Force Majeure, skal uden ugrundet ophold underrette den anden part skriftligt om Force Majeure-begivenheden, dens forventede varighed og de forpligtelser, der påvirkes. Parten skal træffe rimelige foranstaltninger for at begrænse konsekvenserne af Force Majeure-begivenheden.</p>
+          <p>Hvis en Force Majeure-begivenhed varer i mere end 60 dage, kan begge parter opsige aftalen med 14 dages skriftligt varsel uden erstatningsansvar.</p>
+
+          <h2>14. Ændringer til vilkårene</h2>
+          <p>Flow forbeholder sig ret til at ændre, opdatere eller revidere disse Vilkår til enhver tid. Ved ændringer vil vi:</p>
+          <ul>
+            <li>Give mindst 30 dages varsel før væsentlige ændringer træder i kraft</li>
+            <li>Underrette dig via e-mail til den registrerede e-mailadresse og/eller via systemmeddelelse på Platformen</li>
+            <li>Opdatere "Sidst opdateret"-datoen øverst i dette dokument</li>
+            <li>Ved meget væsentlige ændringer, der væsentligt påvirker dine rettigheder, kan vi anmode om aktiv accept</li>
+          </ul>
+          <p>Din fortsatte brug af Tjenesterne efter ændringernes ikrafttræden udgør accept af de reviderede Vilkår. Hvis du ikke accepterer ændringerne, er dit eneste retsmiddel at opsige dit abonnement inden ændringernes ikrafttræden.</p>
+          <p>Ændringer, der ikke væsentligt påvirker dine rettigheder, såsom rettelse af stavefejl eller tilføjelse af nye funktioner, kan implementeres uden forudgående varsel.</p>
+
+          <h2>15. Lovvalg og værneting</h2>
+          <p>Disse Vilkår og ethvert krav, tvist eller uoverensstemmelse, der måtte opstå i forbindelse hermed eller i forbindelse med din brug af Tjenesterne, er underlagt og skal fortolkes i overensstemmelse med dansk ret, uden hensyntagen til lovvalgsregler, der ville medføre anvendelse af en anden jurisdiktions lovgivning.</p>
+          <p>Enhver tvist, der udspringer af eller er relateret til disse Vilkår eller din brug af Tjenesterne, som ikke kan løses ved forhandling, skal indbringes for de danske domstole med Københavns Byret som aftalt værneting i første instans.</p>
+          <p>Uanset ovenstående kan Flow vælge at anlægge sag ved domstolene i din hjemstedsjurisdiktion for at håndhæve eventuelle domme eller for at søge foreløbige retsmidler.</p>
+          <p>Før en tvist indbringes for domstolene, skal parterne i god tro forsøge at løse tvisten gennem direkte forhandling. Hvis tvisten ikke er løst inden for 30 dage fra den ene part har givet skriftlig meddelelse om tvisten til den anden part, kan sagen indbringes for domstolene.</p>
+
+          <h2>16. Generelle bestemmelser</h2>
+
+          <h3>16.1 Hele aftalen</h3>
+          <p>Disse Vilkår, sammen med Privatlivspolitikken og eventuelle yderligere aftaler, du indgår med Flow, udgør den fuldstændige aftale mellem dig og Flow vedrørende brugen af Tjenesterne og erstatter alle tidligere mundtlige eller skriftlige aftaler, forståelser og forhandlinger.</p>
+
+          <h3>16.2 Overdragelse</h3>
+          <p>Du må ikke overdrage eller overføre disse Vilkår eller dine rettigheder eller forpligtelser hereunder til nogen tredjepart uden Flows forudgående skriftlige samtykke. Flow kan frit overdrage disse Vilkår til en køber af hele eller en del af virksomheden eller ved fusion eller omstrukturering.</p>
+
+          <h3>16.3 Frafald</h3>
+          <p>Flows undladelse af at håndhæve en bestemmelse i disse Vilkår skal ikke fortolkes som et frafald af Flows ret til senere at håndhæve denne eller enhver anden bestemmelse.</p>
+
+          <h3>16.4 Ugyldighed</h3>
+          <p>Hvis en bestemmelse i disse Vilkår findes at være ugyldig, ulovlig eller ikke kan håndhæves, skal den pågældende bestemmelse begrænses eller elimineres i det mindst nødvendige omfang, således at de resterende bestemmelser forbliver fuldt gyldige og i kraft.</p>
+
+          <h3>16.5 Uafhængige parter</h3>
+          <p>Forholdet mellem dig og Flow er som uafhængige kontraktsparter. Intet i disse Vilkår skal fortolkes som skabende et ansættelsesforhold, partnerskab, joint venture, agentur eller franchise-forhold.</p>
+
+          <h2>17. Kontaktoplysninger</h2>
+          <p>Hvis du har spørgsmål, kommentarer eller bekymringer vedrørende disse Vilkår eller ønsker at udøve dine rettigheder, er du velkommen til at kontakte os:</p>
+          <ul>
+            <li><strong>Virksomhedsnavn:</strong> Flow ApS</li>
+            <li><strong>CVR-nummer:</strong> 12345678</li>
+            <li><strong>Adresse:</strong> Vestergade 1, 1456 København K, Danmark</li>
+            <li><strong>E-mail (generelle henvendelser):</strong> <a href="mailto:info@flow.dk">info@flow.dk</a></li>
+            <li><strong>E-mail (juridiske henvendelser):</strong> <a href="mailto:legal@flow.dk">legal@flow.dk</a></li>
+            <li><strong>E-mail (support):</strong> <a href="mailto:support@flow.dk">support@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+          </ul>
+          <p>Vi bestræber os på at besvare alle henvendelser inden for 5 arbejdsdage.</p>
+        </div>
+      </article>
     </main>
 
     <footer class="footer">
