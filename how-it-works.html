@@ -1344,110 +1344,116 @@
       direction: ltr;
     }
 
-    /* ==================== ZIGZAG TIMELINE ==================== */
-    /* Vertikal linje (kommer ned fra forrige sektion) */
-    .how-step-row::before {
-      content: '';
-      position: absolute;
-      width: 2px;
-      background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-      z-index: 1;
-    }
+    /* ==================== ZIGZAG TIMELINE (DASHED) ==================== */
 
-    /* Horisontal knæk-linje */
+    /* Skjul ::before og ::after - vi bruger .timeline-* elementer i stedet */
+    .how-step-row::before,
     .how-step-row::after {
-      content: '';
-      position: absolute;
-      height: 2px;
-      background: linear-gradient(to right, #e0e0e0, #d0d0d0);
-      z-index: 1;
+      display: none;
     }
 
-    /* Sektion 1 (tekst venstre): Linje kommer ned på venstre side, knækker til højre */
-    .how-step-row:nth-child(1)::before {
-      top: 0;
-      left: 8%;
-      height: 50%;
-    }
-    .how-step-row:nth-child(1)::after {
-      top: 50%;
-      left: 8%;
-      width: 14%;
-    }
-
-    /* Sektion 2 (tekst højre/reverse): Linje kommer ned på venstre, knækker til højre side */
-    .how-step-row:nth-child(2)::before {
-      top: -6rem;
-      left: 8%;
-      height: calc(50% + 6rem);
-    }
-    .how-step-row:nth-child(2)::after {
-      top: 50%;
-      left: 8%;
-      width: 84%;
-    }
-
-    /* Sektion 3 (tekst venstre): Linje kommer ned på højre side, knækker til venstre */
-    .how-step-row:nth-child(3)::before {
-      top: -6rem;
-      right: 8%;
-      left: auto;
-      height: calc(50% + 6rem);
-    }
-    .how-step-row:nth-child(3)::after {
-      top: 50%;
-      left: 8%;
-      width: 84%;
-    }
-
-    /* Sektion 4 (tekst højre/reverse): Linje kommer ned på venstre, knækker til højre side */
-    .how-step-row:nth-child(4)::before {
-      top: -6rem;
-      left: 8%;
-      height: calc(50% + 6rem);
-    }
-    .how-step-row:nth-child(4)::after {
-      top: 50%;
-      left: 8%;
-      width: 84%;
-    }
-
-    /* Nedadgående segment fra knæk (fortsættelse til næste sektion) */
+    /* Basis for alle timeline elementer */
+    .timeline-vertical,
+    .timeline-horizontal,
     .timeline-down {
       position: absolute;
-      width: 2px;
-      background: linear-gradient(to bottom, #d0d0d0, #e0e0e0);
       z-index: 1;
     }
 
-    /* Sektion 1: Linje fortsætter ned fra højre knæk-punkt */
+    /* Vertikale stiplede linjer */
+    .timeline-vertical,
+    .timeline-down {
+      width: 0;
+      border-left: 2px dashed #d0d0d0;
+    }
+
+    /* Horisontale stiplede linjer */
+    .timeline-horizontal {
+      height: 0;
+      border-top: 2px dashed #d0d0d0;
+    }
+
+    /* ===== SEKTION 1: Tekst venstre ===== */
+    /* Vertikal linje ned på venstre side (ved siden af 01.) */
+    .how-step-row:nth-child(1) .timeline-vertical {
+      top: 0;
+      left: 3%;
+      height: 100%;
+    }
+    /* Horisontal knæk under teksten */
+    .how-step-row:nth-child(1) .timeline-horizontal {
+      bottom: 0;
+      left: 3%;
+      width: 17%;
+    }
+    /* Vertikal ned til næste sektion */
     .how-step-row:nth-child(1) .timeline-down {
-      top: 50%;
-      left: 8%;
-      height: calc(50% + 6rem);
+      bottom: -6rem;
+      left: 20%;
+      height: 6rem;
     }
 
-    /* Sektion 2: Linje fortsætter ned fra højre side */
+    /* ===== SEKTION 2: Tekst højre (reverse) ===== */
+    /* Vertikal fra forrige sektion (venstre side) */
+    .how-step-row:nth-child(2) .timeline-vertical {
+      top: -6rem;
+      left: 20%;
+      height: 6rem;
+    }
+    /* Lang horisontal linje OVER sektionen (i gap) */
+    .how-step-row:nth-child(2) .timeline-horizontal {
+      top: -3rem;
+      left: 20%;
+      width: 60%;
+    }
+    /* Vertikal ned på højre side */
     .how-step-row:nth-child(2) .timeline-down {
-      top: 50%;
-      right: 8%;
+      top: -3rem;
+      right: 20%;
       left: auto;
-      height: calc(50% + 6rem);
+      height: calc(100% + 6rem);
     }
 
-    /* Sektion 3: Linje fortsætter ned fra venstre side */
+    /* ===== SEKTION 3: Tekst venstre ===== */
+    /* Vertikal fra forrige sektion (højre side) */
+    .how-step-row:nth-child(3) .timeline-vertical {
+      top: -6rem;
+      right: 20%;
+      left: auto;
+      height: 6rem;
+    }
+    /* Lang horisontal linje OVER sektionen (i gap) */
+    .how-step-row:nth-child(3) .timeline-horizontal {
+      top: -3rem;
+      left: 20%;
+      width: 60%;
+    }
+    /* Vertikal ned på venstre side */
     .how-step-row:nth-child(3) .timeline-down {
-      top: 50%;
-      left: 8%;
-      height: calc(50% + 6rem);
+      top: -3rem;
+      left: 20%;
+      height: calc(100% + 6rem);
     }
 
-    /* Sektion 4 (sidste): Kort nedadgående linje */
+    /* ===== SEKTION 4: Tekst højre (reverse) ===== */
+    /* Vertikal fra forrige sektion (venstre side) */
+    .how-step-row:nth-child(4) .timeline-vertical {
+      top: -6rem;
+      left: 20%;
+      height: 6rem;
+    }
+    /* Lang horisontal linje OVER sektionen (i gap) */
+    .how-step-row:nth-child(4) .timeline-horizontal {
+      top: -3rem;
+      left: 20%;
+      width: 60%;
+    }
+    /* Vertikal ned på højre side (kort, sidste sektion) */
     .how-step-row:nth-child(4) .timeline-down {
-      top: 50%;
-      right: 8%;
+      top: -3rem;
+      right: 20%;
       left: auto;
-      height: 50%;
+      height: calc(100% + 3rem);
     }
 
     /* Step Content Side */
@@ -1594,6 +1600,8 @@
       .how-timeline,
       .how-step-row::before,
       .how-step-row::after,
+      .timeline-vertical,
+      .timeline-horizontal,
       .timeline-down {
         display: none !important;
       }
@@ -1920,6 +1928,8 @@
 
         <!-- Step 1: Rank højere på Google -->
         <div class="how-step-row">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">01.</div>
@@ -1958,6 +1968,8 @@
 
         <!-- Step 2: Øg dit online salg -->
         <div class="how-step-row reverse">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">02.</div>
@@ -2003,6 +2015,8 @@
 
         <!-- Step 3: Få flere genbestillinger -->
         <div class="how-step-row">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">03.</div>
@@ -2038,6 +2052,8 @@
 
         <!-- Step 4: Hold gæster engageret -->
         <div class="how-step-row reverse">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
           <div class="how-step-content">
             <div class="how-step-number">04.</div>
