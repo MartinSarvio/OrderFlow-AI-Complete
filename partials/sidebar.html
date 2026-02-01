@@ -197,30 +197,44 @@
         </div>
 
         <!-- WEB BUILDER SECTION -->
-        <div class="nav-section">
+        <div class="nav-section" id="nav-webbuilder-section">
           <div class="nav-section-title">Web Builder</div>
-          <div class="nav-dropdown" id="nav-webbuilder">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('webbuilder')" data-tooltip="Web Builder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-              <span>Web Builder</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('branding')">Branding</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('farver')">Farver</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('billeder')">Billeder</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('menu')">Menu</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('timer')">Åbningstider</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('kontakt')">Kontakt</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('levering')">Levering</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('funktioner')">Funktioner</button>
-              <button class="nav-dropdown-item" onclick="showWebBuilderPage('social')">Sociale Medier</button>
-            </div>
-          </div>
+          <button class="nav-btn" onclick="showWebBuilderPage('branding')" data-tooltip="Branding" id="nav-wb-branding">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Branding</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('farver')" data-tooltip="Farver" id="nav-wb-farver">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>
+            <span>Farver</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('billeder')" data-tooltip="Billeder" id="nav-wb-billeder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Billeder</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('menu')" data-tooltip="Menu" id="nav-wb-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Menu</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('timer')" data-tooltip="Åbningstider" id="nav-wb-timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Åbningstider</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('kontakt')" data-tooltip="Kontakt" id="nav-wb-kontakt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Kontakt</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('levering')" data-tooltip="Levering" id="nav-wb-levering">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <span>Levering</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('funktioner')" data-tooltip="Funktioner" id="nav-wb-funktioner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Funktioner</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('social')" data-tooltip="Sociale Medier" id="nav-wb-social">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            <span>Sociale Medier</span>
+          </button>
         </div>
 
         <!-- APP BUILDER SECTION -->

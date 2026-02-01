@@ -24835,34 +24835,124 @@ let webBuilderConfig = null;
 
 // Navigate to Web Builder page with specific section
 function showWebBuilderPage(section) {
-  showPage('webbuilder');
+  // Map section names to page IDs
+  const pageMap = {
+    'branding': 'wb-branding',
+    'farver': 'wb-farver',
+    'billeder': 'wb-billeder',
+    'menu': 'wb-menu',
+    'timer': 'wb-timer',
+    'kontakt': 'wb-kontakt',
+    'levering': 'wb-levering',
+    'funktioner': 'wb-funktioner',
+    'social': 'wb-social'
+  };
 
-  // Open the webbuilder dropdown in sidebar
-  const dropdown = document.getElementById('nav-webbuilder');
-  if (dropdown) dropdown.classList.add('open');
+  const pageId = pageMap[section] || 'wb-branding';
+  showPage(pageId);
 
-  // Switch to the correct tab
-  setTimeout(() => {
-    switchWebBuilderTab(section);
-  }, 50);
-}
-
-// Switch Web Builder tab
-function switchWebBuilderTab(tab) {
-  // Update tab buttons
-  document.querySelectorAll('#webbuilder-tabs .settings-tab').forEach(t => t.classList.remove('active'));
-  const activeTab = document.querySelector(`#webbuilder-tabs .settings-tab[onclick*="'${tab}'"]`);
-  if (activeTab) activeTab.classList.add('active');
-
-  // Update content
-  document.querySelectorAll('.webbuilder-tab-content').forEach(c => c.classList.remove('active'));
-  const content = document.getElementById('webbuilder-content-' + tab);
-  if (content) content.classList.add('active');
+  // Update sidebar active state
+  document.querySelectorAll('#nav-webbuilder-section .nav-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  const activeBtn = document.getElementById('nav-wb-' + section);
+  if (activeBtn) activeBtn.classList.add('active');
 
   // Special handling for hours tab
-  if (tab === 'timer') {
+  if (section === 'timer') {
     renderBusinessHoursGrid();
   }
+
+  // Load config if needed
+  if (!webBuilderConfig) {
+    loadWebBuilderConfig();
+  }
+}
+
+// Switch Farver tab (Tilpasset/Forudindstillinger)
+function switchFarverTab(tab) {
+  document.querySelectorAll('#page-wb-farver .settings-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`#page-wb-farver .settings-tab[onclick*="'${tab}'"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  document.querySelectorAll('.farver-tab-content').forEach(c => {
+    c.style.display = 'none';
+    c.classList.remove('active');
+  });
+  const content = document.getElementById('farver-' + tab);
+  if (content) {
+    content.style.display = 'block';
+    content.classList.add('active');
+  }
+}
+
+// Switch Billeder tab (Logo/Hero/Galleri)
+function switchBillederTab(tab) {
+  document.querySelectorAll('#page-wb-billeder .settings-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`#page-wb-billeder .settings-tab[onclick*="'${tab}'"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  document.querySelectorAll('.billeder-tab-content').forEach(c => {
+    c.style.display = 'none';
+    c.classList.remove('active');
+  });
+  const content = document.getElementById('billeder-' + tab);
+  if (content) {
+    content.style.display = 'block';
+    content.classList.add('active');
+  }
+}
+
+// Apply color theme preset
+function applyColorTheme(theme) {
+  const themes = {
+    'pizza-red': { primary: '#E63946', secondary: '#F4A261', accent: '#F9C74F', bg: '#FAFAFA', text: '#264653' },
+    'sushi-green': { primary: '#2D6A4F', secondary: '#40916C', accent: '#74C69D', bg: '#FAFAFA', text: '#1B4332' },
+    'burger-orange': { primary: '#E76F51', secondary: '#F4A261', accent: '#E9C46A', bg: '#FAFAFA', text: '#264653' },
+    'cafe-brown': { primary: '#6F4E37', secondary: '#A67B5B', accent: '#D4A373', bg: '#FAFAFA', text: '#3C2415' },
+    'dark-mode': { primary: '#BB86FC', secondary: '#03DAC6', accent: '#CF6679', bg: '#121212', text: '#FFFFFF' }
+  };
+
+  const colors = themes[theme];
+  if (!colors) return;
+
+  document.getElementById('wb-color-primary').value = colors.primary;
+  document.getElementById('wb-color-primary-text').value = colors.primary;
+  document.getElementById('wb-color-secondary').value = colors.secondary;
+  document.getElementById('wb-color-secondary-text').value = colors.secondary;
+  document.getElementById('wb-color-accent').value = colors.accent;
+  document.getElementById('wb-color-accent-text').value = colors.accent;
+  if (document.getElementById('wb-color-bg')) {
+    document.getElementById('wb-color-bg').value = colors.bg;
+    document.getElementById('wb-color-bg-text').value = colors.bg;
+  }
+
+  updateWebBuilderPreview();
+  switchFarverTab('tilpasset');
+}
+
+// Toggle Web Builder Preview Panel
+let webBuilderPreviewVisible = false;
+function toggleWebBuilderPreview() {
+  webBuilderPreviewVisible = !webBuilderPreviewVisible;
+  openWebBuilderPreviewFullscreen();
+}
+
+// Set all days open
+function setAllDaysOpen() {
+  document.querySelectorAll('#wb-hours-grid input[type="checkbox"]').forEach(cb => cb.checked = true);
+  updateWebBuilderPreview();
+}
+
+// Set all days closed
+function setAllDaysClosed() {
+  document.querySelectorAll('#wb-hours-grid input[type="checkbox"]').forEach(cb => cb.checked = false);
+  updateWebBuilderPreview();
+}
+
+// Legacy function for backwards compatibility
+function switchWebBuilderTab(tab) {
+  showWebBuilderPage(tab);
 }
 
 // Load Web Builder config from localStorage
@@ -25153,10 +25243,99 @@ function initWebBuilderPreview() {
   }, 500);
 }
 
-// Open Web Builder preview in fullscreen
+// Open Web Builder preview in fullscreen modal with device selector
 function openWebBuilderPreviewFullscreen() {
-  const previewUrl = './Website builder/dist/index.html';
-  window.open(previewUrl, '_blank');
+  // Check if modal already exists
+  let modal = document.getElementById('wb-preview-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'wb-preview-modal';
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'display:flex;align-items:center;justify-content:center;z-index:10000';
+    modal.innerHTML = `
+      <div class="modal" style="width:95vw;max-width:1400px;height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+        <div class="modal-header" style="flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:16px">
+            <h3 style="margin:0;font-size:16px">Forhåndsvisning</h3>
+            <div class="wb-device-selector" style="display:flex;gap:4px;background:var(--bg2);border-radius:8px;padding:4px">
+              <button class="wb-device-btn active" data-device="mobile" onclick="setWbPreviewDevice('mobile')" style="padding:8px 16px;border:none;background:var(--bg1);border-radius:6px;cursor:pointer;font-size:13px;font-weight:500">Mobil</button>
+              <button class="wb-device-btn" data-device="tablet" onclick="setWbPreviewDevice('tablet')" style="padding:8px 16px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:13px">Tablet</button>
+              <button class="wb-device-btn" data-device="desktop" onclick="setWbPreviewDevice('desktop')" style="padding:8px 16px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:13px">Desktop</button>
+            </div>
+          </div>
+          <button class="modal-close" onclick="closeWbPreviewModal()" style="font-size:24px;background:none;border:none;cursor:pointer;color:var(--text)">&times;</button>
+        </div>
+        <div class="modal-body" style="flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg2);padding:24px;overflow:auto">
+          <div id="wb-preview-device-frame" class="wb-device-frame mobile" style="background:#000;border-radius:32px;padding:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transition:all 0.3s ease">
+            <iframe
+              id="wb-fullscreen-preview-frame"
+              src="./Website builder/index.html"
+              style="width:100%;height:100%;border:none;border-radius:20px;background:#fff"
+              onload="initFullscreenPreview()"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Add styles for device frames
+    if (!document.getElementById('wb-device-styles')) {
+      const style = document.createElement('style');
+      style.id = 'wb-device-styles';
+      style.textContent = `
+        .wb-device-frame.mobile { width: 375px; height: 667px; }
+        .wb-device-frame.tablet { width: 768px; height: 600px; border-radius: 24px; }
+        .wb-device-frame.desktop { width: 100%; max-width: 1200px; height: 100%; border-radius: 12px; padding: 8px; }
+        .wb-device-btn.active { background: var(--bg1) !important; font-weight: 500 !important; }
+        .wb-device-btn:hover:not(.active) { background: rgba(255,255,255,0.5) !important; }
+      `;
+      document.head.appendChild(style);
+    }
+  }
+
+  modal.style.display = 'flex';
+
+  // Initialize preview after a short delay
+  setTimeout(() => {
+    initFullscreenPreview();
+  }, 100);
+}
+
+// Set preview device size
+function setWbPreviewDevice(device) {
+  const frame = document.getElementById('wb-preview-device-frame');
+  if (!frame) return;
+
+  frame.className = 'wb-device-frame ' + device;
+
+  // Update buttons
+  document.querySelectorAll('.wb-device-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.style.background = 'transparent';
+    btn.style.fontWeight = 'normal';
+  });
+  const activeBtn = document.querySelector(`.wb-device-btn[data-device="${device}"]`);
+  if (activeBtn) {
+    activeBtn.classList.add('active');
+    activeBtn.style.background = 'var(--bg1)';
+    activeBtn.style.fontWeight = '500';
+  }
+}
+
+// Close preview modal
+function closeWbPreviewModal() {
+  const modal = document.getElementById('wb-preview-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// Initialize fullscreen preview
+function initFullscreenPreview() {
+  const iframe = document.getElementById('wb-fullscreen-preview-frame');
+  if (iframe && iframe.contentWindow) {
+    // Send current config to preview
+    updateWebBuilderPreview();
+  }
 }
 
 // Listen for messages from Web Builder preview
