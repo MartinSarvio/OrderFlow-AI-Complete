@@ -24937,6 +24937,11 @@ function switchBillederTab(tab) {
     content.style.display = 'block';
     content.classList.add('active');
   }
+
+  // Initialize gallery grid when galleri tab is selected
+  if (tab === 'galleri') {
+    initGalleryGrid();
+  }
 }
 
 // Apply color theme preset
@@ -25043,6 +25048,18 @@ function populateWebBuilderForms() {
   const featuredEl = document.getElementById('wb-featured-image');
   if (heroEl) heroEl.value = webBuilderConfig.images?.hero || '';
   if (featuredEl) featuredEl.value = webBuilderConfig.images?.featured || '';
+
+  // Hero Overlay
+  const overlayColor = webBuilderConfig.images?.heroOverlay?.color || '#000000';
+  const overlayOpacity = Math.round((webBuilderConfig.images?.heroOverlay?.opacity || 0.4) * 100);
+  const overlayColorEl = document.getElementById('wb-hero-overlay-color');
+  const overlayColorTextEl = document.getElementById('wb-hero-overlay-color-text');
+  const overlayOpacityEl = document.getElementById('wb-hero-overlay-opacity');
+  const overlayOpacityValueEl = document.getElementById('wb-hero-overlay-opacity-value');
+  if (overlayColorEl) overlayColorEl.value = overlayColor;
+  if (overlayColorTextEl) overlayColorTextEl.value = overlayColor;
+  if (overlayOpacityEl) overlayOpacityEl.value = overlayOpacity;
+  if (overlayOpacityValueEl) overlayOpacityValueEl.textContent = overlayOpacity + '%';
 
   // Menu
   const currencyEl = document.getElementById('wb-currency');
@@ -25167,6 +25184,92 @@ function syncColorInput(type) {
   }
 }
 
+// Hero Overlay color sync
+function syncHeroOverlayColor() {
+  const colorEl = document.getElementById('wb-hero-overlay-color');
+  const textEl = document.getElementById('wb-hero-overlay-color-text');
+  if (colorEl && textEl) textEl.value = colorEl.value;
+}
+
+function syncHeroOverlayColorText() {
+  const textEl = document.getElementById('wb-hero-overlay-color-text');
+  const colorEl = document.getElementById('wb-hero-overlay-color');
+  if (textEl && colorEl && /^#[0-9A-Fa-f]{6}$/.test(textEl.value)) {
+    colorEl.value = textEl.value;
+    updateWebBuilderPreview();
+  }
+}
+
+function updateHeroOverlayOpacity() {
+  const slider = document.getElementById('wb-hero-overlay-opacity');
+  const display = document.getElementById('wb-hero-overlay-opacity-value');
+  if (slider && display) display.textContent = slider.value + '%';
+}
+
+// Gallery images from Web builder Galleri folder
+const WEB_BUILDER_GALLERY_IMAGES = [
+  'images/Web builder Galleri/photo-1513104890138-7c749659a591.jpeg',
+  'images/Web builder Galleri/photo-1574071318508-1cdbab80d002.jpeg',
+  'images/Web builder Galleri/photo-1565299624946-b28f40a0ae38.jpeg',
+  'images/Web builder Galleri/photo-1563379926898-05f4575a45d8.jpeg',
+  'images/Web builder Galleri/photo-1560023907-5f339617ea30.jpeg',
+  'images/Web builder Galleri/photo-1571877227200-a0d98ea607e9.jpeg',
+  'images/Web builder Galleri/photo-1612874742237-6526221588e3.jpeg',
+  'images/Web builder Galleri/photo-1622483767028-3f66f32aef97.jpeg',
+  'images/Web builder Galleri/photo-1628840042765-356cda07504e.jpeg',
+  'images/Web builder Galleri/photo-1488477181946-6428a0291777.jpeg',
+  'images/Web builder Galleri/087cb32951d67b24e3800e63cc8e221e8cf153e3.jpg',
+  'images/Web builder Galleri/6b34ff795ebe5ab0649a25a5462d47f6daf8878b.jpg',
+  'images/Web builder Galleri/3f614186573fe3272aad077f8ac3ae5728296c77.jpg',
+  'images/Web builder Galleri/4eb224c0724cce65431e27f6cbf88341734c716d.jpg',
+  'images/Web builder Galleri/37075d1fe31da04fb73fe1600d90d13398836d96.jpg',
+  'images/Web builder Galleri/dd995904bc5b2a79b5f1211676f34425afc864d7.jpg',
+  'images/Web builder Galleri/5f70ea179451103d83cc64257accbe7484234ee1.jpg',
+  'images/Web builder Galleri/a4727c950fa3cd8633959f81de98178b0b890760.jpg',
+  'images/Web builder Galleri/36a6d191948546e09f528cc212ff65a1d36cedd2.jpeg'
+];
+
+let currentGalleryTarget = 'hero';
+
+function setGalleryTarget(target) {
+  currentGalleryTarget = target;
+  const heroBtn = document.getElementById('gallery-target-hero');
+  const logoBtn = document.getElementById('gallery-target-logo');
+  if (heroBtn) {
+    heroBtn.style.background = target === 'hero' ? 'var(--accent)' : 'var(--bg2)';
+    heroBtn.style.color = target === 'hero' ? 'white' : 'var(--text)';
+  }
+  if (logoBtn) {
+    logoBtn.style.background = target === 'logo' ? 'var(--accent)' : 'var(--bg2)';
+    logoBtn.style.color = target === 'logo' ? 'white' : 'var(--text)';
+  }
+}
+
+function initGalleryGrid() {
+  const grid = document.getElementById('wb-gallery-grid');
+  if (!grid) return;
+
+  grid.innerHTML = WEB_BUILDER_GALLERY_IMAGES.map(img => `
+    <div onclick="selectFromGallery('${img}')" style="cursor:pointer;border-radius:8px;overflow:hidden;aspect-ratio:1;position:relative;border:2px solid transparent;transition:border-color 0.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='transparent'">
+      <img src="${img}" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.parentElement.style.display='none'">
+    </div>
+  `).join('');
+}
+
+function selectFromGallery(imageUrl) {
+  if (currentGalleryTarget === 'hero') {
+    const heroEl = document.getElementById('wb-hero-image');
+    if (heroEl) heroEl.value = imageUrl;
+    if (typeof updateWbHeroPreview === 'function') updateWbHeroPreview();
+  } else {
+    const logoEl = document.getElementById('wb-logo');
+    if (logoEl) logoEl.value = imageUrl;
+    if (typeof updateWbLogoPreview === 'function') updateWbLogoPreview();
+  }
+  updateWebBuilderPreview();
+  toast('Billede valgt!', 'success');
+}
+
 // Collect form data into config object
 function collectWebBuilderFormData() {
   const config = { ...defaultWebBuilderConfig };
@@ -25192,7 +25295,11 @@ function collectWebBuilderFormData() {
   // Images
   config.images = {
     hero: document.getElementById('wb-hero-image')?.value || '',
-    featured: document.getElementById('wb-featured-image')?.value || ''
+    featured: document.getElementById('wb-featured-image')?.value || '',
+    heroOverlay: {
+      color: document.getElementById('wb-hero-overlay-color')?.value || '#000000',
+      opacity: parseInt(document.getElementById('wb-hero-overlay-opacity')?.value || '40') / 100
+    }
   };
 
   // Menu
