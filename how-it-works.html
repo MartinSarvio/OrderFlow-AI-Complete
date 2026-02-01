@@ -1324,6 +1324,8 @@
       flex-direction: column;
       gap: 0;
       position: relative;
+      padding-left: 4rem;
+      padding-right: 4rem;
     }
 
     /* Single Step Row - ALWAYS text left, image right */
@@ -1374,86 +1376,84 @@
     }
 
     /* ===== SEKTION 1: Tekst venstre ===== */
-    /* Vertikal linje ned på venstre side (ved siden af 01.) */
+    /* Vertikal linje ned fra toppen på YDERSTE venstre side */
     .how-step-row:nth-child(1) .timeline-vertical {
       top: 0;
-      left: 3%;
-      height: 100%;
+      left: -2rem;
+      height: calc(100% + 3rem);
     }
-    /* Horisontal knæk under teksten */
+    /* Horisontal knæk til højre (under sektionen, i gap) */
     .how-step-row:nth-child(1) .timeline-horizontal {
-      bottom: 0;
-      left: 3%;
-      width: 17%;
+      bottom: -3rem;
+      left: -2rem;
+      width: calc(45% + 2rem);
     }
-    /* Vertikal ned til næste sektion */
+    /* Skjul timeline-down for sektion 1 */
     .how-step-row:nth-child(1) .timeline-down {
-      bottom: -6rem;
-      left: 20%;
-      height: 6rem;
+      display: none;
     }
 
     /* ===== SEKTION 2: Tekst højre (reverse) ===== */
-    /* Vertikal fra forrige sektion (venstre side) */
+    /* Vertikal linje ned fra knækpunktet (venstre side, fra sektion 1) */
     .how-step-row:nth-child(2) .timeline-vertical {
-      top: -6rem;
-      left: 20%;
-      height: 6rem;
+      top: -3rem;
+      left: 45%;
+      height: calc(50% + 3rem);
     }
-    /* Lang horisontal linje OVER sektionen (i gap) */
+    /* Horisontal linje til højre (midt på sektionen) */
     .how-step-row:nth-child(2) .timeline-horizontal {
-      top: -3rem;
-      left: 20%;
-      width: 60%;
+      top: 50%;
+      left: 45%;
+      width: calc(55% + 2rem);
     }
-    /* Vertikal ned på højre side */
+    /* Vertikal ned på højre side (til næste sektion) */
     .how-step-row:nth-child(2) .timeline-down {
-      top: -3rem;
-      right: 20%;
+      top: 50%;
+      right: -2rem;
       left: auto;
-      height: calc(100% + 6rem);
+      height: calc(50% + 3rem);
     }
 
     /* ===== SEKTION 3: Tekst venstre ===== */
-    /* Vertikal fra forrige sektion (højre side) */
+    /* Vertikal linje ned fra toppen (højre side, fra sektion 2) */
     .how-step-row:nth-child(3) .timeline-vertical {
-      top: -6rem;
-      right: 20%;
+      top: -3rem;
+      right: -2rem;
       left: auto;
-      height: 6rem;
+      height: calc(50% + 3rem);
     }
-    /* Lang horisontal linje OVER sektionen (i gap) */
+    /* Horisontal linje til venstre (midt på sektionen) */
     .how-step-row:nth-child(3) .timeline-horizontal {
-      top: -3rem;
-      left: 20%;
-      width: 60%;
+      top: 50%;
+      left: -2rem;
+      width: calc(100% + 4rem);
     }
-    /* Vertikal ned på venstre side */
+    /* Vertikal ned på venstre side (til næste sektion) */
     .how-step-row:nth-child(3) .timeline-down {
-      top: -3rem;
-      left: 20%;
-      height: calc(100% + 6rem);
+      top: 50%;
+      left: -2rem;
+      height: calc(50% + 3rem);
     }
 
     /* ===== SEKTION 4: Tekst højre (reverse) ===== */
-    /* Vertikal fra forrige sektion (venstre side) */
+    /* Vertikal linje ned fra toppen (venstre side, fra sektion 3) */
     .how-step-row:nth-child(4) .timeline-vertical {
-      top: -6rem;
-      left: 20%;
-      height: 6rem;
-    }
-    /* Lang horisontal linje OVER sektionen (i gap) */
-    .how-step-row:nth-child(4) .timeline-horizontal {
       top: -3rem;
-      left: 20%;
-      width: 60%;
+      left: -2rem;
+      height: calc(50% + 3rem);
+    }
+    /* Horisontal linje til højre (midt på sektionen) */
+    .how-step-row:nth-child(4) .timeline-horizontal {
+      top: 50%;
+      left: -2rem;
+      width: calc(55% + 2rem);
     }
     /* Vertikal ned på højre side (kort, sidste sektion) */
     .how-step-row:nth-child(4) .timeline-down {
-      top: -3rem;
-      right: 20%;
+      top: 50%;
+      right: 45%;
       left: auto;
-      height: calc(100% + 3rem);
+      height: 50%;
     }
 
     /* Step Content Side */
