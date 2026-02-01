@@ -37,19 +37,19 @@
     .findings-stream::-webkit-scrollbar { width: 6px; }
     .findings-stream::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
     .findings-stream::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
-    .finding-card { padding: 16px; border-radius: 8px; border-left: 3px solid; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.04); transition: all 0.2s; }
-    .finding-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .finding-card { padding: 16px; border-radius: 8px; background: white; border: 1px solid #e5e7eb; transition: all 0.2s; }
+    .finding-card:hover { border-color: #d1d5db; }
     .finding-card--highlighted { animation: slideInRight 0.3s ease; }
-    .finding-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .finding-card__module { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; font-weight: 500; }
+    .finding-card__header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .finding-card__module { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; font-weight: 500; }
     .finding-card__title { font-weight: 500; color: #1a1a1a; margin-bottom: 4px; font-size: 14px; }
     .finding-card__description { font-size: 13px; color: #6b7280; line-height: 1.5; }
-    .finding-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 11px; }
+    .finding-card__footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 11px; padding-top: 12px; border-top: 1px solid #f3f4f6; }
     .finding-card__source { color: #9ca3af; }
-    .confidence-badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 500; }
-    .confidence-confirmed { background: #f0fdf4; color: #059669; }
-    .confidence-indicator { background: #fefce8; color: #ca8a04; }
-    .confidence-not_found { background: #f9fafb; color: #6b7280; }
+    .confidence-badge { font-size: 11px; font-weight: 400; color: #6b7280; }
+    .confidence-confirmed { color: #059669; }
+    .confidence-indicator { color: #6b7280; }
+    .confidence-not_found { color: #9ca3af; }
 
     /* Search Page Styles */
     .search-container {
@@ -2015,40 +2015,34 @@
     };
 
     const ImpactBadge = ({ impact }) => {
-      const colors = { high: '#dc2626', medium: '#d97706', low: '#059669' };
-      const labels = { high: 'Høj effekt', medium: 'Medium effekt', low: 'Lav effekt' };
+      const labels = { high: 'Høj', medium: 'Medium', low: 'Lav' };
       return (
         <span style={{
-          padding: '2px 8px',
-          borderRadius: 10,
-          fontSize: 10,
-          fontWeight: 500,
-          background: `${colors[impact]}15`,
-          color: colors[impact],
+          fontSize: 11,
+          fontWeight: 400,
+          color: '#9ca3af',
         }}>
-          {labels[impact]}
+          {labels[impact]} effekt
         </span>
       );
     };
 
     const FindingCard = ({ finding, isHighlighted }) => {
-      const categoryStyles = {
-        positive: { bg: '#d1fae5', border: '#059669', icon: 'CheckCircle' },
-        warning: { bg: '#fef3c7', border: '#d97706', icon: 'AlertTriangle' },
-        critical: { bg: '#fee2e2', border: '#dc2626', icon: 'XCircle' },
-        opportunity: { bg: '#dbeafe', border: '#2563eb', icon: 'Lightbulb' },
+      const categoryIcons = {
+        positive: { icon: 'CheckCircle', color: '#059669' },
+        warning: { icon: 'AlertCircle', color: '#6b7280' },
+        critical: { icon: 'AlertCircle', color: '#6b7280' },
+        opportunity: { icon: 'Lightbulb', color: '#6b7280' },
       };
-      const style = categoryStyles[finding.category] || categoryStyles.warning;
+      const iconStyle = categoryIcons[finding.category] || categoryIcons.warning;
 
       return (
-        <div
-          className={`finding-card ${isHighlighted ? 'finding-card--highlighted' : ''}`}
-          style={{ background: style.bg, borderLeftColor: style.border }}
-        >
+        <div className={`finding-card ${isHighlighted ? 'finding-card--highlighted' : ''}`}>
           <div className="finding-card__header">
-            <Icon name={style.icon} size={16} color={style.border} />
             <span className="finding-card__module">{finding.moduleName}</span>
-            <ConfidenceBadge confidence={finding.confidence} />
+            <span style={{ marginLeft: 'auto' }}>
+              <ConfidenceBadge confidence={finding.confidence} />
+            </span>
           </div>
           <div className="finding-card__title">{finding.title}</div>
           <div className="finding-card__description">{finding.description}</div>
