@@ -13076,21 +13076,49 @@ const workflowModules = {
       { id: 'haandvaerker-booking', name: '📅 Tidsbestilling', description: 'Book tid til opgave' },
       { id: 'followup', name: '🔄 Opfølgning', description: 'Følg op på afgivne tilbud' }
     ]
+  },
+  instagram: {
+    name: 'Instagram',
+    title: 'Instagram Automation',
+    icon: '📸',
+    description: 'Automatiserede Instagram workflows og engagement',
+    templates: [
+      { id: 'ig-dm-reply', name: '💬 DM Auto-svar', description: 'Automatiske svar på Instagram DMs' },
+      { id: 'ig-comment-reply', name: '💭 Kommentar-svar', description: 'Automatiske svar på kommentarer' },
+      { id: 'ig-story-engagement', name: '📱 Story Engagement', description: 'Håndter story mentions og reaktioner' }
+    ]
+  },
+  facebook: {
+    name: 'Facebook',
+    title: 'Facebook Automation',
+    icon: '👍',
+    description: 'Automatiserede Facebook workflows og kundeservice',
+    templates: [
+      { id: 'fb-messenger', name: '💬 Messenger Bot', description: 'Automatiske Messenger beskeder' },
+      { id: 'fb-comment-reply', name: '💭 Kommentar-svar', description: 'Automatiske svar på opslag' },
+      { id: 'fb-review-response', name: '⭐ Anmeldelse-svar', description: 'Besvar Facebook anmeldelser' }
+    ]
   }
 };
 
 function switchWorkflowModule(module) {
-  if (module === 'coming-soon' || !workflowModules[module]) {
+  if (!workflowModules[module]) {
     toast('Modul kommer snart', 'info');
     return;
   }
 
   currentWorkflowModule = module;
 
-  // Update tab styling
-  document.querySelectorAll('.workflow-module-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.module === module);
+  // Update dropdown styling
+  document.querySelectorAll('.workflow-module-option').forEach(opt => {
+    opt.classList.toggle('active', opt.dataset.module === module);
   });
+
+  // Update selected text in dropdown
+  const selectedEl = document.getElementById('workflow-module-selected');
+  if (selectedEl && workflowModules[module]) {
+    selectedEl.textContent = workflowModules[module].name.split(' / ')[0]; // Get first part of name
+  }
 
   // Update title
   const titleEl = document.getElementById('workflow-module-title');
@@ -13107,19 +13135,62 @@ function switchWorkflowModule(module) {
   console.log('Switched workflow module to:', module);
 }
 
+// Workflow Module Dropdown Functions
+function toggleWorkflowModuleDropdown() {
+  const dropdown = document.getElementById('workflow-module-dropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('open');
+  }
+}
+
+function selectWorkflowModule(module, element) {
+  // Update dropdown styling
+  document.querySelectorAll('.workflow-module-option').forEach(opt => {
+    opt.classList.remove('active');
+  });
+  if (element) {
+    element.classList.add('active');
+  }
+
+  // Close dropdown
+  const dropdown = document.getElementById('workflow-module-dropdown');
+  if (dropdown) {
+    dropdown.classList.remove('open');
+  }
+
+  // Switch module
+  switchWorkflowModule(module);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('workflow-module-dropdown');
+  if (dropdown && !dropdown.contains(e.target)) {
+    dropdown.classList.remove('open');
+  }
+});
+
 function initWorkflowModule() {
   const savedModule = localStorage.getItem('workflow_module') || 'restaurant';
 
-  // Update tabs
-  document.querySelectorAll('.workflow-module-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.module === savedModule);
+  // Update dropdown
+  document.querySelectorAll('.workflow-module-option').forEach(opt => {
+    opt.classList.toggle('active', opt.dataset.module === savedModule);
   });
+
+  // Update selected text
+  const selectedEl = document.getElementById('workflow-module-selected');
+  if (selectedEl && workflowModules[savedModule]) {
+    selectedEl.textContent = workflowModules[savedModule].name.split(' / ')[0];
+  }
 
   // Update title
   const titleEl = document.getElementById('workflow-module-title');
   if (titleEl && workflowModules[savedModule]) {
     titleEl.textContent = workflowModules[savedModule].title;
   }
+
+  currentWorkflowModule = savedModule;
 }
 
 // Initialize on page load
@@ -25728,7 +25799,8 @@ const WEB_BUILDER_GALLERY_IMAGES = [
   'images/Web builder Galleri/dd995904bc5b2a79b5f1211676f34425afc864d7.jpg',
   'images/Web builder Galleri/5f70ea179451103d83cc64257accbe7484234ee1.jpg',
   'images/Web builder Galleri/a4727c950fa3cd8633959f81de98178b0b890760.jpg',
-  'images/Web builder Galleri/36a6d191948546e09f528cc212ff65a1d36cedd2.jpeg'
+  'images/Web builder Galleri/36a6d191948546e09f528cc212ff65a1d36cedd2.jpeg',
+  'images/Web builder Galleri/e69a0b6a7fc0c45a510c176eaa705fe2c2107c94.jpg.webp'
 ];
 
 let currentGalleryTarget = 'hero';
@@ -25919,7 +25991,7 @@ function initWebBuilderPreview() {
 
 // Open the full website in a new tab
 function openFullWebsite() {
-  window.open('./Website%20builder/index.html', '_blank');
+  window.open('./Website%20builder/dist/index.html', '_blank');
 }
 
 // Open Web Builder preview in fullscreen modal with device selector
@@ -25948,7 +26020,7 @@ function openWebBuilderPreviewFullscreen() {
           <div id="wb-preview-device-frame" class="wb-device-frame mobile" style="background:#000;border-radius:32px;padding:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transition:all 0.3s ease">
             <iframe
               id="wb-fullscreen-preview-frame"
-              src="./Website%20builder/index.html"
+              src="./Website%20builder/dist/index.html"
               style="width:100%;height:100%;border:none;border-radius:20px;background:#fff"
               onload="initFullscreenPreview()"
             ></iframe>
@@ -26072,10 +26144,61 @@ function updateWbLogoPreview() {
 // Clear Logo
 function clearWbLogo() {
   const logoInput = document.getElementById('wb-logo');
+  const fileInput = document.getElementById('wb-logo-file-input');
   if (logoInput) {
     logoInput.value = '';
     updateWbLogoPreview();
   }
+  if (fileInput) {
+    fileInput.value = '';
+  }
+}
+
+// Handle logo file upload from file input
+function handleLogoFileUpload(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    processLogoFile(file);
+  }
+}
+
+// Handle logo file drop
+function handleLogoFileDrop(event) {
+  const files = event.dataTransfer.files;
+  if (files && files[0]) {
+    const file = files[0];
+    // Check if it's an accepted image type
+    const acceptedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'];
+    if (acceptedTypes.includes(file.type) || file.name.match(/\.(png|jpg|jpeg|svg)$/i)) {
+      processLogoFile(file);
+    } else {
+      toast('Understøtter kun PNG, JPG og SVG billeder', 'error');
+    }
+  }
+}
+
+// Process the logo file and convert to data URL
+function processLogoFile(file) {
+  // Check file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    toast('Filen er for stor. Maks 5MB', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    const logoInput = document.getElementById('wb-logo');
+    if (logoInput) {
+      logoInput.value = dataUrl;
+      updateWbLogoPreview();
+      toast('Logo uploadet!', 'success');
+    }
+  };
+  reader.onerror = function() {
+    toast('Kunne ikke læse filen', 'error');
+  };
+  reader.readAsDataURL(file);
 }
 
 // Update Hero preview when URL changes

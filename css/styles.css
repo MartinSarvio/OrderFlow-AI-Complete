@@ -223,8 +223,8 @@
     .btn-primary:active{filter:brightness(0.95)}
     .btn-secondary{background:var(--card);color:var(--text);border:none}
     .btn-secondary:hover{background:var(--card-hover)}
-    .btn-outline{background:#fff !important;color:#000 !important;border:1px solid var(--border) !important}
-    .btn-outline:hover{background:#f5f5f5 !important}
+    .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+    .btn-outline:hover{background:var(--bg3);border-color:var(--text2)}
     .btn-ghost{background:transparent;color:var(--text2);border:none}
     .btn-ghost:hover{background:var(--bg3);color:var(--text)}
     .btn-danger{background:rgba(248,113,113,0.1);color:var(--danger);border:none}
@@ -2046,7 +2046,51 @@
     }
     .toggle-btn.on{background:var(--danger);border-color:var(--danger)}
     .toggle-btn.on::after{left:25px;background:#fff}
-    
+
+    /* Switch/Slider Toggle Styles (alternative naming) */
+    .switch{
+      position:relative;
+      display:inline-block;
+      width:48px;
+      height:28px;
+      flex-shrink:0;
+    }
+    .switch input{
+      opacity:0;
+      width:0;
+      height:0;
+      position:absolute;
+    }
+    .slider{
+      position:absolute;
+      cursor:pointer;
+      inset:0;
+      background:var(--bg3);
+      border-radius:14px;
+      transition:all .3s ease;
+    }
+    .slider::before{
+      content:'';
+      position:absolute;
+      top:3px;
+      left:3px;
+      width:22px;
+      height:22px;
+      background:#fff;
+      border-radius:50%;
+      transition:all .3s cubic-bezier(0.4,0,0.2,1);
+      box-shadow:0 2px 4px rgba(0,0,0,0.2);
+    }
+    .switch input:checked + .slider{
+      background:var(--accent);
+    }
+    .switch input:checked + .slider::before{
+      transform:translateX(20px);
+    }
+    .switch input:focus + .slider{
+      box-shadow:0 0 0 2px rgba(45,212,191,0.2);
+    }
+
     /* Test Panel Form */
     .test-panel .form-group{margin-bottom:14px}
     .test-panel .form-label{
@@ -2342,6 +2386,18 @@
     .workflow-module-tab:hover{background:rgba(255,255,255,0.03);color:var(--text);border-color:var(--text2)}
     .workflow-module-tab.active{background:rgba(45,212,191,0.1);color:var(--accent);border-color:var(--accent)}
     .workflow-module-tab.disabled{opacity:0.4;cursor:not-allowed}
+
+    /* Workflow Module Dropdown */
+    .workflow-module-dropdown{position:relative;display:inline-block}
+    .workflow-module-dropdown-btn{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s ease}
+    .workflow-module-dropdown-btn:hover{border-color:var(--accent)}
+    .workflow-module-dropdown-btn .dropdown-arrow{width:16px;height:16px;transition:transform 0.2s}
+    .workflow-module-dropdown.open .dropdown-arrow{transform:rotate(180deg)}
+    .workflow-module-dropdown-menu{display:none;position:absolute;top:100%;left:0;margin-top:4px;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:100}
+    .workflow-module-dropdown.open .workflow-module-dropdown-menu{display:block}
+    .workflow-module-option{width:100%;padding:10px 16px;text-align:left;background:transparent;border:none;color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s}
+    .workflow-module-option:hover{background:var(--bg3);color:var(--text)}
+    .workflow-module-option.active{color:var(--accent);background:rgba(45,212,191,0.1)}
 
     /* Support Banner */
     @keyframes support-pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:1}50%{transform:translate(-50%,-50%) scale(1.05);opacity:0.8}}
