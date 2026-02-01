@@ -25373,6 +25373,17 @@ function saveWebBuilderConfig() {
 function updateWebBuilderPreview() {
   const config = collectWebBuilderFormData();
   sendConfigToWebBuilderPreview(config);
+
+  // Also update inline preview elements with the restaurant name
+  const nameValue = document.getElementById('wb-name')?.value || 'Pizzeria Roma';
+  const previewNameElements = [
+    'wb-logo-preview-name',
+    'wb-hero-preview-name'
+  ];
+  previewNameElements.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = nameValue;
+  });
 }
 
 // Send config to preview iframe
