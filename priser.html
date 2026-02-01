@@ -574,6 +574,200 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ==================== FAQ SECTION ==================== */
+    .faq-section {
+      padding: 10rem 0;
+      background: var(--color-white);
+    }
+
+    .faq-container {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 0 4rem;
+    }
+
+    .faq-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .faq-header h2 {
+      font-size: 3.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+
+    .faq-header p {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+
+    /* Search Input */
+    .faq-search {
+      position: relative;
+      margin-bottom: 3.2rem;
+    }
+
+    .faq-search-icon {
+      position: absolute;
+      left: 1.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2rem;
+      height: 2rem;
+      color: var(--color-gray-400);
+      pointer-events: none;
+    }
+
+    .faq-search-input {
+      width: 100%;
+      padding: 1.6rem 1.6rem 1.6rem 4.8rem;
+      font-size: 1.6rem;
+      font-family: inherit;
+      border: 2px solid var(--color-gray-200);
+      border-radius: 1.2rem;
+      background: var(--color-white);
+      color: var(--color-dark);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .faq-search-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .faq-search-input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 4px rgba(1, 91, 248, 0.1);
+    }
+
+    /* FAQ Items */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .faq-item {
+      background: var(--color-white);
+      border: 2px solid var(--color-gray-200);
+      border-radius: 1.2rem;
+      overflow: hidden;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .faq-item:hover {
+      border-color: var(--color-primary);
+    }
+
+    .faq-item.open {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 20px rgba(1, 91, 248, 0.1);
+    }
+
+    .faq-question {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2rem;
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s ease;
+    }
+
+    .faq-question:hover {
+      background: var(--color-gray-50);
+    }
+
+    .faq-question-text {
+      flex: 1;
+      padding-right: 1.6rem;
+    }
+
+    .faq-chevron {
+      width: 2rem;
+      height: 2rem;
+      color: var(--color-gray-500);
+      transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      flex-shrink: 0;
+    }
+
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 50rem;
+      opacity: 1;
+    }
+
+    .faq-answer-content {
+      padding: 0 2rem 2rem;
+      font-size: 1.5rem;
+      line-height: 1.7;
+      color: var(--color-gray-600);
+    }
+
+    /* No Results */
+    .faq-no-results {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: var(--color-gray-50);
+      border-radius: 1.2rem;
+      border: 2px solid var(--color-gray-200);
+    }
+
+    .faq-no-results p {
+      font-size: 1.6rem;
+      color: var(--color-gray-500);
+    }
+
+    /* FAQ hidden class for search */
+    .faq-item.hidden {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .faq-section {
+        padding: 6rem 0;
+      }
+
+      .faq-header h2 {
+        font-size: 2.8rem;
+      }
+
+      .faq-container {
+        padding: 0 2rem;
+      }
+
+      .faq-question {
+        padding: 1.6rem;
+        font-size: 1.5rem;
+      }
+
+      .faq-answer-content {
+        padding: 0 1.6rem 1.6rem;
+        font-size: 1.4rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -759,6 +953,142 @@
       </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="faq-section">
+      <div class="faq-container">
+        <div class="faq-header">
+          <h2>Ofte stillede spørgsmål</h2>
+          <p>Søg i vores FAQ for at finde svar på dine spørgsmål</p>
+        </div>
+
+        <div class="faq-search">
+          <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" class="faq-search-input" id="faqSearchInput" placeholder="Søg i spørgsmål...">
+        </div>
+
+        <div class="faq-list" id="faqList">
+          <div class="faq-item" data-question="hvad er flow hvordan kommer jeg i gang" data-answer="flow restaurant platform automation">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Hvad er Flow, og hvordan kommer jeg i gang?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Flow er en komplet restaurant automation platform, der hjælper dig med online bestilling, marketing, loyalitetsprogrammer og meget mere. For at komme i gang skal du blot vælge en plan og oprette en konto. Vores team hjælper dig med opsætningen, og du kan være klar til at modtage ordrer inden for 24 timer.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="er der bindingsperiode kan jeg opsige annullere" data-answer="ingen binding opsigelse">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Er der nogen bindingsperiode?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Nej, der er ingen bindingsperiode! Du kan opsige dit abonnement når som helst uden ekstra omkostninger. Vi tror på, at vi skal tjene din forretning hver måned, så du har fuld frihed til at forlade os, hvis vi ikke leverer værdi.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="hvad inkluderer gratis opsætning setup" data-answer="opsætning hjemmeside menu">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Hvad inkluderer den gratis opsætning?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Den gratis opsætning inkluderer fuld konfiguration af din restaurant hjemmeside, upload af din menu med billeder og priser, integration med betalingsløsninger, opsætning af åbningstider og leveringsområder, samt træning i brug af dashboardet. Vores team klarer alt, så du kan fokusere på din restaurant.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="kan jeg skifte plan opgradere nedgradere" data-answer="skifte plan upgrade">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Kan jeg skifte plan undervejs?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Ja, du kan til enhver tid opgradere eller nedgradere din plan. Hvis du opgraderer, vil du straks få adgang til de nye funktioner. Ved nedgradering træder ændringen i kraft ved næste faktureringsperiode. Kontakt vores support, hvis du har spørgsmål om planændringer.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="hvordan fungerer mobil app brandet" data-answer="app store google play ios android">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Hvordan fungerer den brandede mobil app?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Med Pro-planen får du din egen app i App Store og Google Play med dit restaurantnavn, logo og farver. Dine kunder kan downloade appen, gemme deres favoritter, optjene loyalitetspoint og bestille med et enkelt tryk. Vi håndterer al udvikling og vedligeholdelse af appen.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="hvad koster levering delivery kommission" data-answer="levering pris gebyr">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Hvad koster levering, og er der kommission?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Med Flow betaler du ingen kommission på ordrer - hverken på afhentning eller levering. Du betaler kun dit månedlige abonnement. For levering kan du vælge at bruge dine egne chauffører eller vores leveringspartnere, hvor leveringsomkostningen sættes på kundens regning.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="support hjælp kontakt kundeservice" data-answer="support telefon email chat">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Hvilken support tilbyder I?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Alle planer inkluderer email support med hurtig svartid. Pro-planen inkluderer prioriteret support med kortere svartid og telefonsupport i åbningstiden. Enterprise-kunder får 24/7 telefonsupport og en dedikeret account manager, der kender din forretning i dybden.
+              </div>
+            </div>
+          </div>
+
+          <div class="faq-item" data-question="integration pos kasse system" data-answer="integration kassesystem pos">
+            <button class="faq-question" type="button">
+              <span class="faq-question-text">Integrerer Flow med mit kassesystem?</span>
+              <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+            <div class="faq-answer">
+              <div class="faq-answer-content">
+                Flow integrerer med de mest populære kassesystemer i Danmark. Ordrer kan automatisk sendes til din printer eller tablet, så du undgår manuel indtastning. Kontakt os for at høre, om vi understøtter dit specifikke kassesystem, eller hvis du ønsker en custom integration.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-no-results" id="faqNoResults" style="display: none;">
+          <p>Ingen spørgsmål matcher din søgning. Prøv et andet søgeord.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
@@ -888,6 +1218,70 @@
         if (!isAnnual) {
           isAnnual = true;
           updatePrices();
+        }
+      });
+    });
+  </script>
+
+  <!-- FAQ Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const faqItems = document.querySelectorAll('.faq-item');
+      const searchInput = document.getElementById('faqSearchInput');
+      const faqList = document.getElementById('faqList');
+      const noResults = document.getElementById('faqNoResults');
+
+      // Accordion functionality
+      faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+
+        question.addEventListener('click', function() {
+          const isOpen = item.classList.contains('open');
+
+          // Close all other items
+          faqItems.forEach(otherItem => {
+            otherItem.classList.remove('open');
+          });
+
+          // Toggle current item
+          if (!isOpen) {
+            item.classList.add('open');
+          }
+        });
+      });
+
+      // Search functionality
+      searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        faqItems.forEach(item => {
+          const questionText = item.querySelector('.faq-question-text').textContent.toLowerCase();
+          const answerText = item.querySelector('.faq-answer-content').textContent.toLowerCase();
+          const dataQuestion = item.dataset.question || '';
+          const dataAnswer = item.dataset.answer || '';
+
+          const matches = questionText.includes(query) ||
+                         answerText.includes(query) ||
+                         dataQuestion.includes(query) ||
+                         dataAnswer.includes(query);
+
+          if (query === '' || matches) {
+            item.classList.remove('hidden');
+            visibleCount++;
+          } else {
+            item.classList.add('hidden');
+            item.classList.remove('open');
+          }
+        });
+
+        // Show/hide no results message
+        if (visibleCount === 0 && query !== '') {
+          noResults.style.display = 'block';
+          faqList.style.display = 'none';
+        } else {
+          noResults.style.display = 'none';
+          faqList.style.display = 'flex';
         }
       });
     });
