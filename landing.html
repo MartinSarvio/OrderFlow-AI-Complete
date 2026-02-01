@@ -1246,6 +1246,324 @@
     }
   }
 
+  /* ==================== PRICING SECTION ==================== */
+  .pricing-section {
+    padding: 10rem 0;
+    background: var(--color-gray-100);
+  }
+
+  .pricing-container {
+    max-width: 120rem;
+    margin: 0 auto;
+    padding: 0 4rem;
+  }
+
+  .pricing-header {
+    text-align: center;
+    margin-bottom: 6rem;
+  }
+
+  .pricing-header h2 {
+    font-size: 4.4rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 1.6rem;
+    letter-spacing: -0.02em;
+  }
+
+  .pricing-header p {
+    font-size: 1.8rem;
+    color: var(--color-gray-600);
+    max-width: 50rem;
+    margin: 0 auto 4rem;
+  }
+
+  /* Toggle Switch */
+  .pricing-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.6rem;
+  }
+
+  .pricing-toggle-label {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--color-gray-500);
+    transition: color 0.3s ease;
+  }
+
+  .pricing-toggle-label.active {
+    color: var(--color-dark);
+  }
+
+  .pricing-toggle-switch {
+    position: relative;
+    width: 6rem;
+    height: 3.2rem;
+    background: var(--color-gray-300);
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+
+  .pricing-toggle-switch.annual {
+    background: var(--color-primary);
+  }
+
+  .pricing-toggle-knob {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.4rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    background: var(--color-white);
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .pricing-toggle-switch.annual .pricing-toggle-knob {
+    transform: translateX(2.8rem);
+  }
+
+  .pricing-save-badge {
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  /* Pricing Grid */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.4rem;
+    align-items: stretch;
+  }
+
+  /* Pricing Card */
+  .pricing-card {
+    background: var(--color-white);
+    border-radius: 2rem;
+    padding: 4rem;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 2px solid transparent;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  }
+
+  .pricing-card.featured {
+    background: var(--color-dark);
+    border-color: var(--color-primary);
+    transform: scale(1.02);
+  }
+
+  .pricing-card.featured:hover {
+    transform: scale(1.02) translateY(-8px);
+  }
+
+  .pricing-card-badge {
+    position: absolute;
+    top: -1.2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: var(--color-white);
+    padding: 0.6rem 1.6rem;
+    border-radius: 2rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .pricing-card-title {
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--color-dark);
+    margin-bottom: 0.8rem;
+  }
+
+  .pricing-card.featured .pricing-card-title {
+    color: var(--color-white);
+  }
+
+  .pricing-card-desc {
+    font-size: 1.4rem;
+    color: var(--color-gray-500);
+    margin-bottom: 2.4rem;
+  }
+
+  .pricing-card.featured .pricing-card-desc {
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* Price Display */
+  .pricing-price {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .pricing-currency {
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--color-dark);
+  }
+
+  .pricing-card.featured .pricing-currency {
+    color: var(--color-white);
+  }
+
+  .pricing-amount {
+    font-size: 5.6rem;
+    font-weight: 700;
+    color: var(--color-dark);
+    line-height: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-card.featured .pricing-amount {
+    color: var(--color-white);
+  }
+
+  .pricing-amount-inner {
+    display: inline-block;
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  .pricing-period {
+    font-size: 1.5rem;
+    color: var(--color-gray-500);
+    margin-bottom: 3.2rem;
+  }
+
+  .pricing-card.featured .pricing-period {
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* CTA Button */
+  .pricing-cta {
+    width: 100%;
+    padding: 1.6rem 2.4rem;
+    border-radius: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    margin-bottom: 3.2rem;
+  }
+
+  .pricing-card .pricing-cta {
+    background: var(--color-dark);
+    color: var(--color-white);
+  }
+
+  .pricing-card .pricing-cta:hover {
+    background: var(--color-gray-800);
+  }
+
+  .pricing-card.featured .pricing-cta {
+    background: var(--color-primary);
+    color: var(--color-white);
+  }
+
+  .pricing-card.featured .pricing-cta:hover {
+    background: var(--color-primary-hover);
+  }
+
+  /* Features List */
+  .pricing-features-label {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 2rem;
+  }
+
+  .pricing-card.featured .pricing-features-label {
+    color: rgba(255,255,255,0.5);
+  }
+
+  .pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+  }
+
+  .pricing-features li {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 1rem 0;
+    font-size: 1.5rem;
+    color: var(--color-dark);
+  }
+
+  .pricing-card.featured .pricing-features li {
+    color: var(--color-white);
+  }
+
+  .pricing-features li svg {
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    color: var(--color-primary);
+  }
+
+  .pricing-card.featured .pricing-features li svg {
+    color: var(--color-primary);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .pricing-grid {
+      grid-template-columns: 1fr;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+
+    .pricing-card.featured {
+      transform: none;
+      order: -1;
+    }
+
+    .pricing-card.featured:hover {
+      transform: translateY(-8px);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .pricing-section {
+      padding: 6rem 0;
+    }
+
+    .pricing-header h2 {
+      font-size: 3.2rem;
+    }
+
+    .pricing-card {
+      padding: 3rem;
+    }
+
+    .pricing-amount {
+      font-size: 4.8rem;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -1671,6 +1989,142 @@
     </div>
   </section>
 
+  <!-- Pricing Section -->
+  <section class="pricing-section" id="priser">
+    <div class="pricing-container">
+      <div class="pricing-header">
+        <h2>Vælg den rigtige plan til din restaurant</h2>
+        <p>Alle planer inkluderer gratis opsætning, support og ingen bindingsperiode. Annuller når som helst.</p>
+        <div class="pricing-toggle">
+          <span class="pricing-toggle-label" data-period="monthly">Månedlig</span>
+          <div class="pricing-toggle-switch annual" id="pricingToggle">
+            <div class="pricing-toggle-knob"></div>
+          </div>
+          <span class="pricing-toggle-label active" data-period="annual">Årlig</span>
+          <span class="pricing-save-badge">Spar 20%</span>
+        </div>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Starter Plan -->
+        <div class="pricing-card">
+          <h3 class="pricing-card-title">Starter</h3>
+          <p class="pricing-card-desc">Perfekt til nye restauranter der vil i gang</p>
+          <div class="pricing-price">
+            <span class="pricing-currency">kr.</span>
+            <span class="pricing-amount" data-monthly="799" data-annual="639">
+              <span class="pricing-amount-inner">639</span>
+            </span>
+          </div>
+          <span class="pricing-period">/måned</span>
+          <a href="#demo" class="pricing-cta">Kom i gang</a>
+          <span class="pricing-features-label">Det får du:</span>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Online bestilling
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Restaurant hjemmeside
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Basis kundedata
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Email support
+            </li>
+          </ul>
+        </div>
+
+        <!-- Pro Plan (Featured) -->
+        <div class="pricing-card featured">
+          <span class="pricing-card-badge">Mest populære</span>
+          <h3 class="pricing-card-title">Pro</h3>
+          <p class="pricing-card-desc">Alt hvad du behøver for at vækste din forretning</p>
+          <div class="pricing-price">
+            <span class="pricing-currency">kr.</span>
+            <span class="pricing-amount" data-monthly="1.499" data-annual="1.199">
+              <span class="pricing-amount-inner">1.199</span>
+            </span>
+          </div>
+          <span class="pricing-period">/måned</span>
+          <a href="#demo" class="pricing-cta">Start gratis prøveperiode</a>
+          <span class="pricing-features-label">Alt i Starter, plus:</span>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Brandet mobil app
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Loyalitetsprogram
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Automatiseret marketing
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Avanceret analytics
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Prioriteret support
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              SMS kampagner
+            </li>
+          </ul>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card">
+          <h3 class="pricing-card-title">Enterprise</h3>
+          <p class="pricing-card-desc">Skræddersyet løsning til restaurantkæder</p>
+          <div class="pricing-price">
+            <span class="pricing-currency"></span>
+            <span class="pricing-amount" style="font-size: 3.6rem;">
+              <span class="pricing-amount-inner">Kontakt os</span>
+            </span>
+          </div>
+          <span class="pricing-period">Tilpasset pris</span>
+          <a href="#demo" class="pricing-cta">Kontakt salg</a>
+          <span class="pricing-features-label">Alt i Pro, plus:</span>
+          <ul class="pricing-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Ubegrænsede lokationer
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Dedikeret account manager
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Custom integrationer
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              SLA & oppetidsgaranti
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              On-site træning
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              24/7 telefon support
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
@@ -1932,6 +2386,72 @@
     });
     startTestimonialCarousel();
   });
+</script>
+
+<!-- Pricing Toggle Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggle = document.getElementById('pricingToggle');
+  const monthlyLabel = document.querySelector('.pricing-toggle-label[data-period="monthly"]');
+  const annualLabel = document.querySelector('.pricing-toggle-label[data-period="annual"]');
+  const priceAmounts = document.querySelectorAll('.pricing-amount[data-monthly]');
+
+  let isAnnual = true;
+
+  function updatePrices() {
+    priceAmounts.forEach(amount => {
+      const inner = amount.querySelector('.pricing-amount-inner');
+      const monthlyPrice = amount.dataset.monthly;
+      const annualPrice = amount.dataset.annual;
+
+      // Animate the price change
+      inner.style.transform = 'translateY(-100%)';
+      inner.style.opacity = '0';
+
+      setTimeout(() => {
+        inner.textContent = isAnnual ? annualPrice : monthlyPrice;
+        inner.style.transform = 'translateY(100%)';
+
+        requestAnimationFrame(() => {
+          inner.style.transition = 'transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease';
+          inner.style.transform = 'translateY(0)';
+          inner.style.opacity = '1';
+        });
+      }, 200);
+    });
+
+    // Update labels
+    if (isAnnual) {
+      toggle.classList.add('annual');
+      monthlyLabel.classList.remove('active');
+      annualLabel.classList.add('active');
+    } else {
+      toggle.classList.remove('annual');
+      monthlyLabel.classList.add('active');
+      annualLabel.classList.remove('active');
+    }
+  }
+
+  toggle.addEventListener('click', function() {
+    isAnnual = !isAnnual;
+    updatePrices();
+  });
+
+  // Also allow clicking on labels
+  monthlyLabel.addEventListener('click', function() {
+    if (isAnnual) {
+      isAnnual = false;
+      updatePrices();
+    }
+  });
+
+  annualLabel.addEventListener('click', function() {
+    if (!isAnnual) {
+      isAnnual = true;
+      updatePrices();
+    }
+  });
+});
 </script>
 </body>
 </html>
