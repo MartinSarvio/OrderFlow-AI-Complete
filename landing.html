@@ -800,80 +800,295 @@
       opacity: 0.8;
     }
 
-    /* ==================== FEATURES SECTION ==================== */
-    .features-section {
-      background: var(--color-white);
-      padding: 8rem 0;
+    /* ==================== APPLE FEATURES CAROUSEL ==================== */
+    .apple-features-section {
+      background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
+      padding: 10rem 0 12rem;
+      overflow: hidden;
+      position: relative;
     }
 
-    .features-header {
+    .apple-features-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(1, 91, 248, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .apple-features-header {
       text-align: center;
       margin-bottom: 6rem;
+      position: relative;
+      z-index: 2;
     }
 
-    .features-header h2 {
+    .apple-features-header h2 {
       font-size: 4.8rem;
       font-weight: 600;
-      color: var(--color-dark);
+      color: #ffffff;
       margin-bottom: 1.6rem;
     }
 
-    .features-header p {
+    .apple-features-header p {
       font-size: 1.8rem;
-      color: var(--color-gray-600);
+      color: rgba(255,255,255,0.6);
       max-width: 60rem;
       margin: 0 auto;
     }
 
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3rem;
+    .apple-carousel-container {
+      position: relative;
+      height: 420px;
+      perspective: 1000px;
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 4rem;
     }
 
-    .feature-card {
-      background: var(--color-gray-50);
-      border-radius: 1.6rem;
-      padding: 3rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    .apple-carousel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    .apple-card {
+      position: absolute;
+      width: 280px;
+      height: 380px;
+      border-radius: 2.4rem;
+      overflow: hidden;
+      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      transform-style: preserve-3d;
+      left: 50%;
+      top: 50%;
     }
 
-    .feature-icon {
-      width: 4.8rem;
-      height: 4.8rem;
-      background: var(--color-primary);
-      border-radius: 1.2rem;
+    .apple-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #1e3a5f 0%, #0d1b2a 100%);
+      border-radius: 2.4rem;
+      padding: 2.4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .apple-card[data-position="center"] {
+      transform: translate(-50%, -50%) rotateY(0deg) scale(1);
+      z-index: 10;
+      opacity: 1;
+    }
+
+    .apple-card[data-position="left"] {
+      transform: translate(-180%, -50%) rotateY(25deg) scale(0.85);
+      z-index: 5;
+      opacity: 0.7;
+    }
+
+    .apple-card[data-position="right"] {
+      transform: translate(80%, -50%) rotateY(-25deg) scale(0.85);
+      z-index: 5;
+      opacity: 0.7;
+    }
+
+    .apple-card[data-position="far-left"] {
+      transform: translate(-280%, -50%) rotateY(35deg) scale(0.7);
+      z-index: 2;
+      opacity: 0.3;
+    }
+
+    .apple-card[data-position="far-right"] {
+      transform: translate(180%, -50%) rotateY(-35deg) scale(0.7);
+      z-index: 2;
+      opacity: 0.3;
+    }
+
+    .apple-card[data-position="hidden"] {
+      transform: translate(-50%, -50%) scale(0.5);
+      z-index: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .apple-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.6rem 1.2rem;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 2rem;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #ffffff;
+      width: fit-content;
+    }
+
+    .apple-card-badge svg {
+      width: 1.4rem;
+      height: 1.4rem;
+    }
+
+    .apple-card-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .apple-card-icon {
+      width: 5.6rem;
+      height: 5.6rem;
+      background: linear-gradient(135deg, var(--color-primary) 0%, #4f8fff 100%);
+      border-radius: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 2rem;
+      box-shadow: 0 8px 24px rgba(1, 91, 248, 0.4);
     }
 
-    .feature-icon svg {
-      width: 2.4rem;
-      height: 2.4rem;
-      color: var(--color-white);
+    .apple-card-icon svg {
+      width: 2.8rem;
+      height: 2.8rem;
+      color: #ffffff;
     }
 
-    .feature-card h3 {
-      font-size: 2rem;
+    .apple-card h3 {
+      font-size: 2.2rem;
       font-weight: 600;
-      color: var(--color-dark);
+      color: #ffffff;
       margin-bottom: 1rem;
+      line-height: 1.3;
     }
 
-    .feature-card p {
-      font-size: 1.5rem;
-      color: var(--color-gray-600);
+    .apple-card p {
+      font-size: 1.4rem;
+      color: rgba(255, 255, 255, 0.7);
       line-height: 1.6;
+    }
+
+    .apple-card-glow {
+      position: absolute;
+      bottom: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(1, 91, 248, 0.2) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .apple-card-shimmer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.03) 45%,
+        rgba(255, 255, 255, 0.05) 50%,
+        rgba(255, 255, 255, 0.03) 55%,
+        transparent 60%
+      );
+      border-radius: 2.4rem;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    .apple-carousel-nav {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 4rem;
+    }
+
+    .apple-nav-dot {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 0;
+    }
+
+    .apple-nav-dot.active {
+      background: var(--color-primary);
+      transform: scale(1.2);
+    }
+
+    .apple-nav-dot:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .apple-nav-dot.active:hover {
+      background: var(--color-primary);
+    }
+
+    @media (max-width: 1024px) {
+      .apple-carousel-container {
+        height: 380px;
+      }
+      .apple-card {
+        width: 240px;
+        height: 340px;
+      }
+      .apple-card[data-position="far-left"],
+      .apple-card[data-position="far-right"] {
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .apple-features-section {
+        padding: 6rem 0 8rem;
+      }
+      .apple-features-header h2 {
+        font-size: 3.2rem;
+      }
+      .apple-carousel-container {
+        height: 360px;
+      }
+      .apple-card {
+        width: 220px;
+        height: 320px;
+      }
+      .apple-card[data-position="left"] {
+        transform: translate(-140%, -50%) rotateY(20deg) scale(0.8);
+        opacity: 0.5;
+      }
+      .apple-card[data-position="right"] {
+        transform: translate(40%, -50%) rotateY(-20deg) scale(0.8);
+        opacity: 0.5;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .apple-carousel-container {
+        height: 340px;
+      }
+      .apple-card {
+        width: 200px;
+        height: 300px;
+      }
+      .apple-card[data-position="left"],
+      .apple-card[data-position="right"] {
+        opacity: 0.3;
+      }
     }
 
     /* ==================== CTA BANNER ==================== */
@@ -1825,55 +2040,118 @@
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section" id="hvordan">
-      <div class="features-header">
+    <!-- Apple Features Carousel -->
+    <section class="apple-features-section" id="hvordan">
+      <div class="apple-features-header">
         <h2>Alt hvad du behøver</h2>
         <p>Flow giver dig alle værktøjerne til at drive en succesfuld restaurant i den digitale tidsalder.</p>
       </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <div class="apple-carousel-container">
+        <div class="apple-carousel" id="appleCarousel">
+          <div class="apple-card" data-index="0">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
+                Bestilling
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                </div>
+                <h3>Online Bestilling</h3>
+                <p>Modtag ordrer direkte fra din hjemmeside og app uden kommission til tredjeparter.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>Online Bestilling</h3>
-          <p>Modtag ordrer direkte fra din hjemmeside og app uden kommission til tredjeparter.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div class="apple-card" data-index="1">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Marketing
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h3>SMS Marketing</h3>
+                <p>Send automatiske SMS-kampagner til dine kunder og øg genbestillinger.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>SMS Marketing</h3>
-          <p>Send automatiske SMS-kampagner til dine kunder og øg genbestillinger.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+          <div class="apple-card" data-index="2">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                Analyse
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                </div>
+                <h3>Indsigt & Rapporter</h3>
+                <p>Få detaljeret indsigt i dit salg, kundeadfærd og marketingperformance.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>Indsigt & Rapporter</h3>
-          <p>Få detaljeret indsigt i dit salg, kundeadfærd og marketingperformance.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="apple-card" data-index="3">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/></svg>
+                CRM
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>Kundestyring</h3>
+                <p>Hold styr på dine kunder, deres præferencer og ordrehistorik.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>Kundestyring</h3>
-          <p>Hold styr på dine kunder, deres præferencer og ordrehistorik.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <div class="apple-card" data-index="4">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+                App
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <h3>Brandet App</h3>
+                <p>Din egen app i App Store og Google Play med dit brand og logo.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>Brandet App</h3>
-          <p>Din egen app i App Store og Google Play med dit brand og logo.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <div class="apple-card" data-index="5">
+            <div class="apple-card-inner">
+              <div class="apple-card-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Sikkerhed
+              </div>
+              <div class="apple-card-content">
+                <div class="apple-card-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3>Sikker Betaling</h3>
+                <p>Integreret betalingsløsning med alle populære betalingsmetoder.</p>
+              </div>
+              <div class="apple-card-glow"></div>
+              <div class="apple-card-shimmer"></div>
+            </div>
           </div>
-          <h3>Sikker Betaling</h3>
-          <p>Integreret betalingsløsning med alle populære betalingsmetoder.</p>
         </div>
+        <div class="apple-carousel-nav" id="appleCarouselNav"></div>
       </div>
     </section>
 
@@ -2226,6 +2504,105 @@
 
   // Start med første tab
   showTab(1);
+</script>
+<script>
+  // Apple Features Carousel
+  (function() {
+    const carousel = document.getElementById('appleCarousel');
+    const nav = document.getElementById('appleCarouselNav');
+    if (!carousel || !nav) return;
+
+    const cards = Array.from(carousel.querySelectorAll('.apple-card'));
+    const totalCards = cards.length;
+    let currentIndex = 0;
+    let autoplayInterval;
+
+    // Create navigation dots
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.className = 'apple-nav-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `Gå til slide ${i + 1}`);
+      dot.addEventListener('click', () => goToSlide(i));
+      nav.appendChild(dot);
+    });
+
+    const dots = nav.querySelectorAll('.apple-nav-dot');
+
+    function getPosition(cardIndex, activeIndex) {
+      const diff = cardIndex - activeIndex;
+      const normalizedDiff = ((diff % totalCards) + totalCards) % totalCards;
+
+      if (normalizedDiff === 0) return 'center';
+      if (normalizedDiff === 1) return 'right';
+      if (normalizedDiff === totalCards - 1) return 'left';
+      if (normalizedDiff === 2) return 'far-right';
+      if (normalizedDiff === totalCards - 2) return 'far-left';
+      return 'hidden';
+    }
+
+    function updateCarousel() {
+      cards.forEach((card, i) => {
+        card.setAttribute('data-position', getPosition(i, currentIndex));
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentIndex);
+      });
+    }
+
+    function goToSlide(index) {
+      currentIndex = index;
+      updateCarousel();
+      resetAutoplay();
+    }
+
+    function nextSlide() {
+      currentIndex = (currentIndex + 1) % totalCards;
+      updateCarousel();
+    }
+
+    function resetAutoplay() {
+      clearInterval(autoplayInterval);
+      autoplayInterval = setInterval(nextSlide, 3500);
+    }
+
+    // Initialize
+    updateCarousel();
+    resetAutoplay();
+
+    // Pause on hover
+    carousel.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
+    carousel.addEventListener('mouseleave', resetAutoplay);
+
+    // Click on card to select it
+    cards.forEach((card, i) => {
+      card.addEventListener('click', () => {
+        if (card.getAttribute('data-position') !== 'center') {
+          goToSlide(i);
+        }
+      });
+    });
+
+    // Touch support
+    let touchStartX = 0;
+    carousel.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      clearInterval(autoplayInterval);
+    }, { passive: true });
+
+    carousel.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          currentIndex = (currentIndex + 1) % totalCards;
+        } else {
+          currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+        }
+        updateCarousel();
+      }
+      resetAutoplay();
+    }, { passive: true });
+  })();
 </script>
 <script>
   // Header scroll effect
