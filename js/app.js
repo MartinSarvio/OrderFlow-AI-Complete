@@ -25060,6 +25060,13 @@ function populateWebBuilderForms() {
   if (fbEl) fbEl.value = webBuilderConfig.contact?.socialMedia?.facebook || '';
   if (igEl) igEl.value = webBuilderConfig.contact?.socialMedia?.instagram || '';
   if (ttEl) ttEl.value = webBuilderConfig.contact?.socialMedia?.tiktok || '';
+
+  // Initialize Billeder image previews
+  setTimeout(() => {
+    if (typeof initBillederPreviews === 'function') {
+      initBillederPreviews();
+    }
+  }, 100);
 }
 
 // Render business hours grid
@@ -25269,7 +25276,7 @@ function openWebBuilderPreviewFullscreen() {
           <div id="wb-preview-device-frame" class="wb-device-frame mobile" style="background:#000;border-radius:32px;padding:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transition:all 0.3s ease">
             <iframe
               id="wb-fullscreen-preview-frame"
-              src="./Website builder/index.html"
+              src="./Website%20builder/index.html"
               style="width:100%;height:100%;border:none;border-radius:20px;background:#fff"
               onload="initFullscreenPreview()"
             ></iframe>
@@ -25344,4 +25351,112 @@ window.addEventListener('message', (event) => {
     updateWebBuilderPreview();
   }
 });
+
+// Update Logo preview when URL changes
+function updateWbLogoPreview() {
+  const logoUrl = document.getElementById('wb-logo')?.value || '';
+  const previewImg = document.getElementById('wb-logo-preview');
+  const previewCircle = document.getElementById('wb-logo-preview-circle');
+  const brandingPreview = document.getElementById('wb-branding-logo-preview');
+  const placeholder = document.getElementById('wb-logo-placeholder');
+  const circlePlaceholder = document.getElementById('wb-logo-preview-circle-placeholder');
+  const removeBtn = document.getElementById('wb-logo-remove-btn');
+  const uploadArea = document.getElementById('wb-logo-upload-area');
+
+  if (logoUrl && logoUrl.trim() !== '') {
+    if (previewImg) previewImg.src = logoUrl;
+    if (previewCircle) previewCircle.src = logoUrl;
+    if (brandingPreview) brandingPreview.src = logoUrl;
+    if (removeBtn) removeBtn.style.display = 'block';
+  } else {
+    if (previewImg) {
+      previewImg.src = '';
+      previewImg.style.display = 'none';
+    }
+    if (previewCircle) {
+      previewCircle.src = '';
+      previewCircle.style.display = 'none';
+    }
+    if (brandingPreview) {
+      brandingPreview.src = '';
+      brandingPreview.style.display = 'none';
+    }
+    if (placeholder) placeholder.style.display = 'flex';
+    if (circlePlaceholder) circlePlaceholder.style.display = 'block';
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (uploadArea) uploadArea.style.border = '2px dashed var(--border)';
+  }
+
+  // Update the restaurant name in preview
+  const nameInput = document.getElementById('wb-name');
+  const previewName = document.getElementById('wb-logo-preview-name');
+  if (nameInput && previewName) {
+    previewName.textContent = nameInput.value || 'Pizzeria Roma';
+  }
+
+  updateWebBuilderPreview();
+}
+
+// Clear Logo
+function clearWbLogo() {
+  const logoInput = document.getElementById('wb-logo');
+  if (logoInput) {
+    logoInput.value = '';
+    updateWbLogoPreview();
+  }
+}
+
+// Update Hero preview when URL changes
+function updateWbHeroPreview() {
+  const heroUrl = document.getElementById('wb-hero-image')?.value || '';
+  const previewImg = document.getElementById('wb-hero-preview');
+  const previewDemo = document.getElementById('wb-hero-preview-demo');
+  const placeholder = document.getElementById('wb-hero-placeholder');
+  const demoPlaceholder = document.getElementById('wb-hero-preview-demo-placeholder');
+  const removeBtn = document.getElementById('wb-hero-remove-btn');
+  const uploadArea = document.getElementById('wb-hero-upload-area');
+
+  if (heroUrl && heroUrl.trim() !== '') {
+    if (previewImg) previewImg.src = heroUrl;
+    if (previewDemo) previewDemo.src = heroUrl;
+    if (removeBtn) removeBtn.style.display = 'block';
+  } else {
+    if (previewImg) {
+      previewImg.src = '';
+      previewImg.style.display = 'none';
+    }
+    if (previewDemo) {
+      previewDemo.src = '';
+      previewDemo.style.display = 'none';
+    }
+    if (placeholder) placeholder.style.display = 'flex';
+    if (demoPlaceholder) demoPlaceholder.style.display = 'flex';
+    if (removeBtn) removeBtn.style.display = 'none';
+    if (uploadArea) uploadArea.style.border = '2px dashed var(--border)';
+  }
+
+  // Update the restaurant name in preview
+  const nameInput = document.getElementById('wb-name');
+  const previewName = document.getElementById('wb-hero-preview-name');
+  if (nameInput && previewName) {
+    previewName.textContent = nameInput.value || 'Pizzeria Roma';
+  }
+
+  updateWebBuilderPreview();
+}
+
+// Clear Hero
+function clearWbHero() {
+  const heroInput = document.getElementById('wb-hero-image');
+  if (heroInput) {
+    heroInput.value = '';
+    updateWbHeroPreview();
+  }
+}
+
+// Initialize Billeder previews on page load
+function initBillederPreviews() {
+  updateWbLogoPreview();
+  updateWbHeroPreview();
+}
 
