@@ -25254,6 +25254,12 @@ function saveWebBuilderConfig() {
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(webBuilderConfig));
   toast('Web Builder konfiguration gemt', 'success');
   updateWebBuilderPreview();
+
+  // Vis "✓ Ændringer gemt" på alle aktive save-status spans
+  document.querySelectorAll('.wb-save-status').forEach(status => {
+    status.style.display = 'block';
+    setTimeout(() => status.style.display = 'none', 3000);
+  });
 }
 
 // Update Web Builder preview
