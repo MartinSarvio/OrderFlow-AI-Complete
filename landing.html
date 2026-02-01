@@ -802,22 +802,10 @@
 
     /* ==================== APPLE FEATURES CAROUSEL ==================== */
     .apple-features-section {
-      background: linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 100%);
-      padding: 10rem 0 12rem;
+      background: var(--color-white);
+      padding: 8rem 0;
       overflow: hidden;
       position: relative;
-    }
-
-    .apple-features-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 800px;
-      background: radial-gradient(circle, rgba(1, 91, 248, 0.15) 0%, transparent 70%);
-      pointer-events: none;
     }
 
     .apple-features-header {
@@ -830,13 +818,13 @@
     .apple-features-header h2 {
       font-size: 4.8rem;
       font-weight: 600;
-      color: #ffffff;
+      color: var(--color-dark);
       margin-bottom: 1.6rem;
     }
 
     .apple-features-header p {
       font-size: 1.8rem;
-      color: rgba(255,255,255,0.6);
+      color: var(--color-gray-600);
       max-width: 60rem;
       margin: 0 auto;
     }
@@ -862,7 +850,7 @@
       position: absolute;
       width: 280px;
       height: 380px;
-      border-radius: 2.4rem;
+      border-radius: 2rem;
       overflow: hidden;
       transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
@@ -875,19 +863,24 @@
       position: relative;
       width: 100%;
       height: 100%;
-      background: linear-gradient(145deg, #1e3a5f 0%, #0d1b2a 100%);
-      border-radius: 2.4rem;
+      background: var(--color-gray-50);
+      border-radius: 2rem;
       padding: 2.4rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+      border: 1px solid var(--color-gray-200);
     }
 
     .apple-card[data-position="center"] {
       transform: translate(-50%, -50%) rotateY(0deg) scale(1);
       z-index: 10;
       opacity: 1;
+    }
+
+    .apple-card[data-position="center"] .apple-card-inner {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
     }
 
     .apple-card[data-position="left"] {
@@ -905,13 +898,13 @@
     .apple-card[data-position="far-left"] {
       transform: translate(-280%, -50%) rotateY(35deg) scale(0.7);
       z-index: 2;
-      opacity: 0.3;
+      opacity: 0.4;
     }
 
     .apple-card[data-position="far-right"] {
       transform: translate(180%, -50%) rotateY(-35deg) scale(0.7);
       z-index: 2;
-      opacity: 0.3;
+      opacity: 0.4;
     }
 
     .apple-card[data-position="hidden"] {
@@ -926,8 +919,7 @@
       align-items: center;
       gap: 0.8rem;
       padding: 0.6rem 1.2rem;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
+      background: var(--color-primary);
       border-radius: 2rem;
       font-size: 1.2rem;
       font-weight: 500;
@@ -948,13 +940,12 @@
     .apple-card-icon {
       width: 5.6rem;
       height: 5.6rem;
-      background: linear-gradient(135deg, var(--color-primary) 0%, #4f8fff 100%);
+      background: var(--color-primary);
       border-radius: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-bottom: 2rem;
-      box-shadow: 0 8px 24px rgba(1, 91, 248, 0.4);
     }
 
     .apple-card-icon svg {
@@ -966,46 +957,20 @@
     .apple-card h3 {
       font-size: 2.2rem;
       font-weight: 600;
-      color: #ffffff;
+      color: var(--color-dark);
       margin-bottom: 1rem;
       line-height: 1.3;
     }
 
     .apple-card p {
       font-size: 1.4rem;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--color-gray-600);
       line-height: 1.6;
     }
 
-    .apple-card-glow {
-      position: absolute;
-      bottom: -50%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle at center, rgba(1, 91, 248, 0.2) 0%, transparent 60%);
-      pointer-events: none;
-      z-index: 1;
-    }
-
+    .apple-card-glow,
     .apple-card-shimmer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(
-        105deg,
-        transparent 40%,
-        rgba(255, 255, 255, 0.03) 45%,
-        rgba(255, 255, 255, 0.05) 50%,
-        rgba(255, 255, 255, 0.03) 55%,
-        transparent 60%
-      );
-      border-radius: 2.4rem;
-      pointer-events: none;
-      z-index: 3;
+      display: none;
     }
 
     .apple-carousel-nav {
@@ -1019,7 +984,7 @@
       width: 1rem;
       height: 1rem;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
+      background: var(--color-gray-300);
       border: none;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -1032,7 +997,7 @@
     }
 
     .apple-nav-dot:hover {
-      background: rgba(255, 255, 255, 0.4);
+      background: var(--color-gray-400);
     }
 
     .apple-nav-dot.active:hover {
@@ -1055,7 +1020,7 @@
 
     @media (max-width: 768px) {
       .apple-features-section {
-        padding: 6rem 0 8rem;
+        padding: 6rem 0;
       }
       .apple-features-header h2 {
         font-size: 3.2rem;
@@ -2237,140 +2202,6 @@
     </div>
   </section>
 
-  <!-- Pricing Section -->
-  <section class="pricing-section" id="priser">
-    <div class="pricing-container">
-      <div class="pricing-header">
-        <div class="pricing-toggle">
-          <span class="pricing-toggle-label" data-period="monthly">Månedlig</span>
-          <div class="pricing-toggle-switch annual" id="pricingToggle">
-            <div class="pricing-toggle-knob"></div>
-          </div>
-          <span class="pricing-toggle-label active" data-period="annual">Årlig</span>
-          <span class="pricing-save-badge">Spar 20%</span>
-        </div>
-      </div>
-
-      <div class="pricing-grid">
-        <!-- Starter Plan -->
-        <div class="pricing-card">
-          <h3 class="pricing-card-title">Starter</h3>
-          <p class="pricing-card-desc">Perfekt til nye restauranter der vil i gang</p>
-          <div class="pricing-price">
-            <span class="pricing-currency">kr.</span>
-            <span class="pricing-amount" data-monthly="799" data-annual="639">
-              <span class="pricing-amount-inner">639</span>
-            </span>
-          </div>
-          <span class="pricing-period">/måned</span>
-          <a href="#demo" class="pricing-cta">Kom i gang</a>
-          <span class="pricing-features-label">Det får du:</span>
-          <ul class="pricing-features">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Online bestilling
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Restaurant hjemmeside
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Basis kundedata
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Email support
-            </li>
-          </ul>
-        </div>
-
-        <!-- Pro Plan (Featured) -->
-        <div class="pricing-card featured">
-          <span class="pricing-card-badge">Mest populære</span>
-          <h3 class="pricing-card-title">Pro</h3>
-          <p class="pricing-card-desc">Alt hvad du behøver for at vækste din forretning</p>
-          <div class="pricing-price">
-            <span class="pricing-currency">kr.</span>
-            <span class="pricing-amount" data-monthly="1.499" data-annual="1.199">
-              <span class="pricing-amount-inner">1.199</span>
-            </span>
-          </div>
-          <span class="pricing-period">/måned</span>
-          <a href="#demo" class="pricing-cta">Start gratis prøveperiode</a>
-          <span class="pricing-features-label">Alt i Starter, plus:</span>
-          <ul class="pricing-features">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Brandet mobil app
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Loyalitetsprogram
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Automatiseret marketing
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Avanceret analytics
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Prioriteret support
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              SMS kampagner
-            </li>
-          </ul>
-        </div>
-
-        <!-- Enterprise Plan -->
-        <div class="pricing-card">
-          <h3 class="pricing-card-title">Enterprise</h3>
-          <p class="pricing-card-desc">Skræddersyet løsning til restaurantkæder</p>
-          <div class="pricing-price">
-            <span class="pricing-currency"></span>
-            <span class="pricing-amount" style="font-size: 3.6rem;">
-              <span class="pricing-amount-inner">Kontakt os</span>
-            </span>
-          </div>
-          <span class="pricing-period">Tilpasset pris</span>
-          <a href="#demo" class="pricing-cta">Kontakt salg</a>
-          <span class="pricing-features-label">Alt i Pro, plus:</span>
-          <ul class="pricing-features">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Ubegrænsede lokationer
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Dedikeret account manager
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              Custom integrationer
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              SLA & oppetidsgaranti
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              On-site træning
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-              24/7 telefon support
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
@@ -2733,70 +2564,5 @@
   });
 </script>
 
-<!-- Pricing Toggle Script -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const toggle = document.getElementById('pricingToggle');
-  const monthlyLabel = document.querySelector('.pricing-toggle-label[data-period="monthly"]');
-  const annualLabel = document.querySelector('.pricing-toggle-label[data-period="annual"]');
-  const priceAmounts = document.querySelectorAll('.pricing-amount[data-monthly]');
-
-  let isAnnual = true;
-
-  function updatePrices() {
-    priceAmounts.forEach(amount => {
-      const inner = amount.querySelector('.pricing-amount-inner');
-      const monthlyPrice = amount.dataset.monthly;
-      const annualPrice = amount.dataset.annual;
-
-      // Animate the price change
-      inner.style.transform = 'translateY(-100%)';
-      inner.style.opacity = '0';
-
-      setTimeout(() => {
-        inner.textContent = isAnnual ? annualPrice : monthlyPrice;
-        inner.style.transform = 'translateY(100%)';
-
-        requestAnimationFrame(() => {
-          inner.style.transition = 'transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease';
-          inner.style.transform = 'translateY(0)';
-          inner.style.opacity = '1';
-        });
-      }, 200);
-    });
-
-    // Update labels
-    if (isAnnual) {
-      toggle.classList.add('annual');
-      monthlyLabel.classList.remove('active');
-      annualLabel.classList.add('active');
-    } else {
-      toggle.classList.remove('annual');
-      monthlyLabel.classList.add('active');
-      annualLabel.classList.remove('active');
-    }
-  }
-
-  toggle.addEventListener('click', function() {
-    isAnnual = !isAnnual;
-    updatePrices();
-  });
-
-  // Also allow clicking on labels
-  monthlyLabel.addEventListener('click', function() {
-    if (isAnnual) {
-      isAnnual = false;
-      updatePrices();
-    }
-  });
-
-  annualLabel.addEventListener('click', function() {
-    if (!isAnnual) {
-      isAnnual = true;
-      updatePrices();
-    }
-  });
-});
-</script>
 </body>
 </html>
