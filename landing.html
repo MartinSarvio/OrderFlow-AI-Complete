@@ -899,17 +899,77 @@
     }
   
 
-  /* Pre-Footer Section */
-  .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-  .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-  .pre-footer-brand { flex-shrink: 0; }
-  .pre-footer-logo { height: 4rem; width: auto; }
-  .pre-footer-cards { display: flex; gap: 2rem; }
-  .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-  .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-  .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-  .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-  .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
+  /* Testimonials Section */
+  .testimonials-section { background: var(--color-white); padding: 8rem 4rem; border-top: 1px solid #e5e5e5; }
+  .testimonials-content { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+  .testimonial-quote-wrapper { min-height: 12rem; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .testimonial-quote {
+    font-size: 2.4rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-black);
+    line-height: 1.4;
+    margin: 0 0 4rem 0;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .testimonial-quote.fade-out { opacity: 0; transform: translateY(-20px); }
+  .testimonial-quote.fade-in { opacity: 0; transform: translateY(20px); }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    padding-top: 2rem;
+    opacity: 1;
+    transition: opacity 0.4s ease, filter 0.4s ease;
+  }
+  .testimonial-author.fade-out { opacity: 0; filter: blur(8px); }
+  .testimonial-author.fade-in { opacity: 0; filter: blur(8px); }
+
+  .testimonial-avatar {
+    width: 4.8rem;
+    height: 4.8rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #e5e5e5;
+    background: #f5f5f5;
+  }
+  .testimonial-divider { width: 1px; height: 3.2rem; background: rgba(0,0,0,0.15); margin: 0 1rem; }
+  .testimonial-info { text-align: left; }
+  .testimonial-name { font-size: 1.8rem; font-weight: 500; font-style: italic; color: var(--color-black); }
+  .testimonial-role { font-size: 1.4rem; color: rgba(0,0,0,0.6); margin-top: 0.2rem; }
+
+  .testimonial-indicators { display: flex; gap: 1.2rem; margin-top: 3.2rem; justify-content: center; }
+  .testimonial-indicator {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .testimonial-indicator.active { width: 5rem; border-radius: 0.8rem; }
+  .testimonial-indicator-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: var(--color-primary, #2dd4bf);
+    border-radius: inherit;
+  }
+  .testimonial-indicator.active .testimonial-indicator-fill {
+    animation: fillProgress 5s linear forwards;
+  }
+  @keyframes fillProgress { 0% { width: 0; } 100% { width: 100%; } }
+
+  @media (min-width: 768px) {
+    .testimonial-quote { font-size: 3.6rem; }
+  }
 
   /* Updated Footer */
   .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
@@ -1461,21 +1521,27 @@
     </div>
   </section>
 
-    <!-- Pre-Footer Section -->
-  <section class="pre-footer">
-    <div class="pre-footer-content">
-      <div class="pre-footer-brand">
-        
+    <!-- Testimonials Section -->
+  <section class="testimonials-section">
+    <div class="testimonials-content">
+      <div class="testimonial-quote-wrapper">
+        <blockquote class="testimonial-quote" id="testimonialQuote">
+          "Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder."
+        </blockquote>
       </div>
-      <div class="pre-footer-cards">
-        <a href="#" class="pre-footer-card">
-          <span class="pre-footer-card-title">Få en gratis demo</span>
-          <span class="pre-footer-card-arrow">↗</span>
-        </a>
-        <a href="#" class="pre-footer-card">
-          <span class="pre-footer-card-title">Se hvordan det virker</span>
-          <span class="pre-footer-card-arrow">↗</span>
-        </a>
+      <div class="testimonial-author" id="testimonialAuthor">
+        <img class="testimonial-avatar" id="testimonialAvatar" src="https://i.pravatar.cc/96?img=1" alt="Maria Jensen">
+        <div class="testimonial-divider"></div>
+        <div class="testimonial-info">
+          <div class="testimonial-name" id="testimonialName">Maria Jensen</div>
+          <div class="testimonial-role" id="testimonialRole">Café Hygge, København</div>
+        </div>
+      </div>
+      <div class="testimonial-indicators" id="testimonialIndicators">
+        <span class="testimonial-indicator active" data-index="0"><span class="testimonial-indicator-fill"></span></span>
+        <span class="testimonial-indicator" data-index="1"><span class="testimonial-indicator-fill"></span></span>
+        <span class="testimonial-indicator" data-index="2"><span class="testimonial-indicator-fill"></span></span>
+        <span class="testimonial-indicator" data-index="3"><span class="testimonial-indicator-fill"></span></span>
       </div>
     </div>
   </section>
@@ -1643,6 +1709,103 @@
     dropdown.addEventListener('mouseleave', () => {
       document.body.classList.remove('dropdown-open');
     });
+  });
+
+  // Testimonials Carousel
+  const testimonialsData = [
+    {
+      quote: "Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder.",
+      avatar: "https://i.pravatar.cc/96?img=1",
+      name: "Maria Jensen",
+      role: "Café Hygge, København"
+    },
+    {
+      quote: "Endelig en platform der forstår restaurantbranchen. Automatiseringen har sparet os timevis af arbejde hver uge.",
+      avatar: "https://i.pravatar.cc/96?img=12",
+      name: "Anders Nielsen",
+      role: "Pizzeria Napoli, Aarhus"
+    },
+    {
+      quote: "Kundeservice er i top, og platformen er utrolig nem at bruge. Vores gæster elsker den nye app.",
+      avatar: "https://i.pravatar.cc/96?img=5",
+      name: "Sophie Larsen",
+      role: "Sushi House, Odense"
+    },
+    {
+      quote: "Vi sparede over 40.000 kr. om måneden ved at skifte væk fra tredjepartsplatforme. Flow betaler sig selv på få uger.",
+      avatar: "https://i.pravatar.cc/96?img=8",
+      name: "Thomas Møller",
+      role: "Burger Joint, Aalborg"
+    }
+  ];
+
+  let currentTestimonial = 0;
+  let testimonialTimer = null;
+  const TESTIMONIAL_DURATION = 5000;
+
+  function updateTestimonial(index) {
+    const quoteEl = document.getElementById('testimonialQuote');
+    const avatarEl = document.getElementById('testimonialAvatar');
+    const nameEl = document.getElementById('testimonialName');
+    const roleEl = document.getElementById('testimonialRole');
+    const authorEl = document.getElementById('testimonialAuthor');
+    const indicators = document.querySelectorAll('.testimonial-indicator');
+
+    if (!quoteEl || !avatarEl || !nameEl || !roleEl || !authorEl) return;
+
+    // Fade out
+    quoteEl.classList.add('fade-out');
+    authorEl.classList.add('fade-out');
+
+    setTimeout(() => {
+      // Update content
+      const testimonial = testimonialsData[index];
+      quoteEl.textContent = '"' + testimonial.quote + '"';
+      avatarEl.src = testimonial.avatar;
+      avatarEl.alt = testimonial.name;
+      nameEl.textContent = testimonial.name;
+      roleEl.textContent = testimonial.role;
+
+      // Update indicators
+      indicators.forEach((ind, i) => {
+        ind.classList.toggle('active', i === index);
+      });
+
+      // Remove fade-out, add fade-in
+      quoteEl.classList.remove('fade-out');
+      authorEl.classList.remove('fade-out');
+      quoteEl.classList.add('fade-in');
+      authorEl.classList.add('fade-in');
+
+      // Remove fade-in after animation
+      setTimeout(() => {
+        quoteEl.classList.remove('fade-in');
+        authorEl.classList.remove('fade-in');
+      }, 50);
+    }, 400);
+  }
+
+  function nextTestimonial() {
+    currentTestimonial = (currentTestimonial + 1) % testimonialsData.length;
+    updateTestimonial(currentTestimonial);
+  }
+
+  function startTestimonialCarousel() {
+    if (testimonialTimer) clearInterval(testimonialTimer);
+    testimonialTimer = setInterval(nextTestimonial, TESTIMONIAL_DURATION);
+  }
+
+  // Initialize testimonials
+  document.addEventListener('DOMContentLoaded', () => {
+    const indicators = document.querySelectorAll('.testimonial-indicator');
+    indicators.forEach((ind, i) => {
+      ind.addEventListener('click', () => {
+        currentTestimonial = i;
+        updateTestimonial(i);
+        startTestimonialCarousel(); // Reset timer
+      });
+    });
+    startTestimonialCarousel();
   });
 </script>
 </body>
