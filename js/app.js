@@ -24936,6 +24936,477 @@ function showFlowPage(slug) {
   window.open(pagePath, '_blank');
 }
 
+// =====================================================
+// FLOW CMS FUNCTIONS
+// =====================================================
+
+// Flow CMS State
+let currentEditingPage = null;
+let blogPosts = [];
+let currentBlogPost = null;
+
+// Flow Pages List
+const flowPagesList = [
+  { slug: 'landing', title: 'Landing Page', description: 'Hovedside med hero og features' },
+  { slug: 'restaurant-hjemmeside', title: 'Restaurant Hjemmeside', description: 'Produktside for hjemmesider' },
+  { slug: 'online-bestilling', title: 'Online Bestilling', description: 'Produktside for bestillingssystem' },
+  { slug: 'custom-mobile-app', title: 'Custom Mobile App', description: 'Produktside for mobilapp' },
+  { slug: 'zero-commission-delivery', title: 'Zero-Commission Delivery', description: 'Produktside for levering' },
+  { slug: 'loyalitetsprogram', title: 'Loyalitetsprogram', description: 'Produktside for loyalitet' },
+  { slug: 'automatiseret-marketing', title: 'Automatiseret Marketing', description: 'Produktside for marketing' },
+  { slug: 'case-studies', title: 'Case Studies', description: 'Kundehistorier og resultater' },
+  { slug: 'seo-for-restauranter', title: 'SEO for Restauranter', description: 'Guide til søgemaskineoptimering' },
+  { slug: 'restaurant-email-marketing', title: 'Restaurant Email Marketing', description: 'Guide til email marketing' },
+  { slug: 'restaurant-mobile-app', title: 'Restaurant Mobile App', description: 'Guide til mobilapps' },
+  { slug: 'online-bestillingssystemer', title: 'Online Bestillingssystemer', description: 'Sammenligning af systemer' },
+  { slug: 'om-os', title: 'Om os', description: 'Virksomhedsprofil' },
+  { slug: 'karriere', title: 'Karriere', description: 'Jobopslag og kultur' },
+  { slug: 'ledelse', title: 'Ledelse', description: 'Ledelseshold' },
+  { slug: 'presse', title: 'Presse', description: 'Pressemateriale' },
+  { slug: 'partner', title: 'Partner med Flow', description: 'Partnerprogram' },
+  { slug: 'how-it-works', title: 'Sådan virker det', description: 'Produktoversigt' }
+];
+
+// Navigate to Flow CMS page
+function showFlowCMSPage(tab) {
+  showPage('flow-cms');
+  setTimeout(() => switchFlowCMSTab(tab), 50);
+}
+
+// Switch Flow CMS tab
+function switchFlowCMSTab(tab) {
+  const tabTitles = {
+    'pages': 'Rediger Flow Sider',
+    'editor': 'Rediger Side',
+    'blog': 'Blog',
+    'blog-editor': 'Rediger Blogindlæg',
+    'seo': 'SEO Indstillinger',
+    'products-sms': 'SMS Workflow',
+    'products-instagram': 'Instagram Workflow',
+    'products-facebook': 'Facebook Workflow'
+  };
+
+  const titleEl = document.getElementById('flow-cms-page-title');
+  if (titleEl) {
+    titleEl.textContent = tabTitles[tab] || 'Flow CMS';
+  }
+
+  document.querySelectorAll('#page-flow-cms .settings-tab-content').forEach(c => c.classList.remove('active'));
+  const contentEl = document.getElementById('flow-cms-content-' + tab);
+  if (contentEl) contentEl.classList.add('active');
+
+  // Load content based on tab
+  if (tab === 'pages') loadFlowPagesList();
+  if (tab === 'blog') loadBlogPosts();
+  if (tab === 'products-sms') loadWorkflowConfig('sms');
+  if (tab === 'products-instagram') loadWorkflowConfig('instagram');
+  if (tab === 'products-facebook') loadWorkflowConfig('facebook');
+}
+
+// Load and render Flow pages grid
+function loadFlowPagesList() {
+  const grid = document.getElementById('flow-pages-grid');
+  if (!grid) return;
+
+  grid.innerHTML = flowPagesList.map(page => `
+    <div class="flow-page-card" onclick="editFlowPage('${page.slug}')">
+      <h3>${page.title}</h3>
+      <p>${page.description}</p>
+      <button class="btn btn-primary btn-sm">Rediger indhold</button>
+    </div>
+  `).join('');
+}
+
+// Edit a Flow page
+function editFlowPage(slug) {
+  const page = flowPagesList.find(p => p.slug === slug);
+  if (!page) return;
+
+  currentEditingPage = {
+    slug: slug,
+    title: page.title,
+    sections: loadPageSections(slug)
+  };
+
+  renderPageEditor();
+  switchFlowCMSTab('editor');
+}
+
+// Load page sections from localStorage or defaults
+function loadPageSections(slug) {
+  const saved = localStorage.getItem('flow_page_' + slug);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading page sections:', e);
+    }
+  }
+
+  // Return default sections based on page type
+  return [
+    { id: 'header', type: 'Header', locked: true, content: {} },
+    { id: 'hero', type: 'Hero Sektion', locked: false, content: { title: '', subtitle: '', ctaText: 'Kom i gang', ctaUrl: '#demo' } },
+    { id: 'features', type: 'Features', locked: false, content: { items: [] } },
+    { id: 'cta', type: 'Call to Action', locked: false, content: { title: '', buttonText: '' } },
+    { id: 'footer', type: 'Footer', locked: true, content: {} }
+  ];
+}
+
+// Render page editor with sections
+function renderPageEditor() {
+  const container = document.getElementById('flow-sections-list');
+  const titleEl = document.getElementById('flow-editor-page-title');
+
+  if (titleEl && currentEditingPage) {
+    titleEl.textContent = 'Redigerer: ' + currentEditingPage.title;
+  }
+
+  if (!container || !currentEditingPage) return;
+
+  container.innerHTML = currentEditingPage.sections.map((section, index) => `
+    <div class="flow-section-editor" data-index="${index}">
+      <div class="flow-section-header" onclick="toggleSectionFields(${index})">
+        <span class="flow-section-type">${section.type}</span>
+        <span class="flow-section-locked">${section.locked ? '🔒 Låst' : '✏️ Redigerbar'}</span>
+      </div>
+      ${section.locked ? `
+        <div class="flow-section-fields" style="padding:16px;color:var(--muted)">
+          <p>Denne sektion er låst og kan ikke redigeres. Header og footer er ens på alle sider.</p>
+        </div>
+      ` : `
+        <div class="flow-section-fields" id="section-fields-${index}" style="display:none">
+          ${renderSectionFields(section)}
+        </div>
+      `}
+    </div>
+  `).join('');
+}
+
+// Toggle section fields visibility
+function toggleSectionFields(index) {
+  const fields = document.getElementById('section-fields-' + index);
+  if (fields) {
+    fields.style.display = fields.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Render fields for a section
+function renderSectionFields(section) {
+  if (section.type === 'Hero Sektion') {
+    return `
+      <div class="form-group">
+        <label class="form-label">Overskrift</label>
+        <input type="text" class="input" id="section-${section.id}-title" value="${section.content.title || ''}" placeholder="Hovedoverskrift">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Undertitel</label>
+        <textarea class="input" id="section-${section.id}-subtitle" rows="2" placeholder="Beskrivende tekst">${section.content.subtitle || ''}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Knaptekst</label>
+        <input type="text" class="input" id="section-${section.id}-cta-text" value="${section.content.ctaText || ''}" placeholder="Kom i gang">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Knap URL</label>
+        <input type="text" class="input" id="section-${section.id}-cta-url" value="${section.content.ctaUrl || ''}" placeholder="#demo">
+      </div>
+    `;
+  }
+
+  if (section.type === 'Call to Action') {
+    return `
+      <div class="form-group">
+        <label class="form-label">Overskrift</label>
+        <input type="text" class="input" id="section-${section.id}-title" value="${section.content.title || ''}" placeholder="Klar til at komme i gang?">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Knaptekst</label>
+        <input type="text" class="input" id="section-${section.id}-button" value="${section.content.buttonText || ''}" placeholder="Start gratis">
+      </div>
+    `;
+  }
+
+  if (section.type === 'Features') {
+    return `
+      <div class="form-group">
+        <label class="form-label">Feature beskrivelser (én per linje)</label>
+        <textarea class="input" id="section-${section.id}-items" rows="6" placeholder="Feature 1\nFeature 2\nFeature 3">${(section.content.items || []).join('\n')}</textarea>
+      </div>
+    `;
+  }
+
+  return `<p style="color:var(--muted)">Ingen redigerbare felter for denne sektionstype.</p>`;
+}
+
+// Save Flow page
+function saveFlowPage() {
+  if (!currentEditingPage) return;
+
+  // Collect data from form fields
+  currentEditingPage.sections.forEach(section => {
+    if (section.locked) return;
+
+    if (section.type === 'Hero Sektion') {
+      section.content.title = document.getElementById('section-' + section.id + '-title')?.value || '';
+      section.content.subtitle = document.getElementById('section-' + section.id + '-subtitle')?.value || '';
+      section.content.ctaText = document.getElementById('section-' + section.id + '-cta-text')?.value || '';
+      section.content.ctaUrl = document.getElementById('section-' + section.id + '-cta-url')?.value || '';
+    }
+
+    if (section.type === 'Call to Action') {
+      section.content.title = document.getElementById('section-' + section.id + '-title')?.value || '';
+      section.content.buttonText = document.getElementById('section-' + section.id + '-button')?.value || '';
+    }
+
+    if (section.type === 'Features') {
+      const items = document.getElementById('section-' + section.id + '-items')?.value || '';
+      section.content.items = items.split('\n').filter(i => i.trim());
+    }
+  });
+
+  // Save to localStorage
+  localStorage.setItem('flow_page_' + currentEditingPage.slug, JSON.stringify(currentEditingPage.sections));
+
+  toast('Side gemt', 'success');
+}
+
+// Preview Flow page
+function previewFlowPage() {
+  if (currentEditingPage) {
+    window.open(currentEditingPage.slug + '.html', '_blank');
+  }
+}
+
+// =====================================================
+// BLOG FUNCTIONS
+// =====================================================
+
+// Load blog posts
+function loadBlogPosts() {
+  const saved = localStorage.getItem('flow_blog_posts');
+  blogPosts = saved ? JSON.parse(saved) : [];
+  renderBlogList();
+}
+
+// Render blog list
+function renderBlogList() {
+  const tbody = document.getElementById('flow-blog-list');
+  const emptyEl = document.getElementById('flow-blog-empty');
+
+  if (!tbody) return;
+
+  if (blogPosts.length === 0) {
+    tbody.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  tbody.innerHTML = blogPosts.map((post, index) => `
+    <tr>
+      <td style="font-weight:500">${post.title || 'Uden titel'}</td>
+      <td><span class="flow-blog-status ${post.status}">${post.status === 'published' ? 'Publiceret' : 'Kladde'}</span></td>
+      <td style="color:var(--muted)">${new Date(post.created_at).toLocaleDateString('da-DK')}</td>
+      <td style="text-align:right">
+        <button class="btn btn-sm btn-secondary" onclick="editBlogPost(${index})">Rediger</button>
+        <button class="btn btn-sm" style="color:var(--danger)" onclick="deleteBlogPost(${index})">Slet</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Create new blog post
+function createNewBlogPost() {
+  currentBlogPost = {
+    title: '',
+    slug: '',
+    excerpt: '',
+    content: '',
+    status: 'draft',
+    created_at: new Date().toISOString()
+  };
+
+  document.getElementById('blog-title').value = '';
+  document.getElementById('blog-slug').value = '';
+  document.getElementById('blog-excerpt').value = '';
+  document.getElementById('blog-content').value = '';
+
+  switchFlowCMSTab('blog-editor');
+}
+
+// Edit blog post
+function editBlogPost(index) {
+  currentBlogPost = { ...blogPosts[index], _index: index };
+
+  document.getElementById('blog-title').value = currentBlogPost.title || '';
+  document.getElementById('blog-slug').value = currentBlogPost.slug || '';
+  document.getElementById('blog-excerpt').value = currentBlogPost.excerpt || '';
+  document.getElementById('blog-content').value = currentBlogPost.content || '';
+
+  switchFlowCMSTab('blog-editor');
+}
+
+// Save blog post
+function saveBlogPost(status) {
+  if (!currentBlogPost) return;
+
+  currentBlogPost.title = document.getElementById('blog-title').value;
+  currentBlogPost.slug = document.getElementById('blog-slug').value || generateSlug(currentBlogPost.title);
+  currentBlogPost.excerpt = document.getElementById('blog-excerpt').value;
+  currentBlogPost.content = document.getElementById('blog-content').value;
+  currentBlogPost.status = status;
+  currentBlogPost.updated_at = new Date().toISOString();
+
+  if (status === 'published' && !currentBlogPost.published_at) {
+    currentBlogPost.published_at = new Date().toISOString();
+  }
+
+  if (currentBlogPost._index !== undefined) {
+    blogPosts[currentBlogPost._index] = currentBlogPost;
+  } else {
+    blogPosts.push(currentBlogPost);
+  }
+
+  localStorage.setItem('flow_blog_posts', JSON.stringify(blogPosts));
+
+  const statusEl = document.getElementById('blog-save-status');
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => statusEl.style.display = 'none', 3000);
+  }
+
+  toast(status === 'published' ? 'Blogindlæg publiceret!' : 'Kladde gemt', 'success');
+  switchFlowCMSTab('blog');
+}
+
+// Delete blog post
+function deleteBlogPost(index) {
+  if (!confirm('Er du sikker på at du vil slette dette blogindlæg?')) return;
+
+  blogPosts.splice(index, 1);
+  localStorage.setItem('flow_blog_posts', JSON.stringify(blogPosts));
+  renderBlogList();
+  toast('Blogindlæg slettet', 'info');
+}
+
+// Generate URL slug from title
+function generateSlug(title) {
+  return title
+    .toLowerCase()
+    .replace(/æ/g, 'ae')
+    .replace(/ø/g, 'oe')
+    .replace(/å/g, 'aa')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// =====================================================
+// WORKFLOW FUNCTIONS
+// =====================================================
+
+// Load workflow configuration
+function loadWorkflowConfig(type) {
+  const saved = localStorage.getItem('flow_product_' + type);
+  const config = saved ? JSON.parse(saved) : {};
+
+  if (type === 'sms') {
+    const welcomeEl = document.getElementById('sms-welcome-msg');
+    const confirmEl = document.getElementById('sms-confirm-msg');
+    const reactivateEl = document.getElementById('sms-reactivate-msg');
+    const daysEl = document.getElementById('sms-reactivate-days');
+
+    if (welcomeEl) welcomeEl.value = config.welcome || '';
+    if (confirmEl) confirmEl.value = config.confirm || '';
+    if (reactivateEl) reactivateEl.value = config.reactivate || '';
+    if (daysEl) daysEl.value = config.reactivateDays || 14;
+  }
+
+  if (type === 'instagram') {
+    const welcomeEl = document.getElementById('ig-welcome-msg');
+    const storyEl = document.getElementById('ig-story-mention-msg');
+    const enabledEl = document.getElementById('ig-auto-reply-enabled');
+
+    if (welcomeEl) welcomeEl.value = config.welcome || '';
+    if (storyEl) storyEl.value = config.storyMention || '';
+    if (enabledEl) enabledEl.checked = config.autoReplyEnabled || false;
+  }
+
+  if (type === 'facebook') {
+    const welcomeEl = document.getElementById('fb-welcome-msg');
+    const offlineEl = document.getElementById('fb-offline-msg');
+    const enabledEl = document.getElementById('fb-auto-reply-enabled');
+
+    if (welcomeEl) welcomeEl.value = config.welcome || '';
+    if (offlineEl) offlineEl.value = config.offline || '';
+    if (enabledEl) enabledEl.checked = config.autoReplyEnabled || false;
+  }
+}
+
+// Save product workflow
+function saveProductWorkflow(type) {
+  let config = {};
+
+  if (type === 'sms') {
+    config = {
+      welcome: document.getElementById('sms-welcome-msg')?.value || '',
+      confirm: document.getElementById('sms-confirm-msg')?.value || '',
+      reactivate: document.getElementById('sms-reactivate-msg')?.value || '',
+      reactivateDays: parseInt(document.getElementById('sms-reactivate-days')?.value) || 14
+    };
+  }
+
+  if (type === 'instagram') {
+    config = {
+      welcome: document.getElementById('ig-welcome-msg')?.value || '',
+      storyMention: document.getElementById('ig-story-mention-msg')?.value || '',
+      autoReplyEnabled: document.getElementById('ig-auto-reply-enabled')?.checked || false
+    };
+  }
+
+  if (type === 'facebook') {
+    config = {
+      welcome: document.getElementById('fb-welcome-msg')?.value || '',
+      offline: document.getElementById('fb-offline-msg')?.value || '',
+      autoReplyEnabled: document.getElementById('fb-auto-reply-enabled')?.checked || false
+    };
+  }
+
+  localStorage.setItem('flow_product_' + type, JSON.stringify(config));
+
+  const statusId = type === 'sms' ? 'sms-save-status' : type === 'instagram' ? 'ig-save-status' : 'fb-save-status';
+  const statusEl = document.getElementById(statusId);
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => statusEl.style.display = 'none', 3000);
+  }
+
+  toast(type.toUpperCase() + ' Workflow gemt', 'success');
+}
+
+// Save SEO settings
+function saveSEOSettings() {
+  const config = {
+    defaultDescription: document.getElementById('seo-default-description')?.value || '',
+    defaultOgImage: document.getElementById('seo-default-og-image')?.value || ''
+  };
+
+  localStorage.setItem('flow_seo_settings', JSON.stringify(config));
+
+  const statusEl = document.getElementById('seo-save-status');
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => statusEl.style.display = 'none', 3000);
+  }
+
+  toast('SEO indstillinger gemt', 'success');
+}
+
+// =====================================================
+// END FLOW CMS FUNCTIONS
+// =====================================================
+
 // Switch Farver tab (Tilpasset/Forudindstillinger)
 function switchFarverTab(tab) {
   document.querySelectorAll('#page-wb-farver .settings-tab').forEach(t => t.classList.remove('active'));
