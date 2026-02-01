@@ -1323,7 +1323,7 @@
       display: flex;
       flex-direction: column;
       gap: 0;
-      padding-left: 4rem;
+      position: relative;
     }
 
     /* Single Step Row - ALWAYS text left, image right */
@@ -1332,7 +1332,7 @@
       grid-template-columns: 45% 55%;
       gap: 6rem;
       align-items: center;
-      padding: 8rem 0;
+      padding: 6rem 0;
       position: relative;
     }
 
@@ -1344,73 +1344,109 @@
       direction: ltr;
     }
 
-    /* Zigzag Timeline - Vertikal linje ned til knækpunkt */
+    /* ==================== ZIGZAG TIMELINE ==================== */
+    /* Vertikal linje (kommer ned fra forrige sektion) */
     .how-step-row::before {
       content: '';
       position: absolute;
-      top: -4rem;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 1px;
-      height: calc(50% + 4rem);
-      background: repeating-linear-gradient(
-        to bottom,
-        #e0e0e0 0, #e0e0e0 8px,
-        transparent 8px, transparent 16px
-      );
+      width: 2px;
+      background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
       z-index: 1;
     }
 
-    /* Første row: start fra toppen */
-    .how-step-row:first-child::before {
-      top: 0;
-      height: 50%;
-    }
-
-    /* Zigzag Timeline - Horisontal linje til venstre (normal rows) */
+    /* Horisontal knæk-linje */
     .how-step-row::after {
       content: '';
       position: absolute;
-      top: 50%;
-      left: 22.5%;
-      width: 27.5%;
-      height: 1px;
-      background: repeating-linear-gradient(
-        to right,
-        #e0e0e0 0, #e0e0e0 8px,
-        transparent 8px, transparent 16px
-      );
+      height: 2px;
+      background: linear-gradient(to right, #e0e0e0, #d0d0d0);
       z-index: 1;
     }
 
-    /* Reversed rows: horisontal til højre side */
-    .how-step-row.reverse::after {
-      left: 50%;
-      width: 27.5%;
+    /* Sektion 1 (tekst venstre): Linje kommer ned på venstre side, knækker til højre */
+    .how-step-row:nth-child(1)::before {
+      top: 0;
+      left: 8%;
+      height: 50%;
+    }
+    .how-step-row:nth-child(1)::after {
+      top: 50%;
+      left: 8%;
+      width: 14%;
     }
 
-    /* Nedadgående segment fra knæk til næste sektion */
+    /* Sektion 2 (tekst højre/reverse): Linje kommer ned på venstre, knækker til højre side */
+    .how-step-row:nth-child(2)::before {
+      top: -6rem;
+      left: 8%;
+      height: calc(50% + 6rem);
+    }
+    .how-step-row:nth-child(2)::after {
+      top: 50%;
+      left: 8%;
+      width: 84%;
+    }
+
+    /* Sektion 3 (tekst venstre): Linje kommer ned på højre side, knækker til venstre */
+    .how-step-row:nth-child(3)::before {
+      top: -6rem;
+      right: 8%;
+      left: auto;
+      height: calc(50% + 6rem);
+    }
+    .how-step-row:nth-child(3)::after {
+      top: 50%;
+      left: 8%;
+      width: 84%;
+    }
+
+    /* Sektion 4 (tekst højre/reverse): Linje kommer ned på venstre, knækker til højre side */
+    .how-step-row:nth-child(4)::before {
+      top: -6rem;
+      left: 8%;
+      height: calc(50% + 6rem);
+    }
+    .how-step-row:nth-child(4)::after {
+      top: 50%;
+      left: 8%;
+      width: 84%;
+    }
+
+    /* Nedadgående segment fra knæk (fortsættelse til næste sektion) */
     .timeline-down {
       position: absolute;
-      top: 50%;
-      left: 22.5%;
-      width: 1px;
-      height: calc(50% + 4rem);
-      background: repeating-linear-gradient(
-        to bottom,
-        #e0e0e0 0, #e0e0e0 8px,
-        transparent 8px, transparent 16px
-      );
+      width: 2px;
+      background: linear-gradient(to bottom, #d0d0d0, #e0e0e0);
       z-index: 1;
     }
 
-    .how-step-row.reverse .timeline-down {
-      left: auto;
-      right: 22.5%;
+    /* Sektion 1: Linje fortsætter ned fra højre knæk-punkt */
+    .how-step-row:nth-child(1) .timeline-down {
+      top: 50%;
+      left: 8%;
+      height: calc(50% + 6rem);
     }
 
-    /* Sidste row: kortere nedadgående */
-    .how-step-row:last-child .timeline-down {
+    /* Sektion 2: Linje fortsætter ned fra højre side */
+    .how-step-row:nth-child(2) .timeline-down {
+      top: 50%;
+      right: 8%;
+      left: auto;
+      height: calc(50% + 6rem);
+    }
+
+    /* Sektion 3: Linje fortsætter ned fra venstre side */
+    .how-step-row:nth-child(3) .timeline-down {
+      top: 50%;
+      left: 8%;
+      height: calc(50% + 6rem);
+    }
+
+    /* Sektion 4 (sidste): Kort nedadgående linje */
+    .how-step-row:nth-child(4) .timeline-down {
+      top: 50%;
+      right: 8%;
+      left: auto;
       height: 50%;
     }
 
@@ -1555,14 +1591,11 @@
         font-size: 3rem;
       }
 
-      .how-timeline {
-        display: none;
-      }
-
+      .how-timeline,
       .how-step-row::before,
       .how-step-row::after,
       .timeline-down {
-        display: none;
+        display: none !important;
       }
     }
 
