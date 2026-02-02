@@ -23206,9 +23206,9 @@ async function renderSegmentsPage() {
                   <span class="text-secondary" style="font-size:13px"> kunder</span>
                 </div>
                 <div style="display:flex;gap:8px">
-                  <button class="btn btn-sm" onclick="viewSegmentCustomers('${s.id}')" title="Se kunder">👁️</button>
-                  <button class="btn btn-sm" onclick="sendToSegment('${s.id}')" title="Send SMS">📱</button>
-                  ${s.segment_type === 'custom' ? `<button class="btn btn-sm btn-danger" onclick="deleteSegment('${s.id}')" title="Slet">🗑️</button>` : ''}
+                  <button class="btn btn-sm" onclick="viewSegmentCustomers('${s.id}')" title="Se kunder">Vis</button>
+                  <button class="btn btn-sm" onclick="sendToSegment('${s.id}')" title="Send SMS">Send</button>
+                  ${s.segment_type === 'custom' ? `<button class="btn btn-sm btn-danger" onclick="deleteSegment('${s.id}')" title="Slet">Slet</button>` : ''}
                 </div>
               </div>
               ${s.last_updated ? `<p class="text-secondary" style="font-size:11px;margin-top:8px">Opdateret: ${new Date(s.last_updated).toLocaleDateString('da-DK')}</p>` : ''}
@@ -26742,7 +26742,7 @@ function renderSegmentsList() {
           <h3 style="margin:0;font-size:16px;font-weight:600">${segment.name}</h3>
           <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">${segment.description || 'Ingen beskrivelse'}</p>
         </div>
-        <button class="btn btn-sm btn-danger" onclick="deleteSegment('${segment.id}')">🗑️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteSegment('${segment.id}')">Slet</button>
       </div>
       <div style="display:flex;align-items:center;gap:8px;padding:12px;background:var(--bg3);border-radius:8px">
         <span style="font-size:24px;font-weight:600">${segment.customerCount}</span>
