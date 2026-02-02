@@ -24752,124 +24752,36 @@ function initAppBuilder() {
   }
 }
 
-// Show QR code for mobile app preview
+// Show QR code for mobile app preview (uses API-based QR generation for reliability)
 function showAppPreviewQR() {
+  // Sync config to all previews first
+  syncAppBuilderConfig();
+
   const container = document.getElementById('app-preview-qr-container');
   if (!container) return;
 
-  container.innerHTML = '<p style="color:var(--muted);margin:0">Indlæser QR-kode...</p>';
-  container.style.minWidth = '200px';
-  container.style.minHeight = '200px';
-  container.style.width = '200px';
-  container.style.height = '200px';
-  container.style.background = '#ffffff';
-  container.style.borderRadius = '12px';
-
-  // Generate preview URL (current host + pwa-preview.html)
   const previewUrl = getAppPreviewUrl();
+  const encodedUrl = encodeURIComponent(previewUrl);
 
-  const renderFallback = (message) => {
-    container.innerHTML = `
-      <div style="text-align:center">
-        <p style="color:var(--muted);margin:0 0 8px">${message}</p>
-        <p style="font-size:12px;color:var(--text);word-break:break-all;margin:0">${previewUrl}</p>
-      </div>
-    `;
-  };
-
-  const renderFallbackImage = () => {
-    const encodedUrl = encodeURIComponent(previewUrl);
-    container.innerHTML = `
-      <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}"
-        alt="QR kode"
-        width="200"
-        height="200"
-        style="display:block"
-      >
-    `;
-  };
+  // Use API-based QR code generation (more reliable than JS library)
+  container.innerHTML = `
+    <img
+      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&format=png"
+      alt="QR kode til app preview"
+      width="200"
+      height="200"
+      style="display:block;border-radius:8px"
+      onerror="this.parentElement.innerHTML='<p style=\\'color:var(--muted);text-align:center\\'>Kunne ikke generere QR-kode<br><small>${previewUrl}</small></p>'"
+    >
+  `;
 
   showModal('app-preview-qr');
-
-  ensureQRCodeLibrary().then((loaded) => {
-    if (!loaded || typeof QRCode === 'undefined') {
-      console.error('QR-kode bibliotek ikke tilgængeligt');
-      renderFallbackImage();
-      return;
-    }
-
-    const applyQrLogo = () => {
-      const canvas = container.querySelector('canvas');
-      if (!canvas) return false;
-
-      const size = canvas.width || 200;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return false;
-
-      const logoWidth = Math.round(size * 0.28);
-      const logoHeight = Math.round(size * 0.18);
-      const logoX = Math.round((size - logoWidth) / 2);
-      const logoY = Math.round((size - logoHeight) / 2);
-      const radius = Math.round(Math.min(logoWidth, logoHeight) * 0.2);
-
-      ctx.save();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(logoX + radius, logoY);
-      ctx.lineTo(logoX + logoWidth - radius, logoY);
-      ctx.quadraticCurveTo(logoX + logoWidth, logoY, logoX + logoWidth, logoY + radius);
-      ctx.lineTo(logoX + logoWidth, logoY + logoHeight - radius);
-      ctx.quadraticCurveTo(logoX + logoWidth, logoY + logoHeight, logoX + logoWidth - radius, logoY + logoHeight);
-      ctx.lineTo(logoX + radius, logoY + logoHeight);
-      ctx.quadraticCurveTo(logoX, logoY + logoHeight, logoX, logoY + logoHeight - radius);
-      ctx.lineTo(logoX, logoY + radius);
-      ctx.quadraticCurveTo(logoX, logoY, logoX + radius, logoY);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = '#000000';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = `600 ${Math.round(logoHeight * 0.55)}px system-ui, -apple-system, BlinkMacSystemFont, sans-serif`;
-      ctx.fillText('FLOW', size / 2, size / 2);
-      ctx.restore();
-      return true;
-    };
-
-    const renderQR = () => {
-      container.innerHTML = '';
-
-      try {
-        new QRCode(container, {
-          text: previewUrl,
-          width: 200,
-          height: 200,
-          colorDark: '#000000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.H : 2
-        });
-      } catch (err) {
-        console.warn('QR-kode fejl:', err);
-        renderFallbackImage();
-        return;
-      }
-
-      setTimeout(() => {
-        if (!applyQrLogo()) {
-          applyQrLogo();
-        }
-      }, 30);
-    };
-
-    requestAnimationFrame(() => {
-      renderQR();
-      setTimeout(renderQR, 50);
-    });
-  });
 }
 
 function openAppPreviewTemplate() {
+  // Sync config to all previews first
+  const config = syncAppBuilderConfig();
+
   const previewUrl = getAppPreviewUrl();
   const templateWindow = window.open(previewUrl, '_blank', 'noopener');
 
@@ -24878,7 +24790,6 @@ function openAppPreviewTemplate() {
     return;
   }
 
-  const config = getAppBuilderPreviewConfig();
   const sendConfig = () => {
     if (templateWindow.closed) return;
     templateWindow.postMessage({ type: 'UPDATE_CONFIG', config: config }, '*');
@@ -24889,17 +24800,35 @@ function openAppPreviewTemplate() {
   setTimeout(sendConfig, 400);
 }
 
+// Sync App Builder config to all preview frames
+function syncAppBuilderConfig() {
+  const config = getAppBuilderPreviewConfig();
+
+  // Send to main preview frame (in App Builder page)
+  const mainFrame = document.getElementById('pwa-preview-frame');
+  if (mainFrame?.contentWindow) {
+    mainFrame.contentWindow.postMessage({ type: 'UPDATE_CONFIG', config }, '*');
+    mainFrame.contentWindow.postMessage({ type: 'RESET_SCROLL' }, '*');
+  }
+
+  // Send to full preview frame (in Mobil App page)
+  const fullFrame = document.getElementById('pwa-fullpreview-frame');
+  if (fullFrame?.contentWindow) {
+    fullFrame.contentWindow.postMessage({ type: 'UPDATE_CONFIG', config }, '*');
+    fullFrame.contentWindow.postMessage({ type: 'RESET_SCROLL' }, '*');
+  }
+
+  return config;
+}
+
 // Publish mobile app
 function publishMobileApp() {
-  // Get current app config
-  const config = {
-    appName: document.getElementById('appbuilder-app-name')?.value || 'Min App',
-    tagline: document.getElementById('appbuilder-tagline')?.value || '',
-    primaryColor: document.getElementById('appbuilder-primary-color')?.value || '#000000',
-    secondaryColor: document.getElementById('appbuilder-secondary-color')?.value || '#ffffff',
-    publishedAt: new Date().toISOString(),
-    status: 'published'
-  };
+  // Sync config to all previews first
+  const config = syncAppBuilderConfig();
+
+  // Add publish metadata
+  config.publishedAt = new Date().toISOString();
+  config.status = 'published';
 
   // Save to localStorage
   localStorage.setItem('published_mobile_app', JSON.stringify(config));
@@ -26156,6 +26085,12 @@ function selectMediaItem() {
     }
   }
 
+  // Update image picker preview if one exists for this input
+  const inputId = mediaLibraryTarget?.inputId || (typeof mediaLibraryTarget === 'string' ? mediaLibraryTarget : null);
+  if (inputId) {
+    updateImagePickerPreview(inputId, selectedMediaItem.url);
+  }
+
   closeMediaLibrary();
   toast('Billede valgt', 'success');
 }
@@ -26908,6 +26843,182 @@ function getSectionIcon(type) {
   return '';
 }
 
+/**
+ * Render a visual image picker component
+ * @param {Object} options - Configuration options
+ * @param {string} options.id - Unique input ID
+ * @param {string} options.sectionId - Section ID for updates
+ * @param {string} options.field - Field path (e.g., 'backgroundImage' or 'tabs.0.image')
+ * @param {string} options.currentValue - Current image URL
+ * @param {string} options.label - Label text
+ * @param {string} options.size - 'small' | 'medium' | 'large' (default: medium)
+ * @param {string} options.shape - 'rectangle' | 'square' | 'circle' (default: rectangle)
+ * @param {string} options.updateFn - Custom update function name (optional)
+ * @returns {string} HTML string
+ */
+function renderImagePicker(options) {
+  const {
+    id,
+    sectionId,
+    field,
+    currentValue,
+    label,
+    size = 'medium',
+    shape = 'rectangle',
+    updateFn = null
+  } = options;
+
+  // Size configurations
+  const sizes = {
+    small: { width: 80, height: 60 },
+    medium: { width: 160, height: 100 },
+    large: { width: 240, height: 150 }
+  };
+  const { width, height } = sizes[size] || sizes.medium;
+
+  // Shape adjustments
+  const borderRadius = shape === 'circle' ? '50%' : '8px';
+  const finalHeight = shape === 'square' ? width : (shape === 'circle' ? width : height);
+
+  const hasImage = currentValue && currentValue.trim() !== '';
+
+  return `
+    <div class="form-group" style="margin-bottom:12px">
+      ${label ? `<label class="form-label" style="font-size:12px">${label}</label>` : ''}
+      <div class="cms-image-picker" data-picker-id="${id}">
+        <div class="cms-image-preview ${hasImage ? 'has-image' : ''}"
+             style="width:${width}px;height:${finalHeight}px;border-radius:${borderRadius};${hasImage ? `background-image:url('${currentValue}')` : ''}"
+             onclick="openMediaLibrary('${id}', '${sectionId}', '${field}')">
+          ${!hasImage ? `
+            <div class="placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+              <span>Vælg billede</span>
+            </div>
+          ` : ''}
+        </div>
+        <input type="hidden" id="${id}" value="${currentValue || ''}">
+        <div class="cms-image-picker-actions">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="openMediaLibrary('${id}', '${sectionId}', '${field}')">
+            ${hasImage ? 'Skift billede' : 'Vælg fra bibliotek'}
+          </button>
+          ${hasImage ? `<button type="button" class="btn btn-sm" style="color:var(--danger)" onclick="clearImagePicker('${id}', '${sectionId}', '${field}')">Fjern</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+/**
+ * Clear an image picker value
+ */
+function clearImagePicker(inputId, sectionId, field) {
+  const input = document.getElementById(inputId);
+  if (input) input.value = '';
+
+  // Update the preview
+  const picker = document.querySelector(`[data-picker-id="${inputId}"]`);
+  if (picker) {
+    const preview = picker.querySelector('.cms-image-preview');
+    if (preview) {
+      preview.style.backgroundImage = '';
+      preview.classList.remove('has-image');
+      preview.innerHTML = `
+        <div class="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <span>Vælg billede</span>
+        </div>`;
+    }
+    // Update button text
+    const actionBtn = picker.querySelector('.cms-image-picker-actions .btn-secondary');
+    if (actionBtn) actionBtn.textContent = 'Vælg fra bibliotek';
+    // Hide remove button
+    const removeBtn = picker.querySelector('.cms-image-picker-actions .btn:last-child');
+    if (removeBtn && removeBtn.style) removeBtn.style.display = 'none';
+  }
+
+  // Update the section field
+  updateNestedSectionField(sectionId, field, '');
+}
+
+/**
+ * Update a nested field in a section (supports dot notation like 'tabs.0.image')
+ */
+function updateNestedSectionField(sectionId, fieldPath, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (!section) return;
+
+  const parts = fieldPath.split('.');
+  let obj = section;
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = isNaN(parts[i]) ? parts[i] : parseInt(parts[i]);
+    if (obj[key] === undefined) obj[key] = {};
+    obj = obj[key];
+  }
+
+  const lastKey = isNaN(parts[parts.length - 1]) ? parts[parts.length - 1] : parseInt(parts[parts.length - 1]);
+  obj[lastKey] = value;
+
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+}
+
+/**
+ * Update image picker preview after media library selection
+ */
+function updateImagePickerPreview(inputId, imageUrl) {
+  const picker = document.querySelector(`[data-picker-id="${inputId}"]`);
+  if (!picker) return;
+
+  const preview = picker.querySelector('.cms-image-preview');
+  if (preview) {
+    if (imageUrl) {
+      preview.style.backgroundImage = `url('${imageUrl}')`;
+      preview.classList.add('has-image');
+      preview.innerHTML = '';
+    } else {
+      preview.style.backgroundImage = '';
+      preview.classList.remove('has-image');
+      preview.innerHTML = `
+        <div class="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <span>Vælg billede</span>
+        </div>`;
+    }
+  }
+
+  // Update button text
+  const actionBtn = picker.querySelector('.cms-image-picker-actions .btn-secondary');
+  if (actionBtn) {
+    actionBtn.textContent = imageUrl ? 'Skift billede' : 'Vælg fra bibliotek';
+  }
+
+  // Show/hide remove button
+  const actionsDiv = picker.querySelector('.cms-image-picker-actions');
+  if (actionsDiv && imageUrl) {
+    let removeBtn = actionsDiv.querySelector('.btn:last-child');
+    if (!removeBtn || !removeBtn.textContent.includes('Fjern')) {
+      const parts = picker.dataset.pickerId.split('-');
+      const sectionId = parts.length > 2 ? parts.slice(1, -1).join('-') : parts[1];
+      actionsDiv.innerHTML += `<button type="button" class="btn btn-sm" style="color:var(--danger)" onclick="clearImagePicker('${picker.dataset.pickerId}', '${sectionId}', '')">Fjern</button>`;
+    }
+  }
+}
+
 // Get section label
 function getSectionLabel(type) {
   const labels = {
@@ -26941,14 +27052,14 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px">Underoverskrift</label>
           <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'subheadline', this.value)">${section.subheadline || ''}</textarea>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Baggrundsbillede</label>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input type="text" id="hero-bg-image-${section.id}" class="input" value="${section.backgroundImage || ''}" onchange="updateSectionField('${section.id}', 'backgroundImage', this.value)" placeholder="https://example.com/image.jpg" style="flex:1">
-            <button type="button" class="btn btn-secondary" style="white-space:nowrap" onclick="openMediaLibrary('hero-bg-image-${section.id}', '${section.id}', 'backgroundImage')">Vælg fra bibliotek</button>
-          </div>
-          ${section.backgroundImage ? `<img src="${section.backgroundImage}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover">` : '<div style="padding:24px;background:var(--bg-tertiary);border-radius:8px;text-align:center;color:var(--muted);font-size:12px">Intet billede valgt</div>'}
-        </div>
+        ${renderImagePicker({
+          id: 'hero-bg-image-' + section.id,
+          sectionId: section.id,
+          field: 'backgroundImage',
+          currentValue: section.backgroundImage || '',
+          label: 'Baggrundsbillede',
+          size: 'large'
+        })}
         <div class="form-group" style="margin-bottom:12px">
           <label class="form-label" style="font-size:12px">Baggrundsvideo(er)</label>
 
@@ -27067,14 +27178,14 @@ function renderSectionEditor(section) {
                 <label class="form-label" style="font-size:11px">Beskrivelse</label>
                 <textarea class="input" rows="2" onchange="updateFeatureTab('${section.id}', ${index}, 'description', this.value)" placeholder="Indholdets beskrivelse">${tab.description || ''}</textarea>
               </div>
-              <div class="form-group">
-                <label class="form-label" style="font-size:11px">Billede</label>
-                <div style="display:flex;gap:8px">
-                  <input type="text" id="feature-tab-img-${section.id}-${index}" class="input" value="${tab.image || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'image', this.value)" placeholder="Billede URL" style="flex:1">
-                  <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibraryForFeatureTab('${section.id}', ${index})">Bibliotek</button>
-                </div>
-                ${tab.image ? `<img src="${tab.image}" style="max-width:100%;max-height:80px;margin-top:6px;border-radius:6px;object-fit:cover">` : ''}
-              </div>
+              ${renderImagePicker({
+                id: 'feature-tab-img-' + section.id + '-' + index,
+                sectionId: section.id,
+                field: 'tabs.' + index + '.image',
+                currentValue: tab.image || '',
+                label: 'Billede',
+                size: 'medium'
+              })}
               <div class="form-group">
                 <label class="form-label" style="font-size:11px">Video URL (valgfrit)</label>
                 <input type="text" class="input" value="${tab.video || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'video', this.value)" placeholder="Video URL (MP4)">
@@ -27164,14 +27275,15 @@ function renderSectionEditor(section) {
                       <input type="text" class="input" placeholder="Rolle/Firma" value="${item.role || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'role', this.value)">
                     </div>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label" style="font-size:11px">Profilbillede</label>
-                    <div style="display:flex;gap:8px">
-                      <input type="text" id="testimonial-image-${section.id}-${idx}" class="input" placeholder="Billede URL" value="${item.image || item.avatar || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'image', this.value)" style="flex:1">
-                      <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibraryForTestimonial('${section.id}', ${idx})">Bibliotek</button>
-                    </div>
-                    ${(item.image || item.avatar) ? `<img src="${item.image || item.avatar}" style="max-width:50px;height:50px;object-fit:cover;border-radius:50%;margin-top:6px">` : ''}
-                  </div>
+                  ${renderImagePicker({
+                    id: 'testimonial-image-' + section.id + '-' + idx,
+                    sectionId: section.id,
+                    field: 'items.' + idx + '.image',
+                    currentValue: item.image || item.avatar || '',
+                    label: 'Profilbillede',
+                    size: 'small',
+                    shape: 'circle'
+                  })}
                   <button class="btn btn-sm" style="background:var(--danger);color:white;margin-top:4px" onclick="removeTestimonialItem('${section.id}', ${idx})">Fjern citat</button>
                 </div>
               </details>
@@ -27283,14 +27395,15 @@ function renderSectionEditor(section) {
                     <label class="form-label" style="font-size:11px">Udtalelse</label>
                     <textarea class="input" rows="2" placeholder="Udtalelse" onchange="updateReviewItem('${section.id}', ${idx}, 'quote', this.value)">${card.quote || ''}</textarea>
                   </div>
-                  <div class="form-group">
-                    <label class="form-label" style="font-size:11px">Profilbillede</label>
-                    <div style="display:flex;gap:8px">
-                      <input type="text" id="trusted-img-${section.id}-${idx}" class="input" placeholder="Billede URL" value="${card.image || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'image', this.value)" style="flex:1">
-                      <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibrary({ sectionId: '${section.id}', index: ${idx}, type: 'review' })">Bibliotek</button>
-                    </div>
-                    ${card.image ? `<img src="${card.image}" style="max-width:60px;height:60px;object-fit:cover;border-radius:50%;margin-top:8px">` : ''}
-                  </div>
+                  ${renderImagePicker({
+                    id: 'trusted-img-' + section.id + '-' + idx,
+                    sectionId: section.id,
+                    field: 'cards.' + idx + '.image',
+                    currentValue: card.image || '',
+                    label: 'Profilbillede',
+                    size: 'small',
+                    shape: 'circle'
+                  })}
                   <div class="form-group">
                     <label class="form-label" style="font-size:11px">Kort gradient baggrund (valgfrit)</label>
                     <input type="text" class="input" placeholder="linear-gradient(135deg, #667eea, #764ba2)" value="${card.gradient || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'gradient', this.value)">
@@ -27325,10 +27438,14 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px">Sektion Overskrift (HTML tilladt)</label>
           <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'heading', this.value)">${section.heading || ''}</textarea>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Hero Billede URL</label>
-          <input type="text" class="input" value="${section.heroImage || ''}" onchange="updateSectionField('${section.id}', 'heroImage', this.value)" placeholder="https://...">
-        </div>
+        ${renderImagePicker({
+          id: 'bento-hero-' + section.id,
+          sectionId: section.id,
+          field: 'heroImage',
+          currentValue: section.heroImage || '',
+          label: 'Hero Billede',
+          size: 'large'
+        })}
         <div class="form-group" style="margin-bottom:12px">
           <label class="form-label" style="font-size:12px">Hero Overlay Tekst (HTML tilladt)</label>
           <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'heroOverlayText', this.value)">${section.heroOverlayText || ''}</textarea>
@@ -27359,10 +27476,15 @@ function renderSectionEditor(section) {
             <input type="text" class="input" value="${section.author?.role || ''}" onchange="updateSectionAuthor('${section.id}', 'role', this.value)">
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Forfatter Billede URL</label>
-          <input type="text" class="input" value="${section.author?.image || ''}" onchange="updateSectionAuthor('${section.id}', 'image', this.value)">
-        </div>
+        ${renderImagePicker({
+          id: 'beliefs-author-' + section.id,
+          sectionId: section.id,
+          field: 'author.image',
+          currentValue: section.author?.image || '',
+          label: 'Forfatter Billede',
+          size: 'small',
+          shape: 'circle'
+        })}
         <div class="form-group">
           <label class="form-label" style="font-size:12px">Belief Items (JSON)</label>
           <textarea class="input" rows="6" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
