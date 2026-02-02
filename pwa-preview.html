@@ -727,6 +727,262 @@
       color: var(--error);
     }
 
+    /* ==================== PROFILE SUBPAGES ==================== */
+
+    .subpage-view {
+      min-height: 100%;
+      background: var(--gray-50);
+    }
+
+    .subpage-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--gray-700);
+    }
+
+    .subpage-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .subpage-content {
+      padding: 16px;
+    }
+
+    /* Info Form */
+    .info-form {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .info-group {
+      margin-bottom: 16px;
+    }
+
+    .info-group label {
+      display: block;
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+
+    .info-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      color: var(--gray-900);
+    }
+
+    .info-input:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+    }
+
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--brand-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    /* Payment/Address Cards */
+    .payment-card, .address-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-icon, .address-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--gray-100);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .card-info, .address-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .card-number, .address-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .card-expiry, .address-text {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .card-default, .address-default {
+      font-size: 12px;
+      color: var(--brand-primary);
+      font-weight: 500;
+    }
+
+    .add-payment-btn, .add-address-btn {
+      width: 100%;
+      padding: 14px;
+      background: white;
+      border: 2px dashed var(--gray-300);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--gray-600);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Notification Settings */
+    .notification-setting {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .notification-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .notification-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-900);
+    }
+
+    .notification-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      display: inline-block;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider-pwa {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--gray-300);
+      border-radius: 28px;
+      transition: 0.3s;
+    }
+
+    .toggle-slider-pwa:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.3s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .toggle-switch input:checked + .toggle-slider-pwa {
+      background: var(--brand-primary);
+    }
+
+    .toggle-switch input:checked + .toggle-slider-pwa:before {
+      transform: translateX(22px);
+    }
+
+    /* Settings */
+    .settings-group-pwa {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .settings-group-pwa h3 {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .settings-select-pwa {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 15px;
+      background: white;
+      font-family: inherit;
+      color: var(--gray-900);
+    }
+
+    .settings-select-pwa:focus {
+      outline: none;
+      border-color: var(--brand-primary);
+    }
+
     /* Offers View */
     .offers-view {
       padding-top: calc(var(--safe-top, 44px));
@@ -2900,7 +3156,7 @@
         </div>
 
         <div class="profile-menu">
-          <div class="profile-menu-item">
+          <div class="profile-menu-item" onclick="switchView('myInfoView')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
@@ -2911,7 +3167,7 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-          <div class="profile-menu-item">
+          <div class="profile-menu-item" onclick="switchView('paymentView')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
               <line x1="1" y1="10" x2="23" y2="10"/>
@@ -2921,7 +3177,7 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-          <div class="profile-menu-item">
+          <div class="profile-menu-item" onclick="switchView('addressView')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
               <circle cx="12" cy="10" r="3"/>
@@ -2931,7 +3187,7 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-          <div class="profile-menu-item">
+          <div class="profile-menu-item" onclick="switchView('notificationsView')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 01-3.46 0"/>
@@ -2941,7 +3197,7 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-          <div class="profile-menu-item">
+          <div class="profile-menu-item" onclick="switchView('settingsAppView')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"/>
               <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -2951,7 +3207,7 @@
               <polyline points="9 18 15 12 9 6"/>
             </svg>
           </div>
-          <div class="profile-menu-item danger">
+          <div class="profile-menu-item danger" onclick="handleLogout()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
@@ -2961,6 +3217,175 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================
+         PROFILE SUBPAGES
+    ======================================== -->
+
+    <!-- Mine Oplysninger View -->
+    <div class="app-view" id="myInfoView">
+      <div class="subpage-view">
+        <div class="subpage-header">
+          <button class="back-btn" onclick="switchView('profileView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Mine oplysninger</h2>
+        </div>
+        <div class="subpage-content">
+          <div class="info-form">
+            <div class="info-group">
+              <label>Navn</label>
+              <input type="text" value="John Doe" class="info-input">
+            </div>
+            <div class="info-group">
+              <label>Email</label>
+              <input type="email" value="john.doe@example.com" class="info-input">
+            </div>
+            <div class="info-group">
+              <label>Telefon</label>
+              <input type="tel" value="+45 12 34 56 78" class="info-input">
+            </div>
+            <button class="save-btn">Gem ændringer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Betalingsmetoder View -->
+    <div class="app-view" id="paymentView">
+      <div class="subpage-view">
+        <div class="subpage-header">
+          <button class="back-btn" onclick="switchView('profileView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Betalingsmetoder</h2>
+        </div>
+        <div class="subpage-content">
+          <div class="payment-card">
+            <div class="card-icon">💳</div>
+            <div class="card-info">
+              <span class="card-number">•••• •••• •••• 4242</span>
+              <span class="card-expiry">Udløber 12/26</span>
+            </div>
+            <span class="card-default">Standard</span>
+          </div>
+          <button class="add-payment-btn">+ Tilføj betalingsmetode</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leveringsadresser View -->
+    <div class="app-view" id="addressView">
+      <div class="subpage-view">
+        <div class="subpage-header">
+          <button class="back-btn" onclick="switchView('profileView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Leveringsadresser</h2>
+        </div>
+        <div class="subpage-content">
+          <div class="address-card">
+            <div class="address-icon">🏠</div>
+            <div class="address-info">
+              <span class="address-label">Hjem</span>
+              <span class="address-text">Vesterbrogade 123, 1620 København V</span>
+            </div>
+            <span class="address-default">Standard</span>
+          </div>
+          <div class="address-card">
+            <div class="address-icon">🏢</div>
+            <div class="address-info">
+              <span class="address-label">Arbejde</span>
+              <span class="address-text">Rådhuspladsen 1, 1550 København K</span>
+            </div>
+          </div>
+          <button class="add-address-btn">+ Tilføj adresse</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifikationer View -->
+    <div class="app-view" id="notificationsView">
+      <div class="subpage-view">
+        <div class="subpage-header">
+          <button class="back-btn" onclick="switchView('profileView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Notifikationer</h2>
+        </div>
+        <div class="subpage-content">
+          <div class="notification-setting">
+            <div class="notification-info">
+              <span class="notification-title">Push notifikationer</span>
+              <span class="notification-desc">Modtag beskeder om ordrestatus</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked>
+              <span class="toggle-slider-pwa"></span>
+            </label>
+          </div>
+          <div class="notification-setting">
+            <div class="notification-info">
+              <span class="notification-title">Email notifikationer</span>
+              <span class="notification-desc">Ordrebekræftelser og kvitteringer</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" checked>
+              <span class="toggle-slider-pwa"></span>
+            </label>
+          </div>
+          <div class="notification-setting">
+            <div class="notification-info">
+              <span class="notification-title">Marketing</span>
+              <span class="notification-desc">Tilbud og nyheder</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox">
+              <span class="toggle-slider-pwa"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Indstillinger View -->
+    <div class="app-view" id="settingsAppView">
+      <div class="subpage-view">
+        <div class="subpage-header">
+          <button class="back-btn" onclick="switchView('profileView')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Indstillinger</h2>
+        </div>
+        <div class="subpage-content">
+          <div class="settings-group-pwa">
+            <h3>Sprog</h3>
+            <select class="settings-select-pwa">
+              <option selected>Dansk</option>
+              <option>English</option>
+            </select>
+          </div>
+          <div class="settings-group-pwa">
+            <h3>Tema</h3>
+            <select class="settings-select-pwa">
+              <option selected>Lyst</option>
+              <option>Mørkt</option>
+              <option>System</option>
+            </select>
           </div>
         </div>
       </div>
@@ -3325,6 +3750,15 @@
         setTimeout(() => {
           initializeScrollState();
         }, 50);
+      }
+    }
+
+    // ========================================
+    // LOGOUT HANDLER
+    // ========================================
+    function handleLogout() {
+      if (confirm('Er du sikker på at du vil logge ud?')) {
+        switchView('homeView');
       }
     }
 

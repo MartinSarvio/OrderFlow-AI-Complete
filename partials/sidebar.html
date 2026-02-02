@@ -240,13 +240,27 @@
         <!-- APP BUILDER SECTION -->
         <div class="nav-section">
           <div class="nav-section-title">App Builder</div>
-          <button class="nav-btn" onclick="showPage('appbuilder')" data-tooltip="App Builder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-              <line x1="12" y1="18" x2="12.01" y2="18"/>
-            </svg>
-            <span>App Builder</span>
-          </button>
+          <div class="nav-dropdown" id="nav-appbuilder">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('appbuilder')" data-tooltip="App Builder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <span>App Builder</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('design')">Design</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('funktioner')">Funktioner</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('menu')">Menu</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('loyalty')">Loyalty</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('push-notifikationer')">Push Notifikationer</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('ordrer')">Ordrer</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('kunder')">Kunder</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('analytics')">Analytics</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('mobilapp')">Mobil App</button>
+            </div>
+          </div>
         </div>
 
         <div class="nav-section">
@@ -271,6 +285,7 @@
               <button class="nav-dropdown-item" onclick="showSettingsPage('passwords')">Adgangskoder</button>
               <button class="nav-dropdown-item" onclick="showSettingsPage('support')">Support</button>
               <button class="nav-dropdown-item" onclick="showSettingsPage('maintenance')">Systemvedligeholdelse</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('cookies')">Cookie Samtykke</button>
             </div>
           </div>
           
