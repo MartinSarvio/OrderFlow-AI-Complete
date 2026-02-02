@@ -2,6 +2,8 @@
  * Flow CMS Dynamic Content Renderer
  * This script reads CMS content from localStorage and applies it to Flow landing pages.
  * Include this script at the end of any editable Flow page.
+ *
+ * Updated to read from orderflow_cms_pages (new CMS editor format)
  */
 
 (function() {
@@ -16,29 +18,46 @@
     pageSlug = 'landing';
   }
 
-  const storageKey = 'flow_page_' + pageSlug;
-
   /**
-   * Load and apply CMS content
+   * Load and apply CMS content from orderflow_cms_pages
    */
   function loadCMSContent() {
-    const saved = localStorage.getItem(storageKey);
+    const saved = localStorage.getItem('orderflow_cms_pages');
     if (!saved) {
-      console.log('Flow CMS: No saved content for ' + pageSlug + ', using defaults');
+      console.log('Flow CMS: No CMS pages found, using defaults');
       return;
     }
 
     try {
-      const sections = JSON.parse(saved);
+      const pages = JSON.parse(saved);
 
-      sections.forEach(section => {
-        // Skip locked sections (header/footer)
-        if (section.locked) return;
+      // Find the page matching current slug
+      const pageData = pages.find(p => {
+        const pSlug = (p.slug || '').replace('.html', '');
+        return pSlug === pageSlug || p.slug === pageSlug + '.html';
+      });
 
+      if (!pageData) {
+        console.log('Flow CMS: No saved content for ' + pageSlug + ', using defaults');
+        return;
+      }
+
+      // Only render if page is published
+      if (pageData.status === 'draft') {
+        console.log('Flow CMS: Page ' + pageSlug + ' is a draft, not rendering');
+        return;
+      }
+
+      // Sort sections by order and render visible ones
+      const visibleSections = (pageData.sections || [])
+        .filter(s => s.isVisible !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      visibleSections.forEach(section => {
         renderSection(section);
       });
 
-      console.log('Flow CMS: Content loaded for ' + pageSlug);
+      console.log('Flow CMS: Content loaded for ' + pageSlug + ' (' + visibleSections.length + ' sections)');
     } catch (e) {
       console.warn('Flow CMS: Error loading content for ' + pageSlug, e);
     }
@@ -49,14 +68,26 @@
    */
   function renderSection(section) {
     switch (section.type) {
-      case 'Hero Sektion':
-        renderHeroSection(section.content);
+      case 'hero':
+        renderHeroSection(section);
         break;
-      case 'Features':
-        renderFeaturesSection(section.content);
+      case 'text':
+        renderTextSection(section);
         break;
-      case 'Call to Action':
-        renderCTASection(section.content);
+      case 'features':
+        renderFeaturesSection(section);
+        break;
+      case 'cta':
+        renderCTASection(section);
+        break;
+      case 'testimonials':
+        renderTestimonialsSection(section);
+        break;
+      case 'faq':
+        renderFAQSection(section);
+        break;
+      case 'images':
+        renderImagesSection(section);
         break;
       default:
         // Unknown section type
@@ -66,61 +97,93 @@
 
   /**
    * Render Hero Section
+   * Fields: headline, subheadline, alignment, buttons[]
    */
-  function renderHeroSection(content) {
-    if (!content) return;
+  function renderHeroSection(section) {
+    if (!section) return;
 
-    // Find hero section (try data attribute first, then common classes)
+    // Find hero section
     const heroSection = document.querySelector('[data-cms="hero"]') ||
                         document.querySelector('.hero-section') ||
                         document.querySelector('.hero');
 
     if (!heroSection) return;
 
-    // Update title
-    if (content.title) {
+    // Update headline
+    if (section.headline) {
       const h1 = heroSection.querySelector('h1');
       if (h1) {
-        // Check if the original title has special formatting (like <span class="big">)
-        // If so, try to preserve the structure or replace entirely
-        const hasSpecialFormatting = h1.querySelector('.big, .highlight, .accent');
+        h1.innerHTML = section.headline;
+      }
+    }
 
-        if (hasSpecialFormatting) {
-          // Replace with plain text (CMS doesn't support special formatting yet)
-          h1.innerHTML = content.title;
-        } else {
-          h1.textContent = content.title;
+    // Update subheadline/description
+    if (section.subheadline) {
+      const p = heroSection.querySelector('.hero-content p, .hero-description, .hero p:not(.small)');
+      if (p) {
+        p.textContent = section.subheadline;
+      }
+    }
+
+    // Update buttons
+    if (section.buttons && section.buttons.length > 0) {
+      const primaryBtn = heroSection.querySelector('.button-white, .hero-cta, .cta-button, .hero-buttons a:first-child, .btn-primary');
+      if (primaryBtn && section.buttons[0]) {
+        primaryBtn.textContent = section.buttons[0].text;
+        if (section.buttons[0].url) {
+          primaryBtn.href = section.buttons[0].url;
         }
       }
-    }
 
-    // Update subtitle/description
-    if (content.subtitle) {
-      const p = heroSection.querySelector('.hero-content p, .hero-description, p');
-      if (p) {
-        p.textContent = content.subtitle;
-      }
-    }
-
-    // Update CTA button
-    if (content.ctaText) {
-      const ctaBtn = heroSection.querySelector('.button-white, .hero-cta, .cta-button, .hero-buttons a:first-child');
-      if (ctaBtn) {
-        ctaBtn.textContent = content.ctaText;
-        if (content.ctaUrl) {
-          ctaBtn.href = content.ctaUrl;
+      // Secondary button if exists
+      const secondaryBtn = heroSection.querySelector('.hero-buttons a:nth-child(2), .btn-secondary');
+      if (secondaryBtn && section.buttons[1]) {
+        secondaryBtn.textContent = section.buttons[1].text;
+        if (section.buttons[1].url) {
+          secondaryBtn.href = section.buttons[1].url;
         }
       }
     }
   }
 
   /**
-   * Render Features Section
+   * Render Text Section
+   * Fields: title, content, alignment
    */
-  function renderFeaturesSection(content) {
-    if (!content || !content.items || content.items.length === 0) return;
+  function renderTextSection(section) {
+    if (!section) return;
 
-    // Find features section
+    const textSection = document.querySelector('[data-cms="text"]') ||
+                        document.querySelector('.text-section');
+
+    if (!textSection) return;
+
+    if (section.title) {
+      const heading = textSection.querySelector('h2, h3');
+      if (heading) {
+        heading.textContent = section.title;
+      }
+    }
+
+    if (section.content) {
+      const content = textSection.querySelector('.text-content, p');
+      if (content) {
+        content.innerHTML = section.content;
+      }
+    }
+
+    if (section.alignment) {
+      textSection.style.textAlign = section.alignment;
+    }
+  }
+
+  /**
+   * Render Features Section
+   * Fields: features[], layout, columns
+   */
+  function renderFeaturesSection(section) {
+    if (!section || !section.features || section.features.length === 0) return;
+
     const featuresSection = document.querySelector('[data-cms="features"]') ||
                             document.querySelector('.features-section') ||
                             document.querySelector('.tabs-header');
@@ -128,22 +191,24 @@
     if (!featuresSection) return;
 
     // Try to find feature items
-    const featureItems = featuresSection.querySelectorAll('.tab-item .tab-text, .feature-item, .feature-title');
+    const featureItems = featuresSection.querySelectorAll('.tab-item .tab-text, .feature-item, .feature-title, .feature-card');
 
-    content.items.forEach((item, index) => {
+    section.features.forEach((feature, index) => {
       if (featureItems[index]) {
-        featureItems[index].textContent = item;
+        // Feature might be object {id, title, description} or string
+        const title = typeof feature === 'string' ? feature : feature.title;
+        featureItems[index].textContent = title;
       }
     });
   }
 
   /**
    * Render Call to Action Section
+   * Fields: title, description, button{text, url, variant}, style
    */
-  function renderCTASection(content) {
-    if (!content) return;
+  function renderCTASection(section) {
+    if (!section) return;
 
-    // Find CTA section
     const ctaSection = document.querySelector('[data-cms="cta"]') ||
                        document.querySelector('.cta-section') ||
                        document.querySelector('.cta-banner');
@@ -151,20 +216,116 @@
     if (!ctaSection) return;
 
     // Update title
-    if (content.title) {
-      const h2 = ctaSection.querySelector('h2, .cta-title');
-      if (h2) {
-        h2.textContent = content.title;
+    if (section.title) {
+      const heading = ctaSection.querySelector('h2, h3, .cta-title');
+      if (heading) {
+        heading.textContent = section.title;
       }
     }
 
-    // Update button text
-    if (content.buttonText) {
-      const btn = ctaSection.querySelector('.button, .cta-button, a.btn');
-      if (btn) {
-        btn.textContent = content.buttonText;
+    // Update description
+    if (section.description) {
+      const desc = ctaSection.querySelector('p, .cta-description');
+      if (desc) {
+        desc.textContent = section.description;
       }
     }
+
+    // Update button
+    if (section.button) {
+      const btn = ctaSection.querySelector('.button, .cta-button, a.btn, button');
+      if (btn) {
+        btn.textContent = section.button.text;
+        if (section.button.url && btn.tagName === 'A') {
+          btn.href = section.button.url;
+        }
+      }
+    }
+  }
+
+  /**
+   * Render Testimonials Section
+   * Fields: items[], layout
+   */
+  function renderTestimonialsSection(section) {
+    if (!section || !section.items || section.items.length === 0) return;
+
+    const testimonialsSection = document.querySelector('[data-cms="testimonials"]') ||
+                                document.querySelector('.testimonials-section') ||
+                                document.querySelector('.testimonials');
+
+    if (!testimonialsSection) return;
+
+    const testimonialItems = testimonialsSection.querySelectorAll('.testimonial-item, .testimonial-card');
+
+    section.items.forEach((item, index) => {
+      if (testimonialItems[index]) {
+        const quote = testimonialItems[index].querySelector('.quote, .testimonial-text, p');
+        const author = testimonialItems[index].querySelector('.author, .testimonial-author');
+
+        if (quote && item.text) {
+          quote.textContent = item.text;
+        }
+        if (author && item.author) {
+          author.textContent = item.author;
+        }
+      }
+    });
+  }
+
+  /**
+   * Render FAQ Section
+   * Fields: items[] (question, answer)
+   */
+  function renderFAQSection(section) {
+    if (!section || !section.items || section.items.length === 0) return;
+
+    const faqSection = document.querySelector('[data-cms="faq"]') ||
+                       document.querySelector('.faq-section') ||
+                       document.querySelector('.faq');
+
+    if (!faqSection) return;
+
+    const faqItems = faqSection.querySelectorAll('.faq-item, .accordion-item');
+
+    section.items.forEach((item, index) => {
+      if (faqItems[index]) {
+        const question = faqItems[index].querySelector('.question, .faq-question, h4');
+        const answer = faqItems[index].querySelector('.answer, .faq-answer, p');
+
+        if (question && item.question) {
+          question.textContent = item.question;
+        }
+        if (answer && item.answer) {
+          answer.textContent = item.answer;
+        }
+      }
+    });
+  }
+
+  /**
+   * Render Images Section
+   * Fields: images[], layout
+   */
+  function renderImagesSection(section) {
+    if (!section || !section.images || section.images.length === 0) return;
+
+    const imagesSection = document.querySelector('[data-cms="images"]') ||
+                          document.querySelector('.images-section') ||
+                          document.querySelector('.gallery');
+
+    if (!imagesSection) return;
+
+    const imageElements = imagesSection.querySelectorAll('img');
+
+    section.images.forEach((image, index) => {
+      if (imageElements[index] && image.url) {
+        imageElements[index].src = image.url;
+        if (image.alt) {
+          imageElements[index].alt = image.alt;
+        }
+      }
+    });
   }
 
   /**

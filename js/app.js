@@ -25470,16 +25470,15 @@ function renderCMSSectionsList() {
   container.innerHTML = sortedSections.map((section, index) => `
     <div class="cms-section-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;${!section.isVisible ? 'opacity:0.5' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-size:16px">${getSectionIcon(section.type)}</span>
-          <span style="font-weight:500;font-size:13px">${getSectionLabel(section.type)}</span>
-          ${!section.isVisible ? '<span class="badge" style="font-size:10px">Skjult</span>' : ''}
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-weight:600;font-size:13px">${getSectionLabel(section.type)}</span>
+          ${!section.isVisible ? '<span class="badge" style="font-size:10px;background:var(--muted);color:var(--text-inverse)">Skjult</span>' : ''}
         </div>
         <div style="display:flex;gap:4px">
           <button class="btn btn-sm" onclick="moveSectionUp('${section.id}')" ${index === 0 ? 'disabled' : ''} title="Flyt op">↑</button>
           <button class="btn btn-sm" onclick="moveSectionDown('${section.id}')" ${index === sortedSections.length - 1 ? 'disabled' : ''} title="Flyt ned">↓</button>
-          <button class="btn btn-sm" onclick="toggleSectionVisibility('${section.id}')" title="${section.isVisible ? 'Skjul' : 'Vis'}">${section.isVisible ? '👁️' : '👁️‍🗨️'}</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteSectionFromPage('${section.id}')" title="Slet">🗑️</button>
+          <button class="btn btn-sm" onclick="toggleSectionVisibility('${section.id}')" title="${section.isVisible ? 'Skjul' : 'Vis'}" style="font-size:11px">${section.isVisible ? 'Skjul' : 'Vis'}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSectionFromPage('${section.id}')" title="Slet" style="font-size:11px">Slet</button>
         </div>
       </div>
       <div style="padding:16px">
@@ -25489,18 +25488,9 @@ function renderCMSSectionsList() {
   `).join('') || '<p style="text-align:center;color:var(--muted);padding:40px">Ingen sektioner endnu. Klik "Tilføj sektion" for at starte.</p>';
 }
 
-// Get section icon
+// Get section icon (returns empty - no icons to keep design clean)
 function getSectionIcon(type) {
-  const icons = {
-    hero: '🎯',
-    text: '📝',
-    features: '⭐',
-    cta: '👆',
-    testimonials: '💬',
-    faq: '❓',
-    images: '🖼️'
-  };
-  return icons[type] || '📄';
+  return '';
 }
 
 // Get section label
@@ -26381,25 +26371,25 @@ function renderCampaignsList() {
       </div>
       ${campaign.stats?.sent > 0 ? `
         <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--muted)">
-          <span>📤 ${campaign.stats.sent}</span>
-          <span>👁️ ${campaign.stats.opened}</span>
-          <span>👆 ${campaign.stats.clicked}</span>
+          <span>Sendt: ${campaign.stats.sent}</span>
+          <span>Åbnet: ${campaign.stats.opened}</span>
+          <span>Klikket: ${campaign.stats.clicked}</span>
         </div>
       ` : ''}
     </div>
   `).join('') || '<p style="text-align:center;padding:20px;color:var(--muted)">Ingen kampagner endnu</p>';
 }
 
-// Get channel icon
+// Get channel label (no icons for cleaner design)
 function getChannelIcon(channel) {
-  const icons = {
-    app: '📱',
-    website: '🌐',
-    email: '✉️',
-    sms: '💬',
-    push: '🔔'
+  const labels = {
+    app: 'App',
+    website: 'Web',
+    email: 'Email',
+    sms: 'SMS',
+    push: 'Push'
   };
-  return icons[channel] || '📣';
+  return labels[channel] || channel;
 }
 
 // Select Campaign
