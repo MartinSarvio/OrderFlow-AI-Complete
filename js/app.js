@@ -770,6 +770,10 @@ function applyRoleBasedSidebar() {
     if (el) el.style.setProperty('display', show ? '' : 'none', 'important');
   };
 
+  // === APP BUILDER ADMIN ONLY ===
+  const templateBtn = document.getElementById('app-preview-template-btn');
+  setDisplay(templateBtn, role === ROLES.ADMIN);
+
   // === SKJUL KUNDER KNAP FOR KUNDE/DEMO ===
   const kunderBtn = document.querySelector('[data-role-menu="kunder"]');
   setDisplay(kunderBtn, !isCustomerView);
@@ -15655,7 +15659,7 @@ async function runWorkflow(restaurant, type) {
     activateNode('send-final-confirm');
     
     // Get custom message or default
-    const defaultAutoMsg = `🎉 Din ordre er bekræftet! {{restaurant}} har modtaget din bestilling og forventer den er klar om ca. {{ventetid}} minutter. Vi sender besked, når maden er klar.`;
+    const defaultAutoMsg = `Din ordre er bekræftet! {{restaurant}} har modtaget din bestilling og forventer den er klar om ca. {{ventetid}} minutter. Vi sender besked, når maden er klar.`;
     let confirmMsg = restaurant?.customMessages?.orderAccepted || defaultAutoMsg;
     confirmMsg = confirmMsg
       .replace(/\{\{restaurant\}\}/gi, restaurant.name)
@@ -16732,7 +16736,7 @@ async function acceptOrder(orderId) {
   const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
   
   // Get custom message or use default
-  const defaultMsg = `🎉 Din ordre er bekræftet! ${restaurant?.name || 'Restauranten'} har modtaget din bestilling og går straks i gang. Vi sender besked, når maden er klar.`;
+  const defaultMsg = `Din ordre er bekræftet! ${restaurant?.name || 'Restauranten'} har modtaget din bestilling og går straks i gang. Vi sender besked, når maden er klar.`;
   let message = restaurant?.customMessages?.orderAccepted || defaultMsg;
   
   // Send bekræftelses-SMS til kunden
@@ -17821,7 +17825,7 @@ function triggerStaffNotification(restaurant, message) {
   notifications.push(notification);
   localStorage.setItem('staff_notifications', JSON.stringify(notifications));
   
-  addLog(`📢 Staff notification: ${message}`, 'warn');
+  addLog(`Staff notification: ${message}`, 'warn');
 }
 
 // Generate AI fallback response for unhandled messages
@@ -21821,10 +21825,10 @@ let loyaltyMembers = [];
 
 // Tier colors and icons
 const LOYALTY_TIERS = {
-  bronze: { color: '#cd7f32', icon: '🥉', name: 'Bronze' },
-  silver: { color: '#c0c0c0', icon: '🥈', name: 'Sølv' },
-  gold: { color: '#ffd700', icon: '🥇', name: 'Guld' },
-  platinum: { color: '#e5e4e2', icon: '💎', name: 'Platin' }
+  bronze: { color: '#cd7f32', icon: '', name: 'Bronze' },
+  silver: { color: '#c0c0c0', icon: '', name: 'Sølv' },
+  gold: { color: '#ffd700', icon: '', name: 'Guld' },
+  platinum: { color: '#e5e4e2', icon: '', name: 'Platin' }
 };
 
 // Get loyalty settings for restaurant
@@ -22195,11 +22199,191 @@ function formatLoyaltyMessage(member, earnedPoints = 0) {
   return msg;
 }
 
+// Render loyalty demo page (when no restaurant is selected)
+function renderLoyaltyDemoPage() {
+  const container = document.getElementById('main-content');
+  if (!container) return;
+
+  // Demo data
+  const demoMembers = 234;
+  const demoPoints = 45678;
+  const demoVIP = 45;
+  const demoRewards = 5;
+
+  container.innerHTML = `
+    <div class="page-header">
+      <h1>Loyalty Program</h1>
+      <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
+      <span class="badge badge-info" style="margin-left:12px">Demo-tilstand</span>
+    </div>
+
+    <div class="alert alert-info" style="margin-bottom:24px">
+      <strong>Demo-tilstand:</strong> Vælg en restaurant for at se rigtige data, eller se demo-data nedenfor.
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">${demoMembers}</div>
+        <div class="stat-label">Medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${demoPoints.toLocaleString('da-DK')}</div>
+        <div class="stat-label">Aktive points</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${demoVIP}</div>
+        <div class="stat-label">VIP medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${demoRewards}</div>
+        <div class="stat-label">Aktive belønninger</div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>Indstillinger</h3>
+        <label class="switch">
+          <input type="checkbox" disabled checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="card-body">
+        <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+          <div class="form-group">
+            <label class="form-label">Points pr. krone</label>
+            <input type="number" class="input" value="1" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min. ordre for points</label>
+            <input type="number" class="input" value="50" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Velkomstbonus</label>
+            <input type="number" class="input" value="50" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fødselsdagsbonus</label>
+            <input type="number" class="input" value="100" disabled>
+          </div>
+        </div>
+
+        <h4 style="margin:24px 0 16px">Tier-grænser</h4>
+        <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+          <div class="form-group">
+            <label class="form-label">Sølv fra</label>
+            <input type="number" class="input" value="500" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Guld fra</label>
+            <input type="number" class="input" value="1500" disabled>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Platin fra</label>
+            <input type="number" class="input" value="5000" disabled>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Rewards -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <h3>Belønninger</h3>
+        <button class="btn btn-primary btn-sm" disabled>+ Tilføj belønning</button>
+      </div>
+      <div class="card-body">
+        <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+              <h4 style="margin:0">Gratis drink</h4>
+              <span class="badge" style="background:var(--accent);color:white">250 pts</span>
+            </div>
+            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Valgfri sodavand eller juice</p>
+          </div>
+          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+              <h4 style="margin:0">Gratis dessert</h4>
+              <span class="badge" style="background:var(--accent);color:white">500 pts</span>
+            </div>
+            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Valgfri dessert fra menuen</p>
+          </div>
+          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+              <h4 style="margin:0">50 kr rabat</h4>
+              <span class="badge" style="background:var(--accent);color:white">1000 pts</span>
+            </div>
+            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Rabat på næste ordre over 200 kr</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Demo Members -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Medlemmer</h3>
+        <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" disabled>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Kunde</th>
+                <th>Telefon</th>
+                <th>Tier</th>
+                <th>Points</th>
+                <th>Lifetime</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Demo Kunde</td>
+                <td>+45 12 34 56 78</td>
+                <td><span class="badge badge-gold">Guld</span></td>
+                <td>1.234</td>
+                <td>4.567</td>
+              </tr>
+              <tr>
+                <td>Test Person</td>
+                <td>+45 87 65 43 21</td>
+                <td><span class="badge badge-silver">Sølv</span></td>
+                <td>567</td>
+                <td>1.890</td>
+              </tr>
+              <tr>
+                <td>Ny Bruger</td>
+                <td>+45 11 22 33 44</td>
+                <td><span class="badge badge-bronze">Bronze</span></td>
+                <td>123</td>
+                <td>123</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // Render loyalty admin page
 async function renderLoyaltyPage() {
-  const restaurantId = document.getElementById('test-restaurant')?.value;
+  let restaurantId = document.getElementById('test-restaurant')?.value;
+
+  // Auto-select first restaurant if none selected
   if (!restaurantId) {
-    document.getElementById('main-content').innerHTML = '<div class="empty-state"><p>Vælg en restaurant først</p></div>';
+    const dropdown = document.getElementById('test-restaurant');
+    if (dropdown && dropdown.options.length > 1) {
+      dropdown.selectedIndex = 1;
+      restaurantId = dropdown.value;
+    }
+  }
+
+  if (!restaurantId) {
+    renderLoyaltyDemoPage();
     return;
   }
 
@@ -22230,7 +22414,7 @@ async function renderLoyaltyPage() {
 
   const html = `
     <div class="page-header">
-      <h1>🎁 Loyalty Program</h1>
+      <h1>Loyalty Program</h1>
       <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
     </div>
 
@@ -22257,7 +22441,7 @@ async function renderLoyaltyPage() {
     <!-- Settings -->
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
-        <h3>⚙️ Indstillinger</h3>
+        <h3>Indstillinger</h3>
         <label class="switch">
           <input type="checkbox" id="loyalty-enabled" ${settings?.enabled ? 'checked' : ''} onchange="toggleLoyaltyEnabled()">
           <span class="slider"></span>
@@ -22286,15 +22470,15 @@ async function renderLoyaltyPage() {
         <h4 style="margin:24px 0 16px">Tier-grænser</h4>
         <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
           <div class="form-group">
-            <label class="form-label">🥉 Sølv fra</label>
+            <label class="form-label">Sølv fra</label>
             <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
           </div>
           <div class="form-group">
-            <label class="form-label">🥇 Guld fra</label>
+            <label class="form-label">Guld fra</label>
             <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
           </div>
           <div class="form-group">
-            <label class="form-label">💎 Platin fra</label>
+            <label class="form-label">Platin fra</label>
             <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
           </div>
         </div>
@@ -22302,15 +22486,15 @@ async function renderLoyaltyPage() {
         <h4 style="margin:24px 0 16px">Tier-bonusser</h4>
         <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
           <div class="form-group">
-            <label class="form-label">🥈 Sølv multiplier</label>
+            <label class="form-label">Sølv multiplier</label>
             <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
           </div>
           <div class="form-group">
-            <label class="form-label">🥇 Guld multiplier</label>
+            <label class="form-label">Guld multiplier</label>
             <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
           </div>
           <div class="form-group">
-            <label class="form-label">💎 Platin multiplier</label>
+            <label class="form-label">Platin multiplier</label>
             <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
           </div>
         </div>
@@ -22342,7 +22526,7 @@ async function renderLoyaltyPage() {
     <!-- Rewards -->
     <div class="card" style="margin-bottom:24px">
       <div class="card-header">
-        <h3>🎁 Belønninger</h3>
+        <h3>Belønninger</h3>
         <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
       </div>
       <div class="card-body">
@@ -22372,7 +22556,7 @@ async function renderLoyaltyPage() {
     <!-- Members -->
     <div class="card">
       <div class="card-header">
-        <h3>👥 Medlemmer</h3>
+        <h3>Medlemmer</h3>
         <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterLoyaltyMembers(this.value)">
       </div>
       <div class="card-body">
@@ -22395,7 +22579,7 @@ async function renderLoyaltyPage() {
                   <td>${m.customer_phone}</td>
                   <td>
                     <span class="tier-badge tier-${m.tier}">
-                      ${LOYALTY_TIERS[m.tier]?.icon || '🥉'} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
+                      ${LOYALTY_TIERS[m.tier]?.icon || ''} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
                     </span>
                   </td>
                   <td><strong>${m.points.toLocaleString('da-DK')}</strong></td>
@@ -22819,12 +23003,12 @@ let campaignSends = [];
 
 // Campaign trigger types
 const CAMPAIGN_TRIGGERS = {
-  manual: { name: 'Manuel', icon: '👆', description: 'Send manuelt når du vil' },
-  birthday: { name: 'Fødselsdag', icon: '🎂', description: 'Automatisk på kundens fødselsdag' },
-  inactive: { name: 'Inaktiv', icon: '😴', description: 'Når kunden ikke har bestilt i X dage' },
-  loyalty_tier: { name: 'Loyalty Tier', icon: '🏆', description: 'Når kunden opnår et nyt tier' },
-  first_order: { name: 'Første ordre', icon: '🎉', description: 'Efter kundens første ordre' },
-  scheduled: { name: 'Planlagt', icon: '📅', description: 'På et bestemt tidspunkt' }
+  manual: { name: 'Manuel', icon: '', description: 'Send manuelt når du vil' },
+  birthday: { name: 'Fødselsdag', icon: '', description: 'Automatisk på kundens fødselsdag' },
+  inactive: { name: 'Inaktiv', icon: '', description: 'Når kunden ikke har bestilt i X dage' },
+  loyalty_tier: { name: 'Loyalty Tier', icon: '', description: 'Når kunden opnår et nyt tier' },
+  first_order: { name: 'Første ordre', icon: '', description: 'Efter kundens første ordre' },
+  scheduled: { name: 'Planlagt', icon: '', description: 'På et bestemt tidspunkt' }
 };
 
 // Get campaigns for restaurant
@@ -22867,7 +23051,7 @@ async function renderCampaignsPage() {
 
   const html = `
     <div class="page-header">
-      <h1>📣 Marketing Kampagner</h1>
+      <h1>Marketing Kampagner</h1>
       <p class="text-secondary">Automatisér din kundekommunikation</p>
     </div>
 
@@ -22895,22 +23079,18 @@ async function renderCampaignsPage() {
       <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
           <button class="btn btn-secondary" onclick="createQuickCampaign('inactive')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
-            <span style="font-size:32px;margin-bottom:8px">😴</span>
             <span style="font-weight:600">Inaktive kunder</span>
             <span class="text-secondary" style="font-size:12px">Genaktiver kunder</span>
           </button>
           <button class="btn btn-secondary" onclick="createQuickCampaign('birthday')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
-            <span style="font-size:32px;margin-bottom:8px">🎂</span>
             <span style="font-weight:600">Fødselsdagshilsen</span>
             <span class="text-secondary" style="font-size:12px">Automatisk hilsen</span>
           </button>
           <button class="btn btn-secondary" onclick="createQuickCampaign('first_order')" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
-            <span style="font-size:32px;margin-bottom:8px">🎉</span>
             <span style="font-weight:600">Velkomstbesked</span>
             <span class="text-secondary" style="font-size:12px">Efter første ordre</span>
           </button>
           <button class="btn btn-primary" onclick="showCreateCampaignModal()" style="display:flex;flex-direction:column;align-items:center;padding:24px;height:auto">
-            <span style="font-size:32px;margin-bottom:8px">➕</span>
             <span style="font-weight:600">Opret kampagne</span>
             <span style="font-size:12px;opacity:0.8">Tilpasset kampagne</span>
           </button>
@@ -22944,9 +23124,9 @@ async function renderCampaignsPage() {
                       <strong>${c.name}</strong>
                       ${c.description ? `<br><span class="text-secondary" style="font-size:12px">${c.description}</span>` : ''}
                     </td>
-                    <td><span class="badge">${c.type === 'sms' ? '📱 SMS' : '📧 Email'}</span></td>
+                    <td><span class="badge">${c.type === 'sms' ? 'SMS' : 'Email'}</span></td>
                     <td>
-                      <span>${CAMPAIGN_TRIGGERS[c.trigger_type]?.icon || '📣'}</span>
+                      <span>${CAMPAIGN_TRIGGERS[c.trigger_type]?.icon || ''}</span>
                       ${CAMPAIGN_TRIGGERS[c.trigger_type]?.name || c.trigger_type}
                       ${c.trigger_days ? `<br><span class="text-secondary" style="font-size:11px">${c.trigger_days} dage</span>` : ''}
                     </td>
@@ -22992,13 +23172,13 @@ async function createQuickCampaign(type) {
       name: 'Fødselsdagshilsen',
       description: 'Automatisk fødselsdagshilsen med tilbud',
       trigger_type: 'birthday',
-      message_template: 'Tillykke med fødselsdagen {navn}! 🎂 Som gave fra {restaurant} får du 15% rabat på din næste ordre. Brug koden FØDSELSDAG15'
+      message_template: 'Tillykke med fødselsdagen {navn}! Som gave fra {restaurant} får du 15% rabat på din næste ordre. Brug koden FØDSELSDAG15'
     },
     first_order: {
       name: 'Velkomstbesked',
       description: 'Tak for første ordre',
       trigger_type: 'first_order',
-      message_template: 'Tak for din første ordre hos {restaurant}, {navn}! 🎉 Vi håber du nød maden. Næste gang får du 10% rabat med koden VELKOMMEN10'
+      message_template: 'Tak for din første ordre hos {restaurant}, {navn}! Vi håber du nød maden. Næste gang får du 10% rabat med koden VELKOMMEN10'
     }
   };
 
@@ -23239,13 +23419,13 @@ let customerSegments = [];
 
 // Default segment icons and colors
 const SEGMENT_TYPES = {
-  vip: { icon: '👑', color: '#f59e0b', name: 'VIP Kunder' },
-  new: { icon: '🆕', color: '#10b981', name: 'Nye Kunder' },
-  inactive: { icon: '😴', color: '#ef4444', name: 'Inaktive' },
-  high_value: { icon: '💎', color: '#8b5cf6', name: 'Højværdi' },
-  at_risk: { icon: '⚠️', color: '#f97316', name: 'At Risk' },
-  loyal: { icon: '❤️', color: '#ec4899', name: 'Loyale' },
-  custom: { icon: '🏷️', color: '#6366f1', name: 'Tilpasset' }
+  vip: { icon: '', color: '#f59e0b', name: 'VIP Kunder' },
+  new: { icon: '', color: '#10b981', name: 'Nye Kunder' },
+  inactive: { icon: '', color: '#ef4444', name: 'Inaktive' },
+  high_value: { icon: '', color: '#8b5cf6', name: 'Højværdi' },
+  at_risk: { icon: '', color: '#f97316', name: 'At Risk' },
+  loyal: { icon: '', color: '#ec4899', name: 'Loyale' },
+  custom: { icon: '', color: '#6366f1', name: 'Tilpasset' }
 };
 
 // Get segments for restaurant
@@ -23294,7 +23474,7 @@ async function createDefaultSegments(restaurantId) {
           restaurant_id: restaurantId,
           ...seg,
           color: SEGMENT_TYPES[seg.segment_type]?.color || '#6366f1',
-          icon: SEGMENT_TYPES[seg.segment_type]?.icon || '🏷️'
+          icon: SEGMENT_TYPES[seg.segment_type]?.icon || ''
         })
       });
     } catch (err) {
@@ -23325,7 +23505,7 @@ async function renderSegmentsPage() {
 
   const html = `
     <div class="page-header">
-      <h1>👥 Kundesegmenter</h1>
+      <h1>Kundesegmenter</h1>
       <p class="text-secondary">Gruppér kunder for målrettet kommunikation</p>
     </div>
 
@@ -23353,7 +23533,7 @@ async function renderSegmentsPage() {
             <div class="segment-card" style="background:var(--card2);border-radius:12px;padding:20px;border:2px solid ${s.color || '#6366f1'}20;position:relative">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
                 <div style="width:48px;height:48px;border-radius:12px;background:${s.color || '#6366f1'}20;display:flex;align-items:center;justify-content:center;font-size:24px">
-                  ${SEGMENT_TYPES[s.segment_type]?.icon || '🏷️'}
+                  ${SEGMENT_TYPES[s.segment_type]?.icon || ''}
                 </div>
                 <div>
                   <h4 style="margin:0;font-size:16px">${s.name}</h4>
@@ -23381,24 +23561,24 @@ async function renderSegmentsPage() {
     <!-- Segment Explanation -->
     <div class="card">
       <div class="card-header">
-        <h3>ℹ️ Sådan virker segmenter</h3>
+        <h3>Sådan virker segmenter</h3>
       </div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));gap:24px">
           <div>
-            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">👑 VIP Kunder</h4>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">VIP Kunder</h4>
             <p class="text-secondary" style="font-size:13px">Kunder med mange ordrer. Beløn dem med eksklusive tilbud.</p>
           </div>
           <div>
-            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">😴 Inaktive</h4>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">Inaktive</h4>
             <p class="text-secondary" style="font-size:13px">Kunder der ikke har bestilt i 30+ dage. Genaktiver dem med rabatkoder.</p>
           </div>
           <div>
-            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">⚠️ At Risk</h4>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">At Risk</h4>
             <p class="text-secondary" style="font-size:13px">Kunder på vej til at blive inaktive. Handl hurtigt!</p>
           </div>
           <div>
-            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">💎 Højværdi</h4>
+            <h4 style="display:flex;align-items:center;gap:8px;margin-bottom:8px">Højværdi</h4>
             <p class="text-secondary" style="font-size:13px">Kunder med høj gennemsnitlig ordre. Tilbyd premium-service.</p>
           </div>
         </div>
@@ -23515,7 +23695,7 @@ async function saveSegment() {
         segment_type: 'custom',
         filter_rules,
         color: '#6366f1',
-        icon: '🏷️'
+        icon: ''
       })
     });
 
@@ -24456,6 +24636,59 @@ function showSavedBadge(section) {
   }, 2000);
 }
 
+function getAppBuilderPreviewConfig() {
+  const nameInput = document.getElementById('appbuilder-app-name');
+  const taglineInput = document.getElementById('appbuilder-tagline');
+  const primaryColorInput = document.getElementById('appbuilder-primary-color');
+  const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
+
+  return {
+    appName: nameInput?.value || 'Din Restaurant',
+    tagline: taglineInput?.value || 'Autentisk smag siden 1985',
+    primaryColor: primaryColorInput?.value || '#D4380D',
+    secondaryColor: secondaryColorInput?.value || '#FFF7E6'
+  };
+}
+
+function getAppPreviewBasePath() {
+  const origin = window.location.origin;
+  const pathBase = window.location.pathname.replace(/[^/]*$/, '');
+
+  if (origin && origin !== 'null') {
+    return origin + pathBase;
+  }
+
+  const href = window.location.href.split('#')[0].split('?')[0];
+  return href.replace(/[^/]*$/, '');
+}
+
+function getAppPreviewUrl() {
+  return getAppPreviewBasePath() + 'pwa-preview.html';
+}
+
+function ensureQRCodeLibrary() {
+  if (typeof QRCode !== 'undefined') {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    const existing = document.querySelector('script[data-qrcode-lib="true"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(true));
+      existing.addEventListener('error', () => resolve(false));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'js/vendor/qrcode.min.js';
+    script.async = true;
+    script.dataset.qrcodeLib = 'true';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+}
+
 // Send initial config to App Builder preview - called directly from iframe onload
 function sendInitialAppBuilderConfig() {
   const previewFrame = document.getElementById('pwa-preview-frame');
@@ -24467,17 +24700,7 @@ function sendInitialAppBuilderConfig() {
   // Wait for iframe to be fully loaded
   setTimeout(() => {
     try {
-      const nameInput = document.getElementById('appbuilder-app-name');
-      const taglineInput = document.getElementById('appbuilder-tagline');
-      const primaryColorInput = document.getElementById('appbuilder-primary-color');
-      const secondaryColorInput = document.getElementById('appbuilder-secondary-color');
-
-      const config = {
-        appName: nameInput?.value || 'Din Restaurant',
-        tagline: taglineInput?.value || 'Autentisk smag siden 1985',
-        primaryColor: primaryColorInput?.value || '#D4380D',
-        secondaryColor: secondaryColorInput?.value || '#FFF7E6'
-      };
+      const config = getAppBuilderPreviewConfig();
 
       previewFrame.contentWindow.postMessage({
         type: 'UPDATE_CONFIG',
@@ -24515,6 +24738,91 @@ function initAppBuilder() {
       }
     });
   }
+}
+
+// Show QR code for mobile app preview
+function showAppPreviewQR() {
+  const container = document.getElementById('app-preview-qr-container');
+  if (!container) return;
+
+  container.innerHTML = '<p style="color:var(--muted);margin:0">Indlæser QR-kode...</p>';
+  container.style.minWidth = '200px';
+  container.style.minHeight = '200px';
+
+  // Generate preview URL (current host + pwa-preview.html)
+  const previewUrl = getAppPreviewUrl();
+
+  const renderFallback = (message) => {
+    container.innerHTML = `
+      <div style="text-align:center">
+        <p style="color:var(--muted);margin:0 0 8px">${message}</p>
+        <p style="font-size:12px;color:var(--text);word-break:break-all;margin:0">${previewUrl}</p>
+      </div>
+    `;
+  };
+
+  showModal('app-preview-qr');
+
+  ensureQRCodeLibrary().then((loaded) => {
+    if (!loaded || typeof QRCode === 'undefined') {
+      renderFallback('QR-kode bibliotek ikke tilgængeligt');
+      return;
+    }
+
+    container.innerHTML = '';
+
+    try {
+      new QRCode(container, {
+        text: previewUrl,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
+      });
+    } catch (err) {
+      console.warn('QR-kode fejl:', err);
+      renderFallback('Kunne ikke generere QR-kode');
+    }
+  });
+}
+
+function openAppPreviewTemplate() {
+  const previewUrl = getAppPreviewUrl();
+  const templateWindow = window.open(previewUrl, '_blank', 'noopener');
+
+  if (!templateWindow) {
+    toast('Popup blev blokeret. Tillad popups for at åbne skabelonen.', 'warning');
+    return;
+  }
+
+  const config = getAppBuilderPreviewConfig();
+  const sendConfig = () => {
+    if (templateWindow.closed) return;
+    templateWindow.postMessage({ type: 'UPDATE_CONFIG', config: config }, '*');
+    templateWindow.postMessage({ type: 'RESET_SCROLL' }, '*');
+  };
+
+  templateWindow.addEventListener('load', sendConfig);
+  setTimeout(sendConfig, 400);
+}
+
+// Publish mobile app
+function publishMobileApp() {
+  // Get current app config
+  const config = {
+    appName: document.getElementById('appbuilder-app-name')?.value || 'Min App',
+    tagline: document.getElementById('appbuilder-tagline')?.value || '',
+    primaryColor: document.getElementById('appbuilder-primary-color')?.value || '#000000',
+    secondaryColor: document.getElementById('appbuilder-secondary-color')?.value || '#ffffff',
+    publishedAt: new Date().toISOString(),
+    status: 'published'
+  };
+
+  // Save to localStorage
+  localStorage.setItem('published_mobile_app', JSON.stringify(config));
+
+  toast('App publiceret!', 'success');
 }
 
 // =====================================================
@@ -25986,6 +26294,122 @@ function getDefaultCMSPages(scrapedContent = null) {
       });
     }
 
+    // Bento section (only for landing page)
+    if (isLandingPage) {
+      sections.push({
+        id: 'section-bento-' + index,
+        type: 'bento',
+        order: sections.length,
+        isVisible: true,
+        padding: 'medium',
+        heading: 'Giv din restaurant den samme<br>teknologi som de store brands',
+        heroImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop',
+        heroOverlayText: 'Dine kunder er vant til at bestille på telefonen.<br>Derfor giver vi din restaurant sin egen <strong>mobile app</strong>.',
+        cards: [
+          { label: 'Få højere Google rankings med din AI-powered', title: 'restaurant hjemmeside.', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop' },
+          { label: 'Vækst dit salg med et', title: 'online bestillingssystem modelleret efter de store brands.', image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop' }
+        ]
+      });
+
+      // Logo Cloud section
+      sections.push({
+        id: 'section-logocloud-' + index,
+        type: 'logocloud',
+        order: sections.length,
+        isVisible: true,
+        padding: 'medium',
+        heading: 'Trusted by the world\'s most innovative teams',
+        subheading: 'Join thousands of developers and designers who are already building with Smoothui',
+        logos: [
+          { name: 'Strava', url: 'https://strava.com' },
+          { name: 'Descript', url: 'https://descript.com' },
+          { name: 'Duolingo', url: 'https://duolingo.com' },
+          { name: 'Faire', url: 'https://faire.com' },
+          { name: 'Clearbit', url: 'https://clearbit.com' },
+          { name: 'Canva', url: 'https://canva.com' },
+          { name: 'Canpoy', url: 'https://canpoy.com' },
+          { name: 'Casetext', url: 'https://casetext.com' }
+        ]
+      });
+
+      // Beliefs section
+      sections.push({
+        id: 'section-beliefs-' + index,
+        type: 'beliefs',
+        order: sections.length,
+        isVisible: true,
+        padding: 'medium',
+        heading: 'Tre overbevisninger der guider vores virksomhed',
+        subtitle: 'Forstå principperne der guider vores beslutninger.',
+        author: {
+          name: 'Adam Guild',
+          role: 'Co-Founder and CEO at OrderFlow',
+          image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop'
+        },
+        items: [
+          { heading: 'Salgsvækst er vigtigere end tilpasning.', text: 'Tredjepartsapps har formet hvordan alle bestiller online. Vi tager deres bedste praksis og giver dem til dig. Det er derfor vi udkonkurrerer dem på salg.' },
+          { heading: 'Vi skal tjene din forretning hver måned.', text: 'Restauranter er hårde nok. Du behøver ikke endnu en tech-leverandør der binder dig. Kunder stemmer med deres fødder. Vi vil have dig skal kunne forlade os nemt hvis vi ikke tilføjer værdi.' },
+          { heading: 'Restauranter bør eje deres kunderelationer.', text: 'En af de grusomste biprodukter af tech "innovation" er hvordan du bliver separeret fra dine kunder. Hvis du beslutter at forlade OrderFlow, får du dine kunder med dig.' }
+        ]
+      });
+
+      // Testimonials section
+      sections.push({
+        id: 'section-testimonials-' + index,
+        type: 'testimonials',
+        order: sections.length,
+        isVisible: true,
+        padding: 'medium',
+        heading: 'Hvad vores kunder siger',
+        layout: 'carousel',
+        rotationInterval: 5000,
+        items: [
+          { text: 'Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder.', author: 'Maria Jensen', role: 'Café Hygge, København', image: 'https://i.pravatar.cc/96?img=1' },
+          { text: 'Endelig en platform der forstår restauranters behov. Supporten er fantastisk og systemet er nemt at bruge.', author: 'Thomas Møller', role: 'Burger Joint, Aalborg', image: 'https://i.pravatar.cc/96?img=2' },
+          { text: 'Vi sparede over 40.000 kr. om måneden ved at skifte væk fra tredjepartsplatforme. Flow betaler sig selv på få uger.', author: 'Emma Christensen', role: 'Thai Kitchen, Esbjerg', image: 'https://i.pravatar.cc/96?img=3' }
+        ]
+      });
+
+      // Footer section
+      sections.push({
+        id: 'section-footer-' + index,
+        type: 'footer',
+        order: sections.length,
+        isVisible: true,
+        padding: 'medium',
+        columns: [
+          { title: 'PRODUKTER', links: [
+            { text: 'Restaurant Hjemmeside', url: 'restaurant-hjemmeside.html' },
+            { text: 'Online Bestilling', url: 'online-bestilling.html' },
+            { text: 'Custom Mobile App', url: 'custom-mobile-app.html' },
+            { text: 'Zero-Commission Delivery', url: 'zero-commission-delivery.html' },
+            { text: 'Loyalitetsprogram', url: 'loyalitetsprogram.html' },
+            { text: 'Automatiseret Marketing', url: 'automatiseret-marketing.html' }
+          ]},
+          { title: 'RESSOURCER', links: [
+            { text: 'Case Studies', url: 'case-studies.html' },
+            { text: 'Restaurant Marketing Guide', url: 'restaurant-marketing-guide.html' },
+            { text: 'SEO for Restauranter', url: 'seo-for-restauranter.html' },
+            { text: 'Restaurant Email Marketing', url: 'restaurant-email-marketing.html' },
+            { text: 'Restaurant Mobile App', url: 'restaurant-mobile-app.html' },
+            { text: 'Online Bestillingssystemer', url: 'online-bestillingssystemer.html' }
+          ]},
+          { title: 'VIRKSOMHED', links: [
+            { text: 'Om os', url: 'om-os.html' },
+            { text: 'Karriere', url: 'karriere.html' },
+            { text: 'Ledelse', url: 'ledelse.html' },
+            { text: 'Presse', url: 'presse.html' }
+          ]},
+          { title: 'SUPPORT', links: [
+            { text: '+45 70 12 34 56', url: 'tel:+4570123456' },
+            { text: 'support@flow.dk', url: 'mailto:support@flow.dk' }
+          ]}
+        ],
+        contact: { phone: '+45 70 12 34 56', email: 'support@flow.dk' },
+        copyright: '© 2024 Flow. Alle rettigheder forbeholdes.'
+      });
+    }
+
     // CTA section
     sections.push({
       id: 'section-cta-' + index,
@@ -26279,7 +26703,9 @@ function getSectionLabel(type) {
     trusted: 'Testimonial Carousel',
     appleFeatures: 'Feature Cards',
     bento: 'Bento Grid',
-    beliefs: 'Virksomhedsværdier'
+    beliefs: 'Virksomhedsværdier',
+    logocloud: 'Logo Cloud',
+    footer: 'Footer'
   };
   return labels[type] || type;
 }
@@ -26501,32 +26927,32 @@ function renderSectionEditor(section) {
             ${testimonialItems.map((item, idx) => `
               <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
                 <summary style="cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px">
-                  ${item.avatar ? `<img src="${item.avatar}" style="width:28px;height:28px;object-fit:cover;border-radius:50%">` : '<span style="width:28px;height:28px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
-                  <span>${item.name || 'Unavngivet'}</span>
-                  <span style="color:var(--muted);font-weight:normal;font-size:11px;margin-left:auto">${item.role || item.company || ''}</span>
+                  ${(item.image || item.avatar) ? `<img src="${item.image || item.avatar}" style="width:28px;height:28px;object-fit:cover;border-radius:50%">` : '<span style="width:28px;height:28px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
+                  <span>${item.author || item.name || 'Unavngivet'}</span>
+                  <span style="color:var(--muted);font-weight:normal;font-size:11px;margin-left:auto">${item.role || ''}</span>
                 </summary>
                 <div style="padding-top:12px;display:flex;flex-direction:column;gap:8px">
                   <div class="form-group">
                     <label class="form-label" style="font-size:11px">Citat</label>
-                    <textarea class="input" rows="3" placeholder="Hvad sagde de?" onchange="updateTestimonialItem('${section.id}', ${idx}, 'quote', this.value)">${item.quote || item.text || ''}</textarea>
+                    <textarea class="input" rows="3" placeholder="Hvad sagde de?" onchange="updateTestimonialItem('${section.id}', ${idx}, 'text', this.value)">${item.text || item.quote || ''}</textarea>
                   </div>
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
                     <div class="form-group">
                       <label class="form-label" style="font-size:11px">Navn</label>
-                      <input type="text" class="input" placeholder="Navn" value="${item.name || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'name', this.value)">
+                      <input type="text" class="input" placeholder="Navn" value="${item.author || item.name || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'author', this.value)">
                     </div>
                     <div class="form-group">
                       <label class="form-label" style="font-size:11px">Rolle/Firma</label>
-                      <input type="text" class="input" placeholder="Rolle/Firma" value="${item.role || item.company || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'role', this.value)">
+                      <input type="text" class="input" placeholder="Rolle/Firma" value="${item.role || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'role', this.value)">
                     </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label" style="font-size:11px">Profilbillede</label>
                     <div style="display:flex;gap:8px">
-                      <input type="text" id="testimonial-avatar-${section.id}-${idx}" class="input" placeholder="Avatar URL" value="${item.avatar || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'avatar', this.value)" style="flex:1">
+                      <input type="text" id="testimonial-image-${section.id}-${idx}" class="input" placeholder="Billede URL" value="${item.image || item.avatar || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'image', this.value)" style="flex:1">
                       <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibraryForTestimonial('${section.id}', ${idx})">Bibliotek</button>
                     </div>
-                    ${item.avatar ? `<img src="${item.avatar}" style="max-width:50px;height:50px;object-fit:cover;border-radius:50%;margin-top:6px">` : ''}
+                    ${(item.image || item.avatar) ? `<img src="${item.image || item.avatar}" style="max-width:50px;height:50px;object-fit:cover;border-radius:50%;margin-top:6px">` : ''}
                   </div>
                   <button class="btn btn-sm" style="background:var(--danger);color:white;margin-top:4px" onclick="removeTestimonialItem('${section.id}', ${idx})">Fjern citat</button>
                 </div>
@@ -26723,6 +27149,44 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px">Belief Items (JSON)</label>
           <textarea class="input" rows="6" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
           <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"heading": "Overskrift", "text": "Beskrivelse"}]</p>
+        </div>
+      `;
+    case 'logocloud':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Underoverskrift</label>
+          <input type="text" class="input" value="${section.subheading || ''}" onchange="updateSectionField('${section.id}', 'subheading', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Logos (JSON)</label>
+          <textarea class="input" rows="6" onchange="updateSectionField('${section.id}', 'logos', JSON.parse(this.value || '[]'))">${JSON.stringify(section.logos || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"name": "Firmanavn", "url": "https://example.com"}]</p>
+        </div>
+      `;
+    case 'footer':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Footer Kolonner (JSON)</label>
+          <textarea class="input" rows="8" onchange="updateSectionField('${section.id}', 'columns', JSON.parse(this.value || '[]'))">${JSON.stringify(section.columns || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"title": "PRODUKTER", "links": [{"text": "Link tekst", "url": "/side.html"}]}]</p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Kontakt Telefon</label>
+            <input type="text" class="input" value="${section.contact?.phone || ''}" onchange="updateFooterContact('${section.id}', 'phone', this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Kontakt Email</label>
+            <input type="text" class="input" value="${section.contact?.email || ''}" onchange="updateFooterContact('${section.id}', 'email', this.value)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Copyright Tekst</label>
+          <input type="text" class="input" value="${section.copyright || ''}" onchange="updateSectionField('${section.id}', 'copyright', this.value)">
         </div>
       `;
     default:
@@ -26947,10 +27411,10 @@ function addTestimonialItem(sectionId) {
   if (section) {
     if (!section.items) section.items = [];
     section.items.push({
-      quote: '',
-      name: '',
+      text: '',
+      author: '',
       role: '',
-      avatar: ''
+      image: ''
     });
     page.updatedAt = new Date().toISOString();
     markCMSChanged();
@@ -27046,6 +27510,20 @@ function updateSectionAuthor(sectionId, field, value) {
   }
 }
 
+// Update footer contact (for footer section)
+function updateFooterContact(sectionId, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.contact) section.contact = { phone: '', email: '' };
+    section.contact[field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
 // Toggle add section dropdown
 function toggleAddSectionDropdown() {
   const dropdown = document.getElementById('add-section-dropdown');
@@ -27125,6 +27603,27 @@ function addSectionToPage(type) {
       newSection.subtitle = '';
       newSection.author = { name: '', role: '', image: '' };
       newSection.items = [];
+      break;
+    case 'logocloud':
+      newSection.heading = 'Trusted by the world\'s most innovative teams';
+      newSection.subheading = 'Join thousands of developers and designers who are already building with Smoothui';
+      newSection.logos = [
+        { name: 'Strava', url: 'https://strava.com' },
+        { name: 'Descript', url: 'https://descript.com' },
+        { name: 'Duolingo', url: 'https://duolingo.com' },
+        { name: 'Faire', url: 'https://faire.com' },
+        { name: 'Clearbit', url: 'https://clearbit.com' }
+      ];
+      break;
+    case 'footer':
+      newSection.columns = [
+        { title: 'PRODUKTER', links: [{ text: 'Restaurant Hjemmeside', url: 'restaurant-hjemmeside.html' }, { text: 'Online Bestilling', url: 'online-bestilling.html' }] },
+        { title: 'RESSOURCER', links: [{ text: 'Case Studies', url: 'case-studies.html' }, { text: 'SEO for Restauranter', url: 'seo-for-restauranter.html' }] },
+        { title: 'VIRKSOMHED', links: [{ text: 'Om os', url: 'om-os.html' }, { text: 'Karriere', url: 'karriere.html' }] },
+        { title: 'SUPPORT', links: [{ text: 'Kontakt', url: '#' }] }
+      ];
+      newSection.contact = { phone: '+45 70 12 34 56', email: 'support@flow.dk' };
+      newSection.copyright = '© 2024 Flow. Alle rettigheder forbeholdes.';
       break;
   }
 
@@ -27849,7 +28348,7 @@ function getDefaultCampaigns() {
       status: 'active',
       channels: ['email', 'push', 'sms'],
       content: {
-        headline: 'Tillykke med fødselsdagen! 🎂',
+        headline: 'Tillykke med fødselsdagen!',
         body: 'Fejr din dag med 20% rabat på din næste ordre.',
         ctaText: 'Indløs rabat',
         ctaUrl: '/bestil'
@@ -27870,6 +28369,48 @@ function getDefaultSegments() {
   ];
 }
 
+// Default broadcasts
+function getDefaultBroadcasts() {
+  return [
+    {
+      id: 'broadcast-1',
+      campaignId: 'campaign-welcome',
+      campaignName: 'Velkomst Email Kampagne',
+      channels: ['email'],
+      sentAt: '2026-01-15T10:00:00Z',
+      stats: { recipients: 156, delivered: 142, opened: 89, clicked: 34, failed: 14 },
+      status: 'completed'
+    },
+    {
+      id: 'broadcast-2',
+      campaignId: 'campaign-promo',
+      campaignName: 'Weekend Tilbud SMS',
+      channels: ['sms'],
+      sentAt: '2026-01-12T14:30:00Z',
+      stats: { recipients: 423, delivered: 418, opened: 0, clicked: 0, failed: 5 },
+      status: 'completed'
+    },
+    {
+      id: 'broadcast-3',
+      campaignId: 'campaign-newsletter',
+      campaignName: 'Januar Nyhedsbrev',
+      channels: ['email', 'app'],
+      sentAt: '2026-01-10T09:00:00Z',
+      stats: { recipients: 892, delivered: 876, opened: 456, clicked: 123, failed: 16 },
+      status: 'completed'
+    },
+    {
+      id: 'broadcast-4',
+      campaignId: 'campaign-loyalty',
+      campaignName: 'Loyalitetsbonus Reminder',
+      channels: ['sms', 'push'],
+      sentAt: '2026-01-05T16:00:00Z',
+      stats: { recipients: 234, delivered: 230, opened: 0, clicked: 0, failed: 4 },
+      status: 'completed'
+    }
+  ];
+}
+
 // Load Marketing Data
 function loadMarketingData() {
   // Load campaigns
@@ -27878,7 +28419,7 @@ function loadMarketingData() {
 
   // Load broadcasts
   const savedBroadcasts = localStorage.getItem('orderflow_marketing_broadcasts');
-  marketingBroadcasts = savedBroadcasts ? JSON.parse(savedBroadcasts) : [];
+  marketingBroadcasts = savedBroadcasts ? JSON.parse(savedBroadcasts) : getDefaultBroadcasts();
 
   // Load segments
   const savedSegments = localStorage.getItem('orderflow_marketing_segments');
@@ -27957,10 +28498,10 @@ function renderCampaignsList() {
   };
 
   const typeIcons = {
-    promotion: '🏷️',
-    newsletter: '📰',
-    event: '🎉',
-    announcement: '📢'
+    promotion: '',
+    newsletter: '',
+    event: '',
+    announcement: ''
   };
 
   container.innerHTML = marketingCampaigns.map(campaign => `
@@ -27968,7 +28509,7 @@ function renderCampaignsList() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div>
           <div style="display:flex;align-items:center;gap:8px">
-            <span>${typeIcons[campaign.type] || '📣'}</span>
+            <span>${typeIcons[campaign.type] || ''}</span>
             <span style="font-weight:500;font-size:13px">${campaign.name}</span>
           </div>
           <p style="font-size:11px;color:var(--muted);margin:4px 0 0">${campaign.description || 'Ingen beskrivelse'}</p>
@@ -30021,4 +30562,3 @@ function updateLandingFooterLinks(colIndex, value) {
 function openLandingPreview() {
   window.open('Website builder/dist/index.html', 'landingPreview', 'width=1200,height=800');
 }
-
