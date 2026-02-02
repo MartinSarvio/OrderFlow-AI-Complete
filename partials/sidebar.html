@@ -184,9 +184,12 @@
               <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showPage('loyalty')">Loyalty Program</button>
+              <button class="nav-dropdown-item" onclick="showPage('loyalty')">Loyalitetsprogram</button>
               <button class="nav-dropdown-item" onclick="showPage('campaigns')">Kampagner</button>
+              <button class="nav-dropdown-item" onclick="showPage('udsendelser')">Udsendelser</button>
               <button class="nav-dropdown-item" onclick="showPage('segments')">Kundesegmenter</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('push-notifikationer')">Push Notifikationer</button>
+              <button class="nav-dropdown-item" onclick="showPage('medlemmer')">Medlemmer</button>
             </div>
           </div>
         </div>
@@ -250,17 +253,22 @@
               <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('design')">Design</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('funktioner')">Funktioner</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('farver')">Farver</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('billeder')">Billeder</button>
               <button class="nav-dropdown-item" onclick="showAppBuilderPage('menu')">Menu</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('loyalty')">Loyalty</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('push-notifikationer')">Push Notifikationer</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('ordrer')">Ordrer</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('kunder')">Kunder</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('analytics')">Analytics</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('timer')">Åbningstider</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('kontakt')">Kontakt</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('levering')">Levering</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('funktioner')">Funktioner</button>
               <button class="nav-dropdown-item" onclick="showAppBuilderPage('mobilapp')">Mobil App</button>
             </div>
           </div>
+
+          <!-- Analytics - direkte kategori -->
+          <button class="nav-btn" onclick="showAppBuilderPage('analytics')" data-tooltip="Analytics" id="nav-analytics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Analytics</span>
+          </button>
         </div>
 
         <div class="nav-section">

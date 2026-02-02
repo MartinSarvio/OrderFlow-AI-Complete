@@ -3821,6 +3821,11 @@ function showPage(page) {
     renderLoyaltyPage();
   }
 
+  // Load medlemmer page
+  if (page === 'medlemmer') {
+    renderMembersPage();
+  }
+
   // Load campaigns page (new Marketing Editor)
   if (page === 'campaigns') {
     initMarketingPage();
@@ -22600,6 +22605,150 @@ async function renderLoyaltyPage() {
   document.getElementById('main-content').innerHTML = html;
 }
 
+// Render members page (separate from loyalty)
+async function renderMembersPage() {
+  const container = document.getElementById('medlemmer-content');
+  if (!container) return;
+
+  // For admin: show restaurant selector, for customer: use their restaurant
+  const isAdmin = currentUser?.role === ROLES.ADMIN;
+  let restaurantId = null;
+
+  if (isAdmin) {
+    restaurantId = document.getElementById('test-restaurant')?.value;
+    if (!restaurantId) {
+      const dropdown = document.getElementById('test-restaurant');
+      if (dropdown && dropdown.options.length > 1) {
+        dropdown.selectedIndex = 1;
+        restaurantId = dropdown.value;
+      }
+    }
+  } else {
+    // For customer/demo, get their restaurant
+    restaurantId = currentUser?.restaurantId || localStorage.getItem('customer_restaurant_id');
+  }
+
+  if (!restaurantId) {
+    container.innerHTML = `
+      <div class="page-header">
+        <h1>Medlemmer</h1>
+        <p class="text-secondary">Administrer dine loyalitetsmedlemmer</p>
+      </div>
+      <div class="card">
+        <div class="card-body" style="text-align:center;padding:48px">
+          <p class="text-secondary">Vælg en restaurant for at se medlemmer</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // Get members
+  const membersResponse = await fetch(
+    \`\${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?restaurant_id=eq.\${restaurantId}&order=lifetime_points.desc&limit=100\`,
+    {
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': \`Bearer \${CONFIG.SUPABASE_ANON_KEY}\`
+      }
+    }
+  );
+  const members = await membersResponse.json();
+
+  // Calculate stats
+  const totalMembers = members.length;
+  const totalPoints = members.reduce((sum, m) => sum + m.points, 0);
+  const tierCounts = { bronze: 0, silver: 0, gold: 0, platinum: 0 };
+  members.forEach(m => tierCounts[m.tier]++);
+
+  const html = \`
+    <div class="page-header">
+      <h1>Medlemmer</h1>
+      <p class="text-secondary">Administrer dine loyalitetsmedlemmer</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">\${totalMembers}</div>
+        <div class="stat-label">Medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">\${totalPoints.toLocaleString('da-DK')}</div>
+        <div class="stat-label">Aktive points</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">\${tierCounts.gold + tierCounts.platinum}</div>
+        <div class="stat-label">VIP medlemmer</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">\${tierCounts.silver}</div>
+        <div class="stat-label">Sølv medlemmer</div>
+      </div>
+    </div>
+
+    <!-- Members Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3>Alle medlemmer</h3>
+        <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterMembersTable(this.value)">
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table class="data-table" id="members-table">
+            <thead>
+              <tr>
+                <th>Kunde</th>
+                <th>Telefon</th>
+                <th>Tier</th>
+                <th>Points</th>
+                <th>Lifetime</th>
+                <th>Handlinger</th>
+              </tr>
+            </thead>
+            <tbody>
+              \${members.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Ingen medlemmer endnu</td></tr>' : members.map(m => \`
+                <tr data-phone="\${m.customer_phone}" data-name="\${m.customer_name || ''}">
+                  <td>\${m.customer_name || '<span class="text-secondary">Ukendt</span>'}</td>
+                  <td>\${m.customer_phone}</td>
+                  <td>
+                    <span class="tier-badge tier-\${m.tier}">
+                      \${LOYALTY_TIERS[m.tier]?.icon || ''} \${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
+                    </span>
+                  </td>
+                  <td><strong>\${m.points.toLocaleString('da-DK')}</strong></td>
+                  <td>\${m.lifetime_points.toLocaleString('da-DK')}</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="showMemberDetails('\${m.id}')">Detaljer</button>
+                    <button class="btn btn-sm" onclick="adjustMemberPoints('\${m.id}')">+/- Points</button>
+                  </td>
+                </tr>
+              \`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  \`;
+
+  container.innerHTML = html;
+}
+
+// Filter members table
+function filterMembersTable(query) {
+  const table = document.getElementById('members-table');
+  if (!table) return;
+
+  const rows = table.querySelectorAll('tbody tr');
+  const lowerQuery = query.toLowerCase();
+
+  rows.forEach(row => {
+    const phone = row.dataset.phone?.toLowerCase() || '';
+    const name = row.dataset.name?.toLowerCase() || '';
+    row.style.display = phone.includes(lowerQuery) || name.includes(lowerQuery) ? '' : 'none';
+  });
+}
+
 // Save loyalty settings
 async function saveLoyaltySettings() {
   const restaurantId = document.getElementById('test-restaurant')?.value;
@@ -24834,6 +24983,252 @@ function publishMobileApp() {
   localStorage.setItem('published_mobile_app', JSON.stringify(config));
 
   toast('App publiceret!', 'success');
+}
+
+// ==================== NEW APP BUILDER FUNCTIONS ====================
+
+// App Builder Config Storage Key
+const APP_BUILDER_CONFIG_KEY = 'orderflow_app_builder_config';
+
+// Load App Builder Config
+function loadAppBuilderConfig() {
+  const saved = localStorage.getItem(APP_BUILDER_CONFIG_KEY);
+  if (saved) {
+    return JSON.parse(saved);
+  }
+  return {
+    farver: { primary: '#D4380D', secondary: '#FFF7E6', background: '#FFFFFF', text: '#1F2937' },
+    billeder: { name: '', tagline: '', logo: null, banner: null },
+    timer: {
+      mon: { open: '10:00', close: '22:00', closed: false },
+      tue: { open: '10:00', close: '22:00', closed: false },
+      wed: { open: '10:00', close: '22:00', closed: false },
+      thu: { open: '10:00', close: '22:00', closed: false },
+      fri: { open: '10:00', close: '23:00', closed: false },
+      sat: { open: '11:00', close: '23:00', closed: false },
+      sun: { open: '12:00', close: '21:00', closed: false }
+    },
+    kontakt: { address: '', zip: '', city: '', phone: '', email: '', website: '' },
+    social: { facebook: '', instagram: '', tripadvisor: '' },
+    levering: { zipcodes: '', distance: 5, minOrder: 100, fee: 39, freeAbove: 300, timeMin: 30, timeMax: 45 },
+    funktioner: { onlineOrder: true, push: true, loyalty: false, reservation: false, takeaway: true }
+  };
+}
+
+// Save App Builder Config
+function saveAppBuilderConfig(config) {
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+}
+
+// Sync all app previews with current config
+function syncAllAppPreviews(config) {
+  const iframeIds = ['pwa-preview-frame', 'pwa-preview-farver', 'pwa-preview-billeder',
+                     'pwa-preview-timer', 'pwa-preview-kontakt', 'pwa-preview-levering',
+                     'pwa-fullpreview-frame'];
+  iframeIds.forEach(id => {
+    const iframe = document.getElementById(id);
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage({ type: 'UPDATE_CONFIG', config: config }, '*');
+    }
+  });
+}
+
+// Update App Color (Farver page)
+function updateAppColor(type, color) {
+  const config = loadAppBuilderConfig();
+  config.farver[type] = color;
+  saveAppBuilderConfig(config);
+
+  // Update preview swatch and value display
+  const preview = document.getElementById(`app-${type}-preview`);
+  if (preview) preview.style.background = color;
+
+  const valueEl = document.getElementById(`app-${type}-value`);
+  if (valueEl) valueEl.textContent = color.toUpperCase();
+}
+
+// Save App Builder Colors
+function saveAppBuilderColors() {
+  toast('Farver gemt!', 'success');
+}
+
+// Update App Info (Billeder page - name/tagline)
+function updateAppInfo(field, value) {
+  const config = loadAppBuilderConfig();
+  config.billeder[field] = value;
+  saveAppBuilderConfig(config);
+}
+
+// Handle App Logo Upload
+function handleAppLogoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Filen er for stor. Maksimal størrelse er 2MB.');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const config = loadAppBuilderConfig();
+    config.billeder.logo = e.target.result;
+    saveAppBuilderConfig(config);
+
+    // Update preview
+    const preview = document.getElementById('app-logo-preview');
+    const img = document.getElementById('app-logo-img');
+    const icon = document.getElementById('app-logo-icon');
+    const removeBtn = document.getElementById('app-remove-logo-btn');
+
+    if (img) img.src = e.target.result;
+    if (preview) preview.style.display = 'block';
+    if (icon) icon.style.display = 'none';
+    if (removeBtn) removeBtn.style.display = 'block';
+
+    showSavedBadge('billeder-logo');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remove App Logo
+function removeAppLogo() {
+  const config = loadAppBuilderConfig();
+  config.billeder.logo = null;
+  saveAppBuilderConfig(config);
+
+  const preview = document.getElementById('app-logo-preview');
+  const icon = document.getElementById('app-logo-icon');
+  const removeBtn = document.getElementById('app-remove-logo-btn');
+
+  if (preview) preview.style.display = 'none';
+  if (icon) icon.style.display = 'block';
+  if (removeBtn) removeBtn.style.display = 'none';
+}
+
+// Handle App Banner Upload
+function handleAppBannerUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Filen er for stor. Maksimal størrelse er 3MB.');
+    input.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const config = loadAppBuilderConfig();
+    config.billeder.banner = e.target.result;
+    saveAppBuilderConfig(config);
+
+    // Update preview
+    const preview = document.getElementById('app-banner-preview');
+    const img = document.getElementById('app-banner-img');
+    const icon = document.getElementById('app-banner-icon');
+    const text = document.getElementById('app-banner-text');
+    const hint = document.getElementById('app-banner-hint');
+    const removeBtn = document.getElementById('app-remove-banner-btn');
+
+    if (img) img.src = e.target.result;
+    if (preview) preview.style.display = 'block';
+    if (icon) icon.style.display = 'none';
+    if (text) text.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    if (removeBtn) removeBtn.style.display = 'block';
+
+    showSavedBadge('billeder-banner');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remove App Banner
+function removeAppBanner() {
+  const config = loadAppBuilderConfig();
+  config.billeder.banner = null;
+  saveAppBuilderConfig(config);
+
+  const preview = document.getElementById('app-banner-preview');
+  const icon = document.getElementById('app-banner-icon');
+  const text = document.getElementById('app-banner-text');
+  const hint = document.getElementById('app-banner-hint');
+  const removeBtn = document.getElementById('app-remove-banner-btn');
+
+  if (preview) preview.style.display = 'none';
+  if (icon) icon.style.display = 'block';
+  if (text) text.style.display = 'block';
+  if (hint) hint.style.display = 'block';
+  if (removeBtn) removeBtn.style.display = 'none';
+}
+
+// Save App Builder Images
+function saveAppBuilderImages() {
+  toast('Billeder gemt!', 'success');
+}
+
+// Update App Hours (Timer page)
+function updateAppHours(day) {
+  const config = loadAppBuilderConfig();
+  const open = document.getElementById(`app-hours-${day}-open`)?.value || '10:00';
+  const close = document.getElementById(`app-hours-${day}-close`)?.value || '22:00';
+  const closed = document.getElementById(`app-hours-${day}-closed`)?.checked || false;
+
+  config.timer[day] = { open, close, closed };
+  saveAppBuilderConfig(config);
+}
+
+// Toggle Day Closed
+function toggleDayClosed(day) {
+  const checkbox = document.getElementById(`app-hours-${day}-closed`);
+  const openInput = document.getElementById(`app-hours-${day}-open`);
+  const closeInput = document.getElementById(`app-hours-${day}-close`);
+
+  if (checkbox && checkbox.checked) {
+    if (openInput) openInput.disabled = true;
+    if (closeInput) closeInput.disabled = true;
+  } else {
+    if (openInput) openInput.disabled = false;
+    if (closeInput) closeInput.disabled = false;
+  }
+}
+
+// Save App Builder Hours
+function saveAppBuilderHours() {
+  toast('Åbningstider gemt!', 'success');
+}
+
+// Update App Contact (Kontakt page)
+function updateAppContact(field, value) {
+  const config = loadAppBuilderConfig();
+  config.kontakt[field] = value;
+  saveAppBuilderConfig(config);
+}
+
+// Update App Social (Kontakt page)
+function updateAppSocial(platform, value) {
+  const config = loadAppBuilderConfig();
+  config.social[platform] = value;
+  saveAppBuilderConfig(config);
+}
+
+// Save App Builder Contact
+function saveAppBuilderContact() {
+  toast('Kontaktoplysninger gemt!', 'success');
+}
+
+// Update App Delivery (Levering page)
+function updateAppDelivery(field, value) {
+  const config = loadAppBuilderConfig();
+  config.levering[field] = value;
+  saveAppBuilderConfig(config);
+}
+
+// Save App Builder Delivery
+function saveAppBuilderDelivery() {
+  toast('Leveringsindstillinger gemt!', 'success');
 }
 
 // =====================================================
