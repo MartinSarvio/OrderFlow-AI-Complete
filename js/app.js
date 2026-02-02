@@ -19012,7 +19012,8 @@ function switchSettingsTab(tab) {
     'notifications': 'Notifikationer',
     'passwords': 'Adgangskoder',
     'support': 'Support',
-    'maintenance': 'Systemvedligeholdelse'
+    'maintenance': 'Systemvedligeholdelse',
+    'cookies': 'Cookie Samtykke'
   };
   
   // Update dynamic page title
@@ -19062,6 +19063,11 @@ function switchSettingsTab(tab) {
   // Load roles when roles tab is opened
   if (tab === 'roles') {
     loadRolesPage();
+  }
+
+  // Load cookie consent settings when cookies tab is opened
+  if (tab === 'cookies') {
+    loadCookieSettings();
   }
 }
 
@@ -24970,10 +24976,15 @@ function showWebBuilderPage(section) {
     renderBusinessHoursGrid();
   }
 
-  // Load config if needed
+  // Load config if needed and initialize preview
   if (!webBuilderConfig) {
     loadWebBuilderConfig();
   }
+
+  // Update preview after page switch (give iframe time to load)
+  setTimeout(() => {
+    updateWebBuilderPreview();
+  }, 300);
 }
 
 // Navigate to Flow landing page (opens in new window)
@@ -25037,6 +25048,190 @@ const flowPagesList = [
   { slug: 'partner', title: 'Partner med Flow', description: 'Partnerprogram' },
   { slug: 'how-it-works', title: 'Sådan virker det', description: 'Produktoversigt' }
 ];
+
+// Default content for Flow pages (template content that shows before customer edits)
+const defaultFlowPageContent = {
+  'landing': {
+    hero: {
+      title: 'AUTOMATION BYGGET TIL AT ØGE SALG',
+      subtitle: 'Flow giver dig de samme værktøjer som store restaurantkæder bruger.',
+      ctaText: 'Få en gratis demo',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Mere Google Trafik', 'Mere Online Salg', 'Flere Genbestillinger', 'Flere App Downloads'] },
+    cta: { title: 'Klar til at øge dit salg?', buttonText: 'Book en demo' }
+  },
+  'restaurant-hjemmeside': {
+    hero: {
+      title: 'Professionel restaurant hjemmeside',
+      subtitle: 'Få en moderne hjemmeside der tiltrækker kunder og øger dit online salg.',
+      ctaText: 'Kom i gang',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Responsivt design', 'Online bestilling', 'SEO optimeret', 'Hurtig indlæsning'] },
+    cta: { title: 'Få din egen hjemmeside', buttonText: 'Start gratis' }
+  },
+  'online-bestilling': {
+    hero: {
+      title: 'Online bestilling uden provision',
+      subtitle: 'Undgå dyre gebyrer fra tredjepartsplatforme. Få dit eget bestillingssystem.',
+      ctaText: 'Start gratis',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['0% provision', 'Direkte integration', 'Automatiske bekræftelser', 'Ordre-tracking'] },
+    cta: { title: 'Spar penge på provision', buttonText: 'Kom i gang' }
+  },
+  'custom-mobile-app': {
+    hero: {
+      title: 'Din egen restaurant app',
+      subtitle: 'Giv dine kunder en personlig app-oplevelse med dit brand.',
+      ctaText: 'Se demo',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Push notifikationer', 'Loyalty program', 'Online bestilling', 'Apple Pay & Google Pay'] },
+    cta: { title: 'Få din egen app', buttonText: 'Book demo' }
+  },
+  'zero-commission-delivery': {
+    hero: {
+      title: 'Levering uden provision',
+      subtitle: 'Administrer din egen levering og behold 100% af omsætningen.',
+      ctaText: 'Lær mere',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Ingen provision', 'Real-time tracking', 'Automatisk routing', 'Chauffør-app'] },
+    cta: { title: 'Start din levering', buttonText: 'Kom i gang' }
+  },
+  'loyalitetsprogram': {
+    hero: {
+      title: 'Øg kundeloyaliteten',
+      subtitle: 'Beløn dine faste kunder og få dem til at vende tilbage igen og igen.',
+      ctaText: 'Se hvordan',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Point-system', 'Automatiske belønninger', 'VIP-tiers', 'Fødselsdagsbelønninger'] },
+    cta: { title: 'Start dit loyalty program', buttonText: 'Prøv gratis' }
+  },
+  'automatiseret-marketing': {
+    hero: {
+      title: 'Marketing på autopilot',
+      subtitle: 'Automatisér din markedsføring og nå kunderne på det rigtige tidspunkt.',
+      ctaText: 'Se muligheder',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Email kampagner', 'SMS marketing', 'Automatiske flows', 'Segmentering'] },
+    cta: { title: 'Automatisér din marketing', buttonText: 'Kom i gang' }
+  },
+  'case-studies': {
+    hero: {
+      title: 'Vores kunders succes',
+      subtitle: 'Se hvordan andre restauranter har øget deres salg med Flow.',
+      ctaText: 'Se cases',
+      ctaUrl: '#cases'
+    },
+    features: { items: [] },
+    cta: { title: 'Bliv den næste succes', buttonText: 'Book en demo' }
+  },
+  'seo-for-restauranter': {
+    hero: {
+      title: 'SEO for restauranter',
+      subtitle: 'Bliv fundet af flere kunder på Google med vores SEO-guide.',
+      ctaText: 'Læs guiden',
+      ctaUrl: '#guide'
+    },
+    features: { items: ['Google My Business', 'Lokale søgninger', 'Anmeldelser', 'Schema markup'] },
+    cta: { title: 'Boost din synlighed', buttonText: 'Kom i gang' }
+  },
+  'restaurant-email-marketing': {
+    hero: {
+      title: 'Email marketing for restauranter',
+      subtitle: 'Lær at bygge relationer med dine kunder via email.',
+      ctaText: 'Læs guiden',
+      ctaUrl: '#guide'
+    },
+    features: { items: ['Nyhedsbreve', 'Tilbudsmails', 'Automatiske flows', 'A/B testing'] },
+    cta: { title: 'Start email marketing', buttonText: 'Prøv gratis' }
+  },
+  'restaurant-mobile-app': {
+    hero: {
+      title: 'Mobilapps for restauranter',
+      subtitle: 'Alt du skal vide om at få din egen restaurant-app.',
+      ctaText: 'Læs mere',
+      ctaUrl: '#info'
+    },
+    features: { items: ['Native apps', 'Push notifikationer', 'Loyalty integration', 'Online bestilling'] },
+    cta: { title: 'Få din egen app', buttonText: 'Se priser' }
+  },
+  'online-bestillingssystemer': {
+    hero: {
+      title: 'Sammenlign bestillingssystemer',
+      subtitle: 'Find det bedste online bestillingssystem til din restaurant.',
+      ctaText: 'Se sammenligning',
+      ctaUrl: '#compare'
+    },
+    features: { items: ['Feature sammenligning', 'Prissammenligning', 'Integrationer', 'Support'] },
+    cta: { title: 'Vælg det rigtige system', buttonText: 'Kontakt os' }
+  },
+  'om-os': {
+    hero: {
+      title: 'Om Flow',
+      subtitle: 'Vi hjælper restauranter med at vokse digitalt.',
+      ctaText: 'Lær os at kende',
+      ctaUrl: '#team'
+    },
+    features: { items: [] },
+    cta: { title: 'Bliv en del af Flow', buttonText: 'Se ledige stillinger' }
+  },
+  'karriere': {
+    hero: {
+      title: 'Karriere hos Flow',
+      subtitle: 'Bliv en del af et passioneret team der transformerer restaurant-branchen.',
+      ctaText: 'Se stillinger',
+      ctaUrl: '#jobs'
+    },
+    features: { items: ['Fleksibelt arbejde', 'Konkurrencedygtig løn', 'Fantastisk team', 'Hurtig vækst'] },
+    cta: { title: 'Ansøg i dag', buttonText: 'Se ledige stillinger' }
+  },
+  'ledelse': {
+    hero: {
+      title: 'Vores ledelse',
+      subtitle: 'Mød holdet bag Flow.',
+      ctaText: 'Se teamet',
+      ctaUrl: '#team'
+    },
+    features: { items: [] },
+    cta: { title: 'Kontakt os', buttonText: 'Send besked' }
+  },
+  'presse': {
+    hero: {
+      title: 'Presse',
+      subtitle: 'Pressemateriale og nyheder om Flow.',
+      ctaText: 'Download materiale',
+      ctaUrl: '#downloads'
+    },
+    features: { items: [] },
+    cta: { title: 'Pressekontakt', buttonText: 'Kontakt os' }
+  },
+  'partner': {
+    hero: {
+      title: 'Bliv Flow Partner',
+      subtitle: 'Tjen penge ved at hjælpe restauranter med at vokse.',
+      ctaText: 'Bliv partner',
+      ctaUrl: '#apply'
+    },
+    features: { items: ['Høje provisioner', 'Marketing support', 'Dedikeret manager', 'Uddannelse'] },
+    cta: { title: 'Start i dag', buttonText: 'Ansøg nu' }
+  },
+  'how-it-works': {
+    hero: {
+      title: 'Sådan virker Flow',
+      subtitle: 'Se hvor nemt det er at komme i gang med Flow.',
+      ctaText: 'Se demo',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Tilmeld dig', 'Opsæt din profil', 'Gå live', 'Se resultater'] },
+    cta: { title: 'Kom i gang på 5 minutter', buttonText: 'Start gratis' }
+  }
+};
 
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
@@ -25114,12 +25309,30 @@ function loadPageSections(slug) {
     }
   }
 
-  // Return default sections based on page type
+  // Get default content for this page from the template
+  const defaults = defaultFlowPageContent[slug] || {};
+
+  // Return default sections with actual page content from template
   return [
     { id: 'header', type: 'Header', locked: true, content: {} },
-    { id: 'hero', type: 'Hero Sektion', locked: false, content: { title: '', subtitle: '', ctaText: 'Kom i gang', ctaUrl: '#demo' } },
-    { id: 'features', type: 'Features', locked: false, content: { items: [] } },
-    { id: 'cta', type: 'Call to Action', locked: false, content: { title: '', buttonText: '' } },
+    {
+      id: 'hero',
+      type: 'Hero Sektion',
+      locked: false,
+      content: defaults.hero || { title: '', subtitle: '', ctaText: 'Kom i gang', ctaUrl: '#demo' }
+    },
+    {
+      id: 'features',
+      type: 'Features',
+      locked: false,
+      content: defaults.features || { items: [] }
+    },
+    {
+      id: 'cta',
+      type: 'Call to Action',
+      locked: false,
+      content: defaults.cta || { title: '', buttonText: '' }
+    },
     { id: 'footer', type: 'Footer', locked: true, content: {} }
   ];
 }
@@ -25596,9 +25809,9 @@ function populateWebBuilderForms() {
   const descEl = document.getElementById('wb-description');
   const logoEl = document.getElementById('wb-logo');
 
-  if (nameEl) nameEl.value = webBuilderConfig.branding?.name || '';
-  if (sloganEl) sloganEl.value = webBuilderConfig.branding?.slogan || '';
-  if (descEl) descEl.value = webBuilderConfig.branding?.description || '';
+  if (nameEl) nameEl.value = webBuilderConfig.branding?.name || defaultWebBuilderConfig.branding.name;
+  if (sloganEl) sloganEl.value = webBuilderConfig.branding?.slogan || defaultWebBuilderConfig.branding.slogan;
+  if (descEl) descEl.value = webBuilderConfig.branding?.description || defaultWebBuilderConfig.branding.description;
   if (logoEl) logoEl.value = webBuilderConfig.branding?.logo || '';
 
   // Colors
@@ -25613,8 +25826,8 @@ function populateWebBuilderForms() {
   // Fonts
   const headingEl = document.getElementById('wb-font-heading');
   const bodyEl = document.getElementById('wb-font-body');
-  if (headingEl) headingEl.value = webBuilderConfig.branding?.fonts?.heading || 'Playfair Display';
-  if (bodyEl) bodyEl.value = webBuilderConfig.branding?.fonts?.body || 'Inter';
+  if (headingEl) headingEl.value = webBuilderConfig.branding?.fonts?.heading || defaultWebBuilderConfig.branding.fonts.heading;
+  if (bodyEl) bodyEl.value = webBuilderConfig.branding?.fonts?.body || defaultWebBuilderConfig.branding.fonts.body;
 
   // Images
   const heroEl = document.getElementById('wb-hero-image');
@@ -25637,8 +25850,8 @@ function populateWebBuilderForms() {
   // Menu
   const currencyEl = document.getElementById('wb-currency');
   const taxEl = document.getElementById('wb-tax-rate');
-  if (currencyEl) currencyEl.value = webBuilderConfig.menu?.currency || 'DKK';
-  if (taxEl) taxEl.value = webBuilderConfig.menu?.taxRate || 25;
+  if (currencyEl) currencyEl.value = webBuilderConfig.menu?.currency || defaultWebBuilderConfig.menu.currency;
+  if (taxEl) taxEl.value = webBuilderConfig.menu?.taxRate || defaultWebBuilderConfig.menu.taxRate;
 
   // Contact
   const addressEl = document.getElementById('wb-address');
@@ -25659,10 +25872,10 @@ function populateWebBuilderForms() {
   const freeDeliveryEl = document.getElementById('wb-free-delivery');
   const deliveryTimeEl = document.getElementById('wb-delivery-time');
   if (deliveryEnabledEl) deliveryEnabledEl.checked = webBuilderConfig.delivery?.enabled !== false;
-  if (feeEl) feeEl.value = webBuilderConfig.delivery?.fee || 35;
-  if (minOrderEl) minOrderEl.value = webBuilderConfig.delivery?.minimumOrder || 150;
-  if (freeDeliveryEl) freeDeliveryEl.value = webBuilderConfig.delivery?.freeDeliveryThreshold || 300;
-  if (deliveryTimeEl) deliveryTimeEl.value = webBuilderConfig.delivery?.estimatedTime || 45;
+  if (feeEl) feeEl.value = webBuilderConfig.delivery?.fee || defaultWebBuilderConfig.delivery.fee;
+  if (minOrderEl) minOrderEl.value = webBuilderConfig.delivery?.minimumOrder || defaultWebBuilderConfig.delivery.minimumOrder;
+  if (freeDeliveryEl) freeDeliveryEl.value = webBuilderConfig.delivery?.freeDeliveryThreshold || defaultWebBuilderConfig.delivery.freeDeliveryThreshold;
+  if (deliveryTimeEl) deliveryTimeEl.value = webBuilderConfig.delivery?.estimatedTime || defaultWebBuilderConfig.delivery.estimatedTime;
 
   // Features
   const feats = webBuilderConfig.features || {};
@@ -25962,11 +26175,23 @@ function updateWebBuilderPreview() {
 
 // Send config to preview iframe
 function sendConfigToWebBuilderPreview(config) {
-  // Send to both embedded and fullscreen preview iframes
-  const frameIds = ['webbuilder-preview-frame', 'wb-fullscreen-preview-frame'];
+  // Collect all preview frames (by ID and by class)
+  const frames = [];
 
+  // Add frames by ID
+  const frameIds = ['webbuilder-preview-frame', 'wb-fullscreen-preview-frame'];
   frameIds.forEach(id => {
     const frame = document.getElementById(id);
+    if (frame) frames.push(frame);
+  });
+
+  // Add frames by class (for embedded previews in Web Builder pages)
+  document.querySelectorAll('.webbuilder-preview-frame').forEach(frame => {
+    if (!frames.includes(frame)) frames.push(frame);
+  });
+
+  // Send config to all found frames
+  frames.forEach(frame => {
     if (frame?.contentWindow) {
       try {
         frame.contentWindow.postMessage({
@@ -25974,7 +26199,7 @@ function sendConfigToWebBuilderPreview(config) {
           config: config
         }, '*');
       } catch (err) {
-        console.warn('Error sending config to preview frame ' + id + ':', err);
+        console.warn('Error sending config to preview frame:', err);
       }
     }
   });
@@ -26253,5 +26478,595 @@ function clearWbHero() {
 function initBillederPreviews() {
   updateWbLogoPreview();
   updateWbHeroPreview();
+}
+
+// =====================================================
+// COOKIE SAMTYKKE SETTINGS
+// =====================================================
+
+// Load cookie consent settings from localStorage
+function loadCookieSettings() {
+  const savedSettings = localStorage.getItem('cookieConsentSettings');
+  if (savedSettings) {
+    const settings = JSON.parse(savedSettings);
+
+    // Banner texts
+    const bannerTitle = document.getElementById('cookie-banner-title');
+    const bannerDesc = document.getElementById('cookie-banner-desc');
+    if (bannerTitle) bannerTitle.value = settings.bannerTitle || 'Vi bruger cookies';
+    if (bannerDesc) bannerDesc.value = settings.bannerDesc || '';
+
+    // Category descriptions
+    const necessaryDesc = document.getElementById('cookie-necessary-desc');
+    const functionalDesc = document.getElementById('cookie-functional-desc');
+    const analyticsDesc = document.getElementById('cookie-analytics-desc');
+    const marketingDesc = document.getElementById('cookie-marketing-desc');
+    if (necessaryDesc) necessaryDesc.value = settings.necessaryDesc || '';
+    if (functionalDesc) functionalDesc.value = settings.functionalDesc || '';
+    if (analyticsDesc) analyticsDesc.value = settings.analyticsDesc || '';
+    if (marketingDesc) marketingDesc.value = settings.marketingDesc || '';
+
+    // Button texts
+    const btnAccept = document.getElementById('cookie-btn-accept');
+    const btnReject = document.getElementById('cookie-btn-reject');
+    const btnSave = document.getElementById('cookie-btn-save');
+    if (btnAccept) btnAccept.value = settings.btnAccept || 'Accepter alle';
+    if (btnReject) btnReject.value = settings.btnReject || 'Kun nødvendige';
+    if (btnSave) btnSave.value = settings.btnSave || 'Gem mine valg';
+
+    // Toggle settings
+    const bannerActive = document.getElementById('cookie-banner-active');
+    const showDetails = document.getElementById('cookie-show-details');
+    if (bannerActive) bannerActive.checked = settings.bannerActive !== false;
+    if (showDetails) showDetails.checked = settings.showDetails !== false;
+  }
+}
+
+// Save cookie consent settings to localStorage
+function saveCookieSettings() {
+  const settings = {
+    // Banner texts
+    bannerTitle: document.getElementById('cookie-banner-title')?.value || 'Vi bruger cookies',
+    bannerDesc: document.getElementById('cookie-banner-desc')?.value || '',
+
+    // Category descriptions
+    necessaryDesc: document.getElementById('cookie-necessary-desc')?.value || '',
+    functionalDesc: document.getElementById('cookie-functional-desc')?.value || '',
+    analyticsDesc: document.getElementById('cookie-analytics-desc')?.value || '',
+    marketingDesc: document.getElementById('cookie-marketing-desc')?.value || '',
+
+    // Button texts
+    btnAccept: document.getElementById('cookie-btn-accept')?.value || 'Accepter alle',
+    btnReject: document.getElementById('cookie-btn-reject')?.value || 'Kun nødvendige',
+    btnSave: document.getElementById('cookie-btn-save')?.value || 'Gem mine valg',
+
+    // Toggle settings
+    bannerActive: document.getElementById('cookie-banner-active')?.checked !== false,
+    showDetails: document.getElementById('cookie-show-details')?.checked !== false,
+
+    // Metadata
+    lastUpdated: new Date().toISOString()
+  };
+
+  localStorage.setItem('cookieConsentSettings', JSON.stringify(settings));
+
+  // Show success message
+  const statusEl = document.getElementById('cookie-save-status');
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => {
+      statusEl.style.display = 'none';
+    }, 3000);
+  }
+
+  toast('Cookie indstillinger gemt', 'success');
+}
+
+// ============================================
+// LANDING PAGE CMS
+// ============================================
+
+// Default Landing Page Configuration
+const defaultLandingPageConfig = {
+  hero: {
+    videoUrl: 'https://videos.pexels.com/video-files/5529601/5529601-uhd_1440_2732_25fps.mp4',
+    headline: 'Din restaurant, din app',
+    subheadline: 'OrderFlow giver dig en fuldt tilpasset mobil app og hjemmeside – uden de høje provisioner fra tredjepartsplatforme.',
+    primaryButton: { text: 'Kom i gang gratis', url: '/priser.html' },
+    secondaryButton: { text: 'Se hvordan det virker', url: '/how-it-works.html' }
+  },
+  tabs: [
+    { id: 'tab1', number: '1', label: 'Online bestilling', heading: 'Online Bestilling', description: 'Modtag ordrer direkte fra din egen hjemmeside og app – helt uden provision.', imageUrl: 'images/apple-iphone-16-pro-max-2024-medium.png', backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    { id: 'tab2', number: '2', label: 'Mobilapp', heading: 'Din Egen App', description: 'En branded app i din kundes lomme – push-notifikationer, loyalitetsprogram og mere.', imageUrl: 'images/apple-iphone-16-pro-max-2024-medium.png', backgroundGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+    { id: 'tab3', number: '3', label: 'Hjemmeside', heading: 'Smuk Hjemmeside', description: 'En moderne, mobilvenlig hjemmeside der konverterer besøgende til kunder.', imageUrl: 'images/apple-iphone-16-pro-max-2024-medium.png', backgroundGradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+    { id: 'tab4', number: '4', label: 'Marketing', heading: 'Smart Marketing', description: 'Automatiserede kampagner, SMS og email marketing – alt samlet ét sted.', imageUrl: 'images/apple-iphone-16-pro-max-2024-medium.png', backgroundGradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' }
+  ],
+  trusted: {
+    heading: 'Betroet af 500+ restauranter i Danmark',
+    cards: [
+      { id: 'c1', imageUrl: 'images/restaurant1.jpg', name: 'Bella Italia', role: 'København', backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      { id: 'c2', imageUrl: 'images/restaurant2.jpg', name: 'Sushi House', role: 'Aarhus', backgroundGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }
+    ]
+  },
+  appleFeatures: {
+    heading: 'Alt du behøver til at drive din restaurant online',
+    subheading: 'Fra online bestilling til marketing automatisering – OrderFlow samler alle dine værktøjer ét sted.',
+    features: [
+      { id: 'f1', badge: 'Bestilling', title: 'Direkte ordrer', description: '0% provision på alle ordrer' },
+      { id: 'f2', badge: 'App', title: 'Branded app', description: 'Din egen app i App Store' },
+      { id: 'f3', badge: 'Web', title: 'Hjemmeside', description: 'Moderne og hurtig' },
+      { id: 'f4', badge: 'Marketing', title: 'Automatisering', description: 'SMS og email kampagner' },
+      { id: 'f5', badge: 'Loyalty', title: 'Kundeloyalitet', description: 'Beløn dine gæster' },
+      { id: 'f6', badge: 'Analytics', title: 'Indsigt', description: 'Data om dine kunder' }
+    ]
+  },
+  bento: {
+    heading: 'Gå i dybden med vores løsninger',
+    cards: [
+      { id: 'b1', label: 'ONLINE BESTILLING', title: 'Modtag ordrer direkte – uden provision', imageUrl: 'images/bento1.jpg', url: '/online-bestilling.html' },
+      { id: 'b2', label: 'MOBIL APP', title: 'Din egen app til iOS og Android', imageUrl: 'images/bento2.jpg', url: '/restaurant-mobile-app.html' }
+    ]
+  },
+  beliefs: {
+    mainTitle: 'Why Flow?',
+    subtitle: 'Et budskab fra vores grundlægger',
+    author: { imageUrl: 'images/founder.jpg', name: 'Martin Sarvio', role: 'CEO & Founder' },
+    beliefs: [
+      { id: 'bl1', heading: 'Ingen provisioner', text: 'Vi tror på, at restauranter bør beholde deres fortjeneste – ikke betale 30% til tredjeparter.' },
+      { id: 'bl2', heading: 'Eget brand', text: 'Din restaurant, din app, din hjemmeside – ikke skjult bag andres logo.' },
+      { id: 'bl3', heading: 'Fuld kontrol', text: 'Du ejer dine kundedata og kan markedsføre direkte til dem.' }
+    ]
+  },
+  testimonials: [
+    { id: 't1', quote: 'OrderFlow har transformeret vores online forretning. Vi sparer tusindvis hver måned på provisioner.', avatarUrl: 'images/avatar1.jpg', name: 'Lars Jensen', role: 'Bella Italia, København' },
+    { id: 't2', quote: 'Vores kunder elsker appen. Push-notifikationer har øget vores genbestillinger med 40%.', avatarUrl: 'images/avatar2.jpg', name: 'Maria Hansen', role: 'Sushi House, Aarhus' }
+  ],
+  footer: {
+    supportSection: { phone: '+45 70 70 70 70', email: 'support@orderflow.dk', logoUrl: 'images/logo.png' },
+    bottomSection: { copyright: '© 2024 OrderFlow. Alle rettigheder forbeholdes.' },
+    columns: [
+      { id: 'col1', heading: 'Produkt', links: [{ id: 'l1', text: 'Online Bestilling', url: '/online-bestilling.html' }, { id: 'l2', text: 'Mobil App', url: '/restaurant-mobile-app.html' }] },
+      { id: 'col2', heading: 'Ressourcer', links: [{ id: 'l3', text: 'Priser', url: '/priser.html' }, { id: 'l4', text: 'Kom i gang', url: '/how-it-works.html' }] }
+    ]
+  }
+};
+
+// Landing Page Config - loaded from localStorage or defaults
+let landingPageConfig = null;
+
+// Load Landing Page config
+function loadLandingPageConfig() {
+  const saved = localStorage.getItem('orderflow_landing_page');
+  if (saved) {
+    try {
+      landingPageConfig = JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading landing page config:', e);
+      landingPageConfig = JSON.parse(JSON.stringify(defaultLandingPageConfig));
+    }
+  } else {
+    landingPageConfig = JSON.parse(JSON.stringify(defaultLandingPageConfig));
+  }
+}
+
+// Save Landing Page config
+function saveLandingPageConfig() {
+  localStorage.setItem('orderflow_landing_page', JSON.stringify(landingPageConfig));
+
+  // Show save status
+  const statusIds = [
+    'landing-save-status',
+    'landing-tabs-save-status',
+    'landing-trusted-save-status',
+    'landing-features-save-status',
+    'landing-bento-save-status',
+    'landing-beliefs-save-status',
+    'landing-testimonials-save-status',
+    'landing-footer-save-status'
+  ];
+
+  statusIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'inline';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+  });
+
+  toast('Landing Page gemt', 'success');
+}
+
+// Navigate to Landing Page CMS and switch to tab
+function showLandingCMSTab(tab) {
+  showPage('landing-cms');
+  setTimeout(() => switchLandingCMSTab(tab), 50);
+}
+
+// Switch Landing CMS tab
+function switchLandingCMSTab(tab) {
+  // Load config if not loaded
+  if (!landingPageConfig) loadLandingPageConfig();
+
+  // Update tab buttons
+  document.querySelectorAll('#page-landing-cms .settings-tab').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.toLowerCase().includes(tab.toLowerCase()) ||
+        (tab === 'hero' && btn.textContent === 'Hero') ||
+        (tab === 'tabs' && btn.textContent === 'Feature Tabs') ||
+        (tab === 'trusted' && btn.textContent === 'Trusted By') ||
+        (tab === 'features' && btn.textContent === 'Features') ||
+        (tab === 'bento' && btn.textContent === 'Bento') ||
+        (tab === 'beliefs' && btn.textContent === 'Beliefs') ||
+        (tab === 'testimonials' && btn.textContent === 'Testimonials') ||
+        (tab === 'footer' && btn.textContent === 'Footer')) {
+      btn.classList.add('active');
+    }
+  });
+
+  // Switch content
+  document.querySelectorAll('#page-landing-cms .settings-tab-content').forEach(c => c.classList.remove('active'));
+  const contentEl = document.getElementById('landing-cms-content-' + tab);
+  if (contentEl) contentEl.classList.add('active');
+
+  // Populate form fields
+  populateLandingTab(tab);
+}
+
+// Populate form fields for a tab
+function populateLandingTab(tab) {
+  if (!landingPageConfig) loadLandingPageConfig();
+
+  switch (tab) {
+    case 'hero':
+      setInputValue('landing-hero-video', landingPageConfig.hero.videoUrl);
+      setInputValue('landing-hero-headline', landingPageConfig.hero.headline);
+      setInputValue('landing-hero-subheadline', landingPageConfig.hero.subheadline);
+      setInputValue('landing-hero-btn1-text', landingPageConfig.hero.primaryButton.text);
+      setInputValue('landing-hero-btn1-url', landingPageConfig.hero.primaryButton.url);
+      setInputValue('landing-hero-btn2-text', landingPageConfig.hero.secondaryButton.text);
+      setInputValue('landing-hero-btn2-url', landingPageConfig.hero.secondaryButton.url);
+      break;
+
+    case 'tabs':
+      renderLandingTabs();
+      break;
+
+    case 'trusted':
+      setInputValue('landing-trusted-heading', landingPageConfig.trusted.heading);
+      renderLandingTrustedCards();
+      break;
+
+    case 'features':
+      setInputValue('landing-features-heading', landingPageConfig.appleFeatures.heading);
+      setInputValue('landing-features-subheading', landingPageConfig.appleFeatures.subheading);
+      renderLandingFeatureCards();
+      break;
+
+    case 'bento':
+      setInputValue('landing-bento-heading', landingPageConfig.bento.heading);
+      renderLandingBentoCards();
+      break;
+
+    case 'beliefs':
+      setInputValue('landing-beliefs-title', landingPageConfig.beliefs.mainTitle);
+      setInputValue('landing-beliefs-subtitle', landingPageConfig.beliefs.subtitle);
+      setInputValue('landing-beliefs-author-name', landingPageConfig.beliefs.author.name);
+      setInputValue('landing-beliefs-author-role', landingPageConfig.beliefs.author.role);
+      setInputValue('landing-beliefs-author-image', landingPageConfig.beliefs.author.imageUrl);
+      renderLandingBeliefs();
+      break;
+
+    case 'testimonials':
+      renderLandingTestimonials();
+      break;
+
+    case 'footer':
+      setInputValue('landing-footer-phone', landingPageConfig.footer.supportSection.phone);
+      setInputValue('landing-footer-email', landingPageConfig.footer.supportSection.email);
+      setInputValue('landing-footer-copyright', landingPageConfig.footer.bottomSection.copyright);
+      renderLandingFooterColumns();
+      break;
+  }
+}
+
+// Helper to set input value
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value || '';
+}
+
+// Update Landing Page config
+function updateLandingConfig(section, path, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+
+  const parts = path.split('.');
+  let obj = landingPageConfig[section];
+
+  for (let i = 0; i < parts.length - 1; i++) {
+    obj = obj[parts[i]];
+  }
+  obj[parts[parts.length - 1]] = value;
+}
+
+// Render Feature Tabs editor
+function renderLandingTabs() {
+  const container = document.getElementById('landing-tabs-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.tabs.map((tab, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title">Tab ${i + 1}: ${tab.label}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Label</label>
+          <input type="text" class="input" value="${tab.label}" oninput="updateLandingTab(${i}, 'label', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nummer</label>
+          <input type="text" class="input" value="${tab.number}" oninput="updateLandingTab(${i}, 'number', this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Overskrift</label>
+        <input type="text" class="input" value="${tab.heading}" oninput="updateLandingTab(${i}, 'heading', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beskrivelse</label>
+        <textarea class="input" rows="2" oninput="updateLandingTab(${i}, 'description', this.value)">${tab.description}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Billede URL</label>
+        <input type="text" class="input" value="${tab.imageUrl}" oninput="updateLandingTab(${i}, 'imageUrl', this.value)">
+      </div>
+    </div>
+  `).join('');
+}
+
+// Update a tab
+function updateLandingTab(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.tabs[index][field] = value;
+}
+
+// Render Trusted By cards
+function renderLandingTrustedCards() {
+  const container = document.getElementById('landing-trusted-cards-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.trusted.cards.map((card, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title" style="display:flex;justify-content:space-between;align-items:center">
+        Kort ${i + 1}
+        <button class="btn btn-danger btn-sm" onclick="removeLandingTrustedCard(${i})">Slet</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Navn</label>
+          <input type="text" class="input" value="${card.name}" oninput="updateLandingTrustedCard(${i}, 'name', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rolle/By</label>
+          <input type="text" class="input" value="${card.role}" oninput="updateLandingTrustedCard(${i}, 'role', this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Billede URL</label>
+        <input type="text" class="input" value="${card.imageUrl}" oninput="updateLandingTrustedCard(${i}, 'imageUrl', this.value)">
+      </div>
+    </div>
+  `).join('');
+
+  container.innerHTML += `<button class="btn btn-secondary" onclick="addLandingTrustedCard()">+ Tilføj kort</button>`;
+}
+
+function updateLandingTrustedCard(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.trusted.cards[index][field] = value;
+}
+
+function addLandingTrustedCard() {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.trusted.cards.push({
+    id: 'c' + Date.now(),
+    imageUrl: '',
+    name: 'Ny restaurant',
+    role: 'By',
+    backgroundGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+  });
+  renderLandingTrustedCards();
+}
+
+function removeLandingTrustedCard(index) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.trusted.cards.splice(index, 1);
+  renderLandingTrustedCards();
+}
+
+// Render Feature cards
+function renderLandingFeatureCards() {
+  const container = document.getElementById('landing-features-cards-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.appleFeatures.features.map((feat, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title">Feature ${i + 1}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Badge</label>
+          <input type="text" class="input" value="${feat.badge}" oninput="updateLandingFeature(${i}, 'badge', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titel</label>
+          <input type="text" class="input" value="${feat.title}" oninput="updateLandingFeature(${i}, 'title', this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beskrivelse</label>
+        <input type="text" class="input" value="${feat.description}" oninput="updateLandingFeature(${i}, 'description', this.value)">
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLandingFeature(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.appleFeatures.features[index][field] = value;
+}
+
+// Render Bento cards
+function renderLandingBentoCards() {
+  const container = document.getElementById('landing-bento-cards-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.bento.cards.map((card, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title">Bento Kort ${i + 1}</div>
+      <div class="form-group">
+        <label class="form-label">Label</label>
+        <input type="text" class="input" value="${card.label}" oninput="updateLandingBento(${i}, 'label', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Titel</label>
+        <input type="text" class="input" value="${card.title}" oninput="updateLandingBento(${i}, 'title', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Billede URL</label>
+        <input type="text" class="input" value="${card.imageUrl}" oninput="updateLandingBento(${i}, 'imageUrl', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Link URL</label>
+        <input type="text" class="input" value="${card.url || ''}" oninput="updateLandingBento(${i}, 'url', this.value)">
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLandingBento(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.bento.cards[index][field] = value;
+}
+
+// Render Beliefs
+function renderLandingBeliefs() {
+  const container = document.getElementById('landing-beliefs-items-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.beliefs.beliefs.map((belief, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title">Belief ${i + 1}</div>
+      <div class="form-group">
+        <label class="form-label">Overskrift</label>
+        <input type="text" class="input" value="${belief.heading}" oninput="updateLandingBelief(${i}, 'heading', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tekst</label>
+        <textarea class="input" rows="2" oninput="updateLandingBelief(${i}, 'text', this.value)">${belief.text}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLandingBelief(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.beliefs.beliefs[index][field] = value;
+}
+
+// Render Testimonials
+function renderLandingTestimonials() {
+  const container = document.getElementById('landing-testimonials-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.testimonials.map((test, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title" style="display:flex;justify-content:space-between;align-items:center">
+        Testimonial ${i + 1}
+        <button class="btn btn-danger btn-sm" onclick="removeLandingTestimonial(${i})">Slet</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Citat</label>
+        <textarea class="input" rows="3" oninput="updateLandingTestimonial(${i}, 'quote', this.value)">${test.quote}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label class="form-label">Navn</label>
+          <input type="text" class="input" value="${test.name}" oninput="updateLandingTestimonial(${i}, 'name', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rolle/Restaurant</label>
+          <input type="text" class="input" value="${test.role}" oninput="updateLandingTestimonial(${i}, 'role', this.value)">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Avatar URL</label>
+        <input type="text" class="input" value="${test.avatarUrl}" oninput="updateLandingTestimonial(${i}, 'avatarUrl', this.value)">
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLandingTestimonial(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.testimonials[index][field] = value;
+}
+
+function addLandingTestimonial() {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.testimonials.push({
+    id: 't' + Date.now(),
+    quote: 'Ny testimonial...',
+    avatarUrl: '',
+    name: 'Kundens navn',
+    role: 'Restaurant, By'
+  });
+  renderLandingTestimonials();
+}
+
+function removeLandingTestimonial(index) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.testimonials.splice(index, 1);
+  renderLandingTestimonials();
+}
+
+// Render Footer columns
+function renderLandingFooterColumns() {
+  const container = document.getElementById('landing-footer-columns-container');
+  if (!container) return;
+
+  container.innerHTML = landingPageConfig.footer.columns.map((col, i) => `
+    <div class="setting-card" style="margin-bottom:16px">
+      <div class="setting-title">Kolonne ${i + 1}</div>
+      <div class="form-group">
+        <label class="form-label">Overskrift</label>
+        <input type="text" class="input" value="${col.heading}" oninput="updateLandingFooterColumn(${i}, 'heading', this.value)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Links (ét pr. linje: tekst|url)</label>
+        <textarea class="input" rows="4" oninput="updateLandingFooterLinks(${i}, this.value)">${col.links.map(l => l.text + '|' + l.url).join('\n')}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLandingFooterColumn(index, field, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  landingPageConfig.footer.columns[index][field] = value;
+}
+
+function updateLandingFooterLinks(colIndex, value) {
+  if (!landingPageConfig) loadLandingPageConfig();
+  const lines = value.split('\n').filter(l => l.trim());
+  landingPageConfig.footer.columns[colIndex].links = lines.map((line, i) => {
+    const parts = line.split('|');
+    return {
+      id: 'l' + Date.now() + i,
+      text: parts[0] || '',
+      url: parts[1] || '#'
+    };
+  });
+}
+
+// Open Landing Page preview
+function openLandingPreview() {
+  window.open('Website builder/dist/index.html', 'landingPreview', 'width=1200,height=800');
 }
 
