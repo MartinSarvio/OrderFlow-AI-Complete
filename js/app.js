@@ -24785,6 +24785,44 @@ function showAppPreviewQR() {
       return;
     }
 
+    const applyQrLogo = () => {
+      const canvas = container.querySelector('canvas');
+      if (!canvas) return false;
+
+      const size = canvas.width || 200;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return false;
+
+      const logoWidth = Math.round(size * 0.28);
+      const logoHeight = Math.round(size * 0.18);
+      const logoX = Math.round((size - logoWidth) / 2);
+      const logoY = Math.round((size - logoHeight) / 2);
+      const radius = Math.round(Math.min(logoWidth, logoHeight) * 0.2);
+
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(logoX + radius, logoY);
+      ctx.lineTo(logoX + logoWidth - radius, logoY);
+      ctx.quadraticCurveTo(logoX + logoWidth, logoY, logoX + logoWidth, logoY + radius);
+      ctx.lineTo(logoX + logoWidth, logoY + logoHeight - radius);
+      ctx.quadraticCurveTo(logoX + logoWidth, logoY + logoHeight, logoX + logoWidth - radius, logoY + logoHeight);
+      ctx.lineTo(logoX + radius, logoY + logoHeight);
+      ctx.quadraticCurveTo(logoX, logoY + logoHeight, logoX, logoY + logoHeight - radius);
+      ctx.lineTo(logoX, logoY + radius);
+      ctx.quadraticCurveTo(logoX, logoY, logoX + radius, logoY);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#000000';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `600 ${Math.round(logoHeight * 0.55)}px system-ui, -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillText('FLOW', size / 2, size / 2);
+      ctx.restore();
+      return true;
+    };
+
     const renderQR = () => {
       container.innerHTML = '';
 
@@ -24795,12 +24833,19 @@ function showAppPreviewQR() {
           height: 200,
           colorDark: '#000000',
           colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
+          correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.H : 2
         });
       } catch (err) {
         console.warn('QR-kode fejl:', err);
         renderFallback('Kunne ikke generere QR-kode');
+        return;
       }
+
+      setTimeout(() => {
+        if (!applyQrLogo()) {
+          applyQrLogo();
+        }
+      }, 30);
     };
 
     requestAnimationFrame(() => {
