@@ -188,6 +188,12 @@
       case 'beliefs':
         renderBeliefsSection(section);
         break;
+      case 'logocloud':
+        renderLogoCloudSection(section);
+        break;
+      case 'footer':
+        renderFooterSection(section);
+        break;
       default:
         // Unknown section type
         break;
@@ -371,27 +377,95 @@
 
   /**
    * Render Features Section
-   * Fields: features[], layout, columns
+   * Fields: tabs[] (tabLabel, headline, description, image, video), heading
    */
   function renderFeaturesSection(section) {
-    if (!section || !section.features || section.features.length === 0) return;
+    if (!section) return;
 
     const featuresSection = document.querySelector('[data-cms="features"]') ||
                             document.querySelector('.features-section') ||
-                            document.querySelector('.tabs-header');
+                            document.querySelector('.tabs-section');
 
     if (!featuresSection) return;
 
-    // Try to find feature items
-    const featureItems = featuresSection.querySelectorAll('.tab-item .tab-text, .feature-item, .feature-title, .feature-card');
+    // Check if we have tabs array (new format) or features array (old format)
+    const tabs = section.tabs || [];
+    const features = section.features || [];
 
-    section.features.forEach((feature, index) => {
-      if (featureItems[index]) {
-        // Feature might be object {id, title, description} or string
-        const title = typeof feature === 'string' ? feature : feature.title;
-        featureItems[index].textContent = title;
+    // Update section heading if present
+    if (section.heading) {
+      const sectionHeading = featuresSection.querySelector('.section-heading, .tabs-heading, h2');
+      if (sectionHeading) {
+        sectionHeading.textContent = section.heading;
       }
-    });
+    }
+
+    // Handle tabs-style layout (landing page)
+    if (tabs.length > 0) {
+      // Update tab labels in header
+      const tabItems = featuresSection.querySelectorAll('.tab-item');
+      tabs.forEach((tab, index) => {
+        if (tabItems[index]) {
+          const tabText = tabItems[index].querySelector('.tab-text');
+          if (tabText && tab.tabLabel) {
+            tabText.textContent = tab.tabLabel;
+          }
+        }
+      });
+
+      // Update tab content
+      const tabContents = featuresSection.querySelectorAll('.tab-content');
+      tabs.forEach((tab, index) => {
+        if (tabContents[index]) {
+          // Update headline
+          if (tab.headline) {
+            const headline = tabContents[index].querySelector('.tab-text-content h3, .tab-headline');
+            if (headline) {
+              headline.textContent = tab.headline;
+            }
+          }
+
+          // Update description
+          if (tab.description) {
+            const description = tabContents[index].querySelector('.tab-text-content p, .tab-description');
+            if (description) {
+              description.textContent = tab.description;
+            }
+          }
+
+          // Update image
+          if (tab.image) {
+            const img = tabContents[index].querySelector('.tab-visual img');
+            if (img) {
+              img.src = tab.image;
+              img.alt = tab.tabLabel || '';
+            }
+          }
+
+          // Update video if present
+          if (tab.video) {
+            const video = tabContents[index].querySelector('.tab-visual video source');
+            if (video) {
+              video.src = tab.video;
+              video.parentElement?.load();
+            }
+          }
+        }
+      });
+
+      return;
+    }
+
+    // Fallback: Handle old features array format
+    if (features.length > 0) {
+      const featureItems = featuresSection.querySelectorAll('.tab-item .tab-text, .feature-item, .feature-title, .feature-card');
+      features.forEach((feature, index) => {
+        if (featureItems[index]) {
+          const title = typeof feature === 'string' ? feature : feature.title;
+          featureItems[index].textContent = title;
+        }
+      });
+    }
   }
 
   /**
@@ -437,7 +511,7 @@
 
   /**
    * Render Testimonials Section
-   * Fields: items[], layout
+   * Fields: heading, items[] (text, author, role, image), layout, rotationInterval
    */
   function renderTestimonialsSection(section) {
     if (!section || !section.items || section.items.length === 0) return;
@@ -448,6 +522,71 @@
 
     if (!testimonialsSection) return;
 
+    // Check for carousel-style structure (landing page style)
+    const quoteEl = testimonialsSection.querySelector('#testimonialQuote, .testimonial-quote');
+    const avatarEl = testimonialsSection.querySelector('#testimonialAvatar, .testimonial-avatar');
+    const nameEl = testimonialsSection.querySelector('#testimonialName, .testimonial-name');
+    const roleEl = testimonialsSection.querySelector('#testimonialRole, .testimonial-role');
+    const indicatorsEl = testimonialsSection.querySelector('#testimonialIndicators, .testimonial-indicators');
+
+    if (quoteEl && nameEl) {
+      // Carousel-style testimonials (single visible, rotates)
+      const items = section.items;
+      let currentIndex = 0;
+
+      function updateTestimonial(index) {
+        const item = items[index];
+        if (!item) return;
+
+        // Support both field name variants (text/quote, author/name, image/avatar)
+        const quoteText = item.text || item.quote || '';
+        const authorName = item.author || item.name || '';
+        const authorImage = item.image || item.avatar || '';
+
+        if (quoteEl) quoteEl.textContent = '"' + quoteText + '"';
+        if (avatarEl && authorImage) avatarEl.src = authorImage;
+        if (nameEl) nameEl.textContent = authorName;
+        if (roleEl) roleEl.textContent = item.role || '';
+
+        // Update indicators
+        if (indicatorsEl) {
+          indicatorsEl.querySelectorAll('.testimonial-indicator').forEach((ind, i) => {
+            ind.classList.toggle('active', i === index);
+          });
+        }
+      }
+
+      // Update indicators HTML if count changed
+      if (indicatorsEl && items.length > 0) {
+        indicatorsEl.innerHTML = items.map((_, i) =>
+          `<span class="testimonial-indicator${i === 0 ? ' active' : ''}" data-index="${i}"><span class="testimonial-indicator-fill"></span></span>`
+        ).join('');
+
+        // Add click handlers to indicators
+        indicatorsEl.querySelectorAll('.testimonial-indicator').forEach(ind => {
+          ind.addEventListener('click', function() {
+            currentIndex = parseInt(this.dataset.index);
+            updateTestimonial(currentIndex);
+          });
+        });
+      }
+
+      // Set initial testimonial
+      updateTestimonial(0);
+
+      // Setup rotation if multiple items
+      if (items.length > 1) {
+        const interval = section.rotationInterval || 5000;
+        setInterval(() => {
+          currentIndex = (currentIndex + 1) % items.length;
+          updateTestimonial(currentIndex);
+        }, interval);
+      }
+
+      return;
+    }
+
+    // Fallback: Grid/list-style testimonials (multiple visible)
     const testimonialItems = testimonialsSection.querySelectorAll('.testimonial-item, .testimonial-card');
 
     section.items.forEach((item, index) => {
@@ -574,27 +713,26 @@
       trustedSection.classList.add('cms-animate-' + section.animation);
     }
 
-    // Update cards
+    // Update cards - get only the first set (not duplicates for infinite scroll)
     if (section.cards && section.cards.length > 0) {
-      const cards = trustedSection.querySelectorAll('.carousel-card, .testimonial-card');
-      section.cards.forEach((card, index) => {
-        if (cards[index]) {
-          const name = cards[index].querySelector('.card-name, .author-name, h4');
-          const role = cards[index].querySelector('.card-role, .author-role, .company');
-          const quote = cards[index].querySelector('.card-quote, .quote, p');
-          const img = cards[index].querySelector('img');
-
-          if (name && card.name) name.textContent = card.name;
-          if (role && card.role) role.textContent = card.role;
-          if (quote && card.quote) quote.textContent = card.quote;
-          if (img && card.image) img.src = card.image;
-
-          // Apply gradient background if specified
-          if (card.gradient) {
-            cards[index].style.background = card.gradient;
-          }
-        }
-      });
+      const carousel = trustedSection.querySelector('.trusted-carousel');
+      if (carousel) {
+        // Rebuild carousel with CMS data (includes duplicates for infinite scroll)
+        let cardsHTML = '';
+        section.cards.forEach(card => {
+          const gradient = card.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+          cardsHTML += `
+            <div class="trusted-card">
+              <img src="${card.image || 'images/apple-iphone-16-pro-max-2024-medium.png'}" alt="${card.name || 'Restaurant Owner'}" style="background: ${gradient};">
+              <div class="trusted-card-overlay">
+                <div class="trusted-card-name">${card.name || ''}</div>
+                <div class="trusted-card-role">${card.role || ''}</div>
+              </div>
+            </div>`;
+        });
+        // Duplicate for seamless infinite scroll
+        carousel.innerHTML = cardsHTML + cardsHTML;
+      }
     }
   }
 
@@ -712,6 +850,120 @@
           if (text && item.text) text.textContent = item.text;
         }
       });
+    }
+  }
+
+  /**
+   * Render Logo Cloud Section
+   * Fields: heading, subheading, logos[] (name, url)
+   */
+  function renderLogoCloudSection(section) {
+    if (!section) return;
+
+    const logoCloudSection = document.querySelector('[data-cms="logocloud"]') ||
+                              document.querySelector('.logo-cloud');
+
+    if (!logoCloudSection) return;
+
+    // Update heading
+    if (section.heading) {
+      const h2 = logoCloudSection.querySelector('h2, .logo-cloud-title');
+      if (h2) {
+        h2.textContent = section.heading;
+      }
+    }
+
+    // Update subheading
+    if (section.subheading) {
+      const p = logoCloudSection.querySelector('.logo-cloud-header p, .logo-cloud-subtitle');
+      if (p) {
+        p.textContent = section.subheading;
+      }
+    }
+
+    // Update logos
+    if (section.logos && section.logos.length > 0) {
+      const logoTrack = logoCloudSection.querySelector('.logo-cloud-track');
+      if (logoTrack) {
+        // Generate new logo HTML
+        let logosHTML = '';
+        section.logos.forEach(logo => {
+          logosHTML += `
+            <a href="${logo.url || '#'}" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+              <svg width="120" height="40" viewBox="0 0 120 40">
+                <rect x="5" y="10" width="20" height="20" rx="4" fill="currentColor"/>
+                <text x="30" y="26" font-size="14" font-weight="600" fill="currentColor">${logo.name || ''}</text>
+              </svg>
+            </a>`;
+        });
+        // Duplicate for seamless loop
+        logosHTML += logosHTML;
+        logoTrack.innerHTML = logosHTML;
+      }
+    }
+  }
+
+  /**
+   * Render Footer Section
+   * Fields: columns[] (title, links[]), contact (phone, email), copyright
+   */
+  function renderFooterSection(section) {
+    if (!section) return;
+
+    const footerSection = document.querySelector('[data-cms="footer"]') ||
+                           document.querySelector('.footer, footer');
+
+    if (!footerSection) return;
+
+    // Update columns
+    if (section.columns && section.columns.length > 0) {
+      const footerColumns = footerSection.querySelectorAll('.footer-column');
+      section.columns.forEach((col, index) => {
+        if (footerColumns[index]) {
+          // Update column title
+          const h4 = footerColumns[index].querySelector('h4');
+          if (h4 && col.title) {
+            h4.textContent = col.title;
+          }
+
+          // Update links
+          if (col.links && col.links.length > 0) {
+            const ul = footerColumns[index].querySelector('ul');
+            if (ul) {
+              ul.innerHTML = col.links.map(link =>
+                `<li><a href="${link.url || '#'}">${link.text || ''}</a></li>`
+              ).join('');
+            }
+          }
+        }
+      });
+    }
+
+    // Update contact info
+    if (section.contact) {
+      // Try to find contact column (usually last or has SUPPORT title)
+      const supportColumn = footerSection.querySelector('.footer-column:last-child');
+      if (supportColumn) {
+        const contactLinks = supportColumn.querySelectorAll('a');
+        contactLinks.forEach(link => {
+          if (link.href.includes('tel:') && section.contact.phone) {
+            link.textContent = section.contact.phone;
+            link.href = 'tel:' + section.contact.phone.replace(/\s/g, '');
+          }
+          if (link.href.includes('mailto:') && section.contact.email) {
+            link.textContent = section.contact.email;
+            link.href = 'mailto:' + section.contact.email;
+          }
+        });
+      }
+    }
+
+    // Update copyright
+    if (section.copyright) {
+      const copyright = footerSection.querySelector('.footer-bottom p, .copyright');
+      if (copyright) {
+        copyright.textContent = section.copyright;
+      }
     }
   }
 

@@ -26533,6 +26533,8 @@ async function loadCMSPages() {
       cmsPages = JSON.parse(saved);
       // MIGRATION: Auto-populate missing video URLs for existing users
       await migrateVideoUrls();
+      // MIGRATION: Add missing sections (logocloud, testimonials, footer, bento, beliefs)
+      migrateMissingSections();
     } catch (e) {
       console.error('Error loading CMS pages:', e);
       cmsPages = getDefaultCMSPages();
@@ -26586,6 +26588,140 @@ async function migrateVideoUrls() {
 
   if (needsSave) {
     localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+  }
+}
+
+// Migrate existing CMS data to add missing sections for landing page
+function migrateMissingSections() {
+  const landingPage = cmsPages.find(p => p.slug === 'landing.html');
+  if (!landingPage) return;
+
+  let needsSave = false;
+  const existingTypes = landingPage.sections.map(s => s.type);
+  let maxOrder = Math.max(...landingPage.sections.map(s => s.order || 0), 0);
+
+  // Define sections that should exist on landing page
+  const requiredSections = [
+    {
+      type: 'bento',
+      data: {
+        heading: 'Giv din restaurant den samme<br>teknologi som de store brands',
+        heroImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop',
+        heroOverlayText: 'Dine kunder er vant til at bestille på telefonen.<br>Derfor giver vi din restaurant sin egen <strong>mobile app</strong>.',
+        cards: [
+          { label: 'Få højere Google rankings med din AI-powered', title: 'restaurant hjemmeside.', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop' },
+          { label: 'Vækst dit salg med et', title: 'online bestillingssystem modelleret efter de store brands.', image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop' }
+        ]
+      }
+    },
+    {
+      type: 'logocloud',
+      data: {
+        heading: 'Trusted by the world\'s most innovative teams',
+        subheading: 'Join thousands of developers and designers who are already building with Smoothui',
+        logos: [
+          { name: 'Strava', url: 'https://strava.com' },
+          { name: 'Descript', url: 'https://descript.com' },
+          { name: 'Duolingo', url: 'https://duolingo.com' },
+          { name: 'Faire', url: 'https://faire.com' },
+          { name: 'Clearbit', url: 'https://clearbit.com' },
+          { name: 'Canva', url: 'https://canva.com' }
+        ]
+      }
+    },
+    {
+      type: 'beliefs',
+      data: {
+        heading: 'Tre overbevisninger der guider vores virksomhed',
+        subtitle: 'Forstå principperne der guider vores beslutninger.',
+        author: {
+          name: 'Adam Guild',
+          role: 'Co-Founder and CEO at OrderFlow',
+          image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop'
+        },
+        items: [
+          { heading: 'Salgsvækst er vigtigere end tilpasning.', text: 'Tredjepartsapps har formet hvordan alle bestiller online. Vi tager deres bedste praksis og giver dem til dig.' },
+          { heading: 'Vi skal tjene din forretning hver måned.', text: 'Restauranter er hårde nok. Du behøver ikke endnu en tech-leverandør der binder dig.' },
+          { heading: 'Restauranter bør eje deres kunderelationer.', text: 'Hvis du beslutter at forlade OrderFlow, får du dine kunder med dig.' }
+        ]
+      }
+    },
+    {
+      type: 'testimonials',
+      data: {
+        heading: 'Hvad vores kunder siger',
+        layout: 'carousel',
+        rotationInterval: 5000,
+        items: [
+          { text: 'Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder.', author: 'Maria Jensen', role: 'Café Hygge, København', image: 'https://i.pravatar.cc/96?img=1' },
+          { text: 'Vi sparede over 40.000 kr. om måneden ved at skifte væk fra tredjepartsplatforme.', author: 'Thomas Møller', role: 'Burger Joint, Aalborg', image: 'https://i.pravatar.cc/96?img=2' }
+        ]
+      }
+    },
+    {
+      type: 'footer',
+      data: {
+        columns: [
+          { title: 'PRODUKTER', links: [{ text: 'Restaurant Hjemmeside', url: 'restaurant-hjemmeside.html' }, { text: 'Online Bestilling', url: 'online-bestilling.html' }] },
+          { title: 'RESSOURCER', links: [{ text: 'Case Studies', url: 'case-studies.html' }, { text: 'SEO for Restauranter', url: 'seo-for-restauranter.html' }] },
+          { title: 'VIRKSOMHED', links: [{ text: 'Om os', url: 'om-os.html' }, { text: 'Karriere', url: 'karriere.html' }] },
+          { title: 'SUPPORT', links: [{ text: '+45 70 12 34 56', url: 'tel:+4570123456' }, { text: 'support@flow.dk', url: 'mailto:support@flow.dk' }] }
+        ],
+        contact: { phone: '+45 70 12 34 56', email: 'support@flow.dk' },
+        copyright: '© 2024 Flow. Alle rettigheder forbeholdes.'
+      }
+    }
+  ];
+
+  // Add missing sections
+  requiredSections.forEach(req => {
+    if (!existingTypes.includes(req.type)) {
+      maxOrder++;
+      landingPage.sections.push({
+        id: 'section-' + req.type + '-' + Date.now(),
+        type: req.type,
+        order: maxOrder,
+        isVisible: true,
+        padding: 'medium',
+        ...req.data
+      });
+      needsSave = true;
+      console.log('Flow CMS: Added missing section:', req.type);
+    }
+  });
+
+  // Migrate features section to use tabs format
+  const featuresSection = landingPage.sections.find(s => s.type === 'features');
+  if (featuresSection && !featuresSection.tabs) {
+    featuresSection.tabs = [
+      { id: 'tab-1', tabLabel: 'Mere Google Trafik', headline: 'Beløn dine gæster', description: 'Giv gæster point når de bruger din brandede mobil app. Øg kundeloyalitet og få flere tilbagevendende kunder med et automatiseret belønningssystem.', image: 'images/apple-iphone-16-pro-max-2024-medium.png', video: '' },
+      { id: 'tab-2', tabLabel: 'Mere Online Salg', headline: 'Øg dit online salg', description: 'Få flere online ordrer med vores integrerede bestillingssystem. Ingen kommission, fuld kontrol over dine kundedata.', image: 'images/apple-iphone-16-pro-max-2024-medium.png', video: '' },
+      { id: 'tab-3', tabLabel: 'Flere Genbestillinger', headline: 'Få flere genbestillinger', description: 'Automatiser din marketing og få kunder til at vende tilbage. SMS-kampagner, push-notifikationer og email marketing.', image: 'images/apple-iphone-16-pro-max-2024-medium.png', video: '' },
+      { id: 'tab-4', tabLabel: 'Flere App Downloads', headline: 'Få flere app downloads', description: 'Din egen brandede app i App Store og Google Play. Øg kundeloyalitet og få direkte kontakt med dine gæster.', image: 'images/apple-iphone-16-pro-max-2024-medium.png', video: '' }
+    ];
+    featuresSection.layout = 'tabs';
+    needsSave = true;
+    console.log('Flow CMS: Migrated features section to tabs format');
+  }
+
+  // Migrate trusted section to add cards if missing
+  const trustedSection = landingPage.sections.find(s => s.type === 'trusted');
+  if (trustedSection && (!trustedSection.cards || trustedSection.cards.length === 0)) {
+    trustedSection.heading = trustedSection.heading || 'Betroet af tusindvis af restauratører';
+    trustedSection.cards = [
+      { name: 'Maria Jensen', role: 'Café Hygge, København', image: 'images/apple-iphone-16-pro-max-2024-medium.png', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+      { name: 'Anders Nielsen', role: 'Pizzeria Napoli, Aarhus', image: 'images/apple-iphone-16-pro-max-2024-medium.png', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+      { name: 'Sophie Larsen', role: 'Sushi House, Odense', image: 'images/apple-iphone-16-pro-max-2024-medium.png', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+      { name: 'Thomas Møller', role: 'Burger Joint, Aalborg', image: 'images/apple-iphone-16-pro-max-2024-medium.png', gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' },
+      { name: 'Emma Christensen', role: 'Thai Kitchen, Esbjerg', image: 'images/apple-iphone-16-pro-max-2024-medium.png', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' }
+    ];
+    needsSave = true;
+    console.log('Flow CMS: Migrated trusted section with cards');
+  }
+
+  if (needsSave) {
+    localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+    console.log('Flow CMS: Migration complete - added missing sections to landing page');
   }
 }
 
