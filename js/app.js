@@ -24748,6 +24748,10 @@ function showAppPreviewQR() {
   container.innerHTML = '<p style="color:var(--muted);margin:0">Indlæser QR-kode...</p>';
   container.style.minWidth = '200px';
   container.style.minHeight = '200px';
+  container.style.width = '200px';
+  container.style.height = '200px';
+  container.style.background = '#ffffff';
+  container.style.borderRadius = '12px';
 
   // Generate preview URL (current host + pwa-preview.html)
   const previewUrl = getAppPreviewUrl();
@@ -24769,21 +24773,28 @@ function showAppPreviewQR() {
       return;
     }
 
-    container.innerHTML = '';
+    const renderQR = () => {
+      container.innerHTML = '';
 
-    try {
-      new QRCode(container, {
-        text: previewUrl,
-        width: 200,
-        height: 200,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
-      });
-    } catch (err) {
-      console.warn('QR-kode fejl:', err);
-      renderFallback('Kunne ikke generere QR-kode');
-    }
+      try {
+        new QRCode(container, {
+          text: previewUrl,
+          width: 200,
+          height: 200,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
+        });
+      } catch (err) {
+        console.warn('QR-kode fejl:', err);
+        renderFallback('Kunne ikke generere QR-kode');
+      }
+    };
+
+    requestAnimationFrame(() => {
+      renderQR();
+      setTimeout(renderQR, 50);
+    });
   });
 }
 
