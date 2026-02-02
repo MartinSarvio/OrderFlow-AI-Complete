@@ -25571,9 +25571,11 @@ let selectedMediaItem = null;
 // target can be: string (input id), function (callback), or object with sectionId/field
 // sectionId and field are used for CMS section field updates
 async function openMediaLibrary(target, sectionId, field, mediaType = 'image') {
+  console.log('openMediaLibrary called', { target, sectionId, field, mediaType });
+
   // If called with sectionId and field, construct the target object
   if (sectionId && field) {
-    // Handle nested paths like tabs.0.image
+    // Handle nested paths like tabs.0.image or backgroundVideos.0.url
     if (field.includes('.')) {
       const parts = field.split('.');
       mediaLibraryTarget = {
@@ -25596,24 +25598,34 @@ async function openMediaLibrary(target, sectionId, field, mediaType = 'image') {
   const loading = document.getElementById('media-library-loading');
   const selectBtn = document.getElementById('media-select-btn');
 
-  if (!modal) return;
+  console.log('Modal element found:', !!modal);
+
+  if (!modal) {
+    console.error('Media library modal not found in DOM!');
+    toast('Kunne ikke åbne medie bibliotek', 'error');
+    return;
+  }
 
   modal.classList.add('active');
-  grid.innerHTML = '';
-  empty.style.display = 'none';
-  loading.style.display = 'block';
-  selectBtn.disabled = true;
+  console.log('Modal classes after add:', modal.className);
+
+  if (grid) grid.innerHTML = '';
+  if (empty) empty.style.display = 'none';
+  if (loading) loading.style.display = 'block';
+  if (selectBtn) selectBtn.disabled = true;
 
   // Load media from Supabase
   try {
+    console.log('Loading media from Supabase...');
     mediaLibraryItems = await SupabaseDB.listMedia('images');
+    console.log('Loaded media items:', mediaLibraryItems?.length || 0);
     renderMediaLibrary();
   } catch (err) {
     console.error('Error loading media:', err);
     toast('Kunne ikke indlæse billeder', 'error');
   }
 
-  loading.style.display = 'none';
+  if (loading) loading.style.display = 'none';
 }
 
 // Close media library modal
@@ -26039,14 +26051,35 @@ async function migrateVideoUrls() {
   if (!landingPage) return;
 
   const heroSection = landingPage.sections.find(s => s.type === 'hero');
-  if (heroSection && !heroSection.backgroundVideo) {
-    console.log('Flow CMS: Migrating video URL for existing landing page...');
+  if (!heroSection) return;
+
+  let needsSave = false;
+
+  // Migrate old backgroundVideo string to new backgroundVideos array
+  if (heroSection.backgroundVideo && !heroSection.backgroundVideos) {
+    console.log('Flow CMS: Migrating single video to array format');
+    heroSection.backgroundVideos = [{ url: heroSection.backgroundVideo, duration: 10 }];
+    heroSection.videoShuffleEnabled = false;
+    heroSection.videoShuffleDuration = 10;
+    delete heroSection.backgroundVideo;
+    needsSave = true;
+  }
+
+  // If no videos at all, scrape from landing page
+  if (!heroSection.backgroundVideos || heroSection.backgroundVideos.length === 0) {
+    console.log('Flow CMS: Scraping video URL from landing page...');
     const scraped = await scrapeLandingPageContent();
     if (scraped?.hero?.backgroundVideo) {
-      heroSection.backgroundVideo = scraped.hero.backgroundVideo;
-      localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
-      console.log('Flow CMS: Video URL migrated:', scraped.hero.backgroundVideo);
+      heroSection.backgroundVideos = [{ url: scraped.hero.backgroundVideo, duration: 10 }];
+      heroSection.videoShuffleEnabled = false;
+      heroSection.videoShuffleDuration = 10;
+      needsSave = true;
+      console.log('Flow CMS: Video URL scraped:', scraped.hero.backgroundVideo);
     }
+  }
+
+  if (needsSave) {
+    localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
   }
 }
 
@@ -26273,12 +26306,46 @@ function renderSectionEditor(section) {
           ${section.backgroundImage ? `<img src="${section.backgroundImage}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover">` : '<div style="padding:24px;background:var(--bg-tertiary);border-radius:8px;text-align:center;color:var(--muted);font-size:12px">Intet billede valgt</div>'}
         </div>
         <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Baggrundsvideo (MP4)</label>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input type="text" id="hero-bg-video-${section.id}" class="input" value="${section.backgroundVideo || ''}" onchange="updateSectionField('${section.id}', 'backgroundVideo', this.value)" placeholder="images/hero-video.mp4" style="flex:1">
-            <button type="button" class="btn btn-secondary" style="white-space:nowrap" onclick="openMediaLibrary('hero-bg-video-${section.id}', '${section.id}', 'backgroundVideo', 'video')">Vælg fra bibliotek</button>
+          <label class="form-label" style="font-size:12px">Baggrundsvideo(er)</label>
+
+          <!-- Video Shuffle Controls -->
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;padding:10px;background:var(--bg-tertiary);border-radius:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px">
+              <input type="checkbox" ${section.videoShuffleEnabled ? 'checked' : ''} onchange="updateSectionField('${section.id}', 'videoShuffleEnabled', this.checked);this.closest('.form-group').querySelector('.shuffle-duration').style.display=this.checked?'flex':'none'">
+              Shuffle videoer
+            </label>
+            <div class="shuffle-duration" style="display:${section.videoShuffleEnabled ? 'flex' : 'none'};align-items:center;gap:6px">
+              <span style="font-size:11px;color:var(--muted)">Skift hver</span>
+              <input type="number" class="input" min="3" max="120" value="${section.videoShuffleDuration || 10}" onchange="updateSectionField('${section.id}', 'videoShuffleDuration', parseInt(this.value))" style="width:60px;padding:6px 8px">
+              <span style="font-size:11px;color:var(--muted)">sek</span>
+            </div>
           </div>
-          ${section.backgroundVideo ? `<div style="margin-top:8px;border-radius:8px;overflow:hidden;background:#000"><video src="${section.backgroundVideo}" style="max-width:100%;max-height:150px;display:block" autoplay muted loop playsinline></video></div>` : ''}
+
+          <!-- Video Liste -->
+          <div id="hero-videos-list-${section.id}">
+            ${(section.backgroundVideos || []).map((video, idx) => `
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;padding:10px;background:var(--bg-tertiary);border-radius:6px">
+                <span style="font-size:11px;color:var(--muted);min-width:20px;font-weight:500">${idx + 1}.</span>
+                <input type="text" class="input" value="${video.url || ''}" id="hero-video-${section.id}-${idx}" onchange="updateHeroVideo('${section.id}', ${idx}, 'url', this.value)" placeholder="Video URL" style="flex:1">
+                <button type="button" class="btn btn-secondary" style="padding:6px 10px;font-size:11px" onclick="openMediaLibrary('hero-video-${section.id}-${idx}', '${section.id}', 'backgroundVideos.${idx}.url', 'video')">Bibliotek</button>
+                <button type="button" class="btn" style="padding:6px 10px;color:var(--danger)" onclick="removeHeroVideo('${section.id}', ${idx})">Slet</button>
+              </div>
+            `).join('')}
+          </div>
+
+          <button type="button" class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="addHeroVideo('${section.id}')">+ Tilføj video</button>
+
+          <!-- Video Previews -->
+          ${(section.backgroundVideos || []).length > 0 ? `
+            <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+              ${section.backgroundVideos.map((video, idx) => video.url ? `
+                <div style="border-radius:6px;overflow:hidden;background:#000;position:relative">
+                  <video src="${video.url}" style="width:100%;height:80px;object-fit:cover" muted playsinline></video>
+                  <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);font-size:10px;color:white;padding:4px;text-align:center">${idx + 1}</div>
+                </div>
+              ` : '').join('')}
+            </div>
+          ` : '<div style="padding:20px;background:var(--bg-tertiary);border-radius:8px;text-align:center;color:var(--muted);font-size:12px;margin-top:8px">Ingen videoer tilføjet</div>'}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="form-group">
@@ -26611,8 +26678,16 @@ function renderSectionEditor(section) {
     case 'bento':
       return `
         <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
-          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift (HTML tilladt)</label>
+          <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'heading', this.value)">${section.heading || ''}</textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Hero Billede URL</label>
+          <input type="text" class="input" value="${section.heroImage || ''}" onchange="updateSectionField('${section.id}', 'heroImage', this.value)" placeholder="https://...">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Hero Overlay Tekst (HTML tilladt)</label>
+          <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'heroOverlayText', this.value)">${section.heroOverlayText || ''}</textarea>
         </div>
         <div class="form-group">
           <label class="form-label" style="font-size:12px">Bento Cards (JSON)</label>
@@ -26666,6 +26741,49 @@ function updateSectionField(sectionId, field, value) {
     page.updatedAt = new Date().toISOString();
     markCMSChanged();
   }
+}
+
+// Add a new hero video
+function addHeroVideo(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (!section) return;
+
+  if (!section.backgroundVideos) section.backgroundVideos = [];
+  section.backgroundVideos.push({ url: '', duration: section.videoShuffleDuration || 10 });
+
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSSectionsList();
+}
+
+// Remove a hero video
+function removeHeroVideo(sectionId, videoIndex) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (!section || !section.backgroundVideos) return;
+
+  section.backgroundVideos.splice(videoIndex, 1);
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSSectionsList();
+}
+
+// Update a hero video field
+function updateHeroVideo(sectionId, videoIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (!section || !section.backgroundVideos || !section.backgroundVideos[videoIndex]) return;
+
+  section.backgroundVideos[videoIndex][field] = value;
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
 }
 
 // Update section button (hero)
@@ -26994,8 +27112,13 @@ function addSectionToPage(type) {
       newSection.cards = [];
       break;
     case 'bento':
-      newSection.heading = 'Giv din restaurant den samme teknologi';
-      newSection.cards = [];
+      newSection.heading = 'Giv din restaurant den samme<br>teknologi som de store brands';
+      newSection.heroImage = 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop';
+      newSection.heroOverlayText = 'Dine kunder er vant til at bestille på telefonen. Derfor giver vi din restaurant sin egen <strong>mobile app</strong>.';
+      newSection.cards = [
+        { label: 'Få højere Google rankings med din AI-powered', title: 'restaurant hjemmeside.', image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop' },
+        { label: 'Vækst dit salg med et', title: 'online bestillingssystem modelleret efter de store brands.', image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop' }
+      ];
       break;
     case 'beliefs':
       newSection.heading = 'Vores overbevisninger';
@@ -27163,8 +27286,15 @@ function previewCurrentPage() {
 
 // Schedule page changes
 function schedulePageChanges() {
+  console.log('schedulePageChanges called');
   const page = getCurrentCMSPage();
-  if (!page) return;
+  console.log('Current page:', page);
+
+  if (!page) {
+    console.warn('No page selected for scheduling');
+    toast('Vælg først en side at planlægge', 'warning');
+    return;
+  }
 
   // Get minimum datetime (now + 1 minute)
   const now = new Date();

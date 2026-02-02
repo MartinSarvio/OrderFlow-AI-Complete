@@ -182,9 +182,6 @@
       case 'trusted':
         renderTrustedSection(section);
         break;
-      case 'appleFeatures':
-        renderAppleFeaturesSection(section);
-        break;
       case 'bento':
         renderBentoSection(section);
         break;
@@ -242,13 +239,39 @@
       }
     }
 
-    // Update background video
-    if (section.backgroundVideo) {
-      const videoSource = heroSection.querySelector('.hero-video-bg video source, video source');
-      if (videoSource) {
-        videoSource.src = section.backgroundVideo;
-        videoSource.parentElement.load();
+    // Update background video(s) with optional shuffle
+    const videoSource = heroSection.querySelector('.hero-video-bg video source, video source');
+    const videoElement = videoSource?.parentElement;
+
+    if (section.backgroundVideos && section.backgroundVideos.length > 0 && videoElement && videoSource) {
+      // Filter out empty URLs
+      const validVideos = section.backgroundVideos.filter(v => v.url && v.url.trim());
+
+      if (validVideos.length > 0) {
+        // Set initial video
+        videoSource.src = validVideos[0].url;
+        videoElement.load();
+
+        // If shuffle enabled and multiple videos, setup rotation
+        if (section.videoShuffleEnabled && validVideos.length > 1) {
+          let currentIndex = 0;
+          const shuffleDuration = (section.videoShuffleDuration || 10) * 1000;
+
+          // Setup shuffle interval
+          setInterval(() => {
+            currentIndex = (currentIndex + 1) % validVideos.length;
+            videoSource.src = validVideos[currentIndex].url;
+            videoElement.load();
+            videoElement.play().catch(() => {}); // Ignore autoplay errors
+          }, shuffleDuration);
+
+          console.log('Flow CMS: Video shuffle enabled with', validVideos.length, 'videos, interval:', shuffleDuration / 1000, 'seconds');
+        }
       }
+    } else if (section.backgroundVideo && videoSource) {
+      // Backwards compatibility with old single video field
+      videoSource.src = section.backgroundVideo;
+      videoElement?.load();
     }
 
     // Update overlay opacity via CSS variable
@@ -274,9 +297,21 @@
           .cms-animate-fade { animation: cmsFadeIn 0.8s ease-out; }
           .cms-animate-slide { animation: cmsSlideUp 0.8s ease-out; }
           .cms-animate-zoom { animation: cmsZoomIn 0.8s ease-out; }
+          .cms-animate-bounce { animation: cmsBounce 1s ease; }
+          .cms-animate-pulse { animation: cmsPulse 1.5s ease-in-out infinite; }
+          .cms-animate-slideLeft { animation: cmsSlideLeft 0.8s ease-out; }
+          .cms-animate-slideRight { animation: cmsSlideRight 0.8s ease-out; }
+          .cms-animate-rotate { animation: cmsRotate 0.8s ease-out; }
+          .cms-animate-scale { animation: cmsScaleUp 0.8s ease-out; }
           @keyframes cmsFadeIn { from { opacity: 0; } to { opacity: 1; } }
           @keyframes cmsSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
           @keyframes cmsZoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+          @keyframes cmsBounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-20px); } 60% { transform: translateY(-10px); } }
+          @keyframes cmsPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+          @keyframes cmsSlideLeft { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes cmsSlideRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+          @keyframes cmsRotate { from { opacity: 0; transform: rotate(-10deg); } to { opacity: 1; transform: rotate(0); } }
+          @keyframes cmsScaleUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
         `;
         document.head.appendChild(style);
       }
@@ -564,69 +599,47 @@
   }
 
   /**
-   * Render Apple Features Section (Feature Cards Carousel)
-   * Fields: heading, description, cards[] (badge, title, description)
-   */
-  function renderAppleFeaturesSection(section) {
-    if (!section) return;
-
-    const appleSection = document.querySelector('[data-cms="appleFeatures"]') ||
-                         document.querySelector('.apple-features') ||
-                         document.querySelector('.features-carousel');
-
-    if (!appleSection) return;
-
-    // Update heading
-    if (section.heading) {
-      const h2 = appleSection.querySelector('h2, .section-title');
-      if (h2) {
-        h2.textContent = section.heading;
-      }
-    }
-
-    // Update description
-    if (section.description) {
-      const desc = appleSection.querySelector('.section-description, > p');
-      if (desc) {
-        desc.textContent = section.description;
-      }
-    }
-
-    // Update cards
-    if (section.cards && section.cards.length > 0) {
-      const cards = appleSection.querySelectorAll('.carousel-card, .feature-card');
-      section.cards.forEach((card, index) => {
-        if (cards[index]) {
-          const badge = cards[index].querySelector('.card-badge, .badge');
-          const title = cards[index].querySelector('.card-title, h3');
-          const desc = cards[index].querySelector('.card-description, p');
-
-          if (badge && card.badge) badge.textContent = card.badge;
-          if (title && card.title) title.textContent = card.title;
-          if (desc && card.description) desc.textContent = card.description;
-        }
-      });
-    }
-  }
-
-  /**
-   * Render Bento Section (Bento Grid)
-   * Fields: heading, cards[] (label, title, image)
+   * Render Bento Section (Owner.com Style Feature Grid)
+   * Fields: heading, heroImage, heroOverlayText, cards[] (label, title, image)
    */
   function renderBentoSection(section) {
     if (!section) return;
 
     const bentoSection = document.querySelector('[data-cms="bento"]') ||
                          document.querySelector('.bento-section') ||
-                         document.querySelector('.bento-grid');
+                         document.querySelector('.bento');
 
     if (!bentoSection) return;
 
     // Update heading
     if (section.heading) {
-      const h2 = bentoSection.querySelector('h2, .section-title');
+      const h2 = bentoSection.querySelector('h2, .bento-title, .section-title');
       if (h2) {
         h2.innerHTML = section.heading;
+      }
+    }
+
+    // Update hero image if present
+    if (section.heroImage) {
+      let heroContainer = bentoSection.querySelector('.bento-hero');
+      if (heroContainer) {
+        const heroImg = heroContainer.querySelector('img');
+        if (heroImg) {
+          heroImg.src = section.heroImage;
+        }
+      }
+    }
+
+    // Update hero overlay text
+    if (section.heroOverlayText) {
+      const heroOverlay = bentoSection.querySelector('.bento-hero-overlay');
+      if (heroOverlay) {
+        const overlayP = heroOverlay.querySelector('p');
+        if (overlayP) {
+          overlayP.innerHTML = section.heroOverlayText;
+        } else {
+          heroOverlay.innerHTML = '<p>' + section.heroOverlayText + '</p>';
+        }
       }
     }
 
@@ -635,8 +648,8 @@
       const cards = bentoSection.querySelectorAll('.bento-card, .card');
       section.cards.forEach((card, index) => {
         if (cards[index]) {
-          const label = cards[index].querySelector('.card-label, .label, small');
-          const title = cards[index].querySelector('.card-title, h3, .title');
+          const label = cards[index].querySelector('.bento-card-label, .card-label, .label, small');
+          const title = cards[index].querySelector('.bento-card-title, .card-title, h3, .title');
           const img = cards[index].querySelector('img');
 
           if (label && card.label) label.textContent = card.label;
