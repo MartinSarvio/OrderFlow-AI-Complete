@@ -24663,7 +24663,7 @@ function getAppPreviewBasePath() {
 }
 
 function getAppPreviewUrl() {
-  return getAppPreviewBasePath() + 'pwa-preview.html';
+  return 'https://flow-lime-rho.vercel.app/pwa-preview.html';
 }
 
 function ensureQRCodeLibrary() {
