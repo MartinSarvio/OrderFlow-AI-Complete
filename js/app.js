@@ -3829,9 +3829,11 @@ function showPage(page) {
     return;
   }
 
-  // Load udsendelser page (Email/SMS campaigns)
+  // Load udsendelser page (redirects to marketing broadcasts tab)
   if (page === 'udsendelser') {
-    renderUdsendelserPage();
+    showPage('campaigns');
+    setTimeout(() => switchMarketingTab('broadcasts'), 50);
+    return;
   }
 
   // Load App Builder page
@@ -28061,6 +28063,9 @@ function sendCurrentCampaign() {
 }
 
 // Render Broadcasts List
+// Track selected broadcasts for table
+let selectedBroadcasts = [];
+
 function renderBroadcastsList() {
   const container = document.getElementById('broadcasts-list');
   const emptyEl = document.getElementById('broadcasts-empty');
@@ -28074,21 +28079,126 @@ function renderBroadcastsList() {
 
   if (emptyEl) emptyEl.style.display = 'none';
 
-  container.innerHTML = marketingBroadcasts.map(broadcast => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-weight:500;font-size:14px">${broadcast.campaignName}</div>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          ${broadcast.channels.map(ch => `<span style="font-size:11px">${getChannelIcon(ch)}</span>`).join('')}
-          <span style="font-size:11px;color:var(--muted)">${new Date(broadcast.sentAt).toLocaleString('da-DK')}</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:16px;font-size:12px">
-        <span style="color:var(--success)">✓ ${broadcast.stats.delivered}</span>
-        <span style="color:var(--danger)">✗ ${broadcast.stats.failed}</span>
-      </div>
+  const allSelected = selectedBroadcasts.length === marketingBroadcasts.length && marketingBroadcasts.length > 0;
+  const someSelected = selectedBroadcasts.length > 0 && selectedBroadcasts.length < marketingBroadcasts.length;
+
+  container.innerHTML = `
+    <div class="table-container" style="overflow-x:auto">
+      <table class="data-table" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            <th style="width:40px;padding:12px 8px;text-align:left">
+              <input type="checkbox"
+                id="select-all-broadcasts"
+                onchange="toggleAllBroadcasts(this.checked)"
+                ${allSelected ? 'checked' : ''}
+                ${someSelected ? 'class="indeterminate"' : ''}>
+            </th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Titel</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Type</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Sendt</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Modtagere</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Åbnet</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Klikket</th>
+            <th style="padding:12px 8px;text-align:left;font-weight:500;font-size:13px">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${marketingBroadcasts.map(broadcast => {
+            const isSelected = selectedBroadcasts.includes(broadcast.id);
+            const recipients = broadcast.stats?.recipients || broadcast.stats?.delivered + broadcast.stats?.failed || 0;
+            const opened = broadcast.stats?.opened || broadcast.stats?.delivered || 0;
+            const clicked = broadcast.stats?.clicked || 0;
+            const openRate = recipients > 0 ? Math.round((opened / recipients) * 100) : 0;
+            const clickRate = recipients > 0 ? Math.round((clicked / recipients) * 100) : 0;
+
+            // Determine type badges
+            const typeBadges = broadcast.channels.map(ch => {
+              const colors = {
+                'email': 'background:var(--accent);color:white',
+                'sms': 'background:var(--warning);color:white',
+                'app': 'background:var(--success);color:white',
+                'web': 'background:var(--info);color:white'
+              };
+              return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;${colors[ch] || 'background:var(--muted)'}">${ch.toUpperCase()}</span>`;
+            }).join(' ');
+
+            // Status badge
+            const statusColors = {
+              'completed': 'background:var(--success);color:white',
+              'pending': 'background:var(--warning);color:white',
+              'failed': 'background:var(--danger);color:white',
+              'draft': 'background:var(--muted);color:white'
+            };
+            const statusText = {
+              'completed': 'Sendt',
+              'pending': 'Afventer',
+              'failed': 'Fejlet',
+              'draft': 'Kladde'
+            };
+            const status = broadcast.status || 'completed';
+
+            return `
+              <tr style="border-bottom:1px solid var(--border);${isSelected ? 'background:var(--accent-light, rgba(45, 212, 191, 0.1))' : ''}">
+                <td style="padding:12px 8px">
+                  <input type="checkbox"
+                    onchange="toggleBroadcastSelection('${broadcast.id}')"
+                    ${isSelected ? 'checked' : ''}>
+                </td>
+                <td style="padding:12px 8px">
+                  <span style="font-weight:500;font-size:14px">${broadcast.campaignName}</span>
+                </td>
+                <td style="padding:12px 8px">
+                  <div style="display:flex;gap:4px;flex-wrap:wrap">${typeBadges}</div>
+                </td>
+                <td style="padding:12px 8px;font-size:13px;color:var(--muted)">
+                  ${new Date(broadcast.sentAt).toLocaleDateString('da-DK')}
+                </td>
+                <td style="padding:12px 8px;font-size:13px">
+                  ${recipients.toLocaleString('da-DK')}
+                </td>
+                <td style="padding:12px 8px;font-size:13px">
+                  ${openRate}%
+                </td>
+                <td style="padding:12px 8px;font-size:13px">
+                  ${clickRate > 0 ? clickRate + '%' : '-'}
+                </td>
+                <td style="padding:12px 8px">
+                  <span style="display:inline-block;padding:4px 10px;border-radius:4px;font-size:12px;${statusColors[status]}">${statusText[status]}</span>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
-  `).join('');
+  `;
+
+  // Set indeterminate state for checkbox
+  const selectAllCheckbox = document.getElementById('select-all-broadcasts');
+  if (selectAllCheckbox && someSelected) {
+    selectAllCheckbox.indeterminate = true;
+  }
+}
+
+// Toggle single broadcast selection
+function toggleBroadcastSelection(id) {
+  if (selectedBroadcasts.includes(id)) {
+    selectedBroadcasts = selectedBroadcasts.filter(item => item !== id);
+  } else {
+    selectedBroadcasts.push(id);
+  }
+  renderBroadcastsList();
+}
+
+// Toggle all broadcasts selection
+function toggleAllBroadcasts(checked) {
+  if (checked) {
+    selectedBroadcasts = marketingBroadcasts.map(b => b.id);
+  } else {
+    selectedBroadcasts = [];
+  }
+  renderBroadcastsList();
 }
 
 // Render Segments List
