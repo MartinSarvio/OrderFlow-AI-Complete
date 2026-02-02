@@ -24671,6 +24671,16 @@ function ensureQRCodeLibrary() {
     return Promise.resolve(true);
   }
 
+  const loadScript = (src) => new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.dataset.qrcodeLib = 'true';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+
   return new Promise((resolve) => {
     const existing = document.querySelector('script[data-qrcode-lib="true"]');
     if (existing) {
@@ -24679,13 +24689,15 @@ function ensureQRCodeLibrary() {
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = 'js/vendor/qrcode.min.js';
-    script.async = true;
-    script.dataset.qrcodeLib = 'true';
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.head.appendChild(script);
+    loadScript('js/vendor/qrcode.min.js').then((loaded) => {
+      if (loaded) {
+        resolve(true);
+        return;
+      }
+
+      loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js')
+        .then(resolve);
+    });
   });
 }
 
