@@ -1,5 +1,5 @@
 // OrderFlow Service Worker
-const CACHE_NAME = 'orderflow-v180';
+const CACHE_NAME = 'orderflow-v310';
 
 // Install event - cache basic assets
 self.addEventListener('install', (event) => {
@@ -58,4 +58,21 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request);
       })
   );
+});
+
+// Message handler for cache invalidation
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CLEAR_CMS_CACHE') {
+    caches.keys().then((names) => {
+      Promise.all(names.map((name) => caches.delete(name))).then(() => {
+        self.skipWaiting();
+        // Notify all clients to refresh
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({ type: 'CACHE_CLEARED' });
+          });
+        });
+      });
+    });
+  }
 });

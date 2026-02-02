@@ -25245,6 +25245,9 @@ let currentCMSPageId = null;
 let cmsHasChanges = false;
 let originalCMSPages = null;
 
+// BroadcastChannel for cross-tab CMS sync
+const cmsChannel = new BroadcastChannel('orderflow_cms_channel');
+
 // Default CMS Pages (populated from flowPagesList if no saved data)
 function getDefaultCMSPages() {
   return flowPagesList.map((page, index) => {
@@ -25332,6 +25335,14 @@ function saveCMSPages() {
 
   // Dispatch event for other components
   window.dispatchEvent(new CustomEvent('cmsPagesUpdated', { detail: { pages: cmsPages } }));
+
+  // Broadcast to other tabs for cross-tab sync
+  cmsChannel.postMessage({ type: 'cms_update', pages: cmsPages });
+
+  // Invalidate service worker cache
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CMS_CACHE' });
+  }
 }
 
 // Mark as changed
@@ -25456,6 +25467,7 @@ function switchCMSEditorTab(tab) {
     document.getElementById('cms-page-slug').value = page.slug.replace('.html', '');
     document.getElementById('cms-page-template').value = page.template || 'landing';
     document.getElementById('cms-page-active').checked = page.isActive !== false;
+    document.getElementById('cms-page-cookie-banner').checked = page.showCookieBanner === true;
   }
 }
 
@@ -25523,6 +25535,31 @@ function renderSectionEditor(section) {
         <div class="form-group" style="margin-bottom:12px">
           <label class="form-label" style="font-size:12px">Underoverskrift</label>
           <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'subheadline', this.value)">${section.subheadline || ''}</textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Baggrundsbillede URL</label>
+          <input type="text" class="input" value="${section.backgroundImage || ''}" onchange="updateSectionField('${section.id}', 'backgroundImage', this.value)" placeholder="https://example.com/image.jpg">
+          ${section.backgroundImage ? `<img src="${section.backgroundImage}" style="max-width:100%;max-height:120px;margin-top:8px;border-radius:8px;object-fit:cover">` : ''}
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Baggrundsvideo URL (MP4)</label>
+          <input type="text" class="input" value="${section.backgroundVideo || ''}" onchange="updateSectionField('${section.id}', 'backgroundVideo', this.value)" placeholder="images/hero-video.mp4">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Overlay Opacity (0-100)</label>
+            <input type="range" min="0" max="100" value="${section.backgroundOverlay || 50}" onchange="updateSectionField('${section.id}', 'backgroundOverlay', parseInt(this.value));this.nextElementSibling.textContent=this.value+'%'" style="width:100%">
+            <span style="font-size:11px;color:var(--muted)">${section.backgroundOverlay || 50}%</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Animation</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'animation', this.value)">
+              <option value="none" ${section.animation === 'none' || !section.animation ? 'selected' : ''}>Ingen</option>
+              <option value="fade" ${section.animation === 'fade' ? 'selected' : ''}>Fade In</option>
+              <option value="slide" ${section.animation === 'slide' ? 'selected' : ''}>Slide Up</option>
+              <option value="zoom" ${section.animation === 'zoom' ? 'selected' : ''}>Zoom In</option>
+            </select>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="form-group">
@@ -25604,30 +25641,97 @@ function renderSectionEditor(section) {
         </div>
       `;
     case 'images':
+      const galleryImages = section.images || [];
+      const imagesArray = Array.isArray(galleryImages) ? galleryImages : [];
+      const normalizedImages = imagesArray.map(img => typeof img === 'string' ? { url: img, alt: '' } : img);
       return `
-        <div class="form-group">
-          <label class="form-label" style="font-size:12px">Billede URLs (én per linje)</label>
-          <textarea class="input" rows="4" onchange="updateSectionImages('${section.id}', this.value)">${(section.images || []).join('\n')}</textarea>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Galleri Titel</label>
+          <input type="text" class="input" value="${section.title || ''}" onchange="updateSectionField('${section.id}', 'title', this.value)">
         </div>
-        <div class="form-group" style="margin-top:12px">
-          <label class="form-label" style="font-size:12px">Layout</label>
-          <select class="input" onchange="updateSectionField('${section.id}', 'layout', this.value)">
-            <option value="gallery" ${section.layout === 'gallery' ? 'selected' : ''}>Galleri</option>
-            <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
-            <option value="single" ${section.layout === 'single' ? 'selected' : ''}>Enkelt</option>
-          </select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Layout</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+              <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
+              <option value="carousel" ${section.layout === 'carousel' ? 'selected' : ''}>Karrusel</option>
+              <option value="masonry" ${section.layout === 'masonry' ? 'selected' : ''}>Masonry</option>
+              <option value="single" ${section.layout === 'single' ? 'selected' : ''}>Enkelt</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Kolonner</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'columns', parseInt(this.value))">
+              <option value="2" ${section.columns === 2 ? 'selected' : ''}>2</option>
+              <option value="3" ${section.columns === 3 || !section.columns ? 'selected' : ''}>3</option>
+              <option value="4" ${section.columns === 4 ? 'selected' : ''}>4</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Billeder (${normalizedImages.length})</label>
+          <div id="gallery-images-${section.id}" style="max-height:350px;overflow-y:auto">
+            ${normalizedImages.map((img, idx) => `
+              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;padding:8px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border)">
+                ${img.url ? `<img src="${img.url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0">` : '<div style="width:60px;height:60px;background:var(--border);border-radius:4px;flex-shrink:0"></div>'}
+                <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+                  <input type="text" class="input" placeholder="Billede URL" value="${img.url || ''}" onchange="updateGalleryImage('${section.id}', ${idx}, 'url', this.value)">
+                  <input type="text" class="input" placeholder="Alt tekst (SEO)" value="${img.alt || ''}" onchange="updateGalleryImage('${section.id}', ${idx}, 'alt', this.value)">
+                </div>
+                <button class="btn btn-sm" style="background:var(--danger);color:white;height:32px;flex-shrink:0" onclick="removeGalleryImage('${section.id}', ${idx})">X</button>
+              </div>
+            `).join('')}
+          </div>
+          <button class="btn btn-sm" onclick="addGalleryImage('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j billede</button>
         </div>
       `;
     case 'trusted':
+      const trustedCards = section.cards || [];
       return `
         <div class="form-group" style="margin-bottom:12px">
           <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
           <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Layout</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+              <option value="carousel" ${section.layout === 'carousel' || !section.layout ? 'selected' : ''}>Karrusel</option>
+              <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
+              <option value="masonry" ${section.layout === 'masonry' ? 'selected' : ''}>Masonry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Animation</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'animation', this.value)">
+              <option value="none" ${section.animation === 'none' || !section.animation ? 'selected' : ''}>Ingen</option>
+              <option value="fade" ${section.animation === 'fade' ? 'selected' : ''}>Fade In</option>
+              <option value="slide" ${section.animation === 'slide' ? 'selected' : ''}>Slide</option>
+            </select>
+          </div>
+        </div>
         <div class="form-group">
-          <label class="form-label" style="font-size:12px">Testimonial Cards (JSON)</label>
-          <textarea class="input" rows="8" onchange="updateSectionField('${section.id}', 'cards', JSON.parse(this.value || '[]'))">${JSON.stringify(section.cards || [], null, 2)}</textarea>
-          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"name": "Navn", "role": "Firma", "quote": "Citat", "image": "url"}]</p>
+          <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Udtalelser (${trustedCards.length})</label>
+          <div id="trusted-cards-${section.id}" style="max-height:400px;overflow-y:auto">
+            ${trustedCards.map((card, idx) => `
+              <div style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+                  <input type="text" class="input" placeholder="Navn" value="${card.name || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'name', this.value)">
+                  <input type="text" class="input" placeholder="Firma/Rolle" value="${card.role || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'role', this.value)">
+                </div>
+                <textarea class="input" rows="2" placeholder="Udtalelse" onchange="updateReviewItem('${section.id}', ${idx}, 'quote', this.value)" style="margin-bottom:8px">${card.quote || ''}</textarea>
+                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
+                  <div>
+                    <input type="text" class="input" placeholder="Billede URL" value="${card.image || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'image', this.value)" style="margin-bottom:4px">
+                    <input type="text" class="input" placeholder="Gradient (valgfrit)" value="${card.gradient || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'gradient', this.value)">
+                  </div>
+                  <button class="btn btn-sm" style="background:var(--danger);color:white;height:32px" onclick="removeReviewItem('${section.id}', ${idx})">Fjern</button>
+                </div>
+                ${card.image ? `<img src="${card.image}" style="max-width:60px;height:60px;object-fit:cover;border-radius:50%;margin-top:8px">` : ''}
+              </div>
+            `).join('')}
+          </div>
+          <button class="btn btn-sm" onclick="addReviewItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j udtalelse</button>
         </div>
       `;
     case 'appleFeatures':
@@ -25762,6 +25866,104 @@ function updateSectionImages(sectionId, value) {
     section.images = value.split('\n').filter(line => line.trim());
     page.updatedAt = new Date().toISOString();
     markCMSChanged();
+  }
+}
+
+// Update review/testimonial item
+function updateReviewItem(sectionId, itemIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section && section.cards && section.cards[itemIndex]) {
+    section.cards[itemIndex][field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Add new review/testimonial item
+function addReviewItem(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.cards) section.cards = [];
+    section.cards.push({
+      name: '',
+      role: '',
+      quote: '',
+      image: '',
+      gradient: ''
+    });
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSPageEditor();
+  }
+}
+
+// Remove review/testimonial item
+function removeReviewItem(sectionId, itemIndex) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section && section.cards) {
+    section.cards.splice(itemIndex, 1);
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSPageEditor();
+  }
+}
+
+// Update gallery image
+function updateGalleryImage(sectionId, imageIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    // Normalize images array to objects
+    if (!section.images) section.images = [];
+    section.images = section.images.map(img => typeof img === 'string' ? { url: img, alt: '' } : img);
+
+    if (section.images[imageIndex]) {
+      section.images[imageIndex][field] = value;
+      page.updatedAt = new Date().toISOString();
+      markCMSChanged();
+    }
+  }
+}
+
+// Add new gallery image
+function addGalleryImage(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.images) section.images = [];
+    // Normalize existing images
+    section.images = section.images.map(img => typeof img === 'string' ? { url: img, alt: '' } : img);
+    section.images.push({ url: '', alt: '' });
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSPageEditor();
+  }
+}
+
+// Remove gallery image
+function removeGalleryImage(sectionId, imageIndex) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section && section.images) {
+    section.images.splice(imageIndex, 1);
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSPageEditor();
   }
 }
 
@@ -26012,6 +26214,134 @@ function previewCurrentPage() {
   }
 }
 
+// Schedule page changes
+function schedulePageChanges() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  // Get minimum datetime (now + 1 minute)
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 1);
+  const minDatetime = now.toISOString().slice(0, 16);
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = 'schedule-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <h3 style="margin:0">Planlaeg aendringer</h3>
+        <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
+      </div>
+      <div class="modal-body" style="padding:20px">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Dato og tid for offentliggoerelse</label>
+          <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
+        </div>
+        <p style="font-size:12px;color:var(--muted)">
+          De nuvaerende aendringer vil blive gemt og automatisk publiceret paa det valgte tidspunkt.
+        </p>
+        ${page.scheduledChanges && page.scheduledChanges.filter(s => s.status === 'pending').length > 0 ? `
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+            <label class="form-label">Planlagte aendringer</label>
+            ${page.scheduledChanges.filter(s => s.status === 'pending').map(s => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg-secondary);border-radius:4px;margin-top:8px">
+                <span style="font-size:12px">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
+                <div>
+                  <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="margin-right:4px">Se preview</button>
+                  <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Annuller</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+      <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn" onclick="closeScheduleModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="confirmSchedule()">Planlaeg</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Close schedule modal
+function closeScheduleModal() {
+  const modal = document.getElementById('schedule-modal');
+  if (modal) modal.remove();
+}
+
+// Confirm schedule
+function confirmSchedule() {
+  const datetime = document.getElementById('schedule-datetime').value;
+  if (!datetime) {
+    toast('Vaelg en dato og tid', 'error');
+    return;
+  }
+
+  const scheduledTime = new Date(datetime);
+  if (scheduledTime <= new Date()) {
+    toast('Tidspunktet skal vaere i fremtiden', 'error');
+    return;
+  }
+
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  // Create scheduled change
+  const scheduledChange = {
+    id: 'schedule-' + Date.now(),
+    sections: JSON.parse(JSON.stringify(page.sections)),
+    scheduledFor: scheduledTime.toISOString(),
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+
+  if (!page.scheduledChanges) page.scheduledChanges = [];
+  page.scheduledChanges.push(scheduledChange);
+
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+
+  closeScheduleModal();
+  toast('Aendringer planlagt til ' + scheduledTime.toLocaleString('da-DK'), 'success');
+  renderCMSPageEditor();
+}
+
+// Preview scheduled changes
+function previewScheduledChanges(scheduleId) {
+  const page = getCurrentCMSPage();
+  if (!page || !page.scheduledChanges) return;
+
+  const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
+  if (!schedule) return;
+
+  // Store scheduled sections temporarily for preview
+  localStorage.setItem('orderflow_cms_preview', JSON.stringify({
+    pageSlug: page.slug,
+    sections: schedule.sections
+  }));
+
+  // Open preview with query parameter
+  window.open(page.slug + '?preview=scheduled', '_blank');
+}
+
+// Cancel scheduled change
+function cancelScheduledChange(scheduleId) {
+  const page = getCurrentCMSPage();
+  if (!page || !page.scheduledChanges) return;
+
+  const idx = page.scheduledChanges.findIndex(s => s.id === scheduleId);
+  if (idx !== -1) {
+    page.scheduledChanges[idx].status = 'cancelled';
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    closeScheduleModal();
+    toast('Planlagt aendring annulleret', 'success');
+    renderCMSPageEditor();
+  }
+}
+
 // Update current page title
 function updateCurrentPageTitle() {
   const page = getCurrentCMSPage();
@@ -26074,6 +26404,19 @@ function updateCurrentPageActive() {
   const checkbox = document.getElementById('cms-page-active');
   if (checkbox) {
     page.isActive = checkbox.checked;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update current page cookie banner setting
+function updateCurrentPageCookieBanner() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const checkbox = document.getElementById('cms-page-cookie-banner');
+  if (checkbox) {
+    page.showCookieBanner = checkbox.checked;
     page.updatedAt = new Date().toISOString();
     markCMSChanged();
   }

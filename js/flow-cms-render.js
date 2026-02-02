@@ -22,6 +22,15 @@
    * Load and apply CMS content from orderflow_cms_pages
    */
   function loadCMSContent() {
+    // Check if this is a scheduled preview
+    const urlParams = new URLSearchParams(window.location.search);
+    const isScheduledPreview = urlParams.get('preview') === 'scheduled';
+
+    if (isScheduledPreview) {
+      loadScheduledPreview();
+      return;
+    }
+
     const saved = localStorage.getItem('orderflow_cms_pages');
     if (!saved) {
       console.log('Flow CMS: No CMS pages found, using defaults');
@@ -60,6 +69,87 @@
       console.log('Flow CMS: Content loaded for ' + pageSlug + ' (' + visibleSections.length + ' sections)');
     } catch (e) {
       console.warn('Flow CMS: Error loading content for ' + pageSlug, e);
+    }
+  }
+
+  /**
+   * Load scheduled preview content
+   */
+  function loadScheduledPreview() {
+    const preview = localStorage.getItem('orderflow_cms_preview');
+    if (!preview) {
+      console.log('Flow CMS: No scheduled preview data found');
+      return;
+    }
+
+    try {
+      const previewData = JSON.parse(preview);
+      const currentSlug = pageSlug + '.html';
+
+      if (previewData.pageSlug !== currentSlug && previewData.pageSlug !== pageSlug) {
+        console.log('Flow CMS: Preview data is for a different page');
+        return;
+      }
+
+      // Show preview banner
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f59e0b;color:#000;padding:12px;text-align:center;z-index:10000;font-weight:500';
+      banner.innerHTML = 'PREVIEW: Dette er en forhåndsvisning af planlagte ændringer. <button onclick="window.close()" style="margin-left:12px;padding:4px 12px;border:none;border-radius:4px;cursor:pointer">Luk</button>';
+      document.body.insertBefore(banner, document.body.firstChild);
+      document.body.style.paddingTop = '48px';
+
+      // Render preview sections
+      const visibleSections = (previewData.sections || [])
+        .filter(s => s.isVisible !== false)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      visibleSections.forEach(section => {
+        renderSection(section);
+      });
+
+      console.log('Flow CMS: Scheduled preview loaded (' + visibleSections.length + ' sections)');
+    } catch (e) {
+      console.warn('Flow CMS: Error loading scheduled preview', e);
+    }
+  }
+
+  /**
+   * Check for scheduled changes that should be applied
+   */
+  function checkScheduledChanges() {
+    const saved = localStorage.getItem('orderflow_cms_pages');
+    if (!saved) return;
+
+    try {
+      const pages = JSON.parse(saved);
+      let hasChanges = false;
+      const now = Date.now();
+
+      pages.forEach(page => {
+        if (!page.scheduledChanges) return;
+
+        page.scheduledChanges.forEach(schedule => {
+          if (schedule.status !== 'pending') return;
+
+          const scheduledTime = new Date(schedule.scheduledFor).getTime();
+
+          if (scheduledTime <= now) {
+            // Apply scheduled changes
+            page.sections = schedule.sections;
+            schedule.status = 'applied';
+            page.updatedAt = new Date().toISOString();
+            hasChanges = true;
+            console.log('Flow CMS: Applied scheduled changes for', page.slug);
+          }
+        });
+      });
+
+      if (hasChanges) {
+        localStorage.setItem('orderflow_cms_pages', JSON.stringify(pages));
+        loadCMSContent();
+      }
+    } catch (e) {
+      console.error('Flow CMS: Error checking scheduled changes', e);
     }
   }
 
@@ -109,7 +199,7 @@
 
   /**
    * Render Hero Section
-   * Fields: headline, subheadline, alignment, buttons[]
+   * Fields: headline, subheadline, alignment, buttons[], backgroundImage, backgroundVideo, backgroundOverlay, animation
    */
   function renderHeroSection(section) {
     if (!section) return;
@@ -134,6 +224,61 @@
       const p = heroSection.querySelector('.hero-content p, .hero-description, .hero p:not(.small)');
       if (p) {
         p.textContent = section.subheadline;
+      }
+    }
+
+    // Update background image
+    if (section.backgroundImage) {
+      const videoBg = heroSection.querySelector('.hero-video-bg');
+      if (videoBg) {
+        videoBg.style.backgroundImage = `url(${section.backgroundImage})`;
+        videoBg.style.backgroundSize = 'cover';
+        videoBg.style.backgroundPosition = 'center';
+      } else {
+        // Try setting on hero section directly
+        heroSection.style.backgroundImage = `url(${section.backgroundImage})`;
+        heroSection.style.backgroundSize = 'cover';
+        heroSection.style.backgroundPosition = 'center';
+      }
+    }
+
+    // Update background video
+    if (section.backgroundVideo) {
+      const videoSource = heroSection.querySelector('.hero-video-bg video source, video source');
+      if (videoSource) {
+        videoSource.src = section.backgroundVideo;
+        videoSource.parentElement.load();
+      }
+    }
+
+    // Update overlay opacity via CSS variable
+    if (section.backgroundOverlay !== undefined) {
+      heroSection.style.setProperty('--hero-overlay-opacity', section.backgroundOverlay / 100);
+      // Also try to update the overlay directly
+      const overlay = heroSection.querySelector('.hero-video-bg');
+      if (overlay) {
+        // Create or update pseudo-element via inline style
+        const overlayOpacity = section.backgroundOverlay / 100;
+        overlay.style.setProperty('--overlay-opacity', overlayOpacity);
+      }
+    }
+
+    // Apply animation
+    if (section.animation && section.animation !== 'none') {
+      heroSection.classList.add('cms-animate-' + section.animation);
+      // Add animation styles if not present
+      if (!document.getElementById('cms-animation-styles')) {
+        const style = document.createElement('style');
+        style.id = 'cms-animation-styles';
+        style.textContent = `
+          .cms-animate-fade { animation: cmsFadeIn 0.8s ease-out; }
+          .cms-animate-slide { animation: cmsSlideUp 0.8s ease-out; }
+          .cms-animate-zoom { animation: cmsZoomIn 0.8s ease-out; }
+          @keyframes cmsFadeIn { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes cmsSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes cmsZoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        `;
+        document.head.appendChild(style);
       }
     }
 
@@ -317,7 +462,7 @@
 
   /**
    * Render Images Section
-   * Fields: images[], layout
+   * Fields: images[], layout, title, columns
    */
   function renderImagesSection(section) {
     if (!section || !section.images || section.images.length === 0) return;
@@ -328,13 +473,35 @@
 
     if (!imagesSection) return;
 
+    // Update title if present
+    if (section.title) {
+      const title = imagesSection.querySelector('h2, h3, .gallery-title');
+      if (title) {
+        title.textContent = section.title;
+      }
+    }
+
+    // Apply layout class
+    if (section.layout) {
+      imagesSection.classList.remove('layout-grid', 'layout-carousel', 'layout-masonry', 'layout-single');
+      imagesSection.classList.add('layout-' + section.layout);
+    }
+
+    // Apply columns
+    if (section.columns) {
+      imagesSection.style.setProperty('--gallery-columns', section.columns);
+    }
+
     const imageElements = imagesSection.querySelectorAll('img');
 
     section.images.forEach((image, index) => {
-      if (imageElements[index] && image.url) {
-        imageElements[index].src = image.url;
-        if (image.alt) {
-          imageElements[index].alt = image.alt;
+      // Normalize image format (can be string or object)
+      const imgData = typeof image === 'string' ? { url: image, alt: '' } : image;
+
+      if (imageElements[index] && imgData.url) {
+        imageElements[index].src = imgData.url;
+        if (imgData.alt) {
+          imageElements[index].alt = imgData.alt;
         }
       }
     });
@@ -342,7 +509,7 @@
 
   /**
    * Render Trusted Section (Testimonial Carousel)
-   * Fields: heading, cards[] (name, role, quote, image, gradient)
+   * Fields: heading, cards[] (name, role, quote, image, gradient), layout, animation
    */
   function renderTrustedSection(section) {
     if (!section) return;
@@ -361,6 +528,17 @@
       }
     }
 
+    // Apply layout class
+    if (section.layout) {
+      trustedSection.classList.remove('layout-carousel', 'layout-grid', 'layout-masonry');
+      trustedSection.classList.add('layout-' + section.layout);
+    }
+
+    // Apply animation
+    if (section.animation && section.animation !== 'none') {
+      trustedSection.classList.add('cms-animate-' + section.animation);
+    }
+
     // Update cards
     if (section.cards && section.cards.length > 0) {
       const cards = trustedSection.querySelectorAll('.carousel-card, .testimonial-card');
@@ -375,6 +553,11 @@
           if (role && card.role) role.textContent = card.role;
           if (quote && card.quote) quote.textContent = card.quote;
           if (img && card.image) img.src = card.image;
+
+          // Apply gradient background if specified
+          if (card.gradient) {
+            cards[index].style.background = card.gradient;
+          }
         }
       });
     }
@@ -520,10 +703,76 @@
   }
 
   /**
+   * Load cookie consent if enabled for this page
+   */
+  function loadCookieConsentIfEnabled() {
+    const saved = localStorage.getItem('orderflow_cms_pages');
+    if (!saved) return;
+
+    try {
+      const pages = JSON.parse(saved);
+      const pageData = pages.find(p => {
+        const pSlug = (p.slug || '').replace('.html', '');
+        return pSlug === pageSlug || p.slug === pageSlug + '.html';
+      });
+
+      if (pageData && pageData.showCookieBanner === true) {
+        // Load cookie consent CSS
+        if (!document.querySelector('link[href*="cookie-consent.css"]')) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = 'css/cookie-consent.css';
+          document.head.appendChild(link);
+        }
+
+        // Load cookie consent JS
+        if (!document.querySelector('script[src*="cookie-consent.js"]')) {
+          const script = document.createElement('script');
+          script.src = 'js/cookie-consent.js';
+          document.body.appendChild(script);
+        }
+
+        console.log('Flow CMS: Cookie consent loaded for', pageSlug);
+      }
+    } catch (e) {
+      console.warn('Flow CMS: Error checking cookie consent setting', e);
+    }
+  }
+
+  /**
    * Initialize CMS content on DOM ready
    */
   function init() {
+    // Check for scheduled changes first
+    checkScheduledChanges();
+
+    // Load CMS content
     loadCMSContent();
+
+    // Load cookie consent if enabled for this page
+    loadCookieConsentIfEnabled();
+
+    // Listen for cross-tab CMS updates via BroadcastChannel
+    const cmsChannel = new BroadcastChannel('orderflow_cms_channel');
+    cmsChannel.onmessage = (event) => {
+      if (event.data && event.data.type === 'cms_update') {
+        console.log('Flow CMS: Received update from another tab, reloading content...');
+        loadCMSContent();
+      }
+    };
+
+    // Listen for service worker cache clear notifications
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'CACHE_CLEARED') {
+          console.log('Flow CMS: Cache cleared, reloading content...');
+          loadCMSContent();
+        }
+      });
+    }
+
+    // Check for scheduled changes every 60 seconds
+    setInterval(checkScheduledChanges, 60000);
   }
 
   // Run when DOM is ready
