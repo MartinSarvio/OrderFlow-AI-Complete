@@ -3829,6 +3829,11 @@ function showPage(page) {
     return;
   }
 
+  // Load udsendelser page (Email/SMS campaigns)
+  if (page === 'udsendelser') {
+    renderUdsendelserPage();
+  }
+
   // Load App Builder page
   if (page === 'appbuilder') {
     showAppBuilderPage('design');
@@ -22308,7 +22313,27 @@ async function renderLoyaltyPage() {
           </div>
         </div>
 
-        <button class="btn btn-primary" style="margin-top:16px" onclick="saveLoyaltySettings()">Gem indstillinger</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+          <span id="settings-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
+          <button class="btn btn-primary" onclick="saveLoyaltySettings()">Gem indstillinger</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loyalty Tiers for Website & App -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <div>
+          <h3>Loyalty Tiers</h3>
+          <p class="text-secondary" style="margin:4px 0 0;font-size:13px">Konfigurer tiers for website og app</p>
+        </div>
+      </div>
+      <div class="card-body" id="loyalty-tiers-container">
+        ${renderLoyaltyTiersHTML(settings)}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-top:1px solid var(--border)">
+        <span id="tiers-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
+        <button class="btn btn-primary" onclick="saveLoyaltyTiers()">Gem tiers</button>
       </div>
     </div>
 
@@ -22424,10 +22449,140 @@ async function saveLoyaltySettings() {
     );
 
     loyaltySettings = { ...loyaltySettings, ...settings };
+    const statusEl = document.getElementById('settings-save-status');
+    if (statusEl) {
+      statusEl.style.display = 'inline';
+      setTimeout(() => statusEl.style.display = 'none', 3000);
+    }
     toast('Indstillinger gemt', 'success');
   } catch (err) {
     console.error('saveLoyaltySettings error:', err);
     toast('Fejl ved gem', 'error');
+  }
+}
+
+// Render Loyalty Tiers HTML for website and app
+function renderLoyaltyTiersHTML(settings) {
+  const tiers = settings?.loyalty_tiers || [
+    { name: 'Bronze', min_points: 0, max_points: 500, benefit: '5% rabat på ordrer' },
+    { name: 'Sølv', min_points: 501, max_points: 2000, benefit: '10% rabat på ordrer' },
+    { name: 'Guld', min_points: 2001, max_points: null, benefit: '15% rabat + gratis levering' }
+  ];
+
+  return `
+    <div id="loyalty-tiers-list">
+      ${tiers.map((tier, index) => `
+        <div class="tier-row" data-tier-index="${index}" style="display:grid; grid-template-columns:1fr 100px 100px 2fr 40px; gap:12px; align-items:center; padding:12px; background:var(--card2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px;">
+          <input type="text" class="input tier-name" value="${tier.name}" placeholder="Tier navn">
+          <input type="number" class="input tier-min" value="${tier.min_points}" placeholder="Fra" min="0">
+          <input type="number" class="input tier-max" value="${tier.max_points || ''}" placeholder="Til">
+          <input type="text" class="input tier-benefit" value="${tier.benefit}" placeholder="Fordele (fx 5% rabat)">
+          <button class="btn btn-sm btn-icon" onclick="removeLoyaltyTier(${index})" title="Fjern tier" style="padding:8px;color:var(--danger)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-secondary" onclick="addLoyaltyTier()" style="margin-top:8px">+ Tilføj tier</button>
+  `;
+}
+
+// Add a new loyalty tier
+function addLoyaltyTier() {
+  const container = document.getElementById('loyalty-tiers-list');
+  if (!container) return;
+
+  const tierRows = container.querySelectorAll('.tier-row');
+  const newIndex = tierRows.length;
+
+  const newTierHTML = `
+    <div class="tier-row" data-tier-index="${newIndex}" style="display:grid; grid-template-columns:1fr 100px 100px 2fr 40px; gap:12px; align-items:center; padding:12px; background:var(--card2); border:1px solid var(--border); border-radius:8px; margin-bottom:12px;">
+      <input type="text" class="input tier-name" value="" placeholder="Tier navn">
+      <input type="number" class="input tier-min" value="" placeholder="Fra" min="0">
+      <input type="number" class="input tier-max" value="" placeholder="Til">
+      <input type="text" class="input tier-benefit" value="" placeholder="Fordele (fx 5% rabat)">
+      <button class="btn btn-sm btn-icon" onclick="removeLoyaltyTier(${newIndex})" title="Fjern tier" style="padding:8px;color:var(--danger)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  `;
+
+  container.insertAdjacentHTML('beforeend', newTierHTML);
+}
+
+// Remove a loyalty tier
+function removeLoyaltyTier(index) {
+  const container = document.getElementById('loyalty-tiers-list');
+  if (!container) return;
+
+  const tierRow = container.querySelector(`.tier-row[data-tier-index="${index}"]`);
+  if (tierRow) {
+    tierRow.remove();
+    // Re-index remaining tiers
+    const rows = container.querySelectorAll('.tier-row');
+    rows.forEach((row, i) => {
+      row.dataset.tierIndex = i;
+      const removeBtn = row.querySelector('button');
+      if (removeBtn) {
+        removeBtn.setAttribute('onclick', `removeLoyaltyTier(${i})`);
+      }
+    });
+  }
+}
+
+// Save loyalty tiers
+async function saveLoyaltyTiers() {
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) return;
+
+  const container = document.getElementById('loyalty-tiers-list');
+  if (!container) return;
+
+  const tierRows = container.querySelectorAll('.tier-row');
+  const tiers = [];
+
+  tierRows.forEach(row => {
+    const name = row.querySelector('.tier-name')?.value?.trim();
+    const minPoints = parseInt(row.querySelector('.tier-min')?.value) || 0;
+    const maxPoints = row.querySelector('.tier-max')?.value ? parseInt(row.querySelector('.tier-max')?.value) : null;
+    const benefit = row.querySelector('.tier-benefit')?.value?.trim();
+
+    if (name) {
+      tiers.push({
+        name,
+        min_points: minPoints,
+        max_points: maxPoints,
+        benefit: benefit || ''
+      });
+    }
+  });
+
+  try {
+    await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_settings?restaurant_id=eq.${restaurantId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          loyalty_tiers: tiers,
+          updated_at: new Date().toISOString()
+        })
+      }
+    );
+
+    const statusEl = document.getElementById('tiers-save-status');
+    if (statusEl) {
+      statusEl.style.display = 'inline';
+      setTimeout(() => statusEl.style.display = 'none', 3000);
+    }
+    toast('Loyalty tiers gemt', 'success');
+  } catch (err) {
+    console.error('saveLoyaltyTiers error:', err);
+    toast('Fejl ved gem af tiers', 'error');
   }
 }
 
@@ -22635,6 +22790,9 @@ function showMemberDetails(memberId) {
 // Export loyalty functions
 window.renderLoyaltyPage = renderLoyaltyPage;
 window.saveLoyaltySettings = saveLoyaltySettings;
+window.saveLoyaltyTiers = saveLoyaltyTiers;
+window.addLoyaltyTier = addLoyaltyTier;
+window.removeLoyaltyTier = removeLoyaltyTier;
 window.toggleLoyaltyEnabled = toggleLoyaltyEnabled;
 window.filterLoyaltyMembers = filterLoyaltyMembers;
 window.showAddRewardModal = showAddRewardModal;
@@ -23408,6 +23566,157 @@ window.saveSegment = saveSegment;
 window.deleteSegment = deleteSegment;
 window.viewSegmentCustomers = viewSegmentCustomers;
 window.sendToSegment = sendToSegment;
+
+// =====================================================
+// UDSENDELSER (Email/SMS Campaign Overview)
+// =====================================================
+
+// Cache for udsendelser
+let udsendelserCache = [];
+
+// Render udsendelser page
+async function renderUdsendelserPage() {
+  const contentEl = document.getElementById('udsendelser-content');
+  if (!contentEl) return;
+
+  contentEl.innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+
+  // Get restaurant ID
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+
+  // Mock data for now - can be replaced with real API calls
+  const udsendelser = [
+    { id: 1, title: 'Velkomsttilbud til nye kunder', type: 'email', sent_at: '2024-01-15', recipients: 156, opened: 89, clicked: 34, status: 'completed' },
+    { id: 2, title: 'Weekend special SMS', type: 'sms', sent_at: '2024-01-12', recipients: 423, opened: null, clicked: null, status: 'completed' },
+    { id: 3, title: 'Nyhedsbrev januar', type: 'email', sent_at: '2024-01-10', recipients: 892, opened: 456, clicked: 123, status: 'completed' },
+    { id: 4, title: 'Loyalitetsbonus reminder', type: 'sms', sent_at: '2024-01-05', recipients: 234, opened: null, clicked: null, status: 'completed' }
+  ];
+
+  // Calculate stats
+  const totalSent = udsendelser.reduce((sum, u) => sum + u.recipients, 0);
+  const emailUdsendelser = udsendelser.filter(u => u.type === 'email');
+  const avgOpenRate = emailUdsendelser.length > 0
+    ? Math.round(emailUdsendelser.reduce((sum, u) => sum + ((u.opened / u.recipients) * 100), 0) / emailUdsendelser.length)
+    : 0;
+  const avgClickRate = emailUdsendelser.length > 0
+    ? Math.round(emailUdsendelser.reduce((sum, u) => sum + ((u.clicked / u.recipients) * 100), 0) / emailUdsendelser.length)
+    : 0;
+
+  const html = `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h1>Udsendelser</h1>
+        <p class="text-secondary">Oversigt over email og SMS kampagner</p>
+      </div>
+      <button class="btn btn-primary" onclick="showCreateUdsendelseModal()">Opret udsendelse</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card">
+        <div class="stat-value">${udsendelser.length}</div>
+        <div class="stat-label">Udsendelser</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${totalSent.toLocaleString('da-DK')}</div>
+        <div class="stat-label">Sendt i alt</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${avgOpenRate}%</div>
+        <div class="stat-label">Gns. åbningsrate</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${avgClickRate}%</div>
+        <div class="stat-label">Gns. klikrate</div>
+      </div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="card">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h3>Sendte udsendelser</h3>
+        <div class="btn-group" id="udsendelser-filter">
+          <button class="btn btn-sm active" onclick="filterUdsendelser('all')">Alle</button>
+          <button class="btn btn-sm" onclick="filterUdsendelser('email')">Email</button>
+          <button class="btn btn-sm" onclick="filterUdsendelser('sms')">SMS</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table class="data-table" id="udsendelser-table">
+            <thead>
+              <tr>
+                <th>Titel</th>
+                <th>Type</th>
+                <th>Sendt</th>
+                <th>Modtagere</th>
+                <th>Åbnet</th>
+                <th>Klikket</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${udsendelser.map(u => `
+                <tr data-type="${u.type}">
+                  <td><strong>${u.title}</strong></td>
+                  <td>
+                    <span class="badge" style="background:${u.type === 'email' ? 'var(--accent)' : 'var(--warning)'};color:white">
+                      ${u.type === 'email' ? 'Email' : 'SMS'}
+                    </span>
+                  </td>
+                  <td>${new Date(u.sent_at).toLocaleDateString('da-DK')}</td>
+                  <td>${u.recipients.toLocaleString('da-DK')}</td>
+                  <td>${u.opened !== null ? Math.round((u.opened / u.recipients) * 100) + '%' : '-'}</td>
+                  <td>${u.clicked !== null ? Math.round((u.clicked / u.recipients) * 100) + '%' : '-'}</td>
+                  <td>
+                    <span class="badge badge-success">Sendt</span>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  contentEl.innerHTML = html;
+}
+
+// Filter udsendelser by type
+function filterUdsendelser(type) {
+  const table = document.getElementById('udsendelser-table');
+  if (!table) return;
+
+  const rows = table.querySelectorAll('tbody tr');
+  rows.forEach(row => {
+    if (type === 'all' || row.dataset.type === type) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+
+  // Update active button
+  const buttons = document.querySelectorAll('#udsendelser-filter .btn');
+  buttons.forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.toLowerCase().includes(type) || (type === 'all' && btn.textContent === 'Alle')) {
+      btn.classList.add('active');
+    }
+  });
+}
+
+// Show create udsendelse modal
+function showCreateUdsendelseModal() {
+  // TODO: Implement create udsendelse modal
+  toast('Opret udsendelse kommer snart', 'info');
+}
+
+// Export udsendelser functions
+window.renderUdsendelserPage = renderUdsendelserPage;
+window.filterUdsendelser = filterUdsendelser;
+window.showCreateUdsendelseModal = showCreateUdsendelseModal;
 
 // =====================================================
 // ROLE MANAGEMENT
@@ -25248,10 +25557,434 @@ let originalCMSPages = null;
 // BroadcastChannel for cross-tab CMS sync
 const cmsChannel = new BroadcastChannel('orderflow_cms_channel');
 
+// =====================================================
+// MEDIA LIBRARY
+// =====================================================
+
+let mediaLibraryTarget = null; // { sectionId, field } or callback function
+let mediaLibraryItems = [];
+let selectedMediaItem = null;
+
+// Open media library modal
+// target can be: string (input id), function (callback), or object with sectionId/field
+// sectionId and field are used for CMS section field updates
+async function openMediaLibrary(target, sectionId, field, mediaType = 'image') {
+  // If called with sectionId and field, construct the target object
+  if (sectionId && field) {
+    // Handle nested paths like tabs.0.image
+    if (field.includes('.')) {
+      const parts = field.split('.');
+      mediaLibraryTarget = {
+        inputId: target,
+        sectionId,
+        nestedPath: parts,
+        type: mediaType === 'video' ? 'video' : 'image'
+      };
+    } else {
+      mediaLibraryTarget = { inputId: target, sectionId, field, type: mediaType === 'video' ? 'video' : 'image' };
+    }
+  } else {
+    mediaLibraryTarget = target;
+  }
+  selectedMediaItem = null;
+
+  const modal = document.getElementById('media-library-modal');
+  const grid = document.getElementById('media-library-grid');
+  const empty = document.getElementById('media-library-empty');
+  const loading = document.getElementById('media-library-loading');
+  const selectBtn = document.getElementById('media-select-btn');
+
+  if (!modal) return;
+
+  modal.classList.add('active');
+  grid.innerHTML = '';
+  empty.style.display = 'none';
+  loading.style.display = 'block';
+  selectBtn.disabled = true;
+
+  // Load media from Supabase
+  try {
+    mediaLibraryItems = await SupabaseDB.listMedia('images');
+    renderMediaLibrary();
+  } catch (err) {
+    console.error('Error loading media:', err);
+    toast('Kunne ikke indlæse billeder', 'error');
+  }
+
+  loading.style.display = 'none';
+}
+
+// Close media library modal
+function closeMediaLibrary() {
+  const modal = document.getElementById('media-library-modal');
+  if (modal) {
+    modal.classList.remove('active');
+  }
+  mediaLibraryTarget = null;
+  selectedMediaItem = null;
+}
+
+// Render media library grid
+function renderMediaLibrary(filter = '') {
+  const grid = document.getElementById('media-library-grid');
+  const empty = document.getElementById('media-library-empty');
+
+  if (!grid) return;
+
+  const filteredItems = filter
+    ? mediaLibraryItems.filter(item => item.name.toLowerCase().includes(filter.toLowerCase()))
+    : mediaLibraryItems;
+
+  if (filteredItems.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  grid.innerHTML = filteredItems.map(item => `
+    <div class="media-library-item" data-path="${item.path}" data-url="${item.url}" onclick="selectMediaLibraryItem(this)" style="cursor:pointer;border:2px solid transparent;border-radius:8px;overflow:hidden;background:var(--bg-secondary);transition:border-color 0.2s">
+      <div style="aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg-tertiary)">
+        ${item.type === 'video'
+          ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover" muted></video>`
+          : `<img src="${item.url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover">`
+        }
+      </div>
+      <div style="padding:8px;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
+      <button onclick="event.stopPropagation();deleteMediaLibraryItem('${item.path}')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);color:white;border:none;border-radius:4px;padding:4px 8px;font-size:11px;cursor:pointer;opacity:0;transition:opacity 0.2s" class="media-delete-btn">Slet</button>
+    </div>
+  `).join('');
+
+  // Add hover effect for delete button
+  grid.querySelectorAll('.media-library-item').forEach(item => {
+    item.addEventListener('mouseenter', () => {
+      item.querySelector('.media-delete-btn').style.opacity = '1';
+    });
+    item.addEventListener('mouseleave', () => {
+      item.querySelector('.media-delete-btn').style.opacity = '0';
+    });
+  });
+}
+
+// Filter media library
+function filterMediaLibrary(query) {
+  renderMediaLibrary(query);
+}
+
+// Select a media item
+function selectMediaLibraryItem(element) {
+  // Deselect previous
+  document.querySelectorAll('.media-library-item').forEach(item => {
+    item.style.borderColor = 'transparent';
+  });
+
+  // Select new
+  element.style.borderColor = 'var(--primary)';
+  selectedMediaItem = {
+    path: element.dataset.path,
+    url: element.dataset.url
+  };
+
+  document.getElementById('media-select-btn').disabled = false;
+}
+
+// Confirm selection
+function selectMediaItem() {
+  if (!selectedMediaItem || !mediaLibraryTarget) return;
+
+  if (typeof mediaLibraryTarget === 'function') {
+    // Callback function
+    mediaLibraryTarget(selectedMediaItem.url);
+  } else if (mediaLibraryTarget.nestedPath) {
+    // Nested CMS section field (e.g., tabs.0.image)
+    const page = getCurrentCMSPage();
+    if (page) {
+      const section = page.sections.find(s => s.id === mediaLibraryTarget.sectionId);
+      if (section) {
+        let obj = section;
+        for (let i = 0; i < mediaLibraryTarget.nestedPath.length - 1; i++) {
+          const key = mediaLibraryTarget.nestedPath[i];
+          obj = obj[key];
+        }
+        obj[mediaLibraryTarget.nestedPath[mediaLibraryTarget.nestedPath.length - 1]] = selectedMediaItem.url;
+        page.updatedAt = new Date().toISOString();
+        markCMSChanged();
+      }
+    }
+    // Update input field if exists
+    if (mediaLibraryTarget.inputId) {
+      const input = document.getElementById(mediaLibraryTarget.inputId);
+      if (input) input.value = selectedMediaItem.url;
+    }
+    renderCMSSectionsList();
+  } else if (mediaLibraryTarget.sectionId && mediaLibraryTarget.field) {
+    // CMS section field
+    updateSectionField(mediaLibraryTarget.sectionId, mediaLibraryTarget.field, selectedMediaItem.url);
+    // Update input field if exists
+    if (mediaLibraryTarget.inputId) {
+      const input = document.getElementById(mediaLibraryTarget.inputId);
+      if (input) input.value = selectedMediaItem.url;
+    }
+    renderCMSSectionsList();
+  } else if (mediaLibraryTarget.sectionId && (mediaLibraryTarget.index !== undefined || mediaLibraryTarget.itemIndex !== undefined)) {
+    // Gallery image, review item, or testimonial item
+    const idx = mediaLibraryTarget.index ?? mediaLibraryTarget.itemIndex;
+    if (mediaLibraryTarget.type === 'gallery') {
+      updateGalleryImage(mediaLibraryTarget.sectionId, idx, 'url', selectedMediaItem.url);
+    } else if (mediaLibraryTarget.type === 'review') {
+      updateReviewItem(mediaLibraryTarget.sectionId, idx, 'image', selectedMediaItem.url);
+    } else if (mediaLibraryTarget.type === 'testimonial') {
+      updateTestimonialItem(mediaLibraryTarget.sectionId, idx, 'avatar', selectedMediaItem.url);
+    }
+    // Update input field if exists
+    if (mediaLibraryTarget.inputId) {
+      const input = document.getElementById(mediaLibraryTarget.inputId);
+      if (input) input.value = selectedMediaItem.url;
+    }
+    renderCMSSectionsList();
+  } else if (typeof mediaLibraryTarget === 'string') {
+    // Simple input ID
+    const input = document.getElementById(mediaLibraryTarget);
+    if (input) {
+      input.value = selectedMediaItem.url;
+      input.dispatchEvent(new Event('change'));
+    }
+  }
+
+  closeMediaLibrary();
+  toast('Billede valgt', 'success');
+}
+
+// Handle file upload
+async function handleMediaUpload(files) {
+  if (!files || files.length === 0) return;
+
+  const grid = document.getElementById('media-library-grid');
+
+  for (const file of files) {
+    // Show uploading indicator
+    toast('Uploader ' + file.name + '...', 'info');
+
+    const result = await SupabaseDB.uploadMedia(file, 'images');
+
+    if (result.error) {
+      toast('Fejl: ' + result.error, 'error');
+    } else {
+      toast(file.name + ' uploadet', 'success');
+
+      // Add to list and re-render
+      mediaLibraryItems.unshift({
+        id: result.path,
+        name: file.name,
+        path: result.path,
+        url: result.url,
+        type: result.type,
+        size: result.size,
+        createdAt: new Date().toISOString()
+      });
+      renderMediaLibrary();
+    }
+  }
+
+  // Clear file input
+  document.getElementById('media-upload-input').value = '';
+}
+
+// Delete media item
+async function deleteMediaLibraryItem(path) {
+  if (!confirm('Er du sikker på at du vil slette dette billede?')) return;
+
+  const result = await SupabaseDB.deleteMedia(path);
+
+  if (result.error) {
+    toast('Fejl: ' + result.error, 'error');
+  } else {
+    toast('Billede slettet', 'success');
+    mediaLibraryItems = mediaLibraryItems.filter(item => item.path !== path);
+    renderMediaLibrary();
+  }
+}
+
+// Scrape actual content from landing.html to populate CMS
+async function scrapeLandingPageContent() {
+  try {
+    const response = await fetch('/landing.html');
+    if (!response.ok) throw new Error('Failed to fetch landing.html');
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // Scrape Hero Section
+    const hero = doc.querySelector('[data-cms="hero"]');
+    const heroData = {
+      headline: hero?.querySelector('h1')?.textContent?.replace(/\s+/g, ' ').trim() || '',
+      subheadline: hero?.querySelector('.hero-content p')?.textContent?.trim() || '',
+      backgroundVideo: hero?.querySelector('video source')?.getAttribute('src') || '',
+      buttons: [
+        {
+          text: hero?.querySelector('.button-white')?.textContent?.trim() || 'Få en gratis demo',
+          url: hero?.querySelector('.button-white')?.getAttribute('href') || '#demo',
+          variant: 'primary'
+        },
+        {
+          text: hero?.querySelector('.button-outline')?.textContent?.trim() || 'Se priser',
+          url: hero?.querySelector('.button-outline')?.getAttribute('href') || '#priser',
+          variant: 'secondary'
+        }
+      ]
+    };
+
+    // Scrape Features/Tabs Section
+    const features = doc.querySelector('[data-cms="features"]');
+    const tabItems = features?.querySelectorAll('.tab-item') || [];
+    const tabContents = features?.querySelectorAll('.tab-content') || [];
+    const tabsData = Array.from(tabItems).map((tab, i) => {
+      const content = tabContents[i];
+      return {
+        id: 'tab-' + (i + 1),
+        tabLabel: tab.querySelector('.tab-text')?.textContent?.trim() || '',
+        headline: content?.querySelector('.tab-text-content h3')?.textContent?.trim() || '',
+        description: content?.querySelector('.tab-text-content p')?.textContent?.trim() || '',
+        image: content?.querySelector('.tab-visual img')?.getAttribute('src') || '',
+        video: ''
+      };
+    });
+
+    // Scrape Trusted Section
+    const trusted = doc.querySelector('[data-cms="trusted"]');
+    const trustedCards = trusted?.querySelectorAll('.trusted-card:not(:nth-child(n+6))') || []; // First 5 only (skip duplicates)
+    const trustedData = {
+      heading: trusted?.querySelector('h2')?.textContent?.trim() || '',
+      cards: Array.from(trustedCards).slice(0, 5).map(card => ({
+        name: card.querySelector('.trusted-card-name')?.textContent?.trim() || '',
+        role: card.querySelector('.trusted-card-role')?.textContent?.trim() || '',
+        image: card.querySelector('img')?.getAttribute('src') || '',
+        gradient: card.querySelector('img')?.getAttribute('style')?.match(/background:\s*([^;]+)/)?.[1] || ''
+      }))
+    };
+
+    // Scrape Apple Features Section
+    const appleFeatures = doc.querySelector('[data-cms="appleFeatures"]');
+    const appleFeaturesData = {
+      heading: appleFeatures?.querySelector('h2')?.textContent?.trim() || '',
+      description: appleFeatures?.querySelector('.apple-features-header p')?.textContent?.trim() || ''
+    };
+
+    // Scrape Bento Section
+    const bento = doc.querySelector('[data-cms="bento"]');
+    const bentoData = {
+      heading: bento?.querySelector('h2')?.textContent?.trim() || ''
+    };
+
+    // Scrape Beliefs Section
+    const beliefs = doc.querySelector('[data-cms="beliefs"]');
+    const beliefsData = {
+      heading: beliefs?.querySelector('h2, .beliefs-title')?.textContent?.trim() || '',
+      subtitle: beliefs?.querySelector('.beliefs-subtitle')?.textContent?.trim() || ''
+    };
+
+    console.log('Flow CMS: Scraped landing page content', { heroData, tabsData, trustedData });
+
+    return {
+      hero: heroData,
+      tabs: tabsData,
+      trusted: trustedData,
+      appleFeatures: appleFeaturesData,
+      bento: bentoData,
+      beliefs: beliefsData
+    };
+  } catch (error) {
+    console.error('Flow CMS: Error scraping landing page:', error);
+    return null;
+  }
+}
+
 // Default CMS Pages (populated from flowPagesList if no saved data)
-function getDefaultCMSPages() {
+function getDefaultCMSPages(scrapedContent = null) {
   return flowPagesList.map((page, index) => {
     const defaults = defaultFlowPageContent[page.slug] || {};
+
+    // Use scraped content for landing page
+    const isLandingPage = page.slug === 'landing';
+    const scraped = isLandingPage && scrapedContent ? scrapedContent : null;
+
+    // Build sections array based on page type
+    const sections = [];
+
+    // Hero section - use scraped content if available
+    sections.push({
+      id: 'section-hero-' + index,
+      type: 'hero',
+      order: 0,
+      isVisible: true,
+      padding: 'medium',
+      headline: scraped?.hero?.headline || defaults.hero?.title || page.title,
+      subheadline: scraped?.hero?.subheadline || defaults.hero?.subtitle || '',
+      backgroundVideo: scraped?.hero?.backgroundVideo || '',
+      backgroundImage: '',
+      backgroundOverlay: 50,
+      animation: 'none',
+      alignment: 'center',
+      buttons: scraped?.hero?.buttons || [
+        { text: defaults.hero?.ctaText || 'Kom i gang', url: defaults.hero?.ctaUrl || '#demo', variant: 'primary' }
+      ]
+    });
+
+    // Features section - use scraped tabs if available
+    if (scraped?.tabs && scraped.tabs.length > 0) {
+      sections.push({
+        id: 'section-features-' + index,
+        type: 'features',
+        order: 1,
+        isVisible: true,
+        padding: 'medium',
+        heading: 'Funktioner',
+        tabs: scraped.tabs,
+        layout: 'tabs',
+        columns: 4
+      });
+    } else if (defaults.features?.items?.length > 0) {
+      sections.push({
+        id: 'section-features-' + index,
+        type: 'features',
+        order: 1,
+        isVisible: true,
+        padding: 'medium',
+        features: defaults.features.items.map((item, i) => ({ id: 'f' + i, title: item, description: '' })),
+        layout: 'grid',
+        columns: 4
+      });
+    }
+
+    // Trusted section - use scraped data if available
+    if (scraped?.trusted && scraped.trusted.cards?.length > 0) {
+      sections.push({
+        id: 'section-trusted-' + index,
+        type: 'trusted',
+        order: 2,
+        isVisible: true,
+        padding: 'medium',
+        heading: scraped.trusted.heading,
+        cards: scraped.trusted.cards,
+        layout: 'carousel',
+        animation: 'none'
+      });
+    }
+
+    // CTA section
+    sections.push({
+      id: 'section-cta-' + index,
+      type: 'cta',
+      order: sections.length,
+      isVisible: true,
+      padding: 'medium',
+      title: defaults.cta?.title || 'Klar til at komme i gang?',
+      description: '',
+      button: { text: defaults.cta?.buttonText || 'Book demo', url: '#demo', variant: 'primary' },
+      style: 'simple'
+    });
+
     return {
       id: 'page-' + page.slug,
       title: page.title,
@@ -25262,67 +25995,57 @@ function getDefaultCMSPages() {
       isActive: true,
       seo: {
         title: page.title + ' | Flow',
-        description: defaults.hero?.subtitle || page.description,
+        description: scraped?.hero?.subheadline || defaults.hero?.subtitle || page.description,
         keywords: []
       },
-      sections: [
-        {
-          id: 'section-hero-' + index,
-          type: 'hero',
-          order: 0,
-          isVisible: true,
-          padding: 'medium',
-          headline: defaults.hero?.title || page.title,
-          subheadline: defaults.hero?.subtitle || '',
-          alignment: 'center',
-          buttons: [
-            { text: defaults.hero?.ctaText || 'Kom i gang', url: defaults.hero?.ctaUrl || '#demo', variant: 'primary' }
-          ]
-        },
-        {
-          id: 'section-features-' + index,
-          type: 'features',
-          order: 1,
-          isVisible: defaults.features?.items?.length > 0,
-          padding: 'medium',
-          features: (defaults.features?.items || []).map((item, i) => ({ id: 'f' + i, title: item, description: '' })),
-          layout: 'grid',
-          columns: 4
-        },
-        {
-          id: 'section-cta-' + index,
-          type: 'cta',
-          order: 2,
-          isVisible: true,
-          padding: 'medium',
-          title: defaults.cta?.title || 'Klar til at komme i gang?',
-          description: '',
-          button: { text: defaults.cta?.buttonText || 'Book demo', url: '#demo', variant: 'primary' },
-          style: 'simple'
-        }
-      ],
+      sections,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
   });
 }
 
-// Load CMS Pages from localStorage
-function loadCMSPages() {
+// Load CMS Pages from localStorage (async to support scraping)
+async function loadCMSPages() {
   const saved = localStorage.getItem('orderflow_cms_pages');
   if (saved) {
     try {
       cmsPages = JSON.parse(saved);
+      // MIGRATION: Auto-populate missing video URLs for existing users
+      await migrateVideoUrls();
     } catch (e) {
       console.error('Error loading CMS pages:', e);
       cmsPages = getDefaultCMSPages();
     }
   } else {
-    cmsPages = getDefaultCMSPages();
+    // First time: scrape actual content from landing page
+    console.log('Flow CMS: No saved pages found, scraping landing page content...');
+    const scrapedContent = await scrapeLandingPageContent();
+    cmsPages = getDefaultCMSPages(scrapedContent);
+    // Auto-save the scraped content
+    localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+    console.log('Flow CMS: Landing page content scraped and saved');
   }
   originalCMSPages = JSON.stringify(cmsPages);
   cmsHasChanges = false;
   renderCMSPagesList();
+}
+
+// Migrate existing CMS data to include video URLs from landing page
+async function migrateVideoUrls() {
+  const landingPage = cmsPages.find(p => p.slug === 'landing.html');
+  if (!landingPage) return;
+
+  const heroSection = landingPage.sections.find(s => s.type === 'hero');
+  if (heroSection && !heroSection.backgroundVideo) {
+    console.log('Flow CMS: Migrating video URL for existing landing page...');
+    const scraped = await scrapeLandingPageContent();
+    if (scraped?.hero?.backgroundVideo) {
+      heroSection.backgroundVideo = scraped.hero.backgroundVideo;
+      localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+      console.log('Flow CMS: Video URL migrated:', scraped.hero.backgroundVideo);
+    }
+  }
 }
 
 // Save CMS Pages to localStorage
@@ -25433,6 +26156,9 @@ function renderCMSPageEditor() {
     publishBtn.textContent = page.status === 'published' ? 'Gem som kladde' : 'Publicer';
   }
 
+  // Update schedule badge
+  updateScheduleBadge();
+
   // Switch to content tab by default
   switchCMSEditorTab('content');
 }
@@ -25537,18 +26263,25 @@ function renderSectionEditor(section) {
           <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'subheadline', this.value)">${section.subheadline || ''}</textarea>
         </div>
         <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Baggrundsbillede URL</label>
-          <input type="text" class="input" value="${section.backgroundImage || ''}" onchange="updateSectionField('${section.id}', 'backgroundImage', this.value)" placeholder="https://example.com/image.jpg">
-          ${section.backgroundImage ? `<img src="${section.backgroundImage}" style="max-width:100%;max-height:120px;margin-top:8px;border-radius:8px;object-fit:cover">` : ''}
+          <label class="form-label" style="font-size:12px">Baggrundsbillede</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="text" id="hero-bg-image-${section.id}" class="input" value="${section.backgroundImage || ''}" onchange="updateSectionField('${section.id}', 'backgroundImage', this.value)" placeholder="https://example.com/image.jpg" style="flex:1">
+            <button type="button" class="btn btn-secondary" style="white-space:nowrap" onclick="openMediaLibrary('hero-bg-image-${section.id}', '${section.id}', 'backgroundImage')">Vælg fra bibliotek</button>
+          </div>
+          ${section.backgroundImage ? `<img src="${section.backgroundImage}" style="max-width:100%;max-height:120px;border-radius:8px;object-fit:cover">` : '<div style="padding:24px;background:var(--bg-tertiary);border-radius:8px;text-align:center;color:var(--muted);font-size:12px">Intet billede valgt</div>'}
         </div>
         <div class="form-group" style="margin-bottom:12px">
-          <label class="form-label" style="font-size:12px">Baggrundsvideo URL (MP4)</label>
-          <input type="text" class="input" value="${section.backgroundVideo || ''}" onchange="updateSectionField('${section.id}', 'backgroundVideo', this.value)" placeholder="images/hero-video.mp4">
+          <label class="form-label" style="font-size:12px">Baggrundsvideo (MP4)</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="text" id="hero-bg-video-${section.id}" class="input" value="${section.backgroundVideo || ''}" onchange="updateSectionField('${section.id}', 'backgroundVideo', this.value)" placeholder="images/hero-video.mp4" style="flex:1">
+            <button type="button" class="btn btn-secondary" style="white-space:nowrap" onclick="openMediaLibrary('hero-bg-video-${section.id}', '${section.id}', 'backgroundVideo', 'video')">Vælg fra bibliotek</button>
+          </div>
+          ${section.backgroundVideo ? `<div style="margin-top:8px;border-radius:8px;overflow:hidden;background:#000"><video src="${section.backgroundVideo}" style="max-width:100%;max-height:150px;display:block" autoplay muted loop playsinline></video></div>` : ''}
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
           <div class="form-group">
             <label class="form-label" style="font-size:12px">Overlay Opacity (0-100)</label>
-            <input type="range" min="0" max="100" value="${section.backgroundOverlay || 50}" onchange="updateSectionField('${section.id}', 'backgroundOverlay', parseInt(this.value));this.nextElementSibling.textContent=this.value+'%'" style="width:100%">
+            <input type="range" min="0" max="100" value="${section.backgroundOverlay || 50}" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="updateSectionField('${section.id}', 'backgroundOverlay', parseInt(this.value))" style="width:100%">
             <span style="font-size:11px;color:var(--muted)">${section.backgroundOverlay || 50}%</span>
           </div>
           <div class="form-group">
@@ -25558,6 +26291,12 @@ function renderSectionEditor(section) {
               <option value="fade" ${section.animation === 'fade' ? 'selected' : ''}>Fade In</option>
               <option value="slide" ${section.animation === 'slide' ? 'selected' : ''}>Slide Up</option>
               <option value="zoom" ${section.animation === 'zoom' ? 'selected' : ''}>Zoom In</option>
+              <option value="bounce" ${section.animation === 'bounce' ? 'selected' : ''}>Bounce</option>
+              <option value="pulse" ${section.animation === 'pulse' ? 'selected' : ''}>Pulse</option>
+              <option value="slideLeft" ${section.animation === 'slideLeft' ? 'selected' : ''}>Slide fra venstre</option>
+              <option value="slideRight" ${section.animation === 'slideRight' ? 'selected' : ''}>Slide fra højre</option>
+              <option value="rotate" ${section.animation === 'rotate' ? 'selected' : ''}>Rotation</option>
+              <option value="scale" ${section.animation === 'scale' ? 'selected' : ''}>Scale Up</option>
             </select>
           </div>
         </div>
@@ -25584,25 +26323,67 @@ function renderSectionEditor(section) {
         </div>
       `;
     case 'features':
+      // Initialize tabs array if not present (4 fixed tabs)
+      if (!section.tabs || section.tabs.length !== 4) {
+        section.tabs = [
+          { id: 'tab-1', tabLabel: 'Tab 1', headline: '', description: '', image: '', video: '' },
+          { id: 'tab-2', tabLabel: 'Tab 2', headline: '', description: '', image: '', video: '' },
+          { id: 'tab-3', tabLabel: 'Tab 3', headline: '', description: '', image: '', video: '' },
+          { id: 'tab-4', tabLabel: 'Tab 4', headline: '', description: '', image: '', video: '' }
+        ];
+      }
       return `
-        <div class="form-group">
-          <label class="form-label" style="font-size:12px">Funktioner (én per linje)</label>
-          <textarea class="input" rows="4" onchange="updateSectionFeatures('${section.id}', this.value)">${(section.features || []).map(f => f.title).join('\n')}</textarea>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)" placeholder="Sektionens hovedtitel">
         </div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text-secondary)">Tabs (4 faste)</div>
+        ${section.tabs.map((tab, index) => `
+          <details class="feature-tab-editor" style="margin-bottom:12px;background:var(--bg-tertiary);border-radius:8px;padding:12px">
+            <summary style="cursor:pointer;font-weight:500;font-size:13px;margin-bottom:8px">Tab ${index + 1}: ${tab.tabLabel || 'Unavngivet'}</summary>
+            <div style="padding-top:12px;display:flex;flex-direction:column;gap:10px">
+              <div class="form-group">
+                <label class="form-label" style="font-size:11px">Tab Label</label>
+                <input type="text" class="input" value="${tab.tabLabel || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'tabLabel', this.value)" placeholder="Vis i tab">
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:11px">Overskrift</label>
+                <input type="text" class="input" value="${tab.headline || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'headline', this.value)" placeholder="Indholdets overskrift">
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:11px">Beskrivelse</label>
+                <textarea class="input" rows="2" onchange="updateFeatureTab('${section.id}', ${index}, 'description', this.value)" placeholder="Indholdets beskrivelse">${tab.description || ''}</textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:11px">Billede</label>
+                <div style="display:flex;gap:8px">
+                  <input type="text" id="feature-tab-img-${section.id}-${index}" class="input" value="${tab.image || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'image', this.value)" placeholder="Billede URL" style="flex:1">
+                  <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibraryForFeatureTab('${section.id}', ${index})">Bibliotek</button>
+                </div>
+                ${tab.image ? `<img src="${tab.image}" style="max-width:100%;max-height:80px;margin-top:6px;border-radius:6px;object-fit:cover">` : ''}
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="font-size:11px">Video URL (valgfrit)</label>
+                <input type="text" class="input" value="${tab.video || ''}" onchange="updateFeatureTab('${section.id}', ${index}, 'video', this.value)" placeholder="Video URL (MP4)">
+              </div>
+            </div>
+          </details>
+        `).join('')}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
           <div class="form-group">
             <label class="form-label" style="font-size:12px">Layout</label>
-            <select class="input" value="${section.layout || 'grid'}" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+            <select class="input" value="${section.layout || 'tabs'}" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+              <option value="tabs" ${section.layout === 'tabs' || !section.layout ? 'selected' : ''}>Tabs</option>
               <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
               <option value="list" ${section.layout === 'list' ? 'selected' : ''}>Liste</option>
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" style="font-size:12px">Kolonner</label>
+            <label class="form-label" style="font-size:12px">Kolonner (grid)</label>
             <select class="input" onchange="updateSectionField('${section.id}', 'columns', parseInt(this.value))">
               <option value="2" ${section.columns === 2 ? 'selected' : ''}>2</option>
               <option value="3" ${section.columns === 3 ? 'selected' : ''}>3</option>
-              <option value="4" ${section.columns === 4 ? 'selected' : ''}>4</option>
+              <option value="4" ${section.columns === 4 || !section.columns ? 'selected' : ''}>4</option>
             </select>
           </div>
         </div>
@@ -25625,11 +26406,65 @@ function renderSectionEditor(section) {
         </div>
       `;
     case 'testimonials':
+      const testimonialItems = section.items || [];
       return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)" placeholder="Hvad siger vores kunder?">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Layout</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+              <option value="carousel" ${section.layout === 'carousel' || !section.layout ? 'selected' : ''}>Karrusel (roterende)</option>
+              <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
+              <option value="single" ${section.layout === 'single' ? 'selected' : ''}>Enkelt (stor)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Auto-rotation (sek)</label>
+            <input type="number" class="input" value="${section.rotationInterval || 5}" min="2" max="30" onchange="updateSectionField('${section.id}', 'rotationInterval', parseInt(this.value))">
+          </div>
+        </div>
         <div class="form-group">
-          <label class="form-label" style="font-size:12px">Udtalelser (JSON format)</label>
-          <textarea class="input" rows="4" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
-          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"name": "Navn", "text": "Udtalelse", "company": "Firma"}]</p>
+          <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Citater (${testimonialItems.length})</label>
+          <div id="testimonial-items-${section.id}" style="max-height:400px;overflow-y:auto">
+            ${testimonialItems.map((item, idx) => `
+              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
+                <summary style="cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px">
+                  ${item.avatar ? `<img src="${item.avatar}" style="width:28px;height:28px;object-fit:cover;border-radius:50%">` : '<span style="width:28px;height:28px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
+                  <span>${item.name || 'Unavngivet'}</span>
+                  <span style="color:var(--muted);font-weight:normal;font-size:11px;margin-left:auto">${item.role || item.company || ''}</span>
+                </summary>
+                <div style="padding-top:12px;display:flex;flex-direction:column;gap:8px">
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:11px">Citat</label>
+                    <textarea class="input" rows="3" placeholder="Hvad sagde de?" onchange="updateTestimonialItem('${section.id}', ${idx}, 'quote', this.value)">${item.quote || item.text || ''}</textarea>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:11px">Navn</label>
+                      <input type="text" class="input" placeholder="Navn" value="${item.name || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'name', this.value)">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:11px">Rolle/Firma</label>
+                      <input type="text" class="input" placeholder="Rolle/Firma" value="${item.role || item.company || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'role', this.value)">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:11px">Profilbillede</label>
+                    <div style="display:flex;gap:8px">
+                      <input type="text" id="testimonial-avatar-${section.id}-${idx}" class="input" placeholder="Avatar URL" value="${item.avatar || ''}" onchange="updateTestimonialItem('${section.id}', ${idx}, 'avatar', this.value)" style="flex:1">
+                      <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibraryForTestimonial('${section.id}', ${idx})">Bibliotek</button>
+                    </div>
+                    ${item.avatar ? `<img src="${item.avatar}" style="max-width:50px;height:50px;object-fit:cover;border-radius:50%;margin-top:6px">` : ''}
+                  </div>
+                  <button class="btn btn-sm" style="background:var(--danger);color:white;margin-top:4px" onclick="removeTestimonialItem('${section.id}', ${idx})">Fjern citat</button>
+                </div>
+              </details>
+            `).join('')}
+          </div>
+          <button class="btn btn-sm" onclick="addTestimonialItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j citat</button>
         </div>
       `;
     case 'faq':
@@ -25714,21 +26549,42 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Udtalelser (${trustedCards.length})</label>
           <div id="trusted-cards-${section.id}" style="max-height:400px;overflow-y:auto">
             ${trustedCards.map((card, idx) => `
-              <div style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-                  <input type="text" class="input" placeholder="Navn" value="${card.name || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'name', this.value)">
-                  <input type="text" class="input" placeholder="Firma/Rolle" value="${card.role || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'role', this.value)">
-                </div>
-                <textarea class="input" rows="2" placeholder="Udtalelse" onchange="updateReviewItem('${section.id}', ${idx}, 'quote', this.value)" style="margin-bottom:8px">${card.quote || ''}</textarea>
-                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end">
-                  <div>
-                    <input type="text" class="input" placeholder="Billede URL" value="${card.image || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'image', this.value)" style="margin-bottom:4px">
-                    <input type="text" class="input" placeholder="Gradient (valgfrit)" value="${card.gradient || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'gradient', this.value)">
+              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
+                <summary style="cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px">
+                  ${card.image ? `<img src="${card.image}" style="width:32px;height:32px;object-fit:cover;border-radius:50%">` : '<span style="width:32px;height:32px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
+                  <span>${card.name || 'Unavngivet'}</span>
+                  <span style="color:var(--muted);font-weight:normal;font-size:11px;margin-left:auto">${card.role || ''}</span>
+                </summary>
+                <div style="padding-top:12px;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:11px">Navn</label>
+                      <input type="text" class="input" placeholder="Navn" value="${card.name || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'name', this.value)">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" style="font-size:11px">Firma/Rolle</label>
+                      <input type="text" class="input" placeholder="Firma/Rolle" value="${card.role || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'role', this.value)">
+                    </div>
                   </div>
-                  <button class="btn btn-sm" style="background:var(--danger);color:white;height:32px" onclick="removeReviewItem('${section.id}', ${idx})">Fjern</button>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:11px">Udtalelse</label>
+                    <textarea class="input" rows="2" placeholder="Udtalelse" onchange="updateReviewItem('${section.id}', ${idx}, 'quote', this.value)">${card.quote || ''}</textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:11px">Profilbillede</label>
+                    <div style="display:flex;gap:8px">
+                      <input type="text" id="trusted-img-${section.id}-${idx}" class="input" placeholder="Billede URL" value="${card.image || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'image', this.value)" style="flex:1">
+                      <button type="button" class="btn btn-secondary" style="white-space:nowrap;font-size:11px;padding:6px 10px" onclick="openMediaLibrary({ sectionId: '${section.id}', index: ${idx}, type: 'review' })">Bibliotek</button>
+                    </div>
+                    ${card.image ? `<img src="${card.image}" style="max-width:60px;height:60px;object-fit:cover;border-radius:50%;margin-top:8px">` : ''}
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" style="font-size:11px">Kort gradient baggrund (valgfrit)</label>
+                    <input type="text" class="input" placeholder="linear-gradient(135deg, #667eea, #764ba2)" value="${card.gradient || ''}" onchange="updateReviewItem('${section.id}', ${idx}, 'gradient', this.value)">
+                  </div>
+                  <button class="btn btn-sm" style="background:var(--danger);color:white;margin-top:4px" onclick="removeReviewItem('${section.id}', ${idx})">Fjern udtalelse</button>
                 </div>
-                ${card.image ? `<img src="${card.image}" style="max-width:60px;height:60px;object-fit:cover;border-radius:50%;margin-top:8px">` : ''}
-              </div>
+              </details>
             `).join('')}
           </div>
           <button class="btn btn-sm" onclick="addReviewItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j udtalelse</button>
@@ -25856,6 +26712,38 @@ function updateSectionFeatures(sectionId, value) {
   }
 }
 
+// Update feature tab (4 fixed tabs)
+function updateFeatureTab(sectionId, tabIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    // Initialize tabs if not present
+    if (!section.tabs || section.tabs.length !== 4) {
+      section.tabs = [
+        { id: 'tab-1', tabLabel: 'Tab 1', headline: '', description: '', image: '', video: '' },
+        { id: 'tab-2', tabLabel: 'Tab 2', headline: '', description: '', image: '', video: '' },
+        { id: 'tab-3', tabLabel: 'Tab 3', headline: '', description: '', image: '', video: '' },
+        { id: 'tab-4', tabLabel: 'Tab 4', headline: '', description: '', image: '', video: '' }
+      ];
+    }
+    section.tabs[tabIndex][field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    // Re-render to update summary text
+    if (field === 'tabLabel') {
+      renderCMSSectionsList();
+    }
+  }
+}
+
+// Open media library for feature tab image
+function openMediaLibraryForFeatureTab(sectionId, tabIndex) {
+  const targetId = `feature-tab-img-${sectionId}-${tabIndex}`;
+  openMediaLibrary(targetId, sectionId, `tabs.${tabIndex}.image`);
+}
+
 // Update section images
 function updateSectionImages(sectionId, value) {
   const page = getCurrentCMSPage();
@@ -25915,6 +26803,63 @@ function removeReviewItem(sectionId, itemIndex) {
     markCMSChanged();
     renderCMSPageEditor();
   }
+}
+
+// Update testimonial item
+function updateTestimonialItem(sectionId, itemIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section && section.items && section.items[itemIndex]) {
+    section.items[itemIndex][field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Add new testimonial item
+function addTestimonialItem(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.items) section.items = [];
+    section.items.push({
+      quote: '',
+      name: '',
+      role: '',
+      avatar: ''
+    });
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSSectionsList();
+  }
+}
+
+// Remove testimonial item
+function removeTestimonialItem(sectionId, itemIndex) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section && section.items) {
+    section.items.splice(itemIndex, 1);
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSSectionsList();
+  }
+}
+
+// Open media library for testimonial avatar
+function openMediaLibraryForTestimonial(sectionId, itemIndex) {
+  openMediaLibrary({
+    sectionId,
+    itemIndex,
+    type: 'testimonial',
+    inputId: `testimonial-avatar-${sectionId}-${itemIndex}`
+  });
 }
 
 // Update gallery image
@@ -26224,32 +27169,38 @@ function schedulePageChanges() {
   now.setMinutes(now.getMinutes() + 1);
   const minDatetime = now.toISOString().slice(0, 16);
 
+  const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
+
   const modal = document.createElement('div');
-  modal.className = 'modal-overlay';
+  modal.className = 'modal-overlay active';
   modal.id = 'schedule-modal';
   modal.innerHTML = `
     <div class="modal" style="max-width:500px">
       <div class="modal-header">
-        <h3 style="margin:0">Planlaeg aendringer</h3>
+        <h3 style="margin:0">Planlæg ændringer</h3>
         <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
       </div>
       <div class="modal-body" style="padding:20px">
         <div class="form-group" style="margin-bottom:16px">
-          <label class="form-label">Dato og tid for offentliggoerelse</label>
+          <label class="form-label">Dato og tid for offentliggørelse</label>
           <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
         </div>
         <p style="font-size:12px;color:var(--muted)">
-          De nuvaerende aendringer vil blive gemt og automatisk publiceret paa det valgte tidspunkt.
+          De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
         </p>
-        ${page.scheduledChanges && page.scheduledChanges.filter(s => s.status === 'pending').length > 0 ? `
+        ${pendingSchedules.length > 0 ? `
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-            <label class="form-label">Planlagte aendringer</label>
-            ${page.scheduledChanges.filter(s => s.status === 'pending').map(s => `
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:var(--bg-secondary);border-radius:4px;margin-top:8px">
-                <span style="font-size:12px">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
-                <div>
-                  <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="margin-right:4px">Se preview</button>
-                  <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Annuller</button>
+            <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
+            ${pendingSchedules.map(s => `
+              <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;margin-top:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
+                  <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
+                </div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="flex:1">Forhåndsvisning</button>
+                  <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
+                  <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
                 </div>
               </div>
             `).join('')}
@@ -26257,12 +27208,33 @@ function schedulePageChanges() {
         ` : ''}
       </div>
       <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn" onclick="closeScheduleModal()">Annuller</button>
-        <button class="btn btn-primary" onclick="confirmSchedule()">Planlaeg</button>
+        <button class="btn" onclick="closeScheduleModal()">Luk</button>
+        <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
       </div>
     </div>
   `;
   document.body.appendChild(modal);
+}
+
+// Get time until scheduled change
+function getTimeUntil(dateString) {
+  const target = new Date(dateString);
+  const now = new Date();
+  const diff = target - now;
+
+  if (diff < 0) return 'Forpasset';
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 24) {
+    const days = Math.floor(hours / 24);
+    return `om ${days} dag${days > 1 ? 'e' : ''}`;
+  } else if (hours > 0) {
+    return `om ${hours}t ${minutes}m`;
+  } else {
+    return `om ${minutes} min`;
+  }
 }
 
 // Close schedule modal
@@ -26275,13 +27247,13 @@ function closeScheduleModal() {
 function confirmSchedule() {
   const datetime = document.getElementById('schedule-datetime').value;
   if (!datetime) {
-    toast('Vaelg en dato og tid', 'error');
+    toast('Vælg en dato og tid', 'error');
     return;
   }
 
   const scheduledTime = new Date(datetime);
   if (scheduledTime <= new Date()) {
-    toast('Tidspunktet skal vaere i fremtiden', 'error');
+    toast('Tidspunktet skal være i fremtiden', 'error');
     return;
   }
 
@@ -26304,8 +27276,39 @@ function confirmSchedule() {
   markCMSChanged();
 
   closeScheduleModal();
-  toast('Aendringer planlagt til ' + scheduledTime.toLocaleString('da-DK'), 'success');
+  toast('Ændringer planlagt til ' + scheduledTime.toLocaleString('da-DK'), 'success');
+  updateScheduleBadge();
   renderCMSPageEditor();
+}
+
+// Edit scheduled change time
+function editScheduledChange(scheduleId) {
+  const page = getCurrentCMSPage();
+  if (!page || !page.scheduledChanges) return;
+
+  const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
+  if (!schedule) return;
+
+  const currentTime = new Date(schedule.scheduledFor).toISOString().slice(0, 16);
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 1);
+  const minDatetime = now.toISOString().slice(0, 16);
+
+  const newTime = prompt('Ny tid (YYYY-MM-DDTHH:MM):', currentTime);
+  if (!newTime) return;
+
+  const newDate = new Date(newTime);
+  if (isNaN(newDate.getTime()) || newDate <= new Date()) {
+    toast('Ugyldigt tidspunkt', 'error');
+    return;
+  }
+
+  schedule.scheduledFor = newDate.toISOString();
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  toast('Planlagt tidspunkt opdateret', 'success');
+  closeScheduleModal();
+  schedulePageChanges(); // Reopen modal to show updated time
 }
 
 // Preview scheduled changes
@@ -26333,12 +27336,36 @@ function cancelScheduledChange(scheduleId) {
 
   const idx = page.scheduledChanges.findIndex(s => s.id === scheduleId);
   if (idx !== -1) {
-    page.scheduledChanges[idx].status = 'cancelled';
+    page.scheduledChanges.splice(idx, 1); // Actually remove, not just mark cancelled
     page.updatedAt = new Date().toISOString();
     markCMSChanged();
     closeScheduleModal();
-    toast('Planlagt aendring annulleret', 'success');
+    toast('Planlagt ændring slettet', 'success');
+    updateScheduleBadge();
     renderCMSPageEditor();
+  }
+}
+
+// Update schedule badge on the Planlæg button
+function updateScheduleBadge() {
+  const page = getCurrentCMSPage();
+  const pendingCount = page?.scheduledChanges?.filter(s => s.status === 'pending').length || 0;
+
+  const scheduleBtn = document.getElementById('cms-schedule-btn');
+  if (scheduleBtn) {
+    // Remove existing badge
+    const existingBadge = scheduleBtn.querySelector('.schedule-badge');
+    if (existingBadge) existingBadge.remove();
+
+    // Add badge if there are pending schedules
+    if (pendingCount > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'schedule-badge';
+      badge.textContent = pendingCount;
+      badge.style.cssText = 'position:absolute;top:-6px;right:-6px;background:var(--primary);color:white;font-size:10px;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px';
+      scheduleBtn.style.position = 'relative';
+      scheduleBtn.appendChild(badge);
+    }
   }
 }
 
@@ -26429,7 +27456,7 @@ function showFlowCMSPage(tab) {
 }
 
 // Switch Flow CMS tab
-function switchFlowCMSTab(tab) {
+async function switchFlowCMSTab(tab) {
   const tabTitles = {
     'pages': 'Rediger Flow Sider',
     'editor': 'Rediger Side',
@@ -26451,7 +27478,7 @@ function switchFlowCMSTab(tab) {
   if (contentEl) contentEl.classList.add('active');
 
   // Load content based on tab
-  if (tab === 'pages') loadCMSPages(); // Use new CMS Pages Editor
+  if (tab === 'pages') await loadCMSPages(); // Use new CMS Pages Editor
   if (tab === 'blog') loadBlogPosts();
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
