@@ -3817,14 +3817,16 @@ function showPage(page) {
     renderLoyaltyPage();
   }
 
-  // Load campaigns page
+  // Load campaigns page (new Marketing Editor)
   if (page === 'campaigns') {
-    renderCampaignsPage();
+    initMarketingPage();
   }
 
-  // Load segments page
+  // Load segments page (redirects to marketing segments tab)
   if (page === 'segments') {
-    renderSegmentsPage();
+    showPage('campaigns');
+    setTimeout(() => switchMarketingTab('segments'), 50);
+    return;
   }
 
   // Load App Builder page
@@ -25233,6 +25235,753 @@ const defaultFlowPageContent = {
   }
 };
 
+// =====================================================
+// NEW CMS PAGES EDITOR (React Admin Style)
+// =====================================================
+
+// CMS State
+let cmsPages = [];
+let currentCMSPageId = null;
+let cmsHasChanges = false;
+let originalCMSPages = null;
+
+// Default CMS Pages (populated from flowPagesList if no saved data)
+function getDefaultCMSPages() {
+  return flowPagesList.map((page, index) => {
+    const defaults = defaultFlowPageContent[page.slug] || {};
+    return {
+      id: 'page-' + page.slug,
+      title: page.title,
+      slug: page.slug + '.html',
+      description: page.description,
+      status: 'published',
+      template: 'landing',
+      isActive: true,
+      seo: {
+        title: page.title + ' | Flow',
+        description: defaults.hero?.subtitle || page.description,
+        keywords: []
+      },
+      sections: [
+        {
+          id: 'section-hero-' + index,
+          type: 'hero',
+          order: 0,
+          isVisible: true,
+          padding: 'medium',
+          headline: defaults.hero?.title || page.title,
+          subheadline: defaults.hero?.subtitle || '',
+          alignment: 'center',
+          buttons: [
+            { text: defaults.hero?.ctaText || 'Kom i gang', url: defaults.hero?.ctaUrl || '#demo', variant: 'primary' }
+          ]
+        },
+        {
+          id: 'section-features-' + index,
+          type: 'features',
+          order: 1,
+          isVisible: defaults.features?.items?.length > 0,
+          padding: 'medium',
+          features: (defaults.features?.items || []).map((item, i) => ({ id: 'f' + i, title: item, description: '' })),
+          layout: 'grid',
+          columns: 4
+        },
+        {
+          id: 'section-cta-' + index,
+          type: 'cta',
+          order: 2,
+          isVisible: true,
+          padding: 'medium',
+          title: defaults.cta?.title || 'Klar til at komme i gang?',
+          description: '',
+          button: { text: defaults.cta?.buttonText || 'Book demo', url: '#demo', variant: 'primary' },
+          style: 'simple'
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  });
+}
+
+// Load CMS Pages from localStorage
+function loadCMSPages() {
+  const saved = localStorage.getItem('orderflow_cms_pages');
+  if (saved) {
+    try {
+      cmsPages = JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading CMS pages:', e);
+      cmsPages = getDefaultCMSPages();
+    }
+  } else {
+    cmsPages = getDefaultCMSPages();
+  }
+  originalCMSPages = JSON.stringify(cmsPages);
+  cmsHasChanges = false;
+  renderCMSPagesList();
+}
+
+// Save CMS Pages to localStorage
+function saveCMSPages() {
+  localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+  originalCMSPages = JSON.stringify(cmsPages);
+  cmsHasChanges = false;
+  updateCMSUnsavedBadge();
+  toast('Sider gemt', 'success');
+
+  // Dispatch event for other components
+  window.dispatchEvent(new CustomEvent('cmsPagesUpdated', { detail: { pages: cmsPages } }));
+}
+
+// Mark as changed
+function markCMSChanged() {
+  cmsHasChanges = true;
+  updateCMSUnsavedBadge();
+}
+
+// Update unsaved badge
+function updateCMSUnsavedBadge() {
+  const badge = document.getElementById('cms-unsaved-badge');
+  if (badge) {
+    badge.style.display = cmsHasChanges ? 'inline-block' : 'none';
+  }
+}
+
+// Render CMS Pages List
+function renderCMSPagesList() {
+  const container = document.getElementById('cms-pages-list');
+  if (!container) return;
+
+  const searchQuery = (document.getElementById('cms-pages-search')?.value || '').toLowerCase();
+  const filteredPages = cmsPages.filter(page =>
+    page.title.toLowerCase().includes(searchQuery) ||
+    page.slug.toLowerCase().includes(searchQuery)
+  );
+
+  container.innerHTML = filteredPages.map(page => `
+    <div class="cms-page-item ${currentCMSPageId === page.id ? 'active' : ''}" onclick="selectCMSPage('${page.id}')" style="padding:12px;border-radius:8px;cursor:pointer;border:1px solid ${currentCMSPageId === page.id ? 'var(--primary)' : 'transparent'};background:${currentCMSPageId === page.id ? 'var(--primary-light)' : 'transparent'};margin-bottom:4px;transition:all 0.15s ease">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:500;font-size:13px">${page.title}</span>
+        <span class="badge ${page.status === 'published' ? 'badge-success' : 'badge-warning'}" style="font-size:10px">${page.status === 'published' ? 'Publiceret' : 'Kladde'}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">/${page.slug}</div>
+    </div>
+  `).join('');
+}
+
+// Filter CMS Pages
+function filterCMSPages() {
+  renderCMSPagesList();
+}
+
+// Select CMS Page
+function selectCMSPage(pageId) {
+  currentCMSPageId = pageId;
+  renderCMSPagesList();
+  renderCMSPageEditor();
+}
+
+// Get current page
+function getCurrentCMSPage() {
+  return cmsPages.find(p => p.id === currentCMSPageId);
+}
+
+// Render CMS Page Editor
+function renderCMSPageEditor() {
+  const page = getCurrentCMSPage();
+  const headerEl = document.getElementById('cms-editor-header');
+  const tabsEl = document.getElementById('cms-editor-tabs');
+  const emptyEl = document.getElementById('cms-editor-empty');
+  const contentTab = document.getElementById('cms-tab-content');
+
+  if (!page) {
+    if (headerEl) headerEl.style.display = 'none';
+    if (tabsEl) tabsEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = 'flex';
+    if (contentTab) contentTab.style.display = 'none';
+    return;
+  }
+
+  if (headerEl) headerEl.style.display = 'block';
+  if (tabsEl) tabsEl.style.display = 'block';
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  // Update header
+  const titleInput = document.getElementById('cms-page-title-input');
+  if (titleInput) titleInput.value = page.title;
+
+  const statusBadge = document.getElementById('cms-page-status-badge');
+  if (statusBadge) {
+    statusBadge.className = 'badge ' + (page.status === 'published' ? 'badge-success' : 'badge-warning');
+    statusBadge.textContent = page.status === 'published' ? 'Publiceret' : 'Kladde';
+  }
+
+  const publishBtn = document.getElementById('cms-publish-btn');
+  if (publishBtn) {
+    publishBtn.textContent = page.status === 'published' ? 'Gem som kladde' : 'Publicer';
+  }
+
+  // Switch to content tab by default
+  switchCMSEditorTab('content');
+}
+
+// Switch CMS Editor Tab
+function switchCMSEditorTab(tab) {
+  // Update tab buttons
+  document.querySelectorAll('#cms-editor-tabs .tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+
+  // Hide all tabs
+  document.getElementById('cms-tab-content').style.display = 'none';
+  document.getElementById('cms-tab-seo').style.display = 'none';
+  document.getElementById('cms-tab-settings').style.display = 'none';
+
+  // Show selected tab
+  const tabEl = document.getElementById('cms-tab-' + tab);
+  if (tabEl) tabEl.style.display = 'block';
+
+  // Render tab content
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  if (tab === 'content') {
+    renderCMSSectionsList();
+  } else if (tab === 'seo') {
+    document.getElementById('cms-seo-title').value = page.seo?.title || '';
+    document.getElementById('cms-seo-description').value = page.seo?.description || '';
+    document.getElementById('cms-seo-keywords').value = (page.seo?.keywords || []).join(', ');
+  } else if (tab === 'settings') {
+    document.getElementById('cms-page-slug').value = page.slug.replace('.html', '');
+    document.getElementById('cms-page-template').value = page.template || 'landing';
+    document.getElementById('cms-page-active').checked = page.isActive !== false;
+  }
+}
+
+// Render CMS Sections List
+function renderCMSSectionsList() {
+  const page = getCurrentCMSPage();
+  const container = document.getElementById('cms-sections-list');
+  if (!container || !page) return;
+
+  const sortedSections = [...page.sections].sort((a, b) => a.order - b.order);
+
+  container.innerHTML = sortedSections.map((section, index) => `
+    <div class="cms-section-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;${!section.isVisible ? 'opacity:0.5' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:16px">${getSectionIcon(section.type)}</span>
+          <span style="font-weight:500;font-size:13px">${getSectionLabel(section.type)}</span>
+          ${!section.isVisible ? '<span class="badge" style="font-size:10px">Skjult</span>' : ''}
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-sm" onclick="moveSectionUp('${section.id}')" ${index === 0 ? 'disabled' : ''} title="Flyt op">↑</button>
+          <button class="btn btn-sm" onclick="moveSectionDown('${section.id}')" ${index === sortedSections.length - 1 ? 'disabled' : ''} title="Flyt ned">↓</button>
+          <button class="btn btn-sm" onclick="toggleSectionVisibility('${section.id}')" title="${section.isVisible ? 'Skjul' : 'Vis'}">${section.isVisible ? '👁️' : '👁️‍🗨️'}</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteSectionFromPage('${section.id}')" title="Slet">🗑️</button>
+        </div>
+      </div>
+      <div style="padding:16px">
+        ${renderSectionEditor(section)}
+      </div>
+    </div>
+  `).join('') || '<p style="text-align:center;color:var(--muted);padding:40px">Ingen sektioner endnu. Klik "Tilføj sektion" for at starte.</p>';
+}
+
+// Get section icon
+function getSectionIcon(type) {
+  const icons = {
+    hero: '🎯',
+    text: '📝',
+    features: '⭐',
+    cta: '👆',
+    testimonials: '💬',
+    faq: '❓',
+    images: '🖼️'
+  };
+  return icons[type] || '📄';
+}
+
+// Get section label
+function getSectionLabel(type) {
+  const labels = {
+    hero: 'Hero',
+    text: 'Tekst',
+    features: 'Funktioner',
+    cta: 'Call-to-Action',
+    testimonials: 'Udtalelser',
+    faq: 'FAQ',
+    images: 'Billeder'
+  };
+  return labels[type] || type;
+}
+
+// Render Section Editor
+function renderSectionEditor(section) {
+  switch (section.type) {
+    case 'hero':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Overskrift</label>
+          <input type="text" class="input" value="${section.headline || ''}" onchange="updateSectionField('${section.id}', 'headline', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Underoverskrift</label>
+          <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'subheadline', this.value)">${section.subheadline || ''}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Knaptekst</label>
+            <input type="text" class="input" value="${section.buttons?.[0]?.text || ''}" onchange="updateSectionButton('${section.id}', 0, 'text', this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Knap URL</label>
+            <input type="text" class="input" value="${section.buttons?.[0]?.url || ''}" onchange="updateSectionButton('${section.id}', 0, 'url', this.value)">
+          </div>
+        </div>
+      `;
+    case 'text':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Titel</label>
+          <input type="text" class="input" value="${section.title || ''}" onchange="updateSectionField('${section.id}', 'title', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Indhold</label>
+          <textarea class="input" rows="4" onchange="updateSectionField('${section.id}', 'content', this.value)">${section.content || ''}</textarea>
+        </div>
+      `;
+    case 'features':
+      return `
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Funktioner (én per linje)</label>
+          <textarea class="input" rows="4" onchange="updateSectionFeatures('${section.id}', this.value)">${(section.features || []).map(f => f.title).join('\n')}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Layout</label>
+            <select class="input" value="${section.layout || 'grid'}" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+              <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
+              <option value="list" ${section.layout === 'list' ? 'selected' : ''}>Liste</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Kolonner</label>
+            <select class="input" onchange="updateSectionField('${section.id}', 'columns', parseInt(this.value))">
+              <option value="2" ${section.columns === 2 ? 'selected' : ''}>2</option>
+              <option value="3" ${section.columns === 3 ? 'selected' : ''}>3</option>
+              <option value="4" ${section.columns === 4 ? 'selected' : ''}>4</option>
+            </select>
+          </div>
+        </div>
+      `;
+    case 'cta':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Overskrift</label>
+          <input type="text" class="input" value="${section.title || ''}" onchange="updateSectionField('${section.id}', 'title', this.value)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Knaptekst</label>
+            <input type="text" class="input" value="${section.button?.text || ''}" onchange="updateSectionCTAButton('${section.id}', 'text', this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Knap URL</label>
+            <input type="text" class="input" value="${section.button?.url || ''}" onchange="updateSectionCTAButton('${section.id}', 'url', this.value)">
+          </div>
+        </div>
+      `;
+    case 'testimonials':
+      return `
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Udtalelser (JSON format)</label>
+          <textarea class="input" rows="4" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"name": "Navn", "text": "Udtalelse", "company": "Firma"}]</p>
+        </div>
+      `;
+    case 'faq':
+      return `
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">FAQ Items (JSON format)</label>
+          <textarea class="input" rows="4" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"question": "Spørgsmål", "answer": "Svar"}]</p>
+        </div>
+      `;
+    case 'images':
+      return `
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Billede URLs (én per linje)</label>
+          <textarea class="input" rows="4" onchange="updateSectionImages('${section.id}', this.value)">${(section.images || []).join('\n')}</textarea>
+        </div>
+        <div class="form-group" style="margin-top:12px">
+          <label class="form-label" style="font-size:12px">Layout</label>
+          <select class="input" onchange="updateSectionField('${section.id}', 'layout', this.value)">
+            <option value="gallery" ${section.layout === 'gallery' ? 'selected' : ''}>Galleri</option>
+            <option value="grid" ${section.layout === 'grid' ? 'selected' : ''}>Grid</option>
+            <option value="single" ${section.layout === 'single' ? 'selected' : ''}>Enkelt</option>
+          </select>
+        </div>
+      `;
+    default:
+      return '<p style="color:var(--muted)">Ukendt sektionstype</p>';
+  }
+}
+
+// Update section field
+function updateSectionField(sectionId, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    section[field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update section button (hero)
+function updateSectionButton(sectionId, buttonIndex, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.buttons) section.buttons = [{ text: '', url: '', variant: 'primary' }];
+    if (!section.buttons[buttonIndex]) section.buttons[buttonIndex] = { text: '', url: '', variant: 'primary' };
+    section.buttons[buttonIndex][field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update section CTA button
+function updateSectionCTAButton(sectionId, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.button) section.button = { text: '', url: '', variant: 'primary' };
+    section.button[field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update section features
+function updateSectionFeatures(sectionId, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    section.features = value.split('\n').filter(line => line.trim()).map((title, i) => ({
+      id: 'feature-' + i,
+      title: title.trim(),
+      description: ''
+    }));
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update section images
+function updateSectionImages(sectionId, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    section.images = value.split('\n').filter(line => line.trim());
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Toggle add section dropdown
+function toggleAddSectionDropdown() {
+  const dropdown = document.getElementById('add-section-dropdown');
+  if (dropdown) {
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Add section to page
+function addSectionToPage(type) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const newSection = {
+    id: 'section-' + Date.now(),
+    type: type,
+    order: page.sections.length,
+    isVisible: true,
+    padding: 'medium'
+  };
+
+  // Add type-specific defaults
+  switch (type) {
+    case 'hero':
+      newSection.headline = 'Ny Hero Overskrift';
+      newSection.subheadline = '';
+      newSection.alignment = 'center';
+      newSection.buttons = [{ text: 'Kom i gang', url: '#', variant: 'primary' }];
+      break;
+    case 'text':
+      newSection.title = 'Ny Tekstsektion';
+      newSection.content = '';
+      newSection.alignment = 'left';
+      break;
+    case 'features':
+      newSection.features = [];
+      newSection.layout = 'grid';
+      newSection.columns = 3;
+      break;
+    case 'cta':
+      newSection.title = 'Klar til at komme i gang?';
+      newSection.description = '';
+      newSection.button = { text: 'Kontakt os', url: '#', variant: 'primary' };
+      newSection.style = 'simple';
+      break;
+    case 'testimonials':
+      newSection.items = [];
+      newSection.layout = 'carousel';
+      break;
+    case 'faq':
+      newSection.items = [];
+      break;
+    case 'images':
+      newSection.images = [];
+      newSection.layout = 'gallery';
+      break;
+  }
+
+  page.sections.push(newSection);
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+
+  // Close dropdown and re-render
+  document.getElementById('add-section-dropdown').style.display = 'none';
+  renderCMSSectionsList();
+}
+
+// Delete section from page
+function deleteSectionFromPage(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  if (!confirm('Er du sikker på at du vil slette denne sektion?')) return;
+
+  page.sections = page.sections.filter(s => s.id !== sectionId);
+  // Re-order remaining sections
+  page.sections.forEach((s, i) => s.order = i);
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSSectionsList();
+}
+
+// Move section up
+function moveSectionUp(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const sortedSections = [...page.sections].sort((a, b) => a.order - b.order);
+  const index = sortedSections.findIndex(s => s.id === sectionId);
+  if (index <= 0) return;
+
+  // Swap orders
+  const temp = sortedSections[index].order;
+  sortedSections[index].order = sortedSections[index - 1].order;
+  sortedSections[index - 1].order = temp;
+
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSSectionsList();
+}
+
+// Move section down
+function moveSectionDown(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const sortedSections = [...page.sections].sort((a, b) => a.order - b.order);
+  const index = sortedSections.findIndex(s => s.id === sectionId);
+  if (index < 0 || index >= sortedSections.length - 1) return;
+
+  // Swap orders
+  const temp = sortedSections[index].order;
+  sortedSections[index].order = sortedSections[index + 1].order;
+  sortedSections[index + 1].order = temp;
+
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSSectionsList();
+}
+
+// Toggle section visibility
+function toggleSectionVisibility(sectionId) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    section.isVisible = !section.isVisible;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSSectionsList();
+  }
+}
+
+// Add new CMS page
+function addNewCMSPage() {
+  const newPage = {
+    id: 'page-' + Date.now(),
+    title: 'Ny Side',
+    slug: 'ny-side.html',
+    description: 'Ny side beskrivelse',
+    status: 'draft',
+    template: 'standard',
+    isActive: false,
+    seo: {
+      title: 'Ny Side | Flow',
+      description: '',
+      keywords: []
+    },
+    sections: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  cmsPages.unshift(newPage);
+  markCMSChanged();
+  renderCMSPagesList();
+  selectCMSPage(newPage.id);
+}
+
+// Delete current page
+function deleteCurrentPage() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  if (!confirm(`Er du sikker på at du vil slette "${page.title}"?`)) return;
+
+  cmsPages = cmsPages.filter(p => p.id !== page.id);
+  currentCMSPageId = null;
+  markCMSChanged();
+  renderCMSPagesList();
+  renderCMSPageEditor();
+}
+
+// Duplicate current page
+function duplicateCurrentPage() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const duplicated = JSON.parse(JSON.stringify(page));
+  duplicated.id = 'page-' + Date.now();
+  duplicated.title = page.title + ' (Kopi)';
+  duplicated.slug = page.slug.replace('.html', '-kopi.html');
+  duplicated.status = 'draft';
+  duplicated.createdAt = new Date().toISOString();
+  duplicated.updatedAt = new Date().toISOString();
+
+  cmsPages.unshift(duplicated);
+  markCMSChanged();
+  renderCMSPagesList();
+  selectCMSPage(duplicated.id);
+  toast('Side duplikeret', 'success');
+}
+
+// Toggle page publish status
+function togglePagePublish() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  page.status = page.status === 'published' ? 'draft' : 'published';
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSPagesList();
+  renderCMSPageEditor();
+}
+
+// Preview current page
+function previewCurrentPage() {
+  const page = getCurrentCMSPage();
+  if (page) {
+    window.open(page.slug, '_blank');
+  }
+}
+
+// Update current page title
+function updateCurrentPageTitle() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const input = document.getElementById('cms-page-title-input');
+  if (input) {
+    page.title = input.value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+    renderCMSPagesList();
+  }
+}
+
+// Update current page SEO
+function updateCurrentPageSEO() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  page.seo = {
+    title: document.getElementById('cms-seo-title')?.value || '',
+    description: document.getElementById('cms-seo-description')?.value || '',
+    keywords: (document.getElementById('cms-seo-keywords')?.value || '').split(',').map(k => k.trim()).filter(k => k)
+  };
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+}
+
+// Update current page slug
+function updateCurrentPageSlug() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const input = document.getElementById('cms-page-slug');
+  if (input) {
+    page.slug = input.value.replace(/[^a-z0-9-]/g, '') + '.html';
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update current page template
+function updateCurrentPageTemplate() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const select = document.getElementById('cms-page-template');
+  if (select) {
+    page.template = select.value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
+// Update current page active status
+function updateCurrentPageActive() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const checkbox = document.getElementById('cms-page-active');
+  if (checkbox) {
+    page.isActive = checkbox.checked;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
   showPage('flow-cms');
@@ -25262,7 +26011,7 @@ function switchFlowCMSTab(tab) {
   if (contentEl) contentEl.classList.add('active');
 
   // Load content based on tab
-  if (tab === 'pages') loadFlowPagesList();
+  if (tab === 'pages') loadCMSPages(); // Use new CMS Pages Editor
   if (tab === 'blog') loadBlogPosts();
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
@@ -25460,6 +26209,502 @@ function previewFlowPage() {
   if (currentEditingPage) {
     window.open(currentEditingPage.slug + '.html', '_blank');
   }
+}
+
+// =====================================================
+// MARKETING EDITOR (React Admin Style)
+// =====================================================
+
+// Marketing State
+let marketingCampaigns = [];
+let marketingBroadcasts = [];
+let marketingSegments = [];
+let currentCampaignId = null;
+let marketingHasChanges = false;
+
+// Default campaigns
+function getDefaultCampaigns() {
+  return [
+    {
+      id: 'campaign-welcome',
+      name: 'Velkomstbesked',
+      description: 'Automatisk besked til nye kunder',
+      type: 'announcement',
+      status: 'active',
+      channels: ['email', 'sms'],
+      content: {
+        headline: 'Velkommen til Flow!',
+        body: 'Tak fordi du valgte os. Vi glæder os til at servicere dig.',
+        ctaText: 'Se vores menu',
+        ctaUrl: '/menu'
+      },
+      stats: { sent: 245, delivered: 240, opened: 180, clicked: 45, converted: 12 },
+      createdAt: '2026-01-15T10:00:00Z',
+      sentAt: '2026-01-20T12:00:00Z'
+    },
+    {
+      id: 'campaign-birthday',
+      name: 'Fødselsdagstilbud',
+      description: 'Automatisk fødselsdagsrabat',
+      type: 'promotion',
+      status: 'active',
+      channels: ['email', 'push', 'sms'],
+      content: {
+        headline: 'Tillykke med fødselsdagen! 🎂',
+        body: 'Fejr din dag med 20% rabat på din næste ordre.',
+        ctaText: 'Indløs rabat',
+        ctaUrl: '/bestil'
+      },
+      stats: { sent: 89, delivered: 87, opened: 72, clicked: 34, converted: 18 },
+      createdAt: '2026-01-10T10:00:00Z',
+      sentAt: null
+    }
+  ];
+}
+
+// Default segments
+function getDefaultSegments() {
+  return [
+    { id: 'segment-vip', name: 'VIP Kunder', description: 'Kunder med mere end 10 ordrer', customerCount: 234, createdAt: '2026-01-01T10:00:00Z' },
+    { id: 'segment-new', name: 'Nye Kunder', description: 'Kunder fra de sidste 30 dage', customerCount: 89, createdAt: '2026-01-01T10:00:00Z' },
+    { id: 'segment-inactive', name: 'Inaktive Kunder', description: 'Ingen ordre i 60+ dage', customerCount: 156, createdAt: '2026-01-01T10:00:00Z' }
+  ];
+}
+
+// Load Marketing Data
+function loadMarketingData() {
+  // Load campaigns
+  const savedCampaigns = localStorage.getItem('orderflow_marketing_campaigns');
+  marketingCampaigns = savedCampaigns ? JSON.parse(savedCampaigns) : getDefaultCampaigns();
+
+  // Load broadcasts
+  const savedBroadcasts = localStorage.getItem('orderflow_marketing_broadcasts');
+  marketingBroadcasts = savedBroadcasts ? JSON.parse(savedBroadcasts) : [];
+
+  // Load segments
+  const savedSegments = localStorage.getItem('orderflow_marketing_segments');
+  marketingSegments = savedSegments ? JSON.parse(savedSegments) : getDefaultSegments();
+
+  marketingHasChanges = false;
+  updateMarketingUnsavedBadge();
+  renderCampaignsList();
+}
+
+// Save Marketing Data
+function saveMarketingData() {
+  localStorage.setItem('orderflow_marketing_campaigns', JSON.stringify(marketingCampaigns));
+  localStorage.setItem('orderflow_marketing_broadcasts', JSON.stringify(marketingBroadcasts));
+  localStorage.setItem('orderflow_marketing_segments', JSON.stringify(marketingSegments));
+  marketingHasChanges = false;
+  updateMarketingUnsavedBadge();
+  toast('Marketing data gemt', 'success');
+}
+
+// Mark marketing as changed
+function markMarketingChanged() {
+  marketingHasChanges = true;
+  updateMarketingUnsavedBadge();
+}
+
+// Update unsaved badge
+function updateMarketingUnsavedBadge() {
+  const badge = document.getElementById('marketing-unsaved-badge');
+  if (badge) {
+    badge.style.display = marketingHasChanges ? 'inline-block' : 'none';
+  }
+}
+
+// Switch Marketing Tab
+function switchMarketingTab(tab) {
+  // Update tab buttons
+  document.querySelectorAll('#page-campaigns .tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.getElementById('marketing-tab-' + tab)?.classList.add('active');
+
+  // Hide all tabs
+  document.getElementById('marketing-content-campaigns').style.display = 'none';
+  document.getElementById('marketing-content-broadcasts').style.display = 'none';
+  document.getElementById('marketing-content-segments').style.display = 'none';
+
+  // Show selected tab
+  document.getElementById('marketing-content-' + tab).style.display = 'block';
+
+  // Render tab content
+  if (tab === 'campaigns') renderCampaignsList();
+  if (tab === 'broadcasts') renderBroadcastsList();
+  if (tab === 'segments') renderSegmentsList();
+}
+
+// Render Campaigns List
+function renderCampaignsList() {
+  const container = document.getElementById('campaigns-list');
+  if (!container) return;
+
+  const statusColors = {
+    draft: 'badge-warning',
+    scheduled: 'badge-info',
+    active: 'badge-success',
+    completed: 'badge-secondary',
+    cancelled: 'badge-danger'
+  };
+
+  const statusLabels = {
+    draft: 'Kladde',
+    scheduled: 'Planlagt',
+    active: 'Aktiv',
+    completed: 'Afsluttet',
+    cancelled: 'Annulleret'
+  };
+
+  const typeIcons = {
+    promotion: '🏷️',
+    newsletter: '📰',
+    event: '🎉',
+    announcement: '📢'
+  };
+
+  container.innerHTML = marketingCampaigns.map(campaign => `
+    <div class="campaign-item" onclick="selectCampaign('${campaign.id}')" style="padding:12px;border-radius:8px;cursor:pointer;border:1px solid ${currentCampaignId === campaign.id ? 'var(--primary)' : 'transparent'};background:${currentCampaignId === campaign.id ? 'var(--primary-light)' : 'transparent'};margin-bottom:8px;transition:all 0.15s ease">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span>${typeIcons[campaign.type] || '📣'}</span>
+            <span style="font-weight:500;font-size:13px">${campaign.name}</span>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin:4px 0 0">${campaign.description || 'Ingen beskrivelse'}</p>
+        </div>
+        <span class="badge ${statusColors[campaign.status] || 'badge-secondary'}" style="font-size:10px">${statusLabels[campaign.status] || campaign.status}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${campaign.channels.map(ch => `<span style="font-size:10px;padding:2px 6px;background:var(--bg3);border-radius:4px">${getChannelIcon(ch)}</span>`).join('')}
+      </div>
+      ${campaign.stats?.sent > 0 ? `
+        <div style="display:flex;gap:12px;margin-top:8px;font-size:10px;color:var(--muted)">
+          <span>📤 ${campaign.stats.sent}</span>
+          <span>👁️ ${campaign.stats.opened}</span>
+          <span>👆 ${campaign.stats.clicked}</span>
+        </div>
+      ` : ''}
+    </div>
+  `).join('') || '<p style="text-align:center;padding:20px;color:var(--muted)">Ingen kampagner endnu</p>';
+}
+
+// Get channel icon
+function getChannelIcon(channel) {
+  const icons = {
+    app: '📱',
+    website: '🌐',
+    email: '✉️',
+    sms: '💬',
+    push: '🔔'
+  };
+  return icons[channel] || '📣';
+}
+
+// Select Campaign
+function selectCampaign(campaignId) {
+  currentCampaignId = campaignId;
+  renderCampaignsList();
+  renderCampaignEditor();
+}
+
+// Get current campaign
+function getCurrentCampaign() {
+  return marketingCampaigns.find(c => c.id === currentCampaignId);
+}
+
+// Render Campaign Editor
+function renderCampaignEditor() {
+  const campaign = getCurrentCampaign();
+  const emptyEl = document.getElementById('campaign-editor-empty');
+  const formEl = document.getElementById('campaign-editor-form');
+  const headerEl = document.getElementById('campaign-editor-header');
+
+  if (!campaign) {
+    if (emptyEl) emptyEl.style.display = 'flex';
+    if (formEl) formEl.style.display = 'none';
+    if (headerEl) headerEl.style.display = 'none';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (formEl) formEl.style.display = 'block';
+  if (headerEl) headerEl.style.display = 'block';
+
+  // Fill form
+  document.getElementById('campaign-name').value = campaign.name || '';
+  document.getElementById('campaign-description').value = campaign.description || '';
+  document.getElementById('campaign-type').value = campaign.type || 'promotion';
+  document.getElementById('campaign-status').value = campaign.status || 'draft';
+
+  // Channels
+  document.getElementById('channel-app').checked = campaign.channels?.includes('app');
+  document.getElementById('channel-website').checked = campaign.channels?.includes('website');
+  document.getElementById('channel-email').checked = campaign.channels?.includes('email');
+  document.getElementById('channel-sms').checked = campaign.channels?.includes('sms');
+  document.getElementById('channel-push').checked = campaign.channels?.includes('push');
+
+  // Content
+  document.getElementById('campaign-headline').value = campaign.content?.headline || '';
+  document.getElementById('campaign-body').value = campaign.content?.body || '';
+  document.getElementById('campaign-cta-text').value = campaign.content?.ctaText || '';
+  document.getElementById('campaign-cta-url').value = campaign.content?.ctaUrl || '';
+
+  // Stats
+  const statsEl = document.getElementById('campaign-stats');
+  if (campaign.stats?.sent > 0) {
+    statsEl.style.display = 'block';
+    document.getElementById('stat-sent').textContent = campaign.stats.sent || 0;
+    document.getElementById('stat-opened').textContent = campaign.stats.opened || 0;
+    document.getElementById('stat-clicked').textContent = campaign.stats.clicked || 0;
+    document.getElementById('stat-converted').textContent = campaign.stats.converted || 0;
+  } else {
+    statsEl.style.display = 'none';
+  }
+}
+
+// Update current campaign field
+function updateCurrentCampaignField(field, value) {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+  campaign[field] = value;
+  markMarketingChanged();
+  renderCampaignsList();
+}
+
+// Update campaign channels
+function updateCampaignChannels() {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+
+  const channels = [];
+  if (document.getElementById('channel-app').checked) channels.push('app');
+  if (document.getElementById('channel-website').checked) channels.push('website');
+  if (document.getElementById('channel-email').checked) channels.push('email');
+  if (document.getElementById('channel-sms').checked) channels.push('sms');
+  if (document.getElementById('channel-push').checked) channels.push('push');
+
+  campaign.channels = channels;
+  markMarketingChanged();
+  renderCampaignsList();
+}
+
+// Update campaign content
+function updateCampaignContent(field, value) {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+  if (!campaign.content) campaign.content = {};
+  campaign.content[field] = value;
+  markMarketingChanged();
+}
+
+// Add new campaign
+function addNewCampaign() {
+  const newCampaign = {
+    id: 'campaign-' + Date.now(),
+    name: 'Ny Kampagne',
+    description: '',
+    type: 'promotion',
+    status: 'draft',
+    channels: ['email'],
+    content: { headline: '', body: '', ctaText: '', ctaUrl: '' },
+    stats: { sent: 0, delivered: 0, opened: 0, clicked: 0, converted: 0 },
+    createdAt: new Date().toISOString(),
+    sentAt: null
+  };
+
+  marketingCampaigns.unshift(newCampaign);
+  markMarketingChanged();
+  renderCampaignsList();
+  selectCampaign(newCampaign.id);
+}
+
+// Delete current campaign
+function deleteCurrentCampaign() {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+  if (!confirm(`Er du sikker på at du vil slette "${campaign.name}"?`)) return;
+
+  marketingCampaigns = marketingCampaigns.filter(c => c.id !== campaign.id);
+  currentCampaignId = null;
+  markMarketingChanged();
+  renderCampaignsList();
+  renderCampaignEditor();
+}
+
+// Duplicate current campaign
+function duplicateCurrentCampaign() {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+
+  const duplicated = JSON.parse(JSON.stringify(campaign));
+  duplicated.id = 'campaign-' + Date.now();
+  duplicated.name = campaign.name + ' (Kopi)';
+  duplicated.status = 'draft';
+  duplicated.stats = { sent: 0, delivered: 0, opened: 0, clicked: 0, converted: 0 };
+  duplicated.createdAt = new Date().toISOString();
+  duplicated.sentAt = null;
+
+  marketingCampaigns.unshift(duplicated);
+  markMarketingChanged();
+  renderCampaignsList();
+  selectCampaign(duplicated.id);
+  toast('Kampagne duplikeret', 'success');
+}
+
+// Send current campaign
+function sendCurrentCampaign() {
+  const campaign = getCurrentCampaign();
+  if (!campaign) return;
+  if (campaign.channels.length === 0) {
+    toast('Vælg mindst én kanal', 'error');
+    return;
+  }
+
+  // Create broadcast record
+  const broadcast = {
+    id: 'broadcast-' + Date.now(),
+    campaignId: campaign.id,
+    campaignName: campaign.name,
+    channels: campaign.channels,
+    sentAt: new Date().toISOString(),
+    stats: {
+      recipients: Math.floor(Math.random() * 500) + 100,
+      delivered: 0,
+      failed: 0
+    },
+    status: 'sending'
+  };
+
+  // Simulate sending
+  broadcast.stats.delivered = Math.floor(broadcast.stats.recipients * 0.95);
+  broadcast.stats.failed = broadcast.stats.recipients - broadcast.stats.delivered;
+  broadcast.status = 'sent';
+
+  // Update campaign stats
+  campaign.stats.sent = (campaign.stats.sent || 0) + broadcast.stats.delivered;
+  campaign.sentAt = broadcast.sentAt;
+
+  marketingBroadcasts.unshift(broadcast);
+  markMarketingChanged();
+  renderCampaignsList();
+  renderCampaignEditor();
+  toast(`Kampagne sendt til ${broadcast.stats.delivered} modtagere`, 'success');
+}
+
+// Render Broadcasts List
+function renderBroadcastsList() {
+  const container = document.getElementById('broadcasts-list');
+  const emptyEl = document.getElementById('broadcasts-empty');
+  if (!container) return;
+
+  if (marketingBroadcasts.length === 0) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  container.innerHTML = marketingBroadcasts.map(broadcast => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:500;font-size:14px">${broadcast.campaignName}</div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          ${broadcast.channels.map(ch => `<span style="font-size:11px">${getChannelIcon(ch)}</span>`).join('')}
+          <span style="font-size:11px;color:var(--muted)">${new Date(broadcast.sentAt).toLocaleString('da-DK')}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px">
+        <span style="color:var(--success)">✓ ${broadcast.stats.delivered}</span>
+        <span style="color:var(--danger)">✗ ${broadcast.stats.failed}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Render Segments List
+function renderSegmentsList() {
+  const container = document.getElementById('segments-grid');
+  const emptyEl = document.getElementById('segments-empty');
+  if (!container) return;
+
+  if (marketingSegments.length === 0) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  container.innerHTML = marketingSegments.map(segment => `
+    <div class="setting-card" style="padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <h3 style="margin:0;font-size:16px;font-weight:600">${segment.name}</h3>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">${segment.description || 'Ingen beskrivelse'}</p>
+        </div>
+        <button class="btn btn-sm btn-danger" onclick="deleteSegment('${segment.id}')">🗑️</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;padding:12px;background:var(--bg3);border-radius:8px">
+        <span style="font-size:24px;font-weight:600">${segment.customerCount}</span>
+        <span style="font-size:12px;color:var(--muted)">kunder</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-sm btn-secondary" style="flex:1" onclick="viewSegmentCustomers('${segment.id}')">Se kunder</button>
+        <button class="btn btn-sm btn-primary" style="flex:1" onclick="sendToSegment('${segment.id}')">Send besked</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Add new segment
+function addNewSegment() {
+  const name = prompt('Segmentnavn:');
+  if (!name) return;
+
+  const newSegment = {
+    id: 'segment-' + Date.now(),
+    name: name,
+    description: '',
+    customerCount: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  marketingSegments.push(newSegment);
+  markMarketingChanged();
+  renderSegmentsList();
+}
+
+// Delete segment
+function deleteSegment(segmentId) {
+  const segment = marketingSegments.find(s => s.id === segmentId);
+  if (!segment) return;
+  if (!confirm(`Er du sikker på at du vil slette "${segment.name}"?`)) return;
+
+  marketingSegments = marketingSegments.filter(s => s.id !== segmentId);
+  markMarketingChanged();
+  renderSegmentsList();
+}
+
+// View segment customers (placeholder)
+function viewSegmentCustomers(segmentId) {
+  toast('Kundevisning kommer snart', 'info');
+}
+
+// Send to segment (placeholder)
+function sendToSegment(segmentId) {
+  const segment = marketingSegments.find(s => s.id === segmentId);
+  if (segment) {
+    toast(`Sender til ${segment.customerCount} kunder i "${segment.name}"`, 'info');
+  }
+}
+
+// Initialize Marketing on page load
+function initMarketingPage() {
+  loadMarketingData();
+  switchMarketingTab('campaigns');
 }
 
 // =====================================================
