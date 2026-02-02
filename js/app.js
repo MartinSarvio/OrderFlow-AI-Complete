@@ -25475,8 +25475,8 @@ function renderCMSSectionsList() {
           ${!section.isVisible ? '<span class="badge" style="font-size:10px;background:var(--muted);color:var(--text-inverse)">Skjult</span>' : ''}
         </div>
         <div style="display:flex;gap:4px">
-          <button class="btn btn-sm" onclick="moveSectionUp('${section.id}')" ${index === 0 ? 'disabled' : ''} title="Flyt op">↑</button>
-          <button class="btn btn-sm" onclick="moveSectionDown('${section.id}')" ${index === sortedSections.length - 1 ? 'disabled' : ''} title="Flyt ned">↓</button>
+          <button class="btn btn-sm" onclick="moveSectionUp('${section.id}')" ${index === 0 ? 'disabled' : ''} title="Flyt op" style="font-size:11px">Op</button>
+          <button class="btn btn-sm" onclick="moveSectionDown('${section.id}')" ${index === sortedSections.length - 1 ? 'disabled' : ''} title="Flyt ned" style="font-size:11px">Ned</button>
           <button class="btn btn-sm" onclick="toggleSectionVisibility('${section.id}')" title="${section.isVisible ? 'Skjul' : 'Vis'}" style="font-size:11px">${section.isVisible ? 'Skjul' : 'Vis'}</button>
           <button class="btn btn-sm btn-danger" onclick="deleteSectionFromPage('${section.id}')" title="Slet" style="font-size:11px">Slet</button>
         </div>
@@ -25498,11 +25498,15 @@ function getSectionLabel(type) {
   const labels = {
     hero: 'Hero',
     text: 'Tekst',
-    features: 'Funktioner',
+    features: 'Funktioner/Tabs',
     cta: 'Call-to-Action',
     testimonials: 'Udtalelser',
     faq: 'FAQ',
-    images: 'Billeder'
+    images: 'Billeder',
+    trusted: 'Testimonial Carousel',
+    appleFeatures: 'Feature Cards',
+    bento: 'Bento Grid',
+    beliefs: 'Virksomhedsværdier'
   };
   return labels[type] || type;
 }
@@ -25614,6 +25618,76 @@ function renderSectionEditor(section) {
           </select>
         </div>
       `;
+    case 'trusted':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Testimonial Cards (JSON)</label>
+          <textarea class="input" rows="8" onchange="updateSectionField('${section.id}', 'cards', JSON.parse(this.value || '[]'))">${JSON.stringify(section.cards || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"name": "Navn", "role": "Firma", "quote": "Citat", "image": "url"}]</p>
+        </div>
+      `;
+    case 'appleFeatures':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Beskrivelse</label>
+          <textarea class="input" rows="2" onchange="updateSectionField('${section.id}', 'description', this.value)">${section.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Feature Cards (JSON)</label>
+          <textarea class="input" rows="8" onchange="updateSectionField('${section.id}', 'cards', JSON.parse(this.value || '[]'))">${JSON.stringify(section.cards || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"badge": "Kategori", "title": "Titel", "description": "Beskrivelse"}]</p>
+        </div>
+      `;
+    case 'bento':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Bento Cards (JSON)</label>
+          <textarea class="input" rows="6" onchange="updateSectionField('${section.id}', 'cards', JSON.parse(this.value || '[]'))">${JSON.stringify(section.cards || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"label": "Label tekst", "title": "Titel", "image": "billede URL"}]</p>
+        </div>
+      `;
+    case 'beliefs':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Sektion Overskrift</label>
+          <input type="text" class="input" value="${section.heading || ''}" onchange="updateSectionField('${section.id}', 'heading', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Undertitel</label>
+          <input type="text" class="input" value="${section.subtitle || ''}" onchange="updateSectionField('${section.id}', 'subtitle', this.value)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Forfatter Navn</label>
+            <input type="text" class="input" value="${section.author?.name || ''}" onchange="updateSectionAuthor('${section.id}', 'name', this.value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Forfatter Rolle</label>
+            <input type="text" class="input" value="${section.author?.role || ''}" onchange="updateSectionAuthor('${section.id}', 'role', this.value)">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Forfatter Billede URL</label>
+          <input type="text" class="input" value="${section.author?.image || ''}" onchange="updateSectionAuthor('${section.id}', 'image', this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px">Belief Items (JSON)</label>
+          <textarea class="input" rows="6" onchange="updateSectionField('${section.id}', 'items', JSON.parse(this.value || '[]'))">${JSON.stringify(section.items || [], null, 2)}</textarea>
+          <p style="font-size:10px;color:var(--muted);margin-top:4px">Format: [{"heading": "Overskrift", "text": "Beskrivelse"}]</p>
+        </div>
+      `;
     default:
       return '<p style="color:var(--muted)">Ukendt sektionstype</p>';
   }
@@ -25691,6 +25765,20 @@ function updateSectionImages(sectionId, value) {
   }
 }
 
+// Update section author (for beliefs section)
+function updateSectionAuthor(sectionId, field, value) {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const section = page.sections.find(s => s.id === sectionId);
+  if (section) {
+    if (!section.author) section.author = { name: '', role: '', image: '' };
+    section.author[field] = value;
+    page.updatedAt = new Date().toISOString();
+    markCMSChanged();
+  }
+}
+
 // Toggle add section dropdown
 function toggleAddSectionDropdown() {
   const dropdown = document.getElementById('add-section-dropdown');
@@ -25746,6 +25834,25 @@ function addSectionToPage(type) {
     case 'images':
       newSection.images = [];
       newSection.layout = 'gallery';
+      break;
+    case 'trusted':
+      newSection.heading = 'Betroet af tusindvis af restauratører';
+      newSection.cards = [];
+      break;
+    case 'appleFeatures':
+      newSection.heading = 'Alt hvad du behøver';
+      newSection.description = '';
+      newSection.cards = [];
+      break;
+    case 'bento':
+      newSection.heading = 'Giv din restaurant den samme teknologi';
+      newSection.cards = [];
+      break;
+    case 'beliefs':
+      newSection.heading = 'Vores overbevisninger';
+      newSection.subtitle = '';
+      newSection.author = { name: '', role: '', image: '' };
+      newSection.items = [];
       break;
   }
 

@@ -89,6 +89,18 @@
       case 'images':
         renderImagesSection(section);
         break;
+      case 'trusted':
+        renderTrustedSection(section);
+        break;
+      case 'appleFeatures':
+        renderAppleFeaturesSection(section);
+        break;
+      case 'bento':
+        renderBentoSection(section);
+        break;
+      case 'beliefs':
+        renderBeliefsSection(section);
+        break;
       default:
         // Unknown section type
         break;
@@ -326,6 +338,185 @@
         }
       }
     });
+  }
+
+  /**
+   * Render Trusted Section (Testimonial Carousel)
+   * Fields: heading, cards[] (name, role, quote, image, gradient)
+   */
+  function renderTrustedSection(section) {
+    if (!section) return;
+
+    const trustedSection = document.querySelector('[data-cms="trusted"]') ||
+                           document.querySelector('.trusted-section') ||
+                           document.querySelector('.testimonials-carousel');
+
+    if (!trustedSection) return;
+
+    // Update heading
+    if (section.heading) {
+      const h2 = trustedSection.querySelector('h2, .section-title');
+      if (h2) {
+        h2.textContent = section.heading;
+      }
+    }
+
+    // Update cards
+    if (section.cards && section.cards.length > 0) {
+      const cards = trustedSection.querySelectorAll('.carousel-card, .testimonial-card');
+      section.cards.forEach((card, index) => {
+        if (cards[index]) {
+          const name = cards[index].querySelector('.card-name, .author-name, h4');
+          const role = cards[index].querySelector('.card-role, .author-role, .company');
+          const quote = cards[index].querySelector('.card-quote, .quote, p');
+          const img = cards[index].querySelector('img');
+
+          if (name && card.name) name.textContent = card.name;
+          if (role && card.role) role.textContent = card.role;
+          if (quote && card.quote) quote.textContent = card.quote;
+          if (img && card.image) img.src = card.image;
+        }
+      });
+    }
+  }
+
+  /**
+   * Render Apple Features Section (Feature Cards Carousel)
+   * Fields: heading, description, cards[] (badge, title, description)
+   */
+  function renderAppleFeaturesSection(section) {
+    if (!section) return;
+
+    const appleSection = document.querySelector('[data-cms="appleFeatures"]') ||
+                         document.querySelector('.apple-features') ||
+                         document.querySelector('.features-carousel');
+
+    if (!appleSection) return;
+
+    // Update heading
+    if (section.heading) {
+      const h2 = appleSection.querySelector('h2, .section-title');
+      if (h2) {
+        h2.textContent = section.heading;
+      }
+    }
+
+    // Update description
+    if (section.description) {
+      const desc = appleSection.querySelector('.section-description, > p');
+      if (desc) {
+        desc.textContent = section.description;
+      }
+    }
+
+    // Update cards
+    if (section.cards && section.cards.length > 0) {
+      const cards = appleSection.querySelectorAll('.carousel-card, .feature-card');
+      section.cards.forEach((card, index) => {
+        if (cards[index]) {
+          const badge = cards[index].querySelector('.card-badge, .badge');
+          const title = cards[index].querySelector('.card-title, h3');
+          const desc = cards[index].querySelector('.card-description, p');
+
+          if (badge && card.badge) badge.textContent = card.badge;
+          if (title && card.title) title.textContent = card.title;
+          if (desc && card.description) desc.textContent = card.description;
+        }
+      });
+    }
+  }
+
+  /**
+   * Render Bento Section (Bento Grid)
+   * Fields: heading, cards[] (label, title, image)
+   */
+  function renderBentoSection(section) {
+    if (!section) return;
+
+    const bentoSection = document.querySelector('[data-cms="bento"]') ||
+                         document.querySelector('.bento-section') ||
+                         document.querySelector('.bento-grid');
+
+    if (!bentoSection) return;
+
+    // Update heading
+    if (section.heading) {
+      const h2 = bentoSection.querySelector('h2, .section-title');
+      if (h2) {
+        h2.innerHTML = section.heading;
+      }
+    }
+
+    // Update cards
+    if (section.cards && section.cards.length > 0) {
+      const cards = bentoSection.querySelectorAll('.bento-card, .card');
+      section.cards.forEach((card, index) => {
+        if (cards[index]) {
+          const label = cards[index].querySelector('.card-label, .label, small');
+          const title = cards[index].querySelector('.card-title, h3, .title');
+          const img = cards[index].querySelector('img');
+
+          if (label && card.label) label.textContent = card.label;
+          if (title && card.title) title.textContent = card.title;
+          if (img && card.image) img.src = card.image;
+        }
+      });
+    }
+  }
+
+  /**
+   * Render Beliefs Section (Company Values)
+   * Fields: heading, subtitle, author{name, role, image}, items[] (heading, text)
+   */
+  function renderBeliefsSection(section) {
+    if (!section) return;
+
+    const beliefsSection = document.querySelector('[data-cms="beliefs"]') ||
+                           document.querySelector('.beliefs-section') ||
+                           document.querySelector('#om');
+
+    if (!beliefsSection) return;
+
+    // Update heading
+    if (section.heading) {
+      const h2 = beliefsSection.querySelector('h2, .section-title');
+      if (h2) {
+        h2.textContent = section.heading;
+      }
+    }
+
+    // Update subtitle
+    if (section.subtitle) {
+      const subtitle = beliefsSection.querySelector('.section-subtitle, > p:first-of-type');
+      if (subtitle) {
+        subtitle.textContent = section.subtitle;
+      }
+    }
+
+    // Update author
+    if (section.author) {
+      const authorName = beliefsSection.querySelector('.author-name, .name');
+      const authorRole = beliefsSection.querySelector('.author-role, .role');
+      const authorImg = beliefsSection.querySelector('.author-image img, .author img');
+
+      if (authorName && section.author.name) authorName.textContent = section.author.name;
+      if (authorRole && section.author.role) authorRole.textContent = section.author.role;
+      if (authorImg && section.author.image) authorImg.src = section.author.image;
+    }
+
+    // Update belief items
+    if (section.items && section.items.length > 0) {
+      const items = beliefsSection.querySelectorAll('.belief-item, .value-item');
+      section.items.forEach((item, index) => {
+        if (items[index]) {
+          const heading = items[index].querySelector('.belief-heading, h3, h4');
+          const text = items[index].querySelector('.belief-text, p');
+
+          if (heading && item.heading) heading.textContent = item.heading;
+          if (text && item.text) text.textContent = item.text;
+        }
+      });
+    }
   }
 
   /**
