@@ -24777,11 +24777,25 @@ function showAppPreviewQR() {
     `;
   };
 
+  const renderFallbackImage = () => {
+    const encodedUrl = encodeURIComponent(previewUrl);
+    container.innerHTML = `
+      <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}"
+        alt="QR kode"
+        width="200"
+        height="200"
+        style="display:block"
+      >
+    `;
+  };
+
   showModal('app-preview-qr');
 
   ensureQRCodeLibrary().then((loaded) => {
     if (!loaded || typeof QRCode === 'undefined') {
-      renderFallback('QR-kode bibliotek ikke tilgængeligt');
+      console.error('QR-kode bibliotek ikke tilgængeligt');
+      renderFallbackImage();
       return;
     }
 
@@ -24837,7 +24851,7 @@ function showAppPreviewQR() {
         });
       } catch (err) {
         console.warn('QR-kode fejl:', err);
-        renderFallback('Kunne ikke generere QR-kode');
+        renderFallbackImage();
         return;
       }
 
