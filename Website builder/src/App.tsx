@@ -76,7 +76,7 @@ function App() {
     } as RestaurantConfig;
   }, [baseRestaurant, externalConfig]);
 
-  // Listen for config updates from parent window
+  // Listen for config updates from parent window OR load from localStorage
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === 'UPDATE_RESTAURANT_CONFIG') {
@@ -86,9 +86,21 @@ function App() {
 
     window.addEventListener('message', handleMessage);
 
-    // Notify parent that we're ready
+    // Check if we're in iframe or standalone mode
     if (window.parent !== window) {
+      // In iframe - notify parent that we're ready
       window.parent.postMessage({ type: 'WEBBUILDER_READY' }, '*');
+    } else {
+      // Standalone mode (new tab) - try to load config from localStorage
+      try {
+        const savedConfig = localStorage.getItem('orderflow_webbuilder_config');
+        if (savedConfig) {
+          const config = JSON.parse(savedConfig);
+          setExternalConfig(config);
+        }
+      } catch (e) {
+        console.warn('Could not load config from localStorage:', e);
+      }
     }
 
     return () => window.removeEventListener('message', handleMessage);
@@ -218,7 +230,7 @@ function App() {
         />
 
         {/* Loyalty Section */}
-        <LoyaltySection 
+        <LoyaltySection
           restaurant={restaurant}
           user={mockUser}
         />
