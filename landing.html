@@ -592,6 +592,22 @@
       display: inline;
     }
 
+    /* Typed text animation */
+    .hero-content h1 .typed-text {
+      color: var(--color-primary, #ff6b35);
+    }
+
+    .hero-content h1 .typed-cursor {
+      color: var(--color-primary, #ff6b35);
+      animation: blink 1s infinite;
+      font-weight: 100;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
     .hero-content p {
       font-size: 1.8rem;
       color: rgba(255,255,255,0.85);
@@ -1380,7 +1396,7 @@
         </video>
       </div>
       <div class="hero-content">
-        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br>BY<span class="big">G</span>GET TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
+        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["DESIGNET", "UDVIKLET", "OPTIMERET"]'>DESIGNET</span><span class="typed-cursor">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
         <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button button-white">Få en gratis demo</a>
@@ -2083,5 +2099,67 @@
 <script src="js/cookie-consent.js"></script>
 <!-- Flow CMS Dynamic Content -->
 <script src="js/flow-cms-render.js"></script>
+
+<!-- Typed Text Animation -->
+<script>
+(function() {
+  function initTypedText() {
+    const elements = document.querySelectorAll('.typed-text[data-typed-text]');
+
+    elements.forEach(el => {
+      try {
+        const words = JSON.parse(el.getAttribute('data-typed-text'));
+        if (!words || words.length === 0) return;
+
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let currentWord = words[0];
+
+        function type() {
+          if (isDeleting) {
+            el.textContent = currentWord.substring(0, charIndex - 1);
+            charIndex--;
+
+            if (charIndex === 0) {
+              isDeleting = false;
+              wordIndex = (wordIndex + 1) % words.length;
+              currentWord = words[wordIndex];
+              setTimeout(type, 500);
+              return;
+            }
+            setTimeout(type, 50);
+          } else {
+            el.textContent = currentWord.substring(0, charIndex + 1);
+            charIndex++;
+
+            if (charIndex === currentWord.length) {
+              isDeleting = true;
+              setTimeout(type, 2000);
+              return;
+            }
+            setTimeout(type, 100);
+          }
+        }
+
+        el.textContent = '';
+        setTimeout(type, 1000);
+      } catch (e) {
+        console.error('Typed text error:', e);
+      }
+    });
+  }
+
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTypedText);
+  } else {
+    initTypedText();
+  }
+
+  // Expose for CMS re-initialization
+  window.initTypedText = initTypedText;
+})();
+</script>
 </body>
 </html>
