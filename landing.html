@@ -765,7 +765,7 @@
 
     /* ==================== TRUSTED CAROUSEL ==================== */
     .trusted-section {
-      background: var(--color-gray-100);
+      background: #ffffff;
       padding: 8rem 0;
       overflow: hidden;
     }
@@ -837,6 +837,99 @@
     .trusted-card-role {
       font-size: 1.4rem;
       opacity: 0.8;
+    }
+
+    /* ==================== CREATIONS GALLERY ==================== */
+    .creations-section {
+      background: var(--color-white);
+      padding: 8rem 0;
+    }
+
+    .creations-header {
+      text-align: center;
+      max-width: 64rem;
+      margin: 0 auto 6rem;
+      padding: 0 2rem;
+    }
+
+    .creations-header h2 {
+      font-size: 3.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+
+    .creations-header h2 span {
+      background: linear-gradient(to top, var(--color-primary) 0%, var(--color-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding: 0.2rem;
+    }
+
+    .creations-header p {
+      font-size: 1.8rem;
+      color: var(--color-gray-500);
+      line-height: 1.6;
+    }
+
+    .creations-gallery {
+      display: flex;
+      justify-content: center;
+      gap: 1.6rem;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 40rem;
+    }
+
+    .creations-card {
+      position: relative;
+      flex: 0 0 24rem;
+      height: 100%;
+      border-radius: 1.6rem;
+      overflow: hidden;
+      transition: flex 0.5s ease;
+    }
+
+    .creations-card:hover {
+      flex: 1 1 auto;
+    }
+
+    .creations-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .creations-card-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 3rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+      color: var(--color-white);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .creations-card:hover .creations-card-overlay {
+      opacity: 1;
+    }
+
+    .creations-card-title {
+      font-size: 2.8rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+    }
+
+    .creations-card-desc {
+      font-size: 1.4rem;
+      line-height: 1.5;
+      opacity: 0.9;
     }
 
     /* ==================== CTA BANNER ==================== */
@@ -930,6 +1023,24 @@
 
       .tab-item {
         white-space: nowrap;
+      }
+
+      .creations-gallery {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .creations-card {
+        flex: none;
+        height: 24rem;
+      }
+
+      .creations-card:hover {
+        flex: none;
+      }
+
+      .creations-card-overlay {
+        opacity: 1;
       }
     }
 
@@ -1466,6 +1577,37 @@
               <div class="trusted-card-name">Emma Christensen</div>
               <div class="trusted-card-role">Thai Kitchen, Esbjerg</div>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Creations Gallery Section -->
+    <section class="creations-section" data-cms="creations">
+      <div class="creations-header">
+        <h2>Se vores nyeste <span>skabelser</span></h2>
+        <p>En visuel samling af vores seneste arbejde - hvert projekt skabt med intention, følelse og stil.</p>
+      </div>
+      <div class="creations-gallery">
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1543269865-0a740d43b90c?w=800&h=400&fit=crop" alt="Online Bestilling">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Online Bestilling</h3>
+            <p class="creations-card-desc">Lad dine kunder bestille direkte fra din hjemmeside med et elegant og brugervenligt system.</p>
+          </div>
+        </div>
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1714976326351-0ecf0244f0fc?w=800&h=400&fit=crop" alt="Mobile App">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Mobile App</h3>
+            <p class="creations-card-desc">Din egen brandede app i App Store og Google Play - lige som de store kæder.</p>
+          </div>
+        </div>
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1736220690062-79e12ca75262?w=800&h=400&fit=crop" alt="Marketing Automation">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Marketing Automation</h3>
+            <p class="creations-card-desc">Automatisk markedsføring der driver salg og fastholder dine kunder.</p>
           </div>
         </div>
       </div>
