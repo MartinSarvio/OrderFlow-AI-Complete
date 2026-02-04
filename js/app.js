@@ -3984,6 +3984,19 @@ function toggleNavDropdown(name) {
   }
 }
 
+// Close FLOW-CMS flyout panel
+function closeFlyout() {
+  const panel = document.getElementById('flow-flyout-panel');
+  if (panel) {
+    panel.classList.remove('visible');
+  }
+  // Also mark trigger as inactive
+  const trigger = document.getElementById('nav-flow-trigger');
+  if (trigger) {
+    trigger.classList.remove('active');
+  }
+}
+
 // =====================================================
 // FAQ ACCORDION FUNCTIONS
 // =====================================================
@@ -27386,6 +27399,11 @@ const flowPagesList = [
   // Support
   { slug: 'help-center', title: 'Help Center', description: 'Hjælp og support' },
 
+  // Workflows
+  { slug: 'sms-workflow', title: 'SMS Workflow', description: 'SMS automatisering' },
+  { slug: 'instagram-workflow', title: 'Instagram Workflow', description: 'Instagram automatisering' },
+  { slug: 'facebook-workflow', title: 'Facebook Workflow', description: 'Facebook automatisering' },
+
   // Juridisk
   { slug: 'privacy', title: 'Privatlivspolitik', description: 'Privatlivspolitik' },
   { slug: 'terms', title: 'Vilkår og betingelser', description: 'Servicevilkår' },
@@ -27692,7 +27710,7 @@ function renderMediaLibrary(filter = '') {
   empty.style.display = 'none';
 
   grid.innerHTML = filteredItems.map(item => `
-    <div class="media-library-item" data-path="${item.path}" data-url="${item.url}" onclick="selectMediaLibraryItem(this)" style="cursor:pointer;border:2px solid transparent;border-radius:8px;overflow:hidden;background:var(--bg-secondary);transition:border-color 0.2s">
+    <div class="media-library-item" data-path="${item.path}" data-url="${item.url}" onclick="selectMediaLibraryItem(this)" style="cursor:pointer;border:2px solid transparent;border-radius:8px;overflow:hidden;background:var(--bg2);transition:border-color 0.2s">
       <div style="aspect-ratio:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--bg-tertiary)">
         ${item.type === 'video'
           ? `<video src="${item.url}" style="width:100%;height:100%;object-fit:cover" muted></video>`
@@ -28986,7 +29004,7 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Citater (${testimonialItems.length})</label>
           <div id="testimonial-items-${section.id}" style="max-height:400px;overflow-y:auto">
             ${testimonialItems.map((item, idx) => `
-              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
+              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg2)">
                 <summary style="cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px">
                   ${(item.image || item.avatar) ? `<img src="${item.image || item.avatar}" style="width:28px;height:28px;object-fit:cover;border-radius:50%">` : '<span style="width:28px;height:28px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
                   <span>${item.author || item.name || 'Unavngivet'}</span>
@@ -29064,7 +29082,7 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Billeder (${normalizedImages.length})</label>
           <div id="gallery-images-${section.id}" style="max-height:350px;overflow-y:auto">
             ${normalizedImages.map((img, idx) => `
-              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;padding:8px;background:var(--bg-secondary);border-radius:8px;border:1px solid var(--border)">
+              <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;padding:8px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)">
                 ${img.url ? `<img src="${img.url}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;flex-shrink:0">` : '<div style="width:60px;height:60px;background:var(--border);border-radius:4px;flex-shrink:0"></div>'}
                 <div style="flex:1;display:flex;flex-direction:column;gap:4px">
                   <input type="text" class="input" placeholder="Billede URL" value="${img.url || ''}" onchange="updateGalleryImage('${section.id}', ${idx}, 'url', this.value)">
@@ -29106,7 +29124,7 @@ function renderSectionEditor(section) {
           <label class="form-label" style="font-size:12px;margin-bottom:8px;display:block">Udtalelser (${trustedCards.length})</label>
           <div id="trusted-cards-${section.id}" style="max-height:400px;overflow-y:auto">
             ${trustedCards.map((card, idx) => `
-              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg-secondary)">
+              <details style="border:1px solid var(--border);padding:12px;border-radius:8px;margin-bottom:8px;background:var(--bg2)">
                 <summary style="cursor:pointer;font-weight:500;font-size:13px;display:flex;align-items:center;gap:8px">
                   ${card.image ? `<img src="${card.image}" style="width:32px;height:32px;object-fit:cover;border-radius:50%">` : '<span style="width:32px;height:32px;background:var(--bg-tertiary);border-radius:50%;display:inline-block"></span>'}
                   <span>${card.name || 'Unavngivet'}</span>
@@ -29895,7 +29913,7 @@ function schedulePageChanges() {
           <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
             <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
             ${pendingSchedules.map(s => `
-              <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;margin-top:8px">
+              <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                   <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
                   <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
