@@ -364,17 +364,30 @@
       column-gap: 2rem;
     }
 
-    /* BENTO SECTION */
+    /* BENTO SECTION - Owner.com Style */
     .bento { padding: 8rem 0; background: var(--color-white); }
     .bento-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; }
     .bento-header { text-align: center; margin-bottom: 4rem; }
     .bento-title { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
+    /* Bento Hero */
+    .bento-hero { margin-bottom: 3rem; border-radius: 2rem; overflow: hidden; position: relative; }
+    .bento-hero img { width: 100%; height: auto; display: block; min-height: 40rem; object-fit: cover; }
+    .bento-hero-overlay { position: absolute; bottom: 0; right: 0; padding: 2.4rem 3.2rem; color: white; font-size: 1.8rem; text-align: right; max-width: 50%; line-height: 1.5; }
+    .bento-hero-overlay strong { font-weight: 600; }
+    /* Bento Cards */
     .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
     .bento-card { background: var(--color-gray-100); border-radius: 2rem; overflow: hidden; display: flex; flex-direction: column; }
     .bento-card-content { padding: 3.2rem; }
     .bento-card-label { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 0.8rem; }
     .bento-card-title { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); line-height: 1.3; }
-    .bento-card img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; }
+    .bento-card-image { margin-top: auto; padding: 0 2rem 2rem; }
+    .bento-card-image img { width: 100%; height: auto; object-fit: contain; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .bento-card > img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; border-radius: 0 0 2rem 2rem; }
+    @media (max-width: 768px) {
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-title { font-size: 3.2rem; }
+      .bento-hero-overlay { max-width: 100%; font-size: 1.4rem; padding: 1.6rem 2rem; }
+    }
     /* BELIEFS SECTION */
     .beliefs { padding: 8rem 0; background: var(--color-gray-100); }
     .beliefs-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; display: flex; gap: 6rem; }
@@ -403,6 +416,9 @@
       text-align: center;
       margin-bottom: 4rem;
       padding: 0 4rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: logoCloudFadeIn 0.6s ease forwards;
     }
 
     .logo-cloud-header h2 {
@@ -420,64 +436,87 @@
     .logo-cloud-wrapper {
       position: relative;
       overflow: hidden;
-    }
-
-    .logo-cloud-wrapper::before,
-    .logo-cloud-wrapper::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 15%;
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .logo-cloud-wrapper::before {
-      left: 0;
-      background: linear-gradient(to right, var(--color-white), transparent);
-    }
-
-    .logo-cloud-wrapper::after {
-      right: 0;
-      background: linear-gradient(to left, var(--color-white), transparent);
+      /* Fade mask matching React component (20% on each side) */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
     }
 
     .logo-cloud-track {
       display: flex;
-      gap: 4rem;
-      animation: logo-scroll 30s linear infinite;
+      gap: 2rem;
+      animation: logo-scroll 25s linear infinite;
       width: max-content;
-    }
-
-    .logo-cloud-track:hover {
-      animation-play-state: paused;
     }
 
     @keyframes logo-scroll {
       0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+      100% { transform: translateX(-33.333%); }
+    }
+
+    @keyframes logoCloudFadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes logoItemFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .logo-cloud-item {
       flex-shrink: 0;
-      padding: 2rem 3rem;
+      padding: 1.5rem 2rem;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      opacity: 0;
+      animation: logoItemFadeIn 0.4s ease forwards;
     }
 
+    /* Staggered animation delays for first set of logos */
+    .logo-cloud-item:nth-child(1) { animation-delay: 0s; }
+    .logo-cloud-item:nth-child(2) { animation-delay: 0.1s; }
+    .logo-cloud-item:nth-child(3) { animation-delay: 0.2s; }
+    .logo-cloud-item:nth-child(4) { animation-delay: 0.3s; }
+    .logo-cloud-item:nth-child(5) { animation-delay: 0.4s; }
+    .logo-cloud-item:nth-child(6) { animation-delay: 0.5s; }
+    .logo-cloud-item:nth-child(7) { animation-delay: 0.6s; }
+    .logo-cloud-item:nth-child(8) { animation-delay: 0.7s; }
+    /* Second set */
+    .logo-cloud-item:nth-child(n+9) { animation-delay: 0s; opacity: 1; }
+
     .logo-cloud-item:hover {
-      transform: scale(1.1);
+      transform: scale(1.2) rotate(5deg);
+    }
+
+    .logo-cloud-item svg {
+      margin-bottom: 0.8rem;
+      color: var(--color-gray-400);
+      fill: var(--color-gray-400);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .logo-cloud-item span {
-      font-size: 2rem;
-      font-weight: 700;
+      font-size: 1.4rem;
+      font-weight: 600;
       color: var(--color-gray-400);
       white-space: nowrap;
-      transition: color 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-cloud-item:hover svg {
+      color: var(--color-dark);
+      fill: var(--color-dark);
     }
 
     .logo-cloud-item:hover span {
@@ -501,6 +540,7 @@
       width: 100%;
       height: 100%;
       z-index: -1;
+      background: #000;
     }
 
     .hero-video-bg video {
@@ -553,19 +593,21 @@
       display: inline;
     }
 
+    /* Typed text animation */
     .hero-content h1 .typed-text {
-      color: #000;
-      font-weight: inherit;
-      display: inline;
+      color: #000000;
     }
 
     .hero-content h1 .typed-cursor {
       color: #000;
       font-weight: 100;
-      animation: blink 0.7s infinite;
     }
 
-    @keyframes blink {
+    .typed-cursor--blink {
+      animation: cursorBlink 0.7s infinite;
+    }
+
+    @keyframes cursorBlink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0; }
     }
@@ -743,7 +785,7 @@
 
     /* ==================== TRUSTED CAROUSEL ==================== */
     .trusted-section {
-      background: var(--color-gray-100);
+      background: #ffffff;
       padding: 8rem 0;
       overflow: hidden;
     }
@@ -817,260 +859,97 @@
       opacity: 0.8;
     }
 
-    /* ==================== APPLE FEATURES CAROUSEL ==================== */
-    .apple-features-section {
+    /* ==================== CREATIONS GALLERY ==================== */
+    .creations-section {
       background: var(--color-white);
       padding: 8rem 0;
-      overflow: hidden;
-      position: relative;
     }
 
-    .apple-features-header {
+    .creations-header {
       text-align: center;
-      margin-bottom: 6rem;
-      position: relative;
-      z-index: 2;
+      max-width: 64rem;
+      margin: 0 auto 6rem;
+      padding: 0 2rem;
     }
 
-    .apple-features-header h2 {
-      font-size: 4.8rem;
+    .creations-header h2 {
+      font-size: 3.6rem;
       font-weight: 600;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
     }
 
-    .apple-features-header p {
+    .creations-header h2 span {
+      background: linear-gradient(to top, var(--color-primary) 0%, var(--color-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding: 0.2rem;
+    }
+
+    .creations-header p {
       font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto;
-    }
-
-    .apple-carousel-container {
-      position: relative;
-      height: 420px;
-      perspective: 1000px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .apple-carousel {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .apple-card {
-      position: absolute;
-      width: 280px;
-      height: 380px;
-      border-radius: 2rem;
-      overflow: hidden;
-      transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
-      transform-style: preserve-3d;
-      left: 50%;
-      top: 50%;
-    }
-
-    .apple-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      background: var(--color-gray-50);
-      border-radius: 2rem;
-      padding: 2.4rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-      border: 1px solid var(--color-gray-200);
-    }
-
-    .apple-card[data-position="center"] {
-      transform: translate(-50%, -50%) rotateY(0deg) scale(1);
-      z-index: 10;
-      opacity: 1;
-    }
-
-    .apple-card[data-position="center"] .apple-card-inner {
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
-    }
-
-    .apple-card[data-position="left"] {
-      transform: translate(-180%, -50%) rotateY(25deg) scale(0.85);
-      z-index: 5;
-      opacity: 0.7;
-    }
-
-    .apple-card[data-position="right"] {
-      transform: translate(80%, -50%) rotateY(-25deg) scale(0.85);
-      z-index: 5;
-      opacity: 0.7;
-    }
-
-    .apple-card[data-position="far-left"] {
-      transform: translate(-280%, -50%) rotateY(35deg) scale(0.7);
-      z-index: 2;
-      opacity: 0.4;
-    }
-
-    .apple-card[data-position="far-right"] {
-      transform: translate(180%, -50%) rotateY(-35deg) scale(0.7);
-      z-index: 2;
-      opacity: 0.4;
-    }
-
-    .apple-card[data-position="hidden"] {
-      transform: translate(-50%, -50%) scale(0.5);
-      z-index: 0;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .apple-card-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.6rem 1.2rem;
-      background: var(--color-primary);
-      border-radius: 2rem;
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: #ffffff;
-      width: fit-content;
-    }
-
-    .apple-card-badge svg {
-      width: 1.4rem;
-      height: 1.4rem;
-    }
-
-    .apple-card-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .apple-card-icon {
-      width: 5.6rem;
-      height: 5.6rem;
-      background: var(--color-primary);
-      border-radius: 1.4rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-
-    .apple-card-icon svg {
-      width: 2.8rem;
-      height: 2.8rem;
-      color: #ffffff;
-    }
-
-    .apple-card h3 {
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1rem;
-      line-height: 1.3;
-    }
-
-    .apple-card p {
-      font-size: 1.4rem;
-      color: var(--color-gray-600);
+      color: var(--color-gray-500);
       line-height: 1.6;
     }
 
-    .apple-card-glow,
-    .apple-card-shimmer {
-      display: none;
-    }
-
-    .apple-carousel-nav {
+    .creations-gallery {
       display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 4rem;
+      gap: 1.6rem;
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 40rem;
     }
 
-    .apple-nav-dot {
-      width: 1rem;
-      height: 1rem;
-      border-radius: 50%;
-      background: var(--color-gray-300);
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      padding: 0;
+    .creations-card {
+      position: relative;
+      flex: 0 0 24rem;
+      height: 100%;
+      border-radius: 1.6rem;
+      overflow: hidden;
+      transition: flex 0.5s ease;
     }
 
-    .apple-nav-dot.active {
-      background: var(--color-primary);
-      transform: scale(1.2);
+    .creations-card:hover {
+      flex: 1 1 auto;
     }
 
-    .apple-nav-dot:hover {
-      background: var(--color-gray-400);
+    .creations-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
     }
 
-    .apple-nav-dot.active:hover {
-      background: var(--color-primary);
+    .creations-card-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 3rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+      color: var(--color-white);
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
 
-    @media (max-width: 1024px) {
-      .apple-carousel-container {
-        height: 380px;
-      }
-      .apple-card {
-        width: 240px;
-        height: 340px;
-      }
-      .apple-card[data-position="far-left"],
-      .apple-card[data-position="far-right"] {
-        opacity: 0;
-      }
+    .creations-card:hover .creations-card-overlay {
+      opacity: 1;
     }
 
-    @media (max-width: 768px) {
-      .apple-features-section {
-        padding: 6rem 0;
-      }
-      .apple-features-header h2 {
-        font-size: 3.2rem;
-      }
-      .apple-carousel-container {
-        height: 360px;
-      }
-      .apple-card {
-        width: 220px;
-        height: 320px;
-      }
-      .apple-card[data-position="left"] {
-        transform: translate(-140%, -50%) rotateY(20deg) scale(0.8);
-        opacity: 0.5;
-      }
-      .apple-card[data-position="right"] {
-        transform: translate(40%, -50%) rotateY(-20deg) scale(0.8);
-        opacity: 0.5;
-      }
+    .creations-card-title {
+      font-size: 2.8rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
     }
 
-    @media (max-width: 480px) {
-      .apple-carousel-container {
-        height: 340px;
-      }
-      .apple-card {
-        width: 200px;
-        height: 300px;
-      }
-      .apple-card[data-position="left"],
-      .apple-card[data-position="right"] {
-        opacity: 0.3;
-      }
+    .creations-card-desc {
+      font-size: 1.4rem;
+      line-height: 1.5;
+      opacity: 0.9;
     }
 
     /* ==================== CTA BANNER ==================== */
@@ -1165,6 +1044,24 @@
       .tab-item {
         white-space: nowrap;
       }
+
+      .creations-gallery {
+        flex-direction: column;
+        height: auto;
+      }
+
+      .creations-card {
+        flex: none;
+        height: 24rem;
+      }
+
+      .creations-card:hover {
+        flex: none;
+      }
+
+      .creations-card-overlay {
+        opacity: 1;
+      }
     }
 
     @media (max-width: 480px) {
@@ -1258,112 +1155,6 @@
 
   @media (min-width: 768px) {
     .testimonial-quote { font-size: 3.6rem; }
-  }
-
-  /* ==================== CREATIONS GALLERY SECTION ==================== */
-  .creations-section {
-    padding: 12rem 0;
-    background: var(--color-white);
-  }
-
-  .creations-container {
-    max-width: 140rem;
-    margin: 0 auto;
-    padding: 0 4rem;
-  }
-
-  .creations-header {
-    text-align: center;
-    margin-bottom: 6rem;
-  }
-
-  .creations-header h2 {
-    font-size: 4.2rem;
-    font-weight: 600;
-    color: var(--color-black);
-    margin-bottom: 1.6rem;
-    letter-spacing: -0.02em;
-  }
-
-  .creations-header p {
-    font-size: 1.8rem;
-    color: rgba(0,0,0,0.6);
-    max-width: 60rem;
-    margin: 0 auto;
-    line-height: 1.6;
-  }
-
-  .creations-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2.4rem;
-  }
-
-  .creation-item {
-    position: relative;
-    aspect-ratio: 4/3;
-    border-radius: 1.6rem;
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .creation-item:hover {
-    transform: scale(1.02);
-  }
-
-  .creation-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .creation-item:hover img {
-    transform: scale(1.08);
-  }
-
-  .creation-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 2.4rem;
-  }
-
-  .creation-item:hover .creation-overlay {
-    opacity: 1;
-  }
-
-  .creation-title {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--color-white);
-    margin-bottom: 0.4rem;
-  }
-
-  .creation-category {
-    font-size: 1.4rem;
-    color: rgba(255,255,255,0.7);
-  }
-
-  @media (max-width: 1024px) {
-    .creations-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 640px) {
-    .creations-header h2 {
-      font-size: 3.2rem;
-    }
-    .creations-grid {
-      grid-template-columns: 1fr;
-    }
   }
 
   /* Updated Footer */
@@ -1550,6 +1341,8 @@
   }
 
 </style>
+  <link rel="stylesheet" href="/css/cookie-consent.css">
+  <link rel="stylesheet" href="/css/privacy-modal.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -1558,7 +1351,7 @@
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
-            <img src="../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
           </a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
@@ -1594,22 +1387,20 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="index.html" class="nav-login">Login</a>
+          <a href="/index.html" class="nav-login">Login</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
     <!-- Hero Section with Video Background -->
-    <section class="hero-section">
+    <section class="hero-section" data-cms="hero">
       <div class="hero-video-bg">
-        <video autoplay muted loop playsinline>
-          <source src="../images/hero-video.mp4" type="video/mp4">
-        </video>
+        <video autoplay muted loop playsinline preload="auto" src="/images/hero-video.mp4" type="video/mp4"></video>
       </div>
       <div class="hero-content">
-        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["BYGGET","DESIGNET","UDVIKLET","OPTIMERET"]'>BYGGET</span><span class="typed-cursor">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
-        <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger. Automatiser din marketing, håndter ordrer og øg dit salg.</p>
+        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["BYGGET", "DESIGNET", "UDVIKLET", "OPTIMERET"]'>BYGGET</span><span class="typed-cursor typed-cursor--blink" aria-hidden="true">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
+        <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button button-white">Få en gratis demo</a>
           <a href="priser.html" class="button button-outline">Se priser</a>
@@ -1617,38 +1408,8 @@
       </div>
     </section>
 
-    <!-- Trusted By / Logo Cloud Section -->
-    <section class="logo-cloud">
-      <div class="container">
-        <div class="logo-cloud-header">
-          <h2>Trusted by the world's most innovative teams</h2>
-          <p>Join thousands of developers and designers who are already building with Smoothui</p>
-        </div>
-        <div class="logo-cloud-wrapper">
-          <div class="logo-cloud-track">
-            <div class="logo-cloud-item"><span>Strava</span></div>
-            <div class="logo-cloud-item"><span>Descript</span></div>
-            <div class="logo-cloud-item"><span>Duolingo</span></div>
-            <div class="logo-cloud-item"><span>Faire</span></div>
-            <div class="logo-cloud-item"><span>Clearbit</span></div>
-            <div class="logo-cloud-item"><span>Canva</span></div>
-            <div class="logo-cloud-item"><span>Notion</span></div>
-            <div class="logo-cloud-item"><span>Stripe</span></div>
-            <div class="logo-cloud-item"><span>Strava</span></div>
-            <div class="logo-cloud-item"><span>Descript</span></div>
-            <div class="logo-cloud-item"><span>Duolingo</span></div>
-            <div class="logo-cloud-item"><span>Faire</span></div>
-            <div class="logo-cloud-item"><span>Clearbit</span></div>
-            <div class="logo-cloud-item"><span>Canva</span></div>
-            <div class="logo-cloud-item"><span>Notion</span></div>
-            <div class="logo-cloud-item"><span>Stripe</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Tabs Section (Owner.com style) -->
-    <section class="tabs-section" id="produkt">
+    <section class="tabs-section" id="produkt" data-cms="features">
       <div class="tabs-header">
         <div class="tab-item active" data-tab="1">
           <span class="tab-number">1</span>
@@ -1675,7 +1436,7 @@
             <p>Giv gæster point når de bruger din brandede mobil app. Øg kundeloyalitet og få flere tilbagevendende kunder med et automatiseret belønningssystem.</p>
           </div>
           <div class="tab-visual">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Mere Google Trafik" style="object-fit: contain; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem;">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Mere Google Trafik" style="object-fit: contain; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem;">
           </div>
         </div>
         <div class="tab-nav">
@@ -1697,7 +1458,7 @@
             <p>Få flere online ordrer med vores integrerede bestillingssystem. Ingen kommission, fuld kontrol over dine kundedata.</p>
           </div>
           <div class="tab-visual">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Mere Online Salg" style="object-fit: contain; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Mere Online Salg" style="object-fit: contain; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
           </div>
         </div>
         <div class="tab-nav">
@@ -1719,7 +1480,7 @@
             <p>Automatiser din marketing og få kunder til at vende tilbage. SMS-kampagner, push-notifikationer og email marketing.</p>
           </div>
           <div class="tab-visual">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Flere Genbestillinger" style="object-fit: contain; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2rem;">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Flere Genbestillinger" style="object-fit: contain; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2rem;">
           </div>
         </div>
         <div class="tab-nav">
@@ -1741,7 +1502,7 @@
             <p>Din egen brandede app i App Store og Google Play. Øg kundeloyalitet og få direkte kontakt med dine gæster.</p>
           </div>
           <div class="tab-visual">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Flere App Downloads" style="object-fit: contain; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 2rem;">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Flere App Downloads" style="object-fit: contain; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 2rem;">
           </div>
         </div>
         <div class="tab-nav">
@@ -1758,7 +1519,7 @@
     </section>
 
     <!-- Trusted Section -->
-    <section class="trusted-section">
+    <section class="trusted-section" data-cms="trusted">
       <div class="trusted-header">
         <h2>Betroet af tusindvis af restauratører</h2>
       </div>
@@ -1766,35 +1527,35 @@
         <div class="trusted-carousel">
           <!-- Cards duplicated for infinite scroll -->
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Maria Jensen</div>
               <div class="trusted-card-role">Café Hygge, København</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Anders Nielsen</div>
               <div class="trusted-card-role">Pizzeria Napoli, Aarhus</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Sophie Larsen</div>
               <div class="trusted-card-role">Sushi House, Odense</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Thomas Møller</div>
               <div class="trusted-card-role">Burger Joint, Aalborg</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Emma Christensen</div>
               <div class="trusted-card-role">Thai Kitchen, Esbjerg</div>
@@ -1802,35 +1563,35 @@
           </div>
           <!-- Duplicate for seamless loop -->
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Maria Jensen</div>
               <div class="trusted-card-role">Café Hygge, København</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Anders Nielsen</div>
               <div class="trusted-card-role">Pizzeria Napoli, Aarhus</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Sophie Larsen</div>
               <div class="trusted-card-role">Sushi House, Odense</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Thomas Møller</div>
               <div class="trusted-card-role">Burger Joint, Aalborg</div>
             </div>
           </div>
           <div class="trusted-card">
-            <img src="../images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
+            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Restaurant Owner" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Emma Christensen</div>
               <div class="trusted-card-role">Thai Kitchen, Esbjerg</div>
@@ -1840,149 +1601,186 @@
       </div>
     </section>
 
-    <!-- Apple Features Carousel -->
-    <section class="apple-features-section" id="hvordan">
-      <div class="apple-features-header">
-        <h2>Alt hvad du behøver</h2>
-        <p>Flow giver dig alle værktøjerne til at drive en succesfuld restaurant i den digitale tidsalder.</p>
+    <!-- Creations Gallery Section -->
+    <section class="creations-section" data-cms="creations">
+      <div class="creations-header">
+        <h2>Se vores nyeste <span>skabelser</span></h2>
+        <p>En visuel samling af vores seneste arbejde - hvert projekt skabt med intention, følelse og stil.</p>
       </div>
-      <div class="apple-carousel-container">
-        <div class="apple-carousel" id="appleCarousel">
-          <div class="apple-card" data-index="0">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
-                Bestilling
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                </div>
-                <h3>Online Bestilling</h3>
-                <p>Modtag ordrer direkte fra din hjemmeside og app uden kommission til tredjeparter.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
-          </div>
-          <div class="apple-card" data-index="1">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Marketing
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                </div>
-                <h3>SMS Marketing</h3>
-                <p>Send automatiske SMS-kampagner til dine kunder og øg genbestillinger.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
-          </div>
-          <div class="apple-card" data-index="2">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
-                Analyse
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
-                </div>
-                <h3>Indsigt & Rapporter</h3>
-                <p>Få detaljeret indsigt i dit salg, kundeadfærd og marketingperformance.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
-          </div>
-          <div class="apple-card" data-index="3">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/></svg>
-                CRM
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </div>
-                <h3>Kundestyring</h3>
-                <p>Hold styr på dine kunder, deres præferencer og ordrehistorik.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
-          </div>
-          <div class="apple-card" data-index="4">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
-                App
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                </div>
-                <h3>Brandet App</h3>
-                <p>Din egen app i App Store og Google Play med dit brand og logo.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
-          </div>
-          <div class="apple-card" data-index="5">
-            <div class="apple-card-inner">
-              <div class="apple-card-badge">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Sikkerhed
-              </div>
-              <div class="apple-card-content">
-                <div class="apple-card-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <h3>Sikker Betaling</h3>
-                <p>Integreret betalingsløsning med alle populære betalingsmetoder.</p>
-              </div>
-              <div class="apple-card-glow"></div>
-              <div class="apple-card-shimmer"></div>
-            </div>
+      <div class="creations-gallery">
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1543269865-0a740d43b90c?w=800&h=400&fit=crop" alt="Online Bestilling">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Online Bestilling</h3>
+            <p class="creations-card-desc">Lad dine kunder bestille direkte fra din hjemmeside med et elegant og brugervenligt system.</p>
           </div>
         </div>
-        <div class="apple-carousel-nav" id="appleCarouselNav"></div>
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1714976326351-0ecf0244f0fc?w=800&h=400&fit=crop" alt="Mobile App">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Mobile App</h3>
+            <p class="creations-card-desc">Din egen brandede app i App Store og Google Play - lige som de store kæder.</p>
+          </div>
+        </div>
+        <div class="creations-card">
+          <img src="https://images.unsplash.com/photo-1736220690062-79e12ca75262?w=800&h=400&fit=crop" alt="Marketing Automation">
+          <div class="creations-card-overlay">
+            <h3 class="creations-card-title">Marketing Automation</h3>
+            <p class="creations-card-desc">Automatisk markedsføring der driver salg og fastholder dine kunder.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- CTA Banner -->
-    
-
-    <section class="bento">
+    <!-- Bento Feature Grid (Owner.com Style) -->
+    <section class="bento" id="hvordan" data-cms="bento">
     <div class="bento-container">
       <div class="bento-header">
         <h2 class="bento-title">Giv din restaurant den samme<br>teknologi som de store brands</h2>
       </div>
+      <!-- Hero billede med overlay -->
+      <div class="bento-hero">
+        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop" alt="Mobile app bestilling">
+        <div class="bento-hero-overlay">
+          <p>Dine kunder er vant til at bestille på telefonen.<br>Derfor giver vi din restaurant sin egen <strong>mobile app</strong>.</p>
+        </div>
+      </div>
+      <!-- Feature cards -->
       <div class="bento-grid">
         <div class="bento-card">
           <div class="bento-card-content">
             <div class="bento-card-label">Få højere Google rankings med din AI-powered</div>
             <div class="bento-card-title">restaurant hjemmeside.</div>
           </div>
-          <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop" alt="Restaurant website">
+          <div class="bento-card-image">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop" alt="Restaurant website">
+          </div>
         </div>
         <div class="bento-card">
           <div class="bento-card-content">
             <div class="bento-card-label">Vækst dit salg med et</div>
             <div class="bento-card-title">online bestillingssystem modelleret efter de store brands.</div>
           </div>
-          <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop" alt="Online ordering">
+          <div class="bento-card-image">
+            <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop" alt="Online ordering">
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-    <section class="beliefs" id="om">
+  <!-- Logo Cloud Animated Section -->
+  <section class="logo-cloud" data-cms="logocloud">
+    <div class="logo-cloud-header">
+      <h2>Trusted by the world's most innovative teams</h2>
+      <p>Join thousands of developers and designers who are already building with Smoothui</p>
+    </div>
+    <div class="logo-cloud-wrapper">
+      <div class="logo-cloud-track">
+        <!-- First set -->
+        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+          <span>Canpoy</span>
+        </a>
+        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+          <span>Canva</span>
+        </a>
+        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+          <span>Casetext</span>
+        </a>
+        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Strava</span>
+        </a>
+        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+          <span>Descript</span>
+        </a>
+        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+          <span>Duolingo</span>
+        </a>
+        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Faire</span>
+        </a>
+        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+          <span>Clearbit</span>
+        </a>
+        <!-- Second set for seamless loop -->
+        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+          <span>Canpoy</span>
+        </a>
+        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+          <span>Canva</span>
+        </a>
+        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+          <span>Casetext</span>
+        </a>
+        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Strava</span>
+        </a>
+        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+          <span>Descript</span>
+        </a>
+        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+          <span>Duolingo</span>
+        </a>
+        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Faire</span>
+        </a>
+        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+          <span>Clearbit</span>
+        </a>
+        <!-- Third set for even smoother loop -->
+        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+          <span>Canpoy</span>
+        </a>
+        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+          <span>Canva</span>
+        </a>
+        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+          <span>Casetext</span>
+        </a>
+        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Strava</span>
+        </a>
+        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+          <span>Descript</span>
+        </a>
+        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+          <span>Duolingo</span>
+        </a>
+        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+          <span>Faire</span>
+        </a>
+        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
+          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+          <span>Clearbit</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+    <section class="beliefs" id="om" data-cms="beliefs">
     <div class="beliefs-container">
       <div class="beliefs-left">
         <h2 class="beliefs-title">Tre overbevisninger der guider vores virksomhed</h2>
@@ -2013,7 +1811,7 @@
   </section>
 
     <!-- Testimonials Section -->
-  <section class="testimonials-section">
+  <section class="testimonials-section" data-cms="testimonials">
     <div class="testimonials-content">
       <div class="testimonial-quote-wrapper">
         <blockquote class="testimonial-quote" id="testimonialQuote">
@@ -2037,62 +1835,8 @@
     </div>
   </section>
 
-  <!-- Creations Gallery Section -->
-  <section class="creations-section">
-    <div class="creations-container">
-      <div class="creations-header">
-        <h2>Se vores nyeste skabelser</h2>
-        <p>En visuel samling af vores seneste arbejde - hvert projekt skabt med intention, følelse og stil.</p>
-      </div>
-      <div class="creations-grid">
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&h=450&fit=crop" alt="Restaurant Bella Italia">
-          <div class="creation-overlay">
-            <div class="creation-title">Bella Italia</div>
-            <div class="creation-category">Italiensk Restaurant</div>
-          </div>
-        </div>
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=450&fit=crop" alt="Café Nordic">
-          <div class="creation-overlay">
-            <div class="creation-title">Café Nordic</div>
-            <div class="creation-category">Café & Bistro</div>
-          </div>
-        </div>
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=450&fit=crop" alt="Sushi Tokyo">
-          <div class="creation-overlay">
-            <div class="creation-title">Sushi Tokyo</div>
-            <div class="creation-category">Japansk Restaurant</div>
-          </div>
-        </div>
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&h=450&fit=crop" alt="Burger House">
-          <div class="creation-overlay">
-            <div class="creation-title">Burger House</div>
-            <div class="creation-category">Fast Food</div>
-          </div>
-        </div>
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=450&fit=crop" alt="Fine Dining Copenhagen">
-          <div class="creation-overlay">
-            <div class="creation-title">Maison Copenhagen</div>
-            <div class="creation-category">Fine Dining</div>
-          </div>
-        </div>
-        <div class="creation-item">
-          <img src="https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&h=450&fit=crop" alt="Thai Garden">
-          <div class="creation-overlay">
-            <div class="creation-title">Thai Garden</div>
-            <div class="creation-category">Asiatisk Køkken</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer" data-cms="footer">
     <div class="footer-content">
       <div class="footer-column">
         <h4>PRODUKTER</h4>
@@ -2132,16 +1876,16 @@
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
           <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
-        <img src="../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
+        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
       </div>
     </div>
     <div class="footer-bottom">
       <p>2026 © Flow. All rights reserved.</p>
       <div class="footer-legal">
-        <a href="cookie-settings.html">Cookie Settings</a>
-        <a href="privacy.html">Privacy</a>
-        <a href="terms.html">Website Terms</a>
-        <a href="disclaimer.html">Disclaimer</a>
+        <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+        <a href="legal.html#privacy">Privacy</a>
+        <a href="legal.html#terms">Website Terms</a>
+        <a href="legal.html#disclaimer">Disclaimer</a>
       </div>
     </div>
   </footer>
@@ -2226,105 +1970,6 @@
   showTab(1);
 </script>
 <script>
-  // Apple Features Carousel
-  (function() {
-    const carousel = document.getElementById('appleCarousel');
-    const nav = document.getElementById('appleCarouselNav');
-    if (!carousel || !nav) return;
-
-    const cards = Array.from(carousel.querySelectorAll('.apple-card'));
-    const totalCards = cards.length;
-    let currentIndex = 0;
-    let autoplayInterval;
-
-    // Create navigation dots
-    cards.forEach((_, i) => {
-      const dot = document.createElement('button');
-      dot.className = 'apple-nav-dot' + (i === 0 ? ' active' : '');
-      dot.setAttribute('aria-label', `Gå til slide ${i + 1}`);
-      dot.addEventListener('click', () => goToSlide(i));
-      nav.appendChild(dot);
-    });
-
-    const dots = nav.querySelectorAll('.apple-nav-dot');
-
-    function getPosition(cardIndex, activeIndex) {
-      const diff = cardIndex - activeIndex;
-      const normalizedDiff = ((diff % totalCards) + totalCards) % totalCards;
-
-      if (normalizedDiff === 0) return 'center';
-      if (normalizedDiff === 1) return 'right';
-      if (normalizedDiff === totalCards - 1) return 'left';
-      if (normalizedDiff === 2) return 'far-right';
-      if (normalizedDiff === totalCards - 2) return 'far-left';
-      return 'hidden';
-    }
-
-    function updateCarousel() {
-      cards.forEach((card, i) => {
-        card.setAttribute('data-position', getPosition(i, currentIndex));
-      });
-      dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === currentIndex);
-      });
-    }
-
-    function goToSlide(index) {
-      currentIndex = index;
-      updateCarousel();
-      resetAutoplay();
-    }
-
-    function nextSlide() {
-      currentIndex = (currentIndex + 1) % totalCards;
-      updateCarousel();
-    }
-
-    function resetAutoplay() {
-      clearInterval(autoplayInterval);
-      autoplayInterval = setInterval(nextSlide, 3500);
-    }
-
-    // Initialize
-    updateCarousel();
-    resetAutoplay();
-
-    // Pause on hover
-    carousel.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
-    carousel.addEventListener('mouseleave', resetAutoplay);
-
-    // Click on card to select it
-    cards.forEach((card, i) => {
-      card.addEventListener('click', () => {
-        if (card.getAttribute('data-position') !== 'center') {
-          goToSlide(i);
-        }
-      });
-    });
-
-    // Touch support
-    let touchStartX = 0;
-    carousel.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      clearInterval(autoplayInterval);
-    }, { passive: true });
-
-    carousel.addEventListener('touchend', (e) => {
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchStartX - touchEndX;
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
-          currentIndex = (currentIndex + 1) % totalCards;
-        } else {
-          currentIndex = (currentIndex - 1 + totalCards) % totalCards;
-        }
-        updateCarousel();
-      }
-      resetAutoplay();
-    }, { passive: true });
-  })();
-</script>
-<script>
   // Header scroll effect
   window.addEventListener('scroll', function() {
     const nav = document.querySelector('.nav-wrapper');
@@ -2342,42 +1987,6 @@
       video.play().catch(function(error) {
         console.log('Autoplay prevented:', error);
       });
-    }
-
-    // Typed text rotation effect
-    const typedElement = document.querySelector('.typed-text');
-    if (typedElement) {
-      const words = JSON.parse(typedElement.dataset.typedText);
-      let wordIndex = 0;
-      let charIndex = words[0].length;
-      let isDeleting = false;
-      const typeSpeed = 100;
-      const deleteSpeed = 50;
-      const pauseTime = 2000;
-
-      function type() {
-        const currentWord = words[wordIndex];
-
-        if (isDeleting) {
-          typedElement.textContent = currentWord.substring(0, charIndex - 1);
-          charIndex--;
-        } else {
-          typedElement.textContent = currentWord.substring(0, charIndex + 1);
-          charIndex++;
-        }
-
-        if (!isDeleting && charIndex === currentWord.length) {
-          setTimeout(() => { isDeleting = true; type(); }, pauseTime);
-          return;
-        } else if (isDeleting && charIndex === 0) {
-          isDeleting = false;
-          wordIndex = (wordIndex + 1) % words.length;
-        }
-
-        setTimeout(type, isDeleting ? deleteSpeed : typeSpeed);
-      }
-
-      setTimeout(type, pauseTime);
     }
   });
 
@@ -2489,5 +2098,78 @@
   });
 </script>
 
+<!-- Cookie Consent -->
+<script src="/js/cookie-consent.js"></script>
+<!-- Privacy Modal -->
+<script src="/js/privacy-modal.js"></script>
+<!-- Flow CMS Dynamic Content -->
+<script src="/js/flow-cms-render.js"></script>
+
+<!-- Typed Text Animation -->
+<script>
+(function() {
+  function initTypedText() {
+    const elements = document.querySelectorAll('.typed-text[data-typed-text]');
+
+    elements.forEach(el => {
+      try {
+        const words = JSON.parse(el.getAttribute('data-typed-text'));
+        if (!words || words.length === 0) return;
+
+        let wordIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let currentWord = words[0];
+
+        function type() {
+          if (isDeleting) {
+            el.textContent = currentWord.substring(0, charIndex - 1);
+            charIndex--;
+
+            if (charIndex === 0) {
+              isDeleting = false;
+              wordIndex = (wordIndex + 1) % words.length;
+              currentWord = words[wordIndex];
+              setTimeout(type, 500);
+              return;
+            }
+            setTimeout(type, 50);
+          } else {
+            el.textContent = currentWord.substring(0, charIndex + 1);
+            charIndex++;
+
+            if (charIndex === currentWord.length) {
+              isDeleting = true;
+              setTimeout(type, 2000);
+              return;
+            }
+            setTimeout(type, 100);
+          }
+        }
+
+        el.textContent = '';
+        setTimeout(type, 1000);
+      } catch (e) {
+        console.error('Typed text error:', e);
+      }
+    });
+  }
+
+  // Initialize after a delay to ensure CMS has finished rendering
+  function startTypedText() {
+    // Small delay to ensure CMS script has finished
+    setTimeout(initTypedText, 100);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startTypedText);
+  } else {
+    startTypedText();
+  }
+
+  // Expose for CMS re-initialization
+  window.initTypedText = initTypedText;
+})();
+</script>
 </body>
 </html>
