@@ -1662,6 +1662,9 @@
       }
     }
   </style>
+
+  <!-- Google Maps Places API -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&libraries=places" async defer></script>
 </head>
 <body>
   <!-- Navigation -->
@@ -2191,6 +2194,8 @@
     // State
     let selectedPlace = null;
     let searchTimeout = null;
+    let autocompleteService = null;
+    let placesService = null;
 
     // DOM Elements
     const searchInput = document.getElementById('searchInput');
@@ -2199,6 +2204,16 @@
     const heroSection = document.getElementById('heroSection');
     const loadingSection = document.getElementById('loadingSection');
     const reportSection = document.getElementById('reportSection');
+
+    // Initialize Google Places services when API is loaded
+    function initGooglePlaces() {
+      if (window.google && google.maps && google.maps.places) {
+        autocompleteService = new google.maps.places.AutocompleteService();
+        // Create a hidden div for PlacesService (required)
+        const placesDiv = document.createElement('div');
+        placesService = new google.maps.places.PlacesService(placesDiv);
+      }
+    }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
@@ -2211,6 +2226,9 @@
           nav.classList.remove('scrolled');
         }
       });
+
+      // Initialize Google Places if already loaded
+      initGooglePlaces();
 
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
@@ -2244,34 +2262,79 @@
       }, 300);
     }
 
-    // Search for places using Google Places API only
-    async function searchPlaces(query) {
+    // Main search function - tries Google Places first, then Serper fallback
+    function searchPlaces(query) {
       // Show loading state
       autocompleteDropdown.innerHTML = '<div class="autocomplete-item"><span>Søger...</span></div>';
       autocompleteDropdown.classList.add('active');
 
+      // Try Google Places AutocompleteService first
+      if (autocompleteService) {
+        autocompleteService.getPlacePredictions({
+          input: query,
+          componentRestrictions: { country: 'dk' }
+        }, (predictions, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions && predictions.length > 0) {
+            // Map Google predictions to our format
+            const results = predictions.map(prediction => ({
+              place_id: prediction.place_id,
+              name: prediction.structured_formatting.main_text,
+              address: prediction.structured_formatting.secondary_text || 'Danmark',
+              type: getPlaceType(prediction.types)
+            }));
+            renderAutocomplete(results);
+          } else {
+            // Google failed - fallback to Serper
+            searchWithSerper(query);
+          }
+        });
+      } else {
+        // Google not available - use Serper
+        searchWithSerper(query);
+      }
+    }
+
+    // Fallback search using Serper.dev API
+    async function searchWithSerper(query) {
       try {
-        // Call our API endpoint
         const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
           renderAutocomplete(data.results);
         } else {
-          // No results - show message, no manual entry allowed
           autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
         }
       } catch (error) {
-        console.error('Search error:', error);
-        // Show error message, no fallback to manual entry
+        console.error('Serper search error:', error);
         autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Der opstod en fejl ved søgning. Prøv igen.</div>';
       }
+    }
+
+    // Get readable place type from Google types array
+    function getPlaceType(types) {
+      if (!types || types.length === 0) return 'Virksomhed';
+      const typeMap = {
+        'restaurant': 'Restaurant',
+        'food': 'Mad & Drikke',
+        'cafe': 'Cafe',
+        'bar': 'Bar',
+        'bakery': 'Bageri',
+        'meal_takeaway': 'Takeaway',
+        'meal_delivery': 'Levering',
+        'store': 'Butik',
+        'establishment': 'Virksomhed'
+      };
+      for (const type of types) {
+        if (typeMap[type]) return typeMap[type];
+      }
+      return 'Virksomhed';
     }
 
     // Render autocomplete results
     function renderAutocomplete(results) {
       autocompleteDropdown.innerHTML = results.map(place => `
-        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}"> 
+        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}">
           <div class="autocomplete-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -2281,7 +2344,7 @@
             <div class="autocomplete-name">${place.name}</div>
             <div class="autocomplete-address">${place.address || 'Danmark'}</div>
           </div>
-          <span class="autocomplete-type">${place.type || 'Restaurant'}</span>
+          <span class="autocomplete-type">${place.type || 'Virksomhed'}</span>
         </div>
       `).join('');
 
@@ -2294,7 +2357,7 @@
     // Select a place
     function selectPlace(item) {
       const placeId = item.dataset.placeId;
-      
+
       selectedPlace = {
         place_id: placeId,
         name: item.dataset.name,
@@ -2926,5 +2989,7 @@
       };
     }
   </script>
+<!-- Flow CMS Dynamic Content -->
+<script src="../js/flow-cms-render.js"></script>
 </body>
 </html>
