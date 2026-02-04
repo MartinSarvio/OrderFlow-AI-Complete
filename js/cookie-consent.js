@@ -1,19 +1,40 @@
 /**
  * Cookie Consent Management
  * Handles cookie consent banner display and user preferences
+ * Supports dynamic categories from admin settings
  */
 
 (function() {
   'use strict';
 
+  // Default categories (fallback if none saved)
+  const DEFAULT_CATEGORIES = [
+    { id: 'necessary', name: 'Nødvendige', description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt.', required: true },
+    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies gør det muligt at huske dine præferencer.', required: false },
+    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside.', required: false },
+    { id: 'marketing', name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.', required: false }
+  ];
+
+  // Get privacy categories from localStorage or use defaults
+  function getPrivacyCategories() {
+    const saved = localStorage.getItem('privacyCategories');
+    if (saved) {
+      try {
+        const categories = JSON.parse(saved);
+        if (Array.isArray(categories) && categories.length > 0) {
+          return categories;
+        }
+      } catch (e) {
+        console.error('Error parsing privacy categories:', e);
+      }
+    }
+    return DEFAULT_CATEGORIES;
+  }
+
   // Default settings (can be overridden by admin settings)
   const defaultSettings = {
     bannerTitle: 'Vi bruger cookies',
     bannerDesc: 'Vi bruger cookies for at forbedre din oplevelse på vores hjemmeside, analysere trafik og personliggøre indhold. Ved at klikke "Accepter alle" samtykker du til vores brug af cookies.',
-    necessaryDesc: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt. De kan ikke deaktiveres.',
-    functionalDesc: 'Disse cookies gør det muligt at huske dine præferencer og tilpasse hjemmesiden til dig.',
-    analyticsDesc: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside ved at indsamle anonyme statistikker.',
-    marketingDesc: 'Disse cookies bruges til at vise dig relevante annoncer baseret på dine interesser.',
     btnAccept: 'Accepter alle',
     btnReject: 'Kun nødvendige',
     btnSave: 'Gem mine valg',
@@ -44,15 +65,16 @@
     return null;
   }
 
-  // Save consent preferences
+  // Save consent preferences (supports dynamic categories)
   function saveConsent(preferences) {
-    const consent = {
-      necessary: true, // Always true
-      functional: preferences.functional || false,
-      analytics: preferences.analytics || false,
-      marketing: preferences.marketing || false,
-      timestamp: Date.now()
-    };
+    const categories = getPrivacyCategories();
+    const consent = { timestamp: Date.now() };
+
+    // Set consent for each category
+    categories.forEach(cat => {
+      consent[cat.id] = cat.required ? true : (preferences[cat.id] || false);
+    });
+
     localStorage.setItem('cookieConsent', JSON.stringify(consent));
 
     // Dispatch event for other scripts to react
@@ -63,35 +85,37 @@
 
   // Accept all cookies
   function acceptAll() {
-    saveConsent({
-      functional: true,
-      analytics: true,
-      marketing: true
+    const categories = getPrivacyCategories();
+    const preferences = {};
+    categories.forEach(cat => {
+      preferences[cat.id] = true;
     });
+    saveConsent(preferences);
     hideBanner();
   }
 
   // Reject all (only necessary)
   function rejectAll() {
-    saveConsent({
-      functional: false,
-      analytics: false,
-      marketing: false
+    const categories = getPrivacyCategories();
+    const preferences = {};
+    categories.forEach(cat => {
+      preferences[cat.id] = cat.required ? true : false;
     });
+    saveConsent(preferences);
     hideBanner();
   }
 
   // Save current selection
   function saveSelection() {
-    const functional = document.getElementById('cookie-functional')?.checked || false;
-    const analytics = document.getElementById('cookie-analytics')?.checked || false;
-    const marketing = document.getElementById('cookie-marketing')?.checked || false;
+    const categories = getPrivacyCategories();
+    const preferences = {};
 
-    saveConsent({
-      functional,
-      analytics,
-      marketing
+    categories.forEach(cat => {
+      const toggle = document.getElementById(`cookie-${cat.id}`);
+      preferences[cat.id] = cat.required ? true : (toggle?.checked || false);
     });
+
+    saveConsent(preferences);
     hideBanner();
   }
 
@@ -151,49 +175,18 @@
 
         ${settings.showDetails ? `
         <div class="cookie-categories">
-          <div class="cookie-category">
-            <div class="cookie-category-info">
-              <div class="cookie-category-name">Nødvendige</div>
-              <div class="cookie-category-desc">${settings.necessaryDesc}</div>
+          ${getPrivacyCategories().map(cat => `
+            <div class="cookie-category">
+              <div class="cookie-category-info">
+                <div class="cookie-category-name">${cat.name}</div>
+                <div class="cookie-category-desc">${cat.description}</div>
+              </div>
+              <label class="cookie-toggle">
+                <input type="checkbox" id="cookie-${cat.id}" ${cat.required ? 'checked disabled' : ''}>
+                <span class="cookie-toggle-slider"></span>
+              </label>
             </div>
-            <label class="cookie-toggle">
-              <input type="checkbox" checked disabled>
-              <span class="cookie-toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="cookie-category">
-            <div class="cookie-category-info">
-              <div class="cookie-category-name">Funktionelle</div>
-              <div class="cookie-category-desc">${settings.functionalDesc}</div>
-            </div>
-            <label class="cookie-toggle">
-              <input type="checkbox" id="cookie-functional">
-              <span class="cookie-toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="cookie-category">
-            <div class="cookie-category-info">
-              <div class="cookie-category-name">Statistik</div>
-              <div class="cookie-category-desc">${settings.analyticsDesc}</div>
-            </div>
-            <label class="cookie-toggle">
-              <input type="checkbox" id="cookie-analytics">
-              <span class="cookie-toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="cookie-category">
-            <div class="cookie-category-info">
-              <div class="cookie-category-name">Marketing</div>
-              <div class="cookie-category-desc">${settings.marketingDesc}</div>
-            </div>
-            <label class="cookie-toggle">
-              <input type="checkbox" id="cookie-marketing">
-              <span class="cookie-toggle-slider"></span>
-            </label>
-          </div>
+          `).join('')}
         </div>
         ` : ''}
 
@@ -209,6 +202,9 @@
             </svg>
           </button>
           ` : ''}
+          <button class="cookie-btn cookie-btn-link" onclick="CookieConsent.openPrivacyModal()">
+            Avancerede indstillinger
+          </button>
         </div>
       </div>
     `;
@@ -224,6 +220,13 @@
       return;
     }
 
+    // Check if popup style is selected - if so, let cookie-popup.js handle it
+    const settings = getSettings();
+    if (settings.displayStyle === 'popup') {
+      // Popup mode - skip banner, CookiePopup.init() will handle it
+      return;
+    }
+
     // Create banner if needed
     createBanner();
 
@@ -231,6 +234,13 @@
     if (!hasConsent()) {
       // Small delay for smooth animation
       setTimeout(showBanner, 500);
+    }
+  }
+
+  // Open privacy modal
+  function openPrivacyModal() {
+    if (window.PrivacyModal && typeof window.PrivacyModal.show === 'function') {
+      window.PrivacyModal.show();
     }
   }
 
@@ -245,7 +255,8 @@
     hideBanner,
     hasConsent,
     getConsent,
-    getSettings
+    getSettings,
+    openPrivacyModal
   };
 
   // Auto-init on DOM ready

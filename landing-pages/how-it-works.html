@@ -1348,128 +1348,116 @@
 
     /* ==================== ZIGZAG TIMELINE (DASHED) ==================== */
     /* Linjer går UDEN OM indholdet - aldrig gennem tekst eller billeder */
+    /* 2cm margin fra tekst og billeder */
 
-    /* Skjul alle timeline elementer - vi bruger kun ::before og ::after på .how-steps */
-    .how-step-row::before,
-    .how-step-row::after,
+    /* Skjul alle timeline elementer */
     .timeline-vertical,
     .timeline-horizontal,
     .timeline-down {
       display: none;
     }
 
-    /* Tegn hele timeline som én sammenhængende SVG-lignende struktur */
+    /* Fjern global ::before på .how-steps */
     .how-steps::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -3rem;
-      width: 2px;
-      height: 100%;
-      background:
-        /* Sektion 1: vertikal ned på venstre */
-        repeating-linear-gradient(to bottom, #d0d0d0 0, #d0d0d0 8px, transparent 8px, transparent 16px);
-      z-index: 1;
+      display: none;
     }
-
-    /* Brug separate divs for hver linje-segment */
-    /* Vi gør dette med CSS custom properties og beregninger */
 
     /* Container til timeline */
     .how-steps {
-      --timeline-color: #d0d0d0;
-      --dash-size: 8px;
-      --gap-size: 8px;
+      --timeline-color: #c4c4c4;
+      --timeline-offset: 2rem; /* 2cm afstand fra indhold */
     }
 
-    /* Sektion 1: Kun vertikal linje på venstre side */
-    .how-step-row:nth-child(1) {
+    /* Alle step rows skal have position relative */
+    .how-step-row {
       position: relative;
     }
+
+    /* Sektion 1: Vertikal linje NED i venstre side (mellem tekst og kant) */
     .how-step-row:nth-child(1)::before {
       content: '';
       display: block;
       position: absolute;
-      left: -3rem;
-      top: 0;
-      bottom: -3rem;
+      left: calc(-4rem - var(--timeline-offset));
+      top: 50%;
+      bottom: 0;
       width: 0;
-      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      border-left: 2px dashed var(--timeline-color);
       z-index: 1;
     }
-    /* Horisontal linje UNDER sektion 1 (i gap-området) */
+    /* Horisontal linje i bunden af sektion 1 - går fra venstre til højre */
     .how-step-row:nth-child(1)::after {
       content: '';
       display: block;
       position: absolute;
-      left: -3rem;
-      bottom: -3rem;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
       height: 0;
-      width: calc(100% + 6rem);
-      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
       z-index: 1;
     }
 
-    /* Sektion 2: Vertikal linje på højre side */
+    /* Sektion 2: Vertikal linje i højre side */
     .how-step-row:nth-child(2)::before {
       content: '';
       display: block;
       position: absolute;
-      right: -3rem;
-      top: -3rem;
-      bottom: -3rem;
+      right: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      bottom: 0;
       width: 0;
-      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      border-left: 2px dashed var(--timeline-color);
       z-index: 1;
     }
-    /* Horisontal linje UNDER sektion 2 (i gap-området) */
+    /* Horisontal linje i bunden af sektion 2 - går fra højre til venstre */
     .how-step-row:nth-child(2)::after {
       content: '';
       display: block;
       position: absolute;
-      left: -3rem;
-      bottom: -3rem;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
       height: 0;
-      width: calc(100% + 6rem);
-      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
       z-index: 1;
     }
 
-    /* Sektion 3: Vertikal linje på venstre side */
+    /* Sektion 3: Vertikal linje i venstre side */
     .how-step-row:nth-child(3)::before {
       content: '';
       display: block;
       position: absolute;
-      left: -3rem;
-      top: -3rem;
-      bottom: -3rem;
+      left: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      bottom: 0;
       width: 0;
-      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      border-left: 2px dashed var(--timeline-color);
       z-index: 1;
     }
-    /* Horisontal linje UNDER sektion 3 (i gap-området) */
+    /* Horisontal linje i bunden af sektion 3 - går fra venstre til højre */
     .how-step-row:nth-child(3)::after {
       content: '';
       display: block;
       position: absolute;
-      left: -3rem;
-      bottom: -3rem;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
       height: 0;
-      width: calc(100% + 6rem);
-      border-top: 2px dashed var(--timeline-color, #d0d0d0);
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
       z-index: 1;
     }
 
-    /* Sektion 4: Vertikal linje på højre side (kun ned) */
+    /* Sektion 4: Vertikal linje i højre side (kun ned til midten) */
     .how-step-row:nth-child(4)::before {
       content: '';
       display: block;
       position: absolute;
-      right: -3rem;
-      top: -3rem;
-      height: calc(100% + 3rem);
+      right: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      height: 50%;
       width: 0;
-      border-left: 2px dashed var(--timeline-color, #d0d0d0);
+      border-left: 2px dashed var(--timeline-color);
       z-index: 1;
     }
     /* Ingen horisontal linje efter sektion 4 */
@@ -1665,6 +1653,7 @@
 
   <!-- Google Maps Places API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&libraries=places" async defer></script>
+<link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
   <!-- Navigation -->
@@ -1708,8 +1697,8 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="index.html" class="nav-login">Login</a>
-          <a href="#demo" class="nav-cta">Få en gratis demo</a>
+          <a href="../index.html" class="nav-login">Login</a>
+          
         </div>
       </div>
     </nav>
@@ -2176,7 +2165,7 @@
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
           <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
+        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
       </div>
     </div>
     <div class="footer-bottom">

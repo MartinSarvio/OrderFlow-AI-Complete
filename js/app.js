@@ -1113,10 +1113,20 @@ const ACTIVITY_TYPES = {
 // SYNC version for backwards compatibility (loads from localStorage)
 function getActivityLog() {
   try {
-    const log = JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY) || '[]');
+    let log = JSON.parse(localStorage.getItem(ACTIVITY_LOG_KEY) || '[]');
     // Filtrer aktiviteter ældre end 2 måneder
     const twoMonthsAgo = Date.now() - (60 * 24 * 60 * 60 * 1000);
-    return log.filter(a => a.timestamp > twoMonthsAgo);
+    log = log.filter(a => a.timestamp > twoMonthsAgo);
+
+    // Add demo activities if enabled
+    if (isDemoDataEnabled()) {
+      const demoActivities = getDemoDataActivities();
+      log = [...log, ...demoActivities];
+      // Sort by timestamp descending
+      log.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    return log;
   } catch (e) {
     return [];
   }
@@ -1810,10 +1820,10 @@ function loadActivitiesPage() {
   log.forEach(a => markActivitySeen(a.id));
 }
 
-// Generer demo aktiviteter
-function generateDemoActivities() {
+// Generer og rens aktivitetslog demo aktiviteter (legacy)
+function cleanupLegacyDemoActivities() {
   const existingLog = getActivityLog();
-  
+
   // Rens eventuelle korrupte/gamle aktiviteter - markér alle demo aktiviteter som set
   if (existingLog.length > 0) {
     let needsSave = false;
@@ -3931,26 +3941,46 @@ window.addEventListener('popstate', (event) => {
 });
 
 // Toggle sidebar dropdown menus - auto-expand sidebar if collapsed
+// OPDATERET: Auto-navigation til første side + kunde-context cleanup
 function toggleNavDropdown(name) {
   const dropdown = document.getElementById('nav-' + name);
   const sidebar = document.getElementById('sidebar');
   const wasOpen = dropdown && dropdown.classList.contains('open');
-  
+
   // Luk alle åbne dropdowns (accordion logik)
   document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
-  
-  // Luk kunde-kontekst menu når andre dropdowns åbnes (medmindre vi er i kunde-profil)
+
+  // Luk kunde-kontekst menu når andre dropdowns åbnes
   if (name !== 'kunder' && currentProfileRestaurantId) {
-    // Vis kun kort besked, luk ikke profilen helt
+    // Ryd kunde kontekst og skjul kunde-navigation
+    const kundeContextNav = document.getElementById('kunde-context-nav');
+    if (kundeContextNav) {
+      kundeContextNav.style.display = 'none';
+    }
+    currentProfileRestaurantId = null;
   }
-  
+
   if (sidebar && sidebar.classList.contains('collapsed')) {
     sidebarCollapsed = false;
     sidebar.classList.remove('collapsed');
     localStorage.setItem('sidebarCollapsed', 'false');
-    setTimeout(() => { if (dropdown) dropdown.classList.add('open'); }, 100);
+    setTimeout(() => {
+      if (dropdown) {
+        dropdown.classList.add('open');
+        // Auto-navigér til første side i dropdown
+        const firstItem = dropdown.querySelector('.nav-dropdown-item');
+        if (firstItem && !wasOpen) {
+          firstItem.click();
+        }
+      }
+    }, 100);
   } else if (dropdown && !wasOpen) {
     dropdown.classList.add('open');
+    // Auto-navigér til første side i dropdown (1 klik = åben + vis første side)
+    const firstItem = dropdown.querySelector('.nav-dropdown-item');
+    if (firstItem) {
+      firstItem.click();
+    }
   }
 }
 
@@ -5631,25 +5661,32 @@ let dashboardStats = {
 let revenueChart = null;
 
 function loadDashboard() {
+  // Combine real restaurants with demo customers if enabled
+  let allRestaurants = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allRestaurants = [...allRestaurants, ...demoCustomers];
+  }
+
   // Restaurant counts - EXTENDED for full lifecycle
-  const active = restaurants.filter(r => r.status === 'active').length;
-  const inactive = restaurants.filter(r => r.status === 'inactive' || r.status === 'pending').length;
-  const churned = restaurants.filter(r => r.status === 'churned' || r.status === 'cancelled').length;
-  const terminated = restaurants.filter(r => r.status === 'terminated').length;
+  const active = allRestaurants.filter(r => r.status === 'active').length;
+  const inactive = allRestaurants.filter(r => r.status === 'inactive' || r.status === 'pending').length;
+  const churned = allRestaurants.filter(r => r.status === 'churned' || r.status === 'cancelled').length;
+  const terminated = allRestaurants.filter(r => r.status === 'terminated').length;
 
   // Order counts (REAL DATA ONLY - no random generation)
-  const ordersToday = restaurants.reduce((s, r) => s + (r.orders || 0), 0);
+  const ordersToday = allRestaurants.reduce((s, r) => s + (r.orders || 0), 0);
 
   // PRODUKTIONSKLAR: Brug reelle data fra restaurants (ingen mock data)
-  dashboardStats.ordersThisMonth = restaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
-  dashboardStats.ordersTotal = restaurants.reduce((s, r) => s + (r.ordersTotal || 0), 0);
+  dashboardStats.ordersThisMonth = allRestaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
+  dashboardStats.ordersTotal = allRestaurants.reduce((s, r) => s + (r.ordersTotal || 0), 0);
 
   const conversations = Math.floor(ordersToday * 0.3);
 
   // Revenue calculations (REAL DATA ONLY)
-  const revenueToday = restaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
-  dashboardStats.revenueThisMonth = restaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
-  dashboardStats.revenueTotal = restaurants.reduce((s, r) => s + (r.revenueTotal || 0), 0);
+  const revenueToday = allRestaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
+  dashboardStats.revenueThisMonth = allRestaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
+  dashboardStats.revenueTotal = allRestaurants.reduce((s, r) => s + (r.revenueTotal || 0), 0);
 
   // Generate revenue history for chart (empty if no data)
   generateRevenueHistory();
@@ -5997,19 +6034,26 @@ function getRestaurantLogoSvg(logo) {
 
 function loadRestaurants() {
   const grid = document.getElementById('restaurants-grid');
-  
+
   // Null check - grid might not exist
   if (!grid) {
     console.log('restaurants-grid not found, skipping');
     return;
   }
-  
-  if (restaurants.length === 0) {
+
+  // Combine real restaurants with demo customers if enabled
+  let allRestaurants = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allRestaurants = [...allRestaurants, ...demoCustomers];
+  }
+
+  if (allRestaurants.length === 0) {
     grid.innerHTML = '<div class="empty"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><div>Ingen restauranter endnu</div><button class="btn btn-primary" style="margin-top:16px" onclick="showModal(\'add-restaurant\')">+ Tilføj restaurant</button></div>';
     return;
   }
-  
-  grid.innerHTML = restaurants.map(r => {
+
+  grid.innerHTML = allRestaurants.map(r => {
     // Tjek aktuel åbningsstatus
     const openStatus = checkRestaurantOpen(r);
     const openBadge = openStatus.isOpen 
@@ -7150,11 +7194,23 @@ function initCrmTable() {
 // Handle CRM search with autocomplete
 function handleCrmSearch(query) {
   query = safeString(query).trim().toLowerCase();
-  
+
+  // Combine real restaurants with demo customers if enabled
+  let allCustomers = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allCustomers = [...allCustomers, ...demoCustomers];
+  }
+
   // Always filter and show results in table
   let filtered;
-  
+
   if (!query) {
+    // If demo data enabled, show all demo customers when no query
+    if (isDemoDataEnabled() && allCustomers.length > 0) {
+      renderCrmTable(allCustomers, '');
+      return;
+    }
     // Show empty state row if no query
     const tbody = document.getElementById('crm-table-body');
     if (tbody) {
@@ -7170,9 +7226,9 @@ function handleCrmSearch(query) {
     document.getElementById('crm-page-info').textContent = '1 af 1';
     return;
   }
-  
-  // Filter restaurants with safe string handling
-  filtered = restaurants.filter(r => {
+
+  // Filter all customers with safe string handling
+  filtered = allCustomers.filter(r => {
     if (!r) return false;
     const userId = generateUserId(r.id).toLowerCase();
     const name = safeString(r.name).toLowerCase();
@@ -7188,7 +7244,7 @@ function handleCrmSearch(query) {
            address.includes(query) ||
            city.includes(query);
   });
-  
+
   // Update table directly
   renderCrmTable(filtered, query);
 }
@@ -7852,6 +7908,573 @@ function generateDemoOrdersData(restaurantId) {
   }
   return orders;
 }
+
+// =====================================================
+// DEMO DATA SYSTEM - Systemvedligeholdelse Toggle
+// =====================================================
+
+const DEMO_DATA_KEY = 'orderflow_demo_data_enabled';
+
+// Check if demo data is enabled
+function isDemoDataEnabled() {
+  return localStorage.getItem(DEMO_DATA_KEY) === 'true';
+}
+
+// Toggle demo data on/off
+function toggleDemoData() {
+  const toggle = document.getElementById('demo-data-toggle');
+  const enabled = toggle?.checked ?? false;
+
+  localStorage.setItem(DEMO_DATA_KEY, enabled ? 'true' : 'false');
+
+  if (enabled) {
+    loadAllDemoData();
+    toast('Demo data aktiveret - alle sider viser nu eksempeldata', 'success');
+  } else {
+    clearAllDemoData();
+    toast('Demo data deaktiveret', 'info');
+  }
+
+  updateDemoDataStatus();
+
+  // Refresh current view
+  setTimeout(() => {
+    loadRestaurants();
+    loadOrdersPage();
+  }, 100);
+}
+
+// Regenerate demo data with new random values
+function regenerateDemoData() {
+  if (!isDemoDataEnabled()) {
+    toast('Aktiver demo data først', 'warning');
+    return;
+  }
+
+  loadAllDemoData();
+  updateDemoDataStatus();
+  toast('Nye demo data genereret', 'success');
+
+  // Refresh views
+  loadRestaurants();
+  loadOrdersPage();
+}
+
+// Load all demo data to localStorage
+function loadAllDemoData() {
+  const customers = generateDemoCustomers();
+  const orders = generateAllDemoOrders(customers);
+  const leads = generateDemoLeads();
+  const products = generateDemoProducts();
+  const campaigns = generateDemoCampaigns();
+  const activities = generateDemoActivities();
+  const invoices = generateDemoInvoicesData(customers);
+
+  localStorage.setItem('orderflow_demo_customers', JSON.stringify(customers));
+  localStorage.setItem('orderflow_demo_orders', JSON.stringify(orders));
+  localStorage.setItem('orderflow_demo_leads', JSON.stringify(leads));
+  localStorage.setItem('orderflow_demo_products', JSON.stringify(products));
+  localStorage.setItem('orderflow_demo_campaigns', JSON.stringify(campaigns));
+  localStorage.setItem('orderflow_demo_activities', JSON.stringify(activities));
+  localStorage.setItem('orderflow_demo_invoices', JSON.stringify(invoices));
+
+  console.log('✅ Demo data loaded:', {
+    customers: customers.length,
+    orders: orders.length,
+    leads: leads.length,
+    products: products.items?.length || 0,
+    campaigns: campaigns.length,
+    activities: activities.length,
+    invoices: invoices.length
+  });
+}
+
+// Clear all demo data from localStorage
+function clearAllDemoData() {
+  const demoKeys = [
+    'orderflow_demo_customers',
+    'orderflow_demo_orders',
+    'orderflow_demo_leads',
+    'orderflow_demo_products',
+    'orderflow_demo_campaigns',
+    'orderflow_demo_activities',
+    'orderflow_demo_invoices'
+  ];
+  demoKeys.forEach(key => localStorage.removeItem(key));
+  console.log('🗑️ Demo data cleared');
+}
+
+// Update demo data status display
+function updateDemoDataStatus() {
+  const enabled = isDemoDataEnabled();
+  const toggle = document.getElementById('demo-data-toggle');
+  const statusText = document.getElementById('demo-data-status-text');
+  const customersCount = document.getElementById('demo-data-customers-count');
+  const ordersCount = document.getElementById('demo-data-orders-count');
+  const leadsCount = document.getElementById('demo-data-leads-count');
+
+  if (toggle) toggle.checked = enabled;
+
+  if (enabled) {
+    if (statusText) {
+      statusText.textContent = 'Aktiveret';
+      statusText.style.color = 'var(--success)';
+    }
+
+    const customers = JSON.parse(localStorage.getItem('orderflow_demo_customers') || '[]');
+    const orders = JSON.parse(localStorage.getItem('orderflow_demo_orders') || '[]');
+    const leads = JSON.parse(localStorage.getItem('orderflow_demo_leads') || '[]');
+
+    if (customersCount) customersCount.textContent = customers.length;
+    if (ordersCount) ordersCount.textContent = orders.length;
+    if (leadsCount) leadsCount.textContent = leads.length;
+  } else {
+    if (statusText) {
+      statusText.textContent = 'Deaktiveret';
+      statusText.style.color = 'var(--muted)';
+    }
+    if (customersCount) customersCount.textContent = '0';
+    if (ordersCount) ordersCount.textContent = '0';
+    if (leadsCount) leadsCount.textContent = '0';
+  }
+}
+
+// Initialize demo data status on page load
+function initDemoDataStatus() {
+  updateDemoDataStatus();
+}
+
+// =====================================================
+// DEMO DATA GENERATORS
+// =====================================================
+
+// Generate 15 demo customers (restaurants)
+function generateDemoCustomers() {
+  const demoRestaurants = [
+    { name: 'Pizza Palace', industry: 'pizzeria', city: 'København' },
+    { name: 'Burger House', industry: 'burger', city: 'Aarhus' },
+    { name: 'Sushi Garden', industry: 'sushi', city: 'Odense' },
+    { name: 'Thai Orchid', industry: 'thai', city: 'Aalborg' },
+    { name: 'Bella Italia', industry: 'pizzeria', city: 'Esbjerg' },
+    { name: 'Golden Dragon', industry: 'chinese', city: 'Randers' },
+    { name: 'Kebab King', industry: 'kebab', city: 'Kolding' },
+    { name: 'Café Central', industry: 'cafe', city: 'Horsens' },
+    { name: 'Grill House', industry: 'grill', city: 'Vejle' },
+    { name: 'Indian Spice', industry: 'indian', city: 'Roskilde' },
+    { name: 'Fish & Chips', industry: 'seafood', city: 'Helsingør' },
+    { name: 'Mexican Fiesta', industry: 'mexican', city: 'Silkeborg' },
+    { name: 'Greek Taverna', industry: 'greek', city: 'Herning' },
+    { name: 'Vegan Delight', industry: 'vegan', city: 'Næstved' },
+    { name: 'Steakhouse Prime', industry: 'steakhouse', city: 'Frederiksberg' }
+  ];
+
+  const statuses = ['active', 'active', 'active', 'active', 'pending', 'inactive'];
+
+  return demoRestaurants.map((r, i) => {
+    const revenue = Math.floor(Math.random() * 200000) + 50000;
+    const ordersCount = Math.floor(revenue / 150);
+    const cvrBase = 10000000 + i * 1111111;
+
+    return {
+      id: `demo-customer-${i + 1}`,
+      name: r.name,
+      status: statuses[Math.floor(Math.random() * statuses.length)],
+      isDemo: true,
+      cvr: String(cvrBase),
+      contact_phone: `+45 ${20 + i} ${10 + i}${20 + i} ${30 + i}${40 + i}`,
+      contact_email: `kontakt@${r.name.toLowerCase().replace(/\s+/g, '')}.dk`,
+      contact_name: ['Lars Hansen', 'Mette Nielsen', 'Peter Jensen', 'Anna Pedersen', 'Thomas Andersen'][i % 5],
+      owner: ['Lars Hansen', 'Mette Nielsen', 'Peter Jensen'][i % 3],
+      address: `${['Hovedgaden', 'Strandvejen', 'Nørregade', 'Vestergade', 'Østergade'][i % 5]} ${10 + i * 3}`,
+      city: r.city,
+      country: 'Danmark',
+      industry: r.industry,
+      website: `https://www.${r.name.toLowerCase().replace(/\s+/g, '')}.dk`,
+      created_at: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+      revenue_total: revenue,
+      orders_total: ordersCount,
+      ai_enabled: Math.random() > 0.3,
+      integration_status: ['connected', 'connected', 'pending', 'disconnected'][Math.floor(Math.random() * 4)],
+      // Demo products for this restaurant
+      productCategories: ['Pizza', 'Pasta', 'Burger', 'Drikkevarer', 'Dessert', 'Tilbehør'],
+      products: generateDemoProductsForRestaurant(r.industry, i),
+      deliveryZones: [
+        { name: 'Zone 1', minOrder: 100, fee: 25, freeAbove: 300 },
+        { name: 'Zone 2', minOrder: 150, fee: 35, freeAbove: 400 }
+      ],
+      extras: [
+        { name: 'Extra ost', price: 10 },
+        { name: 'Extra sauce', price: 5 },
+        { name: 'Bacon', price: 15 },
+        { name: 'Jalapeños', price: 8 }
+      ]
+    };
+  });
+}
+
+// Generate demo products based on restaurant industry
+function generateDemoProductsForRestaurant(industry, index) {
+  const productTemplates = {
+    pizzeria: [
+      { name: 'Margherita', price: 89, category: 'Pizza' },
+      { name: 'Pepperoni', price: 99, category: 'Pizza' },
+      { name: 'Quattro Formaggi', price: 109, category: 'Pizza' },
+      { name: 'Calzone', price: 119, category: 'Pizza' },
+      { name: 'Hawaiianer', price: 99, category: 'Pizza' },
+      { name: 'Carbonara', price: 89, category: 'Pasta' },
+      { name: 'Bolognese', price: 85, category: 'Pasta' }
+    ],
+    burger: [
+      { name: 'Classic Burger', price: 89, category: 'Burger' },
+      { name: 'Cheese Burger', price: 99, category: 'Burger' },
+      { name: 'Bacon Burger', price: 109, category: 'Burger' },
+      { name: 'Veggie Burger', price: 95, category: 'Burger' },
+      { name: 'Double Stack', price: 129, category: 'Burger' },
+      { name: 'Chicken Burger', price: 99, category: 'Burger' }
+    ],
+    sushi: [
+      { name: 'Nigiri Mix (8 stk)', price: 129, category: 'Sushi' },
+      { name: 'Maki Set (12 stk)', price: 99, category: 'Sushi' },
+      { name: 'California Roll', price: 79, category: 'Sushi' },
+      { name: 'Sashimi Deluxe', price: 159, category: 'Sushi' },
+      { name: 'Teriyaki Salmon', price: 119, category: 'Varm' }
+    ],
+    default: [
+      { name: 'Dagens Ret', price: 99, category: 'Hovedret' },
+      { name: 'Forret', price: 69, category: 'Forret' },
+      { name: 'Dessert', price: 59, category: 'Dessert' }
+    ]
+  };
+
+  const drinks = [
+    { name: 'Cola', price: 25, category: 'Drikkevarer' },
+    { name: 'Fanta', price: 25, category: 'Drikkevarer' },
+    { name: 'Sprite', price: 25, category: 'Drikkevarer' },
+    { name: 'Vand', price: 20, category: 'Drikkevarer' },
+    { name: 'Øl', price: 35, category: 'Drikkevarer' }
+  ];
+
+  const desserts = [
+    { name: 'Tiramisu', price: 59, category: 'Dessert' },
+    { name: 'Cheesecake', price: 55, category: 'Dessert' },
+    { name: 'Is (3 kugler)', price: 45, category: 'Dessert' }
+  ];
+
+  const baseProducts = productTemplates[industry] || productTemplates.default;
+  const allProducts = [...baseProducts, ...drinks, ...desserts];
+
+  return allProducts.map((p, i) => ({
+    id: `demo-product-${index}-${i}`,
+    name: p.name,
+    price: p.price,
+    category: p.category,
+    description: `Lækker ${p.name.toLowerCase()} lavet med friske ingredienser`,
+    available: true,
+    isDemo: true
+  }));
+}
+
+// Generate orders for all demo customers
+function generateAllDemoOrders(customers) {
+  const allOrders = [];
+  const paymentMethods = ['Kort', 'Kontant', 'MobilePay', 'Faktura'];
+  const products = [
+    'Margherita', 'Pepperoni', 'Quattro Formaggi', 'Calzone', 'Hawaiianer',
+    'Burger Classic', 'Cheese Burger', 'Veggie Burger', 'Crispy Chicken',
+    'Sushi Mix', 'Nigiri Set', 'Maki Roll', 'Teriyaki', 'Ramen',
+    'Cola', 'Fanta', 'Sprite', 'Vand', 'Øl', 'Vin',
+    'Tiramisu', 'Cheesecake', 'Is', 'Brownie'
+  ];
+
+  customers.forEach((customer, custIndex) => {
+    const orderCount = Math.floor(Math.random() * 30) + 20; // 20-50 ordrer per kunde
+
+    for (let i = 0; i < orderCount; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - Math.floor(Math.random() * 60)); // Sidste 60 dage
+      date.setHours(Math.floor(Math.random() * 14) + 10); // 10:00 - 24:00
+      date.setMinutes(Math.floor(Math.random() * 60));
+
+      const numItems = Math.floor(Math.random() * 4) + 1;
+      const items = [];
+      for (let j = 0; j < numItems; j++) {
+        items.push({
+          name: products[Math.floor(Math.random() * products.length)],
+          quantity: Math.floor(Math.random() * 3) + 1,
+          price: Math.floor(Math.random() * 100) + 50
+        });
+      }
+
+      const orderStatuses = ['completed', 'completed', 'completed', 'completed', 'pending', 'cancelled'];
+
+      allOrders.push({
+        id: `demo-order-${custIndex}-${i}`,
+        restaurant_id: customer.id,
+        restaurant_name: customer.name,
+        customer_name: ['Anders Jensen', 'Bente Nielsen', 'Christian Pedersen', 'Dorthe Hansen', 'Erik Andersen'][Math.floor(Math.random() * 5)],
+        customer_phone: `+45 ${Math.floor(Math.random() * 90000000) + 10000000}`,
+        created_at: date.toISOString(),
+        total: items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        payment_method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+        status: orderStatuses[Math.floor(Math.random() * orderStatuses.length)],
+        items: items,
+        delivery_type: Math.random() > 0.5 ? 'delivery' : 'pickup',
+        delivery_address: Math.random() > 0.5 ? `${['Hovedgaden', 'Strandvejen', 'Nørregade'][Math.floor(Math.random() * 3)]} ${Math.floor(Math.random() * 100) + 1}` : null
+      });
+    }
+  });
+
+  // Sort by date descending
+  return allOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+// Generate 25 demo leads
+function generateDemoLeads() {
+  const stages = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+  const sources = ['Website', 'Telefon', 'Email', 'LinkedIn', 'Anbefaling', 'Messe', 'Google Ads'];
+  const industries = ['pizzeria', 'burger', 'sushi', 'cafe', 'restaurant', 'takeaway', 'catering'];
+
+  const leads = [];
+  const names = [
+    'Restaurant Sunset', 'Café Hygge', 'Pizza Corner', 'Burger Spot', 'Sushi Time',
+    'Thai Kitchen', 'Indian Palace', 'Mexican Wave', 'Greek Island', 'Italian Touch',
+    'Fast Food Plus', 'Healthy Eats', 'Street Food', 'Gourmet Grill', 'Ocean Fresh',
+    'Pasta House', 'Noodle Bar', 'BBQ Master', 'Salad Studio', 'Dessert Heaven',
+    'Coffee Corner', 'Juice Bar', 'Smoothie Shop', 'Ice Cream Dream', 'Bakery Bliss'
+  ];
+
+  for (let i = 0; i < 25; i++) {
+    const createdDate = new Date();
+    createdDate.setDate(createdDate.getDate() - Math.floor(Math.random() * 90));
+
+    const stage = stages[Math.floor(Math.random() * stages.length)];
+    const dealValue = Math.floor(Math.random() * 50000) + 10000;
+
+    leads.push({
+      id: `demo-lead-${i + 1}`,
+      name: names[i],
+      contact_name: ['Lars', 'Mette', 'Peter', 'Anna', 'Thomas'][Math.floor(Math.random() * 5)] + ' ' + ['Hansen', 'Nielsen', 'Jensen', 'Pedersen'][Math.floor(Math.random() * 4)],
+      contact_email: `kontakt@${names[i].toLowerCase().replace(/\s+/g, '')}.dk`,
+      contact_phone: `+45 ${Math.floor(Math.random() * 90000000) + 10000000}`,
+      stage: stage,
+      source: sources[Math.floor(Math.random() * sources.length)],
+      industry: industries[Math.floor(Math.random() * industries.length)],
+      deal_value: dealValue,
+      probability: stage === 'won' ? 100 : stage === 'lost' ? 0 : Math.floor(Math.random() * 80) + 10,
+      created_at: createdDate.toISOString(),
+      last_activity: new Date(createdDate.getTime() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: `Interesseret i ${['OrderFlow Pro', 'OrderFlow Standard', 'OrderFlow Starter'][Math.floor(Math.random() * 3)]} pakken.`,
+      isDemo: true
+    });
+  }
+
+  return leads;
+}
+
+// Generate demo products (menu items)
+function generateDemoProducts() {
+  return {
+    categories: [
+      { id: 'cat-1', name: 'Pizza', color: '#e63946' },
+      { id: 'cat-2', name: 'Burgere', color: '#f4a261' },
+      { id: 'cat-3', name: 'Sushi', color: '#2a9d8f' },
+      { id: 'cat-4', name: 'Drikkevarer', color: '#457b9d' },
+      { id: 'cat-5', name: 'Dessert', color: '#9d4edd' },
+      { id: 'cat-6', name: 'Tilbehør', color: '#6c757d' }
+    ],
+    items: [
+      // Pizzaer
+      { id: 'p1', name: 'Margherita', price: 89, category: 'Pizza', description: 'Tomat, mozzarella, basilikum' },
+      { id: 'p2', name: 'Pepperoni', price: 99, category: 'Pizza', description: 'Tomat, mozzarella, pepperoni' },
+      { id: 'p3', name: 'Quattro Formaggi', price: 109, category: 'Pizza', description: 'Fire forskellige oste' },
+      { id: 'p4', name: 'Hawaiianer', price: 99, category: 'Pizza', description: 'Skinke, ananas' },
+      { id: 'p5', name: 'Calzone', price: 119, category: 'Pizza', description: 'Foldet pizza med fyld' },
+      { id: 'p6', name: 'Vegetar', price: 95, category: 'Pizza', description: 'Grøntsager, ost' },
+      // Burgere
+      { id: 'b1', name: 'Classic Burger', price: 89, category: 'Burgere', description: 'Oksekød, salat, tomat' },
+      { id: 'b2', name: 'Cheese Burger', price: 99, category: 'Burgere', description: 'Med cheddar ost' },
+      { id: 'b3', name: 'Bacon Burger', price: 109, category: 'Burgere', description: 'Sprød bacon' },
+      { id: 'b4', name: 'Veggie Burger', price: 95, category: 'Burgere', description: 'Vegetarisk bøf' },
+      // Sushi
+      { id: 's1', name: 'Nigiri Mix (8 stk)', price: 119, category: 'Sushi', description: 'Laks, tun, rejer' },
+      { id: 's2', name: 'Maki Roll (12 stk)', price: 89, category: 'Sushi', description: 'California, Spicy tuna' },
+      { id: 's3', name: 'Sashimi (10 stk)', price: 149, category: 'Sushi', description: 'Frisk fisk' },
+      // Drikkevarer
+      { id: 'd1', name: 'Cola', price: 25, category: 'Drikkevarer', description: '33 cl' },
+      { id: 'd2', name: 'Fanta', price: 25, category: 'Drikkevarer', description: '33 cl' },
+      { id: 'd3', name: 'Vand', price: 20, category: 'Drikkevarer', description: '50 cl' },
+      { id: 'd4', name: 'Øl', price: 35, category: 'Drikkevarer', description: '33 cl' },
+      // Dessert
+      { id: 'ds1', name: 'Tiramisu', price: 49, category: 'Dessert', description: 'Klassisk italiensk' },
+      { id: 'ds2', name: 'Cheesecake', price: 55, category: 'Dessert', description: 'New York style' },
+      { id: 'ds3', name: 'Is (3 kugler)', price: 39, category: 'Dessert', description: 'Valgfri smag' },
+      // Tilbehør
+      { id: 't1', name: 'Pommes Frites', price: 35, category: 'Tilbehør', description: 'Crispy' },
+      { id: 't2', name: 'Løgringe', price: 39, category: 'Tilbehør', description: 'Paneret' },
+      { id: 't3', name: 'Hvidløgsbrød', price: 29, category: 'Tilbehør', description: '4 stk' }
+    ]
+  };
+}
+
+// Generate 5 demo campaigns
+function generateDemoCampaigns() {
+  const campaigns = [
+    { name: 'Sommertilbud 2024', type: 'email', status: 'active' },
+    { name: 'Nyhedsbrev Februar', type: 'email', status: 'completed' },
+    { name: 'SMS Påmindelse', type: 'sms', status: 'active' },
+    { name: 'Loyalitetsbonus', type: 'email', status: 'draft' },
+    { name: 'Weekend Special', type: 'sms', status: 'scheduled' }
+  ];
+
+  return campaigns.map((c, i) => {
+    const sent = Math.floor(Math.random() * 2000) + 500;
+    const opened = Math.floor(sent * (Math.random() * 0.4 + 0.3)); // 30-70% open rate
+    const clicked = Math.floor(opened * (Math.random() * 0.3 + 0.1)); // 10-40% click rate
+
+    const createdDate = new Date();
+    createdDate.setDate(createdDate.getDate() - (i * 7));
+
+    return {
+      id: `demo-campaign-${i + 1}`,
+      name: c.name,
+      type: c.type,
+      status: c.status,
+      sent: c.status === 'draft' ? 0 : sent,
+      opened: c.status === 'draft' ? 0 : opened,
+      clicked: c.status === 'draft' ? 0 : clicked,
+      revenue: c.status === 'draft' ? 0 : Math.floor(clicked * (Math.random() * 200 + 100)),
+      created_at: createdDate.toISOString(),
+      scheduled_for: c.status === 'scheduled' ? new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() : null,
+      subject: `${c.name} - Speciel tilbud til dig!`,
+      isDemo: true
+    };
+  });
+}
+
+// Generate 50 demo activities
+function generateDemoActivities() {
+  const activityTypes = [
+    { type: 'order', icon: 'shopping-cart', color: 'var(--success)' },
+    { type: 'customer', icon: 'user-plus', color: 'var(--info)' },
+    { type: 'login', icon: 'log-in', color: 'var(--muted)' },
+    { type: 'settings', icon: 'settings', color: 'var(--warn)' },
+    { type: 'campaign', icon: 'mail', color: 'var(--purple)' },
+    { type: 'lead', icon: 'trending-up', color: 'var(--accent)' }
+  ];
+
+  const activities = [];
+  const messages = {
+    order: ['Ny ordre modtaget fra', 'Ordre leveret til', 'Ordre afsluttet for'],
+    customer: ['Ny kunde oprettet:', 'Kunde opdateret:', 'Kunde aktiveret:'],
+    login: ['Bruger loggede ind:', 'Session startet for', 'Login fra ny enhed:'],
+    settings: ['Indstillinger opdateret af', 'API nøgle genereret af', 'Åbningstider ændret af'],
+    campaign: ['Kampagne sendt:', 'Email åbnet fra', 'Klik registreret på'],
+    lead: ['Nyt lead oprettet:', 'Lead flyttet til', 'Lead konverteret:']
+  };
+
+  const names = ['Pizza Palace', 'Burger House', 'Sushi Garden', 'Thai Orchid', 'Bella Italia'];
+  const users = ['admin@orderflow.dk', 'support@orderflow.dk', 'salg@orderflow.dk'];
+
+  for (let i = 0; i < 50; i++) {
+    const activityType = activityTypes[Math.floor(Math.random() * activityTypes.length)];
+    const date = new Date();
+    date.setMinutes(date.getMinutes() - i * Math.floor(Math.random() * 60 + 10));
+
+    const messageOptions = messages[activityType.type];
+    const message = messageOptions[Math.floor(Math.random() * messageOptions.length)];
+    const target = activityType.type === 'login' || activityType.type === 'settings'
+      ? users[Math.floor(Math.random() * users.length)]
+      : names[Math.floor(Math.random() * names.length)];
+
+    activities.push({
+      id: `demo-activity-${i + 1}`,
+      type: activityType.type,
+      icon: activityType.icon,
+      color: activityType.color,
+      message: `${message} ${target}`,
+      timestamp: date.toISOString(),
+      user: users[Math.floor(Math.random() * users.length)],
+      isDemo: true
+    });
+  }
+
+  return activities;
+}
+
+// Generate demo invoices
+function generateDemoInvoicesData(customers) {
+  const invoices = [];
+
+  customers.slice(0, 10).forEach((customer, custIndex) => {
+    const invoiceCount = Math.floor(Math.random() * 3) + 1;
+
+    for (let i = 0; i < invoiceCount; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+
+      const amount = Math.floor(Math.random() * 5000) + 1000;
+      const statuses = ['paid', 'paid', 'paid', 'pending', 'overdue'];
+
+      invoices.push({
+        id: `demo-invoice-${custIndex}-${i}`,
+        invoice_number: `INV-2024-${String(custIndex * 10 + i + 1).padStart(4, '0')}`,
+        customer_id: customer.id,
+        customer_name: customer.name,
+        amount: amount,
+        vat: Math.floor(amount * 0.25),
+        total: Math.floor(amount * 1.25),
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        created_at: date.toISOString(),
+        due_date: new Date(date.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        paid_at: Math.random() > 0.3 ? new Date(date.getTime() + Math.random() * 25 * 24 * 60 * 60 * 1000).toISOString() : null,
+        description: `Abonnement - ${['OrderFlow Pro', 'OrderFlow Standard', 'OrderFlow Starter'][Math.floor(Math.random() * 3)]}`,
+        isDemo: true
+      });
+    }
+  });
+
+  return invoices.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+}
+
+// Helper: Get demo customers for display
+function getDemoDataCustomers() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_customers') || '[]');
+}
+
+// Helper: Get demo orders for display
+function getDemoDataOrders() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_orders') || '[]');
+}
+
+// Helper: Get demo leads for display
+function getDemoDataLeads() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_leads') || '[]');
+}
+
+// Helper: Get demo activities for display
+function getDemoDataActivities() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_activities') || '[]');
+}
+
+// Helper: Get demo campaigns for display
+function getDemoDataCampaigns() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_campaigns') || '[]');
+}
+
+// Helper: Get demo invoices for display
+function getDemoDataInvoices() {
+  if (!isDemoDataEnabled()) return [];
+  return JSON.parse(localStorage.getItem('orderflow_demo_invoices') || '[]');
+}
+
+// =====================================================
+// END DEMO DATA SYSTEM
+// =====================================================
 
 /**
  * Monthly revenue/orders line chart
@@ -8810,7 +9433,12 @@ function closeCustomModal() {
 let currentProductFilter = null;
 
 function loadProductsPage() {
-  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  // Look in both real and demo restaurants
+  let restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === currentProfileRestaurantId);
+  }
   if (!restaurant) return;
   
   // Initialize products array if not exists
@@ -10594,7 +11222,12 @@ function renderCustomerHeatmap(heatmapData) {
 
 // Show profile view
 function showCrmProfileView(id) {
-  const restaurant = restaurants.find(r => r.id === id);
+  let restaurant = restaurants.find(r => r.id === id);
+  // Also check demo customers if enabled
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === id);
+  }
   if (!restaurant) {
     toast('Kunde ikke fundet', 'error');
     return;
@@ -16641,7 +17274,13 @@ function saveOrderToInternalOrdersPage(orderData) {
 function loadOrdersPage() {
   const ordersList = document.getElementById('orders-list');
   const ordersCount = document.getElementById('orders-count');
-  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  let orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+
+  // Add demo orders if enabled
+  if (isDemoDataEnabled()) {
+    const demoOrders = getDemoDataOrders();
+    orders = [...orders, ...demoOrders];
+  }
   
   if (ordersCount) {
     const newOrders = orders.filter(o => o.status === 'Ny').length;
@@ -18851,6 +19490,11 @@ function loadLeads() {
   if (stored) {
     leads = JSON.parse(stored);
   }
+  // Add demo leads if enabled
+  if (isDemoDataEnabled()) {
+    const demoLeads = getDemoDataLeads();
+    leads = [...leads, ...demoLeads];
+  }
 }
 
 function loadLeadsPage() {
@@ -19071,6 +19715,11 @@ function switchSettingsTab(tab) {
   // Initialize 2FA settings when password tab is opened
   if (tab === 'passwords') {
     init2FASettings();
+  }
+
+  // Initialize demo data status when maintenance tab is opened
+  if (tab === 'maintenance') {
+    initDemoDataStatus();
   }
 
   // Load trusted devices when users tab is opened
@@ -22214,41 +22863,9 @@ function renderLoyaltyDemoPage() {
   const container = document.getElementById('main-content');
   if (!container) return;
 
-  // Demo data
-  const demoMembers = 234;
-  const demoPoints = 45678;
-  const demoVIP = 45;
-  const demoRewards = 5;
-
   container.innerHTML = `
     <div class="page-header">
       <h1>Loyalty Program</h1>
-      <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
-      <span class="badge badge-info" style="margin-left:12px">Demo-tilstand</span>
-    </div>
-
-    <div class="alert alert-info" style="margin-bottom:24px">
-      <strong>Demo-tilstand:</strong> Vælg en restaurant for at se rigtige data, eller se demo-data nedenfor.
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid" style="margin-bottom:24px">
-      <div class="stat-card">
-        <div class="stat-value">${demoMembers}</div>
-        <div class="stat-label">Medlemmer</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${demoPoints.toLocaleString('da-DK')}</div>
-        <div class="stat-label">Aktive points</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${demoVIP}</div>
-        <div class="stat-label">VIP medlemmer</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${demoRewards}</div>
-        <div class="stat-label">Aktive belønninger</div>
-      </div>
     </div>
 
     <!-- Settings -->
@@ -26343,6 +26960,8 @@ let webBuilderConfig = null;
 // Web Builder Templates - Demo skabeloner
 const webBuilderTemplates = {
   roma: {
+    templateType: 'roma',
+    previewFile: './demos/pwa-preview-mario.html',
     branding: {
       name: 'Pizzeria Roma',
       shortName: 'Roma',
@@ -26386,16 +27005,18 @@ const webBuilderTemplates = {
     images: { hero: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1200&h=600&fit=crop', featured: '' }
   },
   mario: {
+    templateType: 'mario',
+    previewFile: './demos/pwa-preview-mario.html',
     branding: {
       name: 'Pizza Mario',
       shortName: 'Mario',
-      slogan: 'Delicious Italian Cuisine',
-      description: 'Experience authentic Italian flavors with our handcrafted pizzas and fresh ingredients.',
+      slogan: 'Lækker Italiensk Køkken',
+      description: 'Oplev autentiske italienske smagsvarianter med vores håndlavede pizzaer og friske ingredienser.',
       logo: { url: '', darkUrl: '' },
       colors: {
-        primary: '#78d5ef',
-        secondary: '#fff8e7',
-        accent: '#ffc107',
+        primary: '#FAC564',
+        secondary: '#121618',
+        accent: '#78D5EF',
         background: '#FFFFFF',
         surface: '#F8F9FA',
         text: '#1A1A1A',
@@ -26430,6 +27051,82 @@ const webBuilderTemplates = {
   }
 };
 
+// App Builder Templates - Skabeloner for mobil app
+const appBuilderTemplates = {
+  'app-skabelon-1': {
+    id: 'app-skabelon-1',
+    name: 'App Skabelon 1',
+    description: 'Standard app skabelon med klassisk layout',
+    previewFile: './demos/app-preview.html',
+    colors: {
+      primary: '#D4380D',
+      secondary: '#FFF7E6',
+      accent: '#FFA940',
+      background: '#FFFFFF',
+      surface: '#F5F5F5',
+      text: '#1A1A1A'
+    },
+    fonts: { heading: 'Playfair Display', body: 'Inter' },
+    layout: 'classic'
+  },
+  'app-skabelon-2': {
+    id: 'app-skabelon-2',
+    name: 'App Skabelon 2',
+    description: 'Moderne app skabelon med mørkt tema (kommer snart)',
+    previewFile: './demos/app-preview-v2.html',
+    colors: {
+      primary: '#FAC564',
+      secondary: '#121618',
+      accent: '#78D5EF',
+      background: '#1A1A1A',
+      surface: '#2D2D2D',
+      text: '#FFFFFF'
+    },
+    fonts: { heading: 'Josefin Sans', body: 'Poppins' },
+    layout: 'modern'
+  }
+};
+
+let currentAppTemplate = 'app-skabelon-1';
+
+// Load App Builder template
+function loadAppBuilderTemplate(templateId) {
+  const template = appBuilderTemplates[templateId];
+  if (!template) {
+    toast('App skabelon ikke fundet', 'error');
+    return;
+  }
+
+  currentAppTemplate = templateId;
+
+  // Store selected template
+  localStorage.setItem('orderflow_app_template', templateId);
+
+  // Update all template selectors
+  document.querySelectorAll('#app-template-selector').forEach(select => {
+    select.value = templateId;
+  });
+
+  toast('App skabelon valgt: ' + template.name, 'success');
+
+  // Refresh app preview if visible
+  if (typeof updateAppPreview === 'function') {
+    updateAppPreview();
+  }
+}
+
+// Initialize App Builder template on page load
+function initAppBuilderTemplate() {
+  const savedTemplate = localStorage.getItem('orderflow_app_template') || 'app-skabelon-1';
+  currentAppTemplate = savedTemplate;
+
+  // Set dropdown value
+  const selector = document.getElementById('app-template-selector');
+  if (selector) {
+    selector.value = savedTemplate;
+  }
+}
+
 // Load Web Builder template
 function loadWebBuilderTemplate(templateId) {
   const template = webBuilderTemplates[templateId];
@@ -26438,14 +27135,34 @@ function loadWebBuilderTemplate(templateId) {
     return;
   }
 
+  // Switch preview iframe source based on template type
+  const previewFile = template.previewFile || './demos/pwa-preview-mario.html';
+  const iframeIds = ['pwa-preview-branding', 'pwa-preview-farver', 'pwa-preview-billeder',
+                     'pwa-preview-timer', 'pwa-preview-kontakt', 'pwa-preview-levering',
+                     'webbuilder-preview-frame'];
+
+  iframeIds.forEach(id => {
+    const iframe = document.getElementById(id);
+    if (iframe) {
+      // Only reload if src is different
+      const currentSrc = iframe.src.split('/').pop();
+      const newSrc = previewFile.split('/').pop();
+      if (currentSrc !== newSrc) {
+        iframe.src = previewFile;
+      }
+    }
+  });
+
   // Merge template with default config
   webBuilderConfig = JSON.parse(JSON.stringify(template));
 
   // Populate form fields
   populateWebBuilderForms();
 
-  // Update preview
-  updateWebBuilderPreview();
+  // Update preview (with small delay to allow iframe to load)
+  setTimeout(() => {
+    updateWebBuilderPreview();
+  }, 100);
 
   toast('Skabelon indlæst: ' + template.branding.name, 'success');
 }
@@ -26564,6 +27281,7 @@ function showWebBuilderPage(section) {
     'menu': 'wb-menu',
     'timer': 'wb-timer',
     'kontakt': 'wb-kontakt',
+    'blog': 'wb-blog',
     'levering': 'wb-levering',
     'funktioner': 'wb-funktioner',
     'social': 'wb-social'
@@ -26637,24 +27355,45 @@ let currentBlogPost = null;
 
 // Flow Pages List
 const flowPagesList = [
+  // Hovedsider
   { slug: 'landing', title: 'Landing Page', description: 'Hovedside med hero og features' },
+  { slug: 'how-it-works', title: 'Sådan virker det', description: 'Produktoversigt' },
+  { slug: 'priser', title: 'Priser', description: 'Prisplaner og pakker' },
+
+  // Produkter
   { slug: 'restaurant-hjemmeside', title: 'Restaurant Hjemmeside', description: 'Produktside for hjemmesider' },
   { slug: 'online-bestilling', title: 'Online Bestilling', description: 'Produktside for bestillingssystem' },
   { slug: 'custom-mobile-app', title: 'Custom Mobile App', description: 'Produktside for mobilapp' },
+  { slug: 'restaurant-mobile-app', title: 'Restaurant Mobile App', description: 'Guide til mobilapps' },
   { slug: 'zero-commission-delivery', title: 'Zero-Commission Delivery', description: 'Produktside for levering' },
   { slug: 'loyalitetsprogram', title: 'Loyalitetsprogram', description: 'Produktside for loyalitet' },
   { slug: 'automatiseret-marketing', title: 'Automatiseret Marketing', description: 'Produktside for marketing' },
+
+  // Guides & Resources
   { slug: 'case-studies', title: 'Case Studies', description: 'Kundehistorier og resultater' },
   { slug: 'seo-for-restauranter', title: 'SEO for Restauranter', description: 'Guide til søgemaskineoptimering' },
   { slug: 'restaurant-email-marketing', title: 'Restaurant Email Marketing', description: 'Guide til email marketing' },
-  { slug: 'restaurant-mobile-app', title: 'Restaurant Mobile App', description: 'Guide til mobilapps' },
+  { slug: 'restaurant-marketing-guide', title: 'Restaurant Marketing Guide', description: 'Komplet marketing guide' },
   { slug: 'online-bestillingssystemer', title: 'Online Bestillingssystemer', description: 'Sammenligning af systemer' },
+
+  // Virksomhed
   { slug: 'om-os', title: 'Om os', description: 'Virksomhedsprofil' },
   { slug: 'karriere', title: 'Karriere', description: 'Jobopslag og kultur' },
   { slug: 'ledelse', title: 'Ledelse', description: 'Ledelseshold' },
   { slug: 'presse', title: 'Presse', description: 'Pressemateriale' },
   { slug: 'partner', title: 'Partner med Flow', description: 'Partnerprogram' },
-  { slug: 'how-it-works', title: 'Sådan virker det', description: 'Produktoversigt' }
+
+  // Support
+  { slug: 'help-center', title: 'Help Center', description: 'Hjælp og support' },
+
+  // Juridisk
+  { slug: 'privacy', title: 'Privatlivspolitik', description: 'Privatlivspolitik' },
+  { slug: 'terms', title: 'Vilkår og betingelser', description: 'Servicevilkår' },
+  { slug: 'cookie-settings', title: 'Cookie indstillinger', description: 'Cookie politik' },
+  { slug: 'accessibility', title: 'Tilgængelighed', description: 'Tilgængelighedserklæring' },
+  { slug: 'disclaimer', title: 'Ansvarsfraskrivelse', description: 'Ansvarsfraskrivelse' },
+  { slug: 'platform-terms', title: 'Platform vilkår', description: 'Platform brugsvilkår' },
+  { slug: 'restaurant-agreement', title: 'Restaurant aftale', description: 'Aftale for restauranter' }
 ];
 
 // Default content for Flow pages (template content that shows before customer edits)
@@ -29112,7 +29851,7 @@ function togglePagePublish() {
 function previewCurrentPage() {
   const page = getCurrentCMSPage();
   if (page) {
-    window.open(page.slug, '_blank');
+    window.open('landing-pages/' + page.slug, '_blank');
   }
 }
 
@@ -29290,7 +30029,7 @@ function previewScheduledChanges(scheduleId) {
   }));
 
   // Open preview with query parameter
-  window.open(page.slug + '?preview=scheduled', '_blank');
+  window.open('landing-pages/' + page.slug + '?preview=scheduled', '_blank');
 }
 
 // Cancel scheduled change
@@ -29416,6 +30155,21 @@ function updateCurrentPageCookieBanner() {
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
   showPage('flow-cms');
+
+  // Update sidebar active state for Flow CMS dropdown
+  const flowDropdown = document.getElementById('nav-flow');
+  if (flowDropdown) {
+    const toggle = flowDropdown.querySelector('.nav-dropdown-toggle');
+    if (toggle) toggle.classList.add('active');
+  }
+
+  // Update dropdown item active state
+  document.querySelectorAll('#nav-flow .nav-dropdown-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  const activeItem = document.querySelector(`#nav-flow .nav-dropdown-item[onclick*="${tab}"]`);
+  if (activeItem) activeItem.classList.add('active');
+
   setTimeout(() => switchFlowCMSTab(tab), 50);
 }
 
@@ -29638,7 +30392,7 @@ function saveFlowPage() {
 // Preview Flow page
 function previewFlowPage() {
   if (currentEditingPage) {
-    window.open(currentEditingPage.slug + '.html', '_blank');
+    window.open('landing-pages/' + currentEditingPage.slug + '.html', '_blank');
   }
 }
 
@@ -29749,6 +30503,12 @@ function loadMarketingData() {
   // Load campaigns
   const savedCampaigns = localStorage.getItem('orderflow_marketing_campaigns');
   marketingCampaigns = savedCampaigns ? JSON.parse(savedCampaigns) : getDefaultCampaigns();
+
+  // Add demo campaigns if enabled
+  if (isDemoDataEnabled()) {
+    const demoCampaigns = getDemoDataCampaigns();
+    marketingCampaigns = [...marketingCampaigns, ...demoCampaigns];
+  }
 
   // Load broadcasts
   const savedBroadcasts = localStorage.getItem('orderflow_marketing_broadcasts');
@@ -30587,8 +31347,14 @@ function applyColorTheme(theme) {
 // Toggle Web Builder Preview Panel
 let webBuilderPreviewVisible = false;
 function toggleWebBuilderPreview() {
-  webBuilderPreviewVisible = !webBuilderPreviewVisible;
-  openWebBuilderPreviewFullscreen();
+  const modal = document.getElementById('wb-preview-modal');
+  if (modal && modal.style.display === 'flex') {
+    closeWbPreviewModal();
+    webBuilderPreviewVisible = false;
+  } else {
+    openWebBuilderPreviewFullscreen();
+    webBuilderPreviewVisible = true;
+  }
 }
 
 // Set all days open
@@ -31002,16 +31768,53 @@ function collectWebBuilderFormData() {
 }
 
 // Save Web Builder config
-function saveWebBuilderConfig() {
+function saveWebBuilderConfig(section) {
   webBuilderConfig = collectWebBuilderFormData();
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(webBuilderConfig));
   toast('Web Builder konfiguration gemt', 'success');
   updateWebBuilderPreview();
 
+  // Send scroll-besked til preview for at vise den relevante sektion
+  if (section) {
+    const sectionMap = {
+      'branding': 'hero',
+      'farver': 'hero',
+      'kontakt': 'ftco-appointment',
+      'timer': 'ftco-intro',
+      'blog': 'ftco-section',
+      'levering': 'ftco-services',
+      'social': 'ftco-footer'
+    };
+    const targetSection = sectionMap[section];
+    if (targetSection) {
+      sendScrollToSection(targetSection);
+    }
+  }
+
   // Vis "✓ Ændringer gemt" på alle aktive save-status spans
   document.querySelectorAll('.wb-save-status').forEach(status => {
     status.style.display = 'block';
     setTimeout(() => status.style.display = 'none', 3000);
+  });
+}
+
+// Send scroll command to preview iframe
+function sendScrollToSection(sectionId) {
+  const frames = [
+    document.getElementById('webbuilder-preview-frame'),
+    document.getElementById('wb-fullscreen-preview-frame')
+  ];
+  frames.forEach(frame => {
+    if (frame?.contentWindow) {
+      try {
+        frame.contentWindow.postMessage({
+          type: 'SCROLL_TO_SECTION',
+          sectionId: sectionId
+        }, '*');
+      } catch (err) {
+        console.warn('Error sending scroll command:', err);
+      }
+    }
   });
 }
 
@@ -31098,9 +31901,12 @@ function initWebBuilderPreview() {
   setTimeout(sendInitialConfig, 500);
 }
 
-// Open the full website in a new tab
+// Open the full website in a new tab - dynamic based on selected template
 function openFullWebsite() {
-  window.open('./Website%20builder/dist/index.html', '_blank');
+  // Åbn desktop-hjemmeside preview for den valgte skabelon
+  // Begge skabeloner (Roma + Mario) bruger samme preview-fil med dynamisk styling
+  const websiteUrl = './demos/pwa-preview-mario.html';
+  window.open(websiteUrl, '_blank');
 }
 
 // Open Web Builder preview in fullscreen modal with device selector
@@ -31196,13 +32002,21 @@ function closeWbPreviewModal() {
   if (modal) modal.style.display = 'none';
 }
 
-// Initialize fullscreen preview
+// Initialize fullscreen preview with retry mechanism
 function initFullscreenPreview() {
-  const iframe = document.getElementById('wb-fullscreen-preview-frame');
-  if (iframe && iframe.contentWindow) {
-    // Send current config to preview
-    updateWebBuilderPreview();
-  }
+  let retries = 0;
+  const maxRetries = 5;
+  const tryUpdate = () => {
+    const iframe = document.getElementById('wb-fullscreen-preview-frame');
+    if (iframe && iframe.contentWindow) {
+      // Send current config to preview
+      updateWebBuilderPreview();
+    } else if (retries < maxRetries) {
+      retries++;
+      setTimeout(tryUpdate, 200);
+    }
+  };
+  tryUpdate();
 }
 
 // Listen for messages from Web Builder preview
@@ -31393,21 +32207,31 @@ function loadCookieSettings() {
   if (savedSettings) {
     const settings = JSON.parse(savedSettings);
 
+    // Display style
+    const displayStyle = settings.displayStyle || 'banner';
+    const styleBanner = document.getElementById('style-banner');
+    const stylePopup = document.getElementById('style-popup');
+    if (styleBanner) styleBanner.checked = displayStyle === 'banner';
+    if (stylePopup) stylePopup.checked = displayStyle === 'popup';
+
+    // Show/hide popup settings based on display style
+    updatePopupSettingsVisibility(displayStyle);
+
+    // Popup settings
+    if (settings.popupSettings) {
+      const companyName = document.getElementById('popup-company-name');
+      const logoUrl = document.getElementById('popup-logo-url');
+      const showAbout = document.getElementById('popup-show-about');
+      if (companyName) companyName.value = settings.popupSettings.companyName || '';
+      if (logoUrl) logoUrl.value = settings.popupSettings.logoUrl || '';
+      if (showAbout) showAbout.checked = settings.popupSettings.showAboutTab !== false;
+    }
+
     // Banner texts
     const bannerTitle = document.getElementById('cookie-banner-title');
     const bannerDesc = document.getElementById('cookie-banner-desc');
     if (bannerTitle) bannerTitle.value = settings.bannerTitle || 'Vi bruger cookies';
     if (bannerDesc) bannerDesc.value = settings.bannerDesc || '';
-
-    // Category descriptions
-    const necessaryDesc = document.getElementById('cookie-necessary-desc');
-    const functionalDesc = document.getElementById('cookie-functional-desc');
-    const analyticsDesc = document.getElementById('cookie-analytics-desc');
-    const marketingDesc = document.getElementById('cookie-marketing-desc');
-    if (necessaryDesc) necessaryDesc.value = settings.necessaryDesc || '';
-    if (functionalDesc) functionalDesc.value = settings.functionalDesc || '';
-    if (analyticsDesc) analyticsDesc.value = settings.analyticsDesc || '';
-    if (marketingDesc) marketingDesc.value = settings.marketingDesc || '';
 
     // Button texts
     const btnAccept = document.getElementById('cookie-btn-accept');
@@ -31423,20 +32247,70 @@ function loadCookieSettings() {
     if (bannerActive) bannerActive.checked = settings.bannerActive !== false;
     if (showDetails) showDetails.checked = settings.showDetails !== false;
   }
+
+  // Load privacy modal settings
+  const savedPrivacySettings = localStorage.getItem('privacyModalSettings');
+  if (savedPrivacySettings) {
+    const privacySettings = JSON.parse(savedPrivacySettings);
+    const privacyModalActive = document.getElementById('privacy-modal-active');
+    if (privacyModalActive) privacyModalActive.checked = privacySettings.enabled !== false;
+  }
+
+  // Load and render privacy categories
+  renderPrivacyCategories();
+
+  // Setup display style change listener
+  setupDisplayStyleListener();
+}
+
+// Update popup settings visibility based on display style
+function updatePopupSettingsVisibility(style) {
+  const popupSettingsCard = document.getElementById('popup-settings-card');
+  if (popupSettingsCard) {
+    popupSettingsCard.style.display = style === 'popup' ? 'block' : 'none';
+  }
+
+  // Update visual selection on options
+  document.querySelectorAll('.display-style-option').forEach(option => {
+    if (option.dataset.style === style) {
+      option.style.borderColor = 'var(--accent)';
+      option.style.background = 'rgba(45, 212, 191, 0.05)';
+    } else {
+      option.style.borderColor = 'var(--border)';
+      option.style.background = 'transparent';
+    }
+  });
+}
+
+// Setup event listener for display style radio buttons
+function setupDisplayStyleListener() {
+  const radios = document.querySelectorAll('input[name="cookie-display-style"]');
+  radios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      updatePopupSettingsVisibility(this.value);
+    });
+  });
 }
 
 // Save cookie consent settings to localStorage
 function saveCookieSettings() {
+  // Get selected display style
+  const displayStyle = document.querySelector('input[name="cookie-display-style"]:checked')?.value || 'banner';
+
   const settings = {
+    // Display style
+    displayStyle: displayStyle,
+
+    // Popup settings
+    popupSettings: {
+      companyName: document.getElementById('popup-company-name')?.value || '',
+      logoUrl: document.getElementById('popup-logo-url')?.value || '',
+      showAboutTab: document.getElementById('popup-show-about')?.checked !== false
+    },
+
     // Banner texts
     bannerTitle: document.getElementById('cookie-banner-title')?.value || 'Vi bruger cookies',
     bannerDesc: document.getElementById('cookie-banner-desc')?.value || '',
-
-    // Category descriptions
-    necessaryDesc: document.getElementById('cookie-necessary-desc')?.value || '',
-    functionalDesc: document.getElementById('cookie-functional-desc')?.value || '',
-    analyticsDesc: document.getElementById('cookie-analytics-desc')?.value || '',
-    marketingDesc: document.getElementById('cookie-marketing-desc')?.value || '',
 
     // Button texts
     btnAccept: document.getElementById('cookie-btn-accept')?.value || 'Accepter alle',
@@ -31451,7 +32325,14 @@ function saveCookieSettings() {
     lastUpdated: new Date().toISOString()
   };
 
+  // Privacy modal settings
+  const privacyModalSettings = {
+    enabled: document.getElementById('privacy-modal-active')?.checked !== false,
+    lastUpdated: new Date().toISOString()
+  };
+
   localStorage.setItem('cookieConsentSettings', JSON.stringify(settings));
+  localStorage.setItem('privacyModalSettings', JSON.stringify(privacyModalSettings));
 
   // Show success message
   const statusEl = document.getElementById('cookie-save-status');
@@ -31463,6 +32344,202 @@ function saveCookieSettings() {
   }
 
   toast('Cookie indstillinger gemt', 'success');
+
+  // Also save privacy categories
+  savePrivacyCategories();
+}
+
+// =====================================================
+// PRIVACY CATEGORIES MANAGEMENT
+// =====================================================
+
+// Default privacy categories (GDPR compliant)
+const DEFAULT_PRIVACY_CATEGORIES = [
+  {
+    id: 'necessary',
+    name: 'Nødvendige',
+    description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt. De sikrer grundlæggende funktioner som sidenavigation og adgang til sikre områder.',
+    required: true,
+    gdprBasis: 'legitimate_interest',
+    order: 0
+  },
+  {
+    id: 'functional',
+    name: 'Funktionelle',
+    description: 'Disse cookies gør det muligt at huske dine præferencer og tilpasse hjemmesiden til dig, f.eks. sprogvalg og region.',
+    required: false,
+    gdprBasis: 'consent',
+    order: 1
+  },
+  {
+    id: 'analytics',
+    name: 'Statistik',
+    description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside ved at indsamle anonyme statistikker.',
+    required: false,
+    gdprBasis: 'consent',
+    order: 2
+  },
+  {
+    id: 'marketing',
+    name: 'Marketing',
+    description: 'Disse cookies bruges til at vise dig relevante annoncer baseret på dine interesser på tværs af hjemmesider.',
+    required: false,
+    gdprBasis: 'consent',
+    order: 3
+  }
+];
+
+// GDPR basis options
+const GDPR_BASIS_OPTIONS = {
+  'consent': 'Samtykke (GDPR Art. 6(1)(a))',
+  'legitimate_interest': 'Legitim interesse (GDPR Art. 6(1)(f))',
+  'contract': 'Kontraktopfyldelse (GDPR Art. 6(1)(b))',
+  'legal_obligation': 'Retlig forpligtelse (GDPR Art. 6(1)(c))'
+};
+
+// Get privacy categories from localStorage or return defaults
+function getPrivacyCategories() {
+  const saved = localStorage.getItem('privacyCategories');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error parsing privacy categories:', e);
+    }
+  }
+  return DEFAULT_PRIVACY_CATEGORIES;
+}
+
+// Save privacy categories to localStorage
+function savePrivacyCategories() {
+  const categories = collectCategoriesFromUI();
+  localStorage.setItem('privacyCategories', JSON.stringify(categories));
+}
+
+// Collect categories from the UI form
+function collectCategoriesFromUI() {
+  const container = document.getElementById('privacy-categories-list');
+  if (!container) return getPrivacyCategories();
+
+  const categoryElements = container.querySelectorAll('[data-category-id]');
+  const categories = [];
+
+  categoryElements.forEach((el, index) => {
+    const id = el.dataset.categoryId;
+    const nameInput = el.querySelector(`[data-field="name"]`);
+    const descInput = el.querySelector(`[data-field="description"]`);
+    const requiredInput = el.querySelector(`[data-field="required"]`);
+    const gdprSelect = el.querySelector(`[data-field="gdprBasis"]`);
+
+    categories.push({
+      id: id,
+      name: nameInput?.value || 'Ny kategori',
+      description: descInput?.value || '',
+      required: requiredInput?.checked || false,
+      gdprBasis: gdprSelect?.value || 'consent',
+      order: index
+    });
+  });
+
+  return categories.length > 0 ? categories : getPrivacyCategories();
+}
+
+// Render privacy categories in the admin UI
+function renderPrivacyCategories() {
+  const container = document.getElementById('privacy-categories-list');
+  if (!container) return;
+
+  const categories = getPrivacyCategories();
+
+  container.innerHTML = categories.map((cat, index) => `
+    <div class="privacy-category-item" data-category-id="${cat.id}" style="background:var(--bg2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="cursor:grab">
+            <circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/>
+            <circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>
+          </svg>
+          <span style="font-weight:600;font-size:14px">${cat.name}</span>
+          ${cat.required ? '<span style="font-size:10px;background:var(--accent);color:white;padding:2px 6px;border-radius:4px;margin-left:4px">Obligatorisk</span>' : ''}
+        </div>
+        ${cat.id !== 'necessary' ? `
+          <button onclick="deletePrivacyCategory('${cat.id}')" style="background:none;border:none;cursor:pointer;color:var(--danger);padding:4px" title="Slet kategori">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+          </button>
+        ` : ''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group" style="margin:0">
+          <label class="form-label" style="font-size:11px">Navn</label>
+          <input type="text" class="input" data-field="name" value="${cat.name}" style="font-size:13px" ${cat.id === 'necessary' ? '' : ''}>
+        </div>
+
+        <div class="form-group" style="margin:0">
+          <label class="form-label" style="font-size:11px">GDPR Grundlag</label>
+          <select class="input" data-field="gdprBasis" style="font-size:13px">
+            ${Object.entries(GDPR_BASIS_OPTIONS).map(([value, label]) =>
+              `<option value="${value}" ${cat.gdprBasis === value ? 'selected' : ''}>${label}</option>`
+            ).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin:12px 0 0 0">
+        <label class="form-label" style="font-size:11px">Beskrivelse</label>
+        <textarea class="input" data-field="description" rows="2" style="font-size:13px">${cat.description}</textarea>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted)">
+          ${cat.required ? 'Brugere kan ikke deaktivere denne kategori' : 'Brugere kan vælge at deaktivere'}
+        </div>
+        <label class="toggle" style="transform:scale(0.85)">
+          <input type="checkbox" data-field="required" ${cat.required ? 'checked' : ''} ${cat.id === 'necessary' ? 'disabled' : ''}>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Add a new privacy category
+function addPrivacyCategory() {
+  const categories = getPrivacyCategories();
+  const newId = 'custom_' + Date.now();
+
+  categories.push({
+    id: newId,
+    name: 'Ny kategori',
+    description: 'Beskriv hvad denne cookie-kategori bruges til...',
+    required: false,
+    gdprBasis: 'consent',
+    order: categories.length
+  });
+
+  localStorage.setItem('privacyCategories', JSON.stringify(categories));
+  renderPrivacyCategories();
+  toast('Ny kategori tilføjet', 'success');
+}
+
+// Delete a privacy category
+function deletePrivacyCategory(categoryId) {
+  if (categoryId === 'necessary') {
+    toast('Nødvendige cookies kan ikke slettes', 'error');
+    return;
+  }
+
+  if (!confirm('Er du sikker på at du vil slette denne kategori?')) return;
+
+  // First save current UI state
+  const categories = collectCategoriesFromUI();
+  const filtered = categories.filter(c => c.id !== categoryId);
+
+  localStorage.setItem('privacyCategories', JSON.stringify(filtered));
+  renderPrivacyCategories();
+  toast('Kategori slettet', 'success');
 }
 
 // ============================================
@@ -31972,5 +33049,5 @@ function updateLandingFooterLinks(colIndex, value) {
 
 // Open Landing Page preview
 function openLandingPreview() {
-  window.open('Website builder/dist/index.html', 'landingPreview', 'width=1200,height=800');
+  window.open('website-builder/dist/index.html', 'landingPreview', 'width=1200,height=800');
 }
