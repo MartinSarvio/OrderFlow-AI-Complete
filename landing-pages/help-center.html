@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow Hjælp Center</title>
+  <meta name="description" content="Flow Hjælp Center - Find svar på dine spørgsmål">
+  <link rel="icon" href="../images/FLOW-logo-hvid-4K.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --body-bg: rgb(255, 255, 255);
+      --body-bg-rgb: 255, 255, 255;
+      --body-border: rgb(230, 230, 230);
+      --body-primary-color: #1a1a1a;
+      --body-secondary-color: #737373;
+      --card-bg: rgb(255, 255, 255);
+      --card-border-color: rgb(230, 230, 230);
+      --card-border-radius: 21px;
+      --card-border-inner-radius: 16px;
+      --card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --header-color: hsl(173, 16%, 11%);
+      --primary-color: #2dd4bf;
+      --primary-color-alpha-10: rgba(45, 212, 191, 0.1);
+      --primary-color-alpha-60: rgba(45, 212, 191, 0.6);
+      --footer-bg: rgb(255, 255, 255);
+      --footer-border: rgb(230, 230, 230);
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--body-primary-color);
+      background: var(--body-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Header with background image */
+    .header {
+      display: flex;
+      flex-direction: column;
+      color: var(--header-color);
+    }
+
+    .header-bg {
+      position: relative;
+      display: flex;
+      flex-grow: 1;
+      flex-direction: column;
+      background: radial-gradient(333.38% 100% at 50% 0%,
+        rgba(var(--body-bg-rgb), 0) 0%,
+        rgba(var(--body-bg-rgb), 0.01) 11.67%,
+        rgba(var(--body-bg-rgb), 0.03) 21.17%,
+        rgba(var(--body-bg-rgb), 0.07) 28.85%,
+        rgba(var(--body-bg-rgb), 0.12) 35.03%,
+        rgba(var(--body-bg-rgb), 0.18) 40.05%,
+        rgba(var(--body-bg-rgb), 0.25) 44.25%,
+        rgba(var(--body-bg-rgb), 0.33) 47.96%,
+        rgba(var(--body-bg-rgb), 0.41) 51.51%,
+        rgba(var(--body-bg-rgb), 0.50) 55.23%,
+        rgba(var(--body-bg-rgb), 0.58) 59.47%,
+        rgba(var(--body-bg-rgb), 0.67) 64.55%,
+        rgba(var(--body-bg-rgb), 0.76) 70.81%,
+        rgba(var(--body-bg-rgb), 0.84) 78.58%,
+        rgba(var(--body-bg-rgb), 0.96) 88.2%,
+        rgba(var(--body-bg-rgb), 1) 100%
+      ),
+      url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=600&fit=crop');
+      background-size: cover;
+      background-position: center;
+      margin-bottom: -144px;
+      padding-bottom: 192px;
+      min-height: 560px;
+    }
+
+    /* Top bar with logo and login */
+    .header-top {
+      display: flex;
+      justify-content: center;
+      padding: 24px 40px;
+    }
+
+    .header-top-inner {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .header-logo {
+      flex: 1;
+    }
+
+    .header-logo a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--header-color);
+    }
+
+    .header-logo img {
+      height: 40px;
+      width: auto;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .header-nav a {
+      color: #ffffff;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+
+    .header-nav a:hover {
+      opacity: 1;
+    }
+
+    /* Main header content */
+    .header-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 40px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    .header-main {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .header-title {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--header-color);
+    }
+
+    /* Search bar */
+    .search-bar {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 16px 16px 48px;
+      font-size: 18px;
+      font-family: inherit;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--header-color);
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-input::placeholder {
+      color: var(--header-color);
+      opacity: 0.7;
+    }
+
+    .search-input:hover {
+      background: rgba(255, 255, 255, 0.27);
+    }
+
+    .search-input:focus {
+      background: white;
+      color: #1a1a1a;
+      border-color: transparent;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-input:focus::placeholder {
+      color: #737373;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      fill: var(--header-color);
+      pointer-events: none;
+      transition: fill 0.2s;
+    }
+
+    .search-input:focus ~ .search-icon {
+      fill: #737373;
+    }
+
+    /* Main content area */
+    .main-content {
+      display: flex;
+      justify-content: center;
+      padding: 0 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .content-wrapper {
+      width: 100%;
+      max-width: 960px;
+    }
+
+    /* Articles section */
+    .articles-section {
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--card-border-radius);
+      border: 1px solid var(--card-border-color);
+      background: var(--card-bg);
+      padding: 8px 12px;
+      margin-bottom: 48px;
+    }
+
+    .articles-header {
+      font-size: 20px;
+      font-weight: 700;
+      padding: 8px 12px 16px;
+      color: var(--body-primary-color);
+    }
+
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px 24px;
+    }
+
+    .article-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: var(--card-border-inner-radius);
+      transition: all 0.25s ease;
+    }
+
+    .article-link:hover {
+      background: var(--primary-color-alpha-10);
+    }
+
+    .article-link span {
+      font-size: 15px;
+      color: var(--body-primary-color);
+      transition: color 0.25s ease;
+    }
+
+    .article-link:hover span {
+      color: var(--primary-color);
+    }
+
+    .article-link svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--primary-color);
+      transform: rotate(-90deg);
+      flex-shrink: 0;
+    }
+
+    /* Collections grid */
+    .collections-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px 24px;
+      margin-bottom: 96px;
+    }
+
+    .collection-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 24px;
+      border: 1px solid var(--card-border-color);
+      border-radius: var(--card-border-radius);
+      background: var(--card-bg);
+      box-shadow: var(--card-shadow);
+      transition: all 0.25s ease;
+    }
+
+    .collection-card:hover {
+      border-color: var(--primary-color-alpha-60);
+    }
+
+    .collection-icon {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      border-radius: var(--card-border-radius);
+      flex-shrink: 0;
+    }
+
+    .collection-icon img {
+      width: 28px;
+      height: 28px;
+    }
+
+    .collection-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .collection-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--body-primary-color);
+      transition: color 0.25s ease;
+    }
+
+    .collection-card:hover .collection-name {
+      color: var(--primary-color);
+    }
+
+    .collection-count {
+      font-size: 14px;
+      color: var(--body-secondary-color);
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 96px;
+      padding: 48px 40px;
+      background: var(--footer-bg);
+      text-align: center;
+    }
+
+    .footer-logo {
+      margin-bottom: 12px;
+    }
+
+    .footer-logo img {
+      height: 32px;
+      display: inline-block;
+      filter: contrast(0.8);
+    }
+
+    .footer-contact {
+      font-size: 14px;
+      color: var(--body-primary-color);
+    }
+
+    .footer-contact a {
+      color: var(--primary-color);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-bg {
+        min-height: 480px;
+      }
+
+      .header-title {
+        font-size: 28px;
+      }
+
+      .articles-grid,
+      .collections-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header-nav {
+        display: none;
+      }
+
+      .main-content {
+        padding: 0 20px;
+      }
+
+      .header-top,
+      .header-content {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-bg">
+        <section class="header-top">
+          <div class="header-top-inner">
+            <div class="header-logo">
+              <a href="landing.html">
+                <img src="../images/FLOW-logo-hvid-4K.png" alt="Flow Hjælp Center">
+              </a>
+            </div>
+            <nav class="header-nav">
+              <a href="index.html">Login til Flow Dashboard</a>
+            </nav>
+          </div>
+        </section>
+
+        <section class="header-content">
+          <div class="header-main">
+            <h1 class="header-title">Hvordan kan vi hjælpe?</h1>
+            <div class="search-bar">
+              <input type="text" class="search-input" placeholder="Søg efter artikler..." id="searchInput">
+              <svg class="search-icon" viewBox="0 0 22 21" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.27485 8.7001C3.27485 5.42781 5.92757 2.7751 9.19985 2.7751C12.4721 2.7751 15.1249 5.42781 15.1249 8.7001C15.1249 11.9724 12.4721 14.6251 9.19985 14.6251C5.92757 14.6251 3.27485 11.9724 3.27485 8.7001ZM9.19985 0.225098C4.51924 0.225098 0.724854 4.01948 0.724854 8.7001C0.724854 13.3807 4.51924 17.1751 9.19985 17.1751C11.0802 17.1751 12.8176 16.5627 14.2234 15.5265L19.0981 20.4013C19.5961 20.8992 20.4033 20.8992 20.9013 20.4013C21.3992 19.9033 21.3992 19.0961 20.9013 18.5981L16.0264 13.7233C17.0625 12.3176 17.6749 10.5804 17.6749 8.7001C17.6749 4.01948 13.8805 0.225098 9.19985 0.225098Z"/>
+              </svg>
+            </div>
+          </div>
+        </section>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <section class="content-wrapper">
+        <!-- Most viewed articles -->
+        <section class="articles-section">
+          <header class="articles-header">Mest sete artikler</header>
+          <div class="articles-grid">
+            <a href="#" class="article-link">
+              <span>Hvordan kontakter jeg Flow support?</span>
+              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </a>
+            <a href="#" class="article-link">
+              <span>Hvordan opretter jeg en rabatkode?</span>
+              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </a>
+            <a href="#" class="article-link">
+              <span>Hvordan importerer jeg min kundeliste?</span>
+              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+            </a>
+          </div>
+        </section>
+
+        <!-- Collections grid -->
+        <div class="collections-grid">
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:other-home/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Generelt</div>
+              <div class="collection-count">3 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-wallet/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Gavekort, Kuponer & Loyalitet</div>
+              <div class="collection-count">9 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:content-book-open/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Menu & Åbningstider</div>
+              <div class="collection-count">24 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:people-chat-gets-device-tablet/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Hardware & Fejlfinding</div>
+              <div class="collection-count">3 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-window/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Hjemmeside</div>
+              <div class="collection-count">13 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-banknotes/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Økonomi / Fakturering / Rapporter</div>
+              <div class="collection-count">7 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:arr-sym-shopping-cart/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Ordrer / Levering</div>
+              <div class="collection-count">12 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:communication-paper-airplane/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Marketing</div>
+              <div class="collection-count">5 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-window/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Dashboard</div>
+              <div class="collection-count">12 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:other-devices-device-phone-mobile/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Mobile App</div>
+              <div class="collection-count">1 artikel</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-building-storefront/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Flow App</div>
+              <div class="collection-count">6 artikler</div>
+            </div>
+          </a>
+
+          <a href="#" class="collection-card">
+            <div class="collection-icon">
+              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-wifi/000000" alt="">
+            </div>
+            <div class="collection-info">
+              <div class="collection-name">Integrationer</div>
+              <div class="collection-count">2 artikler</div>
+            </div>
+          </a>
+        </div>
+      </section>
+    </div>
+
+  </main>
+</body>
+</html>

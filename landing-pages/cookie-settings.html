@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie-indstillinger - Flow</title>
+  <meta name="description" content="Læs om hvordan Flow bruger cookies og administrer dine cookie-præferencer for en optimal brugeroplevelse.">
+  <meta property="og:title" content="Cookie-indstillinger - Flow">
+  <meta property="og:description" content="Læs om hvordan Flow bruger cookies og administrer dine cookie-præferencer for en optimal brugeroplevelse.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
+      --container-huge: 1400px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overscroll-behavior: none; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 3.2rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+
+    /* Legal Page Layout with Sidebar */
+    .legal-page { display: flex; max-width: 120rem; margin: 0 auto; padding: 12rem 4rem 8rem; gap: 6rem; }
+    .legal-sidebar { width: 24rem; flex-shrink: 0; position: sticky; top: 10rem; height: fit-content; }
+    .legal-nav { list-style: none; padding: 0; margin: 0; }
+    .legal-nav li { margin-bottom: 0.8rem; }
+    .legal-nav a { display: block; font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; transition: color 0.2s; border-bottom: 1px solid transparent; }
+    .legal-nav a:hover { color: var(--color-primary); }
+    .legal-nav a.active { color: var(--color-primary); font-weight: 600; }
+    .legal-content { flex: 1; max-width: 80rem; }
+
+    .legal-header { margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-gray-200); }
+    .legal-header h1 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .legal-header .last-updated { font-size: 1.4rem; color: var(--color-gray-500); }
+    .legal-body h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-top: 4rem; margin-bottom: 1.6rem; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-top: 3rem; margin-bottom: 1.2rem; }
+    .legal-body p { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 1.6rem; }
+    .legal-body ul, .legal-body ol { margin-left: 2rem; margin-bottom: 1.6rem; list-style: disc; }
+    .legal-body ol { list-style: decimal; }
+    .legal-body li { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 0.8rem; }
+    .legal-body a { color: var(--color-primary); text-decoration: underline; }
+    .legal-body a:hover { color: var(--color-primary-hover); }
+    .legal-body table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
+    .legal-body th, .legal-body td { padding: 1.2rem; text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: 1.5rem; }
+    .legal-body th { font-weight: 600; color: var(--color-dark); background: var(--color-gray-50); }
+    .legal-body td { color: var(--color-gray-600); }
+
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 968px) {
+      .legal-page { flex-direction: column; padding: 10rem 2rem 6rem; gap: 3rem; }
+      .legal-sidebar { width: 100%; position: static; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 2rem; }
+      .legal-nav { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .legal-nav li { margin-bottom: 0; }
+      .legal-nav a { padding: 0.6rem 1.2rem; background: var(--color-gray-50); border-radius: 0.6rem; font-size: 1.4rem; }
+      .legal-nav a.active { background: var(--color-primary); color: white; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-container { padding: 1.2rem 2rem; }
+      .legal-header h1 { font-size: 3.2rem; }
+      .footer { padding: 4rem 2rem 2rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1.6rem; text-align: center; }
+      .footer-legal { flex-wrap: wrap; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-content { grid-template-columns: 1fr; }
+      .legal-header h1 { font-size: 2.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo"><img src="../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
+          <div class="nav-links">
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
+                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
+                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
+                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
+                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
+                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
+            </div>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
+                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
+                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
+                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
+                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+            </div>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
+                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
+                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
+                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
+                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <a href="index.html" class="nav-login">Login</a>
+          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="legal-page">
+      <aside class="legal-sidebar">
+        <ul class="legal-nav">
+          <li><a href="privacy.html">Privatlivspolitik</a></li>
+          <li><a href="cookie-settings.html" class="active">Cookie-indstillinger</a></li>
+          <li><a href="terms.html">Vilkår og betingelser</a></li>
+          <li><a href="disclaimer.html">Ansvarsfraskrivelse</a></li>
+          <li><a href="restaurant-agreement.html">Restaurant Aftale</a></li>
+          <li><a href="platform-terms.html">Platform Vilkår</a></li>
+          <li><a href="accessibility.html">Tilgængelighed</a></li>
+        </ul>
+      </aside>
+
+      <article class="legal-content">
+        <div class="legal-header">
+          <h1>Cookie-indstillinger</h1>
+          <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
+        </div>
+
+        <div class="legal-body">
+          <h2>1. Hvad er cookies?</h2>
+          <p>Cookies er små tekstfiler, der gemmes på din enhed (computer, tablet, smartphone eller anden enhed med internetadgang), når du besøger en hjemmeside. Cookies gør det muligt for hjemmesiden at genkende din enhed og huske oplysninger om dit besøg, såsom dine præferencer og handlinger.</p>
+          <p>Cookies kan være "førstepartscookies" (sat af den hjemmeside, du besøger) eller "tredjepartscookies" (sat af andre domæner end den hjemmeside, du besøger). De kan også være "sessionscookies" (som slettes, når du lukker browseren) eller "vedvarende cookies" (som forbliver på din enhed i en bestemt periode eller indtil du sletter dem).</p>
+          <p>Udover cookies bruger vi også lignende teknologier som web beacons (også kaldet tracking pixels), local storage og fingerprinting-teknologier til visse formål.</p>
+
+          <h2>2. Hvorfor bruger vi cookies?</h2>
+          <p>Flow bruger cookies og lignende teknologier til følgende overordnede formål:</p>
+          <ul>
+            <li><strong>Sikkerhed og drift:</strong> For at sikre vores platformens sikkerhed og korrekte funktion</li>
+            <li><strong>Funktionalitet:</strong> For at huske dine præferencer og forbedre din brugeroplevelse</li>
+            <li><strong>Analyse og forbedring:</strong> For at forstå, hvordan vores platform bruges, og kontinuerligt forbedre den</li>
+            <li><strong>Markedsføring:</strong> For at levere relevante annoncer og måle effektiviteten af vores markedsføringsaktiviteter</li>
+          </ul>
+
+          <h2>3. Kategorier af cookies vi bruger</h2>
+          <p>Vi inddeler vores cookies i følgende kategorier baseret på deres formål:</p>
+
+          <h3>3.1 Strengt nødvendige cookies</h3>
+          <p>Disse cookies er essentielle for at hjemmesiden kan fungere korrekt. De muliggør kernefunktionalitet som sidenavigation, adgang til sikre områder og grundlæggende sikkerhedsfunktioner. Hjemmesiden kan ikke fungere ordentligt uden disse cookies, og de kan derfor ikke deaktiveres.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cookie navn</th>
+                <th>Formål</th>
+                <th>Varighed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>flow_session</td>
+                <td>Opretholder din session og login-status</td>
+                <td>Session</td>
+              </tr>
+              <tr>
+                <td>flow_csrf</td>
+                <td>Beskytter mod cross-site request forgery angreb</td>
+                <td>Session</td>
+              </tr>
+              <tr>
+                <td>cookie_consent</td>
+                <td>Gemmer dine cookie-præferencer</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>flow_security</td>
+                <td>Sikkerhedstoken til beskyttelse af din konto</td>
+                <td>Session</td>
+              </tr>
+              <tr>
+                <td>flow_2fa</td>
+                <td>Husker to-faktor autentificering på betroede enheder</td>
+                <td>30 dage</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>3.2 Funktionelle cookies (præferencer)</h3>
+          <p>Disse cookies gør det muligt for hjemmesiden at huske valg, du har foretaget, og levere forbedrede, mere personlige funktioner. De kan bruges til at huske ændringer, du har foretaget i tekststørrelse, skrifttyper og andre tilpasningsbare dele af websider.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cookie navn</th>
+                <th>Formål</th>
+                <th>Varighed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>flow_lang</td>
+                <td>Husker dit foretrukne sprog</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>flow_timezone</td>
+                <td>Gemmer din tidszone for korrekt visning af tider</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>flow_dashboard_layout</td>
+                <td>Husker dine dashboard-præferencer</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>flow_notifications</td>
+                <td>Gemmer dine notifikationsindstillinger</td>
+                <td>6 måneder</td>
+              </tr>
+              <tr>
+                <td>flow_recent_restaurants</td>
+                <td>Husker nyligt besøgte restauranter</td>
+                <td>30 dage</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>3.3 Analyse- og statistikcookies</h3>
+          <p>Disse cookies hjælper os med at forstå, hvordan besøgende interagerer med vores hjemmeside ved at indsamle og rapportere information. De giver os indsigt i brugeradfærd, så vi kan forbedre vores platform.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cookie navn</th>
+                <th>Udbyder</th>
+                <th>Formål</th>
+                <th>Varighed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>_ga</td>
+                <td>Google Analytics</td>
+                <td>Skelner mellem unikke brugere</td>
+                <td>2 år</td>
+              </tr>
+              <tr>
+                <td>_ga_*</td>
+                <td>Google Analytics 4</td>
+                <td>Opretholder sessionstilstand</td>
+                <td>2 år</td>
+              </tr>
+              <tr>
+                <td>_gid</td>
+                <td>Google Analytics</td>
+                <td>Skelner mellem brugere i en 24-timers periode</td>
+                <td>24 timer</td>
+              </tr>
+              <tr>
+                <td>_gat</td>
+                <td>Google Analytics</td>
+                <td>Begrænser antallet af anmodninger</td>
+                <td>1 minut</td>
+              </tr>
+              <tr>
+                <td>mp_*</td>
+                <td>Mixpanel</td>
+                <td>Sporer brugerinteraktioner og events</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>_hjSessionUser_*</td>
+                <td>Hotjar</td>
+                <td>Identificerer unikke besøgende</td>
+                <td>1 år</td>
+              </tr>
+              <tr>
+                <td>_hjSession_*</td>
+                <td>Hotjar</td>
+                <td>Opretholder session for heatmaps</td>
+                <td>30 minutter</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>3.4 Markedsføringscookies</h3>
+          <p>Disse cookies bruges til at spore besøgende på tværs af hjemmesider. Formålet er at vise annoncer, der er relevante og engagerende for den enkelte bruger, og dermed mere værdifulde for annoncører og tredjepartsudgivere.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Cookie navn</th>
+                <th>Udbyder</th>
+                <th>Formål</th>
+                <th>Varighed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>_fbp</td>
+                <td>Facebook</td>
+                <td>Brugt af Facebook til at levere målrettede annoncer</td>
+                <td>3 måneder</td>
+              </tr>
+              <tr>
+                <td>_fbc</td>
+                <td>Facebook</td>
+                <td>Gemmer klik-ID fra Facebook-annoncer</td>
+                <td>2 år</td>
+              </tr>
+              <tr>
+                <td>_gcl_au</td>
+                <td>Google Ads</td>
+                <td>Bruges til konverteringsmåling</td>
+                <td>3 måneder</td>
+              </tr>
+              <tr>
+                <td>_gcl_aw</td>
+                <td>Google Ads</td>
+                <td>Gemmer klik-ID fra Google Ads</td>
+                <td>3 måneder</td>
+              </tr>
+              <tr>
+                <td>li_fat_id</td>
+                <td>LinkedIn</td>
+                <td>Bruges til LinkedIn Insight Tag</td>
+                <td>30 dage</td>
+              </tr>
+              <tr>
+                <td>_pin_unauth</td>
+                <td>Pinterest</td>
+                <td>Bruges til Pinterest-konverteringsmåling</td>
+                <td>1 år</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2>4. Tredjeparter og deres cookies</h2>
+          <p>Vi samarbejder med flere tredjepartstjenesteudbydere, som kan sætte cookies på din enhed. Her er en oversigt over de vigtigste tredjeparter:</p>
+
+          <h3>4.1 Google (Analytics og Ads)</h3>
+          <p>Vi bruger Google Analytics til at analysere brugen af vores hjemmeside og Google Ads til annoncering. Google kan kombinere de indsamlede oplysninger med data fra andre tjenester.</p>
+          <ul>
+            <li>Privatlivspolitik: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></li>
+            <li>Opt-out tilføjelse: <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener">tools.google.com/dlpage/gaoptout</a></li>
+          </ul>
+
+          <h3>4.2 Meta (Facebook og Instagram)</h3>
+          <p>Vi bruger Facebook Pixel til at måle effektiviteten af vores annoncer på Facebook og Instagram og til at vise dig relevante annoncer.</p>
+          <ul>
+            <li>Datapolitik: <a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener">facebook.com/privacy/policy</a></li>
+            <li>Annonceindstillinger: <a href="https://www.facebook.com/ads/preferences" target="_blank" rel="noopener">facebook.com/ads/preferences</a></li>
+          </ul>
+
+          <h3>4.3 Hotjar</h3>
+          <p>Vi bruger Hotjar til at forstå brugeradfærd gennem heatmaps, session-optagelser og feedback-værktøjer.</p>
+          <ul>
+            <li>Privatlivspolitik: <a href="https://www.hotjar.com/legal/policies/privacy/" target="_blank" rel="noopener">hotjar.com/legal/policies/privacy</a></li>
+            <li>Opt-out: <a href="https://www.hotjar.com/legal/compliance/opt-out" target="_blank" rel="noopener">hotjar.com/legal/compliance/opt-out</a></li>
+          </ul>
+
+          <h3>4.4 Stripe</h3>
+          <p>Vi bruger Stripe til betalingsbehandling. Stripe kan sætte cookies til at forebygge svindel og forbedre deres tjenester.</p>
+          <ul>
+            <li>Privatlivspolitik: <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a></li>
+          </ul>
+
+          <h2>5. Sådan administrerer du dine cookie-præferencer</h2>
+          <p>Du har flere muligheder for at kontrollere, hvilke cookies der gemmes på din enhed:</p>
+
+          <h3>5.1 Via vores cookie-banner</h3>
+          <p>Når du besøger vores hjemmeside første gang, vises et cookie-banner, hvor du kan acceptere eller afvise forskellige kategorier af cookies. Du kan til enhver tid ændre dine valg ved at klikke på "Cookie-indstillinger" i bunden af vores hjemmeside.</p>
+
+          <h3>5.2 Via din browser</h3>
+          <p>De fleste browsere giver dig mulighed for at kontrollere cookies via deres indstillinger. Her er links til vejledninger for de mest populære browsere:</p>
+          <ul>
+            <li><strong>Google Chrome:</strong> <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener">support.google.com/chrome/answer/95647</a></li>
+            <li><strong>Mozilla Firefox:</strong> <a href="https://support.mozilla.org/da/kb/ryd-cookies-og-data-fra-websteder" target="_blank" rel="noopener">support.mozilla.org</a></li>
+            <li><strong>Safari:</strong> <a href="https://support.apple.com/da-dk/guide/safari/sfri11471/mac" target="_blank" rel="noopener">support.apple.com</a></li>
+            <li><strong>Microsoft Edge:</strong> <a href="https://support.microsoft.com/da-dk/microsoft-edge/slet-cookies-i-microsoft-edge" target="_blank" rel="noopener">support.microsoft.com</a></li>
+          </ul>
+
+          <h3>5.3 Via opt-out værktøjer</h3>
+          <p>Du kan også bruge følgende værktøjer til at fravælge visse typer af sporing:</p>
+          <ul>
+            <li><strong>Your Online Choices:</strong> <a href="https://www.youronlinechoices.eu/" target="_blank" rel="noopener">youronlinechoices.eu</a></li>
+            <li><strong>Network Advertising Initiative:</strong> <a href="https://optout.networkadvertising.org/" target="_blank" rel="noopener">optout.networkadvertising.org</a></li>
+            <li><strong>Digital Advertising Alliance:</strong> <a href="https://optout.aboutads.info/" target="_blank" rel="noopener">optout.aboutads.info</a></li>
+          </ul>
+
+          <h3>5.4 Do Not Track</h3>
+          <p>Nogle browsere har en "Do Not Track" (DNT) funktion, der signalerer til hjemmesider, at du ikke ønsker at blive sporet. Da der ikke er nogen ensartet standard for, hvordan hjemmesider skal reagere på DNT-signaler, svarer vores hjemmeside i øjeblikket ikke på DNT-signaler.</p>
+
+          <h2>6. Konsekvenser ved at afvise cookies</h2>
+          <p>Hvis du vælger at blokere eller slette cookies, kan det påvirke din oplevelse på vores hjemmeside:</p>
+          <ul>
+            <li><strong>Strengt nødvendige cookies:</strong> Kan ikke deaktiveres – hjemmesiden fungerer ikke uden dem</li>
+            <li><strong>Funktionelle cookies:</strong> Dine præferencer og indstillinger huskes ikke mellem besøg</li>
+            <li><strong>Analysecookies:</strong> Vi kan ikke forbedre hjemmesiden baseret på brugerdata</li>
+            <li><strong>Markedsføringscookies:</strong> Du vil stadig se annoncer, men de vil være mindre relevante</li>
+          </ul>
+
+          <h2>7. Cookies på Flow-restauranters hjemmesider</h2>
+          <p>Når slutbrugere besøger hjemmesider eller apps oprettet via Flow-platformen for restauranter, kan der også blive sat cookies. Disse kan inkludere:</p>
+          <ul>
+            <li>Flows tekniske cookies til bestillingsfunktionalitet</li>
+            <li>Restaurantens egne analysecookies (hvis aktiveret)</li>
+            <li>Betalingsudbyderens cookies (ved checkout)</li>
+          </ul>
+          <p>Den enkelte restaurant er dataansvarlig for cookies sat på deres hjemmeside og bør have deres egen cookie-politik.</p>
+
+          <h2>8. Opbevaring og sletning af cookies</h2>
+          <p>Cookies opbevares i forskellige perioder afhængigt af deres type og formål:</p>
+          <ul>
+            <li><strong>Sessionscookies:</strong> Slettes automatisk, når du lukker din browser</li>
+            <li><strong>Vedvarende cookies:</strong> Opbevares i den periode, der er angivet i tabellerne ovenfor (typisk fra 1 minut til 2 år)</li>
+          </ul>
+          <p>Du kan til enhver tid slette cookies manuelt via din browsers indstillinger.</p>
+
+          <h2>9. Ændringer til denne cookie-politik</h2>
+          <p>Vi kan opdatere denne cookie-politik fra tid til anden for at afspejle ændringer i de cookies, vi bruger, eller af andre operationelle, juridiske eller regulatoriske årsager. Vi opfordrer dig til regelmæssigt at gennemgå denne politik for at holde dig informeret om vores brug af cookies.</p>
+          <p>Ved væsentlige ændringer vil vi opdatere "Sidst opdateret"-datoen øverst på denne side.</p>
+
+          <h2>10. Kontakt os</h2>
+          <p>Hvis du har spørgsmål om vores brug af cookies eller ønsker at udøve dine rettigheder i henhold til databeskyttelseslovgivningen, er du velkommen til at kontakte os:</p>
+          <ul>
+            <li><strong>E-mail:</strong> <a href="mailto:privacy@flow.dk">privacy@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+            <li><strong>Post:</strong> Flow ApS, Att: Privatlivsteamet, Vestergade 1, 1456 København K</li>
+          </ul>
+          <p>For mere information om, hvordan vi behandler dine personoplysninger generelt, se venligst vores <a href="privacy.html">Privatlivspolitik</a>.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="cookie-settings.html">Cookie Settings</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Website Terms</a>
+          <a href="disclaimer.html">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
+    });
+  </script>
+</body>
+</html>

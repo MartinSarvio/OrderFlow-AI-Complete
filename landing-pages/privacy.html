@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privatlivspolitik - Flow</title>
+  <meta name="description" content="Læs om hvordan Flow behandler dine personoplysninger i overensstemmelse med GDPR og databeskyttelsesforordningen.">
+  <meta property="og:title" content="Privatlivspolitik - Flow">
+  <meta property="og:description" content="Læs om hvordan Flow behandler dine personoplysninger i overensstemmelse med GDPR og databeskyttelsesforordningen.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
+      --container-huge: 1400px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overscroll-behavior: none; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 3.2rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+
+    /* Legal Page Layout with Sidebar */
+    .legal-page { display: flex; max-width: 120rem; margin: 0 auto; padding: 12rem 4rem 8rem; gap: 6rem; }
+    .legal-sidebar { width: 24rem; flex-shrink: 0; position: sticky; top: 10rem; height: fit-content; }
+    .legal-nav { list-style: none; padding: 0; margin: 0; }
+    .legal-nav li { margin-bottom: 0.8rem; }
+    .legal-nav a { display: block; font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; transition: color 0.2s; border-bottom: 1px solid transparent; }
+    .legal-nav a:hover { color: var(--color-primary); }
+    .legal-nav a.active { color: var(--color-primary); font-weight: 600; }
+    .legal-content { flex: 1; max-width: 80rem; }
+
+    .legal-header { margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-gray-200); }
+    .legal-header h1 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .legal-header .last-updated { font-size: 1.4rem; color: var(--color-gray-500); }
+    .legal-body h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-top: 4rem; margin-bottom: 1.6rem; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-top: 3rem; margin-bottom: 1.2rem; }
+    .legal-body p { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 1.6rem; }
+    .legal-body ul, .legal-body ol { margin-left: 2rem; margin-bottom: 1.6rem; list-style: disc; }
+    .legal-body ol { list-style: decimal; }
+    .legal-body li { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 0.8rem; }
+    .legal-body a { color: var(--color-primary); text-decoration: underline; }
+    .legal-body a:hover { color: var(--color-primary-hover); }
+    .legal-body table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
+    .legal-body th, .legal-body td { padding: 1.2rem; text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: 1.5rem; }
+    .legal-body th { font-weight: 600; color: var(--color-dark); background: var(--color-gray-50); }
+    .legal-body td { color: var(--color-gray-600); }
+
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 968px) {
+      .legal-page { flex-direction: column; padding: 10rem 2rem 6rem; gap: 3rem; }
+      .legal-sidebar { width: 100%; position: static; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 2rem; }
+      .legal-nav { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .legal-nav li { margin-bottom: 0; }
+      .legal-nav a { padding: 0.6rem 1.2rem; background: var(--color-gray-50); border-radius: 0.6rem; font-size: 1.4rem; }
+      .legal-nav a.active { background: var(--color-primary); color: white; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-container { padding: 1.2rem 2rem; }
+      .legal-header h1 { font-size: 3.2rem; }
+      .footer { padding: 4rem 2rem 2rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1.6rem; text-align: center; }
+      .footer-legal { flex-wrap: wrap; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-content { grid-template-columns: 1fr; }
+      .legal-header h1 { font-size: 2.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo"><img src="../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
+          <div class="nav-links">
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
+                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
+                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
+                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
+                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
+                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
+            </div>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
+                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
+                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
+                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
+                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+            </div>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
+                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
+                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
+                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
+                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <a href="index.html" class="nav-login">Login</a>
+          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="legal-page">
+      <aside class="legal-sidebar">
+        <ul class="legal-nav">
+          <li><a href="privacy.html" class="active">Privatlivspolitik</a></li>
+          <li><a href="cookie-settings.html">Cookie-indstillinger</a></li>
+          <li><a href="terms.html">Vilkår og betingelser</a></li>
+          <li><a href="disclaimer.html">Ansvarsfraskrivelse</a></li>
+          <li><a href="restaurant-agreement.html">Restaurant Aftale</a></li>
+          <li><a href="platform-terms.html">Platform Vilkår</a></li>
+          <li><a href="accessibility.html">Tilgængelighed</a></li>
+        </ul>
+      </aside>
+
+      <article class="legal-content">
+        <div class="legal-header">
+          <h1>Privatlivspolitik</h1>
+          <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
+        </div>
+
+        <div class="legal-body">
+          <h2>1. Introduktion og formål</h2>
+          <p>Hos Flow ApS ("Flow", "vi", "os", "vores") er beskyttelsen af dine personoplysninger af højeste prioritet. Denne privatlivspolitik forklarer detaljeret, hvordan vi indsamler, behandler, opbevarer og beskytter personoplysninger, når du besøger vores hjemmeside, bruger vores restaurantautomatiseringsplatform, eller på anden måde interagerer med vores tjenester.</p>
+          <p>Flow leverer en omfattende digital platform til restauranter, der inkluderer online bestillingssystemer, hjemmesideløsninger, mobile apps, loyalitetsprogrammer og automatiseret marketing. I forbindelse med disse tjenester behandler vi personoplysninger fra både restaurantejere (vores direkte kunder) og slutbrugere (restauranternes kunder).</p>
+          <p>Denne politik er udformet i overensstemmelse med EU's Generelle Databeskyttelsesforordning (GDPR), den danske databeskyttelseslov og øvrig relevant lovgivning.</p>
+
+          <h2>2. Dataansvarlig og kontaktoplysninger</h2>
+          <p>Flow ApS er dataansvarlig for behandlingen af de personoplysninger, vi indsamler direkte fra dig:</p>
+          <ul>
+            <li><strong>Virksomhedsnavn:</strong> Flow ApS</li>
+            <li><strong>CVR-nummer:</strong> 12345678</li>
+            <li><strong>Adresse:</strong> Vestergade 1, 1456 København K, Danmark</li>
+            <li><strong>E-mail:</strong> <a href="mailto:privacy@flow.dk">privacy@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+            <li><strong>Databeskyttelsesrådgiver (DPO):</strong> <a href="mailto:dpo@flow.dk">dpo@flow.dk</a></li>
+          </ul>
+          <p>For spørgsmål vedrørende behandling af dine personoplysninger er du altid velkommen til at kontakte os via ovenstående kanaler.</p>
+
+          <h2>3. Kategorier af personoplysninger vi indsamler</h2>
+          <p>Vi indsamler og behandler forskellige kategorier af personoplysninger afhængigt af din relation til Flow:</p>
+
+          <h3>3.1 Oplysninger fra restaurantejere og -medarbejdere</h3>
+          <ul>
+            <li><strong>Identitetsoplysninger:</strong> Fulde navn, stilling, foto</li>
+            <li><strong>Kontaktoplysninger:</strong> E-mailadresse, telefonnummer, forretningsadresse</li>
+            <li><strong>Virksomhedsoplysninger:</strong> Restaurantnavn, CVR-nummer, P-nummer, branchekode</li>
+            <li><strong>Finansielle oplysninger:</strong> Bankkontooplysninger, faktureringsadresse, betalingshistorik</li>
+            <li><strong>Loginoplysninger:</strong> Brugernavn, krypteret adgangskode, to-faktor autentificeringsdata</li>
+            <li><strong>Brugsdata:</strong> Login-tidspunkter, funktioner brugt, systeminteraktioner</li>
+          </ul>
+
+          <h3>3.2 Oplysninger fra restauranternes kunder (slutbrugere)</h3>
+          <p>Når slutbrugere bestiller via Flow-platformen på vegne af vores restaurantkunder, behandler vi:</p>
+          <ul>
+            <li><strong>Identitetsoplysninger:</strong> Navn</li>
+            <li><strong>Kontaktoplysninger:</strong> E-mailadresse, telefonnummer, leveringsadresse</li>
+            <li><strong>Ordreoplysninger:</strong> Bestilte varer, ordrehistorik, præferencer, allergier</li>
+            <li><strong>Betalingsoplysninger:</strong> Korttype (vi gemmer ikke fulde kortnumre), transaktionsreferencer</li>
+            <li><strong>Samtykkeoplysninger:</strong> Marketing-præferencer, cookie-samtykke</li>
+          </ul>
+
+          <h3>3.3 Automatisk indsamlede oplysninger</h3>
+          <ul>
+            <li><strong>Tekniske data:</strong> IP-adresse, browsertype og -version, operativsystem, enhedstype</li>
+            <li><strong>Brugsdata:</strong> Besøgte sider, klikstrømme, sessionslængde, henvisningskilder</li>
+            <li><strong>Cookies og sporingsteknologier:</strong> Se vores separate <a href="cookie-settings.html">cookie-politik</a></li>
+            <li><strong>Lokaliseringsdata:</strong> Omtrentlig geografisk placering baseret på IP-adresse</li>
+          </ul>
+
+          <h2>4. Formål og retsgrundlag for behandling</h2>
+          <p>Vi behandler dine personoplysninger til følgende formål med tilhørende retsgrundlag:</p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Formål</th>
+                <th>Retsgrundlag (GDPR)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Levering af vores SaaS-platform og tjenester</td>
+                <td>Kontraktopfyldelse (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Kundesupport og teknisk assistance</td>
+                <td>Kontraktopfyldelse (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Behandling af ordrer og betalinger</td>
+                <td>Kontraktopfyldelse (Art. 6(1)(b))</td>
+              </tr>
+              <tr>
+                <td>Fakturering og regnskab</td>
+                <td>Retlig forpligtelse (Art. 6(1)(c))</td>
+              </tr>
+              <tr>
+                <td>Forbedring af produkter og tjenester</td>
+                <td>Legitim interesse (Art. 6(1)(f))</td>
+              </tr>
+              <tr>
+                <td>Direkte markedsføring</td>
+                <td>Samtykke (Art. 6(1)(a)) eller Legitim interesse</td>
+              </tr>
+              <tr>
+                <td>Sikkerhed og forebyggelse af svindel</td>
+                <td>Legitim interesse (Art. 6(1)(f))</td>
+              </tr>
+              <tr>
+                <td>Overholdelse af lovkrav</td>
+                <td>Retlig forpligtelse (Art. 6(1)(c))</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h2>5. Databehandlerrelationer</h2>
+          <p>I mange tilfælde fungerer Flow som databehandler på vegne af vores restaurantkunder, der er dataansvarlige for deres egne kunders personoplysninger. I disse tilfælde:</p>
+          <ul>
+            <li>Behandler vi kun data efter restaurantens dokumenterede instruktioner</li>
+            <li>Er vores behandling reguleret af en databehandleraftale</li>
+            <li>Implementerer vi passende tekniske og organisatoriske sikkerhedsforanstaltninger</li>
+            <li>Assisterer vi restauranter med at opfylde deres GDPR-forpligtelser</li>
+          </ul>
+
+          <h2>6. Deling og videregivelse af oplysninger</h2>
+          <p>Vi deler kun personoplysninger med tredjeparter under følgende omstændigheder:</p>
+
+          <h3>6.1 Tjenesteudbydere (underdatabehandlere)</h3>
+          <ul>
+            <li><strong>Betalingsudbydere:</strong> Stripe, Nets (til sikker betalingsbehandling)</li>
+            <li><strong>Cloud-hosting:</strong> Amazon Web Services, Google Cloud Platform (datacentre i EU)</li>
+            <li><strong>E-mail-tjenester:</strong> SendGrid, Mailchimp (til transaktionelle e-mails og marketing)</li>
+            <li><strong>SMS-gateway:</strong> Twilio (til ordrebekræftelser og notifikationer)</li>
+            <li><strong>Analytics:</strong> Google Analytics, Mixpanel (til produktforbedring)</li>
+          </ul>
+          <p>Alle underdatabehandlere er bundet af databehandleraftaler og skal overholde GDPR.</p>
+
+          <h3>6.2 Andre modtagere</h3>
+          <ul>
+            <li><strong>Myndigheder:</strong> Når loven kræver det (f.eks. skattevæsenet)</li>
+            <li><strong>Professionelle rådgivere:</strong> Revisorer, advokater under tavshedspligt</li>
+            <li><strong>Erhvervsoverdragelse:</strong> Ved fusion, opkøb eller salg af virksomheden</li>
+          </ul>
+
+          <h2>7. Overførsel til tredjelande</h2>
+          <p>Hovedparten af dine personoplysninger opbevares og behandles inden for EU/EØS. Hvis vi overfører data til lande uden for EU/EØS, sikrer vi et tilstrækkeligt beskyttelsesniveau gennem:</p>
+          <ul>
+            <li>EU-Kommissionens standardkontraktbestemmelser (SCC)</li>
+            <li>Certificeringer som EU-US Data Privacy Framework (hvor relevant)</li>
+            <li>Bindende virksomhedsregler (BCR) hos vores partnere</li>
+          </ul>
+          <p>Du kan anmode om en kopi af de relevante garantier ved at kontakte os.</p>
+
+          <h2>8. Opbevaringsperioder</h2>
+          <p>Vi opbevarer dine personoplysninger så længe det er nødvendigt for at opfylde formålene beskrevet i denne politik:</p>
+          <ul>
+            <li><strong>Aktive kundedata:</strong> I hele kundeforholdets varighed plus 5 år</li>
+            <li><strong>Fakturerings- og regnskabsdata:</strong> 5 år efter regnskabsårets afslutning (bogføringslovens krav)</li>
+            <li><strong>Marketingsamtykker:</strong> Indtil samtykket tilbagekaldes</li>
+            <li><strong>Supporthenvendelser:</strong> 3 år efter sagens afslutning</li>
+            <li><strong>Ordredata (slutbrugere):</strong> 3 år (med mindre restauranten har andre instruktioner)</li>
+            <li><strong>Logdata og analytics:</strong> 26 måneder</li>
+          </ul>
+          <p>Efter opbevaringsperiodens udløb slettes eller anonymiseres data.</p>
+
+          <h2>9. Dine rettigheder som registreret</h2>
+          <p>I henhold til GDPR har du følgende rettigheder:</p>
+
+          <h3>9.1 Ret til indsigt (Art. 15)</h3>
+          <p>Du har ret til at få bekræftet, om vi behandler personoplysninger om dig, og i så fald få adgang til disse oplysninger samt information om behandlingen.</p>
+
+          <h3>9.2 Ret til berigtigelse (Art. 16)</h3>
+          <p>Du har ret til at få urigtige personoplysninger om dig selv berigtiget uden unødig forsinkelse.</p>
+
+          <h3>9.3 Ret til sletning ("retten til at blive glemt") (Art. 17)</h3>
+          <p>Du har i visse tilfælde ret til at få slettet personoplysninger om dig selv, f.eks. hvis oplysningerne ikke længere er nødvendige for de formål, de blev indsamlet til.</p>
+
+          <h3>9.4 Ret til begrænsning af behandling (Art. 18)</h3>
+          <p>Du har i visse tilfælde ret til at få begrænset behandlingen af dine personoplysninger.</p>
+
+          <h3>9.5 Ret til dataportabilitet (Art. 20)</h3>
+          <p>Du har ret til at modtage de personoplysninger, du har givet os, i et struktureret, almindeligt anvendt og maskinlæsbart format.</p>
+
+          <h3>9.6 Ret til indsigelse (Art. 21)</h3>
+          <p>Du har til enhver tid ret til at gøre indsigelse mod behandling af dine personoplysninger baseret på vores legitime interesser, herunder profilering.</p>
+
+          <h3>9.7 Ret til at trække samtykke tilbage</h3>
+          <p>Hvis behandlingen er baseret på samtykke, kan du til enhver tid trække dit samtykke tilbage. Tilbagetrækningen påvirker ikke lovligheden af behandling baseret på samtykket før tilbagetrækningen.</p>
+
+          <p>For at udøve dine rettigheder, kontakt os på <a href="mailto:privacy@flow.dk">privacy@flow.dk</a>. Vi besvarer din henvendelse inden for 30 dage.</p>
+
+          <h2>10. Sikkerhedsforanstaltninger</h2>
+          <p>Vi har implementeret omfattende tekniske og organisatoriske sikkerhedsforanstaltninger for at beskytte dine personoplysninger:</p>
+
+          <h3>10.1 Tekniske foranstaltninger</h3>
+          <ul>
+            <li>Kryptering af data under transport (TLS 1.3) og i hvile (AES-256)</li>
+            <li>Sikker hosting i ISO 27001-certificerede datacentre</li>
+            <li>Regelmæssige penetrationstest og sikkerhedsaudits</li>
+            <li>Firewall-beskyttelse og DDoS-mitigation</li>
+            <li>Automatiserede sikkerhedsopdateringer</li>
+            <li>To-faktor autentificering for alle administratorkonti</li>
+          </ul>
+
+          <h3>10.2 Organisatoriske foranstaltninger</h3>
+          <ul>
+            <li>Adgangskontrol baseret på "need-to-know"-princippet</li>
+            <li>Løbende sikkerhedstræning af medarbejdere</li>
+            <li>Fortrolighedsklausuler i alle ansættelseskontrakter</li>
+            <li>Incident response-procedurer</li>
+            <li>Regelmæssig backup og disaster recovery-test</li>
+          </ul>
+
+          <h2>11. Automatiserede beslutninger og profilering</h2>
+          <p>Vi bruger ikke dine personoplysninger til automatiserede beslutninger, der har retsvirkning eller på tilsvarende vis berører dig væsentligt, uden dit udtrykkelige samtykke.</p>
+          <p>Vi kan dog bruge profilering til at:</p>
+          <ul>
+            <li>Personalisere indhold og anbefalinger på platformen</li>
+            <li>Forbedre målretningen af marketingkampagner (med samtykke)</li>
+            <li>Identificere potentielle sikkerhedstrusler</li>
+          </ul>
+
+          <h2>12. Børns personoplysninger</h2>
+          <p>Vores tjenester er ikke rettet mod børn under 16 år. Vi indsamler ikke bevidst personoplysninger fra børn. Hvis vi bliver opmærksomme på, at vi har indsamlet personoplysninger fra et barn under 16 år uden forældresamtykke, vil vi straks slette disse oplysninger.</p>
+
+          <h2>13. Links til tredjeparter</h2>
+          <p>Vores hjemmeside kan indeholde links til tredjeparters hjemmesider. Denne privatlivspolitik gælder kun for Flow. Vi opfordrer dig til at læse privatlivspolitikken for enhver tredjepart, du besøger.</p>
+
+          <h2>14. Ændringer til denne politik</h2>
+          <p>Vi kan opdatere denne privatlivspolitik fra tid til anden for at afspejle ændringer i vores praksis, teknologi, juridiske krav eller andre faktorer. Ved væsentlige ændringer vil vi:</p>
+          <ul>
+            <li>Informere dig via e-mail mindst 30 dage før ændringerne træder i kraft</li>
+            <li>Opdatere "Sidst opdateret"-datoen øverst på denne side</li>
+            <li>Ved meget væsentlige ændringer kan vi anmode om fornyet samtykke</li>
+          </ul>
+
+          <h2>15. Klageadgang</h2>
+          <p>Hvis du mener, at vores behandling af dine personoplysninger er i strid med databeskyttelsesreglerne, har du ret til at indgive en klage til:</p>
+          <ul>
+            <li><strong>Datatilsynet</strong></li>
+            <li>Carl Jacobsens Vej 35</li>
+            <li>2500 Valby, Danmark</li>
+            <li>Telefon: +45 33 19 32 00</li>
+            <li>E-mail: <a href="mailto:dt@datatilsynet.dk">dt@datatilsynet.dk</a></li>
+            <li>Hjemmeside: <a href="https://www.datatilsynet.dk" target="_blank" rel="noopener">www.datatilsynet.dk</a></li>
+          </ul>
+          <p>Vi vil dog altid opfordre dig til først at kontakte os, så vi kan forsøge at løse problemet direkte.</p>
+
+          <h2>16. Kontakt os</h2>
+          <p>Har du spørgsmål, bekymringer eller anmodninger vedrørende denne privatlivspolitik eller vores behandling af dine personoplysninger, er du velkommen til at kontakte os:</p>
+          <ul>
+            <li><strong>E-mail:</strong> <a href="mailto:privacy@flow.dk">privacy@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+            <li><strong>Post:</strong> Flow ApS, Att: Privatlivsteamet, Vestergade 1, 1456 København K</li>
+          </ul>
+          <p>Vi bestræber os på at besvare alle henvendelser inden for 5 arbejdsdage.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="cookie-settings.html">Cookie Settings</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Website Terms</a>
+          <a href="disclaimer.html">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
+    });
+  </script>
+</body>
+</html>
