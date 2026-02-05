@@ -1896,6 +1896,1097 @@ const SupabaseDB = {
       .getPublicUrl(path);
 
     return data?.publicUrl || '';
+  },
+
+  // ============================================================================
+  // BUILDER CONFIGURATIONS (App Builder, Web Builder, CMS)
+  // ============================================================================
+
+  /**
+   * Save builder configuration to Supabase
+   * @param {string} configType - 'app_builder', 'web_builder', or 'cms'
+   * @param {object} configData - The configuration object
+   * @param {string} restaurantId - Optional restaurant ID
+   */
+  async saveBuilderConfig(configType, configData, restaurantId = null) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available, saving to localStorage only');
+        return { success: false, error: 'Supabase not initialized' };
+      }
+
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        console.warn('⚠️ No user logged in, saving to localStorage only');
+        return { success: false, error: 'No user logged in' };
+      }
+
+      const record = {
+        user_id: userId,
+        restaurant_id: restaurantId,
+        config_type: configType,
+        config_data: configData,
+        updated_at: new Date().toISOString()
+      };
+
+      // Upsert based on user_id and config_type
+      const { data, error } = await supabase
+        .from('builder_configs')
+        .upsert(record, { onConflict: 'user_id,config_type,restaurant_id' })
+        .select()
+        .single();
+
+      if (error) {
+        // Table might not exist yet - fallback to localStorage
+        if (error.code === '42P01') {
+          console.warn('⚠️ builder_configs table does not exist, saving to localStorage only');
+          return { success: false, error: 'Table not found' };
+        }
+        throw error;
+      }
+
+      console.log(`✅ ${configType} config saved to Supabase`);
+      return { success: true, data };
+    } catch (err) {
+      console.error(`❌ Error saving ${configType} config:`, err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Load builder configuration from Supabase
+   * @param {string} configType - 'app_builder', 'web_builder', or 'cms'
+   * @param {string} restaurantId - Optional restaurant ID
+   */
+  async loadBuilderConfig(configType, restaurantId = null) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) {
+        return { success: false, data: null, error: 'Supabase not initialized' };
+      }
+
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        return { success: false, data: null, error: 'No user logged in' };
+      }
+
+      let query = supabase
+        .from('builder_configs')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('config_type', configType);
+
+      if (restaurantId) {
+        query = query.eq('restaurant_id', restaurantId);
+      } else {
+        query = query.is('restaurant_id', null);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        // Table might not exist
+        if (error.code === '42P01') {
+          return { success: false, data: null, error: 'Table not found' };
+        }
+        throw error;
+      }
+
+      if (data) {
+        console.log(`✅ ${configType} config loaded from Supabase`);
+        return { success: true, data: data.config_data };
+      }
+
+      return { success: true, data: null }; // No config found
+    } catch (err) {
+      console.error(`❌ Error loading ${configType} config:`, err);
+      return { success: false, data: null, error: err.message };
+    }
+  },
+
+  /**
+   * Get current user ID from session
+   */
+  getCurrentUserId() {
+    // Check localStorage for demo mode user
+    const demoMode = localStorage.getItem('orderflow_demo_mode') === 'true';
+    if (demoMode) {
+      return 'demo-user';
+    }
+
+    // Check Supabase session
+    if (supabase) {
+      const session = supabase.auth.session?.();
+      if (session?.user?.id) {
+        return session.user.id;
+      }
+    }
+
+    // Fallback to localStorage user ID
+    const storedUserId = localStorage.getItem('orderflow_user_id');
+    if (storedUserId) {
+      return storedUserId;
+    }
+
+    return null;
+  },
+
+  /**
+   * Save template to Supabase storage
+   * @param {File} file - ZIP file
+   * @param {object} metadata - Template metadata
+   */
+  async saveTemplate(file, metadata) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) {
+        return { success: false, error: 'Supabase not initialized' };
+      }
+
+      const path = `templates/${metadata.id}/${file.name}`;
+
+      // Upload file to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('templates')
+        .upload(path, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Save metadata to database
+      const { data, error } = await supabase
+        .from('templates')
+        .upsert({
+          id: metadata.id,
+          name: metadata.name,
+          description: metadata.description,
+          file_path: path,
+          config: metadata,
+          created_by: this.getCurrentUserId(),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Template saved to Supabase:', metadata.id);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error saving template:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get all templates from Supabase
+   */
+  async getTemplates() {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) {
+        return { success: false, data: [], error: 'Supabase not initialized' };
+      }
+
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === '42P01') {
+          return { success: false, data: [], error: 'Table not found' };
+        }
+        throw error;
+      }
+
+      return { success: true, data: data || [] };
+    } catch (err) {
+      console.error('❌ Error loading templates:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // ANALYTICS & METRICS FUNCTIONS
+  // =====================================================
+
+  /**
+   * Get daily metrics for a restaurant
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {string} startDate - Start date (YYYY-MM-DD)
+   * @param {string} endDate - End date (YYYY-MM-DD)
+   */
+  async getDailyMetrics(restaurantId, startDate, endDate) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('daily_metrics')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('date', { ascending: true });
+
+      if (error) throw error;
+
+      // Convert øre to DKK
+      const formatted = (data || []).map(row => ({
+        ...row,
+        total_revenue_dkk: row.total_revenue / 100,
+        avg_order_value_dkk: row.avg_order_value / 100
+      }));
+
+      return { success: true, data: formatted };
+    } catch (err) {
+      console.error('❌ Error fetching daily metrics:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  /**
+   * Get today's metrics for a restaurant
+   * @param {string} restaurantId - Restaurant UUID
+   */
+  async getTodayMetrics(restaurantId) {
+    const today = new Date().toISOString().split('T')[0];
+    return this.getDailyMetrics(restaurantId, today, today);
+  },
+
+  /**
+   * Get product analytics for a restaurant
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {string} startDate - Start date (YYYY-MM-DD)
+   * @param {string} endDate - End date (YYYY-MM-DD)
+   */
+  async getProductAnalytics(restaurantId, startDate, endDate) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('product_analytics')
+        .select(`
+          *,
+          products:product_id (name, category, price)
+        `)
+        .eq('restaurant_id', restaurantId)
+        .gte('date', startDate)
+        .lte('date', endDate)
+        .order('revenue', { ascending: false });
+
+      if (error) throw error;
+
+      // Format data
+      const formatted = (data || []).map(row => ({
+        ...row,
+        revenue_dkk: row.revenue / 100,
+        product_name: row.products?.name,
+        product_category: row.products?.category
+      }));
+
+      return { success: true, data: formatted };
+    } catch (err) {
+      console.error('❌ Error fetching product analytics:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // AI CONVERSATION FUNCTIONS
+  // =====================================================
+
+  /**
+   * Create a new AI conversation
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {object} data - Conversation data
+   */
+  async createAIConversation(restaurantId, data) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const conversationId = data.conversationId || `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      const { data: conversation, error } = await supabase
+        .from('ai_conversations')
+        .insert({
+          conversation_id: conversationId,
+          restaurant_id: restaurantId,
+          channel: data.channel || 'web_chat',
+          channel_user_id: data.channelUserId,
+          customer_phone: data.customerPhone,
+          customer_name: data.customerName,
+          language: data.language || 'da',
+          current_state: data.currentState || 'GREETING'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ AI conversation created:', conversationId);
+      return { success: true, data: conversation, conversationId };
+    } catch (err) {
+      console.error('❌ Error creating AI conversation:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Add a message to an AI conversation
+   * @param {string} conversationId - Conversation ID
+   * @param {object} message - Message data
+   */
+  async addAIMessage(conversationId, message) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('ai_messages')
+        .insert({
+          conversation_id: conversationId,
+          role: message.role,
+          content: message.content,
+          detected_intent: message.detectedIntent,
+          intent_confidence: message.intentConfidence,
+          entities: message.entities,
+          response_time_ms: message.responseTimeMs,
+          tokens_used: message.tokensUsed,
+          conversation_state: message.conversationState
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update conversation message count
+      await supabase.rpc('increment_conversation_messages', {
+        p_conversation_id: conversationId
+      });
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error adding AI message:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Update AI conversation outcome
+   * @param {string} conversationId - Conversation ID
+   * @param {object} updates - Update data
+   */
+  async updateAIConversation(conversationId, updates) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const updateData = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (updates.outcome) updateData.outcome = updates.outcome;
+      if (updates.orderId) updateData.order_id = updates.orderId;
+      if (updates.currentState) updateData.current_state = updates.currentState;
+      if (updates.endedAt) updateData.ended_at = updates.endedAt;
+      if (updates.frustrationScore !== undefined) updateData.frustration_score = updates.frustrationScore;
+      if (updates.customerRating) updateData.customer_rating = updates.customerRating;
+      if (updates.customerFeedback) updateData.customer_feedback = updates.customerFeedback;
+
+      const { data, error } = await supabase
+        .from('ai_conversations')
+        .update(updateData)
+        .eq('conversation_id', conversationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error updating AI conversation:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get AI conversations for a restaurant
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {number} limit - Max results
+   */
+  async getAIConversations(restaurantId, limit = 50) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('ai_conversations')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('started_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (err) {
+      console.error('❌ Error fetching AI conversations:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  /**
+   * Get AI conversation with messages
+   * @param {string} conversationId - Conversation ID
+   */
+  async getAIConversationWithMessages(conversationId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data: conversation, error: convError } = await supabase
+        .from('ai_conversations')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .single();
+
+      if (convError) throw convError;
+
+      const { data: messages, error: msgError } = await supabase
+        .from('ai_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('timestamp', { ascending: true });
+
+      if (msgError) throw msgError;
+
+      return { success: true, data: { ...conversation, messages: messages || [] } };
+    } catch (err) {
+      console.error('❌ Error fetching AI conversation with messages:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get AI performance metrics
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {number} days - Number of days to look back
+   */
+  async getAIPerformanceMetrics(restaurantId, days = 7) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const { data, error } = await supabase
+        .from('ai_conversations')
+        .select('outcome, message_count, clarification_count, frustration_score, started_at, ended_at')
+        .eq('restaurant_id', restaurantId)
+        .gte('started_at', startDate.toISOString());
+
+      if (error) throw error;
+
+      // Calculate metrics
+      const total = data.length;
+      const completed = data.filter(c => c.outcome === 'order_completed').length;
+      const escalated = data.filter(c => c.outcome === 'escalated').length;
+      const abandoned = data.filter(c => c.outcome === 'abandoned').length;
+
+      const avgMessages = total > 0 ? data.reduce((sum, c) => sum + (c.message_count || 0), 0) / total : 0;
+      const avgClarifications = total > 0 ? data.reduce((sum, c) => sum + (c.clarification_count || 0), 0) / total : 0;
+      const avgFrustration = total > 0 ? data.reduce((sum, c) => sum + (parseFloat(c.frustration_score) || 0), 0) / total : 0;
+
+      // Calculate average duration
+      const durations = data
+        .filter(c => c.started_at && c.ended_at)
+        .map(c => new Date(c.ended_at) - new Date(c.started_at));
+      const avgDurationMs = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
+
+      return {
+        success: true,
+        data: {
+          total_conversations: total,
+          orders_created: completed,
+          escalations: escalated,
+          abandoned: abandoned,
+          completion_rate: total > 0 ? (completed / total * 100).toFixed(1) : 0,
+          escalation_rate: total > 0 ? (escalated / total * 100).toFixed(1) : 0,
+          avg_messages: avgMessages.toFixed(1),
+          avg_clarifications: avgClarifications.toFixed(1),
+          avg_frustration_score: avgFrustration.toFixed(2),
+          avg_duration_sec: Math.round(avgDurationMs / 1000)
+        }
+      };
+    } catch (err) {
+      console.error('❌ Error fetching AI performance metrics:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  // =====================================================
+  // ORDER ITEMS FUNCTIONS
+  // =====================================================
+
+  /**
+   * Create order items for an order
+   * @param {string} orderId - Order UUID
+   * @param {array} items - Array of order items
+   */
+  async createOrderItems(orderId, items) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const orderItems = items.map(item => ({
+        order_id: orderId,
+        product_id: item.productId || item.product_id,
+        product_name: item.name || item.product_name,
+        product_sku: item.sku || item.product_sku,
+        product_category: item.category || item.product_category,
+        unit_price: Math.round((item.price || item.unit_price) * 100), // Convert to øre
+        quantity: item.quantity || 1,
+        line_total: Math.round((item.price || item.unit_price) * (item.quantity || 1) * 100),
+        discount_amount: item.discount ? Math.round(item.discount * 100) : 0,
+        discount_reason: item.discountReason,
+        options: item.options || [],
+        notes: item.notes
+      }));
+
+      const { data, error } = await supabase
+        .from('order_items')
+        .insert(orderItems)
+        .select();
+
+      if (error) throw error;
+
+      console.log('✅ Order items created:', data.length);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error creating order items:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get order items for an order
+   * @param {string} orderId - Order UUID
+   */
+  async getOrderItems(orderId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      // Convert from øre to DKK
+      const formatted = (data || []).map(item => ({
+        ...item,
+        unit_price_dkk: item.unit_price / 100,
+        line_total_dkk: item.line_total / 100,
+        discount_amount_dkk: item.discount_amount / 100
+      }));
+
+      return { success: true, data: formatted };
+    } catch (err) {
+      console.error('❌ Error fetching order items:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // PAYMENT FUNCTIONS
+  // =====================================================
+
+  /**
+   * Create a payment record
+   * @param {object} paymentData - Payment data
+   */
+  async createPayment(paymentData) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('payments')
+        .insert({
+          order_id: paymentData.orderId || paymentData.order_id,
+          restaurant_id: paymentData.restaurantId || paymentData.restaurant_id,
+          amount: Math.round(paymentData.amount * 100), // Convert to øre
+          currency: paymentData.currency || 'DKK',
+          status: paymentData.status || 'pending',
+          provider: paymentData.provider,
+          provider_transaction_id: paymentData.transactionId || paymentData.provider_transaction_id,
+          provider_response: paymentData.providerResponse,
+          card_last_four: paymentData.cardLastFour || paymentData.card_last_four,
+          card_brand: paymentData.cardBrand || paymentData.card_brand
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Payment created:', data.id);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error creating payment:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Update payment status
+   * @param {string} paymentId - Payment UUID
+   * @param {string} status - New status
+   * @param {object} additionalData - Additional update data
+   */
+  async updatePaymentStatus(paymentId, status, additionalData = {}) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const updateData = {
+        status,
+        updated_at: new Date().toISOString()
+      };
+
+      if (status === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      } else if (status === 'failed') {
+        updateData.failed_at = new Date().toISOString();
+      }
+
+      if (additionalData.providerTransactionId) {
+        updateData.provider_transaction_id = additionalData.providerTransactionId;
+      }
+      if (additionalData.providerResponse) {
+        updateData.provider_response = additionalData.providerResponse;
+      }
+
+      const { data, error } = await supabase
+        .from('payments')
+        .update(updateData)
+        .eq('id', paymentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error updating payment status:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get payments for an order
+   * @param {string} orderId - Order UUID
+   */
+  async getOrderPayments(orderId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('order_id', orderId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Convert from øre to DKK
+      const formatted = (data || []).map(payment => ({
+        ...payment,
+        amount_dkk: payment.amount / 100,
+        refunded_amount_dkk: payment.refunded_amount / 100
+      }));
+
+      return { success: true, data: formatted };
+    } catch (err) {
+      console.error('❌ Error fetching order payments:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // CONSENT FUNCTIONS
+  // =====================================================
+
+  /**
+   * Record user consent
+   * @param {string} userId - User UUID
+   * @param {string} consentType - Type of consent
+   * @param {boolean} granted - Whether consent is granted
+   * @param {object} options - Additional options
+   */
+  async recordConsent(userId, consentType, granted, options = {}) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      // If withdrawing consent, update existing record
+      if (!granted) {
+        const { data, error } = await supabase
+          .from('user_consents')
+          .update({
+            granted: false,
+            withdrawn_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId)
+          .eq('consent_type', consentType)
+          .eq('granted', true)
+          .select()
+          .single();
+
+        if (data) {
+          console.log('✅ Consent withdrawn:', consentType);
+          return { success: true, data };
+        }
+      }
+
+      // Create new consent record
+      const { data, error } = await supabase
+        .from('user_consents')
+        .insert({
+          user_id: userId,
+          restaurant_id: options.restaurantId,
+          consent_type: consentType,
+          granted,
+          consent_version: options.consentVersion,
+          consent_text: options.consentText,
+          collection_method: options.collectionMethod || 'settings_page',
+          granted_at: granted ? new Date().toISOString() : null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Consent recorded:', consentType, granted);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error recording consent:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Check if user has given consent
+   * @param {string} userId - User UUID
+   * @param {string} consentType - Type of consent
+   */
+  async checkConsent(userId, consentType) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, hasConsent: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('user_consents')
+        .select('granted')
+        .eq('user_id', userId)
+        .eq('consent_type', consentType)
+        .eq('granted', true)
+        .is('withdrawn_at', null)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows found
+
+      return { success: true, hasConsent: !!data };
+    } catch (err) {
+      console.error('❌ Error checking consent:', err);
+      return { success: false, hasConsent: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get all consents for a user
+   * @param {string} userId - User UUID
+   */
+  async getUserConsents(userId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('user_consents')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (err) {
+      console.error('❌ Error fetching user consents:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // WEBHOOK LOGGING FUNCTIONS
+  // =====================================================
+
+  /**
+   * Log a webhook request/response
+   * @param {object} webhookData - Webhook data
+   */
+  async logWebhook(webhookData) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('webhook_logs')
+        .insert({
+          restaurant_id: webhookData.restaurantId,
+          webhook_type: webhookData.type || 'incoming',
+          webhook_name: webhookData.name,
+          method: webhookData.method,
+          url: webhookData.url,
+          headers: webhookData.headers,
+          request_body: webhookData.requestBody,
+          response_status: webhookData.responseStatus,
+          response_body: webhookData.responseBody,
+          response_time_ms: webhookData.responseTimeMs,
+          status: webhookData.status || 'success',
+          error_message: webhookData.errorMessage,
+          idempotency_key: webhookData.idempotencyKey
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error logging webhook:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  // =====================================================
+  // INTEGRATION CONFIG FUNCTIONS
+  // =====================================================
+
+  /**
+   * Get integration config
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {string} integrationType - Integration type
+   * @param {string} integrationName - Integration name
+   */
+  async getIntegrationConfig(restaurantId, integrationType, integrationName) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('integration_configs')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .eq('integration_type', integrationType)
+        .eq('integration_name', integrationName)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error fetching integration config:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Save integration config
+   * @param {string} restaurantId - Restaurant UUID
+   * @param {string} integrationType - Integration type
+   * @param {string} integrationName - Integration name
+   * @param {object} config - Configuration data
+   */
+  async saveIntegrationConfig(restaurantId, integrationType, integrationName, config) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('integration_configs')
+        .upsert({
+          restaurant_id: restaurantId,
+          integration_type: integrationType,
+          integration_name: integrationName,
+          config: config.settings || config,
+          credentials_encrypted: config.credentials,
+          status: config.status || 'active',
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'restaurant_id,integration_type,integration_name'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Integration config saved:', integrationName);
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error saving integration config:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get all integrations for a restaurant
+   * @param {string} restaurantId - Restaurant UUID
+   */
+  async getIntegrations(restaurantId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, data: [], error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('integration_configs')
+        .select('*')
+        .eq('restaurant_id', restaurantId)
+        .order('integration_type', { ascending: true });
+
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (err) {
+      console.error('❌ Error fetching integrations:', err);
+      return { success: false, data: [], error: err.message };
+    }
+  },
+
+  // =====================================================
+  // SYSTEM & ERROR LOGGING
+  // =====================================================
+
+  /**
+   * Log a system event
+   * @param {string} level - Log level (debug, info, warn, error, critical)
+   * @param {string} category - Log category
+   * @param {string} message - Log message
+   * @param {object} options - Additional options
+   */
+  async logSystemEvent(level, category, message, options = {}) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const { data, error } = await supabase
+        .from('system_logs')
+        .insert({
+          log_level: level,
+          log_category: category,
+          message,
+          details: options.details,
+          service: options.service,
+          function_name: options.functionName,
+          restaurant_id: options.restaurantId,
+          user_id: options.userId,
+          stack_trace: options.stackTrace,
+          request_id: options.requestId,
+          duration_ms: options.durationMs
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error logging system event:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Log an error
+   * @param {Error|object} error - Error to log
+   * @param {object} context - Error context
+   */
+  async logError(error, context = {}) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+      const errorMessage = error.message || String(error);
+      const errorHash = this.hashString(errorMessage + (error.stack || ''));
+
+      // Check for existing error with same hash
+      const { data: existing } = await supabase
+        .from('error_logs')
+        .select('id, occurrence_count')
+        .eq('error_hash', errorHash)
+        .eq('status', 'new')
+        .single();
+
+      if (existing) {
+        // Update occurrence count
+        await supabase
+          .from('error_logs')
+          .update({
+            occurrence_count: existing.occurrence_count + 1,
+            last_seen_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+
+        return { success: true, data: { id: existing.id, isExisting: true } };
+      }
+
+      // Create new error log
+      const { data, error: insertError } = await supabase
+        .from('error_logs')
+        .insert({
+          error_type: context.errorType || 'other',
+          error_code: error.code,
+          error_message: errorMessage,
+          error_hash: errorHash,
+          stack_trace: error.stack,
+          service: context.service,
+          restaurant_id: context.restaurantId,
+          user_id: context.userId,
+          request_url: context.requestUrl,
+          request_method: context.requestMethod,
+          browser: context.browser,
+          os: context.os
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      return { success: true, data };
+    } catch (err) {
+      console.error('❌ Error logging error:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Simple hash function for error deduplication
+  hashString(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return 'e_' + Math.abs(hash).toString(16);
   }
 };
 

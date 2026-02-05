@@ -19766,7 +19766,9 @@ function switchSettingsTab(tab) {
     'passwords': 'Adgangskoder',
     'support': 'Support',
     'maintenance': 'Systemvedligeholdelse',
-    'cookies': 'Cookie Samtykke'
+    'cookies': 'Cookie Samtykke',
+    'templates': 'Skabeloner',
+    'bank': 'Bank'
   };
   
   // Update dynamic page title
@@ -19831,6 +19833,11 @@ function switchSettingsTab(tab) {
   // Load maintenance diagnostics when maintenance tab is opened
   if (tab === 'maintenance') {
     refreshMaintenanceDiagnostics();
+  }
+
+  // Load templates when templates tab is opened
+  if (tab === 'templates') {
+    renderInstalledTemplates();
   }
 }
 
@@ -25962,6 +25969,147 @@ function publishMobileApp() {
 
 // App Builder Config Storage Key
 const APP_BUILDER_CONFIG_KEY = 'orderflow_app_builder_config';
+const APP_BUILDER_HISTORY_KEY = 'orderflow_app_builder_history';
+const WEB_BUILDER_HISTORY_KEY = 'orderflow_webbuilder_history';
+const CMS_HISTORY_KEY = 'orderflow_cms_history';
+const MAX_HISTORY_VERSIONS = 20;
+
+// ==================== VERSION HISTORY SYSTEM ====================
+
+// Save a version to history
+function saveConfigVersion(historyKey, config, label = null) {
+  const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+
+  const version = {
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    label: label || new Date().toLocaleString('da-DK'),
+    config: JSON.parse(JSON.stringify(config)) // Deep clone
+  };
+
+  history.unshift(version);
+
+  // Keep only last N versions
+  if (history.length > MAX_HISTORY_VERSIONS) {
+    history.splice(MAX_HISTORY_VERSIONS);
+  }
+
+  localStorage.setItem(historyKey, JSON.stringify(history));
+  console.log(`📚 Version saved to ${historyKey}`);
+  return version.id;
+}
+
+// Get version history
+function getConfigHistory(historyKey) {
+  return JSON.parse(localStorage.getItem(historyKey) || '[]');
+}
+
+// Restore a specific version
+function restoreConfigVersion(historyKey, configKey, versionId, syncFn) {
+  const history = getConfigHistory(historyKey);
+  const version = history.find(v => v.id === versionId);
+
+  if (version) {
+    localStorage.setItem(configKey, JSON.stringify(version.config));
+    if (syncFn) syncFn(version.config);
+    toast('Version gendannet!', 'success');
+    return version.config;
+  }
+
+  toast('Kunne ikke finde version', 'error');
+  return null;
+}
+
+// Undo to previous version
+function undoConfigChange(historyKey, configKey, syncFn) {
+  const history = getConfigHistory(historyKey);
+
+  if (history.length < 2) {
+    toast('Ingen tidligere versioner at fortryde til', 'warning');
+    return null;
+  }
+
+  // Get the version before the current one (index 1 since 0 is current)
+  const previousVersion = history[1];
+
+  if (previousVersion) {
+    localStorage.setItem(configKey, JSON.stringify(previousVersion.config));
+    if (syncFn) syncFn(previousVersion.config);
+    toast('Ændring fortrudt', 'success');
+    return previousVersion.config;
+  }
+
+  return null;
+}
+
+// App Builder specific functions
+function saveAppBuilderVersion(label = null) {
+  const config = loadAppBuilderConfig();
+  return saveConfigVersion(APP_BUILDER_HISTORY_KEY, config, label);
+}
+
+function undoAppBuilderChange() {
+  const config = undoConfigChange(APP_BUILDER_HISTORY_KEY, APP_BUILDER_CONFIG_KEY, (cfg) => {
+    syncAllAppPreviews(cfg);
+    appBuilderChannel.postMessage({ type: 'appbuilder_update', config: cfg });
+  });
+
+  if (config) {
+    // Re-render current App Builder page
+    const activeAppBuilderPage = document.querySelector('[id^="page-appbuilder-"].active');
+    if (activeAppBuilderPage) {
+      const pageId = activeAppBuilderPage.id.replace('page-appbuilder-', '');
+      showAppBuilderPage(pageId);
+    }
+  }
+}
+
+function getAppBuilderHistory() {
+  return getConfigHistory(APP_BUILDER_HISTORY_KEY);
+}
+
+// Web Builder specific functions
+function saveWebBuilderVersion(label = null) {
+  const config = collectWebBuilderFormData();
+  return saveConfigVersion(WEB_BUILDER_HISTORY_KEY, config, label);
+}
+
+function undoWebBuilderChange() {
+  const config = undoConfigChange(WEB_BUILDER_HISTORY_KEY, 'orderflow_webbuilder_config', (cfg) => {
+    sendConfigToWebBuilderPreview(cfg);
+    webBuilderChannel.postMessage({ type: 'webbuilder_update', config: cfg });
+  });
+
+  if (config) {
+    // Re-render current Web Builder page
+    const activeWebBuilderPage = document.querySelector('[id^="page-webbuilder-"].active');
+    if (activeWebBuilderPage) {
+      const pageId = activeWebBuilderPage.id.replace('page-webbuilder-', '');
+      showWebBuilderPage(pageId);
+    }
+  }
+}
+
+function getWebBuilderHistory() {
+  return getConfigHistory(WEB_BUILDER_HISTORY_KEY);
+}
+
+// CMS specific functions
+function saveCMSVersion(label = null) {
+  return saveConfigVersion(CMS_HISTORY_KEY, cmsPages, label);
+}
+
+function undoCMSChange() {
+  const pages = undoConfigChange(CMS_HISTORY_KEY, 'orderflow_cms_pages', (pages) => {
+    cmsPages = pages;
+    renderCMSPagesList();
+    cmsChannel.postMessage({ type: 'cms_update', pages: pages });
+  });
+}
+
+function getCMSHistory() {
+  return getConfigHistory(CMS_HISTORY_KEY);
+}
 
 // Load App Builder Config
 function loadAppBuilderConfig() {
@@ -25990,8 +26138,135 @@ function loadAppBuilderConfig() {
 
 // Save App Builder Config
 function saveAppBuilderConfig(config) {
+  // Always save to localStorage first (instant)
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
+
+  // Broadcast to other tabs for cross-tab sync
+  appBuilderChannel.postMessage({ type: 'appbuilder_update', config: config });
+
+  // Sync to Supabase in background (non-blocking)
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveBuilderConfig('app_builder', config)
+      .then(result => {
+        if (result.success) {
+          console.log('✅ App Builder config synced to Supabase');
+        }
+      })
+      .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+  }
+}
+
+// Auto-save App Builder changes with debounce
+let appBuilderAutoSaveTimer = null;
+let appBuilderHasChanges = false;
+let appBuilderIsSaving = false;
+let appBuilderSaveCount = 0;
+
+function autoSaveAppBuilder() {
+  // Prevent re-entry during save
+  if (appBuilderIsSaving) return;
+
+  if (appBuilderAutoSaveTimer) clearTimeout(appBuilderAutoSaveTimer);
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('saving');
+
+  appBuilderAutoSaveTimer = setTimeout(() => {
+    appBuilderIsSaving = true;
+    const config = loadAppBuilderConfig(); // Get from localStorage (already saved by update functions)
+
+    // Save version every 5th save
+    appBuilderSaveCount++;
+    if (appBuilderSaveCount >= 5) {
+      saveAppBuilderVersion();
+      appBuilderSaveCount = 0;
+    }
+
+    // Broadcast to other tabs
+    appBuilderChannel.postMessage({ type: 'appbuilder_update', config: config });
+
+    // Sync to Supabase in background
+    if (window.SupabaseDB) {
+      window.SupabaseDB.saveBuilderConfig('app_builder', config)
+        .then(result => {
+          if (result.success) {
+            console.log('✅ App Builder config synced to Supabase');
+          }
+        })
+        .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+    }
+
+    appBuilderHasChanges = false;
+    appBuilderIsSaving = false;
+    updateAppBuilderSaveStatus('saved');
+    console.log('📱 App Builder: Auto-saved changes');
+  }, 2000);
+}
+
+function updateAppBuilderSaveStatus(status) {
+  const statusEls = document.querySelectorAll('[id^="app-save-status"]');
+  statusEls.forEach(el => {
+    if (status === 'saving') {
+      el.textContent = '⏳ Gemmer...';
+      el.style.display = 'inline';
+      el.style.color = 'var(--color-warning)';
+    } else if (status === 'saved') {
+      el.textContent = '✓ Ændringer gemt';
+      el.style.display = 'inline';
+      el.style.color = 'var(--color-success)';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
+  });
+}
+
+// Collect form data from current App Builder page
+function collectAppBuilderFormData() {
+  const config = loadAppBuilderConfig();
+
+  // Farver
+  const primaryColor = document.getElementById('app-color-primary');
+  const secondaryColor = document.getElementById('app-color-secondary');
+  const bgColor = document.getElementById('app-color-bg');
+  const textColor = document.getElementById('app-color-text');
+  if (primaryColor) config.farver.primary = primaryColor.value;
+  if (secondaryColor) config.farver.secondary = secondaryColor.value;
+  if (bgColor) config.farver.background = bgColor.value;
+  if (textColor) config.farver.text = textColor.value;
+
+  // Timer (åbningstider)
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  days.forEach(day => {
+    const openEl = document.getElementById(`app-hours-${day}-open`);
+    const closeEl = document.getElementById(`app-hours-${day}-close`);
+    const closedEl = document.getElementById(`app-hours-${day}-closed`);
+    if (openEl) config.timer[day].open = openEl.value;
+    if (closeEl) config.timer[day].close = closeEl.value;
+    if (closedEl) config.timer[day].closed = closedEl.checked;
+  });
+
+  // Kontakt
+  const kontaktFields = ['address', 'zip', 'city', 'phone', 'email', 'website'];
+  kontaktFields.forEach(field => {
+    const el = document.getElementById(`app-kontakt-${field}`);
+    if (el) config.kontakt[field] = el.value;
+  });
+
+  // Levering
+  const leveringFields = {
+    zipcodes: 'app-levering-zipcodes',
+    distance: 'app-levering-distance',
+    minOrder: 'app-levering-min',
+    fee: 'app-levering-fee',
+    freeAbove: 'app-levering-free',
+    timeMin: 'app-levering-time-min',
+    timeMax: 'app-levering-time-max'
+  };
+  Object.entries(leveringFields).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) config.levering[key] = el.type === 'number' ? parseFloat(el.value) : el.value;
+  });
+
+  return config;
 }
 
 // Sync all app previews with current config
@@ -26011,7 +26286,10 @@ function syncAllAppPreviews(config) {
 function updateAppColor(type, color) {
   const config = loadAppBuilderConfig();
   config.farver[type] = color;
-  saveAppBuilderConfig(config);
+
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
 
   // Update preview swatch and value display
   const preview = document.getElementById(`app-${type}-preview`);
@@ -26019,6 +26297,9 @@ function updateAppColor(type, color) {
 
   const valueEl = document.getElementById(`app-${type}-value`);
   if (valueEl) valueEl.textContent = color.toUpperCase();
+
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Save App Builder Colors
@@ -26039,7 +26320,11 @@ function saveAppBuilderColors() {
 function updateAppInfo(field, value) {
   const config = loadAppBuilderConfig();
   config.billeder[field] = value;
-  saveAppBuilderConfig(config);
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Handle App Logo Upload
@@ -26270,7 +26555,11 @@ function updateAppHours(day) {
   const closed = document.getElementById(`app-hours-${day}-closed`)?.checked || false;
 
   config.timer[day] = { open, close, closed };
-  saveAppBuilderConfig(config);
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Toggle Day Closed
@@ -26297,18 +26586,28 @@ function saveAppBuilderHours() {
 function updateAppContact(field, value) {
   const config = loadAppBuilderConfig();
   config.kontakt[field] = value;
-  saveAppBuilderConfig(config);
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Update App Social (Kontakt page)
 function updateAppSocial(platform, value) {
   const config = loadAppBuilderConfig();
   config.social[platform] = value;
-  saveAppBuilderConfig(config);
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Save App Builder Contact
 function saveAppBuilderContact() {
+  const config = loadAppBuilderConfig();
+  saveAppBuilderConfig(config);
   toast('Kontaktoplysninger gemt!', 'success');
 }
 
@@ -26316,11 +26615,17 @@ function saveAppBuilderContact() {
 function updateAppDelivery(field, value) {
   const config = loadAppBuilderConfig();
   config.levering[field] = value;
-  saveAppBuilderConfig(config);
+  // Save to localStorage and sync preview immediately
+  localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
+  syncAllAppPreviews(config);
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveAppBuilder();
 }
 
 // Save App Builder Delivery
 function saveAppBuilderDelivery() {
+  const config = loadAppBuilderConfig();
+  saveAppBuilderConfig(config);
   toast('Leveringsindstillinger gemt!', 'success');
 }
 
@@ -27793,6 +28098,56 @@ let originalCMSPages = null;
 // BroadcastChannel for cross-tab CMS sync
 const cmsChannel = new BroadcastChannel('orderflow_cms_channel');
 
+// BroadcastChannels for cross-tab App/Web Builder sync
+const appBuilderChannel = new BroadcastChannel('orderflow_appbuilder_channel');
+const webBuilderChannel = new BroadcastChannel('orderflow_webbuilder_channel');
+
+// Cross-tab sync message handlers
+cmsChannel.onmessage = (event) => {
+  if (event.data?.type === 'cms_update' && event.data.pages) {
+    console.log('📡 CMS update received from another tab');
+    cmsPages = event.data.pages;
+    localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+    // Re-render if CMS editor is open
+    if (document.getElementById('page-flow-cms')?.classList.contains('active')) {
+      renderCMSPagesList();
+      if (currentCMSPageId) {
+        loadCMSPage(currentCMSPageId);
+      }
+    }
+  }
+};
+
+appBuilderChannel.onmessage = (event) => {
+  if (event.data?.type === 'appbuilder_update' && event.data.config) {
+    console.log('📡 App Builder update received from another tab');
+    localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(event.data.config));
+    // Sync preview if App Builder is open
+    syncAllAppPreviews(event.data.config);
+    // Re-render active page if in App Builder
+    const activeAppBuilderPage = document.querySelector('[id^="page-appbuilder-"].active');
+    if (activeAppBuilderPage) {
+      const pageId = activeAppBuilderPage.id.replace('page-appbuilder-', '');
+      showAppBuilderPage(pageId);
+    }
+  }
+};
+
+webBuilderChannel.onmessage = (event) => {
+  if (event.data?.type === 'webbuilder_update' && event.data.config) {
+    console.log('📡 Web Builder update received from another tab');
+    localStorage.setItem(WEB_BUILDER_CONFIG_KEY, JSON.stringify(event.data.config));
+    // Update preview if Web Builder is open
+    updateWebBuilderPreview();
+    // Re-render active page if in Web Builder
+    const activeWebBuilderPage = document.querySelector('[id^="page-webbuilder-"].active');
+    if (activeWebBuilderPage) {
+      const pageId = activeWebBuilderPage.id.replace('page-webbuilder-', '');
+      showWebBuilderPage(pageId);
+    }
+  }
+};
+
 // =====================================================
 // MEDIA LIBRARY
 // =====================================================
@@ -28675,6 +29030,17 @@ function saveCMSPages() {
   updateCMSUnsavedBadge();
   toast('Sider gemt! Genindlæs landing-siden for at se ændringer.', 'success');
 
+  // Sync to Supabase in background
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveBuilderConfig('cms', { pages: cmsPages })
+      .then(result => {
+        if (result.success) {
+          console.log('✅ CMS pages synced to Supabase');
+        }
+      })
+      .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+  }
+
   // Dispatch event for other components
   window.dispatchEvent(new CustomEvent('cmsPagesUpdated', { detail: { pages: cmsPages } }));
 
@@ -28691,12 +29057,21 @@ function saveCMSPages() {
 
 // Auto-save CMS changes with debounce (saves to localStorage without full save)
 let cmsAutoSaveTimer = null;
+let cmsSaveCount = 0;
 function autoSaveCMSChanges() {
   if (cmsAutoSaveTimer) clearTimeout(cmsAutoSaveTimer);
   cmsAutoSaveTimer = setTimeout(() => {
     if (cmsHasChanges) {
       localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
       cmsChannel.postMessage({ type: 'cms_update', pages: cmsPages });
+
+      // Save version every 5th save
+      cmsSaveCount++;
+      if (cmsSaveCount >= 5) {
+        saveCMSVersion();
+        cmsSaveCount = 0;
+      }
+
       console.log('Flow CMS: Auto-saved changes to localStorage');
     }
   }, 2000);
@@ -30561,7 +30936,8 @@ async function switchFlowCMSTab(tab) {
     'products-sms': 'SMS Workflow',
     'products-instagram': 'Instagram Workflow',
     'products-facebook': 'Facebook Workflow',
-    'data': 'Data & Analytics'
+    'data': 'Data & Analytics',
+    'integrationer': 'System Integrationer'
   };
 
   const titleEl = document.getElementById('flow-cms-page-title');
@@ -30580,6 +30956,7 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
   if (tab === 'data') loadCMSDataStats();
+  if (tab === 'integrationer') loadIntegrationsPage();
 }
 
 // Load CMS Data Statistics
@@ -32252,6 +32629,20 @@ function saveWebBuilderConfig(section) {
   toast('Web Builder konfiguration gemt', 'success');
   updateWebBuilderPreview();
 
+  // Broadcast to other tabs for cross-tab sync
+  webBuilderChannel.postMessage({ type: 'webbuilder_update', config: webBuilderConfig });
+
+  // Sync to Supabase in background
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveBuilderConfig('web_builder', webBuilderConfig)
+      .then(result => {
+        if (result.success) {
+          console.log('✅ Web Builder config synced to Supabase');
+        }
+      })
+      .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+  }
+
   // Send scroll-besked til preview for at vise den relevante sektion
   if (section) {
     const sectionMap = {
@@ -32273,6 +32664,70 @@ function saveWebBuilderConfig(section) {
   document.querySelectorAll('.wb-save-status').forEach(status => {
     status.style.display = 'block';
     setTimeout(() => status.style.display = 'none', 3000);
+  });
+}
+
+// Auto-save Web Builder changes with debounce
+let webBuilderAutoSaveTimer = null;
+let webBuilderHasChanges = false;
+let webBuilderIsSaving = false;
+let webBuilderSaveCount = 0;
+
+function autoSaveWebBuilder() {
+  // Prevent re-entry during save
+  if (webBuilderIsSaving) return;
+
+  if (webBuilderAutoSaveTimer) clearTimeout(webBuilderAutoSaveTimer);
+  webBuilderHasChanges = true;
+  updateWebBuilderSaveStatus('saving');
+
+  webBuilderAutoSaveTimer = setTimeout(() => {
+    webBuilderIsSaving = true;
+
+    // Get current config and save
+    const config = collectWebBuilderFormData();
+
+    // Save version every 5th save
+    webBuilderSaveCount++;
+    if (webBuilderSaveCount >= 5) {
+      saveWebBuilderVersion();
+      webBuilderSaveCount = 0;
+    }
+
+    // Broadcast to other tabs
+    webBuilderChannel.postMessage({ type: 'webbuilder_update', config: config });
+
+    // Sync to Supabase in background
+    if (window.SupabaseDB) {
+      window.SupabaseDB.saveBuilderConfig('web_builder', config)
+        .then(result => {
+          if (result.success) {
+            console.log('✅ Web Builder config synced to Supabase');
+          }
+        })
+        .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+    }
+
+    webBuilderHasChanges = false;
+    webBuilderIsSaving = false;
+    updateWebBuilderSaveStatus('saved');
+    console.log('🌐 Web Builder: Auto-saved changes');
+  }, 2000);
+}
+
+function updateWebBuilderSaveStatus(status) {
+  const statusEls = document.querySelectorAll('.wb-save-status');
+  statusEls.forEach(el => {
+    if (status === 'saving') {
+      el.textContent = '⏳ Gemmer...';
+      el.style.display = 'block';
+      el.style.color = 'var(--color-warning)';
+    } else if (status === 'saved') {
+      el.textContent = '✓ Ændringer gemt';
+      el.style.display = 'block';
+      el.style.color = 'var(--color-success)';
+      setTimeout(() => { el.style.display = 'none'; }, 3000);
+    }
   });
 }
 
@@ -32300,6 +32755,12 @@ function sendScrollToSection(sectionId) {
 function updateWebBuilderPreview() {
   const config = collectWebBuilderFormData();
   sendConfigToWebBuilderPreview(config);
+
+  // Save to localStorage immediately (for preview sync)
+  localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(config));
+
+  // Debounced auto-save (syncs to Supabase after 2s)
+  autoSaveWebBuilder();
 
   // Also update inline preview elements with the restaurant name
   const nameValue = document.getElementById('wb-name')?.value || 'Pizzeria Roma';
@@ -33679,4 +34140,292 @@ function saveHIWTestimonials() {
   }
 
   toast('Testimonials gemt!', 'success');
+}
+
+// =====================================================
+// TEMPLATE MANAGEMENT (Admin)
+// =====================================================
+
+let uploadedTemplateFile = null;
+
+// Render installed templates list
+function renderInstalledTemplates() {
+  const container = document.getElementById('templates-list');
+  if (!container) return;
+
+  // Get templates from webBuilderTemplates object and localStorage
+  const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+  const allTemplates = { ...webBuilderTemplates };
+
+  // Add custom templates
+  customTemplates.forEach(t => {
+    allTemplates[t.id] = t;
+  });
+
+  const templateIds = Object.keys(allTemplates);
+
+  if (templateIds.length === 0) {
+    container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:32px">Ingen skabeloner installeret</p>';
+    return;
+  }
+
+  container.innerHTML = templateIds.map(id => {
+    const t = allTemplates[id];
+    const isCustom = customTemplates.some(ct => ct.id === id);
+    const colors = t.branding?.colors || {};
+
+    return `
+      <div class="template-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="height:120px;background:linear-gradient(135deg, ${colors.primary || '#2563EB'} 0%, ${colors.secondary || '#1E293B'} 100%);position:relative">
+          <div style="position:absolute;bottom:12px;left:12px;right:12px">
+            <span class="badge ${isCustom ? 'badge-accent' : 'badge-success'}" style="font-size:10px">${isCustom ? 'Brugerdefineret' : 'Standard'}</span>
+          </div>
+        </div>
+        <div style="padding:16px">
+          <h4 style="margin:0 0 4px;font-size:14px;font-weight:600">${t.branding?.name || id}</h4>
+          <p style="margin:0;font-size:12px;color:var(--muted)">${t.branding?.slogan || 'Ingen beskrivelse'}</p>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-sm btn-secondary" onclick="previewTemplate('${id}')" style="flex:1">Forhåndsvis</button>
+            ${isCustom ? `<button class="btn btn-sm" style="background:var(--danger);color:white" onclick="deleteTemplate('${id}')">Slet</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// Preview a template
+function previewTemplate(templateId) {
+  const template = webBuilderTemplates[templateId];
+  if (template?.previewFile) {
+    window.open(template.previewFile, '_blank');
+  } else if (template?.templatePath) {
+    window.open(template.templatePath + 'index.html', '_blank');
+  } else {
+    toast('Kunne ikke finde preview for denne skabelon', 'error');
+  }
+}
+
+// Delete a custom template
+function deleteTemplate(templateId) {
+  if (!confirm('Er du sikker på du vil slette denne skabelon? Dette kan ikke fortrydes.')) return;
+
+  const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+  const newTemplates = customTemplates.filter(t => t.id !== templateId);
+  localStorage.setItem('orderflow_custom_templates', JSON.stringify(newTemplates));
+
+  // Remove from webBuilderTemplates if it exists
+  if (webBuilderTemplates[templateId]) {
+    delete webBuilderTemplates[templateId];
+  }
+
+  renderInstalledTemplates();
+  updateTemplateDropdowns();
+  toast('Skabelon slettet', 'success');
+}
+
+// Handle template file drop
+function handleTemplateDrop(event) {
+  event.preventDefault();
+  event.target.style.borderColor = 'var(--border)';
+  event.target.style.background = 'var(--bg2)';
+
+  const files = event.dataTransfer.files;
+  if (files.length > 0 && files[0].name.endsWith('.zip')) {
+    handleTemplateUpload(files[0]);
+  } else {
+    toast('Kun ZIP-filer understøttes', 'error');
+  }
+}
+
+// Handle template file upload
+function handleTemplateUpload(file) {
+  if (!file) return;
+
+  if (!file.name.endsWith('.zip')) {
+    toast('Kun ZIP-filer understøttes', 'error');
+    return;
+  }
+
+  if (file.size > 50 * 1024 * 1024) { // 50MB limit
+    toast('Filen er for stor (max 50MB)', 'error');
+    return;
+  }
+
+  uploadedTemplateFile = file;
+
+  // Show progress
+  const progressEl = document.getElementById('template-upload-progress');
+  const filenameEl = document.getElementById('template-upload-filename');
+  const percentEl = document.getElementById('template-upload-percent');
+  const barEl = document.getElementById('template-upload-bar');
+
+  if (progressEl) progressEl.style.display = 'block';
+  if (filenameEl) filenameEl.textContent = file.name;
+
+  // Simulate upload progress
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 30;
+    if (progress >= 100) {
+      progress = 100;
+      clearInterval(interval);
+
+      // Show metadata form
+      setTimeout(() => {
+        if (progressEl) progressEl.style.display = 'none';
+        const formEl = document.getElementById('template-metadata-form');
+        if (formEl) formEl.style.display = 'block';
+
+        // Pre-fill template name from filename
+        const nameInput = document.getElementById('template-name');
+        const idInput = document.getElementById('template-id');
+        if (nameInput) nameInput.value = file.name.replace('.zip', '').replace(/-/g, ' ').replace(/_/g, ' ');
+        if (idInput) idInput.value = file.name.replace('.zip', '').toLowerCase().replace(/\s+/g, '-');
+      }, 500);
+    }
+    if (percentEl) percentEl.textContent = Math.round(progress) + '%';
+    if (barEl) barEl.style.width = progress + '%';
+  }, 200);
+}
+
+// Cancel template upload
+function cancelTemplateUpload() {
+  uploadedTemplateFile = null;
+
+  const progressEl = document.getElementById('template-upload-progress');
+  const formEl = document.getElementById('template-metadata-form');
+
+  if (progressEl) progressEl.style.display = 'none';
+  if (formEl) formEl.style.display = 'none';
+
+  // Clear form
+  const nameInput = document.getElementById('template-name');
+  const idInput = document.getElementById('template-id');
+  const descInput = document.getElementById('template-description');
+  if (nameInput) nameInput.value = '';
+  if (idInput) idInput.value = '';
+  if (descInput) descInput.value = '';
+}
+
+// Save new template
+async function saveNewTemplate() {
+  const name = document.getElementById('template-name')?.value?.trim();
+  const id = document.getElementById('template-id')?.value?.trim()?.toLowerCase()?.replace(/\s+/g, '-');
+  const description = document.getElementById('template-description')?.value?.trim();
+
+  if (!name || !id) {
+    toast('Udfyld venligst navn og ID', 'error');
+    return;
+  }
+
+  // Check if ID already exists
+  if (webBuilderTemplates[id]) {
+    toast('En skabelon med dette ID eksisterer allerede', 'error');
+    return;
+  }
+
+  // Create new template object
+  const newTemplate = {
+    id: id,
+    templateType: id,
+    templatePath: `templates/${id}/`,
+    previewFile: `./templates/${id}/index.html`,
+    branding: {
+      name: name,
+      shortName: name.split(' ')[0],
+      slogan: description || 'Tilpasset skabelon',
+      description: description || '',
+      logo: { url: '', darkUrl: '' },
+      colors: {
+        primary: '#2563EB',
+        secondary: '#1E293B',
+        accent: '#3B82F6',
+        background: '#FFFFFF',
+        surface: '#F8F9FA',
+        text: '#1A1A1A',
+        textMuted: '#666666',
+        success: '#22C55E',
+        warning: '#F59E0B',
+        error: '#EF4444'
+      },
+      fonts: { heading: 'Inter', body: 'Inter' }
+    },
+    contact: {
+      address: '',
+      postalCode: '',
+      city: '',
+      phone: '',
+      email: '',
+      socialMedia: { facebook: '', instagram: '', tiktok: '' }
+    },
+    businessHours: {
+      monday: { open: '10:00', close: '22:00', closed: false },
+      tuesday: { open: '10:00', close: '22:00', closed: false },
+      wednesday: { open: '10:00', close: '22:00', closed: false },
+      thursday: { open: '10:00', close: '22:00', closed: false },
+      friday: { open: '10:00', close: '23:00', closed: false },
+      saturday: { open: '11:00', close: '23:00', closed: false },
+      sunday: { open: '11:00', close: '21:00', closed: false }
+    },
+    delivery: { enabled: true, fee: 29, minimumOrder: 100, freeDeliveryThreshold: 250, estimatedTime: 40 },
+    features: { ordering: true, loyalty: true, pickup: true, delivery: true, customerAccounts: true, pushNotifications: false },
+    menu: { currency: 'DKK', taxRate: 25 },
+    images: { hero: '', featured: '' },
+    isCustom: true
+  };
+
+  // Save to localStorage custom templates
+  const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+  customTemplates.push(newTemplate);
+  localStorage.setItem('orderflow_custom_templates', JSON.stringify(customTemplates));
+
+  // Add to webBuilderTemplates
+  webBuilderTemplates[id] = newTemplate;
+
+  // TODO: Upload ZIP to Supabase storage
+  // For now, we save metadata only
+
+  // Show success
+  const statusEl = document.getElementById('template-save-status');
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  }
+
+  toast('Skabelon gemt!', 'success');
+
+  // Reset form
+  cancelTemplateUpload();
+
+  // Refresh list and dropdowns
+  renderInstalledTemplates();
+  updateTemplateDropdowns();
+}
+
+// Update all template dropdowns in the app
+function updateTemplateDropdowns() {
+  const webBuilderSelect = document.getElementById('wb-template-selector');
+  if (webBuilderSelect) {
+    const currentValue = webBuilderSelect.value;
+
+    // Get all templates including custom
+    const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+
+    // Build options HTML
+    let optionsHtml = '';
+    Object.keys(webBuilderTemplates).forEach(id => {
+      const t = webBuilderTemplates[id];
+      const isCustom = customTemplates.some(ct => ct.id === id);
+      const label = t.branding?.name || id;
+      optionsHtml += `<option value="${id}">${label}${isCustom ? ' (Brugerdefineret)' : ''}</option>`;
+    });
+
+    webBuilderSelect.innerHTML = optionsHtml;
+
+    // Restore selection if it still exists
+    if (webBuilderTemplates[currentValue]) {
+      webBuilderSelect.value = currentValue;
+    }
+  }
 }
