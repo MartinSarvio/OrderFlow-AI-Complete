@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Case Studies | Flow - Succeshistorier fra restauranter</title>
+  <meta name="description" content="Se hvordan restauranter bruger Flow til at vokse deres forretning. Læs succeshistorier og case studies fra vores kunder.">
+  <meta property="og:title" content="Case Studies | Flow - Succeshistorier fra restauranter">
+  <meta property="og:description" content="Se hvordan restauranter bruger Flow til at vokse deres forretning med online bestilling, mobile apps og marketing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+
+    /* Navigation */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 3.2rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+
+    /* Hero */
+    .hero-section { position: relative; min-height: 50vh; display: flex; align-items: center; padding-top: 8rem; background: linear-gradient(135deg, var(--color-dark) 0%, #1a1a2e 100%); }
+    .hero-content { position: relative; z-index: 1; max-width: 80rem; padding: 6rem 4rem; margin: 0 auto; text-align: center; }
+    .hero-content h1 { font-family: 'Inter', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-white); line-height: 1.1; margin-bottom: 2rem; }
+    .hero-content p { font-size: 2rem; color: rgba(255,255,255,0.85); margin: 0 auto; max-width: 60rem; }
+
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
+    .button:hover { background: var(--color-primary-hover); }
+    .button.button-white { background: var(--color-white); color: var(--color-dark); }
+    .button.button-white:hover { background: var(--color-gray-100); }
+
+    /* Case Studies Section */
+    .cases-section { background: var(--color-white); padding: 10rem 0; }
+    .cases-container { max-width: 120rem; margin: 0 auto; padding: 0 4rem; }
+
+    .case-card { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; margin-bottom: 10rem; padding-bottom: 10rem; border-bottom: 1px solid var(--color-gray-200); }
+    .case-card:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .case-card:nth-child(even) { direction: rtl; }
+    .case-card:nth-child(even) > * { direction: ltr; }
+
+    .case-image { border-radius: 2rem; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+    .case-image img { width: 100%; height: 35rem; object-fit: cover; }
+
+    .case-content { }
+    .case-logo { height: 4rem; margin-bottom: 2rem; }
+    .case-quote { font-size: 2.4rem; font-weight: 500; color: var(--color-dark); line-height: 1.4; margin-bottom: 2rem; font-style: italic; }
+    .case-quote::before { content: '"'; }
+    .case-quote::after { content: '"'; }
+    .case-author { font-size: 1.5rem; color: var(--color-gray-600); margin-bottom: 3rem; }
+    .case-author strong { color: var(--color-dark); }
+
+    .case-stats { display: flex; gap: 4rem; margin-bottom: 3rem; }
+    .case-stat { }
+    .case-stat-value { font-size: 3.6rem; font-weight: 700; color: var(--color-primary); }
+    .case-stat-label { font-size: 1.4rem; color: var(--color-gray-500); }
+
+    .case-highlights { margin-bottom: 3rem; }
+    .case-highlights li { font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; padding-left: 2.4rem; position: relative; }
+    .case-highlights li::before { content: '✓'; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; }
+
+    /* Results Section */
+    .results-section { background: var(--color-gray-50); padding: 8rem 0; }
+    .results-container { max-width: 100rem; margin: 0 auto; padding: 0 4rem; text-align: center; }
+    .results-header { margin-bottom: 6rem; }
+    .results-header h2 { font-size: 3.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2rem; }
+    .results-header p { font-size: 1.8rem; color: var(--color-gray-600); }
+    .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; }
+    .result-item h3 { font-size: 4.8rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.8rem; }
+    .result-item p { font-size: 1.5rem; color: var(--color-gray-600); }
+
+    /* CTA Section */
+    .cta-section { background: var(--color-dark); padding: 10rem 0; }
+    .cta-content { text-align: center; max-width: 80rem; margin: 0 auto; padding: 0 4rem; }
+    .cta-content h2 { font-size: 4.8rem; font-weight: 600; color: var(--color-white); margin-bottom: 2rem; }
+    .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
+    .cta-buttons { display: flex; gap: 1.6rem; justify-content: center; flex-wrap: wrap; }
+
+    /* Footer */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 1024px) {
+      .case-card { grid-template-columns: 1fr; gap: 4rem; }
+      .case-card:nth-child(even) { direction: ltr; }
+      .results-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      html { font-size: 56.25%; }
+      .nav-links { display: none; }
+      .hero-content h1 { font-size: 4rem; }
+      .case-stats { flex-direction: column; gap: 2rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .nav-container { padding: 1.2rem 2rem; }
+      .hero-content { padding: 4rem 2rem; }
+      .hero-content h1 { font-size: 3.2rem; }
+      .results-grid { grid-template-columns: 1fr; }
+      .footer-content { grid-template-columns: 1fr; }
+    }
+  </style>
+<link rel="stylesheet" href="/css/cookie-popup.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- Navigation -->
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo">
+            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+          </a>
+          <div class="nav-links">
+            <a href="restaurant-hjemmeside.html" class="nav-link">Hjemmeside</a>
+            <a href="online-bestilling.html" class="nav-link">Bestilling</a>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+          </div>
+        </div>
+        <div class="nav-right">
+          <a href="../index.html" class="nav-login">Login</a>
+          <a href="#cta" class="nav-cta">Få en gratis demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1>Succeshistorier fra restauranter</h1>
+        <p>Se hvordan restauranter bruger Flow til at vokse deres forretning, spare penge og bygge stærkere kunderelationer.</p>
+      </div>
+    </section>
+
+    <!-- Case Studies Section -->
+    <section class="cases-section">
+      <div class="cases-container">
+        <!-- Case 1 -->
+        <div class="case-card">
+          <div class="case-image">
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=600&fit=crop" alt="Talkin Tacos restaurant">
+          </div>
+          <div class="case-content">
+            <p class="case-quote">Flow har fuldstændig transformeret vores forretning. Vi gik fra at betale 30% i kommission til Wolt til at eje hele kunderejsen selv.</p>
+            <p class="case-author"><strong>Martin Jensen</strong>, Ejer af Talkin' Tacos</p>
+            <div class="case-stats">
+              <div class="case-stat">
+                <div class="case-stat-value">120.000 kr</div>
+                <div class="case-stat-label">Månedligt salg via app</div>
+              </div>
+              <div class="case-stat">
+                <div class="case-stat-value">45%</div>
+                <div class="case-stat-label">Færre omkostninger</div>
+              </div>
+            </div>
+            <ul class="case-highlights">
+              <li>Sparede 36.000 kr/md i platformsgebyrer</li>
+              <li>500+ app-downloads på første måned</li>
+              <li>35% stigning i genbestillinger</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Case 2 -->
+        <div class="case-card">
+          <div class="case-image">
+            <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&h=600&fit=crop" alt="Bella Italia restaurant">
+          </div>
+          <div class="case-content">
+            <p class="case-quote">Push-notifikationerne alene har sparet os over 15.000 kr om måneden i SMS-omkostninger. Og åbningsraten er faktisk højere!</p>
+            <p class="case-author"><strong>Sofia Rossi</strong>, Ejer af Bella Italia</p>
+            <div class="case-stats">
+              <div class="case-stat">
+                <div class="case-stat-value">15.000 kr</div>
+                <div class="case-stat-label">Sparet på SMS/md</div>
+              </div>
+              <div class="case-stat">
+                <div class="case-stat-value">4.2x</div>
+                <div class="case-stat-label">Højere åbningsrate</div>
+              </div>
+            </div>
+            <ul class="case-highlights">
+              <li>Fra 3.000 SMS/md til 0 kr i udgifter</li>
+              <li>Loyalitetsprogram med 1.200 aktive medlemmer</li>
+              <li>28% flere ordrer fra stamkunder</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Case 3 -->
+        <div class="case-card">
+          <div class="case-image">
+            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop" alt="Sushi Master restaurant">
+          </div>
+          <div class="case-content">
+            <p class="case-quote">Vores hjemmeside konverterer nu 3x bedre end før. Flowshjemmeside-builder er simpel og effektiv - og vi ejer vores egne kundedata.</p>
+            <p class="case-author"><strong>Kenji Tanaka</strong>, Ejer af Sushi Master</p>
+            <div class="case-stats">
+              <div class="case-stat">
+                <div class="case-stat-value">3x</div>
+                <div class="case-stat-label">Bedre konvertering</div>
+              </div>
+              <div class="case-stat">
+                <div class="case-stat-value">2.400</div>
+                <div class="case-stat-label">Nye kunder på 6 mdr</div>
+              </div>
+            </div>
+            <ul class="case-highlights">
+              <li>SEO-optimeret hjemmeside på top 3 i Google</li>
+              <li>Online bestilling integreret med POS</li>
+              <li>Automatiseret email-marketing</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Resultater på tværs af alle kunder</h2>
+          <p>Gennemsnitlige resultater fra restauranter der bruger Flow</p>
+        </div>
+        <div class="results-grid">
+          <div class="result-item">
+            <h3>35%</h3>
+            <p>Flere genbestillinger</p>
+          </div>
+          <div class="result-item">
+            <h3>40%</h3>
+            <p>Lavere marketing-omkostninger</p>
+          </div>
+          <div class="result-item">
+            <h3>25%</h3>
+            <p>Højere gennemsnitlig ordre</p>
+          </div>
+          <div class="result-item">
+            <h3>100%</h3>
+            <p>Ejer deres kundedata</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="cta">
+      <div class="cta-content">
+        <h2>Vil du være den næste succeshistorie?</h2>
+        <p>Book en gratis demo og se hvordan Flow kan hjælpe din restaurant.</p>
+        <div class="cta-buttons">
+          <a href="tel:+4570123456" class="button button-white">Ring til os: 70 12 34 56</a>
+          <a href="mailto:kontakt@flow.dk" class="button" style="background: transparent; border: 2px solid white;">Send en email</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+          <a href="legal.html#privacy">Privacy</a>
+          <a href="legal.html#terms">Website Terms</a>
+          <a href="legal.html#disclaimer">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); }
+      else { nav.classList.remove('scrolled'); }
+    });
+  </script>
+  <script src="/js/flow-cms-render.js"></script>
+  <script src="/js/privacy-modal.js"></script>
+</body>
+</html>

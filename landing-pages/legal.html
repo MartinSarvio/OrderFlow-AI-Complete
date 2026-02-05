@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Juridisk Information | Flow</title>
+  <meta name="description" content="Privatlivspolitik, brugervilkår og ansvarsfraskrivelse for Flow. Læs om hvordan vi behandler dine data og vores juridiske vilkår.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-800: #212529;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    a { color: var(--color-primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Navigation */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: 1px solid var(--color-gray-200); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; max-width: 140rem; margin: 0 auto; }
+    .nav-logo img { height: 3.2rem; width: auto; }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { font-size: 1.4rem; font-weight: 500; color: var(--color-gray-600); }
+    .nav-links a:hover { color: var(--color-dark); text-decoration: none; }
+    .nav-links a.active { color: var(--color-primary); }
+
+    /* Main Content */
+    .legal-page { padding-top: 8rem; }
+    .legal-container { max-width: 80rem; margin: 0 auto; padding: 4rem; }
+
+    .legal-nav { background: var(--color-gray-50); border-radius: 1.2rem; padding: 2rem; margin-bottom: 4rem; }
+    .legal-nav h3 { font-size: 1.4rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.2rem; }
+    .legal-nav ul { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .legal-nav li { list-style: none; }
+    .legal-nav a { font-size: 1.5rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.6rem; background: var(--color-white); border-radius: 0.8rem; display: inline-block; transition: all 0.2s; }
+    .legal-nav a:hover { background: var(--color-primary); color: var(--color-white); text-decoration: none; }
+
+    .legal-section { margin-bottom: 6rem; padding-bottom: 6rem; border-bottom: 1px solid var(--color-gray-200); }
+    .legal-section:last-child { border-bottom: none; margin-bottom: 0; }
+
+    .legal-section h1 { font-size: 3.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .legal-section h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin: 3rem 0 1.5rem; }
+    .legal-section h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin: 2rem 0 1rem; }
+
+    .legal-meta { font-size: 1.4rem; color: var(--color-gray-500); margin-bottom: 3rem; }
+
+    .legal-section p { font-size: 1.6rem; color: var(--color-gray-600); line-height: 1.8; margin-bottom: 1.5rem; }
+
+    .legal-section ul, .legal-section ol { margin: 1.5rem 0; padding-left: 2rem; }
+    .legal-section li { font-size: 1.6rem; color: var(--color-gray-600); line-height: 1.8; margin-bottom: 0.8rem; }
+    .legal-section ul li { list-style-type: disc; }
+    .legal-section ol li { list-style-type: decimal; }
+
+    .legal-highlight { background: var(--color-gray-50); border-left: 4px solid var(--color-primary); padding: 2rem; margin: 2rem 0; border-radius: 0 0.8rem 0.8rem 0; }
+    .legal-highlight p { margin: 0; }
+
+    /* Footer */
+    .footer { background: var(--color-dark); color: var(--color-white); padding: 4rem; margin-top: 4rem; }
+    .footer-content { max-width: 80rem; margin: 0 auto; text-align: center; }
+    .footer-content p { font-size: 1.4rem; color: rgba(255,255,255,0.6); margin-bottom: 1rem; }
+    .footer-content a { color: rgba(255,255,255,0.8); }
+
+    @media (max-width: 768px) {
+      html { font-size: 56.25%; }
+      .nav-container { padding: 1.2rem 2rem; }
+      .nav-links { display: none; }
+      .legal-container { padding: 2rem; }
+      .legal-nav ul { flex-direction: column; gap: 0.8rem; }
+      .legal-section h1 { font-size: 2.8rem; }
+    }
+  </style>
+<link rel="stylesheet" href="/css/cookie-popup.css">
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav-wrapper">
+    <div class="nav-container">
+      <a href="landing.html" class="nav-logo">
+        <img src="/images/FLOW-logo-sort-4K.png" alt="Flow">
+      </a>
+      <div class="nav-links">
+        <a href="#privacy">Privatlivspolitik</a>
+        <a href="#terms">Brugervilkår</a>
+        <a href="#disclaimer">Ansvarsfraskrivelse</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="legal-page">
+    <div class="legal-container">
+      <!-- Navigation -->
+      <nav class="legal-nav">
+        <h3>Indhold</h3>
+        <ul>
+          <li><a href="#privacy">Privatlivspolitik</a></li>
+          <li><a href="#terms">Brugervilkår</a></li>
+          <li><a href="#disclaimer">Ansvarsfraskrivelse</a></li>
+        </ul>
+      </nav>
+
+      <!-- Privacy Policy -->
+      <section class="legal-section" id="privacy">
+        <h1>Privatlivspolitik</h1>
+        <p class="legal-meta">Sidst opdateret: Februar 2026</p>
+
+        <p>Hos Flow ApS tager vi dit privatliv alvorligt. Denne privatlivspolitik beskriver, hvordan vi indsamler, bruger og beskytter dine personlige oplysninger.</p>
+
+        <h2>1. Dataansvarlig</h2>
+        <p>Flow ApS er dataansvarlig for behandlingen af de personoplysninger, vi indsamler om dig. Vores kontaktoplysninger er:</p>
+        <p>Flow ApS<br>
+        Vesterbrogade 123<br>
+        1620 København V<br>
+        CVR: 12345678<br>
+        Email: privacy@flow.dk</p>
+
+        <h2>2. Hvilke oplysninger indsamler vi?</h2>
+        <p>Vi indsamler følgende kategorier af personoplysninger:</p>
+        <ul>
+          <li><strong>Kontaktoplysninger:</strong> Navn, email, telefonnummer, adresse</li>
+          <li><strong>Virksomhedsoplysninger:</strong> Virksomhedsnavn, CVR-nummer, branche</li>
+          <li><strong>Brugsdata:</strong> Hvordan du interagerer med vores platform</li>
+          <li><strong>Tekniske data:</strong> IP-adresse, browsertype, enhedstype</li>
+          <li><strong>Transaktionsdata:</strong> Betalingshistorik, ordrer</li>
+        </ul>
+
+        <h2>3. Formål med behandlingen</h2>
+        <p>Vi behandler dine personoplysninger til følgende formål:</p>
+        <ul>
+          <li>Levering af vores tjenester til dig</li>
+          <li>Kundesupport og kommunikation</li>
+          <li>Forbedring af vores produkter og tjenester</li>
+          <li>Markedsføring (med dit samtykke)</li>
+          <li>Overholdelse af lovkrav</li>
+        </ul>
+
+        <h2>4. Retsgrundlag</h2>
+        <p>Vi behandler dine personoplysninger på følgende retsgrundlag:</p>
+        <ul>
+          <li><strong>Kontrakt:</strong> Når behandlingen er nødvendig for at opfylde en aftale med dig</li>
+          <li><strong>Samtykke:</strong> Når du har givet dit samtykke til behandlingen</li>
+          <li><strong>Legitim interesse:</strong> Når vi har en berettiget interesse i behandlingen</li>
+          <li><strong>Retlig forpligtelse:</strong> Når behandlingen er påkrævet ved lov</li>
+        </ul>
+
+        <h2>5. Dine rettigheder</h2>
+        <p>Du har følgende rettigheder i henhold til GDPR:</p>
+        <ul>
+          <li>Ret til indsigt i dine personoplysninger</li>
+          <li>Ret til berigtigelse af urigtige oplysninger</li>
+          <li>Ret til sletning ("retten til at blive glemt")</li>
+          <li>Ret til begrænsning af behandling</li>
+          <li>Ret til dataportabilitet</li>
+          <li>Ret til at gøre indsigelse mod behandling</li>
+          <li>Ret til at trække samtykke tilbage</li>
+        </ul>
+
+        <div class="legal-highlight">
+          <p>For at udøve dine rettigheder, kontakt os på <a href="mailto:privacy@flow.dk">privacy@flow.dk</a>. Vi svarer inden 30 dage.</p>
+        </div>
+
+        <h2>6. Cookies</h2>
+        <p>Vi bruger cookies til at forbedre din oplevelse på vores hjemmeside. Se vores <a href="cookie-settings.html">cookie-politik</a> for mere information.</p>
+
+        <h2>7. Klage</h2>
+        <p>Hvis du mener, at vi ikke behandler dine personoplysninger korrekt, kan du klage til Datatilsynet på <a href="https://www.datatilsynet.dk">www.datatilsynet.dk</a>.</p>
+      </section>
+
+      <!-- Terms of Service -->
+      <section class="legal-section" id="terms">
+        <h1>Brugervilkår</h1>
+        <p class="legal-meta">Sidst opdateret: Februar 2026</p>
+
+        <p>Disse brugervilkår ("Vilkår") gælder for din brug af Flows platform og tjenester. Ved at bruge vores tjenester accepterer du disse vilkår.</p>
+
+        <h2>1. Tjenestebeskrivelse</h2>
+        <p>Flow leverer en platform til restauranter, der omfatter:</p>
+        <ul>
+          <li>Website builder og hosting</li>
+          <li>Online bestillingssystem</li>
+          <li>Mobile app løsninger</li>
+          <li>Marketing automation</li>
+          <li>Loyalitetsprogrammer</li>
+        </ul>
+
+        <h2>2. Kontokrav</h2>
+        <p>For at bruge vores tjenester skal du:</p>
+        <ul>
+          <li>Være mindst 18 år gammel</li>
+          <li>Repræsentere en legitim virksomhed</li>
+          <li>Angive korrekte og fuldstændige oplysninger</li>
+          <li>Holde dine loginoplysninger fortrolige</li>
+        </ul>
+
+        <h2>3. Betaling og fakturering</h2>
+        <p>Vores priser er angivet på vores hjemmeside. Medmindre andet er aftalt:</p>
+        <ul>
+          <li>Fakturering sker månedligt forud</li>
+          <li>Betalingsfrist er 8 dage fra fakturadato</li>
+          <li>Alle priser er ekskl. moms</li>
+          <li>Ved forsinket betaling tillægges renter efter renteloven</li>
+        </ul>
+
+        <h2>4. Opsigelse</h2>
+        <p>Begge parter kan opsige aftalen med 30 dages varsel til udgangen af en måned. Ved opsigelse:</p>
+        <ul>
+          <li>Får du adgang til at eksportere dine data i 30 dage</li>
+          <li>Slettes dine data efter 90 dage (medmindre lovgivning kræver opbevaring)</li>
+          <li>Refunderes forudbetalte beløb ikke</li>
+        </ul>
+
+        <h2>5. Ansvarsbegrænsning</h2>
+        <p>Flow er ikke ansvarlig for:</p>
+        <ul>
+          <li>Indirekte tab, herunder tabt fortjeneste</li>
+          <li>Tab som følge af force majeure</li>
+          <li>Tredjepartstjenester integreret i platformen</li>
+        </ul>
+        <p>Vores samlede ansvar er begrænset til det beløb, du har betalt til os de seneste 12 måneder.</p>
+
+        <h2>6. Immaterielle rettigheder</h2>
+        <p>Flow ejer alle rettigheder til platformen, herunder software, design og dokumentation. Du bevarer ejerskabet til dit eget indhold.</p>
+
+        <h2>7. Ændringer</h2>
+        <p>Vi kan ændre disse vilkår med 30 dages varsel. Fortsat brug af tjenesten efter ikrafttræden udgør accept af de ændrede vilkår.</p>
+
+        <h2>8. Lovvalg og værneting</h2>
+        <p>Disse vilkår er underlagt dansk ret. Eventuelle tvister afgøres ved Københavns Byret.</p>
+      </section>
+
+      <!-- Disclaimer -->
+      <section class="legal-section" id="disclaimer">
+        <h1>Ansvarsfraskrivelse</h1>
+        <p class="legal-meta">Sidst opdateret: Februar 2026</p>
+
+        <h2>Generel information</h2>
+        <p>Indholdet på denne hjemmeside er kun til generel information og udgør ikke juridisk, finansiel eller professionel rådgivning. Selvom vi bestræber os på at holde informationen opdateret og korrekt, giver vi ingen garantier af nogen art, udtrykkelige eller underforståede, om fuldstændigheden, nøjagtigheden, pålideligheden, egnetheden eller tilgængeligheden af hjemmesiden eller de oplysninger, produkter, tjenester eller relaterede grafik, der er indeholdt på hjemmesiden.</p>
+
+        <h2>Brug på eget ansvar</h2>
+        <p>Enhver tillid, du placerer på sådanne oplysninger, er derfor på egen risiko. Vi er under ingen omstændigheder ansvarlige for tab eller skade, herunder uden begrænsning indirekte eller følgeskader, eller tab eller skade, der opstår som følge af tab af data eller fortjeneste, der opstår som følge af eller i forbindelse med brugen af denne hjemmeside.</p>
+
+        <h2>Eksterne links</h2>
+        <p>Gennem denne hjemmeside kan du muligvis linke til andre hjemmesider, som ikke er under kontrol af Flow. Vi har ingen kontrol over indholdet og tilgængeligheden af disse sider. Inkluderingen af links udgør ikke nødvendigvis en anbefaling eller godkendelse af synspunkterne udtrykt deri.</p>
+
+        <h2>Tilgængelighed</h2>
+        <p>Vi bestræber os på at holde hjemmesiden tilgængelig, men vi kan ikke garantere uafbrudt drift. Vi påtager os intet ansvar for midlertidig utilgængelighed forårsaget af tekniske problemer uden for vores kontrol.</p>
+
+        <h2>Ændringer</h2>
+        <p>Vi forbeholder os retten til at ændre, modificere, tilføje eller fjerne dele af denne ansvarsfraskrivelse når som helst uden forudgående varsel. Din fortsatte brug af hjemmesiden efter eventuelle ændringer udgør accept af disse ændringer.</p>
+
+        <div class="legal-highlight">
+          <p>Har du spørgsmål til vores juridiske dokumenter? Kontakt os på <a href="mailto:legal@flow.dk">legal@flow.dk</a>.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>2026 © Flow ApS. Alle rettigheder forbeholdes.</p>
+      <p><a href="landing.html">Tilbage til forsiden</a> | <a href="mailto:kontakt@flow.dk">kontakt@flow.dk</a></p>
+    </div>
+  </footer>
+
+  <script src="/js/flow-cms-render.js"></script>
+  <script src="/js/privacy-modal.js"></script>
+</body>
+</html>
