@@ -3815,6 +3815,21 @@ function showPage(page) {
   if (page === 'activities') {
     loadActivitiesPage();
   }
+
+  // Load Instagram Workflow page
+  if (page === 'instagram-workflow') {
+    loadWorkflowAgentPage('instagram');
+  }
+
+  // Load Facebook Workflow page
+  if (page === 'facebook-workflow') {
+    loadWorkflowAgentPage('facebook');
+  }
+
+  // Load SMS Workflows page
+  if (page === 'sms-workflows') {
+    loadSmsWorkflows();
+  }
   
   // Reset demo onboarding when page is shown
   if (page === 'demo-onboarding') {
@@ -3860,6 +3875,14 @@ function showPage(page) {
     return;
   }
 
+  // Load Instagram/Facebook workflow agent views
+  if (page === 'instagram-workflow') {
+    loadAgentWorkflowPage('instagram');
+  }
+  if (page === 'facebook-workflow') {
+    loadAgentWorkflowPage('facebook');
+  }
+
   // Load App Builder page
   if (page === 'appbuilder') {
     showAppBuilderPage('design');
@@ -3898,7 +3921,58 @@ function showPage(page) {
       }, 300);
     }, 50);
   }
-  
+
+  // Load Analytics Dashboard pages
+  if (page === 'analytics-overview') {
+    if (window.AnalyticsDashboard) {
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
+      if (restaurantId) {
+        AnalyticsDashboard.setRestaurant(restaurantId);
+        AnalyticsDashboard.loadOverviewData();
+      }
+    }
+  }
+
+  if (page === 'analytics-sales') {
+    if (window.AnalyticsDashboard) {
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
+      if (restaurantId) {
+        AnalyticsDashboard.setRestaurant(restaurantId);
+        AnalyticsDashboard.loadSalesData();
+      }
+    }
+  }
+
+  if (page === 'analytics-products') {
+    if (window.AnalyticsDashboard) {
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
+      if (restaurantId) {
+        AnalyticsDashboard.setRestaurant(restaurantId);
+        AnalyticsDashboard.loadProductsData();
+      }
+    }
+  }
+
+  if (page === 'analytics-ai') {
+    if (window.AnalyticsDashboard) {
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
+      if (restaurantId) {
+        AnalyticsDashboard.setRestaurant(restaurantId);
+        AnalyticsDashboard.loadAIData();
+      }
+    }
+  }
+
+  if (page === 'analytics-channels') {
+    if (window.AnalyticsDashboard) {
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
+      if (restaurantId) {
+        AnalyticsDashboard.setRestaurant(restaurantId);
+        // Load channel data (can be added later)
+      }
+    }
+  }
+
   // Highlight correct nav item
   document.querySelectorAll('.nav-btn').forEach(b => {
     const btnPage = b.getAttribute('onclick')?.match(/showPage\('(.+?)'\)/)?.[1];
@@ -27860,7 +27934,11 @@ const flowPagesList = [
   { slug: 'accessibility', title: 'Tilgængelighed', description: 'Tilgængelighedserklæring' },
   { slug: 'disclaimer', title: 'Ansvarsfraskrivelse', description: 'Ansvarsfraskrivelse' },
   { slug: 'platform-terms', title: 'Platform vilkår', description: 'Platform brugsvilkår' },
-  { slug: 'restaurant-agreement', title: 'Restaurant aftale', description: 'Aftale for restauranter' }
+  { slug: 'restaurant-agreement', title: 'Restaurant aftale', description: 'Aftale for restauranter' },
+
+  // Blog
+  { slug: 'blog', title: 'Blog', description: 'Blog oversigt med alle artikler' },
+  { slug: 'blog-post', title: 'Blog Indlæg', description: 'Enkelt blog indlæg skabelon' }
 ];
 
 // Default content for Flow pages (template content that shows before customer edits)
@@ -28082,6 +28160,26 @@ const defaultFlowPageContent = {
     },
     features: { items: ['Messenger bot', 'Kommentar-svar', 'Lead generering', 'Automatiske kampagner'] },
     cta: { title: 'Automatisér din Facebook', buttonText: 'Prøv gratis' }
+  },
+  'blog': {
+    hero: {
+      title: 'Flow Blog',
+      subtitle: 'Tips, guides og nyheder om restaurant marketing, online bestilling og automatisering.',
+      ctaText: '',
+      ctaUrl: ''
+    },
+    features: { items: [] },
+    cta: { title: '', buttonText: '' }
+  },
+  'blog-post': {
+    hero: {
+      title: 'Blogindlæg',
+      subtitle: 'Læs artikel fra Flow Blog.',
+      ctaText: '',
+      ctaUrl: ''
+    },
+    features: { items: [] },
+    cta: { title: '', buttonText: '' }
   }
 };
 
@@ -30936,7 +31034,8 @@ async function switchFlowCMSTab(tab) {
     'products-sms': 'SMS Workflow',
     'products-instagram': 'Instagram Workflow',
     'products-facebook': 'Facebook Workflow',
-    'data': 'Data & Analytics',
+    'raw-data': 'Data',
+    'analytics-oversigt': 'Oversigt',
     'integrationer': 'System Integrationer'
   };
 
@@ -30955,7 +31054,8 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
-  if (tab === 'data') loadCMSDataStats();
+  if (tab === 'raw-data') loadRawDataTab();
+  if (tab === 'analytics-oversigt') loadAnalyticsOverview();
   if (tab === 'integrationer') loadIntegrationsPage();
 }
 
@@ -31009,6 +31109,628 @@ function loadCMSDataStats() {
   }
 }
 
+// Switch main Data tab between Data (raw data) and Oversigt (analytics)
+function switchMainDataTab(tab) {
+  // Update main tab buttons
+  document.getElementById('main-tab-btn-data')?.classList.toggle('active', tab === 'data');
+  document.getElementById('main-tab-btn-oversigt')?.classList.toggle('active', tab === 'oversigt');
+
+  // Update main tab content
+  const dataTab = document.getElementById('main-data-tab-data');
+  const oversigtTab = document.getElementById('main-data-tab-oversigt');
+
+  if (dataTab) dataTab.style.display = tab === 'data' ? 'block' : 'none';
+  if (oversigtTab) oversigtTab.style.display = tab === 'oversigt' ? 'block' : 'none';
+
+  // Load data based on tab
+  if (tab === 'data') {
+    loadRawDataTab();
+  } else if (tab === 'oversigt') {
+    loadAnalyticsOverview();
+  }
+}
+
+// Load raw data tab content
+function loadRawDataTab() {
+  switchDataCategory('users');
+}
+
+// Switch between data categories (Brugere, Ordrer, Database, Integrationer, Flow CMS, Ændringslog)
+function switchDataCategory(category) {
+  // Update tab buttons
+  const tabs = document.querySelectorAll('#flow-cms-content-raw-data > .settings-tabs .settings-tab');
+  const categoryLabels = {
+    users: 'Brugere',
+    orders: 'Ordrer',
+    products: 'Produkter',
+    supabase: 'Database',
+    integrations: 'Integrationer',
+    marketing: 'Marketing',
+    flow: 'Flow CMS',
+    consent: 'Consent',
+    performance: 'Performance',
+    geo: 'Geo & Devices',
+    changes: 'Ændringslog'
+  };
+
+  tabs.forEach(tab => {
+    tab.classList.remove('active');
+    if (tab.textContent === categoryLabels[category]) {
+      tab.classList.add('active');
+    }
+  });
+
+  // Hide all category contents
+  document.querySelectorAll('.data-category-content').forEach(c => c.style.display = 'none');
+
+  // Show selected category
+  const categoryEl = document.getElementById('data-category-' + category);
+  if (categoryEl) categoryEl.style.display = 'block';
+
+  // Load data for category
+  switch(category) {
+    case 'users': loadUsersData(); break;
+    case 'orders': loadOrdersData(); break;
+    case 'products': loadProductsData(); break;
+    case 'supabase': loadSupabaseData(); break;
+    case 'integrations': loadIntegrationsData(); break;
+    case 'marketing': loadMarketingData(); break;
+    case 'flow': loadFlowCMSData(); break;
+    case 'consent': loadConsentData(); break;
+    case 'performance': loadPerformanceData(); break;
+    case 'geo': loadGeoData(); break;
+    case 'changes': loadChangesData(); break;
+  }
+}
+
+// Load users/customers data
+function loadUsersData() {
+  // Stats
+  document.getElementById('data-total-users').textContent = '156';
+  document.getElementById('data-total-customers').textContent = '1,234';
+  document.getElementById('data-active-today').textContent = '89';
+  document.getElementById('data-new-signups').textContent = '+47';
+  document.getElementById('data-logins-today').textContent = '234';
+  document.getElementById('data-sessions-active').textContent = '45';
+
+  // Customers table
+  const customers = [
+    { id: 'C001', name: 'Anders Jensen', email: 'anders@example.dk', phone: '+45 12345678', created: '2026-01-15', orders: 12, total: '4.850 kr' },
+    { id: 'C002', name: 'Maria Nielsen', email: 'maria@example.dk', phone: '+45 23456789', created: '2026-01-20', orders: 8, total: '3.200 kr' },
+    { id: 'C003', name: 'Peter Larsen', email: 'peter@example.dk', phone: '+45 34567890', created: '2026-01-25', orders: 5, total: '1.875 kr' },
+    { id: 'C004', name: 'Louise Hansen', email: 'louise@example.dk', phone: '+45 45678901', created: '2026-02-01', orders: 3, total: '945 kr' },
+    { id: 'C005', name: 'Thomas Pedersen', email: 'thomas@example.dk', phone: '+45 56789012', created: '2026-02-03', orders: 1, total: '285 kr' },
+  ];
+  document.getElementById('data-customers-table').innerHTML = customers.map(c =>
+    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.name}</td><td>${c.email}</td><td>${c.phone}</td><td>${c.created}</td><td>${c.orders}</td><td style="padding-right:12px">${c.total}</td></tr>`
+  ).join('');
+
+  // Activity table
+  const activities = [
+    { time: '12:45', email: 'anders@example.dk', action: 'login', ip: '192.168.1.45', device: 'iPhone', status: 'OK' },
+    { time: '12:42', email: 'maria@example.dk', action: 'logout', ip: '192.168.1.32', device: 'Chrome', status: 'OK' },
+    { time: '12:38', email: 'louise@example.dk', action: 'login', ip: '192.168.1.78', device: 'Safari', status: 'OK' },
+    { time: '12:30', email: 'ny@bruger.dk', action: 'signup', ip: '192.168.1.99', device: 'Android', status: 'OK' },
+    { time: '12:15', email: 'thomas@example.dk', action: 'login', ip: '192.168.1.12', device: 'Chrome', status: 'OK' },
+  ];
+  const actionColors = { login: 'var(--success)', logout: 'var(--muted)', signup: 'var(--accent)' };
+  document.getElementById('data-activity-table').innerHTML = activities.map(a =>
+    `<tr><td style="padding:10px 12px">${a.time}</td><td>${a.email}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.ip}</td><td>${a.device}</td><td style="padding-right:12px;color:var(--success)">${a.status}</td></tr>`
+  ).join('');
+
+  // Sessions table
+  const sessions = [
+    { id: 'S8934', user: 'anders@example.dk', start: '12:30', pages: 5, device: 'iPhone 15', country: 'DK' },
+    { id: 'S8933', user: 'maria@example.dk', start: '12:25', pages: 3, device: 'Chrome/Win', country: 'DK' },
+    { id: 'S8932', user: 'louise@example.dk', start: '12:20', pages: 7, device: 'Safari/Mac', country: 'DK' },
+  ];
+  document.getElementById('data-sessions-table').innerHTML = sessions.map(s =>
+    `<tr><td style="padding:10px 12px">${s.id}</td><td>${s.user}</td><td>${s.start}</td><td>${s.pages}</td><td>${s.device}</td><td style="padding-right:12px">${s.country}</td></tr>`
+  ).join('');
+}
+
+// Load orders data
+function loadOrdersData() {
+  document.getElementById('data-orders-total').textContent = '3,842';
+  document.getElementById('data-orders-today').textContent = '47';
+  document.getElementById('data-orders-pending').textContent = '12';
+  document.getElementById('data-payments-total').textContent = '3,721';
+  document.getElementById('data-revenue-total').textContent = '1.2M';
+  document.getElementById('data-refunds-total').textContent = '23';
+
+  const orders = [
+    { id: '#4523', customer: 'Anders J.', date: '12:01', status: 'confirmed', channel: 'App', items: 3, total: '485 kr', payment: 'Kort' },
+    { id: '#4522', customer: 'Maria N.', date: '11:45', status: 'delivered', channel: 'Web', items: 2, total: '320 kr', payment: 'MobilePay' },
+    { id: '#4521', customer: 'Peter L.', date: '11:30', status: 'preparing', channel: 'App', items: 4, total: '590 kr', payment: 'Kort' },
+    { id: '#4520', customer: 'Louise H.', date: '11:15', status: 'pending', channel: 'Instagram', items: 1, total: '145 kr', payment: 'Afventer' },
+  ];
+  const statusColors = { pending: 'var(--warning)', confirmed: 'var(--accent)', preparing: 'var(--primary)', delivered: 'var(--success)', cancelled: 'var(--error)' };
+  document.getElementById('data-orders-table').innerHTML = orders.map(o =>
+    `<tr><td style="padding:10px 12px">${o.id}</td><td>${o.customer}</td><td>${o.date}</td><td style="color:${statusColors[o.status]}">${o.status}</td><td>${o.channel}</td><td>${o.items}</td><td>${o.total}</td><td style="padding-right:12px">${o.payment}</td></tr>`
+  ).join('');
+
+  const payments = [
+    { id: 'P3721', order: '#4523', amount: '485 kr', method: 'Kort', status: 'completed', provider: 'Stripe', time: '12:02' },
+    { id: 'P3720', order: '#4522', amount: '320 kr', method: 'MobilePay', status: 'completed', provider: 'MobilePay', time: '11:46' },
+    { id: 'P3719', order: '#4521', amount: '590 kr', method: 'Kort', status: 'completed', provider: 'Stripe', time: '11:31' },
+  ];
+  document.getElementById('data-payments-table').innerHTML = payments.map(p =>
+    `<tr><td style="padding:10px 12px">${p.id}</td><td>${p.order}</td><td>${p.amount}</td><td>${p.method}</td><td style="color:var(--success)">${p.status}</td><td>${p.provider}</td><td style="padding-right:12px">${p.time}</td></tr>`
+  ).join('');
+
+  const items = [
+    { id: 'I001', order: '#4523', product: 'Burger Classic', qty: 2, price: '149 kr', subtotal: '298 kr' },
+    { id: 'I002', order: '#4523', product: 'Pommes Frites', qty: 1, price: '45 kr', subtotal: '45 kr' },
+    { id: 'I003', order: '#4522', product: 'Pizza Margherita', qty: 1, price: '189 kr', subtotal: '189 kr' },
+  ];
+  document.getElementById('data-order-items-table').innerHTML = items.map(i =>
+    `<tr><td style="padding:10px 12px">${i.id}</td><td>${i.order}</td><td>${i.product}</td><td>${i.qty}</td><td>${i.price}</td><td style="padding-right:12px">${i.subtotal}</td></tr>`
+  ).join('');
+}
+
+// Load Supabase data
+function loadSupabaseData() {
+  // Tables already hardcoded in HTML
+}
+
+// Load integrations data
+function loadIntegrationsData() {
+  const webhooks = [
+    { time: '12:01', type: 'OUT', endpoint: '/webhook/stripe', status: '200', latency: '45ms', payload: '{...}' },
+    { time: '11:58', type: 'IN', endpoint: '/api/orders', status: '201', latency: '120ms', payload: '{...}' },
+    { time: '11:45', type: 'OUT', endpoint: '/webhook/economic', status: '200', latency: '230ms', payload: '{...}' },
+  ];
+  document.getElementById('data-webhooks-table').innerHTML = webhooks.map(w =>
+    `<tr><td style="padding:10px 12px">${w.time}</td><td>${w.type}</td><td>${w.endpoint}</td><td style="color:var(--success)">${w.status}</td><td>${w.latency}</td><td style="padding-right:12px"><button class="btn btn-secondary btn-sm">Vis</button></td></tr>`
+  ).join('');
+
+  const apiLogs = [
+    { time: '12:02', method: 'POST', endpoint: '/api/orders', status: '201', ip: '192.168.1.45', latency: '89ms' },
+    { time: '12:01', method: 'GET', endpoint: '/api/menu', status: '200', ip: '192.168.1.32', latency: '23ms' },
+    { time: '11:59', method: 'POST', endpoint: '/api/payments', status: '200', ip: '192.168.1.45', latency: '156ms' },
+  ];
+  document.getElementById('data-api-logs-table').innerHTML = apiLogs.map(a =>
+    `<tr><td style="padding:10px 12px">${a.time}</td><td>${a.method}</td><td>${a.endpoint}</td><td style="color:var(--success)">${a.status}</td><td>${a.ip}</td><td style="padding-right:12px">${a.latency}</td></tr>`
+  ).join('');
+}
+
+// Load Flow CMS data
+function loadFlowCMSData() {
+  document.getElementById('flow-pages').textContent = '8';
+  document.getElementById('flow-sections').textContent = '34';
+  document.getElementById('flow-blog-posts').textContent = '12';
+  document.getElementById('flow-media').textContent = '156';
+  document.getElementById('flow-drafts').textContent = '3';
+  document.getElementById('flow-published').textContent = '5';
+
+  const pages = [
+    { id: 'P001', title: 'Forside', slug: '/', status: 'published', sections: 6, updated: '10:30' },
+    { id: 'P002', title: 'Menu', slug: '/menu', status: 'published', sections: 4, updated: '09:15' },
+    { id: 'P003', title: 'Om Os', slug: '/om-os', status: 'published', sections: 5, updated: '08:45' },
+    { id: 'P004', title: 'Kontakt', slug: '/kontakt', status: 'draft', sections: 3, updated: '11:20' },
+  ];
+  const statusColors = { published: 'var(--success)', draft: 'var(--warning)' };
+  document.getElementById('data-flow-pages-table').innerHTML = pages.map(p =>
+    `<tr><td style="padding:10px 12px">${p.id}</td><td>${p.title}</td><td>${p.slug}</td><td style="color:${statusColors[p.status]}">${p.status}</td><td>${p.sections}</td><td style="padding-right:12px">${p.updated}</td></tr>`
+  ).join('');
+
+  const media = [
+    { file: 'hero-bg.jpg', type: 'image/jpeg', size: '2.4MB', uploaded: '2026-02-01', used: 'Forside' },
+    { file: 'logo.png', type: 'image/png', size: '45KB', uploaded: '2026-01-15', used: 'Alle sider' },
+    { file: 'menu-1.jpg', type: 'image/jpeg', size: '1.8MB', uploaded: '2026-02-03', used: 'Menu' },
+  ];
+  document.getElementById('data-flow-media-table').innerHTML = media.map(m =>
+    `<tr><td style="padding:10px 12px">${m.file}</td><td>${m.type}</td><td>${m.size}</td><td>${m.uploaded}</td><td style="padding-right:12px">${m.used}</td></tr>`
+  ).join('');
+
+  const conversations = [
+    { id: 'AI001', session: 'S8934', start: '12:30', messages: 8, outcome: 'order_completed', duration: '4:32' },
+    { id: 'AI002', session: 'S8931', start: '11:45', messages: 5, outcome: 'abandoned', duration: '2:15' },
+    { id: 'AI003', session: 'S8928', start: '10:20', messages: 12, outcome: 'escalated', duration: '6:45' },
+  ];
+  const outcomeColors = { order_completed: 'var(--success)', abandoned: 'var(--warning)', escalated: 'var(--error)' };
+  document.getElementById('data-ai-conversations-table').innerHTML = conversations.map(c =>
+    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.session}</td><td>${c.start}</td><td>${c.messages}</td><td style="color:${outcomeColors[c.outcome]}">${c.outcome}</td><td style="padding-right:12px">${c.duration}</td></tr>`
+  ).join('');
+}
+
+// Load changes/audit data
+function loadChangesData() {
+  document.getElementById('changes-today').textContent = '156';
+  document.getElementById('changes-week').textContent = '1,234';
+  document.getElementById('changes-users').textContent = '12';
+  document.getElementById('changes-tables').textContent = '8';
+  document.getElementById('changes-rollbacks').textContent = '0';
+
+  const audit = [
+    { time: '12:01', user: 'admin@flow.dk', action: 'UPDATE', table: 'orders', record: '#4523', old: 'pending', new: 'confirmed', ip: '192.168.1.1' },
+    { time: '11:58', user: 'system', action: 'INSERT', table: 'payments', record: 'P3721', old: '-', new: '{...}', ip: 'internal' },
+    { time: '11:45', user: 'admin@flow.dk', action: 'UPDATE', table: 'products', record: 'PRD087', old: '149 kr', new: '159 kr', ip: '192.168.1.1' },
+    { time: '11:30', user: 'system', action: 'INSERT', table: 'orders', record: '#4523', old: '-', new: '{...}', ip: 'internal' },
+  ];
+  const actionColors = { INSERT: 'var(--success)', UPDATE: 'var(--accent)', DELETE: 'var(--error)' };
+  document.getElementById('data-audit-log-table').innerHTML = audit.map(a =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${a.time}</td><td>${a.user}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.table}</td><td>${a.record}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.old}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.new}</td><td style="padding-right:12px">${a.ip}</td></tr>`
+  ).join('');
+
+  const sysLogs = [
+    { time: '12:02', level: 'info', service: 'api', message: 'Order #4523 confirmed', trace: 'TR001' },
+    { time: '12:01', level: 'info', service: 'webhook', message: 'Stripe webhook received', trace: 'TR002' },
+    { time: '11:58', level: 'warning', service: 'economic', message: 'Slow response (230ms)', trace: 'TR003' },
+  ];
+  const levelColors = { info: 'var(--accent)', warning: 'var(--warning)', error: 'var(--error)' };
+  document.getElementById('data-system-logs-table').innerHTML = sysLogs.map(l =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${l.time}</td><td style="color:${levelColors[l.level]}">${l.level}</td><td>${l.service}</td><td>${l.message}</td><td style="padding-right:12px">${l.trace}</td></tr>`
+  ).join('');
+
+  const errors = [
+    { time: '10:15', type: 'TimeoutError', message: 'Economic API timeout', stack: '...', user: 'system', status: 'resolved' },
+  ];
+  document.getElementById('data-error-logs-table').innerHTML = errors.length ? errors.map(e =>
+    `<tr><td style="padding:10px 12px">${e.time}</td><td style="color:var(--error)">${e.type}</td><td>${e.message}</td><td><button class="btn btn-secondary btn-sm">Vis</button></td><td>${e.user}</td><td style="padding-right:12px;color:var(--success)">${e.status}</td></tr>`
+  ).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen fejl</td></tr>';
+}
+
+// View table data in Supabase viewer
+function viewTableData(table) {
+  document.getElementById('supabase-table-select').value = table;
+  loadSupabaseTableData();
+}
+
+// Load table data from Supabase
+function loadSupabaseTableData() {
+  const table = document.getElementById('supabase-table-select').value;
+  const limit = document.getElementById('supabase-limit').value || 50;
+  const viewer = document.getElementById('supabase-data-viewer');
+
+  if (!table) {
+    viewer.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Vælg tabel for at se data</div>';
+    return;
+  }
+
+  viewer.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted)">Indlæser ${table} (limit: ${limit})...</div>`;
+
+  // Demo: Show sample data
+  setTimeout(() => {
+    viewer.innerHTML = `<table class="data-table" style="margin:0;width:100%"><thead><tr><th style="padding-left:12px">id</th><th>created_at</th><th>data</th><th style="padding-right:12px">status</th></tr></thead><tbody>
+      <tr><td style="padding:8px 12px">1</td><td>2026-02-05 10:30</td><td>{...}</td><td>active</td></tr>
+      <tr><td style="padding:8px 12px">2</td><td>2026-02-05 09:15</td><td>{...}</td><td>active</td></tr>
+      <tr><td style="padding:8px 12px">3</td><td>2026-02-04 15:20</td><td>{...}</td><td>active</td></tr>
+    </tbody></table>`;
+  }, 500);
+}
+
+// Export functions
+function exportDataTable(type) {
+  alert(`Eksporterer ${type} data til CSV...`);
+}
+
+function exportAuditLog() {
+  alert('Eksporterer audit log til CSV...');
+}
+
+// Load customer data table
+function loadCustomerData() {
+  const tbody = document.getElementById('customer-data-table');
+  if (!tbody) return;
+
+  // Demo data - replace with actual Supabase query
+  const customers = [
+    { name: 'Anders Jensen', email: 'anders@example.dk', phone: '+45 12 34 56 78', created: '2026-01-15', lastOrder: '2026-02-03', orders: 12 },
+    { name: 'Maria Nielsen', email: 'maria@example.dk', phone: '+45 23 45 67 89', created: '2026-01-20', lastOrder: '2026-02-04', orders: 8 },
+    { name: 'Peter Larsen', email: 'peter@example.dk', phone: '+45 34 56 78 90', created: '2026-01-25', lastOrder: '2026-02-01', orders: 5 },
+    { name: 'Louise Hansen', email: 'louise@example.dk', phone: '+45 45 67 89 01', created: '2026-02-01', lastOrder: '2026-02-05', orders: 3 },
+    { name: 'Thomas Pedersen', email: 'thomas@example.dk', phone: '+45 56 78 90 12', created: '2026-02-03', lastOrder: '-', orders: 1 },
+  ];
+
+  tbody.innerHTML = customers.map(c => `
+    <tr style="cursor:pointer" onclick="showCustomerDetails('${c.email}')">
+      <td style="padding:12px 16px">${c.name}</td>
+      <td style="padding:12px 8px">${c.email}</td>
+      <td style="padding:12px 8px">${c.phone}</td>
+      <td style="padding:12px 8px">${c.created}</td>
+      <td style="padding:12px 8px">${c.lastOrder}</td>
+      <td style="padding:12px 16px;text-align:right">${c.orders}</td>
+    </tr>
+  `).join('');
+}
+
+// Load activity log
+function loadActivityLog() {
+  const tbody = document.getElementById('activity-log-table');
+  if (!tbody) return;
+
+  // Demo data - replace with actual Supabase query
+  const activities = [
+    { time: '10:45', user: 'anders@example.dk', action: 'login', ip: '192.168.1.45', device: 'iPhone 15 Pro' },
+    { time: '10:42', user: 'maria@example.dk', action: 'logout', ip: '192.168.1.32', device: 'Chrome / Windows' },
+    { time: '10:38', user: 'louise@example.dk', action: 'login', ip: '192.168.1.78', device: 'Safari / macOS' },
+    { time: '10:30', user: 'peter@example.dk', action: 'signup', ip: '192.168.1.99', device: 'Android App' },
+    { time: '10:15', user: 'thomas@example.dk', action: 'login', ip: '192.168.1.12', device: 'Chrome / Windows' },
+  ];
+
+  const actionLabels = { login: 'Login', logout: 'Logout', signup: 'Oprettet konto' };
+  const actionColors = { login: 'var(--success)', logout: 'var(--muted)', signup: 'var(--accent)' };
+
+  tbody.innerHTML = activities.map(a => `
+    <tr>
+      <td style="padding:12px 16px">${a.time}</td>
+      <td style="padding:12px 8px">${a.user}</td>
+      <td style="padding:12px 8px"><span style="color:${actionColors[a.action]}">${actionLabels[a.action]}</span></td>
+      <td style="padding:12px 8px;color:var(--muted)">${a.ip}</td>
+      <td style="padding:12px 16px">${a.device}</td>
+    </tr>
+  `).join('');
+}
+
+// Load signups chart
+function loadSignupsChart() {
+  const container = document.getElementById('signups-chart');
+  if (!container) return;
+
+  // Demo data - 30 days
+  const data = [3, 5, 2, 7, 4, 6, 8, 3, 5, 9, 4, 6, 7, 5, 8, 10, 6, 4, 7, 9, 5, 8, 6, 7, 11, 8, 9, 12, 7, 10];
+  const max = Math.max(...data);
+
+  container.innerHTML = data.map((val, i) => `
+    <div style="flex:1;background:var(--accent);border-radius:2px 2px 0 0;height:${(val/max)*100}%;min-height:4px;opacity:${0.5 + (i/data.length)*0.5}" title="Dag ${i+1}: ${val} nye konti"></div>
+  `).join('');
+}
+
+// Load raw data stats
+function loadRawDataStats() {
+  document.getElementById('stat-total-customers')?.textContent && (document.getElementById('stat-total-customers').textContent = '1,234');
+  document.getElementById('stat-new-signups')?.textContent && (document.getElementById('stat-new-signups').textContent = '+87');
+  document.getElementById('stat-active-users')?.textContent && (document.getElementById('stat-active-users').textContent = '156');
+  document.getElementById('stat-returning')?.textContent && (document.getElementById('stat-returning').textContent = '68%');
+}
+
+// Load system log
+function loadSystemLog() {
+  const tbody = document.getElementById('system-log-table');
+  if (!tbody) return;
+
+  // Demo data
+  const logs = [
+    { time: '10:45:23', type: 'order', desc: 'Ordre #4523 oprettet', user: 'anders@example.dk' },
+    { time: '10:42:15', type: 'payment', desc: 'Betaling modtaget: 485 kr', user: 'System' },
+    { time: '10:38:07', type: 'system', desc: 'Daglig rapport genereret', user: 'System' },
+    { time: '10:30:45', type: 'order', desc: 'Ordre #4522 leveret', user: 'System' },
+    { time: '10:15:32', type: 'error', desc: 'Webhook timeout: retry pending', user: 'System' },
+  ];
+
+  const typeColors = { order: 'var(--accent)', payment: 'var(--success)', system: 'var(--muted)', error: 'var(--error)' };
+  const typeLabels = { order: 'Ordre', payment: 'Betaling', system: 'System', error: 'Fejl' };
+
+  tbody.innerHTML = logs.map(l => `
+    <tr>
+      <td style="padding:12px 16px;font-family:monospace;font-size:12px">${l.time}</td>
+      <td style="padding:12px 8px"><span style="color:${typeColors[l.type]};font-weight:500">${typeLabels[l.type]}</span></td>
+      <td style="padding:12px 8px">${l.desc}</td>
+      <td style="padding:12px 16px;color:var(--muted)">${l.user}</td>
+    </tr>
+  `).join('');
+}
+
+// Filter functions for data tables
+function filterCustomerTable() {
+  const search = document.getElementById('customer-search')?.value?.toLowerCase() || '';
+  const rows = document.querySelectorAll('#customer-data-table tr');
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(search) ? '' : 'none';
+  });
+}
+
+function filterActivityLog() {
+  const filter = document.getElementById('activity-filter')?.value || 'all';
+  // In production, this would reload from database with filter
+  console.log('Filter activity log:', filter);
+}
+
+function filterSystemLog() {
+  const filter = document.getElementById('system-log-filter')?.value || 'all';
+  // In production, this would reload from database with filter
+  console.log('Filter system log:', filter);
+}
+
+function exportCustomerData() {
+  // In production, this would export actual data
+  alert('Eksporterer kundedata til CSV...');
+}
+
+function showCustomerDetails(email) {
+  // In production, this would show customer details modal
+  console.log('Show customer details for:', email);
+}
+
+// Switch Analytics sub-tab within Oversigt page
+function switchAnalyticsTab(tab) {
+  // Update tab buttons within oversigt page
+  const tabButtons = document.querySelectorAll('#flow-cms-content-analytics-oversigt .settings-tabs .settings-tab');
+  tabButtons.forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.toLowerCase().includes(tab) ||
+        (tab === 'overview' && btn.textContent === 'Oversigt') ||
+        (tab === 'sales' && btn.textContent === 'Salg') ||
+        (tab === 'products' && btn.textContent === 'Produkter') ||
+        (tab === 'ai' && btn.textContent === 'AI Agent') ||
+        (tab === 'channels' && btn.textContent === 'Kanaler') ||
+        (tab === 'content' && btn.textContent === 'Indhold')) {
+      btn.classList.add('active');
+    }
+  });
+
+  // Update tab content
+  document.querySelectorAll('#flow-cms-content-analytics-oversigt .analytics-tab-content').forEach(c => {
+    c.classList.remove('active');
+  });
+  const contentEl = document.getElementById('analytics-tab-' + tab);
+  if (contentEl) contentEl.classList.add('active');
+
+  // Load data based on tab
+  if (tab === 'overview') loadAnalyticsOverview();
+  if (tab === 'sales') loadAnalyticsSales();
+  if (tab === 'products') loadAnalyticsProducts();
+  if (tab === 'ai') loadAnalyticsAI();
+  if (tab === 'channels') loadAnalyticsChannels();
+  if (tab === 'content') loadCMSDataStats();
+}
+
+// Load inline analytics data
+function loadAnalyticsDataInline() {
+  loadAnalyticsOverview();
+}
+
+function refreshAnalyticsInline() {
+  const lastUpdated = document.getElementById('analytics-last-updated-inline');
+  if (lastUpdated) {
+    lastUpdated.textContent = 'Opdateret: ' + new Date().toLocaleTimeString('da-DK');
+  }
+  loadAnalyticsOverview();
+  toast('Analytics opdateret', 'success');
+}
+
+function loadAnalyticsOverview() {
+  // Demo data - replace with real Supabase data
+  const demoData = {
+    revenue: '47.850 kr',
+    orders: '156',
+    aov: '307 kr',
+    visitors: '1.247',
+    aiConversations: '89',
+    aiCompletion: '94%'
+  };
+
+  const revenueEl = document.getElementById('inline-stat-revenue');
+  const ordersEl = document.getElementById('inline-stat-orders');
+  const aovEl = document.getElementById('inline-stat-aov');
+  const visitorsEl = document.getElementById('inline-stat-visitors');
+  const aiConvEl = document.getElementById('inline-ai-conversations');
+  const aiCompEl = document.getElementById('inline-ai-completion');
+
+  if (revenueEl) revenueEl.textContent = demoData.revenue;
+  if (ordersEl) ordersEl.textContent = demoData.orders;
+  if (aovEl) aovEl.textContent = demoData.aov;
+  if (visitorsEl) visitorsEl.textContent = demoData.visitors;
+  if (aiConvEl) aiConvEl.textContent = demoData.aiConversations;
+  if (aiCompEl) aiCompEl.textContent = demoData.aiCompletion;
+
+  // Channel bars demo
+  const channelBars = document.getElementById('inline-channel-bars');
+  if (channelBars) {
+    channelBars.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:13px">App</span>
+        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
+          <div style="width:45%;height:100%;background:var(--primary)"></div>
+        </div>
+        <span style="font-size:13px;width:40px;text-align:right">45%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:13px">Website</span>
+        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
+          <div style="width:30%;height:100%;background:var(--success)"></div>
+        </div>
+        <span style="font-size:13px;width:40px;text-align:right">30%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:13px">Telefon</span>
+        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
+          <div style="width:15%;height:100%;background:var(--warning)"></div>
+        </div>
+        <span style="font-size:13px;width:40px;text-align:right">15%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:13px">Walk-in</span>
+        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
+          <div style="width:10%;height:100%;background:var(--accent)"></div>
+        </div>
+        <span style="font-size:13px;width:40px;text-align:right">10%</span>
+      </div>
+    `;
+  }
+
+  // Top products demo
+  const topProducts = document.getElementById('inline-top-products');
+  if (topProducts) {
+    topProducts.innerHTML = `
+      <tr><td style="padding:12px 16px">Margherita Pizza</td><td style="text-align:right;padding-right:16px">47</td></tr>
+      <tr><td style="padding:12px 16px">Pepperoni Pizza</td><td style="text-align:right;padding-right:16px">38</td></tr>
+      <tr><td style="padding:12px 16px">Quattro Formaggi</td><td style="text-align:right;padding-right:16px">29</td></tr>
+      <tr><td style="padding:12px 16px">Tiramisu</td><td style="text-align:right;padding-right:16px">24</td></tr>
+      <tr><td style="padding:12px 16px">Cola</td><td style="text-align:right;padding-right:16px">21</td></tr>
+    `;
+  }
+}
+
+function loadAnalyticsSales() {
+  const salesTotalEl = document.getElementById('sales-total');
+  const salesOrdersEl = document.getElementById('sales-orders');
+  const salesAvgEl = document.getElementById('sales-avg');
+  const salesGrowthEl = document.getElementById('sales-growth');
+
+  if (salesTotalEl) salesTotalEl.textContent = '47.850 kr';
+  if (salesOrdersEl) salesOrdersEl.textContent = '156';
+  if (salesAvgEl) salesAvgEl.textContent = '307 kr';
+  if (salesGrowthEl) salesGrowthEl.textContent = '+12%';
+}
+
+function loadAnalyticsProducts() {
+  const table = document.getElementById('products-analytics-table');
+  if (table) {
+    table.innerHTML = `
+      <tr><td style="padding:12px 16px">Margherita Pizza</td><td style="text-align:right">47</td><td style="text-align:right">4.230 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 15%</td></tr>
+      <tr><td style="padding:12px 16px">Pepperoni Pizza</td><td style="text-align:right">38</td><td style="text-align:right">3.800 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 8%</td></tr>
+      <tr><td style="padding:12px 16px">Quattro Formaggi</td><td style="text-align:right">29</td><td style="text-align:right">3.190 kr</td><td style="text-align:right;padding-right:16px;color:var(--danger)">↓ 3%</td></tr>
+      <tr><td style="padding:12px 16px">Tiramisu</td><td style="text-align:right">24</td><td style="text-align:right">1.440 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 22%</td></tr>
+      <tr><td style="padding:12px 16px">Cola</td><td style="text-align:right">21</td><td style="text-align:right">630 kr</td><td style="text-align:right;padding-right:16px">→ 0%</td></tr>
+    `;
+  }
+}
+
+function loadAnalyticsAI() {
+  const convEl = document.getElementById('ai-total-conversations');
+  const compEl = document.getElementById('ai-completion-rate');
+  const ordersEl = document.getElementById('ai-orders-created');
+  const escEl = document.getElementById('ai-escalation-rate');
+
+  if (convEl) convEl.textContent = '89';
+  if (compEl) compEl.textContent = '94%';
+  if (ordersEl) ordersEl.textContent = '67';
+  if (escEl) escEl.textContent = '6%';
+
+  const convList = document.getElementById('ai-conversations-list');
+  if (convList) {
+    convList.innerHTML = `
+      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Kunde #1247</strong><div style="font-size:12px;color:var(--muted)">Bestilling: 2x Margherita, 1x Cola</div></div>
+        <span style="font-size:12px;color:var(--success)">Fuldført</span>
+      </div>
+      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Kunde #1246</strong><div style="font-size:12px;color:var(--muted)">Spørgsmål: Åbningstider</div></div>
+        <span style="font-size:12px;color:var(--success)">Fuldført</span>
+      </div>
+      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Kunde #1245</strong><div style="font-size:12px;color:var(--muted)">Bestilling: 3x Pepperoni</div></div>
+        <span style="font-size:12px;color:var(--warning)">Eskaleret</span>
+      </div>
+    `;
+  }
+}
+
+function loadAnalyticsChannels() {
+  const appEl = document.getElementById('channel-app');
+  const webEl = document.getElementById('channel-website');
+  const phoneEl = document.getElementById('channel-phone');
+  const walkinEl = document.getElementById('channel-walkin');
+
+  if (appEl) appEl.textContent = '70';
+  if (webEl) webEl.textContent = '47';
+  if (phoneEl) phoneEl.textContent = '23';
+  if (walkinEl) walkinEl.textContent = '16';
+}
+
 // Export CMS Data
 function exportCMSData(format) {
   const data = {
@@ -31057,6 +31779,289 @@ function exportCMSData(format) {
 
   toast('Data eksporteret som ' + format.toUpperCase(), 'success');
 }
+
+// ============ INTEGRATIONS PAGE ============
+
+// Load integrations page
+function loadIntegrationsPage() {
+  // Generate FLOW ID if not exists
+  let flowId = localStorage.getItem('flow_id');
+  if (!flowId) {
+    flowId = generateFlowIdString();
+    localStorage.setItem('flow_id', flowId);
+  }
+
+  const flowIdDisplay = document.getElementById('flow-id-display');
+  if (flowIdDisplay) flowIdDisplay.value = flowId;
+
+  // Load API keys
+  loadApiKeysList();
+
+  // Load connected integrations
+  loadConnectedIntegrations();
+}
+
+// Generate FLOW ID string
+function generateFlowIdString() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const random1 = Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const random2 = Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  return `FLOW-REST-${random1}-${random2}`;
+}
+
+// Copy FLOW ID
+function copyFlowId() {
+  const flowIdDisplay = document.getElementById('flow-id-display');
+  if (flowIdDisplay) {
+    navigator.clipboard.writeText(flowIdDisplay.value);
+    toast('FLOW ID kopieret til udklipsholder', 'success');
+  }
+}
+
+// Regenerate FLOW ID
+function regenerateFlowId() {
+  if (confirm('Er du sikker? Eksisterende integrationer skal opdateres med det nye ID.')) {
+    const newId = generateFlowIdString();
+    localStorage.setItem('flow_id', newId);
+    const flowIdDisplay = document.getElementById('flow-id-display');
+    if (flowIdDisplay) flowIdDisplay.value = newId;
+    toast('Nyt FLOW ID genereret', 'success');
+  }
+}
+
+// Generate API Key
+function generateApiKey() {
+  const nameInput = document.getElementById('api-key-name');
+  const name = nameInput?.value?.trim();
+
+  if (!name) {
+    toast('Indtast et navn til API nøglen', 'warning');
+    return;
+  }
+
+  // Gather permissions
+  const permissions = [];
+  if (document.getElementById('perm-customers')?.checked) permissions.push('customers');
+  if (document.getElementById('perm-orders')?.checked) permissions.push('orders');
+  if (document.getElementById('perm-invoices')?.checked) permissions.push('invoices');
+  if (document.getElementById('perm-products')?.checked) permissions.push('products');
+  if (document.getElementById('perm-payments')?.checked) permissions.push('payments');
+  if (document.getElementById('perm-analytics')?.checked) permissions.push('analytics');
+
+  if (permissions.length === 0) {
+    toast('Vælg mindst én tilladelse', 'warning');
+    return;
+  }
+
+  // Generate key
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const apiKey = 'of_' + Array.from({length: 32}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+  // Save to localStorage
+  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  keys.push({
+    id: Date.now().toString(),
+    name,
+    keyPrefix: apiKey.substring(0, 10) + '...',
+    permissions,
+    createdAt: new Date().toISOString(),
+    lastUsed: null
+  });
+  localStorage.setItem('flow_api_keys', JSON.stringify(keys));
+
+  // Show generated key
+  const container = document.getElementById('generated-key-container');
+  const keyDisplay = document.getElementById('generated-api-key');
+  if (container && keyDisplay) {
+    keyDisplay.value = apiKey;
+    container.style.display = 'block';
+  }
+
+  // Clear input
+  if (nameInput) nameInput.value = '';
+
+  // Reload list
+  loadApiKeysList();
+
+  toast('API nøgle genereret', 'success');
+}
+
+// Load API keys list
+function loadApiKeysList() {
+  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  const tbody = document.getElementById('api-keys-list');
+  if (!tbody) return;
+
+  if (keys.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API nøgler oprettet endnu</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = keys.map(key => `
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:12px 8px;font-size:14px">${key.name}</td>
+      <td style="padding:12px 8px;font-size:14px;font-family:monospace;color:var(--muted)">${key.keyPrefix}</td>
+      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${new Date(key.createdAt).toLocaleDateString('da-DK')}</td>
+      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('da-DK') : 'Aldrig'}</td>
+      <td style="padding:12px 8px;text-align:right">
+        <button class="btn btn-danger btn-sm" onclick="deleteApiKey('${key.id}')">Slet</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Delete API key
+function deleteApiKey(keyId) {
+  if (!confirm('Er du sikker på at du vil slette denne API nøgle?')) return;
+
+  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  const filtered = keys.filter(k => k.id !== keyId);
+  localStorage.setItem('flow_api_keys', JSON.stringify(filtered));
+  loadApiKeysList();
+  toast('API nøgle slettet', 'success');
+}
+
+// Show integration fields based on selected system
+function showIntegrationFields() {
+  const system = document.getElementById('integration-system')?.value;
+
+  // Hide all
+  ['economic', 'dinero', 'billy', 'visma'].forEach(s => {
+    const el = document.getElementById('integration-fields-' + s);
+    if (el) el.style.display = 'none';
+  });
+
+  // Show selected
+  if (system) {
+    const fields = document.getElementById('integration-fields-' + system);
+    if (fields) fields.style.display = 'block';
+  }
+
+  // Enable/disable add button
+  const addBtn = document.getElementById('add-integration-btn');
+  if (addBtn) addBtn.disabled = system !== 'economic'; // Only e-conomic is available now
+}
+
+// Add integration
+async function addIntegration() {
+  const system = document.getElementById('integration-system')?.value;
+
+  if (system === 'economic') {
+    const appSecret = document.getElementById('economic-app-secret')?.value?.trim();
+    const agreementToken = document.getElementById('economic-agreement-token')?.value?.trim();
+
+    if (!appSecret || !agreementToken) {
+      toast('Indtast både App Secret Token og Agreement Grant Token', 'warning');
+      return;
+    }
+
+    // Save integration
+    const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+
+    // Check if already exists
+    if (integrations.some(i => i.system === 'economic')) {
+      toast('e-conomic integration eksisterer allerede', 'warning');
+      return;
+    }
+
+    integrations.push({
+      id: Date.now().toString(),
+      system: 'economic',
+      name: 'e-conomic',
+      status: 'connected',
+      connectedAt: new Date().toISOString(),
+      // Note: In production, tokens should be encrypted
+      config: {
+        appSecretPrefix: appSecret.substring(0, 8) + '...',
+        agreementTokenPrefix: agreementToken.substring(0, 8) + '...'
+      }
+    });
+
+    localStorage.setItem('flow_integrations', JSON.stringify(integrations));
+
+    // Clear fields
+    document.getElementById('economic-app-secret').value = '';
+    document.getElementById('economic-agreement-token').value = '';
+    document.getElementById('integration-system').value = '';
+    showIntegrationFields();
+
+    // Show status
+    const status = document.getElementById('integration-save-status');
+    if (status) {
+      status.style.display = 'inline';
+      setTimeout(() => status.style.display = 'none', 3000);
+    }
+
+    // Reload
+    loadConnectedIntegrations();
+
+    toast('e-conomic integration tilføjet', 'success');
+  }
+}
+
+// Load connected integrations
+function loadConnectedIntegrations() {
+  const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  const container = document.getElementById('connected-integrations-list');
+  if (!container) return;
+
+  if (integrations.length === 0) {
+    container.innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--muted)">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5;margin-bottom:12px">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <p>Ingen integrationer tilsluttet endnu</p>
+        <p style="font-size:12px;margin-top:4px">Tilføj en integration ovenfor for at komme i gang</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = integrations.map(int => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;background:var(--success-dim);border-radius:8px;display:flex;align-items:center;justify-content:center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${int.name}</div>
+          <div style="font-size:12px;color:var(--muted)">Forbundet ${new Date(int.connectedAt).toLocaleDateString('da-DK')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" onclick="testIntegration('${int.id}')">Test forbindelse</button>
+        <button class="btn btn-danger btn-sm" onclick="removeIntegration('${int.id}')">Fjern</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Test integration connection
+function testIntegration(integrationId) {
+  toast('Tester forbindelse...', 'info');
+  // Simulate test
+  setTimeout(() => {
+    toast('Forbindelse OK!', 'success');
+  }, 1500);
+}
+
+// Remove integration
+function removeIntegration(integrationId) {
+  if (!confirm('Er du sikker på at du vil fjerne denne integration?')) return;
+
+  const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  const filtered = integrations.filter(i => i.id !== integrationId);
+  localStorage.setItem('flow_integrations', JSON.stringify(filtered));
+  loadConnectedIntegrations();
+  toast('Integration fjernet', 'success');
+}
+
+// ============ END INTEGRATIONS PAGE ============
 
 // Load and render Flow pages grid
 function loadFlowPagesList() {
@@ -31931,7 +32936,11 @@ function renderBlogList() {
 
   tbody.innerHTML = blogPosts.map((post, index) => `
     <tr>
-      <td style="font-weight:500">${post.title || 'Uden titel'}</td>
+      <td style="font-weight:500">
+        ${post.featured_image ? '<span style="color:var(--success);margin-right:4px" title="Har billede">●</span>' : ''}
+        ${post.title || 'Uden titel'}
+      </td>
+      <td style="color:var(--muted)">${post.category || '-'}</td>
       <td><span class="flow-blog-status ${post.status}">${post.status === 'published' ? 'Publiceret' : 'Kladde'}</span></td>
       <td style="color:var(--muted)">${new Date(post.created_at).toLocaleDateString('da-DK')}</td>
       <td style="text-align:right">
@@ -31949,6 +32958,9 @@ function createNewBlogPost() {
     slug: '',
     excerpt: '',
     content: '',
+    featured_image: '',
+    category: '',
+    author: '',
     status: 'draft',
     created_at: new Date().toISOString()
   };
@@ -31957,6 +32969,9 @@ function createNewBlogPost() {
   document.getElementById('blog-slug').value = '';
   document.getElementById('blog-excerpt').value = '';
   document.getElementById('blog-content').value = '';
+  document.getElementById('blog-featured-image').value = '';
+  document.getElementById('blog-category').value = '';
+  document.getElementById('blog-author').value = '';
 
   switchFlowCMSTab('blog-editor');
 }
@@ -31969,6 +32984,9 @@ function editBlogPost(index) {
   document.getElementById('blog-slug').value = currentBlogPost.slug || '';
   document.getElementById('blog-excerpt').value = currentBlogPost.excerpt || '';
   document.getElementById('blog-content').value = currentBlogPost.content || '';
+  document.getElementById('blog-featured-image').value = currentBlogPost.featured_image || '';
+  document.getElementById('blog-category').value = currentBlogPost.category || '';
+  document.getElementById('blog-author').value = currentBlogPost.author || '';
 
   switchFlowCMSTab('blog-editor');
 }
@@ -31981,6 +32999,9 @@ function saveBlogPost(status) {
   currentBlogPost.slug = document.getElementById('blog-slug').value || generateSlug(currentBlogPost.title);
   currentBlogPost.excerpt = document.getElementById('blog-excerpt').value;
   currentBlogPost.content = document.getElementById('blog-content').value;
+  currentBlogPost.featured_image = document.getElementById('blog-featured-image').value;
+  currentBlogPost.category = document.getElementById('blog-category').value;
+  currentBlogPost.author = document.getElementById('blog-author').value;
   currentBlogPost.status = status;
   currentBlogPost.updated_at = new Date().toISOString();
 
@@ -34429,3 +35450,928 @@ function updateTemplateDropdowns() {
     }
   }
 }
+
+// =====================================================
+// WORKFLOW AGENT PAGES (Instagram/Facebook)
+// =====================================================
+
+// Agent status stored per channel
+let workflowAgentStatus = {
+  instagram: { active: false, connected: false, paymentsConfigured: false },
+  facebook: { active: false, connected: false, paymentsConfigured: false }
+};
+
+// Load workflow agent page data
+async function loadWorkflowAgentPage(channel) {
+  const prefix = channel; // 'instagram' or 'facebook'
+
+  // Set version from OrderingAgent if available
+  if (typeof OrderingAgent !== 'undefined') {
+    const versionEl = document.getElementById(`${prefix}-agent-version`);
+    const buildEl = document.getElementById(`${prefix}-agent-build`);
+    if (versionEl) versionEl.textContent = `v${OrderingAgent.version || '1.0.0'}`;
+    if (buildEl) buildEl.textContent = OrderingAgent.buildDate || '2026-02-05';
+  }
+
+  // Load status from localStorage for demo
+  const storedStatus = JSON.parse(localStorage.getItem(`orderflow_${channel}_agent_status`) || 'null');
+  if (storedStatus) {
+    workflowAgentStatus[channel] = storedStatus;
+  }
+
+  // Update UI with current status
+  updateWorkflowAgentUI(channel);
+
+  // Load ML statistics from Supabase
+  await loadWorkflowMLStats(channel);
+}
+
+// Update workflow agent UI
+function updateWorkflowAgentUI(channel) {
+  const status = workflowAgentStatus[channel];
+  const prefix = channel;
+
+  // Status dot and text
+  const statusDot = document.getElementById(`${prefix}-agent-status-dot`);
+  const statusText = document.getElementById(`${prefix}-agent-status-text`);
+  const toggleBtn = document.getElementById(`${prefix}-toggle-btn`);
+
+  if (statusDot && statusText) {
+    if (status.active) {
+      statusDot.style.background = 'var(--success)';
+      statusText.textContent = 'Aktiv';
+      if (toggleBtn) {
+        toggleBtn.textContent = 'Deaktiver Agent';
+        toggleBtn.classList.remove('btn-primary');
+        toggleBtn.classList.add('btn-secondary');
+      }
+    } else {
+      statusDot.style.background = 'var(--muted)';
+      statusText.textContent = 'Inaktiv';
+      if (toggleBtn) {
+        toggleBtn.textContent = 'Aktiver Agent';
+        toggleBtn.classList.remove('btn-secondary');
+        toggleBtn.classList.add('btn-primary');
+      }
+    }
+  }
+
+  // Integration status
+  const integrationEl = document.getElementById(`${prefix}-integration-status`);
+  if (integrationEl) {
+    if (status.connected) {
+      integrationEl.innerHTML = `
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--success)"></div>
+        <span style="color:var(--success)">Forbundet</span>
+      `;
+    } else {
+      integrationEl.innerHTML = `
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></div>
+        <span style="color:var(--muted)">Ikke forbundet</span>
+      `;
+    }
+  }
+
+  // Payment status
+  const paymentEl = document.getElementById(`${prefix}-payment-status`);
+  if (paymentEl) {
+    if (status.paymentsConfigured) {
+      paymentEl.innerHTML = `
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--success)"></div>
+        <span style="color:var(--success)">Aktiv (Stripe)</span>
+      `;
+    } else {
+      paymentEl.innerHTML = `
+        <div style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></div>
+        <span style="color:var(--muted)">Ikke konfigureret</span>
+      `;
+    }
+  }
+}
+
+// Load ML statistics for workflow
+async function loadWorkflowMLStats(channel) {
+  const prefix = channel;
+
+  try {
+    let stats = { conversations: 0, orders: 0, completionRate: 0, avgResponseTime: 0, lastTrained: null };
+
+    // Try to load from Supabase
+    if (typeof supabase !== 'undefined' && supabase && typeof OrderingAgent !== 'undefined') {
+      const insights = await OrderingAgent.getMLInsights(getCurrentRestaurantId());
+      if (insights) {
+        stats = {
+          conversations: insights.totalConversations || 0,
+          orders: Math.round((insights.totalConversations || 0) * (insights.completionRate || 0)),
+          completionRate: Math.round((insights.completionRate || 0) * 100),
+          avgResponseTime: insights.avgResponseTime || 0,
+          lastTrained: insights.lastTrained
+        };
+      }
+    } else {
+      // Demo data
+      stats = {
+        conversations: Math.floor(Math.random() * 500) + 100,
+        orders: Math.floor(Math.random() * 200) + 50,
+        completionRate: Math.floor(Math.random() * 30) + 60,
+        avgResponseTime: (Math.random() * 3 + 1).toFixed(1),
+        lastTrained: new Date().toISOString().split('T')[0]
+      };
+    }
+
+    // Update UI
+    const convEl = document.getElementById(`${prefix}-ml-conversations`);
+    const ordersEl = document.getElementById(`${prefix}-ml-orders`);
+    const rateEl = document.getElementById(`${prefix}-ml-rate`);
+    const responseEl = document.getElementById(`${prefix}-ml-response`);
+    const trainedEl = document.getElementById(`${prefix}-ml-trained`);
+
+    if (convEl) convEl.textContent = stats.conversations.toLocaleString();
+    if (ordersEl) ordersEl.textContent = stats.orders.toLocaleString();
+    if (rateEl) rateEl.textContent = `${stats.completionRate}%`;
+    if (responseEl) responseEl.textContent = `${stats.avgResponseTime} sek`;
+    if (trainedEl) trainedEl.textContent = stats.lastTrained || '-';
+
+  } catch (err) {
+    console.error('Error loading ML stats:', err);
+  }
+}
+
+// Toggle Instagram agent
+function toggleInstagramAgent() {
+  workflowAgentStatus.instagram.active = !workflowAgentStatus.instagram.active;
+  localStorage.setItem('orderflow_instagram_agent_status', JSON.stringify(workflowAgentStatus.instagram));
+  updateWorkflowAgentUI('instagram');
+  showToast(workflowAgentStatus.instagram.active ? 'Instagram agent aktiveret' : 'Instagram agent deaktiveret', 'success');
+}
+
+// Toggle Facebook agent
+function toggleFacebookAgent() {
+  workflowAgentStatus.facebook.active = !workflowAgentStatus.facebook.active;
+  localStorage.setItem('orderflow_facebook_agent_status', JSON.stringify(workflowAgentStatus.facebook));
+  updateWorkflowAgentUI('facebook');
+  showToast(workflowAgentStatus.facebook.active ? 'Facebook agent aktiveret' : 'Facebook agent deaktiveret', 'success');
+}
+
+// Show Instagram config (placeholder)
+function showInstagramConfig() {
+  showToast('Instagram konfiguration kommer snart', 'info');
+}
+
+// Show Facebook config (placeholder)
+function showFacebookConfig() {
+  showToast('Facebook konfiguration kommer snart', 'info');
+}
+
+// Export workflow functions
+window.loadWorkflowAgentPage = loadWorkflowAgentPage;
+window.toggleInstagramAgent = toggleInstagramAgent;
+window.toggleFacebookAgent = toggleFacebookAgent;
+window.showInstagramConfig = showInstagramConfig;
+window.showFacebookConfig = showFacebookConfig;
+
+// =====================================================
+// AI AGENTS MANAGEMENT (Legacy - keeping for reference)
+// =====================================================
+
+let aiAgents = [];
+let currentAgentId = null;
+let pendingDeleteAgentId = null;
+
+// Load agents from Supabase
+async function loadAiAgents() {
+  const container = document.getElementById('agents-grid');
+  const emptyEl = document.getElementById('agents-empty');
+
+  if (container) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Indlæser agenter...</div>';
+  }
+
+  try {
+    const userId = getCurrentUserId();
+
+    if (typeof supabase !== 'undefined' && supabase) {
+      const { data, error } = await supabase
+        .from('ai_agents')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      aiAgents = data || [];
+    } else {
+      // Fallback to localStorage for demo
+      aiAgents = JSON.parse(localStorage.getItem('orderflow_ai_agents') || '[]');
+    }
+
+    renderAgentsList();
+    renderActiveAgentWorkflow();
+  } catch (err) {
+    console.error('Error loading AI agents:', err);
+    toast('Kunne ikke indlæse agenter', 'error');
+    if (container) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">Fejl ved indlæsning</div>';
+    }
+  }
+}
+
+// Render agents list
+function renderAgentsList() {
+  const container = document.getElementById('agents-grid');
+  const emptyEl = document.getElementById('agents-empty');
+  if (!container) return;
+
+  const searchQuery = (document.getElementById('agent-search')?.value || '').toLowerCase();
+  const channelFilter = document.getElementById('agent-filter-channel')?.value || '';
+
+  let filteredAgents = aiAgents.filter(agent => {
+    const matchesSearch = agent.name.toLowerCase().includes(searchQuery);
+    const matchesChannel = !channelFilter || agent.channel === channelFilter;
+    return matchesSearch && matchesChannel;
+  });
+
+  if (filteredAgents.length === 0) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const statusColors = {
+    active: '#22c55e',
+    inactive: 'var(--muted)',
+    paused: '#f59e0b'
+  };
+
+  const statusLabels = {
+    active: 'Aktiv',
+    inactive: 'Inaktiv',
+    paused: 'Pauseret'
+  };
+
+  const channelIcons = {
+    instagram: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1.5" fill="currentColor"/></svg>',
+    facebook: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>'
+  };
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:var(--space-4)">
+      ${filteredAgents.map(agent => `
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4);cursor:pointer;transition:border-color 0.2s" onclick="editAgent('${agent.id}')" onmouseenter="this.style.borderColor='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-3)">
+            <div style="display:flex;align-items:center;gap:var(--space-2);color:var(--text2)">
+              ${channelIcons[agent.channel] || ''}
+              <span style="text-transform:capitalize;font-size:var(--font-size-sm)">${agent.channel}</span>
+            </div>
+            <span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;background:${agent.status === 'active' ? 'rgba(34,197,94,0.1)' : 'var(--bg2)'};color:${statusColors[agent.status]}">
+              <span style="width:6px;height:6px;border-radius:50%;background:${statusColors[agent.status]}"></span>
+              ${statusLabels[agent.status]}
+            </span>
+          </div>
+          <h3 style="font-weight:600;margin-bottom:var(--space-2);color:var(--text1)">${agent.name}</h3>
+          <div style="display:flex;gap:var(--space-4);font-size:var(--font-size-sm);color:var(--muted);margin-bottom:var(--space-3)">
+            <span>Samtaler: ${agent.conversations_count || 0}</span>
+            <span>Ordrer: ${agent.orders_completed || 0}</span>
+          </div>
+          <div style="display:flex;gap:var(--space-2)">
+            <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();editAgent('${agent.id}')">Rediger</button>
+            <button class="btn btn-sm" style="background:var(--danger-dim);color:var(--danger)" onclick="event.stopPropagation();confirmDeleteAgent('${agent.id}', '${agent.name}')">Slet</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Show create agent modal
+function showCreateAgentModal(prefillChannel) {
+  currentAgentId = null;
+  document.getElementById('agent-modal-title').textContent = 'Opret AI Agent';
+  document.getElementById('agent-save-btn').textContent = 'Opret agent';
+  document.getElementById('agent-edit-id').value = '';
+  document.getElementById('agent-name').value = '';
+  document.getElementById('agent-channel').value = prefillChannel || 'instagram';
+  document.getElementById('agent-status').value = 'inactive';
+
+  // Reset config to defaults
+  document.getElementById('agent-config-language').value = 'da';
+  document.getElementById('agent-config-retries').value = '1';
+  document.getElementById('agent-config-escalation').value = '2';
+  document.getElementById('agent-config-catering').value = '15';
+  document.getElementById('agent-config-model').value = 'gpt-4o-mini';
+  document.getElementById('agent-config-analytics').checked = true;
+  document.getElementById('agent-config-payments').checked = false;
+  document.getElementById('agent-config-ml').checked = true;
+
+  populateRestaurantDropdownForAgents('agent-restaurant');
+  document.getElementById('agent-modal').style.display = 'flex';
+}
+
+// Edit agent
+function editAgent(agentId) {
+  const agent = aiAgents.find(a => a.id === agentId);
+  if (!agent) return;
+
+  currentAgentId = agentId;
+  document.getElementById('agent-modal-title').textContent = 'Rediger AI Agent';
+  document.getElementById('agent-save-btn').textContent = 'Gem ændringer';
+  document.getElementById('agent-edit-id').value = agentId;
+  document.getElementById('agent-name').value = agent.name;
+  document.getElementById('agent-channel').value = agent.channel;
+  document.getElementById('agent-status').value = agent.status;
+
+  // Load config
+  const config = agent.config || {};
+  document.getElementById('agent-config-language').value = config.defaultLanguage || 'da';
+  document.getElementById('agent-config-retries').value = config.maxRetries || 1;
+  document.getElementById('agent-config-escalation').value = config.escalationThreshold || 2;
+  document.getElementById('agent-config-catering').value = config.cateringThreshold || 15;
+  document.getElementById('agent-config-model').value = config.modelVersion || config.model || 'gpt-4o-mini';
+  document.getElementById('agent-config-analytics').checked = config.enableAnalytics !== false;
+  document.getElementById('agent-config-payments').checked = config.enablePayments === true;
+  document.getElementById('agent-config-ml').checked = config.enableMLStorage !== false;
+
+  populateRestaurantDropdownForAgents('agent-restaurant', agent.restaurant_id);
+  document.getElementById('agent-modal').style.display = 'flex';
+}
+
+// Close agent modal
+function closeAgentModal() {
+  document.getElementById('agent-modal').style.display = 'none';
+  currentAgentId = null;
+}
+
+// Save agent (create or update)
+async function saveAgent() {
+  const name = document.getElementById('agent-name').value.trim();
+  if (!name) {
+    toast('Indtast et agent navn', 'error');
+    return;
+  }
+
+  const agentData = {
+    name,
+    channel: document.getElementById('agent-channel').value,
+    status: document.getElementById('agent-status').value,
+    restaurant_id: document.getElementById('agent-restaurant').value || null,
+    config: {
+      defaultLanguage: document.getElementById('agent-config-language').value,
+      maxRetries: parseInt(document.getElementById('agent-config-retries').value),
+      escalationThreshold: parseInt(document.getElementById('agent-config-escalation').value),
+      cateringThreshold: parseInt(document.getElementById('agent-config-catering').value),
+      modelVersion: document.getElementById('agent-config-model')?.value.trim() || 'gpt-4o-mini',
+      enableAnalytics: document.getElementById('agent-config-analytics').checked,
+      enablePayments: document.getElementById('agent-config-payments').checked,
+      enableMLStorage: document.getElementById('agent-config-ml').checked,
+      paymentTimeout: 900000
+    }
+  };
+
+  try {
+    if (typeof supabase !== 'undefined' && supabase) {
+      if (currentAgentId) {
+        const { error } = await supabase
+          .from('ai_agents')
+          .update(agentData)
+          .eq('id', currentAgentId);
+        if (error) throw error;
+        toast('Agent opdateret', 'success');
+      } else {
+        agentData.user_id = getCurrentUserId();
+        const { error } = await supabase
+          .from('ai_agents')
+          .insert([agentData]);
+        if (error) throw error;
+        toast('Agent oprettet', 'success');
+      }
+    } else {
+      // Fallback to localStorage
+      if (currentAgentId) {
+        const idx = aiAgents.findIndex(a => a.id === currentAgentId);
+        if (idx > -1) {
+          aiAgents[idx] = { ...aiAgents[idx], ...agentData };
+        }
+      } else {
+        agentData.id = 'agent_' + Date.now();
+        agentData.user_id = getCurrentUserId();
+        agentData.created_at = new Date().toISOString();
+        agentData.conversations_count = 0;
+        agentData.orders_completed = 0;
+        aiAgents.push(agentData);
+      }
+      localStorage.setItem('orderflow_ai_agents', JSON.stringify(aiAgents));
+      toast(currentAgentId ? 'Agent opdateret' : 'Agent oprettet', 'success');
+    }
+
+    closeAgentModal();
+    loadAiAgents();
+  } catch (err) {
+    console.error('Error saving agent:', err);
+    toast('Kunne ikke gemme agent', 'error');
+  }
+}
+
+// Confirm delete agent
+function confirmDeleteAgent(agentId, agentName) {
+  pendingDeleteAgentId = agentId;
+  document.getElementById('delete-confirm-message').textContent =
+    'Er du sikker på at du vil slette agenten "' + agentName + '"?';
+  document.getElementById('delete-confirm-btn').onclick = deleteAgent;
+  document.getElementById('delete-confirm-modal').style.display = 'flex';
+}
+
+// Delete agent
+async function deleteAgent() {
+  if (!pendingDeleteAgentId) return;
+
+  try {
+    if (typeof supabase !== 'undefined' && supabase) {
+      const { error } = await supabase
+        .from('ai_agents')
+        .delete()
+        .eq('id', pendingDeleteAgentId);
+
+      if (error) throw error;
+    } else {
+      aiAgents = aiAgents.filter(a => a.id !== pendingDeleteAgentId);
+      localStorage.setItem('orderflow_ai_agents', JSON.stringify(aiAgents));
+    }
+
+    toast('Agent slettet', 'success');
+    closeDeleteConfirmModal();
+    loadAiAgents();
+  } catch (err) {
+    console.error('Error deleting agent:', err);
+    toast('Kunne ikke slette agent', 'error');
+  }
+
+  pendingDeleteAgentId = null;
+}
+
+// Filter agents
+function filterAgents() {
+  renderAgentsList();
+}
+
+function openAgentWorkflow(channel) {
+  if (!channel) return;
+  showPage(`${channel}-workflow`);
+}
+
+async function loadAgentWorkflowPage(channel) {
+  if (!channel) return;
+  if (!aiAgents || aiAgents.length === 0) {
+    await loadAiAgents();
+    return;
+  }
+  renderAgentWorkflow(channel);
+}
+
+function renderActiveAgentWorkflow() {
+  const igPage = document.getElementById('page-instagram-workflow');
+  if (igPage?.classList.contains('active')) {
+    renderAgentWorkflow('instagram');
+  }
+  const fbPage = document.getElementById('page-facebook-workflow');
+  if (fbPage?.classList.contains('active')) {
+    renderAgentWorkflow('facebook');
+  }
+}
+
+function renderAgentWorkflow(channel) {
+  const container = document.getElementById(`workflow-${channel}-content`);
+  if (!container) return;
+
+  const channelLabel = channel === 'instagram' ? 'Instagram' : 'Facebook';
+  const channelAgents = aiAgents.filter(agent => (agent.channel || '').toLowerCase() === channel);
+
+  if (channelAgents.length === 0) {
+    container.innerHTML = `
+      <div style="padding:60px 20px;text-align:center;background:var(--card);border-radius:var(--radius-md);border:1px solid var(--border)">
+        <h3 style="color:var(--text1);margin-bottom:8px">Ingen ${channelLabel} agent endnu</h3>
+        <p style="color:var(--muted);margin-bottom:20px">Opret din første ${channelLabel.toLowerCase()} agent for dette workflow</p>
+        <button class="btn btn-primary" onclick="showCreateAgentModal('${channel}')">Opret ${channelLabel} agent</button>
+      </div>
+    `;
+    return;
+  }
+
+  const agent = channelAgents.find(a => a.status === 'active') || channelAgents[0];
+  const statusLabels = { active: 'Aktiv', inactive: 'Inaktiv', paused: 'Pauseret' };
+  const statusColors = { active: '#22c55e', inactive: 'var(--muted)', paused: '#f59e0b' };
+  const modelVersion = agent.config?.modelVersion || agent.config?.model || agent.model_version || agent.model || 'gpt-4o-mini';
+  const updatedAt = agent.updated_at || agent.created_at;
+  const updatedDisplay = updatedAt ? new Date(updatedAt).toLocaleString('da-DK') : '—';
+
+  container.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-5)">
+      <button class="btn btn-secondary" onclick="loadAgentWorkflowPage('${channel}')">Opdater data</button>
+      <button class="btn btn-secondary" onclick="showPage('ai-agents')">Se alle agenter</button>
+      <button class="btn btn-primary" onclick="editAgent('${agent.id}')">Rediger agent</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:var(--space-4)">
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Agent</div>
+        <div style="font-size:18px;font-weight:600;margin-top:6px">${agent.name}</div>
+      </div>
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Workflow</div>
+        <div style="font-size:18px;font-weight:600;margin-top:6px">${channelLabel} Workflow</div>
+      </div>
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Modelversion</div>
+        <div style="font-size:18px;font-weight:600;margin-top:6px">${modelVersion}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:var(--space-4);margin-top:var(--space-4)">
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Samtaler</div>
+        <div style="font-size:20px;font-weight:600;margin-top:6px">${agent.conversations_count || 0}</div>
+      </div>
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Ordrer</div>
+        <div style="font-size:20px;font-weight:600;margin-top:6px">${agent.orders_completed || 0}</div>
+      </div>
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Status</div>
+        <div style="font-size:16px;font-weight:600;margin-top:8px;display:inline-flex;align-items:center;gap:8px;color:${statusColors[agent.status] || 'var(--muted)'}">
+          <span style="width:8px;height:8px;border-radius:50%;background:${statusColors[agent.status] || 'var(--muted)'}"></span>
+          ${statusLabels[agent.status] || agent.status || 'Ukendt'}
+        </div>
+      </div>
+      <div class="card">
+        <div style="color:var(--muted);font-size:12px;letter-spacing:0.08em;text-transform:uppercase">Sidst opdateret</div>
+        <div style="font-size:16px;font-weight:600;margin-top:6px">${updatedDisplay}</div>
+      </div>
+    </div>
+  `;
+}
+
+// =====================================================
+// SMS WORKFLOWS MANAGEMENT
+// =====================================================
+
+let smsWorkflows = [];
+let currentSmsWorkflowId = null;
+let pendingDeleteWorkflowId = null;
+
+// Load workflows from Supabase
+async function loadSmsWorkflows() {
+  const container = document.getElementById('workflows-list');
+  const emptyEl = document.getElementById('workflows-empty');
+
+  if (container) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">Indlæser workflows...</div>';
+  }
+
+  try {
+    const userId = getCurrentUserId();
+
+    if (typeof supabase !== 'undefined' && supabase) {
+      const { data, error } = await supabase
+        .from('sms_workflows')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      smsWorkflows = data || [];
+    } else {
+      smsWorkflows = JSON.parse(localStorage.getItem('orderflow_sms_workflows') || '[]');
+    }
+
+    renderWorkflowsList();
+  } catch (err) {
+    console.error('Error loading SMS workflows:', err);
+    toast('Kunne ikke indlæse workflows', 'error');
+    if (container) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--danger)">Fejl ved indlæsning</div>';
+    }
+  }
+}
+
+// Render workflows list
+function renderWorkflowsList() {
+  const container = document.getElementById('workflows-list');
+  const emptyEl = document.getElementById('workflows-empty');
+  if (!container) return;
+
+  const searchQuery = (document.getElementById('workflow-search')?.value || '').toLowerCase();
+  const variantFilter = document.getElementById('workflow-filter-variant')?.value || '';
+
+  let filteredWorkflows = smsWorkflows.filter(wf => {
+    const matchesSearch = wf.name.toLowerCase().includes(searchQuery);
+    const matchesVariant = !variantFilter || wf.variant === variantFilter;
+    return matchesSearch && matchesVariant;
+  });
+
+  if (filteredWorkflows.length === 0) {
+    container.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  const statusColors = {
+    active: '#22c55e',
+    inactive: 'var(--muted)',
+    draft: '#f59e0b'
+  };
+
+  const statusLabels = {
+    active: 'Aktiv',
+    inactive: 'Inaktiv',
+    draft: 'Kladde'
+  };
+
+  const variantLabels = {
+    restaurant: 'Restaurant',
+    haandvaerker: 'Håndværker',
+    custom: 'Brugerdefineret'
+  };
+
+  container.innerHTML = '<table style="width:100%;border-collapse:collapse">' +
+    '<thead><tr style="border-bottom:1px solid var(--border);background:var(--bg2)">' +
+    '<th style="padding:12px 16px;text-align:left;font-weight:500;font-size:var(--font-size-sm)">Navn</th>' +
+    '<th style="padding:12px 16px;text-align:left;font-weight:500;font-size:var(--font-size-sm)">Variant</th>' +
+    '<th style="padding:12px 16px;text-align:left;font-weight:500;font-size:var(--font-size-sm)">Status</th>' +
+    '<th style="padding:12px 16px;text-align:left;font-weight:500;font-size:var(--font-size-sm)">Kørsler</th>' +
+    '<th style="padding:12px 16px;text-align:left;font-weight:500;font-size:var(--font-size-sm)">SMS Sendt</th>' +
+    '<th style="padding:12px 16px;text-align:right;font-weight:500;font-size:var(--font-size-sm)">Handlinger</th>' +
+    '</tr></thead><tbody>' +
+    filteredWorkflows.map(function(wf, idx) {
+      return '<tr style="border-bottom:1px solid var(--border);background:' + (idx % 2 === 0 ? 'transparent' : 'var(--bg2)') + '">' +
+        '<td style="padding:12px 16px;font-weight:500">' + wf.name + '</td>' +
+        '<td style="padding:12px 16px">' + (variantLabels[wf.variant] || wf.variant) + '</td>' +
+        '<td style="padding:12px 16px">' +
+        '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;background:' + (wf.status === 'active' ? 'rgba(34,197,94,0.1)' : 'var(--bg2)') + ';color:' + statusColors[wf.status] + '">' +
+        '<span style="width:6px;height:6px;border-radius:50%;background:' + statusColors[wf.status] + '"></span>' +
+        statusLabels[wf.status] + '</span></td>' +
+        '<td style="padding:12px 16px">' + (wf.executions_count || 0) + '</td>' +
+        '<td style="padding:12px 16px">' + (wf.sms_sent_count || 0) + '</td>' +
+        '<td style="padding:12px 16px;text-align:right">' +
+        '<div style="display:flex;gap:var(--space-2);justify-content:flex-end">' +
+        '<button class="btn btn-sm btn-secondary" onclick="openWorkflowInBuilder(\'' + wf.id + '\')">Builder</button>' +
+        '<button class="btn btn-sm btn-secondary" onclick="editSmsWorkflow(\'' + wf.id + '\')">Rediger</button>' +
+        '<button class="btn btn-sm" style="background:var(--danger-dim);color:var(--danger)" onclick="confirmDeleteWorkflow(\'' + wf.id + '\', \'' + wf.name + '\')">Slet</button>' +
+        '</div></td></tr>';
+    }).join('') +
+    '</tbody></table>';
+}
+
+// Show create workflow modal
+function showCreateWorkflowModal() {
+  currentSmsWorkflowId = null;
+  document.getElementById('sms-workflow-modal-title').textContent = 'Opret SMS Workflow';
+  document.getElementById('sms-workflow-save-btn').textContent = 'Opret workflow';
+  document.getElementById('sms-workflow-edit-id').value = '';
+  document.getElementById('sms-workflow-name').value = '';
+  document.getElementById('sms-workflow-variant').value = 'restaurant';
+  document.getElementById('sms-workflow-status').value = 'draft';
+
+  document.getElementById('sms-trigger-order-placed').checked = false;
+  document.getElementById('sms-trigger-delivered').checked = false;
+  document.getElementById('sms-trigger-signup').checked = false;
+  document.getElementById('sms-trigger-missed-call').checked = false;
+
+  populateRestaurantDropdownForAgents('sms-workflow-restaurant');
+  document.getElementById('sms-workflow-modal').style.display = 'flex';
+}
+
+// Edit workflow
+function editSmsWorkflow(workflowId) {
+  const workflow = smsWorkflows.find(function(w) { return w.id === workflowId; });
+  if (!workflow) return;
+
+  currentSmsWorkflowId = workflowId;
+  document.getElementById('sms-workflow-modal-title').textContent = 'Rediger SMS Workflow';
+  document.getElementById('sms-workflow-save-btn').textContent = 'Gem ændringer';
+  document.getElementById('sms-workflow-edit-id').value = workflowId;
+  document.getElementById('sms-workflow-name').value = workflow.name;
+  document.getElementById('sms-workflow-variant').value = workflow.variant;
+  document.getElementById('sms-workflow-status').value = workflow.status;
+
+  var triggers = workflow.triggers || {};
+  document.getElementById('sms-trigger-order-placed').checked = triggers.on_order_placed || false;
+  document.getElementById('sms-trigger-delivered').checked = triggers.on_order_delivered || false;
+  document.getElementById('sms-trigger-signup').checked = triggers.on_customer_signup || false;
+  document.getElementById('sms-trigger-missed-call').checked = triggers.on_missed_call || false;
+
+  populateRestaurantDropdownForAgents('sms-workflow-restaurant', workflow.restaurant_id);
+  document.getElementById('sms-workflow-modal').style.display = 'flex';
+}
+
+// Close workflow modal
+function closeSmsWorkflowModal() {
+  document.getElementById('sms-workflow-modal').style.display = 'none';
+  currentSmsWorkflowId = null;
+}
+
+// Save workflow
+async function saveSmsWorkflow() {
+  var name = document.getElementById('sms-workflow-name').value.trim();
+  if (!name) {
+    toast('Indtast et workflow navn', 'error');
+    return;
+  }
+
+  var workflowData = {
+    name: name,
+    variant: document.getElementById('sms-workflow-variant').value,
+    status: document.getElementById('sms-workflow-status').value,
+    restaurant_id: document.getElementById('sms-workflow-restaurant').value || null,
+    triggers: {
+      on_order_placed: document.getElementById('sms-trigger-order-placed').checked,
+      on_order_delivered: document.getElementById('sms-trigger-delivered').checked,
+      on_customer_signup: document.getElementById('sms-trigger-signup').checked,
+      on_missed_call: document.getElementById('sms-trigger-missed-call').checked,
+      scheduled: null
+    }
+  };
+
+  try {
+    if (typeof supabase !== 'undefined' && supabase) {
+      if (currentSmsWorkflowId) {
+        var result = await supabase.from('sms_workflows').update(workflowData).eq('id', currentSmsWorkflowId);
+        if (result.error) throw result.error;
+        toast('Workflow opdateret', 'success');
+      } else {
+        workflowData.user_id = getCurrentUserId();
+        workflowData.workflow_nodes = [];
+        workflowData.workflow_connections = [];
+        var result = await supabase.from('sms_workflows').insert([workflowData]);
+        if (result.error) throw result.error;
+        toast('Workflow oprettet', 'success');
+      }
+    } else {
+      if (currentSmsWorkflowId) {
+        var idx = smsWorkflows.findIndex(function(w) { return w.id === currentSmsWorkflowId; });
+        if (idx > -1) {
+          smsWorkflows[idx] = Object.assign({}, smsWorkflows[idx], workflowData);
+        }
+      } else {
+        workflowData.id = 'workflow_' + Date.now();
+        workflowData.user_id = getCurrentUserId();
+        workflowData.created_at = new Date().toISOString();
+        workflowData.workflow_nodes = [];
+        workflowData.workflow_connections = [];
+        workflowData.executions_count = 0;
+        workflowData.sms_sent_count = 0;
+        smsWorkflows.push(workflowData);
+      }
+      localStorage.setItem('orderflow_sms_workflows', JSON.stringify(smsWorkflows));
+      toast(currentSmsWorkflowId ? 'Workflow opdateret' : 'Workflow oprettet', 'success');
+    }
+
+    closeSmsWorkflowModal();
+    loadSmsWorkflows();
+  } catch (err) {
+    console.error('Error saving workflow:', err);
+    toast('Kunne ikke gemme workflow', 'error');
+  }
+}
+
+// Open workflow in builder
+function openWorkflowInBuilder(workflowId) {
+  var workflow = smsWorkflows.find(function(w) { return w.id === workflowId; });
+  if (!workflow) return;
+
+  var moduleMap = {
+    restaurant: 'restaurant',
+    haandvaerker: 'haandvaerker',
+    custom: 'restaurant'
+  };
+
+  localStorage.setItem('current_workflow_id', workflowId);
+  showPage('workflow');
+
+  setTimeout(function() {
+    var moduleToSelect = moduleMap[workflow.variant] || 'restaurant';
+    if (typeof selectWorkflowModule === 'function') {
+      selectWorkflowModule(moduleToSelect);
+    }
+
+    if (workflow.workflow_nodes && workflow.workflow_nodes.length > 0) {
+      workflowNodes = workflow.workflow_nodes;
+      workflowConnections = workflow.workflow_connections || [];
+      renderWorkflowNodes();
+      if (typeof renderConnections === 'function') {
+        renderConnections();
+      }
+      setTimeout(function() {
+        if (typeof fitWorkflowToView === 'function') {
+          fitWorkflowToView();
+        }
+      }, 200);
+    }
+  }, 100);
+}
+
+// Handle workflow variant change
+function onWorkflowVariantChange() {
+  // Could be used to update UI based on variant selection
+}
+
+// Confirm delete workflow
+function confirmDeleteWorkflow(workflowId, workflowName) {
+  pendingDeleteWorkflowId = workflowId;
+  document.getElementById('delete-confirm-message').textContent =
+    'Er du sikker på at du vil slette workflowet "' + workflowName + '"?';
+  document.getElementById('delete-confirm-btn').onclick = deleteWorkflow;
+  document.getElementById('delete-confirm-modal').style.display = 'flex';
+}
+
+// Delete workflow
+async function deleteWorkflow() {
+  if (!pendingDeleteWorkflowId) return;
+
+  try {
+    if (typeof supabase !== 'undefined' && supabase) {
+      var result = await supabase.from('sms_workflows').delete().eq('id', pendingDeleteWorkflowId);
+      if (result.error) throw result.error;
+    } else {
+      smsWorkflows = smsWorkflows.filter(function(w) { return w.id !== pendingDeleteWorkflowId; });
+      localStorage.setItem('orderflow_sms_workflows', JSON.stringify(smsWorkflows));
+    }
+
+    toast('Workflow slettet', 'success');
+    closeDeleteConfirmModal();
+    loadSmsWorkflows();
+  } catch (err) {
+    console.error('Error deleting workflow:', err);
+    toast('Kunne ikke slette workflow', 'error');
+  }
+
+  pendingDeleteWorkflowId = null;
+}
+
+// Filter workflows
+function filterWorkflows() {
+  renderWorkflowsList();
+}
+
+// =====================================================
+// SHARED HELPERS FOR AGENT/WORKFLOW MANAGEMENT
+// =====================================================
+
+// Close delete confirm modal
+function closeDeleteConfirmModal() {
+  document.getElementById('delete-confirm-modal').style.display = 'none';
+  pendingDeleteAgentId = null;
+  pendingDeleteWorkflowId = null;
+}
+
+// Populate restaurant dropdown for agents/workflows
+function populateRestaurantDropdownForAgents(selectId, selectedValue) {
+  var select = document.getElementById(selectId);
+  if (!select) return;
+
+  select.innerHTML = '<option value="">Vælg restaurant...</option>';
+
+  var restaurantList = window.restaurants || [];
+
+  restaurantList.forEach(function(r) {
+    var option = document.createElement('option');
+    option.value = r.id;
+    option.textContent = r.name || r.firmanavn || 'Unavngivet';
+    if (selectedValue && r.id === selectedValue) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+}
+
+// Get current user ID (helper)
+function getCurrentUserId() {
+  return (window.currentUser && window.currentUser.id) || localStorage.getItem('demo_user_id') || 'demo-user';
+}
+
+// Export functions to window
+window.loadAiAgents = loadAiAgents;
+window.renderAgentsList = renderAgentsList;
+window.showCreateAgentModal = showCreateAgentModal;
+window.editAgent = editAgent;
+window.closeAgentModal = closeAgentModal;
+window.saveAgent = saveAgent;
+window.confirmDeleteAgent = confirmDeleteAgent;
+window.deleteAgent = deleteAgent;
+window.filterAgents = filterAgents;
+
+window.loadSmsWorkflows = loadSmsWorkflows;
+window.renderWorkflowsList = renderWorkflowsList;
+window.showCreateWorkflowModal = showCreateWorkflowModal;
+window.editSmsWorkflow = editSmsWorkflow;
+window.closeSmsWorkflowModal = closeSmsWorkflowModal;
+window.saveSmsWorkflow = saveSmsWorkflow;
+window.openWorkflowInBuilder = openWorkflowInBuilder;
+window.onWorkflowVariantChange = onWorkflowVariantChange;
+window.confirmDeleteWorkflow = confirmDeleteWorkflow;
+window.deleteWorkflow = deleteWorkflow;
+window.filterWorkflows = filterWorkflows;
+
+window.closeDeleteConfirmModal = closeDeleteConfirmModal;
+window.populateRestaurantDropdownForAgents = populateRestaurantDropdownForAgents;

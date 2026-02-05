@@ -324,9 +324,12 @@
                     PROGRAMMER
                   </div>
                   <div class="flyout-category-items">
-                    <a class="flyout-item" href="/landing-pages/sms-workflow.html" onclick="closeFlyout()">SMS Workflow</a>
-                    <a class="flyout-item" href="/landing-pages/instagram-workflow.html" onclick="closeFlyout()">Instagram Workflow</a>
-                    <a class="flyout-item" href="/landing-pages/facebook-workflow.html" onclick="closeFlyout()">Facebook Workflow</a>
+                    <button class="flyout-item" onclick="showPage('instagram-workflow');closeFlyout()">Instagram Workflow</button>
+                    <button class="flyout-item" onclick="showPage('facebook-workflow');closeFlyout()">Facebook Workflow</button>
+                    <button class="flyout-item" onclick="showPage('sms-workflows');closeFlyout()">SMS Workflows</button>
+                    <a class="flyout-item" href="/landing-pages/sms-workflow.html" onclick="closeFlyout()">SMS Workflow Info</a>
+                    <a class="flyout-item" href="/landing-pages/instagram-workflow.html" onclick="closeFlyout()">Instagram Workflow Info</a>
+                    <a class="flyout-item" href="/landing-pages/facebook-workflow.html" onclick="closeFlyout()">Facebook Workflow Info</a>
                   </div>
                 </div>
                 <div class="flyout-category">
@@ -348,7 +351,8 @@
                   </div>
                   <div class="flyout-category-items">
                     <button class="flyout-item" onclick="showSettingsPage('api');closeFlyout()">API nøgler</button>
-                    <button class="flyout-item" onclick="showFlowCMSPage('data');closeFlyout()">Data<span class="flyout-badge-new">New</span></button>
+                    <button class="flyout-item" onclick="showFlowCMSPage('data');closeFlyout()">Data</button>
+                    <button class="flyout-item" onclick="showFlowCMSPage('integrationer');closeFlyout()">Integrationer<span class="flyout-badge-new">New</span></button>
                   </div>
                 </div>
               </div>
