@@ -143,16 +143,16 @@
       --n12: #020617;
 
       /* Background */
-      --bg: #ececec;
-      --bg1: #FFFFFF;
+      --bg: #f3f3f3;
+      --bg1: #f3f3f3;
       --bg2: var(--n2);
-      --bg3: #FFFFFF;
-      --nav-bg: #FFFFFF;
-      --sidebar-bg: #FFFFFF;
-      --content-bg: #FFFFFF;
+      --bg3: #f3f3f3;
+      --nav-bg: #f3f3f3;
+      --sidebar-bg: #f3f3f3;
+      --content-bg: #f3f3f3;
 
       /* Surfaces */
-      --surface: #ffffff;
+      --surface: #f3f3f3;
       --surface-2: var(--n2);
       --surface-3: var(--n3);
       --card: #ffffff;
@@ -938,14 +938,18 @@
     .card-elevated{background:var(--card-elevated);box-shadow:none}
     
     /* Auth */
-    .auth{min-height:100vh;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at top,rgba(99,102,241,.08),transparent 60%),radial-gradient(ellipse at bottom right,rgba(139,92,246,.05),transparent 50%),var(--bg);position:relative;z-index:1}
+    .auth{min-height:100vh;background:var(--bg);position:relative;z-index:1}
+    .auth-split{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;width:100%}
+    .auth-media{position:relative;overflow:hidden;background-image:url("../images/auth-bg.jpg");background-size:cover;background-position:center}
+    .auth-media::after{content:"";position:absolute;inset:0;background:linear-gradient(130deg,rgba(10,10,12,0.25),rgba(10,10,12,0.65))}
+    .auth-content{display:flex;align-items:center;justify-content:center;padding:48px;background:radial-gradient(ellipse at top,rgba(99,102,241,.08),transparent 60%),radial-gradient(ellipse at bottom right,rgba(139,92,246,.05),transparent 50%),var(--bg)}
 
     /* Ensure auth is hidden when app is active */
     .app.active ~ .auth,
     .app.active + .auth{display:none !important;visibility:hidden !important}
     #auth-screen[style*="display: none"],
     #auth-screen[style*="display:none"]{visibility:hidden !important;pointer-events:none !important;position:absolute !important;left:-9999px !important}
-    .auth-box{width:100%;max-width:420px;padding:20px}
+    .auth-box{width:100%;max-width:420px;padding:20px;margin-left:-64px}
     .auth-logo{text-align:center;margin-bottom:40px}
     .auth-logo h1{font-size:28px;font-weight:700;margin-top:16px;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--text) 0%,var(--text2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
     .auth-logo p{color:var(--text2);font-size:15px;margin-top:8px}
@@ -967,6 +971,15 @@
     .auth-card .input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-dim)}
     .auth-card .auth-tabs{background:var(--color-bg);border:1px solid var(--color-border)}
     .auth-card .auth-tab.active{background:var(--color-card);border:1px solid var(--color-border)}
+    .auth-card{background:rgba(15,16,20,0.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+    [data-theme="light"] .auth-card{background:rgba(255,255,255,0.92)}
+
+    @media (max-width: 900px){
+      .auth-split{grid-template-columns:1fr}
+      .auth-media{min-height:220px}
+      .auth-content{padding:32px 20px 48px}
+      .auth-box{margin-left:0}
+    }
 
     /* App Layout - Swiftmesh inspired */
     .app{display:none;height:100vh;overflow:hidden}
@@ -3128,6 +3141,10 @@
     .settings-tab-content{display:none}
     .settings-tab-content.active{display:block}
     .settings-tab-content > .support-banner:first-child{margin-top:0}
+
+    /* Analytics Sub-tabs */
+    .analytics-tab-content{display:none}
+    .analytics-tab-content.active{display:block}
 
     /* Grouped Settings Tabs */
     .settings-tabs-grouped{display:flex;flex-wrap:wrap;gap:24px;padding:16px;background:var(--bg2);border-radius:var(--radius-lg);border:1px solid var(--border)}
@@ -7065,4 +7082,3 @@ input.flatpickr-input:focus {
   width: 80px;
   height: 60px;
 }
-

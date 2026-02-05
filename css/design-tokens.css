@@ -53,6 +53,25 @@
   --color-cyan: #06B6D4;         /* cyan-500 */
   --color-orange: #F97316;       /* orange-500 */
 
+  /* Neutral Scale (Dark Mode - same values, inverted use) */
+  --n1: #F8FAFC;   /* slate-50 - Lightest */
+  --n2: #F1F5F9;   /* slate-100 */
+  --n3: #E2E8F0;   /* slate-200 */
+  --n4: #CBD5E1;   /* slate-300 */
+  --n5: #94A3B8;   /* slate-400 */
+  --n6: #64748B;   /* slate-500 */
+  --n7: #475569;   /* slate-600 */
+  --n8: #334155;   /* slate-700 */
+  --n9: #1E293B;   /* slate-800 - Dark */
+  --n10: #0F172A;  /* slate-900 - Darker */
+  --n11: #0B1220;  /* Extra dark */
+  --n12: #020617;  /* slate-950 - Darkest */
+
+  /* Surface colors for dark mode */
+  --surface: #1E293B;
+  --surface-2: #334155;
+  --surface-3: #475569;
+
   /* ==================== SPACING ==================== */
   /* 4px base scale - strict adherence */
 
@@ -256,17 +275,17 @@
 
   /* ========== SEMANTIC TOKENS ========== */
   /* Backgrounds */
-  --color-bg: #ececec;
-  --color-bg-2: #FFFFFF;
-  --color-bg-3: #FFFFFF;
-  --color-nav-bg: #FFFFFF;
-  --color-content-bg: #FFFFFF;
+  --color-bg: #f3f3f3;
+  --color-bg-2: #f3f3f3;
+  --color-bg-3: #f3f3f3;
+  --color-nav-bg: #f3f3f3;
+  --color-content-bg: #f3f3f3;
   --color-card: #FFFFFF;
   --color-card-hover: var(--n2);
   --color-card-elevated: #FFFFFF;
 
   /* Surfaces */
-  --surface: #FFFFFF;
+  --surface: #f3f3f3;
   --surface-2: var(--n2);
   --surface-3: var(--n3);
 
