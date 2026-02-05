@@ -276,9 +276,9 @@
   /* ========== SEMANTIC TOKENS ========== */
   /* Backgrounds */
   --color-bg: #f3f3f3;
-  --color-bg-2: #f3f3f3;
-  --color-bg-3: #f3f3f3;
-  --color-nav-bg: #f3f3f3;
+  --color-bg-2: #8d8d8d;
+  --color-bg-3: #8d8d8d;
+  --color-nav-bg: #8d8d8d;
   --color-content-bg: #f3f3f3;
   --color-card: #FFFFFF;
   --color-card-hover: var(--n2);
