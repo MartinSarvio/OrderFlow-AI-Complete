@@ -414,31 +414,42 @@
 
     /* FLOW-CMS Flyout Panel */
     .nav-flyout-trigger{position:relative;margin-bottom:6px}
-    .nav-flyout-trigger .nav-flyout-btn{width:100%;display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:12px;font-weight:500;background:transparent;border:none;border-radius:var(--radius-md);color:var(--text2);cursor:pointer;text-align:left;transition:all 0.2s ease}
-    .nav-flyout-trigger .nav-flyout-btn svg{width:16px;height:16px;opacity:0.5;flex-shrink:0;stroke-width:1.5;transition:all 0.2s ease}
-    .nav-flyout-trigger .nav-flyout-btn:hover{background:rgba(255,255,255,0.03);color:var(--text)}
-    .nav-flyout-trigger .nav-flyout-btn:hover svg{opacity:0.7}
+    .nav-flyout-trigger .nav-flyout-btn{width:100%;display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:12px;font-weight:500;background:transparent;border:none;border-radius:var(--radius-md);color:var(--text2);cursor:pointer;text-align:left;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+    .nav-flyout-trigger .nav-flyout-btn svg{width:16px;height:16px;opacity:0.5;flex-shrink:0;stroke-width:1.5;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+    .nav-flyout-trigger .nav-flyout-btn:hover{background:rgba(255,255,255,0.03);color:var(--text);transform:translateX(2px)}
+    .nav-flyout-trigger .nav-flyout-btn:hover svg{opacity:0.8;transform:scale(1.1)}
     .nav-flyout-trigger.active .nav-flyout-btn{color:var(--text);background:rgba(45,212,191,0.08)}
     .nav-flyout-trigger.active .nav-flyout-btn svg{opacity:0.8}
 
-    .nav-flyout-panel{position:fixed;left:240px;top:0;height:100vh;width:520px;background:var(--bg);border-left:1px solid var(--border);box-shadow:8px 0 32px rgba(0,0,0,0.3);opacity:0;visibility:hidden;transform:translateX(-20px);transition:all 0.25s cubic-bezier(0.4,0,0.2,1);z-index:999;overflow-y:auto}
-    .nav-flyout-trigger:hover .nav-flyout-panel,.nav-flyout-panel:hover,.nav-flyout-panel.visible{opacity:1;visibility:visible;transform:translateX(0)}
+    .nav-flyout-panel{position:fixed;left:240px;top:0;height:100vh;width:520px;background:var(--bg);border-left:1px solid var(--border);box-shadow:8px 0 32px rgba(0,0,0,0.3);opacity:0;visibility:hidden;transform:translateX(-30px) scale(0.98);transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);z-index:999;overflow-y:auto}
+    .nav-flyout-trigger:hover .nav-flyout-panel,.nav-flyout-panel:hover,.nav-flyout-panel.visible{opacity:1;visibility:visible;transform:translateX(0) scale(1)}
 
-    .flyout-header{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);background:var(--card)}
-    .flyout-header svg{width:24px;height:24px;color:var(--accent);stroke-width:1.5}
+    .flyout-header{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);background:var(--card);opacity:0;transform:translateY(-10px);animation:flyoutSlideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards}
+    .nav-flyout-trigger:hover .flyout-header,.nav-flyout-panel:hover .flyout-header,.nav-flyout-panel.visible .flyout-header{opacity:1;transform:translateY(0)}
+    .flyout-header svg{width:24px;height:24px;color:var(--accent);stroke-width:1.5;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+    .flyout-header:hover svg{transform:rotate(90deg) scale(1.1)}
     .flyout-header-title{font-size:16px;font-weight:600;color:var(--text)}
 
     .flyout-content{display:grid;grid-template-columns:repeat(4,1fr);gap:0;padding:0}
-    .flyout-category{padding:20px;border-right:1px solid var(--border)}
+    .flyout-category{padding:20px;border-right:1px solid var(--border);opacity:0;transform:translateY(15px);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+    .flyout-category:nth-child(1){transition-delay:0.05s}
+    .flyout-category:nth-child(2){transition-delay:0.1s}
+    .flyout-category:nth-child(3){transition-delay:0.15s}
+    .flyout-category:nth-child(4){transition-delay:0.2s}
+    .nav-flyout-trigger:hover .flyout-category,.nav-flyout-panel:hover .flyout-category,.nav-flyout-panel.visible .flyout-category{opacity:1;transform:translateY(0)}
     .flyout-category:last-child{border-right:none}
-    .flyout-category-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+    .flyout-category-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);transition:color 0.2s}
+    .flyout-category:hover .flyout-category-title{color:var(--accent)}
     .flyout-category-items{display:flex;flex-direction:column;gap:2px}
-    .flyout-item{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;font-weight:400;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;text-align:left;transition:all 0.15s;width:100%}
-    .flyout-item:hover{background:rgba(45,212,191,0.08);color:var(--text)}
-    .flyout-item.active{background:rgba(45,212,191,0.12);color:var(--accent)}
-    .flyout-item svg{width:14px;height:14px;opacity:0.5;flex-shrink:0}
-    .flyout-item:hover svg{opacity:0.7}
+    .flyout-item{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;font-weight:400;background:transparent;border:none;border-radius:var(--radius-sm);color:var(--text2);cursor:pointer;text-align:left;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1);width:100%;transform-origin:left center}
+    .flyout-item:hover{background:rgba(45,212,191,0.1);color:var(--text);transform:translateX(4px) scale(1.02)}
+    .flyout-item:active{transform:translateX(2px) scale(0.98)}
+    .flyout-item.active{background:rgba(45,212,191,0.15);color:var(--accent)}
+    .flyout-item svg{width:14px;height:14px;opacity:0.5;flex-shrink:0;transition:all 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+    .flyout-item:hover svg{opacity:0.8;transform:scale(1.15)}
     .flyout-item.active svg{opacity:1;stroke:var(--accent)}
+
+    @keyframes flyoutSlideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
     /* Collapsed sidebar flyout positioning */
     .sidebar.collapsed .nav-flyout-panel{left:72px}
