@@ -30201,7 +30201,8 @@ async function switchFlowCMSTab(tab) {
     'seo': 'SEO Indstillinger',
     'products-sms': 'SMS Workflow',
     'products-instagram': 'Instagram Workflow',
-    'products-facebook': 'Facebook Workflow'
+    'products-facebook': 'Facebook Workflow',
+    'data': 'Data & Analytics'
   };
 
   const titleEl = document.getElementById('flow-cms-page-title');
@@ -30219,6 +30220,106 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
+  if (tab === 'data') loadCMSDataStats();
+}
+
+// Load CMS Data Statistics
+function loadCMSDataStats() {
+  // Get pages from localStorage
+  const savedPages = localStorage.getItem('flow_cms_pages');
+  const pages = savedPages ? JSON.parse(savedPages) : [];
+
+  // Get blog posts
+  const savedBlog = localStorage.getItem('flow_blog_posts');
+  const blogPosts = savedBlog ? JSON.parse(savedBlog) : [];
+
+  // Count pages
+  const totalPages = pages.length;
+  const publishedPages = pages.filter(p => p.status === 'published').length;
+  const draftPages = pages.filter(p => p.status === 'draft').length;
+
+  // Update stats
+  const totalEl = document.getElementById('data-total-pages');
+  const pubEl = document.getElementById('data-published-pages');
+  const draftEl = document.getElementById('data-draft-pages');
+  const blogEl = document.getElementById('data-blog-posts');
+
+  if (totalEl) totalEl.textContent = totalPages;
+  if (pubEl) pubEl.textContent = publishedPages;
+  if (draftEl) draftEl.textContent = draftPages;
+  if (blogEl) blogEl.textContent = blogPosts.length;
+
+  // Update table counts
+  const landingCount = document.getElementById('data-landing-count');
+  const blogCount = document.getElementById('data-blog-count');
+  if (landingCount) landingCount.textContent = totalPages;
+  if (blogCount) blogCount.textContent = blogPosts.length;
+
+  // Update last modified dates
+  if (pages.length > 0) {
+    const lastPage = pages.sort((a, b) => new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0))[0];
+    const landingUpdated = document.getElementById('data-landing-updated');
+    if (landingUpdated && lastPage.updatedAt) {
+      landingUpdated.textContent = new Date(lastPage.updatedAt).toLocaleDateString('da-DK');
+    }
+  }
+
+  if (blogPosts.length > 0) {
+    const lastBlog = blogPosts.sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0))[0];
+    const blogUpdated = document.getElementById('data-blog-updated');
+    if (blogUpdated && lastBlog.updated_at) {
+      blogUpdated.textContent = new Date(lastBlog.updated_at).toLocaleDateString('da-DK');
+    }
+  }
+}
+
+// Export CMS Data
+function exportCMSData(format) {
+  const data = {
+    pages: JSON.parse(localStorage.getItem('flow_cms_pages') || '[]'),
+    blogPosts: JSON.parse(localStorage.getItem('flow_blog_posts') || '[]'),
+    workflows: {
+      sms: JSON.parse(localStorage.getItem('flow_product_sms') || '{}'),
+      instagram: JSON.parse(localStorage.getItem('flow_product_instagram') || '{}'),
+      facebook: JSON.parse(localStorage.getItem('flow_product_facebook') || '{}')
+    },
+    exportedAt: new Date().toISOString()
+  };
+
+  let content, filename, type;
+
+  if (format === 'json') {
+    content = JSON.stringify(data, null, 2);
+    filename = 'flow-cms-export-' + new Date().toISOString().split('T')[0] + '.json';
+    type = 'application/json';
+  } else if (format === 'csv') {
+    // Simple CSV export for pages
+    const headers = ['ID', 'Title', 'Slug', 'Status', 'Template', 'Created', 'Updated'];
+    const rows = data.pages.map(p => [
+      p.id || '',
+      p.title || '',
+      p.slug || '',
+      p.status || '',
+      p.template || '',
+      p.createdAt || '',
+      p.updatedAt || ''
+    ]);
+    content = [headers.join(','), ...rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(','))].join('\n');
+    filename = 'flow-cms-pages-' + new Date().toISOString().split('T')[0] + '.csv';
+    type = 'text/csv';
+  }
+
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  toast('Data eksporteret som ' + format.toUpperCase(), 'success');
 }
 
 // Load and render Flow pages grid
@@ -32697,6 +32798,7 @@ function switchLandingCMSTab(tab) {
         (tab === 'bento' && btn.textContent === 'Bento') ||
         (tab === 'beliefs' && btn.textContent === 'Beliefs') ||
         (tab === 'testimonials' && btn.textContent === 'Testimonials') ||
+        (tab === 'how-it-works' && btn.textContent === 'Sådan virker det') ||
         (tab === 'footer' && btn.textContent === 'Footer')) {
       btn.classList.add('active');
     }
@@ -32758,6 +32860,10 @@ function populateLandingTab(tab) {
 
     case 'testimonials':
       renderLandingTestimonials();
+      break;
+
+    case 'how-it-works':
+      loadHIWTestimonials();
       break;
 
     case 'footer':
@@ -33068,4 +33174,150 @@ function updateLandingFooterLinks(colIndex, value) {
 // Open Landing Page preview
 function openLandingPreview() {
   window.open('website-builder/dist/index.html', 'landingPreview', 'width=1200,height=800');
+}
+
+// ==================== HOW IT WORKS TESTIMONIALS ====================
+
+// Default testimonials for how-it-works page
+const defaultHIWTestimonials = {
+  headline: 'Elsket af restauranter i hele Danmark',
+  subheadline: 'Start din gratis prøveperiode. Ingen kreditkort påkrævet.',
+  testimonials: [
+    { id: 1, name: 'Martin', handle: '@cafe_amalfi', quote: 'Flow har ændret alt for os. Vores ordrer er steget med 40% siden vi startede.' },
+    { id: 2, name: 'Sarah', handle: '@pasta_mia', quote: 'Endelig et system der bare virker. Ingen bøvl, ingen problemer.' },
+    { id: 3, name: 'Jakob', handle: '@burger_joint', quote: 'Vores kunder elsker den nye app. Vi får rosende anmeldelser hver dag.' },
+    { id: 4, name: 'Emma', handle: '@sushi_express', quote: 'Den bedste investering vi har gjort. ROI var positiv efter 2 uger.' },
+    { id: 5, name: 'Anders', handle: '@pizza_palace', quote: 'Support teamet er fantastisk. De hjalp os med alt fra start til slut.' },
+    { id: 6, name: 'Mette', handle: '@cafe_hygge', quote: 'Vi sparer 10 timer om ugen på administration. Det er uvurderligt.' },
+    { id: 7, name: 'Thomas', handle: '@thai_garden', quote: 'Leveringsintegrationen er perfekt. Alt kører automatisk nu.' },
+    { id: 8, name: 'Louise', handle: '@french_bistro', quote: 'Vores omsætning er steget 60% på 3 måneder. Utroligt resultat.' },
+    { id: 9, name: 'Kasper', handle: '@grill_house', quote: 'Systemet er så intuitivt at selv min bedstemor kunne bruge det.' },
+    { id: 10, name: 'Sofie', handle: '@salad_bar', quote: 'Push notifikationer har øget vores genbestillinger markant.' },
+    { id: 11, name: 'Nikolaj', handle: '@taco_town', quote: 'Vi har fået 500+ nye kunder gennem appen på bare 2 måneder.' },
+    { id: 12, name: 'Camilla', handle: '@dessert_heaven', quote: 'Analytics dashboardet giver os indsigt vi aldrig har haft før.' },
+    { id: 13, name: 'Frederik', handle: '@seafood_shack', quote: 'Booking systemet har elimineret no-shows fuldstændigt.' },
+    { id: 14, name: 'Ida', handle: '@vegan_vibes', quote: 'Flow integrerer perfekt med vores eksisterende systemer.' },
+    { id: 15, name: 'Christian', handle: '@steakhouse_dk', quote: 'Kundeservice svarer altid inden for minutter. Imponerende.' },
+    { id: 16, name: 'Julie', handle: '@breakfast_club', quote: 'Menuen er nem at opdatere og ændringerne vises med det samme.' },
+    { id: 17, name: 'Mikkel', handle: '@wings_n_things', quote: 'QR-kode bestilling har reduceret ventetiden med 70%.' },
+    { id: 18, name: 'Anna', handle: '@smoothie_spot', quote: 'Loyalitetsprogrammet har skabt en fast kundebase for os.' }
+  ]
+};
+
+let hiwTestimonialsConfig = null;
+
+// Load HIW testimonials from localStorage
+function loadHIWTestimonials() {
+  const saved = localStorage.getItem('orderflow_hiw_testimonials');
+  if (saved) {
+    hiwTestimonialsConfig = JSON.parse(saved);
+  } else {
+    hiwTestimonialsConfig = JSON.parse(JSON.stringify(defaultHIWTestimonials));
+  }
+
+  // Populate form fields
+  setInputValue('hiw-testimonials-headline', hiwTestimonialsConfig.headline);
+  setInputValue('hiw-testimonials-subheadline', hiwTestimonialsConfig.subheadline);
+
+  // Render testimonials
+  renderHIWTestimonials();
+}
+
+// Render HIW testimonials in the editor
+function renderHIWTestimonials() {
+  const container = document.getElementById('hiw-testimonials-container');
+  if (!container || !hiwTestimonialsConfig) return;
+
+  container.innerHTML = hiwTestimonialsConfig.testimonials.map((t, i) => `
+    <div class="setting-card" style="margin-bottom:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <img src="https://avatar.vercel.sh/${encodeURIComponent(t.name)}?size=40"
+               style="width:40px;height:40px;border-radius:50%;background:#e5e7eb">
+          <div>
+            <div style="font-weight:600;font-size:14px">${t.name}</div>
+            <div style="font-size:12px;color:var(--muted)">${t.handle}</div>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="removeHIWTestimonial(${i})">Slet</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" style="font-size:12px">Navn</label>
+          <input type="text" class="input" value="${t.name}" oninput="updateHIWTestimonial(${i}, 'name', this.value)">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" style="font-size:12px">Handle</label>
+          <input type="text" class="input" value="${t.handle}" oninput="updateHIWTestimonial(${i}, 'handle', this.value)">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label" style="font-size:12px">Citat</label>
+        <textarea class="input" rows="2" oninput="updateHIWTestimonial(${i}, 'quote', this.value)">${t.quote}</textarea>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Update HIW testimonial config
+function updateHIWTestimonialConfig() {
+  if (!hiwTestimonialsConfig) loadHIWTestimonials();
+
+  const headline = document.getElementById('hiw-testimonials-headline');
+  const subheadline = document.getElementById('hiw-testimonials-subheadline');
+
+  if (headline) hiwTestimonialsConfig.headline = headline.value;
+  if (subheadline) hiwTestimonialsConfig.subheadline = subheadline.value;
+}
+
+// Update single testimonial
+function updateHIWTestimonial(index, field, value) {
+  if (!hiwTestimonialsConfig) loadHIWTestimonials();
+  hiwTestimonialsConfig.testimonials[index][field] = value;
+}
+
+// Add new testimonial
+function addHIWTestimonial() {
+  if (!hiwTestimonialsConfig) loadHIWTestimonials();
+
+  hiwTestimonialsConfig.testimonials.push({
+    id: Date.now(),
+    name: 'Ny kunde',
+    handle: '@restaurant',
+    quote: 'Skriv dit citat her...'
+  });
+
+  renderHIWTestimonials();
+}
+
+// Remove testimonial
+function removeHIWTestimonial(index) {
+  if (!hiwTestimonialsConfig) loadHIWTestimonials();
+
+  if (hiwTestimonialsConfig.testimonials.length > 1) {
+    hiwTestimonialsConfig.testimonials.splice(index, 1);
+    renderHIWTestimonials();
+  } else {
+    toast('Du skal have mindst én testimonial', 'error');
+  }
+}
+
+// Save HIW testimonials
+function saveHIWTestimonials() {
+  if (!hiwTestimonialsConfig) return;
+
+  // Update headline/subheadline from inputs
+  updateHIWTestimonialConfig();
+
+  // Save to localStorage
+  localStorage.setItem('orderflow_hiw_testimonials', JSON.stringify(hiwTestimonialsConfig));
+
+  // Show save status
+  const statusEl = document.getElementById('hiw-testimonials-save-status');
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  }
+
+  toast('Testimonials gemt!', 'success');
 }
