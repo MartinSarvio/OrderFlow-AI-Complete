@@ -287,11 +287,11 @@
 
     /* Sidebar - grå baggrund for at vise afrundet hjørne */
     [data-theme="light"] .sidebar {
-      background: #ececec;
+      background: #8d8d8d;
       border-right: none;
     }
     [data-theme="light"] .sidebar-header {
-      background: #ececec;
+      background: #8d8d8d;
     }
     [data-theme="light"] .sidebar .nav-item,
     [data-theme="light"] .sidebar .nav-dropdown-item,
@@ -336,13 +336,13 @@
 
     /* Main area - grå baggrund for at vise afrundet hjørne */
     [data-theme="light"] .main {
-      background: #ececec !important;
+      background: #8d8d8d !important;
       position: relative;
     }
 
     /* Header/Topbar - grå baggrund for at vise afrundet hjørne */
     [data-theme="light"] .topbar {
-      background: #ececec;
+      background: #8d8d8d;
       border-bottom: none;
     }
     [data-theme="light"] .topbar-btn {
