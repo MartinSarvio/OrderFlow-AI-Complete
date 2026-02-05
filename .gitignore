@@ -1,8 +1,44 @@
-.vercel
-.DS_Store
+# Dependencies
 node_modules/
+**/node_modules/
 
-# Backup filer med mulige secrets
-*.backup
-*.bak
+# Build output
+dist/
 OrderFlow-complete.html
+
+# Generated files
+generated_*.pdf
+*.backup
+*.backup2
+*.bak
+*.bak3
+*.corrupted
+*.save
+
+# IDE and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# Temporary
+*.tmp
+*.log
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local config
+.claude/settings.local.json

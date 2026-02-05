@@ -194,6 +194,9 @@
       case 'footer':
         renderFooterSection(section);
         break;
+      case 'chat-demo':
+        renderChatDemoSection(section);
+        break;
       default:
         // Unknown section type
         break;
@@ -214,15 +217,33 @@
 
     if (!heroSection) return;
 
-    // Update headline
+    // Update headline - but preserve typed-text element if rotating words exist
     if (section.headline) {
       const h1 = heroSection.querySelector('h1');
       if (h1) {
-        h1.innerHTML = section.headline;
+        // If we have rotating words AND a typed-text element, we need to preserve it
+        if (section.rotatingWords && Array.isArray(section.rotatingWords) && section.rotatingWords.length > 0) {
+          // Don't overwrite h1 if headline doesn't include typed-text placeholder
+          // The headline should contain {TYPED_TEXT} placeholder if rotating words are used
+          if (section.headline.includes('{TYPED_TEXT}')) {
+            const uppercaseWords = section.rotatingWords.map(w => w.toUpperCase());
+            const typedHtml = '<span class="typed-text" data-typed-text=\'' + JSON.stringify(uppercaseWords) + '\'>' + uppercaseWords[0] + '</span><span class="typed-cursor typed-cursor--blink" aria-hidden="true">|</span>';
+            h1.innerHTML = section.headline.replace('{TYPED_TEXT}', typedHtml);
+          }
+          // If no placeholder but rotatingWords exist, just update the existing typed-text without replacing h1
+        } else {
+          // No rotating words in CMS data - check if h1 already has typed-text element
+          const existingTypedText = h1.querySelector('.typed-text');
+          if (!existingTypedText) {
+            // No existing typed-text, safe to replace h1 content
+            h1.innerHTML = section.headline;
+          }
+          // If there's an existing typed-text element, preserve the h1 to keep the animation
+        }
       }
     }
 
-    // Update rotating words (typed text animation)
+    // Update rotating words (typed text animation) - for existing typed-text elements
     if (section.rotatingWords && Array.isArray(section.rotatingWords) && section.rotatingWords.length > 0) {
       const typedEl = heroSection.querySelector('.typed-text');
       if (typedEl) {
@@ -836,7 +857,7 @@
 
     // Update subtitle
     if (section.subtitle) {
-      const subtitle = beliefsSection.querySelector('.section-subtitle, > p:first-of-type');
+      const subtitle = beliefsSection.querySelector('.section-subtitle, p:first-of-type');
       if (subtitle) {
         subtitle.textContent = section.subtitle;
       }
@@ -896,24 +917,31 @@
       }
     }
 
-    // Update logos
+    // Update logos - React style (SVG only, no text)
     if (section.logos && section.logos.length > 0) {
       const logoTrack = logoCloudSection.querySelector('.logo-cloud-track');
       if (logoTrack) {
-        // Generate new logo HTML
+        // Predefined logo SVG icons
+        const logoIcons = {
+          'Canpoy': '<svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>',
+          'Canva': '<svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>',
+          'Casetext': '<svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>',
+          'Strava': '<svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>',
+          'Descript': '<svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>',
+          'Duolingo': '<svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>',
+          'Faire': '<svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>',
+          'Clearbit': '<svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>'
+        };
+        const defaultIcon = '<svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>';
+
+        // Generate logo HTML - SVG only, no text (matches React style)
         let logosHTML = '';
         section.logos.forEach(logo => {
-          logosHTML += `
-            <a href="${logo.url || '#'}" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-              <svg width="120" height="40" viewBox="0 0 120 40">
-                <rect x="5" y="10" width="20" height="20" rx="4" fill="currentColor"/>
-                <text x="30" y="26" font-size="14" font-weight="600" fill="currentColor">${logo.name || ''}</text>
-              </svg>
-            </a>`;
+          const icon = logoIcons[logo.name] || defaultIcon;
+          logosHTML += `<a href="${logo.url || '#'}" target="_blank" rel="noopener noreferrer" class="logo-cloud-item" title="${logo.name || ''}">${icon}</a>`;
         });
-        // Duplicate for seamless loop
-        logosHTML += logosHTML;
-        logoTrack.innerHTML = logosHTML;
+        // Triple for seamless loop
+        logoTrack.innerHTML = logosHTML + logosHTML + logosHTML;
       }
     }
   }
@@ -980,6 +1008,60 @@
         copyright.textContent = section.copyright;
       }
     }
+  }
+
+  /**
+   * Render Chat Demo Section
+   * Fields: userMessage, botMessage, userAvatar, userDelay, botDelay, textExpandDelay
+   */
+  function renderChatDemoSection(section) {
+    if (!section) return;
+
+    // Find chat demo container - look for various selectors
+    const chatContainer = document.querySelector('[data-cms="chat-demo"]') ||
+                          document.querySelector('.chat-message')?.closest('.w-full') ||
+                          document.querySelector('.ai-hero-container > div:last-child');
+
+    if (!chatContainer) {
+      console.log('Flow CMS: Chat demo container not found');
+      return;
+    }
+
+    // Update user message
+    if (section.userMessage) {
+      const userMsg = chatContainer.querySelector('[data-cms-field="userMessage"] p') ||
+                      chatContainer.querySelector('.chat-message p');
+      if (userMsg) {
+        userMsg.textContent = section.userMessage;
+      }
+    }
+
+    // Update bot message
+    if (section.botMessage) {
+      const botMsg = chatContainer.querySelector('[data-cms-field="botMessage"] p') ||
+                     chatContainer.querySelector('.chat-response .prose p');
+      if (botMsg) {
+        botMsg.textContent = section.botMessage;
+      }
+    }
+
+    // Update user avatar
+    if (section.userAvatar) {
+      const avatar = chatContainer.querySelector('[data-cms-field="userAvatar"]') ||
+                     chatContainer.querySelector('img[alt="User Avatar"]');
+      if (avatar) {
+        avatar.src = section.userAvatar;
+      }
+    }
+
+    // Update animation timing via data attributes on container
+    if (chatContainer) {
+      chatContainer.dataset.userDelay = section.userDelay || 500;
+      chatContainer.dataset.botDelay = section.botDelay || 1200;
+      chatContainer.dataset.textExpandDelay = section.textExpandDelay || 1800;
+    }
+
+    console.log('Flow CMS: Chat demo section updated');
   }
 
   /**

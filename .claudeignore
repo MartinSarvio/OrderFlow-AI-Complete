@@ -1,0 +1,30 @@
+# Large folders
+node_modules/
+**/node_modules/
+website-builder/
+images/
+screenshots/
+assets/images/
+assets/fonts/
+
+# Large HTML files and backups
+OrderFlow-complete.html
+*.backup
+*.backup2
+*.bak*
+*.corrupted
+
+# Build artifacts
+.vercel/
+.git/
+dist/
+
+# PDF and generated files
+*.pdf
+generated_*.pdf
+
+# Cache
+.DS_Store
+
+# Templates (large demo files)
+templates/mario/

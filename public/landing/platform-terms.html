@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Vilkår - Flow</title>
+  <meta name="description" content="Læs vilkår og betingelser for brug af Flow-platformen til restauranter. Omfatter ordrehåndtering, betalingsbehandling, API-adgang og mere.">
+  <meta property="og:title" content="Platform Vilkår - Flow">
+  <meta property="og:description" content="Læs vilkår og betingelser for brug af Flow-platformen til restauranter. Omfatter ordrehåndtering, betalingsbehandling, API-adgang og mere.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
+      --container-huge: 1400px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overscroll-behavior: none; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img {
+      height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+
+    /* Legal Page Layout with Sidebar */
+    .legal-page { display: flex; max-width: 120rem; margin: 0 auto; padding: 12rem 4rem 8rem; gap: 6rem; }
+    .legal-sidebar { width: 24rem; flex-shrink: 0; position: sticky; top: 10rem; height: fit-content; }
+    .legal-nav { list-style: none; padding: 0; margin: 0; }
+    .legal-nav li { margin-bottom: 0.8rem; }
+    .legal-nav a { display: block; font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; transition: color 0.2s; border-bottom: 1px solid transparent; }
+    .legal-nav a:hover { color: var(--color-primary); }
+    .legal-nav a.active { color: var(--color-primary); font-weight: 600; }
+    .legal-content { flex: 1; max-width: 80rem; }
+
+    .legal-header { margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-gray-200); }
+    .legal-header h1 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .legal-header .last-updated { font-size: 1.4rem; color: var(--color-gray-500); }
+    .legal-body h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-top: 4rem; margin-bottom: 1.6rem; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-top: 3rem; margin-bottom: 1.2rem; }
+    .legal-body p { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 1.6rem; }
+    .legal-body ul, .legal-body ol { margin-left: 2rem; margin-bottom: 1.6rem; list-style: disc; }
+    .legal-body ol { list-style: decimal; }
+    .legal-body li { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 0.8rem; }
+    .legal-body a { color: var(--color-primary); text-decoration: underline; }
+    .legal-body a:hover { color: var(--color-primary-hover); }
+    .legal-body table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
+    .legal-body th, .legal-body td { padding: 1.2rem; text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: 1.5rem; }
+    .legal-body th { font-weight: 600; color: var(--color-dark); background: var(--color-gray-50); }
+    .legal-body td { color: var(--color-gray-600); }
+
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 968px) {
+      .legal-page { flex-direction: column; padding: 10rem 2rem 6rem; gap: 3rem; }
+      .legal-sidebar { width: 100%; position: static; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 2rem; }
+      .legal-nav { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .legal-nav li { margin-bottom: 0; }
+      .legal-nav a { padding: 0.6rem 1.2rem; background: var(--color-gray-50); border-radius: 0.6rem; font-size: 1.4rem; }
+      .legal-nav a.active { background: var(--color-primary); color: white; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-container { padding: 1.2rem 2rem; }
+      .legal-header h1 { font-size: 3.2rem; }
+      .footer { padding: 4rem 2rem 2rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1.6rem; text-align: center; }
+      .footer-legal { flex-wrap: wrap; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-content { grid-template-columns: 1fr; }
+      .legal-header h1 { font-size: 2.8rem; }
+    }
+  </style>
+<link rel="stylesheet" href="/css/cookie-popup.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo"><img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
+          <div class="nav-links">
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
+                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
+                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
+                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
+                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
+                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
+            </div>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
+                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
+                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
+                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
+                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+            </div>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
+                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
+                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
+                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
+                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <a href="../../index.html" class="nav-login">Login</a>
+          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="legal-page">
+      <aside class="legal-sidebar">
+        <ul class="legal-nav">
+          <li><a href="privacy.html">Privatlivspolitik</a></li>
+          <li><a href="cookie-settings.html">Cookie-indstillinger</a></li>
+          <li><a href="terms.html">Vilkår og betingelser</a></li>
+          <li><a href="disclaimer.html">Ansvarsfraskrivelse</a></li>
+          <li><a href="restaurant-agreement.html">Restaurant Aftale</a></li>
+          <li><a href="platform-terms.html" class="active">Platform Vilkår</a></li>
+          <li><a href="accessibility.html">Tilgængelighed</a></li>
+        </ul>
+      </aside>
+
+      <article class="legal-content">
+        <div class="legal-header">
+          <h1>Platform Vilkår</h1>
+          <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
+        </div>
+
+        <div class="legal-body">
+          <h2>1. Platformens formål og omfang</h2>
+          <p>Disse Platform Vilkår ("Vilkårene") regulerer din adgang til og brug af Flow-platformen ("Platformen"), en cloud-baseret software-as-a-service (SaaS) løsning udviklet og drevet af Flow ApS ("Flow", "vi", "os", "vores"). Platformen er specifikt designet til at understøtte restauranter, caféer, takeaway-virksomheder og lignende fødevarevirksomheder ("Restauranter") i deres digitale transformation og daglige drift.</p>
+          <p>Platformen udgør en omfattende digital infrastruktur, der muliggør online bestillingsmodtagelse, menustyring, kundeloyalitetsprogrammer, automatiseret marketing, hjemmesideløsninger, mobilapplikationer og integration med tredjeparts leveringstjenester. Ved at oprette en konto på Platformen eller på anden måde tilgå Platformens funktionalitet accepterer du at være bundet af disse Vilkår i tillæg til eventuelle separate aftaler indgået mellem dig og Flow.</p>
+          <p>Platformen er udelukkende beregnet til erhvervsmæssig brug af registrerede virksomheder. Privatpersoner uden CVR-registrering kan ikke oprette selvstændige konti på Platformen, men kan interagere med Platformen som slutbrugere i forbindelse med bestillinger hos tilsluttede Restauranter.</p>
+
+          <h2>2. Definitioner</h2>
+          <p>I disse Vilkår anvendes følgende definitioner:</p>
+          <ul>
+            <li><strong>"Platformen"</strong> refererer til Flow-softwareplatformen i sin helhed, herunder alle tilhørende webapplikationer, mobilapplikationer, API'er, administrative værktøjer, integrationer og relaterede tjenester, uanset hvordan disse tilgås eller anvendes.</li>
+            <li><strong>"Restaurant"</strong> eller <strong>"Restauranten"</strong> refererer til den juridiske enhed, der har indgået en abonnementsaftale med Flow og er registreret som kontohaver på Platformen. Dette omfatter alle typer af fødevarevirksomheder, herunder traditionelle restauranter, caféer, pizzeriaer, takeaway-forretninger, foodtrucks, cateringvirksomheder og lignende.</li>
+            <li><strong>"Slutbruger"</strong> refererer til enhver fysisk person, der interagerer med Platformen i egenskab af kunde hos en Restaurant, herunder ved afgivelse af bestillinger, tilmelding til loyalitetsprogrammer, modtagelse af marketingkommunikation eller anden brug af de kundevendte funktioner.</li>
+            <li><strong>"Ordre"</strong> eller <strong>"Bestilling"</strong> refererer til enhver transaktion initieret af en Slutbruger gennem Platformen med henblik på køb af varer eller tjenesteydelser fra en Restaurant, uanset om ordren omfatter levering, afhentning eller spisning på stedet.</li>
+            <li><strong>"Administratorkonto"</strong> refererer til en brugerkonto med udvidede rettigheder til at administrere Restaurantens tilstedeværelse på Platformen, herunder menustyring, prissætning, ordrehåndtering og adgang til rapporter og analyser.</li>
+            <li><strong>"Indhold"</strong> refererer til alt materiale, der uploades, oprettes eller på anden måde gøres tilgængeligt på Platformen, herunder men ikke begrænset til menubeskrivelser, billeder, logoer, priser, åbningstider, restaurantbeskrivelser og marketingmateriale.</li>
+            <li><strong>"API"</strong> (Application Programming Interface) refererer til de programmeringsgrænseflader, som Flow stiller til rådighed for integration mellem Platformen og tredjepartssystemer.</li>
+            <li><strong>"Personoplysninger"</strong> refererer til enhver oplysning om en identificeret eller identificerbar fysisk person, som defineret i EU's Generelle Databeskyttelsesforordning (GDPR).</li>
+          </ul>
+
+          <h2>3. Platform-funktionalitet</h2>
+          <p>Platformen tilbyder en række integrerede funktioner designet til at optimere Restaurantens digitale tilstedeværelse og operationelle effektivitet:</p>
+
+          <h3>3.1 Kernefunktioner</h3>
+          <p>Alle Restauranter med et aktivt abonnement har adgang til følgende kernefunktioner:</p>
+          <ul>
+            <li><strong>Online bestillingssystem:</strong> En fuldt integreret løsning til modtagelse og håndtering af kundebestillinger via web og mobil, med understøttelse af både levering, afhentning og bordreservation.</li>
+            <li><strong>Menustyring:</strong> Avancerede værktøjer til oprettelse, redigering og organisering af menuer, herunder understøttelse af kategorier, tilvalg, allergener, kostpræferencer og sæsonvariationer.</li>
+            <li><strong>Administrativt dashboard:</strong> Et centralt overblik over alle aspekter af Restaurantens digitale drift, herunder realtidsstatistikker, ordrestatus og performanceindikatorer.</li>
+            <li><strong>Kundeadministration:</strong> Værktøjer til håndtering af kundedata, ordrehistorik og præferencer i overensstemmelse med gældende databeskyttelseslovgivning.</li>
+            <li><strong>Rapportering og analytics:</strong> Omfattende rapporteringsfunktioner med indsigt i salgstal, kundeadfærd, populære produkter og forretningsmæssige tendenser.</li>
+          </ul>
+
+          <h3>3.2 Udvidede funktioner</h3>
+          <p>Afhængigt af det valgte abonnementsniveau kan Restauranten have adgang til følgende udvidede funktioner:</p>
+          <ul>
+            <li><strong>Custom hjemmeside:</strong> En professionelt designet, responsiv hjemmeside fuldt integreret med bestillingssystemet og optimeret til søgemaskiner.</li>
+            <li><strong>Custom mobilapp:</strong> En brandingpræget mobilapplikation til iOS og Android med push-notifikationer og loyalitetsprogramintegration.</li>
+            <li><strong>Loyalitetsprogram:</strong> Et fleksibelt belønningssystem med pointoptjening, stempelkort, VIP-niveauer og personaliserede tilbud.</li>
+            <li><strong>Automatiseret marketing:</strong> Værktøjer til e-mail- og SMS-kampagner med segmentering, automatiserede flows og A/B-testning.</li>
+            <li><strong>Leveringsintegration:</strong> Direkte integration med førende leveringstjenester for sømløs ordrehåndtering og sporing.</li>
+            <li><strong>POS-integration:</strong> Mulighed for integration med eksisterende kassesystemer for synkroniseret lagerstyring og regnskab.</li>
+          </ul>
+
+          <h3>3.3 Funktionsopdateringer</h3>
+          <p>Flow forbeholder sig retten til løbende at udvikle, forbedre og udvide Platformens funktionalitet. Væsentlige ændringer i eksisterende funktioner vil blive kommunikeret med passende varsel. Nye funktioner kan introduceres som del af eksisterende abonnementer eller som separate tilkøbsmoduler.</p>
+
+          <h2>4. Ordrehåndtering og workflow</h2>
+          <p>Platformen faciliterer en struktureret proces for modtagelse, behandling og levering af kundebestillinger:</p>
+
+          <h3>4.1 Ordremodtagelse</h3>
+          <p>Når en Slutbruger afgiver en bestilling gennem Platformen, sker følgende:</p>
+          <ul>
+            <li>Ordren valideres automatisk for at sikre, at alle påkrævede oplysninger er udfyldt korrekt, og at de valgte menupunkter er tilgængelige.</li>
+            <li>Betalingen autoriseres eller gennemføres i henhold til den valgte betalingsmetode og Restaurantens betalingsindstillinger.</li>
+            <li>Restauranten modtager notifikation om den nye ordre via det administrative dashboard, e-mail, SMS og/eller printudskrift, afhængigt af de konfigurerede præferencer.</li>
+            <li>Slutbrugeren modtager en ordrebekræftelse med ordrenummer, estimeret leveringstid og relevante detaljer.</li>
+          </ul>
+
+          <h3>4.2 Ordrebehandling</h3>
+          <p>Restauranten er ansvarlig for rettidig behandling af alle modtagne ordrer:</p>
+          <ul>
+            <li>Ordrer skal bekræftes eller afvises inden for den tidsramme, der er specificeret i Restaurantens aftale med Flow, typisk inden for 5-10 minutter fra modtagelse.</li>
+            <li>Ved afvisning af en ordre skal Restauranten angive en gyldig årsag, og Slutbrugeren vil automatisk blive notificeret og eventuelt refunderet.</li>
+            <li>Restauranten skal løbende opdatere ordrestatus i systemet for at sikre nøjagtig kommunikation til Slutbrugeren.</li>
+            <li>Estimerede tilberedningstider skal være realistiske og afspejle den faktiske kapacitet på det pågældende tidspunkt.</li>
+          </ul>
+
+          <h3>4.3 Levering og afhentning</h3>
+          <p>For ordrer med levering eller afhentning gælder følgende:</p>
+          <ul>
+            <li><strong>Afhentning:</strong> Restauranten skal sikre, at ordren er klar til afhentning på det angivne tidspunkt. Slutbrugeren notificeres automatisk, når ordren er klar.</li>
+            <li><strong>Egen levering:</strong> Hvis Restauranten håndterer levering selv, er Restauranten fuldt ansvarlig for leveringens gennemførelse, kvalitet og eventuelle forsinkelser.</li>
+            <li><strong>Tredjeparts levering:</strong> Ved brug af integrerede leveringstjenester faciliterer Platformen kommunikationen mellem Restauranten og leveringstjenesten, men Restauranten forbliver ansvarlig for ordrekvaliteten indtil overdragelse.</li>
+          </ul>
+
+          <h3>4.4 Ordreændringer og annulleringer</h3>
+          <p>Håndtering af ordreændringer og annulleringer følger disse retningslinjer:</p>
+          <ul>
+            <li>Slutbrugere kan anmode om ændringer eller annullering af ordrer, så længe tilberedningen ikke er påbegyndt.</li>
+            <li>Restauranten har ret til at afvise ændringsanmodninger, hvis disse ikke kan imødekommes praktisk.</li>
+            <li>Ved annullering efter betalingsgennemførelse vil refundering ske i henhold til Restaurantens refunderingspolitik og gældende forbrugerlovgivning.</li>
+            <li>Platformen understøtter delvis refundering i tilfælde, hvor kun dele af en ordre annulleres.</li>
+          </ul>
+
+          <h2>5. Betalingsbehandling og provision</h2>
+          <p>Flow tilbyder integreret betalingsbehandling som en del af Platformen:</p>
+
+          <h3>5.1 Understøttede betalingsmetoder</h3>
+          <p>Platformen understøtter en bred vifte af betalingsmetoder, herunder:</p>
+          <ul>
+            <li>Kreditkort og debetkort (Visa, Mastercard, American Express, Maestro)</li>
+            <li>Mobilbetalingsløsninger (MobilePay, Apple Pay, Google Pay)</li>
+            <li>Online bankbetalinger og overførsler</li>
+            <li>Kontant betaling ved afhentning eller levering (hvor aktiveret af Restauranten)</li>
+            <li>Fakturering til erhvervskunder (hvor aktiveret)</li>
+          </ul>
+
+          <h3>5.2 Betalingsflow</h3>
+          <p>Betalinger behandles som følger:</p>
+          <ul>
+            <li>Ved onlinebestilling autoriseres eller gennemføres betalingen på ordretidspunktet via vores certificerede betalingspartner.</li>
+            <li>Flow fungerer som teknisk facilitator af betalingstransaktionen og optræder ikke som betalingsinstitut.</li>
+            <li>Midler fra kundebetalinger afregnes til Restauranten i henhold til den aftalte udbetalingsfrekvens, typisk ugentligt eller hver 14. dag.</li>
+            <li>Detaljerede transaktionsrapporter er tilgængelige i det administrative dashboard.</li>
+          </ul>
+
+          <h3>5.3 Provision og gebyrer</h3>
+          <p>Flows provisionstruktur er som følger:</p>
+          <ul>
+            <li><strong>Platformsprovision:</strong> En procentdel af ordreværdien (ekskl. moms og leveringsgebyr) opkræves som provision for brug af Platformen. Den specifikke sats fremgår af Restaurantens abonnementsaftale.</li>
+            <li><strong>Betalingsgebyrer:</strong> Gebyrer fra betalingsudbydere (kortgebyrer m.v.) kan enten være inkluderet i platformsprovisionen eller opkræves separat, afhængigt af den valgte prismodel.</li>
+            <li><strong>Ingen skjulte gebyrer:</strong> Alle gebyrer og provisioner er transparent dokumenteret i Restaurantens aftale og i de løbende afregninger.</li>
+          </ul>
+
+          <h3>5.4 Refunderinger og tilbageførsler</h3>
+          <p>Ved refunderinger gælder følgende:</p>
+          <ul>
+            <li>Restauranten kan initiere refunderinger gennem det administrative dashboard.</li>
+            <li>Refunderinger behandles via den oprindelige betalingsmetode, hvor dette er teknisk muligt.</li>
+            <li>Ved chargebacks (tvister initieret af kortindehaver) vil Flow bistå Restauranten med dokumentation, men det endelige ansvar for betalingstvister påhviler Restauranten.</li>
+            <li>Provision på refunderede ordrer tilbageføres til Restauranten i overensstemmelse med Flows refunderingspolitik.</li>
+          </ul>
+
+          <h2>6. Restaurantens forpligtelser på Platformen</h2>
+          <p>Som bruger af Platformen påtager Restauranten sig følgende forpligtelser:</p>
+
+          <h3>6.1 Kontoansvar</h3>
+          <ul>
+            <li>Restauranten er ansvarlig for at sikre, at alle oplysninger i kontoprofilen er nøjagtige, fuldstændige og opdaterede.</li>
+            <li>Adgangsoplysninger skal behandles fortroligt og må ikke deles med uautoriserede personer.</li>
+            <li>Ved mistanke om uautoriseret adgang skal Flow kontaktes omgående.</li>
+            <li>Restauranten er ansvarlig for alle handlinger foretaget via Restaurantens konto, medmindre der kan dokumenteres uautoriseret adgang.</li>
+          </ul>
+
+          <h3>6.2 Driftsmæssige forpligtelser</h3>
+          <ul>
+            <li>Restauranten skal opretholde tilstrækkelig kapacitet til at håndtere de ordrer, der modtages gennem Platformen.</li>
+            <li>Åbningstider skal være korrekt angivet, og Restauranten skal være i stand til at modtage ordrer i de angivne perioder.</li>
+            <li>Ved uforudsete lukninger eller kapacitetsproblemer skal Restauranten omgående opdatere tilgængeligheden på Platformen.</li>
+            <li>Alle ordrer skal behandles med samme kvalitet og omhu, uanset om de modtages gennem Platformen eller andre kanaler.</li>
+          </ul>
+
+          <h3>6.3 Lovmæssig compliance</h3>
+          <ul>
+            <li>Restauranten er ansvarlig for at overholde alle relevante love og regler, herunder fødevarelovgivning, hygiejneregler, alkohollovgivning og forbrugerrettigheder.</li>
+            <li>Restauranten skal have alle nødvendige tilladelser, licenser og godkendelser til at drive sin virksomhed.</li>
+            <li>Ved salg af alkohol er Restauranten ansvarlig for aldersverifikation i overensstemmelse med gældende lovgivning.</li>
+            <li>Restauranten skal overholde GDPR og anden databeskyttelseslovgivning i forbindelse med behandling af kundedata.</li>
+          </ul>
+
+          <h3>6.4 Kvalitetsstandarder</h3>
+          <ul>
+            <li>Restauranten forpligter sig til at levere produkter af den kvalitet, der er beskrevet på Platformen.</li>
+            <li>Billeder og beskrivelser skal være retvisende og ikke vildledende.</li>
+            <li>Allergener og kostinformation skal være nøjagtigt angivet.</li>
+            <li>Restauranten skal aktivt håndtere kundefeedback og arbejde for kontinuerlig forbedring.</li>
+          </ul>
+
+          <h2>7. Slutbrugerinteraktion</h2>
+          <p>Platformen faciliterer interaktionen mellem Restauranter og deres kunder (Slutbrugere):</p>
+
+          <h3>7.1 Kundeservice</h3>
+          <ul>
+            <li>Restauranten er primært ansvarlig for kundeservice relateret til ordrer, produktkvalitet og leveringsproblemer.</li>
+            <li>Flow leverer teknisk support relateret til Platformens funktionalitet.</li>
+            <li>Slutbrugere kan kontakte Flow vedrørende generelle spørgsmål om Platformen og betalingsproblemer.</li>
+            <li>Ved tvister mellem Restaurant og Slutbruger kan Flow facilitere dialog, men er ikke forpligtet til at træffe afgørelser.</li>
+          </ul>
+
+          <h3>7.2 Anmeldelser og ratings</h3>
+          <ul>
+            <li>Slutbrugere kan afgive anmeldelser og ratings efter gennemførte ordrer.</li>
+            <li>Restauranten må ikke forsøge at påvirke eller manipulere anmeldelser på utilbørlig vis.</li>
+            <li>Flow forbeholder sig retten til at fjerne anmeldelser, der vurderes at være falske, chikanerende eller i strid med vores retningslinjer.</li>
+            <li>Restauranten har mulighed for at svare offentligt på anmeldelser gennem det administrative dashboard.</li>
+          </ul>
+
+          <h3>7.3 Kommunikation</h3>
+          <ul>
+            <li>Direkte kommunikation mellem Restaurant og Slutbruger i forbindelse med specifikke ordrer faciliteres gennem Platformen.</li>
+            <li>Restauranten må ikke bruge kontaktoplysninger indsamlet gennem Platformen til formål, der ikke er relateret til ordrehåndtering, medmindre Slutbrugeren har givet eksplicit samtykke.</li>
+            <li>Al marketingkommunikation til Slutbrugere skal overholde gældende regler for elektronisk markedsføring.</li>
+          </ul>
+
+          <h2>8. Menustyring og prissætning</h2>
+          <p>Restauranten har fuld kontrol over sin menu og prissætning på Platformen:</p>
+
+          <h3>8.1 Menuoprettelse og -vedligeholdelse</h3>
+          <ul>
+            <li>Restauranten er ansvarlig for at oprette, vedligeholde og opdatere sin menu i det administrative dashboard.</li>
+            <li>Menupunkter skal have klare, beskrivende navne og nøjagtige beskrivelser.</li>
+            <li>Billeder skal være af høj kvalitet og repræsentative for det faktiske produkt.</li>
+            <li>Allergener og ingredienser skal angives i overensstemmelse med gældende fødevarelovgivning.</li>
+            <li>Tilgængelighed af produkter skal opdateres i realtid for at undgå ordrer på udsolgte varer.</li>
+          </ul>
+
+          <h3>8.2 Prissætning</h3>
+          <ul>
+            <li>Restauranten fastsætter selv priserne på sine produkter på Platformen.</li>
+            <li>Alle priser skal angives inklusive moms, medmindre andet er specifikt angivet for erhvervskunder.</li>
+            <li>Prisændringer kan foretages når som helst og træder i kraft øjeblikkeligt for nye ordrer.</li>
+            <li>Restauranten må ikke diskriminere i prissætningen mellem Platformens kunder og andre salgskanaler, medmindre dette er aftalt med Flow.</li>
+          </ul>
+
+          <h3>8.3 Tilbud og kampagner</h3>
+          <ul>
+            <li>Restauranten kan oprette tidsbegrænsede tilbud, rabatkoder og kampagner gennem Platformens kampagneværktøjer.</li>
+            <li>Vilkår og begrænsninger for tilbud skal være tydeligt kommunikeret til kunderne.</li>
+            <li>Restauranten er ansvarlig for at sikre, at tilbud kan honoreres inden for de angivne rammer.</li>
+            <li>Flow kan tilbyde platformbrede kampagner, hvor Restauranten kan vælge at deltage.</li>
+          </ul>
+
+          <h2>9. Leveringsintegration</h2>
+          <p>Platformen tilbyder fleksible muligheder for håndtering af levering:</p>
+
+          <h3>9.1 Leveringsmodeller</h3>
+          <p>Restauranten kan vælge mellem følgende leveringsmodeller:</p>
+          <ul>
+            <li><strong>Egen levering:</strong> Restauranten håndterer selv al levering med egne medarbejdere og køretøjer.</li>
+            <li><strong>Tredjeparts levering:</strong> Levering håndteres af integrerede leveringspartnere som Wolt Drive, DoorDash Drive eller lignende.</li>
+            <li><strong>Hybrid model:</strong> Kombination af egen levering i nærområdet og tredjeparts levering for længere afstande.</li>
+            <li><strong>Kun afhentning:</strong> Restauranten tilbyder ikke levering, kun afhentning.</li>
+          </ul>
+
+          <h3>9.2 Integration med leveringstjenester</h3>
+          <ul>
+            <li>Platformen tilbyder direkte integration med udvalgte leveringspartnere for automatiseret ordreoverførsel.</li>
+            <li>Ved brug af tredjeparts levering er leveringstjenestens egne vilkår og betingelser gældende for leveringsdelen.</li>
+            <li>Leveringsgebyrer kan enten fastsættes af Restauranten, beregnes dynamisk baseret på afstand, eller følge leveringspartnerens prissætning.</li>
+            <li>Restauranten modtager real-time opdateringer om leveringsstatus gennem Platformen.</li>
+          </ul>
+
+          <h3>9.3 Leveringsområder</h3>
+          <ul>
+            <li>Restauranten definerer selv sit leveringsområde baseret på postcodes, afstand eller tegning af polygon på kort.</li>
+            <li>Minimumordrebeløb kan fastsættes for leveringsordrer og kan variere efter leveringszone.</li>
+            <li>Leveringstider kan tilpasses efter afstand og tidspunkt på dagen.</li>
+          </ul>
+
+          <h2>10. API og integrationer</h2>
+          <p>Flow tilbyder API-adgang for integration med tredjepartssystemer:</p>
+
+          <h3>10.1 API-adgang</h3>
+          <ul>
+            <li>API-adgang er tilgængelig for Restauranter på udvalgte abonnementsniveauer eller som tilkøbsmodul.</li>
+            <li>API-nøgler er fortrolige og må ikke deles med uautoriserede parter.</li>
+            <li>Al API-brug skal overholde Flows API-dokumentation og retningslinjer for acceptable use.</li>
+            <li>Flow forbeholder sig retten til at rate-limite eller suspendere API-adgang ved misbrug.</li>
+          </ul>
+
+          <h3>10.2 Tilgængelige integrationer</h3>
+          <p>Platformen understøtter integration med:</p>
+          <ul>
+            <li><strong>Kassesystemer (POS):</strong> Direkte integration med førende kassesystemer for ordresynkronisering.</li>
+            <li><strong>Regnskabssystemer:</strong> Automatisk overførsel af transaktionsdata til regnskabsprogrammer.</li>
+            <li><strong>Lagerstyring:</strong> Synkronisering af lagerbeholdning på tværs af salgskanaler.</li>
+            <li><strong>Bordreservation:</strong> Integration med reservationssystemer for koordineret kapacitetsstyring.</li>
+            <li><strong>Marketingplatforme:</strong> Datadeling med CRM- og marketingautomatiseringsværktøjer.</li>
+          </ul>
+
+          <h3>10.3 Udviklerressourcer</h3>
+          <ul>
+            <li>Omfattende API-dokumentation er tilgængelig på developers.flow.dk.</li>
+            <li>Sandbox-miljø til test af integrationer uden påvirkning af produktionsdata.</li>
+            <li>Webhooks til realtidsnotifikationer om hændelser på Platformen.</li>
+            <li>Teknisk support til udviklere via dedikeret supportkanal.</li>
+          </ul>
+
+          <h2>11. Dataadgang og eksport</h2>
+          <p>Restauranten har ret til adgang til og eksport af egne data:</p>
+
+          <h3>11.1 Dataadgang</h3>
+          <ul>
+            <li>Restauranten har til enhver tid adgang til egne driftsdata via det administrative dashboard.</li>
+            <li>Historiske data er tilgængelige i minimum 3 år efter ordredato.</li>
+            <li>Rapporter kan genereres og downloades i almindeligt anvendte formater (CSV, Excel, PDF).</li>
+            <li>Real-time adgang til data er tilgængelig via API for relevante abonnementer.</li>
+          </ul>
+
+          <h3>11.2 Dataeksport</h3>
+          <ul>
+            <li>Ved opsigelse af abonnement har Restauranten ret til at eksportere alle egne data inden kontolukning.</li>
+            <li>Fuld dataeksport inkluderer ordrehistorik, kundedata (med forbehold for GDPR), menudata og rapporter.</li>
+            <li>Flow vil bistå med dataeksport i et struktureret, maskinlæsbart format.</li>
+            <li>Særlige dataeksportanmodninger kan være forbundet med et administrationsgebyr.</li>
+          </ul>
+
+          <h3>11.3 Dataportabilitet</h3>
+          <ul>
+            <li>Restauranten har ret til dataportabilitet i henhold til GDPR artikel 20.</li>
+            <li>Personoplysninger om Slutbrugere kan eksporteres i det omfang, Restauranten er dataansvarlig herfor.</li>
+            <li>Flow vil samarbejde om overførsel af data til alternative platforme ved opsigelse.</li>
+          </ul>
+
+          <h2>12. Platform-opdateringer og vedligeholdelse</h2>
+          <p>Flow arbejder kontinuerligt på at forbedre og vedligeholde Platformen:</p>
+
+          <h3>12.1 Opdateringer</h3>
+          <ul>
+            <li>Platformen opdateres løbende med fejlrettelser, sikkerhedsopdateringer og nye funktioner.</li>
+            <li>Mindre opdateringer implementeres automatisk uden varsel.</li>
+            <li>Større opdateringer, der påvirker eksisterende funktionalitet, varsles minimum 14 dage i forvejen.</li>
+            <li>Release notes publiceres for alle væsentlige opdateringer.</li>
+          </ul>
+
+          <h3>12.2 Planlagt vedligeholdelse</h3>
+          <ul>
+            <li>Planlagt vedligeholdelse udføres så vidt muligt uden for spidsbelastningstider.</li>
+            <li>Ved forventet nedetid over 30 minutter varsles Restauranter minimum 48 timer i forvejen.</li>
+            <li>Statusopdateringer om igangværende vedligeholdelse kommunikeres via status.flow.dk.</li>
+          </ul>
+
+          <h3>12.3 Uplanlagt nedetid</h3>
+          <ul>
+            <li>Ved uplanlagt nedetid arbejder Flow på hurtigst mulig genetablering af tjenesten.</li>
+            <li>Information om igangværende hændelser kommunikeres via statussiden og direkte notifikationer.</li>
+            <li>Post-incident rapporter udarbejdes for væsentlige hændelser.</li>
+            <li>Flow kompenserer ikke for tabt omsætning som følge af nedetid, medmindre andet fremgår af serviceniveauaftalen.</li>
+          </ul>
+
+          <h2>13. Sikkerhed og adgangskontrol</h2>
+          <p>Flow prioriterer sikkerheden af Platformen og de data, der behandles:</p>
+
+          <h3>13.1 Platformsikkerhed</h3>
+          <ul>
+            <li>Al datatransmission er krypteret med TLS 1.3 eller nyere.</li>
+            <li>Data i hvile er krypteret med AES-256 kryptering.</li>
+            <li>Regelmæssige sikkerhedsaudits og penetrationstest gennemføres af uafhængige tredjeparter.</li>
+            <li>Platformen hostes i ISO 27001-certificerede datacentre inden for EU.</li>
+            <li>DDoS-beskyttelse og web application firewall er implementeret.</li>
+          </ul>
+
+          <h3>13.2 Adgangskontrol</h3>
+          <ul>
+            <li>Restauranten kan oprette flere brugerkonti med differentierede adgangsrettigheder.</li>
+            <li>To-faktor autentificering (2FA) er tilgængeligt og anbefales stærkt for alle administratorkonti.</li>
+            <li>Login-aktivitet logges og kan gennemgås i det administrative dashboard.</li>
+            <li>Automatisk logout efter inaktivitet beskytter mod uautoriseret adgang.</li>
+          </ul>
+
+          <h3>13.3 Sikkerhedshændelser</h3>
+          <ul>
+            <li>Ved mistanke om sikkerhedsbrud skal Flow kontaktes omgående via security@flow.dk.</li>
+            <li>Flow vil notificere berørte Restauranter om sikkerhedshændelser, der påvirker deres data.</li>
+            <li>Databrud håndteres i overensstemmelse med GDPR's notifikationskrav.</li>
+          </ul>
+
+          <h2>14. Acceptable Use Policy</h2>
+          <p>Brugen af Platformen er underlagt følgende retningslinjer for acceptabel brug:</p>
+
+          <h3>14.1 Tilladt brug</h3>
+          <p>Platformen må udelukkende anvendes til:</p>
+          <ul>
+            <li>Lovlig erhvervsmæssig drift af fødevarevirksomhed.</li>
+            <li>Modtagelse og behandling af legitime kundeordrer.</li>
+            <li>Markedsføring og kommunikation, der overholder gældende lovgivning.</li>
+            <li>Databehandling i overensstemmelse med databeskyttelsesreglerne.</li>
+          </ul>
+
+          <h3>14.2 Forbudt brug</h3>
+          <p>Følgende aktiviteter er strengt forbudt:</p>
+          <ul>
+            <li>Enhver form for ulovlig aktivitet, herunder hvidvask, svindel eller skatteunddragelse.</li>
+            <li>Salg af ulovlige produkter eller tjenester.</li>
+            <li>Forsøg på at kompromittere Platformens sikkerhed eller integritet.</li>
+            <li>Uautoriseret adgang til andre brugeres data eller konti.</li>
+            <li>Systematisk scraping eller automatiseret dataindsamling uden tilladelse.</li>
+            <li>Brug af Platformen til at distribuere malware, spam eller skadeligt indhold.</li>
+            <li>Manipulation af anmeldelser, ratings eller andre brugergeneret indhold.</li>
+            <li>Overtrædelse af tredjeparters immaterielle rettigheder.</li>
+          </ul>
+
+          <h3>14.3 Konsekvenser ved overtrædelse</h3>
+          <p>Ved overtrædelse af acceptable use policy kan Flow:</p>
+          <ul>
+            <li>Udstede advarsler og kræve øjeblikkelig ophør af den problematiske adfærd.</li>
+            <li>Midlertidigt suspendere adgangen til Platformen.</li>
+            <li>Permanent ophæve Restaurantens konto uden refundering.</li>
+            <li>Rapportere ulovlige aktiviteter til relevante myndigheder.</li>
+            <li>Kræve erstatning for skader forårsaget af overtrædelsen.</li>
+          </ul>
+
+          <h2>15. Indholdsretningslinjer</h2>
+          <p>Alt indhold, der uploades til Platformen, skal overholde følgende retningslinjer:</p>
+
+          <h3>15.1 Generelle krav</h3>
+          <ul>
+            <li>Indhold skal være nøjagtigt, sandfærdigt og ikke vildledende.</li>
+            <li>Billeder skal være af tilstrækkelig kvalitet og repræsentative for de faktiske produkter.</li>
+            <li>Beskrivelser skal være på dansk eller engelsk (efter aftale) og grammatisk korrekte.</li>
+            <li>Indhold må ikke krænke tredjeparters rettigheder, herunder ophavsret og varemærker.</li>
+          </ul>
+
+          <h3>15.2 Forbudt indhold</h3>
+          <ul>
+            <li>Diskriminerende, hadefuldt eller stødende materiale.</li>
+            <li>Vildledende sundhedspåstande eller ulovlige påstande om produktegenskaber.</li>
+            <li>Seksuelt eksplicit materiale.</li>
+            <li>Voldeligt eller grafisk indhold.</li>
+            <li>Indhold, der promoverer ulovlige aktiviteter.</li>
+          </ul>
+
+          <h3>15.3 Moderation</h3>
+          <ul>
+            <li>Flow forbeholder sig retten til at gennemgå og moderere indhold på Platformen.</li>
+            <li>Indhold, der vurderes at være i strid med retningslinjerne, kan fjernes uden varsel.</li>
+            <li>Gentagne overtrædelser kan medføre suspension eller ophævelse af kontoen.</li>
+          </ul>
+
+          <h2>16. Suspension og ophør</h2>
+          <p>Følgende vilkår gælder for suspension og ophør af brug af Platformen:</p>
+
+          <h3>16.1 Suspension initieret af Flow</h3>
+          <p>Flow kan midlertidigt suspendere Restaurantens adgang til Platformen i følgende tilfælde:</p>
+          <ul>
+            <li>Mistanke om overtrædelse af disse Vilkår eller gældende lovgivning.</li>
+            <li>Manglende betaling af skyldige beløb trods rykkere.</li>
+            <li>Sikkerhedsmæssige bekymringer relateret til Restaurantens konto.</li>
+            <li>Gentagne klager fra Slutbrugere om kvalitet eller service.</li>
+            <li>Anmodning fra myndigheder eller som påkrævet ved lov.</li>
+          </ul>
+
+          <h3>16.2 Ophævelse af aftalen</h3>
+          <p>Enhver part kan opsige aftalen med 30 dages skriftligt varsel. Flow kan ophæve aftalen med øjeblikkelig virkning ved:</p>
+          <ul>
+            <li>Væsentlig misligholdelse af disse Vilkår.</li>
+            <li>Restaurantens konkurs, betalingsstandsning eller lignende.</li>
+            <li>Dokumenteret ulovlig aktivitet.</li>
+            <li>Gentagen suspension inden for en 12-måneders periode.</li>
+          </ul>
+
+          <h3>16.3 Konsekvenser ved ophør</h3>
+          <ul>
+            <li>Ved ophør vil Restaurantens adgang til Platformen blive deaktiveret.</li>
+            <li>Igangværende ordrer skal færdigbehandles inden deaktivering.</li>
+            <li>Restauranten har 30 dage til at eksportere egne data efter ophør.</li>
+            <li>Skyldige beløb forfalder til betaling ved ophør.</li>
+            <li>Eventuelle forudbetalte beløb refunderes pro rata, medmindre ophøret skyldes Restaurantens misligholdelse.</li>
+          </ul>
+
+          <h2>17. Ansvarsbegrænsning</h2>
+          <p>Flows ansvar i forbindelse med Platformen er begrænset som følger:</p>
+
+          <h3>17.1 Ansvarsfrihed</h3>
+          <p>Flow er ikke ansvarlig for:</p>
+          <ul>
+            <li>Indirekte tab, følgeskader, driftstab eller tab af goodwill.</li>
+            <li>Tab forårsaget af Restaurantens egen misligholdelse eller uagtsomhed.</li>
+            <li>Tab som følge af force majeure, herunder naturkatastrofer, krig, strejker eller myndighedsindgreb.</li>
+            <li>Kvaliteten af Restaurantens produkter eller tjenesteydelser.</li>
+            <li>Tredjepartstjenesters funktionalitet eller tilgængelighed.</li>
+            <li>Slutbrugeres adfærd eller manglende betaling.</li>
+          </ul>
+
+          <h3>17.2 Ansvarsbegrænsning</h3>
+          <ul>
+            <li>Flows samlede ansvar over for Restauranten er under alle omstændigheder begrænset til det beløb, Restauranten har betalt til Flow i de seneste 12 måneder forud for kravet.</li>
+            <li>Denne begrænsning gælder ikke i tilfælde af forsæt, grov uagtsomhed eller personskade.</li>
+            <li>Begrænsningen gælder uanset om kravet er baseret på kontrakt, erstatning uden for kontrakt eller andet grundlag.</li>
+          </ul>
+
+          <h3>17.3 Skadesløsholdelse</h3>
+          <p>Restauranten accepterer at skadesløsholde Flow, dets direktører, medarbejdere og partnere fra ethvert krav, tab, skade eller udgift (herunder rimelige advokatomkostninger) der opstår som følge af:</p>
+          <ul>
+            <li>Restaurantens brug af Platformen.</li>
+            <li>Restaurantens overtrædelse af disse Vilkår.</li>
+            <li>Restaurantens overtrædelse af gældende lovgivning.</li>
+            <li>Krav fra Slutbrugere relateret til Restaurantens produkter eller service.</li>
+            <li>Restaurantens krænkelse af tredjeparters rettigheder.</li>
+          </ul>
+
+          <h2>18. Kontaktoplysninger</h2>
+          <p>For spørgsmål, support eller henvendelser vedrørende Platformen eller disse Vilkår:</p>
+
+          <h3>18.1 Generelle henvendelser</h3>
+          <ul>
+            <li><strong>Virksomhed:</strong> Flow ApS</li>
+            <li><strong>CVR-nummer:</strong> 12345678</li>
+            <li><strong>Adresse:</strong> Vestergade 1, 1456 København K, Danmark</li>
+            <li><strong>E-mail:</strong> <a href="mailto:info@flow.dk">info@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+          </ul>
+
+          <h3>18.2 Teknisk support</h3>
+          <ul>
+            <li><strong>E-mail:</strong> <a href="mailto:support@flow.dk">support@flow.dk</a></li>
+            <li><strong>Support-portal:</strong> <a href="https://help.flow.dk">help.flow.dk</a></li>
+            <li><strong>Åbningstider:</strong> Mandag-fredag 08:00-22:00, weekend 10:00-18:00</li>
+          </ul>
+
+          <h3>18.3 Juridiske henvendelser</h3>
+          <ul>
+            <li><strong>E-mail:</strong> <a href="mailto:legal@flow.dk">legal@flow.dk</a></li>
+            <li><strong>Databeskyttelse:</strong> <a href="mailto:privacy@flow.dk">privacy@flow.dk</a></li>
+          </ul>
+
+          <h3>18.4 Sikkerhed</h3>
+          <ul>
+            <li><strong>Sikkerhedsproblemer:</strong> <a href="mailto:security@flow.dk">security@flow.dk</a></li>
+            <li><strong>Statusside:</strong> <a href="https://status.flow.dk">status.flow.dk</a></li>
+          </ul>
+
+          <h2>19. Ændringer og ikrafttrædelse</h2>
+          <p>Disse Vilkår kan ændres af Flow med 30 dages varsel. Ved væsentlige ændringer vil Restauranten blive notificeret via e-mail og/eller meddelelse i det administrative dashboard. Fortsat brug af Platformen efter ændringernes ikrafttrædelse udgør accept af de opdaterede Vilkår.</p>
+          <p>Disse Vilkår er gældende fra 1. februar 2026 og erstatter alle tidligere versioner af platformvilkårene.</p>
+
+          <h2>20. Lovvalg og tvistløsning</h2>
+          <p>Disse Vilkår er underlagt dansk ret. Eventuelle tvister, der udspringer af eller relaterer sig til disse Vilkår eller brugen af Platformen, skal søges løst gennem forhandling. Såfremt parterne ikke kan nå til enighed inden for 30 dage, kan tvisten indbringes for de danske domstole med Københavns Byret som første instans.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="cookie-settings.html">Cookie Settings</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Website Terms</a>
+          <a href="disclaimer.html">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
+    });
+  </script>
+<!-- Flow CMS Dynamic Content -->
+<script src="/js/flow-cms-render.js"></script>
+</body>
+</html>

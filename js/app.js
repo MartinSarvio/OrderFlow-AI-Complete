@@ -23,6 +23,11 @@ function toggleTheme() {
   // Update logos based on theme
   updateLogos(newTheme);
 
+  // Reinitialize charts with new theme colors
+  if (typeof initRevenueChart === 'function') {
+    setTimeout(() => initRevenueChart(), 50);
+  }
+
   console.log('Theme changed to:', newTheme);
 }
 
@@ -32,8 +37,8 @@ function updateLogos(theme) {
     ? 'images/FLOW-logo-sort-4K.png'
     : 'images/FLOW-logo-hvid-4K.png';
 
-  // Update all logo images
-  document.querySelectorAll('.logo img, .app-logo img, .auth-logo img').forEach(img => {
+  // Update all logo images (including sidebar logo and any with flow-logo class)
+  document.querySelectorAll('.logo img, .app-logo img, .auth-logo img, .flow-logo, img[src*="FLOW-logo"]').forEach(img => {
     img.src = logoSrc;
   });
 }
@@ -3989,6 +3994,7 @@ function closeFlyout() {
   const panel = document.getElementById('flow-flyout-panel');
   if (panel) {
     panel.classList.remove('visible');
+    panel.classList.remove('pinned');
   }
   // Also mark trigger as inactive
   const trigger = document.getElementById('nav-flow-trigger');
@@ -3996,6 +4002,78 @@ function closeFlyout() {
     trigger.classList.remove('active');
   }
 }
+
+// Position flyout panel within screen bounds
+function positionFlyoutPanel() {
+  const panel = document.getElementById('flow-flyout-panel');
+  const trigger = document.getElementById('nav-flow-trigger');
+  const btn = trigger ? trigger.querySelector('.nav-flyout-btn') : null;
+
+  if (panel && btn) {
+    const btnRect = btn.getBoundingClientRect();
+    const panelHeight = panel.offsetHeight || 400;
+    const viewportHeight = window.innerHeight;
+    const margin = 20;
+
+    // Calculate top position - align with button, but ensure it stays within viewport
+    let topPos = btnRect.top;
+    if (topPos + panelHeight > viewportHeight - margin) {
+      topPos = viewportHeight - panelHeight - margin;
+    }
+    if (topPos < margin) {
+      topPos = margin;
+    }
+
+    panel.style.top = topPos + 'px';
+  }
+}
+
+// Toggle FLOW-CMS flyout panel on button click (pin/unpin)
+function toggleFlyout(event) {
+  event.stopPropagation();
+  const panel = document.getElementById('flow-flyout-panel');
+  const trigger = document.getElementById('nav-flow-trigger');
+
+  if (panel && trigger) {
+    const isPinned = panel.classList.contains('pinned');
+
+    if (isPinned) {
+      // Unpin - will close when mouse leaves
+      panel.classList.remove('pinned');
+      panel.classList.remove('visible');
+      trigger.classList.remove('active');
+    } else {
+      // Pin - stays open
+      positionFlyoutPanel();
+      panel.classList.add('pinned');
+      panel.classList.add('visible');
+      trigger.classList.add('active');
+    }
+  }
+}
+
+// Initialize flyout behavior
+document.addEventListener('DOMContentLoaded', function() {
+  const trigger = document.getElementById('nav-flow-trigger');
+  const flyoutBtn = trigger ? trigger.querySelector('.nav-flyout-btn') : null;
+  const panel = document.getElementById('flow-flyout-panel');
+
+  if (flyoutBtn && panel) {
+    // Click to pin/unpin
+    flyoutBtn.addEventListener('click', toggleFlyout);
+
+    // Position panel on hover
+    trigger.addEventListener('mouseenter', positionFlyoutPanel);
+  }
+
+  // Close flyout when clicking other sidebar nav items
+  const sidebarItems = document.querySelectorAll('.sidebar .nav-dropdown-toggle, .sidebar .nav-item:not(#nav-flow-trigger)');
+  sidebarItems.forEach(item => {
+    item.addEventListener('click', function() {
+      closeFlyout();
+    });
+  });
+});
 
 // =====================================================
 // FAQ ACCORDION FUNCTIONS
@@ -5952,13 +6030,13 @@ function initRevenueChart() {
         x: {
           grid: {
             display: true,
-            color: 'rgba(255,255,255,0.05)',
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)',
             drawBorder: true,
-            borderColor: 'rgba(255,255,255,0.1)'
+            borderColor: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.1)'
           },
           ticks: {
             display: true,
-            color: '#ffffff',
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? '#000000' : '#ffffff',
             font: { size: 11 },
             maxRotation: 0,
             autoSkip: true,
@@ -5966,20 +6044,20 @@ function initRevenueChart() {
           },
           border: {
             display: true,
-            color: 'rgba(255,255,255,0.2)'
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'
           }
         },
         y: {
           beginAtZero: true,
           grid: {
             display: true,
-            color: 'rgba(255,255,255,0.05)',
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)',
             drawBorder: true,
-            borderColor: 'rgba(255,255,255,0.2)'
+            borderColor: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'
           },
           ticks: {
             display: true,
-            color: '#ffffff',
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? '#000000' : '#ffffff',
             font: { size: 11 },
             maxTicksLimit: 6,
             callback: function(value) {
@@ -5990,7 +6068,7 @@ function initRevenueChart() {
           },
           border: {
             display: true,
-            color: 'rgba(255,255,255,0.2)'
+            color: document.documentElement.getAttribute('data-theme') === 'light' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)'
           }
         }
       }
@@ -25945,7 +26023,16 @@ function updateAppColor(type, color) {
 
 // Save App Builder Colors
 function saveAppBuilderColors() {
+  const config = loadAppBuilderConfig();
+  saveAppBuilderConfig(config);
   toast('Farver gemt!', 'success');
+
+  // Show status indicator
+  const status = document.getElementById('farver-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
 }
 
 // Update App Info (Billeder page - name/tagline)
@@ -26061,7 +26148,16 @@ function removeAppBanner() {
 
 // Save App Builder Images
 function saveAppBuilderImages() {
+  const config = loadAppBuilderConfig();
+  saveAppBuilderConfig(config);
   toast('Billeder gemt!', 'success');
+
+  // Show status indicator
+  const status = document.getElementById('billeder-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
 }
 
 // Handle Branding Logo Upload
@@ -26972,9 +27068,10 @@ let webBuilderConfig = null;
 
 // Web Builder Templates - Demo skabeloner
 const webBuilderTemplates = {
-  roma: {
-    templateType: 'roma',
-    previewFile: './demos/pwa-preview-mario.html',
+  'skabelon-1': {
+    templateType: 'skabelon-1',
+    templatePath: 'templates/skabelon-1/',
+    previewFile: './templates/skabelon-1/dist/index.html',
     branding: {
       name: 'Pizzeria Roma',
       shortName: 'Roma',
@@ -27017,12 +27114,59 @@ const webBuilderTemplates = {
     menu: { currency: 'DKK', taxRate: 25 },
     images: { hero: 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1200&h=600&fit=crop', featured: '' }
   },
-  mario: {
-    templateType: 'mario',
-    previewFile: './demos/pwa-preview-mario.html',
+  'skabelon-2': {
+    templateType: 'skabelon-2',
+    templatePath: 'templates/skabelon-2/',
+    previewFile: './templates/skabelon-2/index.html',
     branding: {
-      name: 'Pizza Mario',
-      shortName: 'Mario',
+      name: 'Feane Restaurant',
+      shortName: 'Feane',
+      slogan: 'Fantastisk Mad & Service',
+      description: 'Oplev vores unikke retter lavet med de friskeste ingredienser og passion for madlavning.',
+      logo: { url: '', darkUrl: '' },
+      colors: {
+        primary: '#ffbe33',
+        secondary: '#222831',
+        accent: '#e1e1e1',
+        background: '#FFFFFF',
+        surface: '#F8F9FA',
+        text: '#222222',
+        textMuted: '#666666',
+        success: '#28a745',
+        warning: '#ffc107',
+        error: '#dc3545'
+      },
+      fonts: { heading: 'Poppins', body: 'Open Sans' }
+    },
+    contact: {
+      address: 'Nørrebrogade 45',
+      postalCode: '2200',
+      city: 'København N',
+      phone: '+45 38 88 88 88',
+      email: 'info@feane.dk',
+      socialMedia: { facebook: 'https://facebook.com/feane', instagram: 'https://instagram.com/feane', tiktok: '' }
+    },
+    businessHours: {
+      monday: { open: '10:00', close: '22:00', closed: false },
+      tuesday: { open: '10:00', close: '22:00', closed: false },
+      wednesday: { open: '10:00', close: '22:00', closed: false },
+      thursday: { open: '10:00', close: '22:00', closed: false },
+      friday: { open: '10:00', close: '23:00', closed: false },
+      saturday: { open: '11:00', close: '23:00', closed: false },
+      sunday: { open: '11:00', close: '21:00', closed: false }
+    },
+    delivery: { enabled: true, fee: 25, minimumOrder: 120, freeDeliveryThreshold: 250, estimatedTime: 35 },
+    features: { ordering: true, loyalty: true, pickup: true, delivery: true, customerAccounts: true, pushNotifications: false },
+    menu: { currency: 'DKK', taxRate: 25 },
+    images: { hero: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=600&fit=crop', featured: '' }
+  },
+  'skabelon-3': {
+    templateType: 'skabelon-3',
+    templatePath: 'templates/skabelon-3/',
+    previewFile: './templates/skabelon-3/index.html',
+    branding: {
+      name: 'Pizza Delicious',
+      shortName: 'Pizza',
       slogan: 'Lækker Italiensk Køkken',
       description: 'Oplev autentiske italienske smagsvarianter med vores håndlavede pizzaer og friske ingredienser.',
       logo: { url: '', darkUrl: '' },
@@ -27045,8 +27189,8 @@ const webBuilderTemplates = {
       postalCode: '2100',
       city: 'København Ø',
       phone: '+45 35 42 42 42',
-      email: 'ciao@pizzamario.dk',
-      socialMedia: { facebook: 'https://facebook.com/pizzamario', instagram: 'https://instagram.com/pizzamario', tiktok: '' }
+      email: 'ciao@pizzadelicious.dk',
+      socialMedia: { facebook: 'https://facebook.com/pizzadelicious', instagram: 'https://instagram.com/pizzadelicious', tiktok: '' }
     },
     businessHours: {
       monday: { open: '12:00', close: '22:00', closed: false },
@@ -27595,6 +27739,44 @@ const defaultFlowPageContent = {
     },
     features: { items: ['Tilmeld dig', 'Opsæt din profil', 'Gå live', 'Se resultater'] },
     cta: { title: 'Kom i gang på 5 minutter', buttonText: 'Start gratis' }
+  },
+  'sms-workflow': {
+    hero: {
+      title: 'Automatiser din kommunikation med AI',
+      subtitle: 'Lad AI håndtere dine kundehenvendelser, marketing-beskeder og reservationsbekræftelser.',
+      ctaText: 'Kom i gang',
+      ctaUrl: '#demo'
+    },
+    chatDemo: {
+      userMessage: 'Hej, jeg vil gerne bestille 2x Margherita og 1x Pepperoni til levering kl. 18:30',
+      botMessage: 'Tak for din bestilling! Jeg har modtaget: 2x Margherita (178 kr) og 1x Pepperoni (99 kr). Total: 277 kr. Levering kl. 18:30 til din adresse. Du modtager SMS når maden er på vej!',
+      userAvatar: 'https://randomuser.me/api/portraits/women/79.jpg',
+      userDelay: 500,
+      botDelay: 1200,
+      textExpandDelay: 1800
+    },
+    features: { items: ['98% åbningsrate', 'Win-back kampagner', 'Fødselsdagstilbud', 'Ordrebekræftelser'] },
+    cta: { title: 'Start din SMS automation', buttonText: 'Prøv gratis' }
+  },
+  'instagram-workflow': {
+    hero: {
+      title: 'Instagram automation',
+      subtitle: 'Automatiser svar på DMs, kommentarer og story-mentions.',
+      ctaText: 'Kom i gang',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Auto-svar på DMs', 'Kommentar-automation', 'Story mentions', '24/7 engagement'] },
+    cta: { title: 'Automatisér din Instagram', buttonText: 'Prøv gratis' }
+  },
+  'facebook-workflow': {
+    hero: {
+      title: 'Facebook automation',
+      subtitle: 'Messenger automation og kommentar-svar for din restaurant.',
+      ctaText: 'Kom i gang',
+      ctaUrl: '#demo'
+    },
+    features: { items: ['Messenger bot', 'Kommentar-svar', 'Lead generering', 'Automatiske kampagner'] },
+    cta: { title: 'Automatisér din Facebook', buttonText: 'Prøv gratis' }
   }
 };
 
@@ -28203,6 +28385,8 @@ async function loadCMSPages() {
       await migrateVideoUrls();
       // MIGRATION: Add missing sections (logocloud, testimonials, footer, bento, beliefs)
       migrateMissingSections();
+      // MIGRATION: Add missing pages from flowPagesList
+      migrateMissingPages();
     } catch (e) {
       console.error('Error loading CMS pages:', e);
       cmsPages = getDefaultCMSPages();
@@ -28393,6 +28577,96 @@ function migrateMissingSections() {
   }
 }
 
+// MIGRATION: Add missing pages from flowPagesList
+function migrateMissingPages() {
+  let needsSave = false;
+  const existingSlugs = cmsPages.map(p => p.slug.replace('.html', ''));
+
+  flowPagesList.forEach((pageInfo, index) => {
+    if (!existingSlugs.includes(pageInfo.slug)) {
+      console.log('Flow CMS: Adding missing page:', pageInfo.title, '(' + pageInfo.slug + ')');
+
+      const defaults = defaultFlowPageContent[pageInfo.slug] || {};
+
+      // Create the new page object
+      const newPage = {
+        id: 'page-' + pageInfo.slug,
+        title: pageInfo.title,
+        slug: pageInfo.slug + '.html',
+        description: pageInfo.description || '',
+        status: 'published',
+        template: 'landing',
+        isActive: true,
+        showCookieBanner: false,
+        seo: {
+          title: pageInfo.title + ' | Flow',
+          description: defaults.hero?.subtitle || pageInfo.description || '',
+          keywords: []
+        },
+        sections: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Add hero section
+      newPage.sections.push({
+        id: 'section-hero-' + index,
+        type: 'hero',
+        order: 0,
+        isVisible: true,
+        padding: 'medium',
+        headline: defaults.hero?.title || pageInfo.title,
+        subheadline: defaults.hero?.subtitle || '',
+        backgroundVideo: '',
+        backgroundImage: '',
+        backgroundOverlay: 50,
+        animation: 'none',
+        alignment: 'center',
+        buttons: [
+          { text: defaults.hero?.ctaText || 'Kom i gang', url: defaults.hero?.ctaUrl || '#demo', variant: 'primary' }
+        ]
+      });
+
+      // Add chat-demo section for workflow pages
+      if (pageInfo.slug.includes('workflow') && defaults.chatDemo) {
+        newPage.sections.push({
+          id: 'section-chat-demo-' + index,
+          type: 'chat-demo',
+          order: 1,
+          isVisible: true,
+          padding: 'medium',
+          userMessage: defaults.chatDemo.userMessage || '',
+          botMessage: defaults.chatDemo.botMessage || '',
+          userAvatar: defaults.chatDemo.userAvatar || 'https://randomuser.me/api/portraits/women/79.jpg',
+          userDelay: defaults.chatDemo.userDelay || 500,
+          botDelay: defaults.chatDemo.botDelay || 1200,
+          textExpandDelay: defaults.chatDemo.textExpandDelay || 1800
+        });
+      }
+
+      // Add CTA section
+      newPage.sections.push({
+        id: 'section-cta-' + index,
+        type: 'cta',
+        order: newPage.sections.length,
+        isVisible: true,
+        padding: 'medium',
+        title: defaults.cta?.title || 'Klar til at komme i gang?',
+        description: '',
+        button: { text: defaults.cta?.buttonText || 'Kom i gang', url: '#demo', variant: 'primary' }
+      });
+
+      cmsPages.push(newPage);
+      needsSave = true;
+    }
+  });
+
+  if (needsSave) {
+    localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+    console.log('Flow CMS: Migration complete - added', cmsPages.length - existingSlugs.length, 'missing pages');
+  }
+}
+
 // Save CMS Pages to localStorage
 function saveCMSPages() {
   localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
@@ -28527,35 +28801,71 @@ function renderCMSPageEditor() {
 
 // Switch CMS Editor Tab
 function switchCMSEditorTab(tab) {
-  // Update tab buttons
-  document.querySelectorAll('#cms-editor-tabs .tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tab);
-  });
+  console.log('switchCMSEditorTab called with:', tab);
 
-  // Hide all tabs
-  document.getElementById('cms-tab-content').style.display = 'none';
-  document.getElementById('cms-tab-seo').style.display = 'none';
-  document.getElementById('cms-tab-settings').style.display = 'none';
+  try {
+    // Update tab buttons
+    document.querySelectorAll('#cms-editor-tabs .tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
 
-  // Show selected tab
-  const tabEl = document.getElementById('cms-tab-' + tab);
-  if (tabEl) tabEl.style.display = 'block';
+    // Hide all tabs (with null checks)
+    const contentTab = document.getElementById('cms-tab-content');
+    const seoTab = document.getElementById('cms-tab-seo');
+    const settingsTab = document.getElementById('cms-tab-settings');
 
-  // Render tab content
-  const page = getCurrentCMSPage();
-  if (!page) return;
+    if (contentTab) contentTab.style.display = 'none';
+    if (seoTab) seoTab.style.display = 'none';
+    if (settingsTab) settingsTab.style.display = 'none';
 
-  if (tab === 'content') {
-    renderCMSSectionsList();
-  } else if (tab === 'seo') {
-    document.getElementById('cms-seo-title').value = page.seo?.title || '';
-    document.getElementById('cms-seo-description').value = page.seo?.description || '';
-    document.getElementById('cms-seo-keywords').value = (page.seo?.keywords || []).join(', ');
-  } else if (tab === 'settings') {
-    document.getElementById('cms-page-slug').value = page.slug.replace('.html', '');
-    document.getElementById('cms-page-template').value = page.template || 'landing';
-    document.getElementById('cms-page-active').checked = page.isActive !== false;
-    document.getElementById('cms-page-cookie-banner').checked = page.showCookieBanner === true;
+    // Show selected tab
+    const tabEl = document.getElementById('cms-tab-' + tab);
+    if (tabEl) {
+      tabEl.style.display = 'block';
+      console.log('Tab shown:', tab);
+    } else {
+      console.error('Tab element not found:', 'cms-tab-' + tab);
+      return;
+    }
+
+    // Render tab content
+    const page = getCurrentCMSPage();
+    if (!page) {
+      console.warn('No page selected for tab:', tab);
+      return;
+    }
+    console.log('Current page:', page.title);
+
+    if (tab === 'content') {
+      renderCMSSectionsList();
+    } else if (tab === 'seo') {
+      const seoTitle = document.getElementById('cms-seo-title');
+      const seoDesc = document.getElementById('cms-seo-description');
+      const seoKeywords = document.getElementById('cms-seo-keywords');
+
+      if (seoTitle) seoTitle.value = page.seo?.title || '';
+      if (seoDesc) seoDesc.value = page.seo?.description || '';
+      if (seoKeywords) seoKeywords.value = (page.seo?.keywords || []).join(', ');
+    } else if (tab === 'settings') {
+      // Ensure empty state is hidden
+      const emptyEl = document.getElementById('cms-editor-empty');
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      const slugEl = document.getElementById('cms-page-slug');
+      const templateEl = document.getElementById('cms-page-template');
+      const activeEl = document.getElementById('cms-page-active');
+      const cookieEl = document.getElementById('cms-page-cookie-banner');
+
+      if (slugEl) slugEl.value = page.slug.replace('.html', '');
+      if (templateEl) templateEl.value = page.template || 'landing';
+      if (activeEl) activeEl.checked = page.isActive !== false;
+      if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
+
+      console.log('Settings tab loaded for:', page.slug);
+      console.log('Empty state hidden:', emptyEl?.style.display);
+    }
+  } catch (e) {
+    console.error('Error in switchCMSEditorTab:', e);
   }
 }
 
@@ -29279,6 +29589,40 @@ function renderSectionEditor(section) {
           <input type="text" class="input" value="${section.copyright || ''}" onchange="updateSectionField('${section.id}', 'copyright', this.value)">
         </div>
       `;
+    case 'chat-demo':
+      return `
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">Bruger Besked</label>
+          <textarea class="input" rows="3" onchange="updateSectionField('${section.id}', 'userMessage', this.value)">${section.userMessage || ''}</textarea>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <label class="form-label" style="font-size:12px">AI Svar</label>
+          <textarea class="input" rows="4" onchange="updateSectionField('${section.id}', 'botMessage', this.value)">${section.botMessage || ''}</textarea>
+        </div>
+        ${renderImagePicker({
+          id: 'chat-avatar-' + section.id,
+          sectionId: section.id,
+          field: 'userAvatar',
+          currentValue: section.userAvatar || '',
+          label: 'Bruger Avatar',
+          size: 'small',
+          shape: 'circle'
+        })}
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Bruger Delay (ms)</label>
+            <input type="number" class="input" min="0" max="5000" value="${section.userDelay || 500}" onchange="updateSectionField('${section.id}', 'userDelay', parseInt(this.value))">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Bot Delay (ms)</label>
+            <input type="number" class="input" min="0" max="5000" value="${section.botDelay || 1200}" onchange="updateSectionField('${section.id}', 'botDelay', parseInt(this.value))">
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">Tekst Expand (ms)</label>
+            <input type="number" class="input" min="0" max="5000" value="${section.textExpandDelay || 1800}" onchange="updateSectionField('${section.id}', 'textExpandDelay', parseInt(this.value))">
+          </div>
+        </div>
+      `;
     default:
       return '<p style="color:var(--muted)">Ukendt sektionstype</p>';
   }
@@ -29715,6 +30059,14 @@ function addSectionToPage(type) {
       newSection.contact = { phone: '+45 70 12 34 56', email: 'support@flow.dk' };
       newSection.copyright = '© 2024 Flow. Alle rettigheder forbeholdes.';
       break;
+    case 'chat-demo':
+      newSection.userMessage = 'Hej, jeg vil gerne bestille 2x Margherita og 1x Pepperoni til levering kl. 18:30';
+      newSection.botMessage = 'Tak for din bestilling! Jeg har modtaget: 2x Margherita (178 kr) og 1x Pepperoni (99 kr). Total: 277 kr. Levering kl. 18:30 til din adresse. Du modtager SMS når maden er på vej!';
+      newSection.userAvatar = 'https://randomuser.me/api/portraits/women/79.jpg';
+      newSection.userDelay = 500;
+      newSection.botDelay = 1200;
+      newSection.textExpandDelay = 1800;
+      break;
   }
 
   page.sections.push(newSection);
@@ -29876,65 +30228,72 @@ function previewCurrentPage() {
 // Schedule page changes
 function schedulePageChanges() {
   console.log('schedulePageChanges called');
-  const page = getCurrentCMSPage();
-  console.log('Current page:', page);
 
-  if (!page) {
-    console.warn('No page selected for scheduling');
-    toast('Vælg først en side at planlægge', 'warning');
-    return;
-  }
+  try {
+    const page = getCurrentCMSPage();
+    console.log('Current page:', page);
 
-  // Get minimum datetime (now + 1 minute)
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + 1);
-  const minDatetime = now.toISOString().slice(0, 16);
+    if (!page) {
+      console.warn('No page selected for scheduling');
+      toast('Vælg først en side at planlægge', 'warning');
+      return;
+    }
 
-  const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
+    // Get minimum datetime (now + 1 minute)
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 1);
+    const minDatetime = now.toISOString().slice(0, 16);
 
-  const modal = document.createElement('div');
-  modal.className = 'modal-overlay active';
-  modal.id = 'schedule-modal';
-  modal.innerHTML = `
-    <div class="modal" style="max-width:500px">
-      <div class="modal-header">
-        <h3 style="margin:0">Planlæg ændringer</h3>
-        <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
-      </div>
-      <div class="modal-body" style="padding:20px">
-        <div class="form-group" style="margin-bottom:16px">
-          <label class="form-label">Dato og tid for offentliggørelse</label>
-          <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
+    const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay active';
+    modal.id = 'schedule-modal';
+    modal.innerHTML = `
+      <div class="modal" style="max-width:500px">
+        <div class="modal-header">
+          <h3 style="margin:0">Planlæg ændringer</h3>
+          <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
         </div>
-        <p style="font-size:12px;color:var(--muted)">
-          De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
-        </p>
-        ${pendingSchedules.length > 0 ? `
-          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-            <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
-            ${pendingSchedules.map(s => `
-              <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                  <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
-                  <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
-                </div>
-                <div style="display:flex;gap:8px">
-                  <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="flex:1">Forhåndsvisning</button>
-                  <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
-                  <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
-                </div>
-              </div>
-            `).join('')}
+        <div class="modal-body" style="padding:20px">
+          <div class="form-group" style="margin-bottom:16px">
+            <label class="form-label">Dato og tid for offentliggørelse</label>
+            <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
           </div>
-        ` : ''}
+          <p style="font-size:12px;color:var(--muted)">
+            De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
+          </p>
+          ${pendingSchedules.length > 0 ? `
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+              <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
+              ${pendingSchedules.map(s => `
+                <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
+                    <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="flex:1">Forhåndsvisning</button>
+                    <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
+                    <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+        <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn" onclick="closeScheduleModal()">Luk</button>
+          <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
+        </div>
       </div>
-      <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
-        <button class="btn" onclick="closeScheduleModal()">Luk</button>
-        <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(modal);
+    `;
+    document.body.appendChild(modal);
+    console.log('Schedule modal opened successfully');
+  } catch (e) {
+    console.error('Error in schedulePageChanges:', e);
+    toast('Fejl ved åbning af planlægning', 'error');
+  }
 }
 
 // Get time until scheduled change

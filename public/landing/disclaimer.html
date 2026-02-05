@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ansvarsfraskrivelse - Flow</title>
+  <meta name="description" content="Læs Flows ansvarsfraskrivelse. Vigtig information om begrænsning af ansvar, garantier og betingelser for brug af vores platform og tjenester.">
+  <meta property="og:title" content="Ansvarsfraskrivelse - Flow">
+  <meta property="og:description" content="Læs Flows ansvarsfraskrivelse. Vigtig information om begrænsning af ansvar, garantier og betingelser for brug af vores platform og tjenester.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-primary-hover: #0047cc;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6c6f75;
+      --color-gray-600: #495057;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
+      --container-huge: 1400px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overscroll-behavior: none; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img {
+      height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+
+    /* Legal Page Layout with Sidebar */
+    .legal-page { display: flex; max-width: 120rem; margin: 0 auto; padding: 12rem 4rem 8rem; gap: 6rem; }
+    .legal-sidebar { width: 24rem; flex-shrink: 0; position: sticky; top: 10rem; height: fit-content; }
+    .legal-nav { list-style: none; padding: 0; margin: 0; }
+    .legal-nav li { margin-bottom: 0.8rem; }
+    .legal-nav a { display: block; font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; transition: color 0.2s; border-bottom: 1px solid transparent; }
+    .legal-nav a:hover { color: var(--color-primary); }
+    .legal-nav a.active { color: var(--color-primary); font-weight: 600; }
+    .legal-content { flex: 1; max-width: 80rem; }
+
+    .legal-header { margin-bottom: 4rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-gray-200); }
+    .legal-header h1 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .legal-header .last-updated { font-size: 1.4rem; color: var(--color-gray-500); }
+    .legal-body h2 { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-top: 4rem; margin-bottom: 1.6rem; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body h3 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-top: 3rem; margin-bottom: 1.2rem; }
+    .legal-body p { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 1.6rem; }
+    .legal-body ul, .legal-body ol { margin-left: 2rem; margin-bottom: 1.6rem; list-style: disc; }
+    .legal-body ol { list-style: decimal; }
+    .legal-body li { font-size: 1.6rem; line-height: 1.8; color: var(--color-gray-600); margin-bottom: 0.8rem; }
+    .legal-body a { color: var(--color-primary); text-decoration: underline; }
+    .legal-body a:hover { color: var(--color-primary-hover); }
+    .legal-body table { width: 100%; border-collapse: collapse; margin: 2rem 0; }
+    .legal-body th, .legal-body td { padding: 1.2rem; text-align: left; border-bottom: 1px solid var(--color-gray-200); font-size: 1.5rem; }
+    .legal-body th { font-weight: 600; color: var(--color-dark); background: var(--color-gray-50); }
+    .legal-body td { color: var(--color-gray-600); }
+
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 968px) {
+      .legal-page { flex-direction: column; padding: 10rem 2rem 6rem; gap: 3rem; }
+      .legal-sidebar { width: 100%; position: static; border-bottom: 1px solid var(--color-gray-200); padding-bottom: 2rem; }
+      .legal-nav { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+      .legal-nav li { margin-bottom: 0; }
+      .legal-nav a { padding: 0.6rem 1.2rem; background: var(--color-gray-50); border-radius: 0.6rem; font-size: 1.4rem; }
+      .legal-nav a.active { background: var(--color-primary); color: white; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-container { padding: 1.2rem 2rem; }
+      .legal-header h1 { font-size: 3.2rem; }
+      .footer { padding: 4rem 2rem 2rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+      .footer-bottom { flex-direction: column; gap: 1.6rem; text-align: center; }
+      .footer-legal { flex-wrap: wrap; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .footer-content { grid-template-columns: 1fr; }
+      .legal-header h1 { font-size: 2.8rem; }
+    }
+  </style>
+<link rel="stylesheet" href="/css/cookie-popup.css">
+</head>
+<body>
+  <div class="page-wrapper">
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo"><img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
+          <div class="nav-links">
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
+                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
+                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
+                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
+                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
+                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
+            </div>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
+                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
+                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
+                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
+                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+            </div>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
+                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
+                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
+                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
+                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <a href="../../index.html" class="nav-login">Login</a>
+          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+        </div>
+      </div>
+    </nav>
+
+    <main class="legal-page">
+      <aside class="legal-sidebar">
+        <ul class="legal-nav">
+          <li><a href="privacy.html">Privatlivspolitik</a></li>
+          <li><a href="cookie-settings.html">Cookie-indstillinger</a></li>
+          <li><a href="terms.html">Vilkår og betingelser</a></li>
+          <li><a href="disclaimer.html" class="active">Ansvarsfraskrivelse</a></li>
+          <li><a href="restaurant-agreement.html">Restaurant Aftale</a></li>
+          <li><a href="platform-terms.html">Platform Vilkår</a></li>
+          <li><a href="accessibility.html">Tilgængelighed</a></li>
+        </ul>
+      </aside>
+
+      <article class="legal-content">
+        <div class="legal-header">
+          <h1>Ansvarsfraskrivelse</h1>
+          <p class="last-updated">Sidst opdateret: 1. februar 2026</p>
+        </div>
+
+        <div class="legal-body">
+          <h2>1. Generel ansvarsfraskrivelse</h2>
+          <p>Denne ansvarsfraskrivelse ("Disclaimer") regulerer din brug af hjemmesiden flow.dk og alle tilknyttede tjenester, platforme, applikationer og produkter (samlet benævnt "Tjenesterne"), der leveres af Flow ApS ("Flow", "vi", "os", "vores"), CVR-nummer 12345678, med adresse på Vestergade 1, 1456 København K, Danmark.</p>
+          <p>Ved at tilgå eller bruge vores Tjenester accepterer du denne ansvarsfraskrivelse i sin helhed. Hvis du ikke accepterer alle bestemmelser i denne ansvarsfraskrivelse, bør du ikke bruge vores Tjenester. Denne ansvarsfraskrivelse supplerer vores <a href="terms.html">Vilkår og betingelser</a> og <a href="privacy.html">Privatlivspolitik</a>.</p>
+          <p>Flow forbeholder sig retten til at ændre, opdatere eller erstatte enhver del af denne ansvarsfraskrivelse ved at offentliggøre opdateringer på vores hjemmeside. Det er dit ansvar regelmæssigt at gennemgå denne side for ændringer. Din fortsatte brug af Tjenesterne efter offentliggørelse af ændringer udgør accept af disse ændringer.</p>
+
+          <h2>2. Ingen garantier</h2>
+          <p>Tjenesterne leveres "som de er" og "som de er tilgængelige" uden garantier af nogen art, hverken udtrykkelige eller underforståede. I det videst mulige omfang tilladt efter gældende dansk og europæisk lovgivning fraskriver Flow sig udtrykkeligt alle garantier, herunder men ikke begrænset til:</p>
+
+          <h3>2.1 Garanti for salgbarhed</h3>
+          <p>Vi giver ingen garanti for, at Tjenesterne er egnede til kommercielt salg eller vil opfylde dine kommercielle behov og forventninger. Tjenesterne er designet som generelle værktøjer til restaurationsbranchen, og vi garanterer ikke, at de vil være egnede til alle typer restauranter, forretningsmodeller eller markedsforhold.</p>
+
+          <h3>2.2 Garanti for egnethed til et bestemt formål</h3>
+          <p>Vi garanterer ikke, at Tjenesterne er egnede til noget bestemt formål, selvom vi har været informeret om eller burde have været klar over et sådant formål. Det er dit ansvar at vurdere, om Tjenesterne opfylder dine specifikke behov, før du indgår en aftale med os.</p>
+
+          <h3>2.3 Garanti for fejlfri drift</h3>
+          <p>Vi garanterer ikke, at Tjenesterne vil fungere fejlfrit, uafbrudt eller uden forstyrrelser. Software og internetbaserede tjenester er komplekse systemer, der kan indeholde fejl, bugs eller andre mangler. Vi arbejder løbende på at forbedre vores Tjenester, men kan ikke garantere perfekt funktionalitet til enhver tid.</p>
+
+          <h3>2.4 Garanti for sikkerhed</h3>
+          <p>Selvom vi implementerer omfattende sikkerhedsforanstaltninger, garanterer vi ikke, at Tjenesterne er fuldstændig sikre mod uautoriseret adgang, hacking, malware eller andre sikkerhedstrusler. Ingen internetbaseret tjeneste kan garantere absolut sikkerhed.</p>
+
+          <h3>2.5 Garanti for kompatibilitet</h3>
+          <p>Vi garanterer ikke fuld kompatibilitet med alle browsere, operativsystemer, enheder eller tredjepartssoftware. Teknologiske ændringer og opdateringer hos tredjeparter kan påvirke Tjenesternes funktionalitet.</p>
+
+          <h2>3. Brug på eget ansvar</h2>
+          <p>Din brug af Tjenesterne sker udelukkende på dit eget ansvar og egen risiko. Du anerkender og accepterer, at:</p>
+          <ul>
+            <li>Du er ansvarlig for at sikre, at din brug af Tjenesterne er i overensstemmelse med alle gældende love og regler, herunder fødevaresikkerhedsregler, skatteregler, arbejdsmarkedslovgivning og databeskyttelsesregler.</li>
+            <li>Du er ansvarlig for alle beslutninger truffet på baggrund af information eller data fra Tjenesterne.</li>
+            <li>Du er ansvarlig for at have tilstrækkelig backup af dine egne data og forretningskritiske oplysninger.</li>
+            <li>Du er ansvarlig for at sikre, at dine medarbejdere og andre brugere med adgang til din konto er tilstrækkeligt uddannet i korrekt brug af Tjenesterne.</li>
+            <li>Du er ansvarlig for alle aktiviteter, der foretages via din konto, uanset om de er autoriseret af dig eller ej.</li>
+            <li>Du er ansvarlig for at implementere passende sikkerhedsforanstaltninger for at beskytte dine loginoplysninger og adgangskoder.</li>
+          </ul>
+          <p>Flow er ikke ansvarlig for tab, skader eller negative konsekvenser, der måtte opstå som følge af din brug af Tjenesterne, medmindre sådanne tab skyldes grov uagtsomhed eller forsætlig handling fra Flows side.</p>
+
+          <h2>4. Begrænsning af ansvar</h2>
+          <p>I det videst mulige omfang tilladt efter gældende lov, skal Flow, dets direktører, ledere, medarbejdere, agenter, leverandører eller licensgivere under ingen omstændigheder være ansvarlige for:</p>
+
+          <h3>4.1 Direkte skader</h3>
+          <p>Flow's samlede ansvar for direkte skader relateret til Tjenesterne er begrænset til det beløb, du har betalt til Flow i abonnementsgebyrer i de 12 måneder forud for den begivenhed, der gav anledning til kravet. Denne begrænsning gælder uanset årsagen til skaden og uanset om kravet er baseret på kontrakt, erstatning uden for kontrakt eller andet grundlag.</p>
+
+          <h3>4.2 Indirekte skader</h3>
+          <p>Flow er under ingen omstændigheder ansvarlig for indirekte skader, følgeskader, særlige skader eller pønale erstatninger, herunder men ikke begrænset til:</p>
+          <ul>
+            <li><strong>Tabt fortjeneste:</strong> Tab af indtægter, omsætning, besparelser eller forventede forretningsmæssige gevinster.</li>
+            <li><strong>Tab af data:</strong> Tab, beskadigelse eller korruption af data, uanset om data kan genskabes eller ej.</li>
+            <li><strong>Tab af goodwill:</strong> Tab af omdømme, kundeforhold, forretningsforbindelser eller markedsposition.</li>
+            <li><strong>Driftstab:</strong> Tab som følge af driftsforstyrrelser, produktionsnedsættelse eller forretningsafbrydelse.</li>
+            <li><strong>Tab af muligheder:</strong> Tabte forretningsmuligheder, kontrakter eller samarbejdsaftaler.</li>
+            <li><strong>Erstatningskrav fra tredjeparter:</strong> Krav rejst af dine kunder, samarbejdspartnere eller andre tredjeparter.</li>
+          </ul>
+          <p>Denne ansvarsbegrænsning gælder, uanset om Flow er blevet informeret om muligheden for sådanne skader, og uanset om skaden var forudsigelig.</p>
+
+          <h3>4.3 Undtagelser fra ansvarsbegrænsningen</h3>
+          <p>Intet i denne ansvarsfraskrivelse begrænser eller udelukker Flow's ansvar for:</p>
+          <ul>
+            <li>Død eller personskade forårsaget af vores uagtsomhed.</li>
+            <li>Svig eller svigagtig vildledning.</li>
+            <li>Ansvar, der efter gældende lov ikke kan begrænses eller udelukkes.</li>
+          </ul>
+
+          <h2>5. Eksterne links og tredjepartsindhold</h2>
+          <p>Vores Tjenester kan indeholde links til eksterne hjemmesider, tjenester eller ressourcer, der drives af tredjeparter. Flow har ingen kontrol over indholdet, tilgængeligheden, privatlivspraksis eller sikkerhedsforanstaltninger hos disse tredjeparter.</p>
+
+          <h3>5.1 Ingen godkendelse</h3>
+          <p>Tilstedeværelsen af et link til en ekstern hjemmeside udgør ikke en godkendelse, anbefaling eller garanti fra Flow vedrørende:</p>
+          <ul>
+            <li>Nøjagtigheden, pålideligheden eller fuldstændigheden af indholdet på den eksterne hjemmeside.</li>
+            <li>Kvaliteten af produkter eller tjenester tilbudt af tredjeparten.</li>
+            <li>Sikkerheden eller privatlivsbeskyttelsen på den eksterne hjemmeside.</li>
+            <li>Den juridiske overholdelse hos tredjeparten.</li>
+          </ul>
+
+          <h3>5.2 Ansvarsfraskrivelse for tredjepartsindhold</h3>
+          <p>Flow er ikke ansvarlig for tab eller skade, der måtte opstå som følge af din brug af eller tillid til tredjeparters hjemmesider, tjenester eller indhold. Vi opfordrer dig til at gennemgå vilkår og privatlivspolitikker for enhver ekstern hjemmeside, du besøger.</p>
+
+          <h3>5.3 Tredjepartsintegrationer</h3>
+          <p>Vores Tjenester kan integrere med tredjepartssystemer såsom betalingsgateways, regnskabssoftware, leveringstjenester og marketingplatforme. Flow er ikke ansvarlig for funktionalitet, tilgængelighed eller fejl i disse tredjepartssystemer. Din brug af sådanne integrationer er underlagt tredjepartens egne vilkår.</p>
+
+          <h2>6. Professionel rådgivning</h2>
+          <p>Indholdet på vores hjemmeside og i vores Tjenester er udelukkende til generelle informationsformål og udgør ikke professionel rådgivning af nogen art.</p>
+
+          <h3>6.1 Juridisk rådgivning</h3>
+          <p>Flow leverer ikke juridisk rådgivning. Oplysninger om lovgivning, kontrakter, databeskyttelse eller andre juridiske emner på vores hjemmeside er kun til generel orientering. Du bør altid konsultere en kvalificeret advokat eller juridisk rådgiver for juridiske spørgsmål, der vedrører din specifikke situation, herunder:</p>
+          <ul>
+            <li>Kontraktforhold med kunder, leverandører eller medarbejdere.</li>
+            <li>Overholdelse af fødevaresikkerhedslovgivning og hygiejneregler.</li>
+            <li>Ansættelsesret og arbejdsmarkedslovgivning.</li>
+            <li>Databeskyttelse og GDPR-overholdelse.</li>
+            <li>Forbrugerrettigheder og reklamationsbehandling.</li>
+          </ul>
+
+          <h3>6.2 Økonomisk rådgivning</h3>
+          <p>Flow leverer ikke finansiel, regnskabsmæssig eller skattemæssig rådgivning. Selvom vores Tjenester kan inkludere rapportering, analyser og statistik vedrørende din forretning, bør du altid konsultere en kvalificeret revisor, bogholder eller økonomisk rådgiver for:</p>
+          <ul>
+            <li>Skattemæssige spørgsmål og momsafregning.</li>
+            <li>Regnskabsføring og årsrapporter.</li>
+            <li>Investerings- og finansieringsbeslutninger.</li>
+            <li>Prissætningsstrategier og rentabilitetsanalyser.</li>
+            <li>Budgettering og finansiel planlægning.</li>
+          </ul>
+
+          <h3>6.3 Teknisk rådgivning</h3>
+          <p>Flow leverer ikke teknisk rådgivning ud over support relateret til vores egne Tjenester. For spørgsmål vedrørende IT-infrastruktur, netværkssikkerhed, hardware eller andre tekniske systemer bør du konsultere en kvalificeret IT-konsulent eller teknisk rådgiver.</p>
+
+          <h3>6.4 Sundhedsmæssig rådgivning</h3>
+          <p>Flow leverer ikke rådgivning om fødevaresikkerhed, allergenindhold, næringsværdier eller andre sundhedsrelaterede emner. Du er selv ansvarlig for at sikre, at dine produkter overholder alle fødevaresikkerhedsregler og korrekt informerer kunder om allergener og ingredienser.</p>
+
+          <h2>7. Informationsnøjagtighed</h2>
+          <p>Vi bestræber os på at sikre, at alle oplysninger på vores hjemmeside og i vores Tjenester er korrekte og opdaterede. Vi kan dog ikke garantere nøjagtigheden, fuldstændigheden eller aktualiteten af nogen information.</p>
+
+          <h3>7.1 Forbehold for fejl</h3>
+          <p>Vores hjemmeside og Tjenester kan indeholde:</p>
+          <ul>
+            <li>Typografiske fejl eller stavefejl.</li>
+            <li>Forældede oplysninger.</li>
+            <li>Unøjagtigheder i tekniske specifikationer eller funktionsbeskrivelser.</li>
+            <li>Fejl i priser, tilbud eller rabatter.</li>
+            <li>Utilsigtede udeladelser.</li>
+          </ul>
+          <p>Flow forbeholder sig retten til at korrigere eventuelle fejl uden forudgående varsel og uden ansvar for tab eller skade, der måtte opstå som følge af sådanne fejl.</p>
+
+          <h3>7.2 Dynamisk indhold</h3>
+          <p>Visse dele af vores Tjenester genererer dynamisk indhold baseret på brugerinput, algoritmer eller eksterne datakilder. Vi garanterer ikke nøjagtigheden eller pålideligheden af sådant dynamisk indhold, herunder:</p>
+          <ul>
+            <li>Automatisk genererede rapporter og statistikker.</li>
+            <li>Anbefalinger baseret på kundedata eller købsmønstre.</li>
+            <li>Prognoser eller forudsigelser.</li>
+            <li>Sammenligninger med branchestandarder eller konkurrenter.</li>
+          </ul>
+
+          <h2>8. Tekniske fejl og nedetid</h2>
+          <p>Som med enhver internetbaseret tjeneste kan vores Tjenester være utilgængelige eller fungere med nedsat kapacitet af forskellige årsager.</p>
+
+          <h3>8.1 Planlagt vedligeholdelse</h3>
+          <p>Vi udfører regelmæssigt planlagt vedligeholdelse for at forbedre og opdatere vores Tjenester. Vi bestræber os på at udføre planlagt vedligeholdelse uden for spidsbelastningsperioder og vil, hvor det er praktisk muligt, varsle større vedligeholdelsesarbejder på forhånd. Flow er ikke ansvarlig for tab eller ulempe forårsaget af planlagt vedligeholdelse.</p>
+
+          <h3>8.2 Uplanlagt nedetid</h3>
+          <p>Uplanlagt nedetid kan forekomme som følge af:</p>
+          <ul>
+            <li>Tekniske fejl i hardware eller software.</li>
+            <li>Netværksproblemer hos hosting-udbydere eller internetudbydere.</li>
+            <li>Sikkerhedshændelser eller cyberangreb.</li>
+            <li>Fejl hos tredjepartsleverandører.</li>
+            <li>Uforudsete omstændigheder eller force majeure.</li>
+          </ul>
+          <p>Flow er ikke ansvarlig for tab eller skade forårsaget af uplanlagt nedetid, medmindre nedetiden skyldes grov uagtsomhed fra vores side.</p>
+
+          <h3>8.3 Datatab</h3>
+          <p>Selvom vi implementerer omfattende backup-procedurer, kan datatab forekomme. Du er selv ansvarlig for at opretholde uafhængige backup-kopier af dine kritiske forretningsdata. Flow er ikke ansvarlig for tab af data, uanset årsagen.</p>
+
+          <h2>9. Resultater og forventninger</h2>
+          <p>Flow garanterer ikke specifikke resultater fra brugen af vores Tjenester. Enhver reference til potentielle fordele, besparelser, omsætningsvækst eller andre positive resultater er baseret på generelle erfaringer og bør ikke opfattes som en garanti for, at du vil opnå lignende resultater.</p>
+
+          <h3>9.1 Individuelle variationer</h3>
+          <p>Resultaterne fra brug af vores Tjenester varierer betydeligt afhængigt af mange faktorer, herunder:</p>
+          <ul>
+            <li>Din restaurants beliggenhed, størrelse og koncept.</li>
+            <li>Din eksisterende kundebase og markedsposition.</li>
+            <li>Konkurrenceforholdene i dit lokale marked.</li>
+            <li>Din indsats og engagement i at implementere Tjenesterne effektivt.</li>
+            <li>Eksterne økonomiske og markedsmæssige faktorer.</li>
+            <li>Sæsonmæssige variationer og trends i restaurationsbranchen.</li>
+          </ul>
+
+          <h3>9.2 Ingen garanterede resultater</h3>
+          <p>Vi garanterer ikke, at du vil:</p>
+          <ul>
+            <li>Øge din omsætning eller fortjeneste.</li>
+            <li>Tiltrække flere kunder eller øge kundeloyaliteten.</li>
+            <li>Reducere dine driftsomkostninger.</li>
+            <li>Forbedre din online synlighed eller søgemaskineplacering.</li>
+            <li>Opnå nogen specifik rating, anmeldelse eller feedback fra kunder.</li>
+          </ul>
+
+          <h2>10. Brugergenereret indhold</h2>
+          <p>Vores Tjenester kan give mulighed for, at brugere kan uploade, dele eller offentliggøre indhold, herunder men ikke begrænset til menubeskrivelser, billeder, kundeanmeldelser og kommentarer.</p>
+
+          <h3>10.1 Ansvarsfraskrivelse for brugerindhold</h3>
+          <p>Flow er ikke ansvarlig for indhold, der er oprettet, uploadet eller delt af brugere af vores Tjenester. Vi godkender, verificerer eller garanterer ikke for nøjagtigheden, kvaliteten, lovligheden eller egnetheden af brugergenereret indhold.</p>
+
+          <h3>10.2 Dit ansvar som bruger</h3>
+          <p>Hvis du uploader eller deler indhold via vores Tjenester, er du ansvarlig for at sikre, at:</p>
+          <ul>
+            <li>Du har de nødvendige rettigheder til at dele indholdet, herunder ophavsrettigheder, varemærkerettigheder og billedrettigheder.</li>
+            <li>Indholdet ikke krænker tredjemands rettigheder.</li>
+            <li>Indholdet ikke er vildledende, falsk eller urimeligt.</li>
+            <li>Indholdet overholder alle gældende love og regler.</li>
+            <li>Indholdet ikke er stødende, diskriminerende eller på anden måde upassende.</li>
+          </ul>
+
+          <h3>10.3 Moderering</h3>
+          <p>Flow forbeholder sig retten til, men er ikke forpligtet til, at moderere, redigere eller fjerne brugergenereret indhold efter eget skøn og uden forudgående varsel eller begrundelse.</p>
+
+          <h2>11. Produktinformation</h2>
+          <p>Oplysninger om Flow's produkter og tjenester på vores hjemmeside er til generel orientering og kan ændres uden varsel.</p>
+
+          <h3>11.1 Funktionsbeskrivelser</h3>
+          <p>Beskrivelser af funktioner, egenskaber og kapaciteter i vores Tjenester repræsenterer vores intentioner og mål, men udgør ikke en garanti for, at alle beskrevne funktioner er tilgængelige, fungerer som beskrevet eller vil forblive uændrede.</p>
+
+          <h3>11.2 Priser og tilbud</h3>
+          <p>Alle priser på vores hjemmeside er vejledende og kan ændres uden varsel. Specifikke tilbud, rabatter eller kampagner er underlagt deres egne vilkår og kan være tidsbegrænsede eller underlagt begrænsninger i tilgængelighed.</p>
+
+          <h3>11.3 Tilgængelighed</h3>
+          <p>Vi garanterer ikke, at alle produkter eller tjenester er tilgængelige i alle regioner eller for alle kundetyper. Visse funktioner kan være begrænset til bestemte abonnementsplaner eller markeder.</p>
+
+          <h2>12. Testimonials og case studies</h2>
+          <p>Vores hjemmeside kan indeholde testimonials, case studies, kundeudtalelser eller succeshistorier fra nuværende eller tidligere kunder.</p>
+
+          <h3>12.1 Individuelle erfaringer</h3>
+          <p>Testimonials og case studies repræsenterer de individuelle erfaringer fra de pågældende kunder og afspejler ikke nødvendigvis typiske resultater. Hvert resultat er unikt og afhænger af de specifikke omstændigheder for den pågældende kunde.</p>
+
+          <h3>12.2 Ingen garanti</h3>
+          <p>Vi garanterer ikke, at du vil opnå lignende resultater som dem, der beskrives i vores testimonials eller case studies. Disse præsenteres kun som eksempler på, hvad der er muligt under ideelle omstændigheder.</p>
+
+          <h3>12.3 Autenticitet</h3>
+          <p>Alle testimonials og case studies er baseret på faktiske kundeerfaringer, men kan være redigeret for klarhed, længde eller grammatik. I visse tilfælde kan navne eller identificerende oplysninger være ændret for at beskytte kundens privatliv.</p>
+
+          <h2>13. Force majeure</h2>
+          <p>Flow er ikke ansvarlig for forsinkelser, fejl eller mangler i opfyldelsen af vores forpligtelser, der skyldes omstændigheder uden for vores rimelige kontrol, herunder men ikke begrænset til:</p>
+          <ul>
+            <li>Naturkatastrofer såsom jordskælv, oversvømmelser, storme, brande eller pandemier.</li>
+            <li>Krig, terrorisme, civile uroligheder eller militære aktioner.</li>
+            <li>Regeringshandlinger, lovændringer, embargos eller restriktioner.</li>
+            <li>Arbejdskonflikter, strejker eller lockouts (undtagen hos Flow selv).</li>
+            <li>Svigt i offentlige eller private telekommunikationsnetværk.</li>
+            <li>Strømafbrydelser eller svigt i elektricitetsforsyningen.</li>
+            <li>Cyberangreb, DDoS-angreb eller andre ondsindede handlinger fra tredjeparter.</li>
+            <li>Svigt hos tredjepartsleverandører, der er kritiske for vores Tjenesters drift.</li>
+          </ul>
+          <p>I tilfælde af force majeure vil Flow bestræbe sig på at genoptage normal drift så hurtigt som praktisk muligt og vil informere berørte kunder om situationen og forventede løsninger.</p>
+
+          <h2>14. Ændringer til denne ansvarsfraskrivelse</h2>
+          <p>Flow forbeholder sig retten til at ændre, opdatere eller erstatte denne ansvarsfraskrivelse til enhver tid. Ændringer træder i kraft umiddelbart efter offentliggørelse på vores hjemmeside.</p>
+
+          <h3>14.1 Varsling af ændringer</h3>
+          <p>Ved væsentlige ændringer til denne ansvarsfraskrivelse vil vi:</p>
+          <ul>
+            <li>Opdatere "Sidst opdateret"-datoen øverst på denne side.</li>
+            <li>Eventuelt sende en meddelelse til registrerede brugere via e-mail.</li>
+            <li>Eventuelt fremhæve ændringerne på vores hjemmeside i en overgangsperiode.</li>
+          </ul>
+
+          <h3>14.2 Din accept</h3>
+          <p>Din fortsatte brug af vores Tjenester efter offentliggørelse af ændringer til denne ansvarsfraskrivelse udgør din accept af de ændrede vilkår. Hvis du ikke accepterer ændringerne, bør du ophøre med at bruge vores Tjenester.</p>
+
+          <h2>15. Kontaktoplysninger</h2>
+          <p>Hvis du har spørgsmål, kommentarer eller bekymringer vedrørende denne ansvarsfraskrivelse, er du velkommen til at kontakte os:</p>
+
+          <h3>15.1 Kontaktinformation</h3>
+          <ul>
+            <li><strong>Virksomhed:</strong> Flow ApS</li>
+            <li><strong>CVR-nummer:</strong> 12345678</li>
+            <li><strong>Adresse:</strong> Vestergade 1, 1456 København K, Danmark</li>
+            <li><strong>E-mail:</strong> <a href="mailto:legal@flow.dk">legal@flow.dk</a></li>
+            <li><strong>Telefon:</strong> +45 70 12 34 56</li>
+            <li><strong>Åbningstider:</strong> Mandag-fredag 09:00-17:00</li>
+          </ul>
+
+          <h3>15.2 Svartid</h3>
+          <p>Vi bestræber os på at besvare alle henvendelser inden for 5 arbejdsdage. For hastende juridiske spørgsmål, kontakt os venligst telefonisk.</p>
+
+          <h3>15.3 Juridiske henvendelser</h3>
+          <p>Formelle juridiske henvendelser, herunder stævninger eller myndighedsanmodninger, skal sendes til:</p>
+          <p>
+            Flow ApS<br>
+            Att: Juridisk afdeling<br>
+            Vestergade 1<br>
+            1456 København K<br>
+            Danmark
+          </p>
+          <p>Eller via e-mail til <a href="mailto:legal@flow.dk">legal@flow.dk</a>.</p>
+
+          <h2>16. Gældende lov og tvistløsning</h2>
+          <p>Denne ansvarsfraskrivelse er underlagt dansk ret. Eventuelle tvister, der måtte opstå i forbindelse med denne ansvarsfraskrivelse eller din brug af vores Tjenester, skal søges løst gennem forhandling. Hvis parterne ikke kan nå til enighed, skal tvisten afgøres ved de danske domstole med Københavns Byret som første instans.</p>
+        </div>
+      </article>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="cookie-settings.html">Cookie Settings</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="terms.html">Website Terms</a>
+          <a href="disclaimer.html">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
+    });
+  </script>
+<!-- Flow CMS Dynamic Content -->
+<script src="/js/flow-cms-render.js"></script>
+</body>
+</html>

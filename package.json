@@ -1,7 +1,17 @@
 {
-  "name": "orderflow-v171",
-  "version": "1.7.1",
+  "name": "orderflow",
+  "version": "3.8.6",
+  "description": "OrderFlow - Restaurant order management system",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "npx live-server --port=8080 --open=index.html"
+  },
   "devDependencies": {
-    "supabase": "^2.72.9"
+    "supabase": "^2.72.9",
+    "vite": "^5.0.0",
+    "vite-plugin-handlebars": "^2.0.0"
   }
 }

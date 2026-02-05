@@ -1736,10 +1736,166 @@ const SupabaseDB = {
         .lt('created_at', sevenDaysAgo);
 
       if (error) throw error;
-      console.log('🗑️ Cleaned up old OTP attempts');
+      console.log('Cleaned up old OTP attempts');
     } catch (err) {
       console.error('cleanupExpiredOTPs error:', err);
     }
+  },
+
+  // =====================================================
+  // MEDIA LIBRARY FUNCTIONS
+  // =====================================================
+
+  /**
+   * Upload a media file to Supabase Storage
+   * @param {File} file - File object to upload
+   * @param {string} folder - Folder name (default: 'images')
+   * @returns {Object} {url, path, name, type, error}
+   */
+  async uploadMedia(file, folder = 'images') {
+    try {
+      if (!supabase) {
+        console.error('Supabase not initialized');
+        return { error: 'Supabase not initialized' };
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+      if (!allowedTypes.includes(file.type)) {
+        return { error: 'Filtype ikke understøttet. Brug JPEG, PNG, GIF, WebP, MP4 eller WebM.' };
+      }
+
+      // Validate file size (max 50MB)
+      const maxSize = 50 * 1024 * 1024;
+      if (file.size > maxSize) {
+        return { error: 'Filen er for stor. Maksimum 50MB.' };
+      }
+
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const path = `${folder}/${timestamp}-${safeName}`;
+
+      // Upload to 'media' bucket
+      const { data, error } = await supabase.storage
+        .from('media')
+        .upload(path, file, {
+          contentType: file.type,
+          cacheControl: '31536000', // 1 year cache
+          upsert: false
+        });
+
+      if (error) {
+        console.error('Upload error:', error);
+        return { error: error.message };
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('media')
+        .getPublicUrl(path);
+
+      console.log('Media uploaded:', urlData.publicUrl);
+      return {
+        url: urlData.publicUrl,
+        path: path,
+        name: file.name,
+        type: file.type.startsWith('video/') ? 'video' : 'image',
+        size: file.size,
+        error: null
+      };
+    } catch (err) {
+      console.error('Error uploading media:', err);
+      return { error: err.message };
+    }
+  },
+
+  /**
+   * List all media files in a folder
+   * @param {string} folder - Folder name (default: 'images')
+   * @returns {Array} List of files with URLs
+   */
+  async listMedia(folder = 'images') {
+    try {
+      if (!supabase) {
+        console.error('Supabase not initialized');
+        return [];
+      }
+
+      const { data: files, error } = await supabase.storage
+        .from('media')
+        .list(folder, {
+          limit: 500,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (error) {
+        console.error('List error:', error);
+        return [];
+      }
+
+      // Get public URLs for each file
+      return files.map(file => {
+        const { data: urlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(`${folder}/${file.name}`);
+
+        return {
+          id: file.id,
+          name: file.name,
+          path: `${folder}/${file.name}`,
+          url: urlData.publicUrl,
+          type: file.metadata?.mimetype?.startsWith('video/') ? 'video' : 'image',
+          size: file.metadata?.size || 0,
+          createdAt: file.created_at
+        };
+      });
+    } catch (err) {
+      console.error('Error listing media:', err);
+      return [];
+    }
+  },
+
+  /**
+   * Delete a media file
+   * @param {string} path - Full path to the file
+   * @returns {Object} {success, error}
+   */
+  async deleteMedia(path) {
+    try {
+      if (!supabase) {
+        return { success: false, error: 'Supabase not initialized' };
+      }
+
+      const { error } = await supabase.storage
+        .from('media')
+        .remove([path]);
+
+      if (error) {
+        console.error('Delete error:', error);
+        return { success: false, error: error.message };
+      }
+
+      console.log('Media deleted:', path);
+      return { success: true, error: null };
+    } catch (err) {
+      console.error('Error deleting media:', err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Get public URL for a media file
+   * @param {string} path - Full path to the file
+   * @returns {string} Public URL
+   */
+  getMediaUrl(path) {
+    if (!supabase) return '';
+
+    const { data } = supabase.storage
+      .from('media')
+      .getPublicUrl(path);
+
+    return data?.publicUrl || '';
   }
 };
 

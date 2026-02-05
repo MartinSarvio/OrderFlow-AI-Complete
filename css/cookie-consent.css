@@ -82,12 +82,13 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
-  padding: 1.2rem 1.6rem;
-  background: var(--color-white, #ffffff);
-  border: 1px solid var(--color-gray-200, #e5e7eb);
+  padding: 1.4rem 1.8rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 0.8rem;
   min-width: 20rem;
   flex: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .cookie-category-info {
@@ -96,14 +97,15 @@
 
 .cookie-category-name {
   font-size: 1.4rem;
-  font-weight: 500;
-  color: var(--color-dark, #111827);
-  margin-bottom: 0.2rem;
+  font-weight: 700;
+  color: #111827 !important;
+  margin-bottom: 0.4rem;
 }
 
 .cookie-category-desc {
-  font-size: 1.2rem;
-  color: var(--color-gray-500, #6b7280);
+  font-size: 1.3rem;
+  color: #4b5563 !important;
+  line-height: 1.5;
 }
 
 /* Cookie Toggle */

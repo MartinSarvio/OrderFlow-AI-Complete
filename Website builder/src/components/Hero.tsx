@@ -150,10 +150,10 @@ export function Hero({ restaurant, isOpen, nextOpeningTime, onOrderClick }: Hero
                 className="w-full h-full object-cover"
               />
               {/* Overlay Gradient */}
-              <div 
+              <div
                 className="absolute inset-0"
                 style={{
-                  background: `linear-gradient(135deg, ${branding.colors.primary}20 0%, transparent 50%)`
+                  background: `linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)`
                 }}
               />
             </div>

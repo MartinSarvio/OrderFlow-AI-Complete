@@ -33,7 +33,19 @@
       color: var(--text);
       line-height: 1.6;
     }
-    
+
+    /* Hide scrollbar but keep functionality */
+    .sidebar::-webkit-scrollbar,
+    .main::-webkit-scrollbar {
+      width: 0;
+      background: transparent;
+    }
+    .sidebar,
+    .main {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
     /* Layout */
     .layout {
       display: flex;
@@ -555,12 +567,8 @@
     <aside class="sidebar">
       <div class="sidebar-header">
         <a href="#" class="logo">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#0d1117" stroke-width="2.5">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-          </div>
-          <span class="logo-text">OrderFlow<span class="logo-badge">Docs</span></span>
+          <img src="../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 32px; width: auto;">
+          <span class="logo-text">Docs</span>
         </a>
       </div>
       
@@ -610,21 +618,110 @@
         </div>
         
         <div class="nav-section">
-          <div class="nav-section-title">Tutorials</div>
-          <a class="nav-item" onclick="loadPage('train-ai-orders')">
+          <div class="nav-section-title">Web Builder</div>
+          <a class="nav-item" onclick="loadPage('wb-branding')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            Branding
+          </a>
+          <a class="nav-item" onclick="loadPage('wb-farver')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>
+            Farver & Tema
+          </a>
+          <a class="nav-item" onclick="loadPage('wb-menu')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Menu & Produkter
+          </a>
+          <a class="nav-item" onclick="loadPage('wb-timer')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Åbningstider
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">App Builder</div>
+          <a class="nav-item" onclick="loadPage('app-analytics')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Analytics
+          </a>
+          <a class="nav-item" onclick="loadPage('app-branding')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            App Branding
+          </a>
+          <a class="nav-item" onclick="loadPage('app-mobilapp')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            Mobil App
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Marketing</div>
+          <a class="nav-item" onclick="loadPage('marketing-loyalty')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Loyalitetsprogram
+          </a>
+          <a class="nav-item" onclick="loadPage('marketing-campaigns')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Kampagner
+          </a>
+          <a class="nav-item" onclick="loadPage('marketing-push')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            Push Notifikationer
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Flow CMS</div>
+          <a class="nav-item" onclick="loadPage('cms-pages')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Rediger Sider
+          </a>
+          <a class="nav-item" onclick="loadPage('cms-blog')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Træn din AI
-            <span class="nav-badge">Tutorial</span>
+            Blog
           </a>
-          <a class="nav-item" onclick="loadPage('vat-configuration')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-            Moms-regler
-            <span class="nav-badge">Tutorial</span>
+          <a class="nav-item" onclick="loadPage('cms-seo')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            SEO Indstillinger
           </a>
-          <a class="nav-item" onclick="loadPage('custom-workflow')">
+          <a class="nav-item" onclick="loadPage('cms-workflows')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Custom Workflows
-            <span class="nav-badge">Tutorial</span>
+            Workflows
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Rapporter</div>
+          <a class="nav-item" onclick="loadPage('reports-daily')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Dagsrapport
+          </a>
+          <a class="nav-item" onclick="loadPage('reports-products')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+            Produktrapport
+          </a>
+          <a class="nav-item" onclick="loadPage('reports-zrapport')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Z-rapport
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">Indstillinger</div>
+          <a class="nav-item" onclick="loadPage('settings-users')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Brugere & Roller
+          </a>
+          <a class="nav-item" onclick="loadPage('settings-api')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            API Adgang
+          </a>
+          <a class="nav-item" onclick="loadPage('settings-vat')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Moms
+          </a>
+          <a class="nav-item" onclick="loadPage('settings-integrations')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            Integrationer
           </a>
         </div>
         
@@ -899,6 +996,138 @@
         title: 'Ofte stillede spørgsmål (FAQ)',
         desc: 'Hurtige svar på de mest almindelige spørgsmål om OrderFlow.',
         time: '5 min'
+      },
+      // Web Builder pages
+      'wb-branding': {
+        section: 'Web Builder',
+        title: 'Branding',
+        desc: 'Opsæt dit logo, navn og brand-identitet for din hjemmeside.',
+        time: '5 min'
+      },
+      'wb-farver': {
+        section: 'Web Builder',
+        title: 'Farver & Tema',
+        desc: 'Tilpas farveskema og tema for din hjemmeside.',
+        time: '5 min'
+      },
+      'wb-menu': {
+        section: 'Web Builder',
+        title: 'Menu & Produkter',
+        desc: 'Administrer din menukort og produktbibliotek.',
+        time: '10 min'
+      },
+      'wb-timer': {
+        section: 'Web Builder',
+        title: 'Åbningstider',
+        desc: 'Indstil åbningstider for din restaurant.',
+        time: '3 min'
+      },
+      // App Builder pages
+      'app-analytics': {
+        section: 'App Builder',
+        title: 'Analytics',
+        desc: 'Få indsigt i brugeradfærd og app-performance.',
+        time: '8 min'
+      },
+      'app-branding': {
+        section: 'App Builder',
+        title: 'App Branding',
+        desc: 'Tilpas din mobile app med logo, farver og branding.',
+        time: '5 min'
+      },
+      'app-mobilapp': {
+        section: 'App Builder',
+        title: 'Mobil App',
+        desc: 'Opsæt og administrer din custom mobile app.',
+        time: '15 min'
+      },
+      // Marketing pages
+      'marketing-loyalty': {
+        section: 'Marketing',
+        title: 'Loyalitetsprogram',
+        desc: 'Opret og administrer loyalitetsprogrammer for dine kunder.',
+        time: '12 min'
+      },
+      'marketing-campaigns': {
+        section: 'Marketing',
+        title: 'Kampagner',
+        desc: 'Opret målrettede marketingkampagner.',
+        time: '10 min'
+      },
+      'marketing-push': {
+        section: 'Marketing',
+        title: 'Push Notifikationer',
+        desc: 'Send push-beskeder til dine app-brugere.',
+        time: '5 min'
+      },
+      // Flow CMS pages
+      'cms-pages': {
+        section: 'Flow CMS',
+        title: 'Rediger Sider',
+        desc: 'Rediger indhold på dine Flow-sider.',
+        time: '10 min'
+      },
+      'cms-blog': {
+        section: 'Flow CMS',
+        title: 'Blog',
+        desc: 'Opret og administrer blogindlæg.',
+        time: '8 min'
+      },
+      'cms-seo': {
+        section: 'Flow CMS',
+        title: 'SEO Indstillinger',
+        desc: 'Optimer dine sider til søgemaskiner.',
+        time: '12 min'
+      },
+      'cms-workflows': {
+        section: 'Flow CMS',
+        title: 'Workflows',
+        desc: 'Opsæt automatiske workflows for SMS, Instagram og Facebook.',
+        time: '15 min'
+      },
+      // Rapporter pages
+      'reports-daily': {
+        section: 'Rapporter',
+        title: 'Dagsrapport',
+        desc: 'Se daglige salgs- og ordrestatistikker.',
+        time: '5 min'
+      },
+      'reports-products': {
+        section: 'Rapporter',
+        title: 'Produktrapport',
+        desc: 'Analyser produktsalg og performance.',
+        time: '8 min'
+      },
+      'reports-zrapport': {
+        section: 'Rapporter',
+        title: 'Z-rapport',
+        desc: 'Generer Z-rapporter for bogføring.',
+        time: '5 min'
+      },
+      // Indstillinger pages
+      'settings-users': {
+        section: 'Indstillinger',
+        title: 'Brugere & Roller',
+        desc: 'Administrer brugere og deres adgangsrettigheder.',
+        time: '10 min'
+      },
+      'settings-api': {
+        section: 'Indstillinger',
+        title: 'API Adgang',
+        desc: 'Generer og administrer API-nøgler.',
+        time: '5 min'
+      },
+      'settings-vat': {
+        section: 'Indstillinger',
+        title: 'Moms',
+        desc: 'Konfigurer momsindstillinger for din virksomhed.',
+        time: '8 min'
+      },
+      'settings-integrations': {
+        section: 'Indstillinger',
+        title: 'Integrationer',
+        desc: 'Forbind til bogholderi, betaling og andre systemer.',
+        time: '15 min'
       }
     };
     

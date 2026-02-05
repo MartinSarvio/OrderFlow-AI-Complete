@@ -6,52 +6,52 @@
 :root {
   /* ==================== COLORS ==================== */
 
-  /* Base Colors */
-  --color-bg: #0a0b0d;
-  --color-bg-2: #0f1114;
-  --color-bg-3: #141619;
-  --color-nav-bg: #0a0b0d;
-  --color-content-bg: #111316;
-  --color-card: #181b20;
-  --color-card-hover: #1e2228;
-  --color-card-elevated: #1f2329;
+  /* Base Colors - Slate Scale Dark Mode */
+  --color-bg: #0F172A;           /* slate-900 - Hovedbaggrund */
+  --color-bg-2: #020617;         /* slate-950 - Sidebar */
+  --color-bg-3: #1E293B;         /* slate-800 - Header */
+  --color-nav-bg: #020617;       /* slate-950 - Navigation */
+  --color-content-bg: #0F172A;   /* slate-900 - Indholdsområde */
+  --color-card: #1E293B;         /* slate-800 - Kort baggrund */
+  --color-card-hover: #334155;   /* slate-700 - Kort hover */
+  --color-card-elevated: #334155; /* slate-700 - Hævet kort */
 
   /* Borders */
-  --color-border: #252930;
-  --color-border-light: #353a45;
+  --color-border: #334155;       /* slate-700 */
+  --color-border-light: #475569; /* slate-600 */
 
   /* Text Colors */
-  --color-text: #f4f5f6;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #848b98;  /* OPDATERET: Før #6b7280 - nu WCAG AA compliant */
-  --color-text-disabled: rgba(244, 245, 246, 0.4);
+  --color-text: #F1F5F9;         /* slate-100 - Primær tekst */
+  --color-text-secondary: #94A3B8; /* slate-400 - Sekundær */
+  --color-text-muted: #64748B;   /* slate-500 - Dæmpet tekst */
+  --color-text-disabled: rgba(241, 245, 249, 0.4);
 
-  /* Brand Colors */
-  --color-primary: #2dd4bf;
-  --color-primary-hover: #5eead4;
-  --color-primary-active: #14b8a6;
-  --color-primary-dim: rgba(45, 212, 191, 0.1);
-  --color-primary-glow: rgba(45, 212, 191, 0.3);
+  /* Brand Colors - Blue (SAME as light mode) */
+  --color-primary: #2563EB;      /* blue-600 */
+  --color-primary-hover: #3B82F6; /* blue-500 - Lighter on hover */
+  --color-primary-active: #1D4ED8; /* blue-700 */
+  --color-primary-dim: rgba(37, 99, 235, 0.15);
+  --color-primary-glow: rgba(37, 99, 235, 0.35);
 
-  /* Semantic Colors */
-  --color-danger: #f87171;
-  --color-danger-dim: rgba(248, 113, 113, 0.1);
-  --color-danger-border: rgba(248, 113, 113, 0.2);
+  /* Semantic Colors (adjusted for dark backgrounds) */
+  --color-danger: #EF4444;       /* red-500 */
+  --color-danger-dim: rgba(239, 68, 68, 0.15);
+  --color-danger-border: rgba(239, 68, 68, 0.30);
 
-  --color-warning: #fbbf24;
-  --color-warning-dim: rgba(251, 191, 36, 0.1);
+  --color-warning: #F59E0B;      /* amber-500 */
+  --color-warning-dim: rgba(245, 158, 11, 0.15);
 
-  --color-success: #22c55e;  /* OPDATERET: Før #34d399 - nu adskilt fra primary */
-  --color-success-dim: rgba(34, 197, 94, 0.1);  /* OPDATERET */
+  --color-success: #22C55E;      /* green-500 */
+  --color-success-dim: rgba(34, 197, 94, 0.15);
 
-  --color-info: #60a5fa;
-  --color-info-dim: rgba(96, 165, 250, 0.1);
+  --color-info: #06B6D4;         /* cyan-500 */
+  --color-info-dim: rgba(6, 182, 212, 0.15);
 
   /* Additional Colors */
-  --color-purple: #a78bfa;
-  --color-accent: #f472b6;  /* OPDATERET: Cyan erstattet med Pink accent */
-  --color-cyan: #f472b6;  /* Alias for bagudkompatibilitet */
-  --color-orange: #fb923c;
+  --color-purple: #8B5CF6;       /* violet-500 */
+  --color-accent: #2563EB;       /* blue-600 - Matcher primary */
+  --color-cyan: #06B6D4;         /* cyan-500 */
+  --color-orange: #F97316;       /* orange-500 */
 
   /* ==================== SPACING ==================== */
   /* 4px base scale - strict adherence */
@@ -126,16 +126,18 @@
   /* ==================== SHADOWS ==================== */
 
   --shadow-none: none;
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.6);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.55);
   --shadow-glow: 0 0 20px var(--color-primary-glow);
   --shadow-glow-lg: 0 0 40px var(--color-primary-glow);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.40);
 
   /* Focus Shadow */
-  --shadow-focus: 0 0 0 3px var(--color-primary-dim);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.45);
 
   /* ==================== ICONS ==================== */
 
@@ -224,46 +226,105 @@
   --avatar-2xl: 96px;
 }
 
-/* ==================== LIGHT MODE ==================== */
+/* ==================== LIGHT MODE - Professional Clean Design ==================== */
 [data-theme="light"] {
-  /* Base Colors - Optimized for contrast */
-  --color-bg: #ffffff;           /* Pure white background */
-  --color-bg-2: #f8fafc;         /* Slightly off-white */
-  --color-bg-3: #f1f5f9;         /* Light gray */
-  --color-nav-bg: #f1f5f9;       /* Light gray sidebar for contrast */
-  --color-content-bg: #ffffff;   /* White content area */
-  --color-card: #ffffff;         /* White cards */
-  --color-card-hover: #f8fafc;   /* Subtle hover */
-  --color-card-elevated: #ffffff; /* Elevated cards */
+  /* ========== NEUTRAL SCALE ========== */
+  --n1: #ececec;   /* App baggrund */
+  --n2: #F1F5F9;   /* Surface, cards */
+  --n3: #E2E8F0;   /* Surface 2, table header */
+  --n4: #CBD5E1;   /* Border */
+  --n5: #94A3B8;   /* Subtle tekst, icons */
+  --n6: #64748B;   /* Muted tekst */
+  --n7: #475569;   /* Strong muted, labels */
+  --n8: #334155;   /* Overskrifter på lys flade */
+  --n9: #1E293B;   /* Næsten sort */
+  --n10: #0F172A;  /* Primær tekst */
+  --n11: #0B1220;  /* Extra kontrast */
+  --n12: #020617;  /* Max kontrast */
+
+  /* ========== BRAND COLORS ========== */
+  --primary-600: #2563EB;
+  --primary-700: #1D4ED8;
+  --secondary-700: #0F766E;
+  --accent-600: #7C3AED;
+
+  /* ========== STATE COLORS ========== */
+  --success-600: #16A34A;
+  --warning-600: #D97706;
+  --danger-600: #DC2626;
+  --info-600: #0891B2;
+
+  /* ========== SEMANTIC TOKENS ========== */
+  /* Backgrounds */
+  --color-bg: #ececec;
+  --color-bg-2: #FFFFFF;
+  --color-bg-3: #FFFFFF;
+  --color-nav-bg: #FFFFFF;
+  --color-content-bg: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-card-hover: var(--n2);
+  --color-card-elevated: #FFFFFF;
+
+  /* Surfaces */
+  --surface: #FFFFFF;
+  --surface-2: var(--n2);
+  --surface-3: var(--n3);
 
   /* Borders */
-  --color-border: #e2e8f0;
-  --color-border-light: #cbd5e1;
+  --color-border: var(--n4);
+  --color-border-light: var(--n3);
 
-  /* Text Colors */
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #64748b;
-  --color-text-disabled: rgba(15, 23, 42, 0.4);
+  /* Text Colors - All black */
+  --color-text: #000000;
+  --color-text-secondary: #000000;
+  --color-text-muted: #000000;
+  --color-text-subtle: #000000;
+  --color-text-disabled: rgba(0, 0, 0, 0.4);
+  --color-text-inverse: #FFFFFF;
 
-  /* Brand Colors */
-  --color-primary: #0d9488;
-  --color-primary-hover: #14b8a6;
-  --color-primary-active: #0f766e;
-  --color-primary-dim: rgba(13, 148, 136, 0.1);
-  --color-primary-glow: rgba(13, 148, 136, 0.2);
+  /* Links */
+  --link: var(--primary-700);
+  --link-hover: var(--primary-600);
+
+  /* Brand Colors - Primary Blue */
+  --color-primary: var(--primary-600);
+  --color-primary-hover: var(--primary-700);
+  --color-primary-active: #1e40af;
+  --color-primary-dim: rgba(37, 99, 235, 0.1);
+  --color-primary-glow: rgba(37, 99, 235, 0.2);
+  --primary-contrast: #FFFFFF;
+
+  /* Secondary */
+  --color-secondary: var(--secondary-700);
+  --secondary-hover: #0B5F59;
+  --secondary-contrast: #FFFFFF;
+
+  /* Accent */
+  --color-accent: var(--accent-600);
+  --accent-contrast: #FFFFFF;
 
   /* Semantic Colors */
-  --color-danger: #dc2626;
+  --color-danger: var(--danger-600);
   --color-danger-dim: rgba(220, 38, 38, 0.1);
-  --color-danger-border: rgba(220, 38, 38, 0.2);
+  --color-danger-border: rgba(220, 38, 38, 0.25);
 
-  --color-warning: #d97706;
+  --color-warning: var(--warning-600);
   --color-warning-dim: rgba(217, 119, 6, 0.1);
+  --color-warning-border: rgba(217, 119, 6, 0.28);
 
-  --color-success: #059669;
-  --color-success-dim: rgba(5, 150, 105, 0.1);
+  --color-success: var(--success-600);
+  --color-success-dim: rgba(22, 163, 74, 0.1);
+  --color-success-border: rgba(22, 163, 74, 0.25);
 
-  --color-info: #2563eb;
-  --color-info-dim: rgba(37, 99, 235, 0.1);
+  --color-info: var(--info-600);
+  --color-info-dim: rgba(8, 145, 178, 0.1);
+  --color-info-border: rgba(8, 145, 178, 0.28);
+
+  /* Focus & Selection */
+  --focus-ring: rgba(37, 99, 235, 0.35);
+  --selection: rgba(37, 99, 235, 0.22);
+
+  /* Shadows - Light mode specific */
+  --shadow-1: 0 1px 2px rgba(2, 6, 23, 0.06);
+  --shadow-2: 0 8px 24px rgba(2, 6, 23, 0.10);
 }
