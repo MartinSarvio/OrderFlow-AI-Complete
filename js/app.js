@@ -30172,7 +30172,6 @@ function updateCurrentPageCookieBanner() {
 
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
-  console.log('🔵 showFlowCMSPage called with tab:', tab);
   showPage('flow-cms');
 
   // Update sidebar active state for Flow CMS dropdown
@@ -30213,7 +30212,6 @@ async function switchFlowCMSTab(tab) {
 
   document.querySelectorAll('#page-flow-cms .settings-tab-content').forEach(c => c.classList.remove('active'));
   const contentEl = document.getElementById('flow-cms-content-' + tab);
-  console.log('🔵 Looking for element:', 'flow-cms-content-' + tab, '| Found:', !!contentEl);
   if (contentEl) contentEl.classList.add('active');
 
   // Load content based on tab
