@@ -2246,6 +2246,287 @@
     };
 
     // =============================================================================
+    // PROGRAM DATA & COMPONENTS
+    // =============================================================================
+    const PROGRAM_DATA = {
+      name: 'SEO Analyse',
+      version: 'v1.0.0',
+      subtitle: 'Digital Synlighed & Vækst',
+      size: '2.4 MB',
+      features: [
+        'Google Business Profil',
+        'Anmeldelsesanalyse',
+        'Konkurrentoverblik',
+        'Social Media Scanning',
+        'Website Performance',
+        'NAP Konsistens'
+      ],
+      description: 'Komplet digital synlighedsanalyse for restauranter og takeaway. Analyserer Google Business, anmeldelser, konkurrenter, sociale medier og website performance.',
+      status: 'Aktiv',
+      nextVersion: {
+        version: 'v2.0.0',
+        features: [
+          'SEO Strategi & Vækstanalyse',
+          'Trustpilot Analyse',
+          'Facebook/TikTok/Instagram Playbooks',
+          'Prioriteret Forbedringsplan',
+          'Danmark & EU Benchmark'
+        ]
+      }
+    };
+
+    const ProgramCard = ({ program, onClick }) => {
+      return (
+        <div
+          onClick={onClick}
+          style={{
+            background: 'white',
+            borderRadius: 8,
+            border: '1px solid #e5e5e5',
+            padding: 24,
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.borderColor = '#10b981';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.12)';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.borderColor = '#e5e5e5';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          {/* Version Badge */}
+          <span style={{
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            background: '#059669',
+            color: 'white',
+            fontSize: 11,
+            padding: '2px 8px',
+            borderRadius: 6,
+            fontWeight: 500,
+          }}>{program.version}</span>
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              background: 'linear-gradient(135deg, #10b981, #059669)',
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10 7v4m0 0v2m0-2h3m-3 0H8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h4 style={{ fontWeight: 600, margin: 0, fontSize: 15 }}>{program.name}</h4>
+              <span style={{ color: '#6b7280', fontSize: 13 }}>{program.subtitle}</span>
+            </div>
+          </div>
+
+          {/* Features as tags */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            {program.features.slice(0, 4).map((feature, i) => (
+              <span key={i} style={{
+                fontSize: 11,
+                padding: '3px 8px',
+                background: '#f0fdf4',
+                color: '#059669',
+                borderRadius: 4,
+                fontWeight: 500,
+              }}>{feature}</span>
+            ))}
+            {program.features.length > 4 && (
+              <span style={{
+                fontSize: 11,
+                padding: '3px 8px',
+                background: '#f3f4f6',
+                color: '#6b7280',
+                borderRadius: 4,
+                fontWeight: 500,
+              }}>+{program.features.length - 4} mere</span>
+            )}
+          </div>
+
+          {/* Footer: Size & Status */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
+            <span style={{ fontSize: 12, color: '#9ca3af' }}>{program.size}</span>
+            <span style={{ fontSize: 12, color: '#059669', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', display: 'inline-block' }}></span>
+              {program.status}
+            </span>
+          </div>
+        </div>
+      );
+    };
+
+    const ProgramDetailModal = ({ program, onClose }) => {
+      return (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: 20,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        >
+          <div style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: 32,
+            maxWidth: 520,
+            width: '100%',
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            boxShadow: '0 25px 80px rgba(0,0,0,0.2)',
+            animation: 'slideIn 0.3s ease',
+            position: 'relative',
+          }}>
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 'none',
+                fontSize: 20,
+                cursor: 'pointer',
+                color: '#9ca3af',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 8,
+              }}
+            >×</button>
+
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+              <div style={{
+                width: 56,
+                height: 56,
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                borderRadius: 12,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M10 7v4m0 0v2m0-2h3m-3 0H8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{program.name}</h2>
+                  <span style={{
+                    background: '#059669',
+                    color: 'white',
+                    fontSize: 11,
+                    padding: '2px 8px',
+                    borderRadius: 6,
+                    fontWeight: 500,
+                  }}>{program.version}</span>
+                </div>
+                <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>{program.subtitle}</p>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
+              {program.description}
+            </p>
+
+            {/* Info row */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{program.size}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Størrelse</div>
+              </div>
+              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#059669' }}>{program.status}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Status</div>
+              </div>
+              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{program.features.length}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Funktioner</div>
+              </div>
+            </div>
+
+            {/* Features list */}
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Funktioner</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+              {program.features.map((feature, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 6 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
+                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span style={{ fontSize: 13, color: '#374151' }}>{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Next version */}
+            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 20, border: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#1a1a1a' }}>Næste version</h3>
+                <span style={{
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  background: '#dbeafe',
+                  color: '#2563eb',
+                  borderRadius: 4,
+                  fontWeight: 600,
+                }}>{program.nextVersion.version}</span>
+                <span style={{
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  background: '#fef3c7',
+                  color: '#d97706',
+                  borderRadius: 4,
+                  fontWeight: 600,
+                }}>Kommer snart</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {program.nextVersion.features.map((feature, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M8 12h8M12 8v8" strokeLinecap="round"/>
+                    </svg>
+                    <span style={{ fontSize: 13, color: '#6b7280' }}>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // =============================================================================
     // SEARCH COMPONENT
     // =============================================================================
     const BusinessSearch = ({ onBusinessSelect }) => {
@@ -2254,6 +2535,7 @@
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [showResults, setShowResults] = useState(false);
+      const [showProgramModal, setShowProgramModal] = useState(false);
       const debounceRef = useRef(null);
 
       useEffect(() => {
@@ -2355,6 +2637,16 @@
               Start analyse
             </button>
           </div>
+
+          {/* Program Card */}
+          <div style={{ marginTop: 32, width: '100%', maxWidth: 600 }}>
+            <ProgramCard program={PROGRAM_DATA} onClick={() => setShowProgramModal(true)} />
+          </div>
+
+          {/* Program Detail Modal */}
+          {showProgramModal && (
+            <ProgramDetailModal program={PROGRAM_DATA} onClose={() => setShowProgramModal(false)} />
+          )}
         </div>
       );
     };
