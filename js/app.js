@@ -729,11 +729,12 @@ const ROLES = {
 const ADMIN_ONLY_MENUS = {
   'kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'alle-kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'leads': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'workflow': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'nav-indsigt': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-salg': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-rapporter': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-integrationer': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-admin-profil': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE], // Real test only for admin
+  'nav-flow-cms': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-billing': [ROLES.ADMIN, ROLES.EMPLOYEE],
@@ -742,11 +743,7 @@ const ADMIN_ONLY_MENUS = {
 };
 
 // Customer/Demo only menus (hidden for admin/employee)
-const CUSTOMER_ONLY_MENUS = {
-  'nav-butikindstillinger': [ROLES.CUSTOMER, ROLES.DEMO],
-  'nav-indsigt': [ROLES.CUSTOMER, ROLES.DEMO],
-  'nav-kunde-profil': [ROLES.CUSTOMER, ROLES.DEMO]
-};
+const CUSTOMER_ONLY_MENUS = {};
 
 function hasRoleAccess(menuItem) {
   const role = currentUser?.role || ROLES.CUSTOMER;
@@ -769,8 +766,7 @@ function applyRoleBasedSidebar() {
   const role = currentUser?.role || ROLES.CUSTOMER;
   const isCustomerView = [ROLES.CUSTOMER, ROLES.DEMO].includes(role);
   const isDemoView = role === ROLES.DEMO;
-  const isRegularCustomer = role === ROLES.CUSTOMER;
-  console.log('🔐 Applying role-based sidebar for role:', role, '(Customer view:', isCustomerView, ', Demo view:', isDemoView, ')');
+  console.log('🔐 Applying role-based sidebar for role:', role, '(Customer view:', isCustomerView, ')');
 
   // Helper function for konsistent display manipulation med !important
   const setDisplay = (el, show) => {
@@ -781,14 +777,37 @@ function applyRoleBasedSidebar() {
   const templateBtn = document.getElementById('app-preview-template-btn');
   setDisplay(templateBtn, role === ROLES.ADMIN);
 
-  // === SKJUL KUNDER KNAP FOR KUNDE/DEMO ===
-  const kunderBtn = document.querySelector('[data-role-menu="kunder"]');
-  setDisplay(kunderBtn, !isCustomerView);
-  if (kunderBtn) console.log(`  - Kunder knap: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+  // === ADMIN-ONLY SIDEBAR ELEMENTER ===
+  // Kunder, Workflow, Indsigt, Salg, Lead Management: Kun admin/employee
+  ['kunder', 'workflow', 'nav-indsigt', 'nav-salg', 'leads'].forEach(menuKey => {
+    const el = document.querySelector(`[data-role-menu="${menuKey}"]`);
+    setDisplay(el, !isCustomerView);
+    if (el) console.log(`  - ${menuKey}: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+  });
+
+  // === FLOW CMS: Kun admin/employee ===
+  const flowCmsSection = document.querySelector('[data-role-menu="nav-flow-cms"]');
+  setDisplay(flowCmsSection, !isCustomerView);
+  if (flowCmsSection) console.log(`  - Flow CMS: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+
+  // === RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
+  ['nav-rapporter', 'nav-integrationer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', '', 'important');
+      console.log(`  - ${id}: ✓ visible`);
+    }
+  });
+
+  // === VIRKSOMHEDS PROFIL, BUTIKINDSTILLINGER, MARKETING: Synlige for ALLE ===
+  ['nav-virksomheds-profil', 'nav-butikindstillinger', 'nav-marketing'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', '', 'important');
+    }
+  });
 
   // === INDSTILLINGER BEGRÆNSNINGER ===
-  // Kunde/Demo har IKKE adgang til: API adgang, AI læring, Abonnement (billing)
-  // Kunde/Demo HAR adgang til: Brugere, Roller, Sprog, Notifikationer, Adgangskoder, Support
   const adminOnlySettings = ['settings-api', 'settings-ailearning', 'settings-billing'];
   adminOnlySettings.forEach(menuId => {
     const el = document.querySelector(`[data-role-menu="${menuId}"]`);
@@ -801,6 +820,12 @@ function applyRoleBasedSidebar() {
     setDisplay(el, true);
   });
 
+  // Indstillinger dropdown: Synlig for alle
+  const indstillingerDropdown = document.getElementById('nav-indstillinger');
+  if (indstillingerDropdown) {
+    indstillingerDropdown.style.setProperty('display', '', 'important');
+  }
+
   // === ADMIN ELEMENTER ===
   if (isCustomerView) {
     document.querySelectorAll('.admin-customer-search').forEach(el => setDisplay(el, false));
@@ -810,60 +835,7 @@ function applyRoleBasedSidebar() {
     document.querySelectorAll('.admin-quick-actions').forEach(el => setDisplay(el, true));
   }
 
-  // === KUNDE-SPECIFIKKE MENUPUNKTER ===
-  // Butikindstillinger, Indsigt: Vis kun for kunde/demo
-  ['nav-butikindstillinger', 'nav-indsigt'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', isCustomerView ? 'block' : 'none', 'important');
-      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
-    }
-  });
-
-  // Workflow Kontrol og Produktbibliotek: Kun for demo/kunde (admin bruger kunde-kontekst menu)
-  ['nav-workflow-kontrol', 'nav-produktbibliotek'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', isCustomerView ? '' : 'none', 'important');
-      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
-    }
-  });
-
-  // === SALG, RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
-  ['nav-salg', 'nav-rapporter', 'nav-integrationer'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', '', 'important');
-      console.log(`  - ${id}: ✓ visible`);
-    }
-  });
-
-  // === SYSTEM SEKTION ===
-  // Workflow: Synlig for Admin + Demo (IKKE for almindelige kunder)
-  // Indstillinger: Synlig for ALLE (men med begrænsede items)
-  const systemSection = document.querySelector('.nav-section:has(#nav-indstillinger)');
-  if (systemSection) {
-    // Vis system sektion for alle
-    systemSection.style.setProperty('display', '', 'important');
-  }
-
-  // Workflow knap: Kun for admin + demo (ikke almindelige kunder)
-  const workflowBtn = document.querySelector('.nav-btn[onclick="showPage(\'workflow\')"]');
-  if (workflowBtn) {
-    // Admin: fuld adgang, Demo: kun test workflow, Kunde: ingen adgang
-    setDisplay(workflowBtn, !isRegularCustomer);
-    console.log(`  - Workflow: ${isRegularCustomer ? '✗ hidden' : '✓ visible'}`);
-  }
-
-  // Indstillinger dropdown: Synlig for alle
-  const indstillingerDropdown = document.getElementById('nav-indstillinger');
-  if (indstillingerDropdown) {
-    indstillingerDropdown.style.setProperty('display', '', 'important');
-    console.log('  - Indstillinger: ✓ visible');
-  }
-
   // === WORKFLOW TEST PANEL ===
-  // Demo brugere ser demo overlay i stedet for test panel
   const workflowTestPanel = document.querySelector('.test-panel');
   if (workflowTestPanel) {
     setDisplay(workflowTestPanel, !isCustomerView);
@@ -874,7 +846,6 @@ function applyRoleBasedSidebar() {
   const customerDash = document.getElementById('customer-dashboard');
 
   if (isCustomerView) {
-    // VIGTIGT: Brug style.setProperty med !important for at sikre admin elementer forbliver skjulte
     if (adminDash) {
       adminDash.classList.add('hidden');
       adminDash.style.setProperty('display', 'none', 'important');
@@ -883,7 +854,6 @@ function applyRoleBasedSidebar() {
       customerDash.classList.remove('hidden');
       customerDash.style.setProperty('display', '', 'important');
     }
-    // Skjul ALLE admin dashboard elementer med !important
     document.querySelectorAll('.admin-dashboard-content').forEach(el => {
       el.classList.add('hidden');
       el.style.setProperty('display', 'none', 'important');
@@ -907,7 +877,6 @@ function applyRoleBasedSidebar() {
 
   // === SKJUL ADMIN-ELEMENTER FOR DEMO/KUNDE ===
   if (isCustomerView) {
-    // Skjul admin-knapper i kunde profil
     const terminateBtn = document.getElementById('btn-terminate-customer');
     const profileStatus = document.getElementById('profile-status');
     const backToCustomers = document.querySelector('.crm-back-btn');
@@ -916,7 +885,6 @@ function applyRoleBasedSidebar() {
     if (profileStatus) profileStatus.style.setProperty('display', 'none', 'important');
     if (backToCustomers) backToCustomers.style.setProperty('display', 'none', 'important');
 
-    // Skjul "Vis alle" og "+ Tilføj kunde" knapper
     document.querySelectorAll('.btn[onclick*="showPage(\'alle-kunder\')"]').forEach(el => {
       el.style.setProperty('display', 'none', 'important');
     });
@@ -927,9 +895,11 @@ function applyRoleBasedSidebar() {
     console.log('  - Admin buttons hidden for customer/demo');
   }
 
-  // === DROPDOWN MANAGEMENT FOR DEMO/KUNDE ===
-  // Alle dropdowns forbliver lukkede som standard - præcis som for admin
-  // Brugeren klikker selv for at åbne dem
+  // === KUNDE CONTEXT: Skjul for kunde/demo (de ser ikke Kunder-listen) ===
+  const customerContext = document.getElementById('nav-customer-context');
+  if (customerContext && isCustomerView) {
+    setDisplay(customerContext, false);
+  }
 
   console.log('✅ Sidebar updated for', isCustomerView ? 'customer/demo' : 'admin/employee', 'view');
 }
@@ -11430,9 +11400,6 @@ function showCrmProfileView(id) {
   // Reset to first subpage (dashboard)
   document.querySelectorAll('.customer-subpage').forEach(sp => sp.classList.remove('active'));
   document.getElementById('subpage-dashboard').classList.add('active');
-  document.querySelectorAll('.nav-customer-menu .nav-dropdown-item').forEach((item, i) => {
-    item.classList.toggle('active', i === 0);
-  });
 
   // Load customer dashboard
   loadCustomerDashboard(id);
@@ -31535,7 +31502,8 @@ async function switchFlowCMSTab(tab) {
     'products-facebook': 'Facebook Workflow',
     'raw-data': 'Data',
     'analytics-oversigt': 'Oversigt',
-    'integrationer': 'System Integrationer'
+    'integrationer': 'System Integrationer',
+    'farver-og-fonts': 'Farver & Fonts'
   };
 
   const titleEl = document.getElementById('flow-cms-page-title');
@@ -31556,7 +31524,244 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'raw-data') loadRawDataTab();
   if (tab === 'analytics-oversigt') loadAnalyticsOverview();
   if (tab === 'integrationer') loadIntegrationsPage();
+  if (tab === 'farver-og-fonts') loadFarverOgFonts();
 }
+
+// ==================== CMS THEME: Farver og Fonts ====================
+
+const CMS_THEME_DEFAULTS = {
+  colors: {
+    primary: '#6366F1',
+    accent: '#6366F1',
+    success: '#10B981',
+    warning: '#F59E0B',
+    danger: '#EF4444',
+    background: '#13131F'
+  },
+  fonts: {
+    heading: 'Inter',
+    body: 'Inter'
+  }
+};
+
+const CMS_THEME_PRESETS = {
+  'default-indigo': {
+    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'ocean-blue': {
+    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'forest-green': {
+    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'sunset-orange': {
+    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917' },
+    fonts: { heading: 'Poppins', body: 'Inter' }
+  },
+  'minimal-dark': {
+    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  }
+};
+
+const CMS_COLOR_MAP = {
+  primary: '--color-primary',
+  accent: '--color-accent',
+  success: '--color-success',
+  warning: '--color-warning',
+  danger: '--color-danger',
+  background: '--color-bg'
+};
+
+function loadFarverOgFonts() {
+  const saved = localStorage.getItem('orderflow_cms_theme');
+  const config = saved ? JSON.parse(saved) : CMS_THEME_DEFAULTS;
+
+  // Populate color inputs
+  Object.keys(config.colors).forEach(key => {
+    const colorEl = document.getElementById('cms-color-' + key);
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    const previewEl = document.getElementById('cms-color-' + key + '-preview');
+    if (colorEl) colorEl.value = config.colors[key];
+    if (textEl) textEl.value = config.colors[key];
+    if (previewEl) previewEl.style.background = config.colors[key];
+  });
+
+  // Populate font selects
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  if (headingEl) headingEl.value = config.fonts.heading;
+  if (bodyEl) bodyEl.value = config.fonts.body;
+
+  updateCMSFontPreview();
+}
+
+function switchCMSThemeTab(tab) {
+  document.querySelectorAll('#flow-cms-content-farver-og-fonts .settings-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`#flow-cms-content-farver-og-fonts .settings-tab[onclick*="'${tab}'"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  document.querySelectorAll('.cms-theme-tab-content').forEach(c => {
+    c.style.display = 'none';
+  });
+  const content = document.getElementById('cms-theme-' + tab);
+  if (content) {
+    content.style.display = 'block';
+  }
+}
+
+function syncCMSColorInput(type) {
+  const textEl = document.getElementById('cms-color-' + type + '-text');
+  const colorEl = document.getElementById('cms-color-' + type);
+  const previewEl = document.getElementById('cms-color-' + type + '-preview');
+
+  if (textEl && colorEl) {
+    const value = textEl.value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      colorEl.value = value;
+      if (previewEl) previewEl.style.background = value;
+    }
+  }
+}
+
+function updateCMSColorFromPicker(type) {
+  const colorEl = document.getElementById('cms-color-' + type);
+  const textEl = document.getElementById('cms-color-' + type + '-text');
+  const previewEl = document.getElementById('cms-color-' + type + '-preview');
+
+  if (colorEl && textEl) {
+    textEl.value = colorEl.value;
+    if (previewEl) previewEl.style.background = colorEl.value;
+  }
+}
+
+function updateCMSFontPreview() {
+  const headingFont = document.getElementById('cms-font-heading')?.value || 'Inter';
+  const bodyFont = document.getElementById('cms-font-body')?.value || 'Inter';
+
+  const headingEl = document.getElementById('cms-font-preview-heading');
+  const bodyEl = document.getElementById('cms-font-preview-body');
+
+  if (headingEl) headingEl.style.fontFamily = `'${headingFont}', sans-serif`;
+  if (bodyEl) bodyEl.style.fontFamily = `'${bodyFont}', sans-serif`;
+}
+
+function saveCMSTheme() {
+  const config = {
+    colors: {},
+    fonts: {}
+  };
+
+  // Collect colors
+  Object.keys(CMS_THEME_DEFAULTS.colors).forEach(key => {
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    config.colors[key] = textEl ? textEl.value : CMS_THEME_DEFAULTS.colors[key];
+  });
+
+  // Collect fonts
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  config.fonts.heading = headingEl ? headingEl.value : 'Inter';
+  config.fonts.body = bodyEl ? bodyEl.value : 'Inter';
+
+  // Save to localStorage
+  localStorage.setItem('orderflow_cms_theme', JSON.stringify(config));
+
+  // Apply runtime
+  applyCMSTheme(config);
+
+  // Show save status
+  const status = document.getElementById('cms-theme-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
+}
+
+function applyCMSTheme(config) {
+  const root = document.documentElement;
+
+  // Apply colors
+  Object.keys(config.colors).forEach(key => {
+    const cssVar = CMS_COLOR_MAP[key];
+    if (cssVar) {
+      root.style.setProperty(cssVar, config.colors[key]);
+    }
+  });
+
+  // Apply primary-related derived colors
+  const primary = config.colors.primary;
+  if (primary) {
+    root.style.setProperty('--color-primary-hover', adjustBrightness(primary, 20));
+    root.style.setProperty('--color-primary-active', adjustBrightness(primary, -15));
+    root.style.setProperty('--color-primary-dim', primary + '26');
+    root.style.setProperty('--color-primary-glow', primary + '59');
+  }
+
+  // Apply fonts
+  if (config.fonts.heading && config.fonts.heading !== 'Inter') {
+    loadGoogleFont(config.fonts.heading);
+  }
+  if (config.fonts.body && config.fonts.body !== 'Inter') {
+    loadGoogleFont(config.fonts.body);
+  }
+  root.style.setProperty('--font-family-base', `'${config.fonts.body}', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`);
+}
+
+function adjustBrightness(hex, percent) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + Math.round(2.55 * percent)));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + Math.round(2.55 * percent)));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + Math.round(2.55 * percent)));
+  return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function loadGoogleFont(fontName) {
+  const id = 'gfont-' + fontName.replace(/\s+/g, '-').toLowerCase();
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+}
+
+function applyCMSThemePreset(presetName) {
+  const preset = CMS_THEME_PRESETS[presetName];
+  if (!preset) return;
+
+  // Update color inputs
+  Object.keys(preset.colors).forEach(key => {
+    const colorEl = document.getElementById('cms-color-' + key);
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    const previewEl = document.getElementById('cms-color-' + key + '-preview');
+    if (colorEl) colorEl.value = preset.colors[key];
+    if (textEl) textEl.value = preset.colors[key];
+    if (previewEl) previewEl.style.background = preset.colors[key];
+  });
+
+  // Update font selects
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  if (headingEl) headingEl.value = preset.fonts.heading;
+  if (bodyEl) bodyEl.value = preset.fonts.body;
+
+  updateCMSFontPreview();
+  switchCMSThemeTab('farver');
+}
+
+// Load saved CMS theme on app startup
+(function initCMSTheme() {
+  const saved = localStorage.getItem('orderflow_cms_theme');
+  if (saved) {
+    try {
+      applyCMSTheme(JSON.parse(saved));
+    } catch(e) { /* ignore corrupt data */ }
+  }
+})();
 
 // Load CMS Data Statistics
 function loadCMSDataStats() {

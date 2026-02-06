@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-06
-**Version:** 3.26.0
-**Total antal sider:** 86+
+**Version:** 3.28.0
+**Total antal sider:** 87+
 
 ---
 
@@ -93,6 +93,7 @@
 | Side ID | Beskrivelse |
 |---------|-------------|
 | `page-flow-cms` | FLOW CMS |
+| `flow-cms-content-farver-og-fonts` | Farver & Fonts (CMS tema-indstillinger) |
 | `page-landing-cms` | Landing Page CMS |
 
 ### Admin Profil (admin/employee)
