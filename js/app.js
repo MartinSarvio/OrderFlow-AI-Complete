@@ -22,6 +22,9 @@ function toggleTheme() {
 
   // Update logos based on theme
   updateLogos(newTheme);
+  if (typeof updateThemeEditorActiveTheme === 'function') {
+    updateThemeEditorActiveTheme();
+  }
 
   // Reinitialize charts with new theme colors
   if (typeof initRevenueChart === 'function') {
@@ -72,17 +75,733 @@ function initTheme() {
     document.addEventListener('DOMContentLoaded', () => {
       updateLogos(theme);
       updateThemeToggleTooltip(theme);
+      if (typeof updateThemeEditorActiveTheme === 'function') {
+        updateThemeEditorActiveTheme();
+      }
     });
   } else {
     updateLogos(theme);
     updateThemeToggleTooltip(theme);
+    if (typeof updateThemeEditorActiveTheme === 'function') {
+      updateThemeEditorActiveTheme();
+    }
   }
 
   console.log('Theme initialized:', theme);
 }
 
+// =====================================================
+// THEME OVERRIDES (FLOW CMS)
+// =====================================================
+const THEME_OVERRIDE_KEY = 'flow_theme_overrides_v1';
+let themeEditorSaved = null;
+let themeEditorDraft = null;
+let themeSaveTimeout = null;
+
+function getEmptyThemeOverrides() {
+  return {
+    dark: {},
+    light: {},
+    global: {},
+    fonts: {},
+    customCSS: '',
+    customStyles: ''
+  };
+}
+
+function cloneThemeOverrides(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function loadThemeOverridesFromStorage() {
+  const raw = localStorage.getItem(THEME_OVERRIDE_KEY);
+  if (!raw) return getEmptyThemeOverrides();
+
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      ...getEmptyThemeOverrides(),
+      ...parsed,
+      dark: parsed.dark || {},
+      light: parsed.light || {},
+      global: parsed.global || {},
+      fonts: parsed.fonts || {},
+      customCSS: parsed.customCSS || '',
+      customStyles: parsed.customStyles || ''
+    };
+  } catch (err) {
+    console.warn('⚠️ Invalid theme override data, resetting.', err);
+    return getEmptyThemeOverrides();
+  }
+}
+
+function hasThemeOverrides(state) {
+  if (!state) return false;
+  const hasVars = (obj) => obj && Object.keys(obj).length > 0;
+  return (
+    hasVars(state.dark) ||
+    hasVars(state.light) ||
+    hasVars(state.global) ||
+    hasVars(state.fonts) ||
+    (state.customCSS && state.customCSS.trim()) ||
+    (state.customStyles && state.customStyles.trim())
+  );
+}
+
+function getThemeOverrideStyleEl() {
+  let styleEl = document.getElementById('theme-overrides');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'theme-overrides';
+    document.head.appendChild(styleEl);
+  }
+  return styleEl;
+}
+
+function formatThemeVars(vars) {
+  return Object.entries(vars)
+    .map(([key, value]) => `  ${key}: ${value};`)
+    .join('\n');
+}
+
+function applyThemeOverrides(state) {
+  const styleEl = getThemeOverrideStyleEl();
+
+  if (!hasThemeOverrides(state)) {
+    styleEl.textContent = '';
+    updateMetaThemeColorFromCSS();
+    return;
+  }
+
+  const rootVars = { ...(state.global || {}), ...(state.dark || {}) };
+  const lightVars = { ...(state.light || {}) };
+  const cssParts = [];
+
+  if (Object.keys(rootVars).length) {
+    cssParts.push(`:root{\n${formatThemeVars(rootVars)}\n}`);
+  }
+  if (Object.keys(lightVars).length) {
+    cssParts.push(`[data-theme="light"]{\n${formatThemeVars(lightVars)}\n}`);
+  }
+
+  const fonts = state.fonts || {};
+  const fontRules = [];
+  if (fonts.body) {
+    fontRules.push(`body, button, input, textarea, select, .sidebar { font-family: ${fonts.body}; }`);
+  }
+  if (fonts.heading) {
+    fontRules.push(`h1, h2, h3, h4, h5, h6, .page-title, .section-title { font-family: ${fonts.heading}; }`);
+  }
+  if (fonts.mono) {
+    fontRules.push(`code, pre, .mono, .nav-customer-id, .message-node, .var-tag { font-family: ${fonts.mono}; }`);
+  }
+  if (fontRules.length) cssParts.push(fontRules.join('\n'));
+
+  if (state.customCSS && state.customCSS.trim()) cssParts.push(state.customCSS.trim());
+  if (state.customStyles && state.customStyles.trim()) cssParts.push(state.customStyles.trim());
+
+  styleEl.textContent = cssParts.join('\n\n');
+  updateMetaThemeColorFromCSS();
+}
+
+function updateMetaThemeColorFromCSS() {
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (!metaTheme) return;
+
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if (bg && (bg.startsWith('#') || bg.startsWith('rgb'))) {
+    metaTheme.setAttribute('content', bg);
+  }
+}
+
+function initThemeOverrides() {
+  themeEditorSaved = loadThemeOverridesFromStorage();
+  applyThemeOverrides(themeEditorSaved);
+}
+
+function ensureThemeLightProbe() {
+  let probe = document.getElementById('theme-light-probe');
+  if (!probe && document.body) {
+    probe = document.createElement('div');
+    probe.id = 'theme-light-probe';
+    probe.setAttribute('data-theme', 'light');
+    probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
+    document.body.appendChild(probe);
+  }
+  return probe;
+}
+
+function getComputedTokenValue(token, mode) {
+  if (mode === 'light') {
+    const probe = ensureThemeLightProbe();
+    if (!probe) return '';
+    return getComputedStyle(probe).getPropertyValue(token).trim();
+  }
+  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+}
+
+function normalizeThemeColor(value) {
+  if (!value) return '';
+  const trimmed = value.trim();
+  const hexMatch = trimmed.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (hexMatch) {
+    if (trimmed.length === 4) {
+      return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+    }
+    return trimmed;
+  }
+
+  const rgbMatch = trimmed.match(/^rgba?\\(([^)]+)\\)$/i);
+  if (rgbMatch) {
+    const parts = rgbMatch[1].split(',').map(part => parseFloat(part.trim()));
+    if (parts.length >= 3 && parts.every(num => !Number.isNaN(num))) {
+      const toHex = (num) => Math.max(0, Math.min(255, Math.round(num))).toString(16).padStart(2, '0');
+      return `#${toHex(parts[0])}${toHex(parts[1])}${toHex(parts[2])}`;
+    }
+  }
+  return '';
+}
+
+const THEME_TOKEN_SOURCES = {
+  theme: { label: 'theme.css', url: 'theme.css' },
+  styles: { label: 'css/styles.css', url: 'css/styles.css' }
+};
+const THEME_EDITOR_STATE_KEY = 'flow_theme_editor_state_v1';
+let themeTokensLoaded = false;
+const themeTokenData = {};
+const themeEditorUIState = {
+  source: 'theme',
+  mode: 'dark',
+  search: '',
+  live: true,
+  initialized: false
+};
+
+function loadThemeEditorState() {
+  const raw = localStorage.getItem(THEME_EDITOR_STATE_KEY);
+  if (!raw) return;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.source && THEME_TOKEN_SOURCES[parsed.source]) themeEditorUIState.source = parsed.source;
+    if (parsed.mode === 'light' || parsed.mode === 'dark') themeEditorUIState.mode = parsed.mode;
+    if (typeof parsed.search === 'string') themeEditorUIState.search = parsed.search;
+    if (typeof parsed.live === 'boolean') themeEditorUIState.live = parsed.live;
+  } catch (err) {
+    console.warn('⚠️ Invalid theme editor state, resetting.', err);
+  }
+}
+
+function saveThemeEditorState() {
+  const payload = {
+    source: themeEditorUIState.source,
+    mode: themeEditorUIState.mode,
+    search: themeEditorUIState.search,
+    live: themeEditorUIState.live
+  };
+  localStorage.setItem(THEME_EDITOR_STATE_KEY, JSON.stringify(payload));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function extractCssBlock(cssText, selector) {
+  const index = cssText.indexOf(selector);
+  if (index === -1) return '';
+  const start = cssText.indexOf('{', index);
+  if (start === -1) return '';
+  let depth = 0;
+  for (let i = start; i < cssText.length; i++) {
+    const char = cssText[i];
+    if (char === '{') depth += 1;
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) return cssText.slice(start + 1, i);
+    }
+  }
+  return '';
+}
+
+function parseCssVars(blockText) {
+  const vars = [];
+  const map = {};
+  const regex = /--([A-Za-z0-9-_]+)\s*:\s*([^;]+);/g;
+  let match;
+  while ((match = regex.exec(blockText)) !== null) {
+    const name = `--${match[1]}`;
+    const value = match[2].trim();
+    if (!map[name]) {
+      vars.push({ name, value });
+    } else {
+      const idx = vars.findIndex((item) => item.name === name);
+      if (idx >= 0) vars[idx].value = value;
+    }
+    map[name] = value;
+  }
+  return { list: vars, map };
+}
+
+function upsertThemeVar(list, map, name, value) {
+  if (!map[name]) {
+    list.push({ name, value });
+  } else {
+    const idx = list.findIndex(item => item.name === name);
+    if (idx >= 0) list[idx].value = value;
+  }
+  map[name] = value;
+}
+
+function collectThemeVarsFromRule(rule, buckets, mediaIsLight) {
+  if (!rule || !rule.style) return;
+  const selector = rule.selectorText || '';
+  const isLightSelector = selector.includes('[data-theme="light"]');
+  const isRootSelector = selector.includes(':root');
+  if (!isLightSelector && !isRootSelector) return;
+
+  const target = isLightSelector ? 'light' : (mediaIsLight ? 'light' : 'dark');
+  const list = target === 'light' ? buckets.light : buckets.dark;
+  const map = target === 'light' ? buckets.lightMap : buckets.darkMap;
+
+  for (let i = 0; i < rule.style.length; i += 1) {
+    const prop = rule.style[i];
+    if (!prop || !prop.startsWith('--')) continue;
+    const value = rule.style.getPropertyValue(prop).trim();
+    upsertThemeVar(list, map, prop, value);
+  }
+}
+
+function collectThemeVarsFromRules(rules, buckets, mediaIsLight) {
+  if (!rules) return;
+  for (const rule of rules) {
+    if (!rule) continue;
+    if (rule.type === 4 && rule.cssRules) {
+      const condition = rule.conditionText || '';
+      const prefersLight = /prefers-color-scheme\\s*:\\s*light/i.test(condition);
+      const prefersDark = /prefers-color-scheme\\s*:\\s*dark/i.test(condition);
+      collectThemeVarsFromRules(rule.cssRules, buckets, prefersLight ? true : prefersDark ? false : mediaIsLight);
+    } else if (rule.type === 1) {
+      collectThemeVarsFromRule(rule, buckets, mediaIsLight);
+    } else if (rule.cssRules) {
+      collectThemeVarsFromRules(rule.cssRules, buckets, mediaIsLight);
+    }
+  }
+}
+
+function readThemeTokensFromStyleSheets(sourceUrl) {
+  const dark = [];
+  const light = [];
+  const darkMap = {};
+  const lightMap = {};
+  const target = sourceUrl.split('/').pop();
+
+  const allSheets = Array.from(document.styleSheets || []);
+  let matchedSheets = allSheets.filter(sheet => {
+    if (!sheet || !sheet.href) return false;
+    return sheet.href.includes(sourceUrl) || (target && sheet.href.includes(target));
+  });
+
+  if (!matchedSheets.length) matchedSheets = allSheets;
+
+  matchedSheets.forEach(sheet => {
+    try {
+      collectThemeVarsFromRules(sheet.cssRules, { dark, light, darkMap, lightMap }, false);
+    } catch (err) {
+      // Ignore unreadable stylesheets (cross-origin)
+    }
+  });
+
+  return { dark, light, map: { dark: darkMap, light: lightMap } };
+}
+
+async function loadThemeTokenSources() {
+  const entries = Object.entries(THEME_TOKEN_SOURCES);
+  await Promise.all(entries.map(async ([key, source]) => {
+    let parsedData = null;
+    try {
+      const res = await fetch(source.url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+      const text = await res.text();
+      const darkBlock = extractCssBlock(text, ':root');
+      const lightBlock = extractCssBlock(text, '[data-theme="light"]');
+      const darkVars = parseCssVars(darkBlock);
+      const lightVars = parseCssVars(lightBlock);
+      parsedData = {
+        dark: darkVars.list,
+        light: lightVars.list,
+        map: {
+          dark: darkVars.map,
+          light: lightVars.map
+        }
+      };
+    } catch (err) {
+      console.warn(`⚠️ Could not load ${source.url} via fetch`, err);
+    }
+
+    if (!parsedData || (!parsedData.dark.length && !parsedData.light.length)) {
+      const fallback = readThemeTokensFromStyleSheets(source.url);
+      parsedData = fallback;
+    }
+
+    themeTokenData[key] = parsedData || { dark: [], light: [], map: { dark: {}, light: {} } };
+  }));
+  themeTokensLoaded = true;
+}
+
+function syncThemeEditorTabs() {
+  document.querySelectorAll('#theme-editor-source-tabs .settings-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.themeSource === themeEditorUIState.source);
+  });
+  document.querySelectorAll('#theme-editor-mode-tabs .settings-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.themeMode === themeEditorUIState.mode);
+  });
+  const fileBadge = document.getElementById('theme-editor-current-file');
+  if (fileBadge) {
+    const label = THEME_TOKEN_SOURCES[themeEditorUIState.source]?.label || 'theme.css';
+    fileBadge.textContent = label;
+  }
+  const liveToggle = document.getElementById('theme-editor-live-toggle');
+  if (liveToggle) liveToggle.checked = themeEditorUIState.live;
+  const search = document.getElementById('theme-editor-search');
+  if (search) search.value = themeEditorUIState.search || '';
+}
+
+function updateThemeEditorActiveTheme() {
+  const badge = document.getElementById('theme-editor-active-theme');
+  if (badge) {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    badge.textContent = current === 'light' ? 'Aktivt tema: Lys' : 'Aktivt tema: Mørk';
+  }
+  const activeBadge = document.getElementById('theme-editor-overrides-active');
+  if (activeBadge) {
+    const state = themeEditorUIState.live ? themeEditorDraft : themeEditorSaved;
+    activeBadge.style.display = hasThemeOverrides(state) ? 'inline-flex' : 'none';
+  }
+  const themeTab = document.getElementById('flow-cms-content-theme');
+  if (themeTab && themeTab.classList.contains('active')) {
+    renderThemeTokenList();
+  }
+}
+
+function getThemeOverrideValue(mode, token) {
+  if (!themeEditorDraft) return { value: '', source: '' };
+  const bucket = mode === 'light' ? themeEditorDraft.light : themeEditorDraft.dark;
+  if (bucket && Object.prototype.hasOwnProperty.call(bucket, token)) {
+    return { value: bucket[token], source: 'mode' };
+  }
+  if (themeEditorDraft.global && Object.prototype.hasOwnProperty.call(themeEditorDraft.global, token)) {
+    return { value: themeEditorDraft.global[token], source: 'global' };
+  }
+  return { value: '', source: '' };
+}
+
+function renderThemeTokenList() {
+  const listEl = document.getElementById('theme-editor-list');
+  const countEl = document.getElementById('theme-editor-count');
+  if (!listEl || !countEl) return;
+
+  if (!themeTokensLoaded || !themeTokenData[themeEditorUIState.source]) {
+    countEl.textContent = 'Indlæser variabler...';
+    listEl.innerHTML = '';
+    return;
+  }
+
+  const sourceKey = themeEditorUIState.source;
+  const mode = themeEditorUIState.mode;
+  const tokens = themeTokenData[sourceKey][mode] || [];
+  const search = themeEditorUIState.search.trim().toLowerCase();
+
+  const filtered = tokens.filter((token) => {
+    if (!search) return true;
+    const override = getThemeOverrideValue(mode, token.name);
+    const displayValue = override.value || token.value;
+    return token.name.toLowerCase().includes(search) || token.value.toLowerCase().includes(search) || displayValue.toLowerCase().includes(search);
+  });
+
+  countEl.textContent = `Viser ${filtered.length} af ${tokens.length} variabler`;
+
+  if (!filtered.length) {
+    listEl.innerHTML = '<div style="padding:24px;color:var(--muted);text-align:center">Ingen variabler fundet.</div>';
+    return;
+  }
+
+  const fileLabel = THEME_TOKEN_SOURCES[sourceKey]?.label || sourceKey;
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+  listEl.innerHTML = filtered.map((token) => {
+    const override = getThemeOverrideValue(mode, token.name);
+    const baseValue = token.value || '';
+    const displayValue = (override.value || baseValue).trim();
+    const isOverride = Boolean(override.value) && override.value.trim() !== baseValue.trim();
+    const isActive = isOverride && mode === currentTheme;
+    const overrideBadge = `<span class="badge badge-warning" data-theme-badge="override" style="font-size:10px;${isOverride ? '' : 'display:none'}">Overstyrer</span>`;
+    const activeBadge = `<span class="badge badge-success" data-theme-badge="active" style="font-size:10px;${isActive ? '' : 'display:none'}">Aktiv</span>`;
+    const globalBadge = override.source === 'global'
+      ? '<span class="badge badge-info" style="font-size:10px">Global</span>'
+      : '';
+
+    return `
+      <div class="setting-card" data-theme-row="true" style="padding:16px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+          <div style="min-width:220px">
+            <div style="font-weight:600;font-size:13px">${escapeHtml(token.name)}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+              <span class="badge badge-info" style="font-size:10px">${escapeHtml(fileLabel)}</span>
+              ${globalBadge}
+              ${overrideBadge}
+              ${activeBadge}
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:6px">Standard: ${escapeHtml(baseValue || '—')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px">
+            <div data-theme-swatch style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:${escapeHtml(displayValue)}"></div>
+            <input class="input" data-theme-var="${escapeHtml(token.name)}" data-theme-base="${escapeHtml(baseValue)}" value="${escapeHtml(displayValue)}" oninput="handleThemeVarInput(this)" style="flex:1">
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateThemeVarRow(input) {
+  const row = input.closest('[data-theme-row]');
+  if (!row) return;
+  const base = input.dataset.themeBase || '';
+  const value = input.value.trim();
+  const isOverride = Boolean(value) && value !== base.trim();
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+  const overrideBadge = row.querySelector('[data-theme-badge="override"]');
+  if (overrideBadge) overrideBadge.style.display = isOverride ? 'inline-flex' : 'none';
+  const activeBadge = row.querySelector('[data-theme-badge="active"]');
+  if (activeBadge) activeBadge.style.display = isOverride && themeEditorUIState.mode === currentTheme ? 'inline-flex' : 'none';
+  const swatch = row.querySelector('[data-theme-swatch]');
+  if (swatch) swatch.style.background = value || base || 'transparent';
+}
+
+function setThemeEditorSource(source) {
+  if (!THEME_TOKEN_SOURCES[source]) return;
+  themeEditorUIState.source = source;
+  saveThemeEditorState();
+  syncThemeEditorTabs();
+  renderThemeTokenList();
+}
+
+function setThemeEditorMode(mode) {
+  if (mode !== 'dark' && mode !== 'light') return;
+  themeEditorUIState.mode = mode;
+  saveThemeEditorState();
+  syncThemeEditorTabs();
+  renderThemeTokenList();
+}
+
+function handleThemeEditorSearch(value) {
+  themeEditorUIState.search = value || '';
+  saveThemeEditorState();
+  renderThemeTokenList();
+}
+
+function toggleThemeEditorLive(isLive) {
+  themeEditorUIState.live = Boolean(isLive);
+  saveThemeEditorState();
+  if (themeEditorUIState.live && themeEditorDraft) {
+    applyThemeOverrides(themeEditorDraft);
+  }
+}
+
+function handleThemeVarInput(input) {
+  if (!themeEditorDraft) return;
+  const token = input.dataset.themeVar;
+  const base = input.dataset.themeBase || '';
+  const value = input.value.trim();
+  const bucketKey = themeEditorUIState.mode === 'light' ? 'light' : 'dark';
+
+  if (!themeEditorDraft[bucketKey]) themeEditorDraft[bucketKey] = {};
+  if (value && value !== base.trim()) themeEditorDraft[bucketKey][token] = value;
+  else delete themeEditorDraft[bucketKey][token];
+
+  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
+  setThemeDirty(true);
+  updateThemeVarRow(input);
+  updateThemeEditorActiveTheme();
+}
+
+function handleThemeFontInput(input) {
+  if (!themeEditorDraft) return;
+  const key = input.dataset.themeFont;
+  const value = input.value.trim();
+  if (!themeEditorDraft.fonts) themeEditorDraft.fonts = {};
+
+  if (value) themeEditorDraft.fonts[key] = value;
+  else delete themeEditorDraft.fonts[key];
+
+  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
+  setThemeDirty(true);
+  updateThemeEditorActiveTheme();
+}
+
+function handleThemeCustomCSS(textarea) {
+  if (!themeEditorDraft) return;
+  themeEditorDraft.customCSS = textarea.value;
+  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
+  setThemeDirty(true);
+  updateThemeEditorActiveTheme();
+}
+
+function handleThemeCustomStyles(textarea) {
+  if (!themeEditorDraft) return;
+  themeEditorDraft.customStyles = textarea.value;
+  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
+  setThemeDirty(true);
+  updateThemeEditorActiveTheme();
+}
+
+function populateThemeEditorFonts(state) {
+  const bodyInput = document.querySelector('[data-theme-font="body"]');
+  if (bodyInput) bodyInput.value = state.fonts?.body || getComputedStyle(document.body).fontFamily;
+
+  const headingInput = document.querySelector('[data-theme-font="heading"]');
+  if (headingInput) {
+    const headingEl = document.querySelector('.page-title, h1, h2, h3');
+    headingInput.value = state.fonts?.heading || (headingEl ? getComputedStyle(headingEl).fontFamily : getComputedStyle(document.body).fontFamily);
+  }
+
+  const monoInput = document.querySelector('[data-theme-font="mono"]');
+  if (monoInput) {
+    const monoEl = document.querySelector('.nav-customer-id, code, pre');
+    monoInput.value = state.fonts?.mono || (monoEl ? getComputedStyle(monoEl).fontFamily : 'monospace');
+  }
+}
+
+function populateThemeEditorCustom(state) {
+  const customCSS = document.getElementById('theme-custom-css');
+  if (customCSS) customCSS.value = state.customCSS || '';
+  const customStyles = document.getElementById('theme-custom-styles');
+  if (customStyles) customStyles.value = state.customStyles || '';
+}
+
+function setThemeDirty(isDirty) {
+  const badge = document.getElementById('theme-unsaved-badge');
+  if (badge) badge.style.display = isDirty ? 'inline-flex' : 'none';
+
+  if (isDirty) {
+    const status = document.getElementById('theme-save-status');
+    if (status) status.style.display = 'none';
+  }
+}
+
+function loadThemeEditor() {
+  if (!themeEditorUIState.initialized) {
+    loadThemeEditorState();
+    themeEditorUIState.initialized = true;
+  }
+
+  themeEditorSaved = loadThemeOverridesFromStorage();
+  themeEditorDraft = cloneThemeOverrides(themeEditorSaved);
+  populateThemeEditorFonts(themeEditorDraft);
+  populateThemeEditorCustom(themeEditorDraft);
+  syncThemeEditorTabs();
+  updateThemeEditorActiveTheme();
+
+  const countEl = document.getElementById('theme-editor-count');
+  if (countEl) countEl.textContent = 'Indlæser variabler...';
+
+  if (themeTokensLoaded) {
+    renderThemeTokenList();
+  } else {
+    loadThemeTokenSources().then(() => renderThemeTokenList());
+  }
+
+  setThemeDirty(false);
+}
+
+function copyThemeOverrides() {
+  if (!themeEditorDraft || !themeTokensLoaded) return;
+  const sourceKey = themeEditorUIState.source;
+  const mode = themeEditorUIState.mode;
+  const tokens = themeTokenData[sourceKey]?.[mode] || [];
+  const tokenSet = new Set(tokens.map((token) => token.name));
+  const bucketKey = mode === 'light' ? 'light' : 'dark';
+  const overrides = Object.entries(themeEditorDraft[bucketKey] || {})
+    .filter(([name]) => tokenSet.has(name));
+
+  if (!overrides.length) {
+    toast('Ingen overrides at kopiere', 'info');
+    return;
+  }
+
+  const selector = mode === 'light' ? '[data-theme="light"]' : ':root';
+  const css = `/* ${THEME_TOKEN_SOURCES[sourceKey]?.label || sourceKey} */
+${selector}{
+${overrides.map(([key, value]) => `  ${key}: ${value};`).join('\n')}
+}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(css).then(() => {
+      toast('CSS kopieret til udklipsholder', 'success');
+    }).catch(() => {
+      toast('Kunne ikke kopiere CSS', 'error');
+    });
+  } else {
+    const temp = document.createElement('textarea');
+    temp.value = css;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    toast('CSS kopieret til udklipsholder', 'success');
+  }
+}
+
+function saveThemeOverrides() {
+  if (!themeEditorDraft) return;
+  localStorage.setItem(THEME_OVERRIDE_KEY, JSON.stringify(themeEditorDraft));
+  themeEditorSaved = cloneThemeOverrides(themeEditorDraft);
+  applyThemeOverrides(themeEditorDraft);
+  setThemeDirty(false);
+  updateThemeEditorActiveTheme();
+
+  const status = document.getElementById('theme-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    clearTimeout(themeSaveTimeout);
+    themeSaveTimeout = setTimeout(() => {
+      status.style.display = 'none';
+    }, 2000);
+  }
+}
+
+function resetThemeOverrides() {
+  if (!confirm('Nulstil alle tema-ændringer?')) return;
+  localStorage.removeItem(THEME_OVERRIDE_KEY);
+  themeEditorSaved = getEmptyThemeOverrides();
+  themeEditorDraft = cloneThemeOverrides(themeEditorSaved);
+  applyThemeOverrides(themeEditorSaved);
+  populateThemeEditorFonts(themeEditorDraft);
+  populateThemeEditorCustom(themeEditorDraft);
+  renderThemeTokenList();
+  setThemeDirty(false);
+  updateThemeEditorActiveTheme();
+
+  const status = document.getElementById('theme-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    status.textContent = '✓ Nulstil';
+    clearTimeout(themeSaveTimeout);
+    themeSaveTimeout = setTimeout(() => {
+      status.style.display = 'none';
+      status.textContent = '✓ Ændringer gemt';
+    }, 2000);
+  }
+}
+
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
+initThemeOverrides();
 
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
@@ -6732,14 +7451,20 @@ function getFilteredAlleKunder() {
   // Apply search filter
   if (alleKunderSearchQuery) {
     const query = alleKunderSearchQuery.toLowerCase();
-    filtered = filtered.filter(r =>
-      (r.name && r.name.toLowerCase().includes(query)) ||
-      (r.contact_name && r.contact_name.toLowerCase().includes(query)) ||
-      (r.metadata?.owner && r.metadata.owner.toLowerCase().includes(query)) ||
-      (r.contact_phone && r.contact_phone.includes(query)) ||
-      (r.cvr && r.cvr.includes(query)) ||
-      (r.user_id && r.user_id.toLowerCase().includes(query))
-    );
+    filtered = filtered.filter(r => {
+      const phone = (r.phone || r.contact_phone || '').toLowerCase();
+      const address = (r.address || '').toLowerCase();
+      const city = (r.city || '').toLowerCase();
+
+      return (r.name && r.name.toLowerCase().includes(query)) ||
+        (r.contact_name && r.contact_name.toLowerCase().includes(query)) ||
+        (r.metadata?.owner && r.metadata.owner.toLowerCase().includes(query)) ||
+        phone.includes(query) ||
+        address.includes(query) ||
+        city.includes(query) ||
+        (r.cvr && r.cvr.includes(query)) ||
+        (r.user_id && r.user_id.toLowerCase().includes(query));
+    });
   }
 
   // Sort by created_at descending (newest first)
@@ -29342,7 +30067,10 @@ function switchCMSEditorTab(tab) {
       const activeEl = document.getElementById('cms-page-active');
       const cookieEl = document.getElementById('cms-page-cookie-banner');
 
-      if (slugEl) slugEl.value = page.slug.replace('.html', '');
+      if (slugEl) {
+        const safeSlug = typeof page.slug === 'string' ? page.slug : '';
+        slugEl.value = safeSlug ? safeSlug.replace('.html', '') : '';
+      }
       if (templateEl) templateEl.value = page.template || 'landing';
       if (activeEl) activeEl.checked = page.isActive !== false;
       if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
@@ -30730,7 +31458,9 @@ function schedulePageChanges() {
     now.setMinutes(now.getMinutes() + 1);
     const minDatetime = now.toISOString().slice(0, 16);
 
-    const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
+    const schedules = Array.isArray(page.scheduledChanges) ? page.scheduledChanges : [];
+    if (!Array.isArray(page.scheduledChanges)) page.scheduledChanges = schedules;
+    const pendingSchedules = schedules.filter(s => s.status === 'pending');
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay active';
@@ -30835,7 +31565,7 @@ function confirmSchedule() {
     createdAt: new Date().toISOString()
   };
 
-  if (!page.scheduledChanges) page.scheduledChanges = [];
+  if (!Array.isArray(page.scheduledChanges)) page.scheduledChanges = [];
   page.scheduledChanges.push(scheduledChange);
 
   page.updatedAt = new Date().toISOString();
@@ -30850,7 +31580,7 @@ function confirmSchedule() {
 // Edit scheduled change time
 function editScheduledChange(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !page.scheduledChanges) return;
+  if (!page || !Array.isArray(page.scheduledChanges)) return;
 
   const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
   if (!schedule) return;
@@ -30880,7 +31610,7 @@ function editScheduledChange(scheduleId) {
 // Preview scheduled changes
 function previewScheduledChanges(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !page.scheduledChanges) return;
+  if (!page || !Array.isArray(page.scheduledChanges)) return;
 
   const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
   if (!schedule) return;
@@ -30898,7 +31628,7 @@ function previewScheduledChanges(scheduleId) {
 // Cancel scheduled change
 function cancelScheduledChange(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !page.scheduledChanges) return;
+  if (!page || !Array.isArray(page.scheduledChanges)) return;
 
   const idx = page.scheduledChanges.findIndex(s => s.id === scheduleId);
   if (idx !== -1) {
@@ -30915,7 +31645,8 @@ function cancelScheduledChange(scheduleId) {
 // Update schedule badge on the Planlæg button
 function updateScheduleBadge() {
   const page = getCurrentCMSPage();
-  const pendingCount = page?.scheduledChanges?.filter(s => s.status === 'pending').length || 0;
+  const schedules = Array.isArray(page?.scheduledChanges) ? page.scheduledChanges : [];
+  const pendingCount = schedules.filter(s => s.status === 'pending').length;
 
   const scheduleBtn = document.getElementById('cms-schedule-btn');
   if (scheduleBtn) {
@@ -31044,6 +31775,7 @@ async function switchFlowCMSTab(tab) {
     'blog': 'Blog',
     'blog-editor': 'Rediger Blogindlæg',
     'seo': 'SEO Indstillinger',
+    'theme': 'Farver og Fonts',
     'products-sms': 'SMS Workflow',
     'products-instagram': 'Instagram Workflow',
     'products-facebook': 'Facebook Workflow',
@@ -31064,6 +31796,7 @@ async function switchFlowCMSTab(tab) {
   // Load content based on tab
   if (tab === 'pages') await loadCMSPages(); // Use new CMS Pages Editor
   if (tab === 'blog') loadBlogPosts();
+  if (tab === 'theme') loadThemeEditor();
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
