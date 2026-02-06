@@ -601,6 +601,109 @@ const SupabaseDB = {
   },
 
   // ============================================================================
+  // SUBSCRIPTION PLANS
+  // ============================================================================
+
+  /**
+   * Get all subscription plans
+   */
+  async getSubscriptionPlans(activeOnly = true) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) return [];
+
+      let query = supabase
+        .from('subscription_plans')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (activeOnly) {
+        query = query.eq('is_active', true);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      console.log('✅ Subscription plans fetched:', (data || []).length);
+      return data || [];
+    } catch (err) {
+      console.error('❌ Error fetching subscription plans:', err);
+      return [];
+    }
+  },
+
+  /**
+   * Create new subscription plan
+   */
+  async createSubscriptionPlan(planData) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .insert([planData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Subscription plan created:', data.id);
+      return data;
+    } catch (err) {
+      console.error('❌ Error creating subscription plan:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Update subscription plan
+   */
+  async updateSubscriptionPlan(planId, updates) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+
+      updates.updated_at = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .update(updates)
+        .eq('id', planId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      console.log('✅ Subscription plan updated:', planId);
+      return data;
+    } catch (err) {
+      console.error('❌ Error updating subscription plan:', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Delete subscription plan
+   */
+  async deleteSubscriptionPlan(planId) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+
+      const { error } = await supabase
+        .from('subscription_plans')
+        .delete()
+        .eq('id', planId);
+
+      if (error) throw error;
+
+      console.log('✅ Subscription plan deleted:', planId);
+      return true;
+    } catch (err) {
+      console.error('❌ Error deleting subscription plan:', err);
+      throw err;
+    }
+  },
+
+  // ============================================================================
   // REAL-TIME SUBSCRIPTIONS
   // ============================================================================
 

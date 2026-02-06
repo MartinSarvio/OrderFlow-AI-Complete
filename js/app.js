@@ -9436,12 +9436,48 @@ let invoiceHistoryData = [];
 let invoiceCurrentPage = 1;
 const invoicesPerPage = 10;
 
-// Default subscription plans
+// Default subscription plans (localStorage fallback, overwritten by Supabase on load)
 let subscriptionPlans = JSON.parse(localStorage.getItem('orderflow_subscription_plans') || 'null') || [
   { id: 'starter', name: 'Starter', price: 299, description: 'Perfekt til små restauranter', features: ['100 SMS/måned', '2 brugere', 'Basis workflow', 'Email support'], popular: false },
   { id: 'professional', name: 'Professional', price: 799, description: 'Den perfekte løsning for voksende restauranter', features: ['500 SMS/måned', '5 brugere', 'AI Workflow', 'Rapporter', 'Email support', 'API adgang'], popular: true },
   { id: 'enterprise', name: 'Enterprise', price: 1499, description: 'For store restaurantkæder', features: ['Ubegrænset SMS', 'Ubegrænset brugere', 'AI Workflow Pro', 'Avancerede rapporter', '24/7 Support', 'Dedikeret manager'], popular: false }
 ];
+
+// Transform Supabase DB row → local plan format
+function dbPlanToLocal(dbPlan) {
+  return {
+    id: dbPlan.plan_id || dbPlan.id,
+    _dbId: dbPlan.id,
+    name: dbPlan.name,
+    price: dbPlan.monthly_price,
+    monthly_price: dbPlan.monthly_price,
+    annual_price: dbPlan.annual_price,
+    description: dbPlan.description || '',
+    features: Array.isArray(dbPlan.features) ? dbPlan.features : [],
+    popular: dbPlan.is_popular || false,
+    button_text: dbPlan.button_text || 'Kom i gang',
+    button_variant: dbPlan.button_variant || 'default',
+    is_active: dbPlan.is_active !== false,
+    sort_order: dbPlan.sort_order || 0
+  };
+}
+
+// Transform local plan → Supabase DB row
+function localPlanToDB(plan) {
+  return {
+    plan_id: plan.id,
+    name: plan.name,
+    description: plan.description || '',
+    monthly_price: plan.monthly_price ?? plan.price ?? 0,
+    annual_price: plan.annual_price ?? Math.round((plan.monthly_price || plan.price || 0) * 0.8),
+    features: plan.features || [],
+    button_text: plan.button_text || 'Kom i gang',
+    button_variant: plan.button_variant || 'default',
+    is_popular: plan.popular || false,
+    is_active: plan.is_active !== false,
+    sort_order: plan.sort_order || 0
+  };
+}
 
 function loadFakturaPage() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
@@ -9888,10 +9924,24 @@ function exportInvoiceHistory() { toast('Eksport funktion kommer snart', 'info')
 // ABONNEMENT PAGE - Subscription Management
 // =====================================================
 
-function loadAbonnementPage() {
+async function loadAbonnementPage() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (!restaurant) return;
   if (!restaurant.subscription) restaurant.subscription = { planId: 'professional', nextBilling: getNextMonthFirst() };
+
+  // Refresh plans from Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getSubscriptionPlans) {
+      const dbPlans = await SupabaseDB.getSubscriptionPlans(true);
+      if (dbPlans && dbPlans.length > 0) {
+        subscriptionPlans = dbPlans.map(dbPlanToLocal);
+        saveSubscriptionPlans();
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Bruger cached planer:', err.message);
+  }
+
   const currentPlan = subscriptionPlans.find(p => p.id === restaurant.subscription.planId) || subscriptionPlans[1];
   document.getElementById('current-plan-name').textContent = currentPlan.name;
   document.getElementById('current-plan-desc').textContent = currentPlan.description;
@@ -9933,11 +9983,25 @@ function purchaseAddon(type) {
 // SUBSCRIPTION PLAN CONFIGURATION (Settings Admin)
 // =====================================================
 
-function renderSubscriptionPlansConfig() {
+async function renderSubscriptionPlansConfig() {
   const container = document.getElementById('subscription-plans-config');
   if (!container) return;
-  
-  container.innerHTML = subscriptionPlans.map((plan, index) => `
+
+  // Fetch from Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getSubscriptionPlans) {
+      const dbPlans = await SupabaseDB.getSubscriptionPlans(false);
+      if (dbPlans && dbPlans.length > 0) {
+        subscriptionPlans = dbPlans.map(dbPlanToLocal);
+        saveSubscriptionPlans();
+        console.log('✅ Planer hentet fra Supabase:', subscriptionPlans.length);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Kunne ikke hente planer fra Supabase, bruger lokale:', err.message);
+  }
+
+  container.innerHTML = subscriptionPlans.map((plan) => `
     <div class="card" style="padding:20px;position:relative;${plan.popular ? 'border:2px solid var(--accent)' : ''}" data-plan-id="${plan.id}">
       ${plan.popular ? '<span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0a0b0d;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px">POPULÆR</span>' : ''}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
@@ -9954,7 +10018,10 @@ function renderSubscriptionPlansConfig() {
           </button>
         </div>
       </div>
-      <div style="font-size:24px;font-weight:700;margin-bottom:12px">${plan.price} <span style="font-size:12px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+      <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:12px">
+        <div><span style="font-size:24px;font-weight:700">${plan.monthly_price || plan.price || 0}</span> <span style="font-size:12px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+        ${plan.annual_price ? `<div><span style="font-size:16px;font-weight:600;color:var(--muted)">${plan.annual_price}</span> <span style="font-size:11px;color:var(--muted)">DKK/md (årlig)</span></div>` : ''}
+      </div>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
         ${plan.features.slice(0, 4).map(f => `
           <div style="display:flex;align-items:center;gap:6px">
@@ -9974,16 +10041,39 @@ function renderSubscriptionPlansConfig() {
   `).join('');
 }
 
-function addSubscriptionPlan() {
+async function addSubscriptionPlan() {
+  const planId = 'plan_' + Date.now();
+  const sortOrder = subscriptionPlans.length + 1;
+
   const newPlan = {
-    id: 'plan_' + Date.now(),
+    id: planId,
     name: 'Ny Plan',
     price: 499,
+    monthly_price: 499,
+    annual_price: 399,
     description: 'Beskrivelse af planen',
     features: ['Feature 1', 'Feature 2', 'Feature 3'],
-    popular: false
+    popular: false,
+    button_text: 'Kom i gang',
+    button_variant: 'default',
+    is_active: true,
+    sort_order: sortOrder
   };
-  
+
+  // Insert into Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.createSubscriptionPlan) {
+      const dbData = localPlanToDB(newPlan);
+      const created = await SupabaseDB.createSubscriptionPlan(dbData);
+      newPlan._dbId = created.id;
+      console.log('✅ Ny plan oprettet i Supabase:', created.id);
+    }
+  } catch (err) {
+    console.error('❌ Fejl ved oprettelse i Supabase:', err);
+    toast('Fejl ved oprettelse', 'error');
+    return;
+  }
+
   subscriptionPlans.push(newPlan);
   saveSubscriptionPlans();
   renderSubscriptionPlansConfig();
@@ -9993,7 +10083,7 @@ function addSubscriptionPlan() {
 function editSubscriptionPlan(planId) {
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (!plan) return;
-  
+
   const html = `
     <div style="display:flex;flex-direction:column;gap:16px">
       <div class="form-group">
@@ -10004,9 +10094,19 @@ function editSubscriptionPlan(planId) {
         <label class="form-label">Beskrivelse</label>
         <input type="text" class="input" id="edit-plan-desc" value="${plan.description}">
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Månedlig pris (DKK)</label>
+          <input type="number" class="input" id="edit-plan-monthly-price" value="${plan.monthly_price ?? plan.price ?? 0}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Årlig pris (DKK/md)</label>
+          <input type="number" class="input" id="edit-plan-annual-price" value="${plan.annual_price ?? 0}">
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label">Pris (DKK/md)</label>
-        <input type="number" class="input" id="edit-plan-price" value="${plan.price}">
+        <label class="form-label">Knaptekst</label>
+        <input type="text" class="input" id="edit-plan-button-text" value="${plan.button_text || 'Kom i gang'}">
       </div>
       <div class="form-group">
         <label class="form-label">Features (én per linje)</label>
@@ -10018,32 +10118,63 @@ function editSubscriptionPlan(planId) {
       </div>
     </div>
   `;
-  
+
   showCustomModal('Rediger plan: ' + plan.name, html);
 }
 
-function saveEditedPlan(planId) {
+async function saveEditedPlan(planId) {
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (!plan) return;
-  
+
   plan.name = document.getElementById('edit-plan-name').value;
   plan.description = document.getElementById('edit-plan-desc').value;
-  plan.price = parseInt(document.getElementById('edit-plan-price').value) || 0;
+  plan.monthly_price = parseInt(document.getElementById('edit-plan-monthly-price').value) || 0;
+  plan.annual_price = parseInt(document.getElementById('edit-plan-annual-price').value) || 0;
+  plan.price = plan.monthly_price;
+  plan.button_text = document.getElementById('edit-plan-button-text')?.value || 'Kom i gang';
   plan.features = document.getElementById('edit-plan-features').value.split('\n').filter(f => f.trim());
-  
+
+  // Save to Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && plan._dbId) {
+      const dbData = localPlanToDB(plan);
+      delete dbData.plan_id;
+      await SupabaseDB.updateSubscriptionPlan(plan._dbId, dbData);
+      console.log('✅ Plan opdateret i Supabase:', plan.name);
+    }
+  } catch (err) {
+    console.error('❌ Fejl ved Supabase opdatering:', err);
+    toast('Fejl ved gem', 'error');
+    return;
+  }
+
   saveSubscriptionPlans();
   renderSubscriptionPlansConfig();
   closeCustomModal();
   toast('Plan opdateret', 'success');
 }
 
-function deleteSubscriptionPlan(planId) {
+async function deleteSubscriptionPlan(planId) {
   if (subscriptionPlans.length <= 1) {
     toast('Der skal være mindst én plan', 'error');
     return;
   }
-  
+
   if (confirm('Er du sikker på du vil slette denne plan?')) {
+    const plan = subscriptionPlans.find(p => p.id === planId);
+
+    // Delete from Supabase
+    try {
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.deleteSubscriptionPlan && plan?._dbId) {
+        await SupabaseDB.deleteSubscriptionPlan(plan._dbId);
+        console.log('✅ Plan slettet fra Supabase:', plan._dbId);
+      }
+    } catch (err) {
+      console.error('❌ Fejl ved sletning fra Supabase:', err);
+      toast('Fejl ved sletning', 'error');
+      return;
+    }
+
     subscriptionPlans = subscriptionPlans.filter(p => p.id !== planId);
     saveSubscriptionPlans();
     renderSubscriptionPlansConfig();
@@ -10051,13 +10182,33 @@ function deleteSubscriptionPlan(planId) {
   }
 }
 
-function togglePlanPopular(planId, isPopular) {
+async function togglePlanPopular(planId, isPopular) {
+  // Nulstil alle andre planer
   if (isPopular) {
-    subscriptionPlans.forEach(p => p.popular = false);
+    for (const p of subscriptionPlans) {
+      if (p.popular && p.id !== planId) {
+        p.popular = false;
+        try {
+          if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && p._dbId) {
+            await SupabaseDB.updateSubscriptionPlan(p._dbId, { is_popular: false });
+          }
+        } catch (err) {
+          console.warn('⚠️ Fejl ved nulstilling af populær:', err);
+        }
+      }
+    }
   }
+
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (plan) {
     plan.popular = isPopular;
+    try {
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && plan._dbId) {
+        await SupabaseDB.updateSubscriptionPlan(plan._dbId, { is_popular: isPopular });
+      }
+    } catch (err) {
+      console.error('❌ Fejl ved populær toggle:', err);
+    }
     saveSubscriptionPlans();
     renderSubscriptionPlansConfig();
   }
