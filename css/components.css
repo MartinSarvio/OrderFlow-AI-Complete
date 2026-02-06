@@ -48,19 +48,21 @@
 
 /* Button Variants */
 .btn-primary {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-active));
-  color: var(--color-bg);
+  background: var(--color-primary);
+  color: #ffffff;
   font-weight: var(--font-weight-semibold);  /* 600 */
 }
 
 .btn-primary:hover {
-  filter: brightness(1.1);
+  background: var(--color-primary-hover);
+  filter: none;
   box-shadow: none;
 }
 
 .btn-primary:active {
-  filter: brightness(0.95);
-  transform: translateY(1px);
+  background: var(--color-primary-active);
+  filter: none;
+  transform: none;
 }
 
 .btn-secondary {
@@ -187,13 +189,10 @@
 .card {
   background: var(--color-card);
   border: none;
-  border-radius: var(--radius-lg);  /* 16px */
-  padding: var(--card-padding-md);  /* 24px */
-  transition: var(--transition-fast);
-}
-
-.card:hover {
-  background: var(--color-card-hover);
+  border-radius: 6px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease;
 }
 
 /* Card Sizes */
@@ -240,11 +239,12 @@
 
 /* Card Sections */
 .card-header {
-  padding: var(--space-5);  /* 24px */
-  border-bottom: 1px solid var(--color-border);
-  margin: calc(var(--space-5) * -1);  /* Negative margin to extend to edges */
-  margin-bottom: var(--space-5);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0;
+  border-bottom: none;
 }
 
 .card-body {
@@ -252,10 +252,9 @@
 }
 
 .card-footer {
-  padding: var(--space-5);  /* 24px */
+  padding-top: 16px;
   border-top: 1px solid var(--color-border);
-  margin: var(--space-5) calc(var(--space-5) * -1) calc(var(--space-5) * -1);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin: 16px 0 0 0;
 }
 
 /* ==================== FORMS ==================== */
@@ -538,11 +537,11 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: var(--space-1) var(--space-2);  /* 4px 8px */
-  font-size: var(--font-size-xs);  /* 11px */
-  font-weight: var(--font-weight-medium);  /* 500 */
-  line-height: 1;
-  border-radius: var(--radius-sm);  /* 8px */
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 9999px;
   white-space: nowrap;
 }
 

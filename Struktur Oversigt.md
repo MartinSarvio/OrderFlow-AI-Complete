@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-06
-**Version:** 3.18.1
-**Total antal sider:** 74+
+**Version:** 3.28.0
+**Total antal sider:** 87+
 
 ---
 
@@ -35,6 +35,7 @@
 | `page-instagram-workflow` | Instagram AI Agent (OrderingAgent for DM) |
 | `page-facebook-workflow` | Facebook AI Agent (OrderingAgent for Messenger) |
 | `page-sms-workflows` | SMS Workflows (Restaurant/Håndværker varianter) |
+| `page-search-engine` | Search Engine (SEO-værktøjer og søgemaskine-optimering) |
 | `page-workflow-kontrol` | Workflow kontrol |
 
 ### Leads & CRM
@@ -92,18 +93,39 @@
 | Side ID | Beskrivelse |
 |---------|-------------|
 | `page-flow-cms` | FLOW CMS |
-| `flow-cms-content-theme` | Farver og Fonts (tema editor) |
+| `flow-cms-content-farver-og-fonts` | Farver & Fonts (CMS tema-indstillinger) |
 | `page-landing-cms` | Landing Page CMS |
-| `flow-cms-content-theme` | Flow CMS – Farver og Fonts editor |
+
+### Admin Profil (admin/employee)
+| Side ID | Beskrivelse |
+|---------|-------------|
+| `page-admin-profil` | Admin profiloversigt |
+| `page-admin-oplysninger` | Admin personlige oplysninger |
+| `page-admin-team` | Team oversigt |
+| `page-admin-virksomhed` | Virksomhedsinfo |
+| `page-admin-sikkerhed` | Sikkerhed (adgangskode, 2FA, sessioner) |
+| `page-admin-aktivitet` | Admin aktivitetslog |
+| `page-admin-abonnement` | Abonnement og fakturering |
+
+### Kunde Profil (customer/demo)
+| Side ID | Beskrivelse |
+|---------|-------------|
+| `page-kunde-profil` | Kunde profiloversigt |
+| `page-kunde-oplysninger` | Kunde personlige oplysninger |
+| `page-kunde-ordrer` | Kunde ordrehistorik |
+| `page-kunde-betaling` | Kunde betalingsmetoder |
+| `page-kunde-adresser` | Kunde leveringsadresser |
+| `page-kunde-loyalitet` | Loyalitetsprogram (point, belønninger, tier) |
+| `page-kunde-praeferencer` | Præferencer (notifikationer, sprog, kostpræferencer) |
 
 ### Indstillinger
 | Side ID | Beskrivelse |
 |---------|-------------|
 | `page-settings` | Indstillinger |
-| `page-mine-oplysninger` | Mine oplysninger |
-| `page-ordrehistorik` | Ordrehistorik |
-| `page-betalingsmetoder` | Betalingsmetoder |
-| `page-leveringsadresser` | Leveringsadresser |
+| `page-mine-oplysninger` | Mine oplysninger (legacy) |
+| `page-ordrehistorik` | Ordrehistorik (legacy) |
+| `page-betalingsmetoder` | Betalingsmetoder (legacy) |
+| `page-leveringsadresser` | Leveringsadresser (legacy) |
 | `page-bogholderi` | Bogholderi |
 | `page-betaling` | Betaling |
 
@@ -126,6 +148,93 @@
 
 ---
 
+## Landing Pages (34 sider)
+
+Udvikling i `landing-pages/` → Produktion i `public/landing/`
+
+### Produkt
+| Fil | Titel |
+|-----|-------|
+| `landing.html` | Flow - Restaurant Automation Platform |
+| `how-it-works.html` | Sådan virker det |
+| `priser.html` | Priser |
+| `online-bestilling.html` | Online Bestilling uden Kommission |
+| `custom-mobile-app.html` | Custom Mobile App |
+| `zero-commission-delivery.html` | Kommissionsfri Levering |
+| `loyalitetsprogram.html` | Loyalitetsprogram til Restaurant |
+
+### Guides
+| Fil | Titel |
+|-----|-------|
+| `online-bestillingssystemer.html` | Online Bestillingssystemer Guide |
+| `restaurant-hjemmeside.html` | Restaurant Hjemmeside |
+| `restaurant-mobile-app.html` | Restaurant Mobile App Guide |
+| `restaurant-marketing-guide.html` | Restaurant Marketing Guide 2024 |
+| `restaurant-email-marketing.html` | Restaurant Email Marketing Guide |
+| `seo-for-restauranter.html` | SEO for Restauranter |
+
+### Workflow
+| Fil | Titel |
+|-----|-------|
+| `automatiseret-marketing.html` | Automatiseret Marketing til Restaurant |
+| `facebook-workflow.html` | Facebook Workflow |
+| `instagram-workflow.html` | Instagram Workflow |
+| `sms-workflow.html` | SMS Workflow til Restaurant |
+
+### Virksomhed
+| Fil | Titel |
+|-----|-------|
+| `case-studies.html` | Case Studies |
+| `om-os.html` | Om os |
+| `karriere.html` | Karriere |
+| `ledelse.html` | Ledelse |
+| `presse.html` | Presse |
+| `partner.html` | Partner med Flow |
+
+### Blog
+| Fil | Titel |
+|-----|-------|
+| `blog.html` | Blog |
+| `blog-post.html` | Blog Post |
+
+### Juridisk
+| Fil | Titel |
+|-----|-------|
+| `privacy.html` | Privatlivspolitik |
+| `terms.html` | Vilkår og betingelser |
+| `legal.html` | Juridisk |
+| `disclaimer.html` | Ansvarsfraskrivelse |
+| `cookie-settings.html` | Cookie-indstillinger |
+| `platform-terms.html` | Platform Vilkår |
+| `restaurant-agreement.html` | Restaurant Aftale |
+| `accessibility.html` | Tilgængelighed |
+
+### Support
+| Fil | Titel |
+|-----|-------|
+| `help-center.html` | Flow Hjælp Center |
+
+---
+
+## Web Builder Skabeloner
+
+| Mappe | Navn | Type | Preview |
+|-------|------|------|---------|
+| `templates/skabelon-1/` | Pizzeria Roma | React/Vite | `dist/index.html` |
+| `templates/skabelon-2/` | Feane Restaurant | jQuery/Bootstrap | `index.html` |
+| `templates/skabelon-3/` | Pizza Delicious | jQuery/Bootstrap | `index.html` |
+
+Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
+
+## App Builder Skabeloner
+
+| ID | Navn | Preview | Status |
+|----|------|---------|--------|
+| `app-skabelon-1` | App Skabelon 1 | `demos/app-preview.html` | Aktiv |
+| `app-skabelon-2` | App Skabelon 2 | `demos/app-preview-v2.html` | Planlagt |
+
+---
+
 ## Database Tabeller
 
 ### Nye tabeller (v3.12.0)
@@ -143,10 +252,6 @@
 ---
 
 ## Changelog
-
-### v3.18.0 (2026-02-06)
-- Tilføjet Flow CMS “Farver og Fonts” side til tema- og typography overrides
-- Opdateret flyout navigation med nyt tema-link
 
 ### v3.14.0 (2026-02-06)
 - Tilføjet API Integration sektion til Instagram/Facebook workflow sider

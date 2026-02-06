@@ -36,14 +36,14 @@
 
   <div class="hero_area">
     <div class="bg-box">
-      <img src="images/hero-bg.jpg" alt="">
+      <img id="hero-bg-image" src="images/hero-bg.jpg" alt="">
     </div>
     <!-- header section strats -->
     <header class="header_section">
       <div class="container">
         <nav class="navbar navbar-expand-lg custom_nav-container ">
           <a class="navbar-brand" href="index.html">
-            <span>
+            <span id="restaurant-name">
               Feane
             </span>
           </a>
@@ -148,10 +148,10 @@
               <div class="row">
                 <div class="col-md-7 col-lg-6 ">
                   <div class="detail-box">
-                    <h1>
+                    <h1 id="hero-title">
                       Fast Food Restaurant
                     </h1>
-                    <p>
+                    <p id="hero-description">
                       Doloremque, itaque aperiam facilis rerum, commodi, temporibus sapiente ad mollitia laborum quam quisquam esse error unde. Tempora ex doloremque, labore, sunt repellat dolore, iste magni quos nihil ducimus libero ipsam.
                     </p>
                     <div class="btn-box">
@@ -1249,19 +1249,19 @@
             <div class="contact_link_box">
               <a href="">
                 <i class="fa fa-map-marker" aria-hidden="true"></i>
-                <span>
+                <span id="footer-address">
                   Location
                 </span>
               </a>
               <a href="">
                 <i class="fa fa-phone" aria-hidden="true"></i>
-                <span>
+                <span id="footer-phone">
                   Call +01 1234567890
                 </span>
               </a>
               <a href="">
                 <i class="fa fa-envelope" aria-hidden="true"></i>
-                <span>
+                <span id="footer-email">
                   demo@gmail.com
                 </span>
               </a>
@@ -1270,23 +1270,23 @@
         </div>
         <div class="col-md-4 footer-col">
           <div class="footer_detail">
-            <a href="" class="footer-logo">
+            <a href="" class="footer-logo" id="footer-name">
               Feane
             </a>
-            <p>
+            <p id="footer-about">
               Necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with
             </p>
             <div class="footer_social">
-              <a href="">
+              <a href="" id="social-facebook">
                 <i class="fa fa-facebook" aria-hidden="true"></i>
               </a>
-              <a href="">
+              <a href="" id="social-twitter">
                 <i class="fa fa-twitter" aria-hidden="true"></i>
               </a>
               <a href="">
                 <i class="fa fa-linkedin" aria-hidden="true"></i>
               </a>
-              <a href="">
+              <a href="" id="social-instagram">
                 <i class="fa fa-instagram" aria-hidden="true"></i>
               </a>
               <a href="">
@@ -1299,21 +1299,15 @@
           <h4>
             Opening Hours
           </h4>
-          <p>
-            Everyday
-          </p>
-          <p>
-            10.00 Am -10.00 Pm
-          </p>
+          <div id="footer-hours">
+            <p>Everyday</p>
+            <p>10.00 Am -10.00 Pm</p>
+          </div>
         </div>
       </div>
-      <div class="footer-info">
-        <p>
-          &copy; <span id="displayYear"></span> All Rights Reserved By
-          <a href="https://html.design/">Free Html Templates</a><br><br>
-          &copy; <span id="displayYear"></span> Distributed By
-          <a href="https://themewagon.com/" target="_blank">ThemeWagon</a>
-        </p>
+      <div class="footer-info" id="flow-copyright-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:15px 0">
+        <p style="margin:0">Copyright &copy;2026 All rights reserved <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>
+        <p style="margin:0">This template is made with <span style="color:#e25555">&#10084;</span> by <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>
       </div>
     </div>
   </footer>
@@ -1339,6 +1333,117 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
   </script>
   <!-- End Google Map -->
+
+  <script>
+    // PostMessage listener for config updates from parent window
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'UPDATE_RESTAURANT_CONFIG') {
+        updatePreview(event.data.config);
+      }
+      if (event.data && event.data.type === 'SCROLL_TO_SECTION') {
+        var section = document.querySelector('.' + event.data.sectionId) || document.getElementById(event.data.sectionId);
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // Notify parent that preview is ready
+    window.addEventListener('load', function() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'PREVIEW_READY', template: 'skabelon-2' }, '*');
+      }
+    });
+
+    function updatePreview(config) {
+      if (!config) return;
+
+      if (config.branding) {
+        var b = config.branding;
+        if (b.name) {
+          updateText('#restaurant-name', b.name);
+          updateText('#footer-name', b.name);
+          document.title = b.name + ' - Preview';
+        }
+        if (b.slogan) {
+          updateText('#hero-title', b.slogan);
+        }
+        if (b.description) {
+          updateText('#hero-description', b.description);
+          updateText('#footer-about', b.description);
+        }
+        if (b.colors) {
+          var root = document.documentElement;
+          if (b.colors.primary) root.style.setProperty('--brand-primary', b.colors.primary);
+          if (b.colors.secondary) root.style.setProperty('--brand-secondary', b.colors.secondary);
+          if (b.colors.accent) root.style.setProperty('--brand-accent', b.colors.accent);
+        }
+        if (b.logo && b.logo.url) {
+          var heroImg = document.getElementById('hero-bg-image');
+          // Only update hero if explicitly set via images
+        }
+      }
+
+      if (config.contact) {
+        var c = config.contact;
+        if (c.phone) updateText('#footer-phone', c.phone);
+        if (c.email) updateText('#footer-email', c.email);
+        if (c.address) {
+          var addr = c.address;
+          if (c.postalCode) addr += ', ' + c.postalCode;
+          if (c.city) addr += ' ' + c.city;
+          updateText('#footer-address', addr);
+        }
+        if (c.socialMedia) {
+          if (c.socialMedia.facebook) { var fb = document.getElementById('social-facebook'); if (fb) fb.href = c.socialMedia.facebook; }
+          if (c.socialMedia.instagram) { var ig = document.getElementById('social-instagram'); if (ig) ig.href = c.socialMedia.instagram; }
+          if (c.socialMedia.twitter) { var tw = document.getElementById('social-twitter'); if (tw) tw.href = c.socialMedia.twitter; }
+        }
+      }
+
+      if (config.businessHours) {
+        updateBusinessHours(config.businessHours);
+      }
+
+      if (config.images && config.images.hero) {
+        var heroImg = document.getElementById('hero-bg-image');
+        if (heroImg) heroImg.src = config.images.hero;
+      }
+    }
+
+    function updateText(selector, text) {
+      var el = document.querySelector(selector);
+      if (el) el.textContent = text;
+    }
+
+    function updateBusinessHours(hours) {
+      var footerHours = document.getElementById('footer-hours');
+      if (footerHours && hours) {
+        var html = '';
+        var mon = hours.monday;
+        if (mon && !mon.closed) html += '<p>Mandag - Torsdag: ' + mon.open + ' - ' + mon.close + '</p>';
+        var fri = hours.friday;
+        if (fri && !fri.closed) html += '<p>Fredag - Lørdag: ' + fri.open + ' - ' + fri.close + '</p>';
+        var sun = hours.sunday;
+        if (sun && !sun.closed) html += '<p>Søndag: ' + sun.open + ' - ' + sun.close + '</p>';
+        footerHours.innerHTML = html;
+      }
+    }
+
+    // Protect FLOW copyright footer from removal
+    var footerObserver = new MutationObserver(function() {
+      if (!document.getElementById('flow-copyright-footer')) {
+        var container = document.querySelector('.footer_section .container') || document.querySelector('footer');
+        if (container) {
+          var div = document.createElement('div');
+          div.id = 'flow-copyright-footer';
+          div.className = 'footer-info';
+          div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:15px 0';
+          div.innerHTML = '<p style="margin:0">Copyright &copy;2026 All rights reserved <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p><p style="margin:0">This template is made with <span style="color:#e25555">&#10084;</span> by <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>';
+          container.appendChild(div);
+        }
+      }
+    });
+    footerObserver.observe(document.body, { childList: true, subtree: true });
+  </script>
 
 </body>
 

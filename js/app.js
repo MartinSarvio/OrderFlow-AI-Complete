@@ -17,14 +17,11 @@ function toggleTheme() {
   // Update meta theme-color for mobile browsers
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', newTheme === 'light' ? '#ffffff' : '#0a0a0a');
+    metaTheme.setAttribute('content', newTheme === 'light' ? '#F0F2F5' : '#13131F');
   }
 
   // Update logos based on theme
   updateLogos(newTheme);
-  if (typeof updateThemeEditorActiveTheme === 'function') {
-    updateThemeEditorActiveTheme();
-  }
 
   // Reinitialize charts with new theme colors
   if (typeof initRevenueChart === 'function') {
@@ -67,7 +64,7 @@ function initTheme() {
   // Update meta theme-color
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', theme === 'light' ? '#ffffff' : '#0a0a0a');
+    metaTheme.setAttribute('content', theme === 'light' ? '#F0F2F5' : '#13131F');
   }
 
   // Update logos and tooltip when DOM is ready
@@ -75,733 +72,17 @@ function initTheme() {
     document.addEventListener('DOMContentLoaded', () => {
       updateLogos(theme);
       updateThemeToggleTooltip(theme);
-      if (typeof updateThemeEditorActiveTheme === 'function') {
-        updateThemeEditorActiveTheme();
-      }
     });
   } else {
     updateLogos(theme);
     updateThemeToggleTooltip(theme);
-    if (typeof updateThemeEditorActiveTheme === 'function') {
-      updateThemeEditorActiveTheme();
-    }
   }
 
   console.log('Theme initialized:', theme);
 }
 
-// =====================================================
-// THEME OVERRIDES (FLOW CMS)
-// =====================================================
-const THEME_OVERRIDE_KEY = 'flow_theme_overrides_v1';
-let themeEditorSaved = null;
-let themeEditorDraft = null;
-let themeSaveTimeout = null;
-
-function getEmptyThemeOverrides() {
-  return {
-    dark: {},
-    light: {},
-    global: {},
-    fonts: {},
-    customCSS: '',
-    customStyles: ''
-  };
-}
-
-function cloneThemeOverrides(state) {
-  return JSON.parse(JSON.stringify(state));
-}
-
-function loadThemeOverridesFromStorage() {
-  const raw = localStorage.getItem(THEME_OVERRIDE_KEY);
-  if (!raw) return getEmptyThemeOverrides();
-
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      ...getEmptyThemeOverrides(),
-      ...parsed,
-      dark: parsed.dark || {},
-      light: parsed.light || {},
-      global: parsed.global || {},
-      fonts: parsed.fonts || {},
-      customCSS: parsed.customCSS || '',
-      customStyles: parsed.customStyles || ''
-    };
-  } catch (err) {
-    console.warn('⚠️ Invalid theme override data, resetting.', err);
-    return getEmptyThemeOverrides();
-  }
-}
-
-function hasThemeOverrides(state) {
-  if (!state) return false;
-  const hasVars = (obj) => obj && Object.keys(obj).length > 0;
-  return (
-    hasVars(state.dark) ||
-    hasVars(state.light) ||
-    hasVars(state.global) ||
-    hasVars(state.fonts) ||
-    (state.customCSS && state.customCSS.trim()) ||
-    (state.customStyles && state.customStyles.trim())
-  );
-}
-
-function getThemeOverrideStyleEl() {
-  let styleEl = document.getElementById('theme-overrides');
-  if (!styleEl) {
-    styleEl = document.createElement('style');
-    styleEl.id = 'theme-overrides';
-    document.head.appendChild(styleEl);
-  }
-  return styleEl;
-}
-
-function formatThemeVars(vars) {
-  return Object.entries(vars)
-    .map(([key, value]) => `  ${key}: ${value};`)
-    .join('\n');
-}
-
-function applyThemeOverrides(state) {
-  const styleEl = getThemeOverrideStyleEl();
-
-  if (!hasThemeOverrides(state)) {
-    styleEl.textContent = '';
-    updateMetaThemeColorFromCSS();
-    return;
-  }
-
-  const rootVars = { ...(state.global || {}), ...(state.dark || {}) };
-  const lightVars = { ...(state.light || {}) };
-  const cssParts = [];
-
-  if (Object.keys(rootVars).length) {
-    cssParts.push(`:root{\n${formatThemeVars(rootVars)}\n}`);
-  }
-  if (Object.keys(lightVars).length) {
-    cssParts.push(`[data-theme="light"]{\n${formatThemeVars(lightVars)}\n}`);
-  }
-
-  const fonts = state.fonts || {};
-  const fontRules = [];
-  if (fonts.body) {
-    fontRules.push(`body, button, input, textarea, select, .sidebar { font-family: ${fonts.body}; }`);
-  }
-  if (fonts.heading) {
-    fontRules.push(`h1, h2, h3, h4, h5, h6, .page-title, .section-title { font-family: ${fonts.heading}; }`);
-  }
-  if (fonts.mono) {
-    fontRules.push(`code, pre, .mono, .nav-customer-id, .message-node, .var-tag { font-family: ${fonts.mono}; }`);
-  }
-  if (fontRules.length) cssParts.push(fontRules.join('\n'));
-
-  if (state.customCSS && state.customCSS.trim()) cssParts.push(state.customCSS.trim());
-  if (state.customStyles && state.customStyles.trim()) cssParts.push(state.customStyles.trim());
-
-  styleEl.textContent = cssParts.join('\n\n');
-  updateMetaThemeColorFromCSS();
-}
-
-function updateMetaThemeColorFromCSS() {
-  const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if (!metaTheme) return;
-
-  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
-  if (bg && (bg.startsWith('#') || bg.startsWith('rgb'))) {
-    metaTheme.setAttribute('content', bg);
-  }
-}
-
-function initThemeOverrides() {
-  themeEditorSaved = loadThemeOverridesFromStorage();
-  applyThemeOverrides(themeEditorSaved);
-}
-
-function ensureThemeLightProbe() {
-  let probe = document.getElementById('theme-light-probe');
-  if (!probe && document.body) {
-    probe = document.createElement('div');
-    probe.id = 'theme-light-probe';
-    probe.setAttribute('data-theme', 'light');
-    probe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;pointer-events:none;';
-    document.body.appendChild(probe);
-  }
-  return probe;
-}
-
-function getComputedTokenValue(token, mode) {
-  if (mode === 'light') {
-    const probe = ensureThemeLightProbe();
-    if (!probe) return '';
-    return getComputedStyle(probe).getPropertyValue(token).trim();
-  }
-  return getComputedStyle(document.documentElement).getPropertyValue(token).trim();
-}
-
-function normalizeThemeColor(value) {
-  if (!value) return '';
-  const trimmed = value.trim();
-  const hexMatch = trimmed.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-  if (hexMatch) {
-    if (trimmed.length === 4) {
-      return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
-    }
-    return trimmed;
-  }
-
-  const rgbMatch = trimmed.match(/^rgba?\\(([^)]+)\\)$/i);
-  if (rgbMatch) {
-    const parts = rgbMatch[1].split(',').map(part => parseFloat(part.trim()));
-    if (parts.length >= 3 && parts.every(num => !Number.isNaN(num))) {
-      const toHex = (num) => Math.max(0, Math.min(255, Math.round(num))).toString(16).padStart(2, '0');
-      return `#${toHex(parts[0])}${toHex(parts[1])}${toHex(parts[2])}`;
-    }
-  }
-  return '';
-}
-
-const THEME_TOKEN_SOURCES = {
-  theme: { label: 'theme.css', url: 'theme.css' },
-  styles: { label: 'css/styles.css', url: 'css/styles.css' }
-};
-const THEME_EDITOR_STATE_KEY = 'flow_theme_editor_state_v1';
-let themeTokensLoaded = false;
-const themeTokenData = {};
-const themeEditorUIState = {
-  source: 'theme',
-  mode: 'dark',
-  search: '',
-  live: true,
-  initialized: false
-};
-
-function loadThemeEditorState() {
-  const raw = localStorage.getItem(THEME_EDITOR_STATE_KEY);
-  if (!raw) return;
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed.source && THEME_TOKEN_SOURCES[parsed.source]) themeEditorUIState.source = parsed.source;
-    if (parsed.mode === 'light' || parsed.mode === 'dark') themeEditorUIState.mode = parsed.mode;
-    if (typeof parsed.search === 'string') themeEditorUIState.search = parsed.search;
-    if (typeof parsed.live === 'boolean') themeEditorUIState.live = parsed.live;
-  } catch (err) {
-    console.warn('⚠️ Invalid theme editor state, resetting.', err);
-  }
-}
-
-function saveThemeEditorState() {
-  const payload = {
-    source: themeEditorUIState.source,
-    mode: themeEditorUIState.mode,
-    search: themeEditorUIState.search,
-    live: themeEditorUIState.live
-  };
-  localStorage.setItem(THEME_EDITOR_STATE_KEY, JSON.stringify(payload));
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
-function extractCssBlock(cssText, selector) {
-  const index = cssText.indexOf(selector);
-  if (index === -1) return '';
-  const start = cssText.indexOf('{', index);
-  if (start === -1) return '';
-  let depth = 0;
-  for (let i = start; i < cssText.length; i++) {
-    const char = cssText[i];
-    if (char === '{') depth += 1;
-    if (char === '}') {
-      depth -= 1;
-      if (depth === 0) return cssText.slice(start + 1, i);
-    }
-  }
-  return '';
-}
-
-function parseCssVars(blockText) {
-  const vars = [];
-  const map = {};
-  const regex = /--([A-Za-z0-9-_]+)\s*:\s*([^;]+);/g;
-  let match;
-  while ((match = regex.exec(blockText)) !== null) {
-    const name = `--${match[1]}`;
-    const value = match[2].trim();
-    if (!map[name]) {
-      vars.push({ name, value });
-    } else {
-      const idx = vars.findIndex((item) => item.name === name);
-      if (idx >= 0) vars[idx].value = value;
-    }
-    map[name] = value;
-  }
-  return { list: vars, map };
-}
-
-function upsertThemeVar(list, map, name, value) {
-  if (!map[name]) {
-    list.push({ name, value });
-  } else {
-    const idx = list.findIndex(item => item.name === name);
-    if (idx >= 0) list[idx].value = value;
-  }
-  map[name] = value;
-}
-
-function collectThemeVarsFromRule(rule, buckets, mediaIsLight) {
-  if (!rule || !rule.style) return;
-  const selector = rule.selectorText || '';
-  const isLightSelector = selector.includes('[data-theme="light"]');
-  const isRootSelector = selector.includes(':root');
-  if (!isLightSelector && !isRootSelector) return;
-
-  const target = isLightSelector ? 'light' : (mediaIsLight ? 'light' : 'dark');
-  const list = target === 'light' ? buckets.light : buckets.dark;
-  const map = target === 'light' ? buckets.lightMap : buckets.darkMap;
-
-  for (let i = 0; i < rule.style.length; i += 1) {
-    const prop = rule.style[i];
-    if (!prop || !prop.startsWith('--')) continue;
-    const value = rule.style.getPropertyValue(prop).trim();
-    upsertThemeVar(list, map, prop, value);
-  }
-}
-
-function collectThemeVarsFromRules(rules, buckets, mediaIsLight) {
-  if (!rules) return;
-  for (const rule of rules) {
-    if (!rule) continue;
-    if (rule.type === 4 && rule.cssRules) {
-      const condition = rule.conditionText || '';
-      const prefersLight = /prefers-color-scheme\\s*:\\s*light/i.test(condition);
-      const prefersDark = /prefers-color-scheme\\s*:\\s*dark/i.test(condition);
-      collectThemeVarsFromRules(rule.cssRules, buckets, prefersLight ? true : prefersDark ? false : mediaIsLight);
-    } else if (rule.type === 1) {
-      collectThemeVarsFromRule(rule, buckets, mediaIsLight);
-    } else if (rule.cssRules) {
-      collectThemeVarsFromRules(rule.cssRules, buckets, mediaIsLight);
-    }
-  }
-}
-
-function readThemeTokensFromStyleSheets(sourceUrl) {
-  const dark = [];
-  const light = [];
-  const darkMap = {};
-  const lightMap = {};
-  const target = sourceUrl.split('/').pop();
-
-  const allSheets = Array.from(document.styleSheets || []);
-  let matchedSheets = allSheets.filter(sheet => {
-    if (!sheet || !sheet.href) return false;
-    return sheet.href.includes(sourceUrl) || (target && sheet.href.includes(target));
-  });
-
-  if (!matchedSheets.length) matchedSheets = allSheets;
-
-  matchedSheets.forEach(sheet => {
-    try {
-      collectThemeVarsFromRules(sheet.cssRules, { dark, light, darkMap, lightMap }, false);
-    } catch (err) {
-      // Ignore unreadable stylesheets (cross-origin)
-    }
-  });
-
-  return { dark, light, map: { dark: darkMap, light: lightMap } };
-}
-
-async function loadThemeTokenSources() {
-  const entries = Object.entries(THEME_TOKEN_SOURCES);
-  await Promise.all(entries.map(async ([key, source]) => {
-    let parsedData = null;
-    try {
-      const res = await fetch(source.url, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      const text = await res.text();
-      const darkBlock = extractCssBlock(text, ':root');
-      const lightBlock = extractCssBlock(text, '[data-theme="light"]');
-      const darkVars = parseCssVars(darkBlock);
-      const lightVars = parseCssVars(lightBlock);
-      parsedData = {
-        dark: darkVars.list,
-        light: lightVars.list,
-        map: {
-          dark: darkVars.map,
-          light: lightVars.map
-        }
-      };
-    } catch (err) {
-      console.warn(`⚠️ Could not load ${source.url} via fetch`, err);
-    }
-
-    if (!parsedData || (!parsedData.dark.length && !parsedData.light.length)) {
-      const fallback = readThemeTokensFromStyleSheets(source.url);
-      parsedData = fallback;
-    }
-
-    themeTokenData[key] = parsedData || { dark: [], light: [], map: { dark: {}, light: {} } };
-  }));
-  themeTokensLoaded = true;
-}
-
-function syncThemeEditorTabs() {
-  document.querySelectorAll('#theme-editor-source-tabs .settings-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.themeSource === themeEditorUIState.source);
-  });
-  document.querySelectorAll('#theme-editor-mode-tabs .settings-tab').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.themeMode === themeEditorUIState.mode);
-  });
-  const fileBadge = document.getElementById('theme-editor-current-file');
-  if (fileBadge) {
-    const label = THEME_TOKEN_SOURCES[themeEditorUIState.source]?.label || 'theme.css';
-    fileBadge.textContent = label;
-  }
-  const liveToggle = document.getElementById('theme-editor-live-toggle');
-  if (liveToggle) liveToggle.checked = themeEditorUIState.live;
-  const search = document.getElementById('theme-editor-search');
-  if (search) search.value = themeEditorUIState.search || '';
-}
-
-function updateThemeEditorActiveTheme() {
-  const badge = document.getElementById('theme-editor-active-theme');
-  if (badge) {
-    const current = document.documentElement.getAttribute('data-theme') || 'dark';
-    badge.textContent = current === 'light' ? 'Aktivt tema: Lys' : 'Aktivt tema: Mørk';
-  }
-  const activeBadge = document.getElementById('theme-editor-overrides-active');
-  if (activeBadge) {
-    const state = themeEditorUIState.live ? themeEditorDraft : themeEditorSaved;
-    activeBadge.style.display = hasThemeOverrides(state) ? 'inline-flex' : 'none';
-  }
-  const themeTab = document.getElementById('flow-cms-content-theme');
-  if (themeTab && themeTab.classList.contains('active')) {
-    renderThemeTokenList();
-  }
-}
-
-function getThemeOverrideValue(mode, token) {
-  if (!themeEditorDraft) return { value: '', source: '' };
-  const bucket = mode === 'light' ? themeEditorDraft.light : themeEditorDraft.dark;
-  if (bucket && Object.prototype.hasOwnProperty.call(bucket, token)) {
-    return { value: bucket[token], source: 'mode' };
-  }
-  if (themeEditorDraft.global && Object.prototype.hasOwnProperty.call(themeEditorDraft.global, token)) {
-    return { value: themeEditorDraft.global[token], source: 'global' };
-  }
-  return { value: '', source: '' };
-}
-
-function renderThemeTokenList() {
-  const listEl = document.getElementById('theme-editor-list');
-  const countEl = document.getElementById('theme-editor-count');
-  if (!listEl || !countEl) return;
-
-  if (!themeTokensLoaded || !themeTokenData[themeEditorUIState.source]) {
-    countEl.textContent = 'Indlæser variabler...';
-    listEl.innerHTML = '';
-    return;
-  }
-
-  const sourceKey = themeEditorUIState.source;
-  const mode = themeEditorUIState.mode;
-  const tokens = themeTokenData[sourceKey][mode] || [];
-  const search = themeEditorUIState.search.trim().toLowerCase();
-
-  const filtered = tokens.filter((token) => {
-    if (!search) return true;
-    const override = getThemeOverrideValue(mode, token.name);
-    const displayValue = override.value || token.value;
-    return token.name.toLowerCase().includes(search) || token.value.toLowerCase().includes(search) || displayValue.toLowerCase().includes(search);
-  });
-
-  countEl.textContent = `Viser ${filtered.length} af ${tokens.length} variabler`;
-
-  if (!filtered.length) {
-    listEl.innerHTML = '<div style="padding:24px;color:var(--muted);text-align:center">Ingen variabler fundet.</div>';
-    return;
-  }
-
-  const fileLabel = THEME_TOKEN_SOURCES[sourceKey]?.label || sourceKey;
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-
-  listEl.innerHTML = filtered.map((token) => {
-    const override = getThemeOverrideValue(mode, token.name);
-    const baseValue = token.value || '';
-    const displayValue = (override.value || baseValue).trim();
-    const isOverride = Boolean(override.value) && override.value.trim() !== baseValue.trim();
-    const isActive = isOverride && mode === currentTheme;
-    const overrideBadge = `<span class="badge badge-warning" data-theme-badge="override" style="font-size:10px;${isOverride ? '' : 'display:none'}">Overstyrer</span>`;
-    const activeBadge = `<span class="badge badge-success" data-theme-badge="active" style="font-size:10px;${isActive ? '' : 'display:none'}">Aktiv</span>`;
-    const globalBadge = override.source === 'global'
-      ? '<span class="badge badge-info" style="font-size:10px">Global</span>'
-      : '';
-
-    return `
-      <div class="setting-card" data-theme-row="true" style="padding:16px;margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
-          <div style="min-width:220px">
-            <div style="font-weight:600;font-size:13px">${escapeHtml(token.name)}</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-              <span class="badge badge-info" style="font-size:10px">${escapeHtml(fileLabel)}</span>
-              ${globalBadge}
-              ${overrideBadge}
-              ${activeBadge}
-            </div>
-            <div style="font-size:11px;color:var(--muted);margin-top:6px">Standard: ${escapeHtml(baseValue || '—')}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px">
-            <div data-theme-swatch style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:${escapeHtml(displayValue)}"></div>
-            <input class="input" data-theme-var="${escapeHtml(token.name)}" data-theme-base="${escapeHtml(baseValue)}" value="${escapeHtml(displayValue)}" oninput="handleThemeVarInput(this)" style="flex:1">
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function updateThemeVarRow(input) {
-  const row = input.closest('[data-theme-row]');
-  if (!row) return;
-  const base = input.dataset.themeBase || '';
-  const value = input.value.trim();
-  const isOverride = Boolean(value) && value !== base.trim();
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-
-  const overrideBadge = row.querySelector('[data-theme-badge="override"]');
-  if (overrideBadge) overrideBadge.style.display = isOverride ? 'inline-flex' : 'none';
-  const activeBadge = row.querySelector('[data-theme-badge="active"]');
-  if (activeBadge) activeBadge.style.display = isOverride && themeEditorUIState.mode === currentTheme ? 'inline-flex' : 'none';
-  const swatch = row.querySelector('[data-theme-swatch]');
-  if (swatch) swatch.style.background = value || base || 'transparent';
-}
-
-function setThemeEditorSource(source) {
-  if (!THEME_TOKEN_SOURCES[source]) return;
-  themeEditorUIState.source = source;
-  saveThemeEditorState();
-  syncThemeEditorTabs();
-  renderThemeTokenList();
-}
-
-function setThemeEditorMode(mode) {
-  if (mode !== 'dark' && mode !== 'light') return;
-  themeEditorUIState.mode = mode;
-  saveThemeEditorState();
-  syncThemeEditorTabs();
-  renderThemeTokenList();
-}
-
-function handleThemeEditorSearch(value) {
-  themeEditorUIState.search = value || '';
-  saveThemeEditorState();
-  renderThemeTokenList();
-}
-
-function toggleThemeEditorLive(isLive) {
-  themeEditorUIState.live = Boolean(isLive);
-  saveThemeEditorState();
-  if (themeEditorUIState.live && themeEditorDraft) {
-    applyThemeOverrides(themeEditorDraft);
-  }
-}
-
-function handleThemeVarInput(input) {
-  if (!themeEditorDraft) return;
-  const token = input.dataset.themeVar;
-  const base = input.dataset.themeBase || '';
-  const value = input.value.trim();
-  const bucketKey = themeEditorUIState.mode === 'light' ? 'light' : 'dark';
-
-  if (!themeEditorDraft[bucketKey]) themeEditorDraft[bucketKey] = {};
-  if (value && value !== base.trim()) themeEditorDraft[bucketKey][token] = value;
-  else delete themeEditorDraft[bucketKey][token];
-
-  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
-  setThemeDirty(true);
-  updateThemeVarRow(input);
-  updateThemeEditorActiveTheme();
-}
-
-function handleThemeFontInput(input) {
-  if (!themeEditorDraft) return;
-  const key = input.dataset.themeFont;
-  const value = input.value.trim();
-  if (!themeEditorDraft.fonts) themeEditorDraft.fonts = {};
-
-  if (value) themeEditorDraft.fonts[key] = value;
-  else delete themeEditorDraft.fonts[key];
-
-  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
-  setThemeDirty(true);
-  updateThemeEditorActiveTheme();
-}
-
-function handleThemeCustomCSS(textarea) {
-  if (!themeEditorDraft) return;
-  themeEditorDraft.customCSS = textarea.value;
-  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
-  setThemeDirty(true);
-  updateThemeEditorActiveTheme();
-}
-
-function handleThemeCustomStyles(textarea) {
-  if (!themeEditorDraft) return;
-  themeEditorDraft.customStyles = textarea.value;
-  if (themeEditorUIState.live) applyThemeOverrides(themeEditorDraft);
-  setThemeDirty(true);
-  updateThemeEditorActiveTheme();
-}
-
-function populateThemeEditorFonts(state) {
-  const bodyInput = document.querySelector('[data-theme-font="body"]');
-  if (bodyInput) bodyInput.value = state.fonts?.body || getComputedStyle(document.body).fontFamily;
-
-  const headingInput = document.querySelector('[data-theme-font="heading"]');
-  if (headingInput) {
-    const headingEl = document.querySelector('.page-title, h1, h2, h3');
-    headingInput.value = state.fonts?.heading || (headingEl ? getComputedStyle(headingEl).fontFamily : getComputedStyle(document.body).fontFamily);
-  }
-
-  const monoInput = document.querySelector('[data-theme-font="mono"]');
-  if (monoInput) {
-    const monoEl = document.querySelector('.nav-customer-id, code, pre');
-    monoInput.value = state.fonts?.mono || (monoEl ? getComputedStyle(monoEl).fontFamily : 'monospace');
-  }
-}
-
-function populateThemeEditorCustom(state) {
-  const customCSS = document.getElementById('theme-custom-css');
-  if (customCSS) customCSS.value = state.customCSS || '';
-  const customStyles = document.getElementById('theme-custom-styles');
-  if (customStyles) customStyles.value = state.customStyles || '';
-}
-
-function setThemeDirty(isDirty) {
-  const badge = document.getElementById('theme-unsaved-badge');
-  if (badge) badge.style.display = isDirty ? 'inline-flex' : 'none';
-
-  if (isDirty) {
-    const status = document.getElementById('theme-save-status');
-    if (status) status.style.display = 'none';
-  }
-}
-
-function loadThemeEditor() {
-  if (!themeEditorUIState.initialized) {
-    loadThemeEditorState();
-    themeEditorUIState.initialized = true;
-  }
-
-  themeEditorSaved = loadThemeOverridesFromStorage();
-  themeEditorDraft = cloneThemeOverrides(themeEditorSaved);
-  populateThemeEditorFonts(themeEditorDraft);
-  populateThemeEditorCustom(themeEditorDraft);
-  syncThemeEditorTabs();
-  updateThemeEditorActiveTheme();
-
-  const countEl = document.getElementById('theme-editor-count');
-  if (countEl) countEl.textContent = 'Indlæser variabler...';
-
-  if (themeTokensLoaded) {
-    renderThemeTokenList();
-  } else {
-    loadThemeTokenSources().then(() => renderThemeTokenList());
-  }
-
-  setThemeDirty(false);
-}
-
-function copyThemeOverrides() {
-  if (!themeEditorDraft || !themeTokensLoaded) return;
-  const sourceKey = themeEditorUIState.source;
-  const mode = themeEditorUIState.mode;
-  const tokens = themeTokenData[sourceKey]?.[mode] || [];
-  const tokenSet = new Set(tokens.map((token) => token.name));
-  const bucketKey = mode === 'light' ? 'light' : 'dark';
-  const overrides = Object.entries(themeEditorDraft[bucketKey] || {})
-    .filter(([name]) => tokenSet.has(name));
-
-  if (!overrides.length) {
-    toast('Ingen overrides at kopiere', 'info');
-    return;
-  }
-
-  const selector = mode === 'light' ? '[data-theme="light"]' : ':root';
-  const css = `/* ${THEME_TOKEN_SOURCES[sourceKey]?.label || sourceKey} */
-${selector}{
-${overrides.map(([key, value]) => `  ${key}: ${value};`).join('\n')}
-}`;
-
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(css).then(() => {
-      toast('CSS kopieret til udklipsholder', 'success');
-    }).catch(() => {
-      toast('Kunne ikke kopiere CSS', 'error');
-    });
-  } else {
-    const temp = document.createElement('textarea');
-    temp.value = css;
-    document.body.appendChild(temp);
-    temp.select();
-    document.execCommand('copy');
-    document.body.removeChild(temp);
-    toast('CSS kopieret til udklipsholder', 'success');
-  }
-}
-
-function saveThemeOverrides() {
-  if (!themeEditorDraft) return;
-  localStorage.setItem(THEME_OVERRIDE_KEY, JSON.stringify(themeEditorDraft));
-  themeEditorSaved = cloneThemeOverrides(themeEditorDraft);
-  applyThemeOverrides(themeEditorDraft);
-  setThemeDirty(false);
-  updateThemeEditorActiveTheme();
-
-  const status = document.getElementById('theme-save-status');
-  if (status) {
-    status.style.display = 'inline';
-    clearTimeout(themeSaveTimeout);
-    themeSaveTimeout = setTimeout(() => {
-      status.style.display = 'none';
-    }, 2000);
-  }
-}
-
-function resetThemeOverrides() {
-  if (!confirm('Nulstil alle tema-ændringer?')) return;
-  localStorage.removeItem(THEME_OVERRIDE_KEY);
-  themeEditorSaved = getEmptyThemeOverrides();
-  themeEditorDraft = cloneThemeOverrides(themeEditorSaved);
-  applyThemeOverrides(themeEditorSaved);
-  populateThemeEditorFonts(themeEditorDraft);
-  populateThemeEditorCustom(themeEditorDraft);
-  renderThemeTokenList();
-  setThemeDirty(false);
-  updateThemeEditorActiveTheme();
-
-  const status = document.getElementById('theme-save-status');
-  if (status) {
-    status.style.display = 'inline';
-    status.textContent = '✓ Nulstil';
-    clearTimeout(themeSaveTimeout);
-    themeSaveTimeout = setTimeout(() => {
-      status.style.display = 'none';
-      status.textContent = '✓ Ændringer gemt';
-    }, 2000);
-  }
-}
-
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
-initThemeOverrides();
 
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
@@ -1448,10 +729,11 @@ const ROLES = {
 const ADMIN_ONLY_MENUS = {
   'kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'alle-kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'workflow': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-salg': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-rapporter': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-integrationer': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE], // Real test only for admin
+  'nav-flow-cms': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'admin-separator': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-billing': [ROLES.ADMIN, ROLES.EMPLOYEE],
@@ -1460,10 +742,7 @@ const ADMIN_ONLY_MENUS = {
 };
 
 // Customer/Demo only menus (hidden for admin/employee)
-const CUSTOMER_ONLY_MENUS = {
-  'nav-butikindstillinger': [ROLES.CUSTOMER, ROLES.DEMO],
-  'nav-indsigt': [ROLES.CUSTOMER, ROLES.DEMO]
-};
+const CUSTOMER_ONLY_MENUS = {};
 
 function hasRoleAccess(menuItem) {
   const role = currentUser?.role || ROLES.CUSTOMER;
@@ -1486,8 +765,7 @@ function applyRoleBasedSidebar() {
   const role = currentUser?.role || ROLES.CUSTOMER;
   const isCustomerView = [ROLES.CUSTOMER, ROLES.DEMO].includes(role);
   const isDemoView = role === ROLES.DEMO;
-  const isRegularCustomer = role === ROLES.CUSTOMER;
-  console.log('🔐 Applying role-based sidebar for role:', role, '(Customer view:', isCustomerView, ', Demo view:', isDemoView, ')');
+  console.log('🔐 Applying role-based sidebar for role:', role, '(Customer view:', isCustomerView, ')');
 
   // Helper function for konsistent display manipulation med !important
   const setDisplay = (el, show) => {
@@ -1498,14 +776,32 @@ function applyRoleBasedSidebar() {
   const templateBtn = document.getElementById('app-preview-template-btn');
   setDisplay(templateBtn, role === ROLES.ADMIN);
 
-  // === SKJUL KUNDER KNAP FOR KUNDE/DEMO ===
-  const kunderBtn = document.querySelector('[data-role-menu="kunder"]');
-  setDisplay(kunderBtn, !isCustomerView);
-  if (kunderBtn) console.log(`  - Kunder knap: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+  // === ADMIN-ONLY SIDEBAR ELEMENTER ===
+  // Kunder, Workflow, Salg, Flow CMS, Separator: Kun admin/employee
+  ['kunder', 'workflow', 'nav-salg', 'nav-flow-cms', 'admin-separator'].forEach(menuKey => {
+    const el = document.querySelector(`[data-role-menu="${menuKey}"]`);
+    setDisplay(el, !isCustomerView);
+    if (el) console.log(`  - ${menuKey}: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
+  });
+
+  // === RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
+  ['nav-rapporter', 'nav-integrationer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', '', 'important');
+      console.log(`  - ${id}: ✓ visible`);
+    }
+  });
+
+  // === VIRKSOMHEDS PROFIL, MARKETING: Synlige for ALLE ===
+  ['nav-virksomheds-profil', 'nav-marketing'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.setProperty('display', '', 'important');
+    }
+  });
 
   // === INDSTILLINGER BEGRÆNSNINGER ===
-  // Kunde/Demo har IKKE adgang til: API adgang, AI læring, Abonnement (billing)
-  // Kunde/Demo HAR adgang til: Brugere, Roller, Sprog, Notifikationer, Adgangskoder, Support
   const adminOnlySettings = ['settings-api', 'settings-ailearning', 'settings-billing'];
   adminOnlySettings.forEach(menuId => {
     const el = document.querySelector(`[data-role-menu="${menuId}"]`);
@@ -1518,6 +814,12 @@ function applyRoleBasedSidebar() {
     setDisplay(el, true);
   });
 
+  // Indstillinger dropdown: Synlig for alle
+  const indstillingerDropdown = document.getElementById('nav-indstillinger');
+  if (indstillingerDropdown) {
+    indstillingerDropdown.style.setProperty('display', '', 'important');
+  }
+
   // === ADMIN ELEMENTER ===
   if (isCustomerView) {
     document.querySelectorAll('.admin-customer-search').forEach(el => setDisplay(el, false));
@@ -1527,60 +829,7 @@ function applyRoleBasedSidebar() {
     document.querySelectorAll('.admin-quick-actions').forEach(el => setDisplay(el, true));
   }
 
-  // === KUNDE-SPECIFIKKE MENUPUNKTER ===
-  // Butikindstillinger, Indsigt: Vis kun for kunde/demo
-  ['nav-butikindstillinger', 'nav-indsigt'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', isCustomerView ? 'block' : 'none', 'important');
-      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
-    }
-  });
-
-  // Workflow Kontrol og Produktbibliotek: Kun for demo/kunde (admin bruger kunde-kontekst menu)
-  ['nav-workflow-kontrol', 'nav-produktbibliotek'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', isCustomerView ? '' : 'none', 'important');
-      console.log(`  - ${id}: ${isCustomerView ? '✓ visible' : '✗ hidden'}`);
-    }
-  });
-
-  // === SALG, RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
-  ['nav-salg', 'nav-rapporter', 'nav-integrationer'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.setProperty('display', '', 'important');
-      console.log(`  - ${id}: ✓ visible`);
-    }
-  });
-
-  // === SYSTEM SEKTION ===
-  // Workflow: Synlig for Admin + Demo (IKKE for almindelige kunder)
-  // Indstillinger: Synlig for ALLE (men med begrænsede items)
-  const systemSection = document.querySelector('.nav-section:has(#nav-indstillinger)');
-  if (systemSection) {
-    // Vis system sektion for alle
-    systemSection.style.setProperty('display', '', 'important');
-  }
-
-  // Workflow knap: Kun for admin + demo (ikke almindelige kunder)
-  const workflowBtn = document.querySelector('.nav-btn[onclick="showPage(\'workflow\')"]');
-  if (workflowBtn) {
-    // Admin: fuld adgang, Demo: kun test workflow, Kunde: ingen adgang
-    setDisplay(workflowBtn, !isRegularCustomer);
-    console.log(`  - Workflow: ${isRegularCustomer ? '✗ hidden' : '✓ visible'}`);
-  }
-
-  // Indstillinger dropdown: Synlig for alle
-  const indstillingerDropdown = document.getElementById('nav-indstillinger');
-  if (indstillingerDropdown) {
-    indstillingerDropdown.style.setProperty('display', '', 'important');
-    console.log('  - Indstillinger: ✓ visible');
-  }
-
   // === WORKFLOW TEST PANEL ===
-  // Demo brugere ser demo overlay i stedet for test panel
   const workflowTestPanel = document.querySelector('.test-panel');
   if (workflowTestPanel) {
     setDisplay(workflowTestPanel, !isCustomerView);
@@ -1591,7 +840,6 @@ function applyRoleBasedSidebar() {
   const customerDash = document.getElementById('customer-dashboard');
 
   if (isCustomerView) {
-    // VIGTIGT: Brug style.setProperty med !important for at sikre admin elementer forbliver skjulte
     if (adminDash) {
       adminDash.classList.add('hidden');
       adminDash.style.setProperty('display', 'none', 'important');
@@ -1600,7 +848,6 @@ function applyRoleBasedSidebar() {
       customerDash.classList.remove('hidden');
       customerDash.style.setProperty('display', '', 'important');
     }
-    // Skjul ALLE admin dashboard elementer med !important
     document.querySelectorAll('.admin-dashboard-content').forEach(el => {
       el.classList.add('hidden');
       el.style.setProperty('display', 'none', 'important');
@@ -1624,7 +871,6 @@ function applyRoleBasedSidebar() {
 
   // === SKJUL ADMIN-ELEMENTER FOR DEMO/KUNDE ===
   if (isCustomerView) {
-    // Skjul admin-knapper i kunde profil
     const terminateBtn = document.getElementById('btn-terminate-customer');
     const profileStatus = document.getElementById('profile-status');
     const backToCustomers = document.querySelector('.crm-back-btn');
@@ -1633,7 +879,6 @@ function applyRoleBasedSidebar() {
     if (profileStatus) profileStatus.style.setProperty('display', 'none', 'important');
     if (backToCustomers) backToCustomers.style.setProperty('display', 'none', 'important');
 
-    // Skjul "Vis alle" og "+ Tilføj kunde" knapper
     document.querySelectorAll('.btn[onclick*="showPage(\'alle-kunder\')"]').forEach(el => {
       el.style.setProperty('display', 'none', 'important');
     });
@@ -1644,9 +889,11 @@ function applyRoleBasedSidebar() {
     console.log('  - Admin buttons hidden for customer/demo');
   }
 
-  // === DROPDOWN MANAGEMENT FOR DEMO/KUNDE ===
-  // Alle dropdowns forbliver lukkede som standard - præcis som for admin
-  // Brugeren klikker selv for at åbne dem
+  // === KUNDE CONTEXT: Skjul for kunde/demo (de ser ikke Kunder-listen) ===
+  const customerContext = document.getElementById('nav-customer-context');
+  if (customerContext && isCustomerView) {
+    setDisplay(customerContext, false);
+  }
 
   console.log('✅ Sidebar updated for', isCustomerView ? 'customer/demo' : 'admin/employee', 'view');
 }
@@ -3848,6 +3095,7 @@ async function loginDemo() {
 
   // Sæt demo restaurant som aktiv (for subpages)
   currentProfileRestaurantId = restaurants[0]?.id || 'demo-restaurant-1';
+  localStorage.setItem('lastViewedCustomerId', currentProfileRestaurantId);
   console.log('📍 Demo restaurant ID sat:', currentProfileRestaurantId);
 
   // Play login transition animation
@@ -4435,12 +3683,8 @@ document.addEventListener('DOMContentLoaded', function() {
 let isNavigatingFromHistory = false;
 
 function showPage(page) {
-  // Luk kunde-kontekst menu når man navigerer til en anden side (kun for admin)
+  // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
-    const customerContext = document.getElementById('nav-customer-context');
-    if (customerContext) {
-      customerContext.style.display = 'none';
-    }
     currentProfileRestaurantId = null;
   }
 
@@ -4531,10 +3775,10 @@ function showPage(page) {
     loadPipelinePage();
   }
 
-  // Set dagsrapport dato til i dag
-  if (page === 'dagsrapport') {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dagsrapport-dato').value = today;
+  // Rapport-sider: populer filtre og vis demo data hvis aktiv
+  var _reportPages = ['dagsrapport','produktrapport','zrapport','konverteringsrapport','genbestillingsrapport','anmeldelsesrapport','heatmaprapport'];
+  if (_reportPages.indexOf(page) !== -1) {
+    populateReportFiltersAndRender(page);
   }
   
   // Load aktiviteter når activities-siden vises
@@ -5402,8 +4646,8 @@ function showSettingsPage(tab) {
 // =====================================================
 let dagsrapportData = null;
 
-function generateDagsrapport() {
-  const dato = document.getElementById('dagsrapport-dato').value;
+function generateDagsrapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('dagsrapport-dato').value;
   if (!dato) {
     toast('Vælg venligst en dato', 'error');
     return;
@@ -5470,7 +4714,7 @@ function generateDagsrapport() {
   };
   
   renderDagsrapport();
-  toast('Dagsrapport genereret', 'success');
+  if (!silent) toast('Dagsrapport genereret', 'success');
 }
 
 function renderDagsrapport() {
@@ -5860,6 +5104,397 @@ function exportDagsrapportExcel() {
 }
 
 // =====================================================
+// RAPPORT FUNKTIONER - Alle rapporter med tabeller
+// =====================================================
+let produktrapportData = null;
+let zrapportData = null;
+let konverteringsrapportData = null;
+let genbestillingsrapportData = null;
+let anmeldelsesrapportData = null;
+let heatmaprapportData = null;
+
+// Shared seeded random helper
+function _reportRandom(seed, min, max, offset) {
+  offset = offset || 0;
+  const x = Math.sin((seed + offset) * 9999 + min) * 10000;
+  return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
+}
+
+function _fmtDKK(n) {
+  return n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
+}
+
+function _fmtPct(n) {
+  return n.toLocaleString('da-DK', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+}
+
+function _fmtDateDK(d) {
+  if (typeof d === 'string') d = new Date(d);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return day + '.' + month + '.' + d.getFullYear();
+}
+
+// --- PRODUKTRAPPORT ---
+function generateProduktrapport(demoFra, demoTil, silent) {
+  const fra = demoFra || document.getElementById('produktrapport-fra').value;
+  const til = demoTil || document.getElementById('produktrapport-til').value;
+  if (!fra || !til) { toast('Vælg venligst et datointerval', 'error'); return; }
+
+  const seed = new Date(fra).getDate() + new Date(fra).getMonth() * 31 + new Date(til).getDate();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const products = [
+    { name: 'Margherita Pizza', cat: 'Pizza', base: 99 },
+    { name: 'Pepperoni Pizza', cat: 'Pizza', base: 109 },
+    { name: 'Hawaii Pizza', cat: 'Pizza', base: 109 },
+    { name: 'Caesar Salat', cat: 'Salater', base: 79 },
+    { name: 'Pasta Carbonara', cat: 'Pasta', base: 119 },
+    { name: 'Pasta Bolognese', cat: 'Pasta', base: 109 },
+    { name: 'Tiramisu', cat: 'Dessert', base: 59 },
+    { name: 'Cola 0.5L', cat: 'Drikkevarer', base: 35 },
+    { name: 'Fadøl 0.4L', cat: 'Drikkevarer', base: 55 },
+    { name: 'Husets Rødvin', cat: 'Vin', base: 149 },
+    { name: 'Bruschetta', cat: 'Forretter', base: 69 },
+    { name: 'Moules Frites', cat: 'Hovedretter', base: 169 }
+  ];
+
+  const rows = products.map((p, i) => {
+    const sold = r(20, 350, i);
+    const price = p.base + r(-10, 20, i + 100);
+    const revenue = sold * price;
+    const margin = r(55, 82, i + 200);
+    return { name: p.name, cat: p.cat, sold, revenue, avgPrice: price, margin };
+  });
+  rows.sort((a, b) => b.revenue - a.revenue);
+
+  const totalSold = rows.reduce((s, x) => s + x.sold, 0);
+  const totalRevenue = rows.reduce((s, x) => s + x.revenue, 0);
+  const avgMargin = rows.reduce((s, x) => s + x.margin, 0) / rows.length;
+
+  produktrapportData = {
+    title: 'Produktoversigt',
+    period: _fmtDateDK(fra) + ' - ' + _fmtDateDK(til),
+    headers: ['Produkt', 'Kategori', 'Solgt', 'Omsætning', 'Gns. pris', 'Avance'],
+    rows: rows.map(x => [x.name, x.cat, x.sold.toLocaleString('da-DK'), _fmtDKK(x.revenue), _fmtDKK(x.avgPrice), x.margin + '%']),
+    _raw: rows,
+    summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
+  };
+  renderProduktrapport();
+  if (!silent) toast('Produktrapport genereret', 'success');
+}
+
+function renderProduktrapport() {
+  if (!produktrapportData) return;
+  const d = produktrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Produktoversigt — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Produkt</th><th class="hide-mobile">Kategori</th><th style="text-align:right">Solgt</th><th style="text-align:right">Omsætning</th><th style="text-align:right" class="hide-mobile">Gns. pris</th><th style="text-align:right;padding-right:16px">Avance</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td class="hide-mobile">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('produktrapport-content').innerHTML = html;
+}
+
+// --- Z-RAPPORT ---
+function generateZrapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('zrapport-dato').value;
+  if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
+
+  const dateObj = new Date(dato);
+  const seed = dateObj.getDate() + dateObj.getMonth() * 31 + dateObj.getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const lines = [
+    { desc: 'Kontant salg', count: r(30, 80, 1), amount: r(8000, 25000, 2) + r(0, 99, 3) / 100 },
+    { desc: 'Kort salg (Dankort)', count: r(100, 300, 4), amount: r(30000, 80000, 5) + r(0, 99, 6) / 100 },
+    { desc: 'Kort salg (Visa/MC)', count: r(20, 80, 7), amount: r(8000, 25000, 8) + r(0, 99, 9) / 100 },
+    { desc: 'MobilePay', count: r(15, 60, 10), amount: r(4000, 15000, 11) + r(0, 99, 12) / 100 },
+    { desc: 'Online betaling', count: r(10, 40, 13), amount: r(3000, 12000, 14) + r(0, 99, 15) / 100 },
+    { desc: 'Gavekort', count: r(2, 15, 16), amount: r(500, 5000, 17) + r(0, 99, 18) / 100 },
+    { desc: 'Rabatter givet', count: r(5, 30, 19), amount: -(r(500, 5000, 20) + r(0, 99, 21) / 100) },
+    { desc: 'Returneringer', count: r(0, 5, 22), amount: -(r(0, 2000, 23) + r(0, 99, 24) / 100) }
+  ];
+
+  const brutto = lines.filter(l => l.amount > 0).reduce((s, l) => s + l.amount, 0);
+  const netto = lines.reduce((s, l) => s + l.amount, 0);
+  const moms = netto * 0.25 / 1.25;
+  const diff = r(-50, 50, 30) + r(0, 99, 31) / 100;
+  const zNr = 'Z-' + dateObj.getFullYear() + '-' + String(r(1, 9999, 32)).padStart(4, '0');
+
+  zrapportData = {
+    title: 'Z-Rapport',
+    period: _fmtDateDK(dato),
+    headers: ['Beskrivelse', 'Antal', 'Beløb (DKK)'],
+    rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
+    summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
+  };
+  renderZrapport();
+  if (!silent) toast('Z-rapport genereret', 'success');
+}
+
+function renderZrapport() {
+  if (!zrapportData) return;
+  const d = zrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Z-rapport — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Beskrivelse</th><th style="text-align:right">Antal</th><th style="text-align:right;padding-right:16px">Beløb (DKK)</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    const isNeg = r[2].indexOf('-') !== -1;
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right;padding-right:16px' + (isNeg ? ';color:var(--danger)' : '') + '">' + r[2] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => {
+    const hl = k === 'Netto omsætning' ? ' highlight' : '';
+    html += '<div class="report-row' + hl + '"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>';
+  });
+  html += '</div></div>';
+  document.getElementById('zrapport-content').innerHTML = html;
+}
+
+// --- KONVERTERINGSRAPPORT ---
+function generateKonverteringsrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('konverteringsrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const sources = ['Direkte', 'Google Søgning', 'Facebook Ads', 'Instagram', 'Email kampagner', 'Henvisninger', 'Google Maps', 'TikTok'];
+  const rows = sources.map((src, i) => {
+    const visitors = r(200, 3000, i);
+    const convRate = (r(50, 250, i + 100) / 10);
+    const orders = Math.round(visitors * convRate / 100);
+    const avgOrder = r(150, 450, i + 200) + r(0, 99, i + 300) / 100;
+    const revenue = orders * avgOrder;
+    return { src, visitors, orders, convRate, avgOrder, revenue };
+  });
+  rows.sort((a, b) => b.revenue - a.revenue);
+
+  const totalVisitors = rows.reduce((s, x) => s + x.visitors, 0);
+  const totalOrders = rows.reduce((s, x) => s + x.orders, 0);
+  const totalRevenue = rows.reduce((s, x) => s + x.revenue, 0);
+  const avgConv = totalVisitors > 0 ? (totalOrders / totalVisitors * 100) : 0;
+
+  konverteringsrapportData = {
+    title: 'Konverteringsrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Kilde / Kanal', 'Besøgende', 'Ordrer', 'Konvertering', 'Gns. ordre', 'Omsætning'],
+    rows: rows.map(x => [x.src, x.visitors.toLocaleString('da-DK'), x.orders.toLocaleString('da-DK'), _fmtPct(x.convRate), _fmtDKK(x.avgOrder), _fmtDKK(x.revenue)]),
+    summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
+  };
+  renderKonverteringsrapport();
+  if (!silent) toast('Konverteringsrapport genereret', 'success');
+}
+
+function renderKonverteringsrapport() {
+  if (!konverteringsrapportData) return;
+  const d = konverteringsrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Konvertering — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kilde / Kanal</th><th style="text-align:right">Besøgende</th><th style="text-align:right">Ordrer</th><th style="text-align:right">Konvertering</th><th style="text-align:right" class="hide-mobile">Gns. ordre</th><th style="text-align:right;padding-right:16px">Omsætning</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('konverteringsrapport-content').innerHTML = html;
+}
+
+// --- GENBESTILLINGSRAPPORT ---
+function generateGenbestillingsrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('genbestillingsrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const customers = ['Anders Jensen', 'Maria Nielsen', 'Peter Hansen', 'Louise Pedersen', 'Thomas Andersen', 'Sofie Larsen', 'Mikkel Christensen', 'Emma Rasmussen', 'Frederik Møller', 'Line Jørgensen', 'Kasper Thomsen', 'Ida Madsen'];
+  const today = new Date();
+  const rows = customers.map((name, i) => {
+    const orders = r(2, 25, i);
+    const daysSinceLast = r(1, 60, i + 100);
+    const lastDate = new Date(today);
+    lastDate.setDate(lastDate.getDate() - daysSinceLast);
+    const totalSpent = orders * (r(150, 500, i + 200) + r(0, 99, i + 300) / 100);
+    const avgInterval = r(3, 35, i + 400);
+    let status, badgeClass;
+    if (avgInterval < 14) { status = 'Aktiv'; badgeClass = 'badge-success'; }
+    else if (avgInterval < 30) { status = 'Aftagende'; badgeClass = 'badge-warning'; }
+    else { status = 'Inaktiv'; badgeClass = 'badge-danger'; }
+    return { name, orders, lastDate: _fmtDateDK(lastDate), totalSpent, avgInterval, status, badgeClass };
+  });
+  rows.sort((a, b) => b.orders - a.orders);
+
+  const totalCustomers = rows.length;
+  const avgOrders = rows.reduce((s, x) => s + x.orders, 0) / totalCustomers;
+  const avgInterval = rows.reduce((s, x) => s + x.avgInterval, 0) / totalCustomers;
+  const activeCount = rows.filter(x => x.status === 'Aktiv').length;
+  const retention = (activeCount / totalCustomers * 100);
+
+  genbestillingsrapportData = {
+    title: 'Genbestillingsrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Kunde', 'Ordrer', 'Sidste ordre', 'Total forbrugt', 'Gns. interval', 'Status'],
+    rows: rows.map(x => [x.name, x.orders.toLocaleString('da-DK'), x.lastDate, _fmtDKK(x.totalSpent), x.avgInterval + ' dage', x.status]),
+    _raw: rows,
+    summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
+  };
+  renderGenbestillingsrapport();
+  if (!silent) toast('Genbestillingsrapport genereret', 'success');
+}
+
+function renderGenbestillingsrapport() {
+  if (!genbestillingsrapportData) return;
+  const d = genbestillingsrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Genbestilling — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kunde</th><th style="text-align:right">Ordrer</th><th class="hide-mobile">Sidste ordre</th><th style="text-align:right">Total forbrugt</th><th style="text-align:right" class="hide-mobile">Gns. interval</th><th style="text-align:center;padding-right:16px">Status</th></tr></thead><tbody>';
+  d._raw.forEach(x => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.name + '</td><td style="text-align:right">' + x.orders.toLocaleString('da-DK') + '</td><td class="hide-mobile">' + x.lastDate + '</td><td style="text-align:right">' + _fmtDKK(x.totalSpent) + '</td><td style="text-align:right" class="hide-mobile">' + x.avgInterval + ' dage</td><td style="text-align:center;padding-right:16px"><span class="badge ' + x.badgeClass + '">' + x.status + '</span></td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('genbestillingsrapport-content').innerHTML = html;
+}
+
+// --- ANMELDELSESRAPPORT ---
+function generateAnmeldelsesrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('anmeldelsesrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const platforms = [
+    { name: 'Google', baseReviews: 40 },
+    { name: 'Trustpilot', baseReviews: 20 },
+    { name: 'Facebook', baseReviews: 15 },
+    { name: 'TripAdvisor', baseReviews: 10 },
+    { name: 'Intern feedback', baseReviews: 50 }
+  ];
+
+  const rows = platforms.map((p, i) => {
+    const reviews = p.baseReviews + r(0, 30, i);
+    const rating = (r(35, 49, i + 100) / 10);
+    const positive = Math.round(reviews * (r(65, 95, i + 200) / 100));
+    const negative = reviews - positive;
+    const conv = r(50, 200, i + 300) / 10;
+    return { platform: p.name, reviews, rating, positive, negative, conv };
+  });
+
+  const totalReviews = rows.reduce((s, x) => s + x.reviews, 0);
+  const avgRating = rows.reduce((s, x) => s + x.rating * x.reviews, 0) / totalReviews;
+  const totalPositive = rows.reduce((s, x) => s + x.positive, 0);
+  const avgConv = rows.reduce((s, x) => s + x.conv, 0) / rows.length;
+
+  anmeldelsesrapportData = {
+    title: 'Anmeldelsesrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Platform', 'Anmeldelser', 'Gns. rating', 'Positive', 'Negative', 'Konvertering'],
+    rows: rows.map(x => [x.platform, x.reviews.toLocaleString('da-DK'), x.rating.toFixed(1), x.positive.toLocaleString('da-DK'), x.negative.toLocaleString('da-DK'), _fmtPct(x.conv)]),
+    _raw: rows,
+    summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
+  };
+  renderAnmeldelsesrapport();
+  if (!silent) toast('Anmeldelsesrapport genereret', 'success');
+}
+
+function renderAnmeldelsesrapport() {
+  if (!anmeldelsesrapportData) return;
+  const d = anmeldelsesrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Anmeldelser — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Platform</th><th style="text-align:right">Anmeldelser</th><th style="text-align:center">Gns. rating</th><th style="text-align:right" class="hide-mobile">Positive</th><th style="text-align:right" class="hide-mobile">Negative</th><th style="text-align:right;padding-right:16px">Konvertering</th></tr></thead><tbody>';
+  d._raw.forEach(x => {
+    const stars = '&#9733;'.repeat(Math.round(x.rating)) + '&#9734;'.repeat(5 - Math.round(x.rating));
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.platform + '</td><td style="text-align:right">' + x.reviews.toLocaleString('da-DK') + '</td><td style="text-align:center"><span style="color:#f59e0b">' + stars + '</span> ' + x.rating.toFixed(1) + '</td><td style="text-align:right" class="hide-mobile"><span style="color:var(--success)">' + x.positive + '</span></td><td style="text-align:right" class="hide-mobile"><span style="color:var(--danger)">' + x.negative + '</span></td><td style="text-align:right;padding-right:16px">' + _fmtPct(x.conv) + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('anmeldelsesrapport-content').innerHTML = html;
+}
+
+// --- HEATMAPRAPPORT ---
+function generateHeatmaprapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('heatmaprapport-dato').value;
+  if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
+
+  const dateObj = new Date(dato);
+  const seed = dateObj.getDate() + dateObj.getMonth() * 31 + dateObj.getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const days = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+  const timeSlots = ['10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00'];
+  const grid = [];
+  let maxVal = 0;
+  let totalOrders = 0;
+  let busiestDay = { day: '', total: 0 };
+  let busiestSlot = { slot: '', total: 0 };
+  const dayTotals = days.map(() => 0);
+  const slotTotals = timeSlots.map(() => 0);
+
+  timeSlots.forEach((slot, si) => {
+    const row = [];
+    const hour = 10 + si;
+    days.forEach((day, di) => {
+      let base = r(2, 15, si * 7 + di);
+      if (hour >= 12 && hour < 14) base += r(8, 20, si * 7 + di + 100);
+      if (hour >= 18 && hour < 21) base += r(10, 25, si * 7 + di + 200);
+      if (di >= 4) base = Math.round(base * 1.3);
+      if (hour < 11 || hour >= 21) base = Math.max(1, Math.round(base * 0.4));
+      row.push(base);
+      if (base > maxVal) maxVal = base;
+      totalOrders += base;
+      dayTotals[di] += base;
+      slotTotals[si] += base;
+    });
+    grid.push(row);
+  });
+
+  dayTotals.forEach((t, i) => { if (t > busiestDay.total) { busiestDay = { day: days[i], total: t }; } });
+  slotTotals.forEach((t, i) => { if (t > busiestSlot.total) { busiestSlot = { slot: timeSlots[i], total: t }; } });
+
+  const avgPerHour = (totalOrders / (timeSlots.length * days.length)).toFixed(1);
+
+  heatmaprapportData = {
+    title: 'Heatmap Rapport',
+    period: 'Uge fra ' + _fmtDateDK(dato),
+    headers: ['Tidspunkt', ...days],
+    rows: timeSlots.map((slot, si) => [slot, ...grid[si].map(v => v.toString())]),
+    _grid: grid, _maxVal: maxVal, _timeSlots: timeSlots, _days: days,
+    summary: { 'Travleste dag': busiestDay.day + ' (' + busiestDay.total + ' ordrer)', 'Travleste time': busiestSlot.slot + ' (' + busiestSlot.total + ' ordrer)', 'Total ordrer (ugen)': totalOrders.toLocaleString('da-DK'), 'Gns. ordrer pr. time': avgPerHour }
+  };
+  renderHeatmaprapport();
+  if (!silent) toast('Heatmap genereret', 'success');
+}
+
+function _heatColor(value, max) {
+  const intensity = value / max;
+  if (intensity > 0.8) return 'background:rgba(239,68,68,0.3);color:#ef4444;font-weight:600';
+  if (intensity > 0.6) return 'background:rgba(251,191,36,0.25);color:#f59e0b;font-weight:600';
+  if (intensity > 0.4) return 'background:rgba(251,191,36,0.1)';
+  if (intensity > 0.2) return 'background:rgba(99,102,241,0.08)';
+  return '';
+}
+
+function renderHeatmaprapport() {
+  if (!heatmaprapportData) return;
+  const d = heatmaprapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Heatmap — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Tidspunkt</th>';
+  d._days.forEach(day => { html += '<th style="text-align:center">' + day + '</th>'; });
+  html += '</tr></thead><tbody>';
+  d._timeSlots.forEach((slot, si) => {
+    html += '<tr><td style="padding-left:16px;font-weight:500;white-space:nowrap">' + slot + '</td>';
+    d._grid[si].forEach(val => {
+      const style = _heatColor(val, d._maxVal);
+      html += '<td style="text-align:center;' + style + '">' + val + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('heatmaprapport-content').innerHTML = html;
+}
+
+// =====================================================
 // =====================================================
 // EXPORT SERVICE - Enhanced with Logo & Professional Wrapper
 // =====================================================
@@ -5950,17 +5585,17 @@ const ExportService = {
       case 'dagsrapport':
         return typeof dagsrapportData !== 'undefined' ? dagsrapportData : null;
       case 'produktrapport':
-        return this.getProduktrapportData();
+        return produktrapportData || this.getProduktrapportData();
       case 'zrapport':
-        return this.getZrapportData();
+        return zrapportData || this.getZrapportData();
       case 'konverteringsrapport':
-        return this.getKonverteringsrapportData();
+        return konverteringsrapportData || this.getKonverteringsrapportData();
       case 'genbestillingsrapport':
-        return this.getGenbestillingsrapportData();
+        return genbestillingsrapportData || this.getGenbestillingsrapportData();
       case 'anmeldelsesrapport':
-        return this.getAnmeldelsesrapportData();
+        return anmeldelsesrapportData || this.getAnmeldelsesrapportData();
       case 'heatmaprapport':
-        return this.getHeatmaprapportData();
+        return heatmaprapportData || this.getHeatmaprapportData();
       default:
         return null;
     }
@@ -7451,20 +7086,14 @@ function getFilteredAlleKunder() {
   // Apply search filter
   if (alleKunderSearchQuery) {
     const query = alleKunderSearchQuery.toLowerCase();
-    filtered = filtered.filter(r => {
-      const phone = (r.phone || r.contact_phone || '').toLowerCase();
-      const address = (r.address || '').toLowerCase();
-      const city = (r.city || '').toLowerCase();
-
-      return (r.name && r.name.toLowerCase().includes(query)) ||
-        (r.contact_name && r.contact_name.toLowerCase().includes(query)) ||
-        (r.metadata?.owner && r.metadata.owner.toLowerCase().includes(query)) ||
-        phone.includes(query) ||
-        address.includes(query) ||
-        city.includes(query) ||
-        (r.cvr && r.cvr.includes(query)) ||
-        (r.user_id && r.user_id.toLowerCase().includes(query));
-    });
+    filtered = filtered.filter(r =>
+      (r.name && r.name.toLowerCase().includes(query)) ||
+      (r.contact_name && r.contact_name.toLowerCase().includes(query)) ||
+      (r.metadata?.owner && r.metadata.owner.toLowerCase().includes(query)) ||
+      (r.contact_phone && r.contact_phone.includes(query)) ||
+      (r.cvr && r.cvr.includes(query)) ||
+      (r.user_id && r.user_id.toLowerCase().includes(query))
+    );
   }
 
   // Sort by created_at descending (newest first)
@@ -8240,12 +7869,10 @@ function showCrmSearchView() {
   document.getElementById('crm-search-view').style.display = 'block';
   document.getElementById('crm-profile-view').style.display = 'none';
   currentProfileRestaurantId = null;
+  localStorage.removeItem('lastViewedCustomerId');
   document.getElementById('crm-search').value = '';
   initCrmTable();
-  
-  // Hide customer context menu
-  document.getElementById('nav-customer-context').style.display = 'none';
-  
+
   // Update breadcrumb
   updateBreadcrumb('kunder');
 }
@@ -8258,6 +7885,11 @@ function closeCustomerContext() {
 // Show customer sub-page
 function showCustomerSubpage(subpage) {
   const isCustomerView = currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role);
+  // Fallback til localStorage hvis currentProfileRestaurantId er null
+  if (!currentProfileRestaurantId) {
+    const lastViewed = localStorage.getItem('lastViewedCustomerId');
+    if (lastViewed) currentProfileRestaurantId = lastViewed;
+  }
   const restaurantId = currentProfileRestaurantId || (restaurants[0]?.id);
 
   console.log('📄 showCustomerSubpage:', subpage, 'isCustomerView:', isCustomerView, 'restaurantId:', restaurantId);
@@ -8875,6 +8507,9 @@ function loadAllDemoData() {
   localStorage.setItem('orderflow_demo_activities', JSON.stringify(activities));
   localStorage.setItem('orderflow_demo_invoices', JSON.stringify(invoices));
 
+  // Generate demo reports
+  generateAllDemoReports();
+
   console.log('✅ Demo data loaded:', {
     customers: customers.length,
     orders: orders.length,
@@ -8882,8 +8517,37 @@ function loadAllDemoData() {
     products: products.items?.length || 0,
     campaigns: campaigns.length,
     activities: activities.length,
-    invoices: invoices.length
+    invoices: invoices.length,
+    reports: 7
   });
+}
+
+// Generate all 7 demo reports with default date ranges
+function generateAllDemoReports() {
+  const today = new Date();
+  const todayISO = today.toISOString().split('T')[0];
+  const ago30 = new Date(today); ago30.setDate(ago30.getDate() - 30);
+  const ago30ISO = ago30.toISOString().split('T')[0];
+  const monday = new Date(today); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const mondayISO = monday.toISOString().split('T')[0];
+
+  generateDagsrapport(todayISO, true);
+  generateProduktrapport(ago30ISO, todayISO, true);
+  generateZrapport(todayISO, true);
+  generateKonverteringsrapport(30, true);
+  generateGenbestillingsrapport(90, true);
+  generateAnmeldelsesrapport(30, true);
+  generateHeatmaprapport(mondayISO, true);
+
+  localStorage.setItem('orderflow_demo_report_params', JSON.stringify({
+    dagsrapport: { dato: todayISO },
+    produktrapport: { fra: ago30ISO, til: todayISO },
+    zrapport: { dato: todayISO },
+    konverteringsrapport: { periode: 30 },
+    genbestillingsrapport: { periode: 90 },
+    anmeldelsesrapport: { periode: 30 },
+    heatmaprapport: { dato: mondayISO }
+  }));
 }
 
 // Clear all demo data from localStorage
@@ -8895,10 +8559,134 @@ function clearAllDemoData() {
     'orderflow_demo_products',
     'orderflow_demo_campaigns',
     'orderflow_demo_activities',
-    'orderflow_demo_invoices'
+    'orderflow_demo_invoices',
+    'orderflow_demo_report_params'
   ];
   demoKeys.forEach(key => localStorage.removeItem(key));
+
+  // Clear report global variables
+  dagsrapportData = null;
+  produktrapportData = null;
+  zrapportData = null;
+  konverteringsrapportData = null;
+  genbestillingsrapportData = null;
+  anmeldelsesrapportData = null;
+  heatmaprapportData = null;
+
+  // Restore empty state on report pages
+  clearAllReportContent();
+
   console.log('🗑️ Demo data cleared');
+}
+
+function clearAllReportContent() {
+  const emptyStates = {
+    'dagsrapport-content': { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', text: 'Vælg en dato for at generere dagsrapport', sub: 'Rapporten viser salgsdata, betalinger og momsspecifikation' },
+    'produktrapport-content': { icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', text: 'Vælg datointerval for at generere produktrapport', sub: 'Se hvilke produkter der sælger bedst' },
+    'zrapport-content': { icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', text: 'Vælg en dato for at generere Z-rapport', sub: 'Daglig kasserapport med afstemning' },
+    'konverteringsrapport-content': { icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', text: 'Vælg en periode for at generere konverteringsrapport', sub: 'Se hvor mange kunder SAAS-systemet konverterer' },
+    'genbestillingsrapport-content': { icon: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>', text: 'Vælg en periode for at generere genbestillingsrapport', sub: 'Se genbestillingsprocenter' },
+    'anmeldelsesrapport-content': { icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', text: 'Vælg en periode for at generere anmeldelsesrapport', sub: 'Se konvertering fra anmeldelser' },
+    'heatmaprapport-content': { icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', text: 'Vælg en uge for at generere heatmap', sub: 'Oversigt over hvornår ordretrykket er størst' }
+  };
+  Object.entries(emptyStates).forEach(([id, cfg]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="card" style="padding:24px"><div class="empty"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' + cfg.icon + '</svg></div><div>' + cfg.text + '</div><div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">' + cfg.sub + '</div></div></div>';
+  });
+  ['dagsrapport-dato','produktrapport-fra','produktrapport-til','zrapport-dato','heatmaprapport-dato'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['konverteringsrapport-periode','genbestillingsrapport-periode','anmeldelsesrapport-periode'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = el.querySelector('[selected]')?.index || 0;
+  });
+}
+
+// Populate report filters and auto-render when navigating to report pages
+function populateReportFiltersAndRender(page) {
+  // Always set dagsrapport date to today (existing behavior)
+  if (page === 'dagsrapport') {
+    var dagEl = document.getElementById('dagsrapport-dato');
+    if (dagEl && !dagEl.value) dagEl.value = new Date().toISOString().split('T')[0];
+  }
+
+  if (typeof isDemoDataEnabled !== 'function' || !isDemoDataEnabled()) return;
+
+  var params = JSON.parse(localStorage.getItem('orderflow_demo_report_params') || '{}');
+  var p = params[page];
+  if (!p) return;
+
+  // Populate filter inputs with demo values
+  switch (page) {
+    case 'dagsrapport':
+      var d1 = document.getElementById('dagsrapport-dato');
+      if (d1) d1.value = p.dato;
+      break;
+    case 'produktrapport':
+      var f1 = document.getElementById('produktrapport-fra');
+      var t1 = document.getElementById('produktrapport-til');
+      if (f1) f1.value = p.fra;
+      if (t1) t1.value = p.til;
+      break;
+    case 'zrapport':
+      var z1 = document.getElementById('zrapport-dato');
+      if (z1) z1.value = p.dato;
+      break;
+    case 'konverteringsrapport':
+      var k1 = document.getElementById('konverteringsrapport-periode');
+      if (k1) k1.value = p.periode;
+      break;
+    case 'genbestillingsrapport':
+      var g1 = document.getElementById('genbestillingsrapport-periode');
+      if (g1) g1.value = p.periode;
+      break;
+    case 'anmeldelsesrapport':
+      var a1 = document.getElementById('anmeldelsesrapport-periode');
+      if (a1) a1.value = p.periode;
+      break;
+    case 'heatmaprapport':
+      var h1 = document.getElementById('heatmaprapport-dato');
+      if (h1) h1.value = p.dato;
+      break;
+  }
+
+  // Check if data exists in global variable, render if so
+  var dataMap = {
+    'dagsrapport': dagsrapportData,
+    'produktrapport': produktrapportData,
+    'zrapport': zrapportData,
+    'konverteringsrapport': konverteringsrapportData,
+    'genbestillingsrapport': genbestillingsrapportData,
+    'anmeldelsesrapport': anmeldelsesrapportData,
+    'heatmaprapport': heatmaprapportData
+  };
+  var renderMap = {
+    'dagsrapport': renderDagsrapport,
+    'produktrapport': renderProduktrapport,
+    'zrapport': renderZrapport,
+    'konverteringsrapport': renderKonverteringsrapport,
+    'genbestillingsrapport': renderGenbestillingsrapport,
+    'anmeldelsesrapport': renderAnmeldelsesrapport,
+    'heatmaprapport': renderHeatmaprapport
+  };
+
+  if (dataMap[page]) {
+    // Data exists, just render
+    renderMap[page]();
+  } else {
+    // Data null (e.g., after page reload) — regenerate silently from saved params
+    var regenMap = {
+      'dagsrapport': function() { generateDagsrapport(p.dato, true); },
+      'produktrapport': function() { generateProduktrapport(p.fra, p.til, true); },
+      'zrapport': function() { generateZrapport(p.dato, true); },
+      'konverteringsrapport': function() { generateKonverteringsrapport(p.periode, true); },
+      'genbestillingsrapport': function() { generateGenbestillingsrapport(p.periode, true); },
+      'anmeldelsesrapport': function() { generateAnmeldelsesrapport(p.periode, true); },
+      'heatmaprapport': function() { generateHeatmaprapport(p.dato, true); }
+    };
+    if (regenMap[page]) regenMap[page]();
+  }
 }
 
 // Update demo data status display
@@ -8909,6 +8697,7 @@ function updateDemoDataStatus() {
   const customersCount = document.getElementById('demo-data-customers-count');
   const ordersCount = document.getElementById('demo-data-orders-count');
   const leadsCount = document.getElementById('demo-data-leads-count');
+  const reportsCountEl = document.getElementById('demo-data-reports-count');
 
   if (toggle) toggle.checked = enabled;
 
@@ -8921,10 +8710,12 @@ function updateDemoDataStatus() {
     const customers = JSON.parse(localStorage.getItem('orderflow_demo_customers') || '[]');
     const orders = JSON.parse(localStorage.getItem('orderflow_demo_orders') || '[]');
     const leads = JSON.parse(localStorage.getItem('orderflow_demo_leads') || '[]');
+    const reportsCount = [dagsrapportData, produktrapportData, zrapportData, konverteringsrapportData, genbestillingsrapportData, anmeldelsesrapportData, heatmaprapportData].filter(d => d !== null).length;
 
     if (customersCount) customersCount.textContent = customers.length;
     if (ordersCount) ordersCount.textContent = orders.length;
     if (leadsCount) leadsCount.textContent = leads.length;
+    if (reportsCountEl) reportsCountEl.textContent = reportsCount;
   } else {
     if (statusText) {
       statusText.textContent = 'Deaktiveret';
@@ -8933,6 +8724,7 @@ function updateDemoDataStatus() {
     if (customersCount) customersCount.textContent = '0';
     if (ordersCount) ordersCount.textContent = '0';
     if (leadsCount) leadsCount.textContent = '0';
+    if (reportsCountEl) reportsCountEl.textContent = '0';
   }
 }
 
@@ -9644,12 +9436,48 @@ let invoiceHistoryData = [];
 let invoiceCurrentPage = 1;
 const invoicesPerPage = 10;
 
-// Default subscription plans
+// Default subscription plans (localStorage fallback, overwritten by Supabase on load)
 let subscriptionPlans = JSON.parse(localStorage.getItem('orderflow_subscription_plans') || 'null') || [
   { id: 'starter', name: 'Starter', price: 299, description: 'Perfekt til små restauranter', features: ['100 SMS/måned', '2 brugere', 'Basis workflow', 'Email support'], popular: false },
   { id: 'professional', name: 'Professional', price: 799, description: 'Den perfekte løsning for voksende restauranter', features: ['500 SMS/måned', '5 brugere', 'AI Workflow', 'Rapporter', 'Email support', 'API adgang'], popular: true },
   { id: 'enterprise', name: 'Enterprise', price: 1499, description: 'For store restaurantkæder', features: ['Ubegrænset SMS', 'Ubegrænset brugere', 'AI Workflow Pro', 'Avancerede rapporter', '24/7 Support', 'Dedikeret manager'], popular: false }
 ];
+
+// Transform Supabase DB row → local plan format
+function dbPlanToLocal(dbPlan) {
+  return {
+    id: dbPlan.plan_id || dbPlan.id,
+    _dbId: dbPlan.id,
+    name: dbPlan.name,
+    price: dbPlan.monthly_price,
+    monthly_price: dbPlan.monthly_price,
+    annual_price: dbPlan.annual_price,
+    description: dbPlan.description || '',
+    features: Array.isArray(dbPlan.features) ? dbPlan.features : [],
+    popular: dbPlan.is_popular || false,
+    button_text: dbPlan.button_text || 'Kom i gang',
+    button_variant: dbPlan.button_variant || 'default',
+    is_active: dbPlan.is_active !== false,
+    sort_order: dbPlan.sort_order || 0
+  };
+}
+
+// Transform local plan → Supabase DB row
+function localPlanToDB(plan) {
+  return {
+    plan_id: plan.id,
+    name: plan.name,
+    description: plan.description || '',
+    monthly_price: plan.monthly_price ?? plan.price ?? 0,
+    annual_price: plan.annual_price ?? Math.round((plan.monthly_price || plan.price || 0) * 0.8),
+    features: plan.features || [],
+    button_text: plan.button_text || 'Kom i gang',
+    button_variant: plan.button_variant || 'default',
+    is_popular: plan.popular || false,
+    is_active: plan.is_active !== false,
+    sort_order: plan.sort_order || 0
+  };
+}
 
 function loadFakturaPage() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
@@ -10096,10 +9924,24 @@ function exportInvoiceHistory() { toast('Eksport funktion kommer snart', 'info')
 // ABONNEMENT PAGE - Subscription Management
 // =====================================================
 
-function loadAbonnementPage() {
+async function loadAbonnementPage() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (!restaurant) return;
   if (!restaurant.subscription) restaurant.subscription = { planId: 'professional', nextBilling: getNextMonthFirst() };
+
+  // Refresh plans from Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getSubscriptionPlans) {
+      const dbPlans = await SupabaseDB.getSubscriptionPlans(true);
+      if (dbPlans && dbPlans.length > 0) {
+        subscriptionPlans = dbPlans.map(dbPlanToLocal);
+        saveSubscriptionPlans();
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Bruger cached planer:', err.message);
+  }
+
   const currentPlan = subscriptionPlans.find(p => p.id === restaurant.subscription.planId) || subscriptionPlans[1];
   document.getElementById('current-plan-name').textContent = currentPlan.name;
   document.getElementById('current-plan-desc').textContent = currentPlan.description;
@@ -10141,11 +9983,25 @@ function purchaseAddon(type) {
 // SUBSCRIPTION PLAN CONFIGURATION (Settings Admin)
 // =====================================================
 
-function renderSubscriptionPlansConfig() {
+async function renderSubscriptionPlansConfig() {
   const container = document.getElementById('subscription-plans-config');
   if (!container) return;
-  
-  container.innerHTML = subscriptionPlans.map((plan, index) => `
+
+  // Fetch from Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getSubscriptionPlans) {
+      const dbPlans = await SupabaseDB.getSubscriptionPlans(false);
+      if (dbPlans && dbPlans.length > 0) {
+        subscriptionPlans = dbPlans.map(dbPlanToLocal);
+        saveSubscriptionPlans();
+        console.log('✅ Planer hentet fra Supabase:', subscriptionPlans.length);
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Kunne ikke hente planer fra Supabase, bruger lokale:', err.message);
+  }
+
+  container.innerHTML = subscriptionPlans.map((plan) => `
     <div class="card" style="padding:20px;position:relative;${plan.popular ? 'border:2px solid var(--accent)' : ''}" data-plan-id="${plan.id}">
       ${plan.popular ? '<span style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#0a0b0d;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px">POPULÆR</span>' : ''}
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
@@ -10162,7 +10018,10 @@ function renderSubscriptionPlansConfig() {
           </button>
         </div>
       </div>
-      <div style="font-size:24px;font-weight:700;margin-bottom:12px">${plan.price} <span style="font-size:12px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+      <div style="display:flex;gap:16px;align-items:baseline;margin-bottom:12px">
+        <div><span style="font-size:24px;font-weight:700">${plan.monthly_price || plan.price || 0}</span> <span style="font-size:12px;font-weight:400;color:var(--muted)">DKK/md</span></div>
+        ${plan.annual_price ? `<div><span style="font-size:16px;font-weight:600;color:var(--muted)">${plan.annual_price}</span> <span style="font-size:11px;color:var(--muted)">DKK/md (årlig)</span></div>` : ''}
+      </div>
       <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
         ${plan.features.slice(0, 4).map(f => `
           <div style="display:flex;align-items:center;gap:6px">
@@ -10182,16 +10041,39 @@ function renderSubscriptionPlansConfig() {
   `).join('');
 }
 
-function addSubscriptionPlan() {
+async function addSubscriptionPlan() {
+  const planId = 'plan_' + Date.now();
+  const sortOrder = subscriptionPlans.length + 1;
+
   const newPlan = {
-    id: 'plan_' + Date.now(),
+    id: planId,
     name: 'Ny Plan',
     price: 499,
+    monthly_price: 499,
+    annual_price: 399,
     description: 'Beskrivelse af planen',
     features: ['Feature 1', 'Feature 2', 'Feature 3'],
-    popular: false
+    popular: false,
+    button_text: 'Kom i gang',
+    button_variant: 'default',
+    is_active: true,
+    sort_order: sortOrder
   };
-  
+
+  // Insert into Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.createSubscriptionPlan) {
+      const dbData = localPlanToDB(newPlan);
+      const created = await SupabaseDB.createSubscriptionPlan(dbData);
+      newPlan._dbId = created.id;
+      console.log('✅ Ny plan oprettet i Supabase:', created.id);
+    }
+  } catch (err) {
+    console.error('❌ Fejl ved oprettelse i Supabase:', err);
+    toast('Fejl ved oprettelse', 'error');
+    return;
+  }
+
   subscriptionPlans.push(newPlan);
   saveSubscriptionPlans();
   renderSubscriptionPlansConfig();
@@ -10201,7 +10083,7 @@ function addSubscriptionPlan() {
 function editSubscriptionPlan(planId) {
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (!plan) return;
-  
+
   const html = `
     <div style="display:flex;flex-direction:column;gap:16px">
       <div class="form-group">
@@ -10212,9 +10094,19 @@ function editSubscriptionPlan(planId) {
         <label class="form-label">Beskrivelse</label>
         <input type="text" class="input" id="edit-plan-desc" value="${plan.description}">
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Månedlig pris (DKK)</label>
+          <input type="number" class="input" id="edit-plan-monthly-price" value="${plan.monthly_price ?? plan.price ?? 0}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Årlig pris (DKK/md)</label>
+          <input type="number" class="input" id="edit-plan-annual-price" value="${plan.annual_price ?? 0}">
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label">Pris (DKK/md)</label>
-        <input type="number" class="input" id="edit-plan-price" value="${plan.price}">
+        <label class="form-label">Knaptekst</label>
+        <input type="text" class="input" id="edit-plan-button-text" value="${plan.button_text || 'Kom i gang'}">
       </div>
       <div class="form-group">
         <label class="form-label">Features (én per linje)</label>
@@ -10226,32 +10118,63 @@ function editSubscriptionPlan(planId) {
       </div>
     </div>
   `;
-  
+
   showCustomModal('Rediger plan: ' + plan.name, html);
 }
 
-function saveEditedPlan(planId) {
+async function saveEditedPlan(planId) {
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (!plan) return;
-  
+
   plan.name = document.getElementById('edit-plan-name').value;
   plan.description = document.getElementById('edit-plan-desc').value;
-  plan.price = parseInt(document.getElementById('edit-plan-price').value) || 0;
+  plan.monthly_price = parseInt(document.getElementById('edit-plan-monthly-price').value) || 0;
+  plan.annual_price = parseInt(document.getElementById('edit-plan-annual-price').value) || 0;
+  plan.price = plan.monthly_price;
+  plan.button_text = document.getElementById('edit-plan-button-text')?.value || 'Kom i gang';
   plan.features = document.getElementById('edit-plan-features').value.split('\n').filter(f => f.trim());
-  
+
+  // Save to Supabase
+  try {
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && plan._dbId) {
+      const dbData = localPlanToDB(plan);
+      delete dbData.plan_id;
+      await SupabaseDB.updateSubscriptionPlan(plan._dbId, dbData);
+      console.log('✅ Plan opdateret i Supabase:', plan.name);
+    }
+  } catch (err) {
+    console.error('❌ Fejl ved Supabase opdatering:', err);
+    toast('Fejl ved gem', 'error');
+    return;
+  }
+
   saveSubscriptionPlans();
   renderSubscriptionPlansConfig();
   closeCustomModal();
   toast('Plan opdateret', 'success');
 }
 
-function deleteSubscriptionPlan(planId) {
+async function deleteSubscriptionPlan(planId) {
   if (subscriptionPlans.length <= 1) {
     toast('Der skal være mindst én plan', 'error');
     return;
   }
-  
+
   if (confirm('Er du sikker på du vil slette denne plan?')) {
+    const plan = subscriptionPlans.find(p => p.id === planId);
+
+    // Delete from Supabase
+    try {
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.deleteSubscriptionPlan && plan?._dbId) {
+        await SupabaseDB.deleteSubscriptionPlan(plan._dbId);
+        console.log('✅ Plan slettet fra Supabase:', plan._dbId);
+      }
+    } catch (err) {
+      console.error('❌ Fejl ved sletning fra Supabase:', err);
+      toast('Fejl ved sletning', 'error');
+      return;
+    }
+
     subscriptionPlans = subscriptionPlans.filter(p => p.id !== planId);
     saveSubscriptionPlans();
     renderSubscriptionPlansConfig();
@@ -10259,13 +10182,33 @@ function deleteSubscriptionPlan(planId) {
   }
 }
 
-function togglePlanPopular(planId, isPopular) {
+async function togglePlanPopular(planId, isPopular) {
+  // Nulstil alle andre planer
   if (isPopular) {
-    subscriptionPlans.forEach(p => p.popular = false);
+    for (const p of subscriptionPlans) {
+      if (p.popular && p.id !== planId) {
+        p.popular = false;
+        try {
+          if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && p._dbId) {
+            await SupabaseDB.updateSubscriptionPlan(p._dbId, { is_popular: false });
+          }
+        } catch (err) {
+          console.warn('⚠️ Fejl ved nulstilling af populær:', err);
+        }
+      }
+    }
   }
+
   const plan = subscriptionPlans.find(p => p.id === planId);
   if (plan) {
     plan.popular = isPopular;
+    try {
+      if (typeof SupabaseDB !== 'undefined' && SupabaseDB.updateSubscriptionPlan && plan._dbId) {
+        await SupabaseDB.updateSubscriptionPlan(plan._dbId, { is_popular: isPopular });
+      }
+    } catch (err) {
+      console.error('❌ Fejl ved populær toggle:', err);
+    }
     saveSubscriptionPlans();
     renderSubscriptionPlansConfig();
   }
@@ -12131,8 +12074,9 @@ function showCrmProfileView(id) {
   }
   
   currentProfileRestaurantId = id;
+  localStorage.setItem('lastViewedCustomerId', id);
   const userId = generateUserId(id);
-  
+
   // Load saved products for this restaurant
   loadSavedProducts(restaurant);
   
@@ -12143,19 +12087,9 @@ function showCrmProfileView(id) {
   // Remove active indicator from Kunder nav button (the green dot)
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
 
-  // Show customer context menu in sidebar
-  const contextMenu = document.getElementById('nav-customer-context');
-  contextMenu.style.display = 'block';
-  document.getElementById('nav-customer-name').textContent = restaurant.name;
-  document.getElementById('nav-customer-id').textContent = 'ID: ' + userId;
-  document.getElementById('nav-customer-avatar').textContent = restaurant.name.charAt(0).toUpperCase();
-  
   // Reset to first subpage (dashboard)
   document.querySelectorAll('.customer-subpage').forEach(sp => sp.classList.remove('active'));
   document.getElementById('subpage-dashboard').classList.add('active');
-  document.querySelectorAll('.nav-customer-menu .nav-dropdown-item').forEach((item, i) => {
-    item.classList.toggle('active', i === 0);
-  });
 
   // Load customer dashboard
   loadCustomerDashboard(id);
@@ -27477,6 +27411,491 @@ function showAccountPage(page) {
   }
 }
 
+// ========== Profile Pages Navigation ==========
+
+function showProfilePage(page) {
+  // Close any open dropdowns
+  const dropdown = document.getElementById('profile-dropdown');
+  if (dropdown) dropdown.classList.remove('active');
+
+  // Hide all pages
+  document.querySelectorAll('.page, .workflow-page').forEach(p => p.classList.remove('active'));
+
+  // Clear all active states
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
+
+  // Show requested profile page
+  const targetPage = document.getElementById('page-' + page);
+  if (targetPage) {
+    targetPage.classList.add('active');
+
+    // Set active state on sidebar item
+    const items = document.querySelectorAll('.nav-dropdown-item');
+    items.forEach(item => {
+      if (item.getAttribute('onclick') === `showProfilePage('${page}')`) {
+        item.classList.add('active');
+      }
+    });
+
+    // Scroll to top
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
+
+    // Load data based on page
+    switch(page) {
+      case 'admin-profil':
+        loadAdminProfileOverview();
+        break;
+      case 'admin-oplysninger':
+        loadAdminOplysninger();
+        break;
+      case 'admin-team':
+        loadAdminTeam();
+        break;
+      case 'admin-virksomhed':
+        loadAdminVirksomhed();
+        break;
+      case 'admin-sikkerhed':
+        loadAdminSikkerhed();
+        break;
+      case 'admin-aktivitet':
+        loadAdminAktivitet();
+        break;
+      case 'admin-abonnement':
+        loadAdminAbonnement();
+        break;
+      case 'kunde-profil':
+        loadKundeProfileOverview();
+        break;
+      case 'kunde-oplysninger':
+        loadKundeOplysninger();
+        break;
+      case 'kunde-ordrer':
+        loadKundeOrdrer();
+        break;
+      case 'kunde-betaling':
+        loadKundeBetaling();
+        break;
+      case 'kunde-adresser':
+        loadKundeAdresser();
+        break;
+      case 'kunde-loyalitet':
+        loadKundeLoyalitet();
+        break;
+      case 'kunde-praeferencer':
+        loadKundePraeferencer();
+        break;
+    }
+  }
+}
+
+// ========== Admin Profile Functions ==========
+
+function loadAdminProfileOverview() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_admin_profile') || '{}');
+  const name = (profile.firstName || 'Admin') + ' ' + (profile.lastName || '');
+  const el = document.getElementById('admin-profile-name');
+  if (el) el.textContent = name.trim();
+
+  const emailEl = document.getElementById('admin-profile-email');
+  if (emailEl) emailEl.textContent = profile.email || currentUser?.email || 'admin@flow.dk';
+
+  const titleEl = document.getElementById('admin-profile-title');
+  if (titleEl) titleEl.textContent = profile.title || 'Administrator';
+
+  // Update avatar initial
+  const avatarEl = document.getElementById('admin-profile-avatar');
+  if (avatarEl) avatarEl.textContent = (profile.firstName || 'A').charAt(0).toUpperCase();
+
+  // Load stats
+  const teamCount = JSON.parse(localStorage.getItem('orderflow_admin_team') || '[]').length;
+  const statTeam = document.getElementById('admin-stat-team');
+  if (statTeam) statTeam.textContent = teamCount || '3';
+
+  const statKunder = document.getElementById('admin-stat-kunder');
+  if (statKunder) statKunder.textContent = restaurants?.length || '12';
+}
+
+function loadAdminOplysninger() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_admin_profile') || '{}');
+  const fields = {
+    'admin-firstname': profile.firstName || '',
+    'admin-lastname': profile.lastName || '',
+    'admin-email': profile.email || currentUser?.email || '',
+    'admin-phone': profile.phone || '',
+    'admin-title': profile.title || '',
+    'admin-position': profile.position || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveAdminOplysninger() {
+  const profile = {
+    firstName: document.getElementById('admin-firstname')?.value || '',
+    lastName: document.getElementById('admin-lastname')?.value || '',
+    email: document.getElementById('admin-email')?.value || '',
+    phone: document.getElementById('admin-phone')?.value || '',
+    title: document.getElementById('admin-title')?.value || '',
+    position: document.getElementById('admin-position')?.value || ''
+  };
+  localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
+  showSaveStatus('admin-oplysninger-status', 'saved');
+}
+
+function loadAdminTeam() {
+  const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || 'null') || [
+    { name: 'Martin Sarvio', email: 'martin@flow.dk', role: 'Admin', status: 'Aktiv' },
+    { name: 'Emma Nielsen', email: 'emma@flow.dk', role: 'Medarbejder', status: 'Aktiv' },
+    { name: 'Lars Petersen', email: 'lars@flow.dk', role: 'Medarbejder', status: 'Inviteret' }
+  ];
+  const container = document.getElementById('admin-team-list');
+  if (!container) return;
+
+  container.innerHTML = team.map((m, i) => `
+    <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;font-size:14px">${m.name.charAt(0)}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${m.name}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">${m.email}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${m.role === 'Admin' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.08)'};color:${m.role === 'Admin' ? 'var(--color-primary)' : 'var(--color-text-muted)'}">${m.role}</span>
+        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:${m.status === 'Aktiv' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'};color:${m.status === 'Aktiv' ? 'var(--color-success)' : '#F59E0B'}">${m.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminVirksomhed() {
+  const company = JSON.parse(localStorage.getItem('orderflow_admin_company') || '{}');
+  const fields = {
+    'company-name': company.name || '',
+    'company-cvr': company.cvr || '',
+    'company-address': company.address || '',
+    'company-city': company.city || '',
+    'company-zip': company.zip || '',
+    'company-phone': company.phone || '',
+    'company-email': company.email || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveAdminVirksomhed() {
+  const company = {
+    name: document.getElementById('company-name')?.value || '',
+    cvr: document.getElementById('company-cvr')?.value || '',
+    address: document.getElementById('company-address')?.value || '',
+    city: document.getElementById('company-city')?.value || '',
+    zip: document.getElementById('company-zip')?.value || '',
+    phone: document.getElementById('company-phone')?.value || '',
+    email: document.getElementById('company-email')?.value || ''
+  };
+  localStorage.setItem('orderflow_admin_company', JSON.stringify(company));
+  showSaveStatus('company-save-status', 'saved');
+}
+
+function loadAdminSikkerhed() {
+  const sessions = [
+    { device: 'Chrome - macOS', location: 'København, DK', time: 'Aktiv nu', current: true },
+    { device: 'Safari - iPhone', location: 'Aarhus, DK', time: '2 timer siden', current: false },
+    { device: 'Firefox - Windows', location: 'Odense, DK', time: '1 dag siden', current: false }
+  ];
+  const container = document.getElementById('admin-sessions-list');
+  if (!container) return;
+
+  container.innerHTML = sessions.map(s => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--color-border)">
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.device}</div>
+        <div style="font-size:12px;color:var(--color-text-muted)">${s.location}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:${s.current ? 'var(--color-success)' : 'var(--color-text-muted)'}">${s.time}</span>
+        ${!s.current ? '<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px">Afslut</button>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminAktivitet() {
+  const activities = [
+    { action: 'Opdaterede virksomhedsoplysninger', type: 'Profil', time: '10 min siden' },
+    { action: 'Tilføjede ny medarbejder: Emma Nielsen', type: 'Team', time: '1 time siden' },
+    { action: 'Ændrede abonnementsplan til Pro', type: 'Fakturering', time: '3 timer siden' },
+    { action: 'Opdaterede API-nøgler', type: 'System', time: '1 dag siden' },
+    { action: 'Loggede ind fra ny enhed', type: 'Sikkerhed', time: '2 dage siden' },
+    { action: 'Eksporterede kundedata', type: 'Data', time: '3 dage siden' },
+    { action: 'Ændrede rolletilladelser', type: 'Team', time: '1 uge siden' },
+    { action: 'Oprettede ny kampagne', type: 'Marketing', time: '1 uge siden' }
+  ];
+  const container = document.getElementById('admin-activity-list');
+  if (!container) return;
+
+  const typeColors = {
+    'Profil': '#6366F1', 'Team': '#10B981', 'Fakturering': '#F59E0B',
+    'System': '#06B6D4', 'Sikkerhed': '#EF4444', 'Data': '#8B5CF6', 'Marketing': '#EC4899'
+  };
+
+  container.innerHTML = activities.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${typeColors[a.type] || '#6366F1'};margin-top:6px;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${a.action}</div>
+        <div style="display:flex;gap:12px;margin-top:4px">
+          <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(${typeColors[a.type] === '#6366F1' ? '99,102,241' : '255,255,255'},0.1);color:${typeColors[a.type] || 'var(--color-text-muted)'}">${a.type}</span>
+          <span style="font-size:11px;color:var(--color-text-muted)">${a.time}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminAbonnement() {
+  // Placeholder data for subscription
+  const sub = JSON.parse(localStorage.getItem('orderflow_admin_subscription') || 'null') || {
+    plan: 'Pro', price: '599', period: 'måned', nextBilling: '2026-03-06',
+    usage: { kunder: 12, maxKunder: 50, ordrer: 342, storage: '2.1 GB' }
+  };
+  const planEl = document.getElementById('admin-plan-name');
+  if (planEl) planEl.textContent = sub.plan;
+
+  const priceEl = document.getElementById('admin-plan-price');
+  if (priceEl) priceEl.textContent = sub.price + ' kr/' + sub.period;
+
+  const nextEl = document.getElementById('admin-next-billing');
+  if (nextEl) nextEl.textContent = sub.nextBilling;
+
+  const usageBar = document.getElementById('admin-usage-bar');
+  if (usageBar) usageBar.style.width = Math.round((sub.usage.kunder / sub.usage.maxKunder) * 100) + '%';
+
+  const usageText = document.getElementById('admin-usage-text');
+  if (usageText) usageText.textContent = `${sub.usage.kunder} / ${sub.usage.maxKunder} kunder`;
+}
+
+// ========== Kunde Profile Functions ==========
+
+function loadKundeProfileOverview() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_kunde_profile') || '{}');
+  const name = (profile.firstName || 'Kunde') + ' ' + (profile.lastName || '');
+  const el = document.getElementById('kunde-profile-name');
+  if (el) el.textContent = name.trim();
+
+  const emailEl = document.getElementById('kunde-profile-email');
+  if (emailEl) emailEl.textContent = profile.email || currentUser?.email || 'kunde@example.dk';
+
+  const avatarEl = document.getElementById('kunde-profile-avatar');
+  if (avatarEl) avatarEl.textContent = (profile.firstName || 'K').charAt(0).toUpperCase();
+
+  // Load loyalty status
+  const loyalty = JSON.parse(localStorage.getItem('orderflow_kunde_loyalty') || '{}');
+  const pointsEl = document.getElementById('kunde-stat-points');
+  if (pointsEl) pointsEl.textContent = loyalty.points || '2.450';
+
+  const tierEl = document.getElementById('kunde-stat-tier');
+  if (tierEl) tierEl.textContent = loyalty.tier || 'Guld';
+}
+
+function loadKundeOplysninger() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_kunde_profile') || '{}');
+  const fields = {
+    'kunde-firstname': profile.firstName || '',
+    'kunde-lastname': profile.lastName || '',
+    'kunde-email': profile.email || currentUser?.email || '',
+    'kunde-phone': profile.phone || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveKundeOplysninger() {
+  const profile = {
+    firstName: document.getElementById('kunde-firstname')?.value || '',
+    lastName: document.getElementById('kunde-lastname')?.value || '',
+    email: document.getElementById('kunde-email')?.value || '',
+    phone: document.getElementById('kunde-phone')?.value || ''
+  };
+  localStorage.setItem('orderflow_kunde_profile', JSON.stringify(profile));
+  showSaveStatus('kunde-oplysninger-status', 'saved');
+}
+
+function loadKundeOrdrer() {
+  const orders = [
+    { id: '#ORD-2847', date: '2026-02-06', restaurant: 'Pizza Palace', total: '189 kr', status: 'Leveret' },
+    { id: '#ORD-2831', date: '2026-02-04', restaurant: 'Sushi House', total: '342 kr', status: 'Leveret' },
+    { id: '#ORD-2815', date: '2026-02-01', restaurant: 'Burger Bar', total: '145 kr', status: 'Leveret' },
+    { id: '#ORD-2798', date: '2026-01-28', restaurant: 'Thai Garden', total: '278 kr', status: 'Leveret' },
+    { id: '#ORD-2776', date: '2026-01-25', restaurant: 'Pizza Palace', total: '212 kr', status: 'Leveret' }
+  ];
+  const container = document.getElementById('kunde-orders-list');
+  if (!container) return;
+
+  container.innerHTML = orders.map(o => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--color-border);font-size:13px">
+      <span style="font-weight:600;color:var(--color-primary)">${o.id}</span>
+      <span style="color:var(--color-text-muted)">${o.date}</span>
+      <span>${o.restaurant}</span>
+      <span style="font-weight:600">${o.total}</span>
+      <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(16,185,129,0.15);color:var(--color-success);display:inline-block;width:fit-content">${o.status}</span>
+    </div>
+  `).join('');
+}
+
+function loadKundeBetaling() {
+  const cards = JSON.parse(localStorage.getItem('orderflow_kunde_cards') || 'null') || [
+    { type: 'Visa', last4: '4242', expiry: '12/27', default: true },
+    { type: 'Mastercard', last4: '8888', expiry: '06/28', default: false }
+  ];
+  const container = document.getElementById('kunde-cards-list');
+  if (!container) return;
+
+  container.innerHTML = cards.map((c, i) => `
+    <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:48px;height:32px;border-radius:6px;background:${c.type === 'Visa' ? 'linear-gradient(135deg,#1a1f71,#2a3eb1)' : 'linear-gradient(135deg,#eb001b,#f79e1b)'};display:flex;align-items:center;justify-content:center">
+          <span style="color:#fff;font-size:10px;font-weight:700">${c.type}</span>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:600">•••• •••• •••• ${c.last4}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">Udløber ${c.expiry}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${c.default ? '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(99,102,241,0.15);color:var(--color-primary)">Standard</span>' : ''}
+        <button class="btn btn-ghost" style="font-size:12px">Fjern</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadKundeAdresser() {
+  const addresses = JSON.parse(localStorage.getItem('orderflow_kunde_addresses') || 'null') || [
+    { label: 'Hjem', address: 'Vesterbrogade 42, 3. th', city: '1620 København V', default: true },
+    { label: 'Arbejde', address: 'Kongens Nytorv 15', city: '1050 København K', default: false }
+  ];
+  const container = document.getElementById('kunde-addresses-list');
+  if (!container) return;
+
+  container.innerHTML = addresses.map((a, i) => `
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:600">${a.label}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${a.default ? '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(99,102,241,0.15);color:var(--color-primary)">Standard</span>' : ''}
+          <button class="btn btn-ghost" style="font-size:12px">Rediger</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--color-text-muted)">${a.address}</div>
+      <div style="font-size:13px;color:var(--color-text-muted)">${a.city}</div>
+    </div>
+  `).join('');
+}
+
+function loadKundeLoyalitet() {
+  const loyalty = JSON.parse(localStorage.getItem('orderflow_kunde_loyalty') || 'null') || {
+    points: 2450, tier: 'Guld', nextTier: 'Platin', pointsToNext: 550,
+    history: [
+      { action: 'Ordre #ORD-2847', points: '+45', date: '2026-02-06' },
+      { action: 'Ordre #ORD-2831', points: '+68', date: '2026-02-04' },
+      { action: 'Indløst belønning', points: '-500', date: '2026-02-02' },
+      { action: 'Ordre #ORD-2815', points: '+29', date: '2026-02-01' },
+      { action: 'Bonus - Guld tier', points: '+100', date: '2026-01-31' }
+    ],
+    rewards: [
+      { name: 'Gratis levering', cost: 200, available: true },
+      { name: '10% rabat på næste ordre', cost: 500, available: true },
+      { name: 'Gratis dessert', cost: 300, available: true },
+      { name: 'VIP adgang til nye restauranter', cost: 1000, available: true }
+    ]
+  };
+
+  const pointsEl = document.getElementById('loyalty-points-value');
+  if (pointsEl) pointsEl.textContent = loyalty.points.toLocaleString('da-DK');
+
+  const tierEl = document.getElementById('loyalty-tier-name');
+  if (tierEl) tierEl.textContent = loyalty.tier;
+
+  const progressEl = document.getElementById('loyalty-progress-bar');
+  if (progressEl) {
+    const progress = Math.round(((3000 - loyalty.pointsToNext) / 3000) * 100);
+    progressEl.style.width = progress + '%';
+  }
+
+  const nextEl = document.getElementById('loyalty-next-tier');
+  if (nextEl) nextEl.textContent = `${loyalty.pointsToNext} point til ${loyalty.nextTier}`;
+
+  // Render history
+  const historyContainer = document.getElementById('loyalty-history-list');
+  if (historyContainer) {
+    historyContainer.innerHTML = loyalty.history.map(h => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border)">
+        <div>
+          <div style="font-size:13px;font-weight:500">${h.action}</div>
+          <div style="font-size:11px;color:var(--color-text-muted)">${h.date}</div>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:${h.points.startsWith('+') ? 'var(--color-success)' : 'var(--color-danger)'}">${h.points}</span>
+      </div>
+    `).join('');
+  }
+
+  // Render rewards
+  const rewardsContainer = document.getElementById('loyalty-rewards-list');
+  if (rewardsContainer) {
+    rewardsContainer.innerHTML = loyalty.rewards.map(r => `
+      <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:600">${r.name}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">${r.cost} point</div>
+        </div>
+        <button class="btn btn-${loyalty.points >= r.cost ? 'primary' : 'secondary'}" style="font-size:12px;padding:6px 14px" ${loyalty.points < r.cost ? 'disabled' : ''}>Indløs</button>
+      </div>
+    `).join('');
+  }
+}
+
+function loadKundePraeferencer() {
+  const prefs = JSON.parse(localStorage.getItem('orderflow_kunde_preferences') || '{}');
+
+  const fields = {
+    'pref-language': prefs.language || 'da',
+    'pref-email-notif': prefs.emailNotif !== false,
+    'pref-sms-notif': prefs.smsNotif !== false,
+    'pref-push-notif': prefs.pushNotif !== false,
+    'pref-marketing': prefs.marketing || false,
+    'pref-dietary': prefs.dietary || ''
+  };
+
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = val;
+    else el.value = val;
+  });
+}
+
+function saveKundePraeferencer() {
+  const prefs = {
+    language: document.getElementById('pref-language')?.value || 'da',
+    emailNotif: document.getElementById('pref-email-notif')?.checked ?? true,
+    smsNotif: document.getElementById('pref-sms-notif')?.checked ?? true,
+    pushNotif: document.getElementById('pref-push-notif')?.checked ?? true,
+    marketing: document.getElementById('pref-marketing')?.checked ?? false,
+    dietary: document.getElementById('pref-dietary')?.value || ''
+  };
+  localStorage.setItem('orderflow_kunde_preferences', JSON.stringify(prefs));
+  showSaveStatus('kunde-prefs-status', 'saved');
+}
+
 // ========== Mine Oplysninger ==========
 
 function loadAccountInfo() {
@@ -28411,19 +28830,22 @@ function loadWebBuilderTemplate(templateId) {
 
   // Switch preview iframe source based on template type
   const previewFile = template.previewFile || './demos/pwa-preview-mario.html';
-  const iframeIds = ['pwa-preview-branding', 'pwa-preview-farver', 'pwa-preview-billeder',
-                     'pwa-preview-timer', 'pwa-preview-kontakt', 'pwa-preview-levering',
-                     'webbuilder-preview-frame'];
 
-  iframeIds.forEach(id => {
-    const iframe = document.getElementById(id);
-    if (iframe) {
-      // Only reload if src is different
-      const currentSrc = iframe.src.split('/').pop();
-      const newSrc = previewFile.split('/').pop();
-      if (currentSrc !== newSrc) {
-        iframe.src = previewFile;
-      }
+  // Target Web Builder iframes by ID and class
+  const frames = [];
+  const mainFrame = document.getElementById('webbuilder-preview-frame');
+  if (mainFrame) frames.push(mainFrame);
+  document.querySelectorAll('.webbuilder-preview-frame').forEach(f => {
+    if (!frames.includes(f)) frames.push(f);
+  });
+  const fullscreenFrame = document.getElementById('wb-fullscreen-preview-frame');
+  if (fullscreenFrame && !frames.includes(fullscreenFrame)) frames.push(fullscreenFrame);
+
+  frames.forEach(iframe => {
+    const currentSrc = iframe.src.split('/').pop();
+    const newSrc = previewFile.split('/').pop();
+    if (currentSrc !== newSrc) {
+      iframe.src = previewFile;
     }
   });
 
@@ -30023,11 +30445,9 @@ function switchCMSEditorTab(tab) {
     // Hide all tabs (with null checks)
     const contentTab = document.getElementById('cms-tab-content');
     const seoTab = document.getElementById('cms-tab-seo');
-    const settingsTab = document.getElementById('cms-tab-settings');
 
     if (contentTab) contentTab.style.display = 'none';
     if (seoTab) seoTab.style.display = 'none';
-    if (settingsTab) settingsTab.style.display = 'none';
 
     // Show selected tab
     const tabEl = document.getElementById('cms-tab-' + tab);
@@ -30057,26 +30477,6 @@ function switchCMSEditorTab(tab) {
       if (seoTitle) seoTitle.value = page.seo?.title || '';
       if (seoDesc) seoDesc.value = page.seo?.description || '';
       if (seoKeywords) seoKeywords.value = (page.seo?.keywords || []).join(', ');
-    } else if (tab === 'settings') {
-      // Ensure empty state is hidden
-      const emptyEl = document.getElementById('cms-editor-empty');
-      if (emptyEl) emptyEl.style.display = 'none';
-
-      const slugEl = document.getElementById('cms-page-slug');
-      const templateEl = document.getElementById('cms-page-template');
-      const activeEl = document.getElementById('cms-page-active');
-      const cookieEl = document.getElementById('cms-page-cookie-banner');
-
-      if (slugEl) {
-        const safeSlug = typeof page.slug === 'string' ? page.slug : '';
-        slugEl.value = safeSlug ? safeSlug.replace('.html', '') : '';
-      }
-      if (templateEl) templateEl.value = page.template || 'landing';
-      if (activeEl) activeEl.checked = page.isActive !== false;
-      if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
-
-      console.log('Settings tab loaded for:', page.slug);
-      console.log('Empty state hidden:', emptyEl?.style.display);
     }
   } catch (e) {
     console.error('Error in switchCMSEditorTab:', e);
@@ -31458,9 +31858,7 @@ function schedulePageChanges() {
     now.setMinutes(now.getMinutes() + 1);
     const minDatetime = now.toISOString().slice(0, 16);
 
-    const schedules = Array.isArray(page.scheduledChanges) ? page.scheduledChanges : [];
-    if (!Array.isArray(page.scheduledChanges)) page.scheduledChanges = schedules;
-    const pendingSchedules = schedules.filter(s => s.status === 'pending');
+    const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
 
     const modal = document.createElement('div');
     modal.className = 'modal-overlay active';
@@ -31565,7 +31963,7 @@ function confirmSchedule() {
     createdAt: new Date().toISOString()
   };
 
-  if (!Array.isArray(page.scheduledChanges)) page.scheduledChanges = [];
+  if (!page.scheduledChanges) page.scheduledChanges = [];
   page.scheduledChanges.push(scheduledChange);
 
   page.updatedAt = new Date().toISOString();
@@ -31580,7 +31978,7 @@ function confirmSchedule() {
 // Edit scheduled change time
 function editScheduledChange(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !Array.isArray(page.scheduledChanges)) return;
+  if (!page || !page.scheduledChanges) return;
 
   const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
   if (!schedule) return;
@@ -31610,7 +32008,7 @@ function editScheduledChange(scheduleId) {
 // Preview scheduled changes
 function previewScheduledChanges(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !Array.isArray(page.scheduledChanges)) return;
+  if (!page || !page.scheduledChanges) return;
 
   const schedule = page.scheduledChanges.find(s => s.id === scheduleId);
   if (!schedule) return;
@@ -31628,7 +32026,7 @@ function previewScheduledChanges(scheduleId) {
 // Cancel scheduled change
 function cancelScheduledChange(scheduleId) {
   const page = getCurrentCMSPage();
-  if (!page || !Array.isArray(page.scheduledChanges)) return;
+  if (!page || !page.scheduledChanges) return;
 
   const idx = page.scheduledChanges.findIndex(s => s.id === scheduleId);
   if (idx !== -1) {
@@ -31645,8 +32043,7 @@ function cancelScheduledChange(scheduleId) {
 // Update schedule badge on the Planlæg button
 function updateScheduleBadge() {
   const page = getCurrentCMSPage();
-  const schedules = Array.isArray(page?.scheduledChanges) ? page.scheduledChanges : [];
-  const pendingCount = schedules.filter(s => s.status === 'pending').length;
+  const pendingCount = page?.scheduledChanges?.filter(s => s.status === 'pending').length || 0;
 
   const scheduleBtn = document.getElementById('cms-schedule-btn');
   if (scheduleBtn) {
@@ -31746,6 +32143,24 @@ function updateCurrentPageCookieBanner() {
   }
 }
 
+// Open CMS Page Settings Modal
+function openCMSSettingsModal() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const slugEl = document.getElementById('cms-page-slug');
+  const templateEl = document.getElementById('cms-page-template');
+  const activeEl = document.getElementById('cms-page-active');
+  const cookieEl = document.getElementById('cms-page-cookie-banner');
+
+  if (slugEl) slugEl.value = page.slug.replace('.html', '');
+  if (templateEl) templateEl.value = page.template || 'landing';
+  if (activeEl) activeEl.checked = page.isActive !== false;
+  if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
+
+  showModal('cms-settings');
+}
+
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
   showPage('flow-cms');
@@ -31775,13 +32190,13 @@ async function switchFlowCMSTab(tab) {
     'blog': 'Blog',
     'blog-editor': 'Rediger Blogindlæg',
     'seo': 'SEO Indstillinger',
-    'theme': 'Farver og Fonts',
     'products-sms': 'SMS Workflow',
     'products-instagram': 'Instagram Workflow',
     'products-facebook': 'Facebook Workflow',
     'raw-data': 'Data',
     'analytics-oversigt': 'Oversigt',
-    'integrationer': 'System Integrationer'
+    'integrationer': 'System Integrationer',
+    'farver-og-fonts': 'Farver & Fonts'
   };
 
   const titleEl = document.getElementById('flow-cms-page-title');
@@ -31796,14 +32211,250 @@ async function switchFlowCMSTab(tab) {
   // Load content based on tab
   if (tab === 'pages') await loadCMSPages(); // Use new CMS Pages Editor
   if (tab === 'blog') loadBlogPosts();
-  if (tab === 'theme') loadThemeEditor();
   if (tab === 'products-sms') loadWorkflowConfig('sms');
   if (tab === 'products-instagram') loadWorkflowConfig('instagram');
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
   if (tab === 'raw-data') loadRawDataTab();
   if (tab === 'analytics-oversigt') loadAnalyticsOverview();
   if (tab === 'integrationer') loadIntegrationsPage();
+  if (tab === 'farver-og-fonts') loadFarverOgFonts();
 }
+
+// ==================== CMS THEME: Farver og Fonts ====================
+
+const CMS_THEME_DEFAULTS = {
+  colors: {
+    primary: '#6366F1',
+    accent: '#6366F1',
+    success: '#10B981',
+    warning: '#F59E0B',
+    danger: '#EF4444',
+    background: '#13131F'
+  },
+  fonts: {
+    heading: 'Inter',
+    body: 'Inter'
+  }
+};
+
+const CMS_THEME_PRESETS = {
+  'default-indigo': {
+    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'ocean-blue': {
+    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'forest-green': {
+    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'sunset-orange': {
+    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917' },
+    fonts: { heading: 'Poppins', body: 'Inter' }
+  },
+  'minimal-dark': {
+    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  }
+};
+
+const CMS_COLOR_MAP = {
+  primary: '--color-primary',
+  accent: '--color-accent',
+  success: '--color-success',
+  warning: '--color-warning',
+  danger: '--color-danger',
+  background: '--color-bg'
+};
+
+function loadFarverOgFonts() {
+  const saved = localStorage.getItem('orderflow_cms_theme');
+  const config = saved ? JSON.parse(saved) : CMS_THEME_DEFAULTS;
+
+  // Populate color inputs
+  Object.keys(config.colors).forEach(key => {
+    const colorEl = document.getElementById('cms-color-' + key);
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    const previewEl = document.getElementById('cms-color-' + key + '-preview');
+    if (colorEl) colorEl.value = config.colors[key];
+    if (textEl) textEl.value = config.colors[key];
+    if (previewEl) previewEl.style.background = config.colors[key];
+  });
+
+  // Populate font selects
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  if (headingEl) headingEl.value = config.fonts.heading;
+  if (bodyEl) bodyEl.value = config.fonts.body;
+
+  updateCMSFontPreview();
+}
+
+function switchCMSThemeTab(tab) {
+  document.querySelectorAll('#flow-cms-content-farver-og-fonts .settings-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.querySelector(`#flow-cms-content-farver-og-fonts .settings-tab[onclick*="'${tab}'"]`);
+  if (activeTab) activeTab.classList.add('active');
+
+  document.querySelectorAll('.cms-theme-tab-content').forEach(c => {
+    c.style.display = 'none';
+  });
+  const content = document.getElementById('cms-theme-' + tab);
+  if (content) {
+    content.style.display = 'block';
+  }
+}
+
+function syncCMSColorInput(type) {
+  const textEl = document.getElementById('cms-color-' + type + '-text');
+  const colorEl = document.getElementById('cms-color-' + type);
+  const previewEl = document.getElementById('cms-color-' + type + '-preview');
+
+  if (textEl && colorEl) {
+    const value = textEl.value;
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      colorEl.value = value;
+      if (previewEl) previewEl.style.background = value;
+    }
+  }
+}
+
+function updateCMSColorFromPicker(type) {
+  const colorEl = document.getElementById('cms-color-' + type);
+  const textEl = document.getElementById('cms-color-' + type + '-text');
+  const previewEl = document.getElementById('cms-color-' + type + '-preview');
+
+  if (colorEl && textEl) {
+    textEl.value = colorEl.value;
+    if (previewEl) previewEl.style.background = colorEl.value;
+  }
+}
+
+function updateCMSFontPreview() {
+  const headingFont = document.getElementById('cms-font-heading')?.value || 'Inter';
+  const bodyFont = document.getElementById('cms-font-body')?.value || 'Inter';
+
+  const headingEl = document.getElementById('cms-font-preview-heading');
+  const bodyEl = document.getElementById('cms-font-preview-body');
+
+  if (headingEl) headingEl.style.fontFamily = `'${headingFont}', sans-serif`;
+  if (bodyEl) bodyEl.style.fontFamily = `'${bodyFont}', sans-serif`;
+}
+
+function saveCMSTheme() {
+  const config = {
+    colors: {},
+    fonts: {}
+  };
+
+  // Collect colors
+  Object.keys(CMS_THEME_DEFAULTS.colors).forEach(key => {
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    config.colors[key] = textEl ? textEl.value : CMS_THEME_DEFAULTS.colors[key];
+  });
+
+  // Collect fonts
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  config.fonts.heading = headingEl ? headingEl.value : 'Inter';
+  config.fonts.body = bodyEl ? bodyEl.value : 'Inter';
+
+  // Save to localStorage
+  localStorage.setItem('orderflow_cms_theme', JSON.stringify(config));
+
+  // Apply runtime
+  applyCMSTheme(config);
+
+  // Show save status
+  const status = document.getElementById('cms-theme-save-status');
+  if (status) {
+    status.style.display = 'inline';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
+}
+
+function applyCMSTheme(config) {
+  const root = document.documentElement;
+
+  // Apply colors
+  Object.keys(config.colors).forEach(key => {
+    const cssVar = CMS_COLOR_MAP[key];
+    if (cssVar) {
+      root.style.setProperty(cssVar, config.colors[key]);
+    }
+  });
+
+  // Apply primary-related derived colors
+  const primary = config.colors.primary;
+  if (primary) {
+    root.style.setProperty('--color-primary-hover', adjustBrightness(primary, 20));
+    root.style.setProperty('--color-primary-active', adjustBrightness(primary, -15));
+    root.style.setProperty('--color-primary-dim', primary + '26');
+    root.style.setProperty('--color-primary-glow', primary + '59');
+  }
+
+  // Apply fonts
+  if (config.fonts.heading && config.fonts.heading !== 'Inter') {
+    loadGoogleFont(config.fonts.heading);
+  }
+  if (config.fonts.body && config.fonts.body !== 'Inter') {
+    loadGoogleFont(config.fonts.body);
+  }
+  root.style.setProperty('--font-family-base', `'${config.fonts.body}', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`);
+}
+
+function adjustBrightness(hex, percent) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.min(255, Math.max(0, (num >> 16) + Math.round(2.55 * percent)));
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + Math.round(2.55 * percent)));
+  const b = Math.min(255, Math.max(0, (num & 0x0000FF) + Math.round(2.55 * percent)));
+  return '#' + (0x1000000 + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function loadGoogleFont(fontName) {
+  const id = 'gfont-' + fontName.replace(/\s+/g, '-').toLowerCase();
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@400;500;600;700&display=swap`;
+  document.head.appendChild(link);
+}
+
+function applyCMSThemePreset(presetName) {
+  const preset = CMS_THEME_PRESETS[presetName];
+  if (!preset) return;
+
+  // Update color inputs
+  Object.keys(preset.colors).forEach(key => {
+    const colorEl = document.getElementById('cms-color-' + key);
+    const textEl = document.getElementById('cms-color-' + key + '-text');
+    const previewEl = document.getElementById('cms-color-' + key + '-preview');
+    if (colorEl) colorEl.value = preset.colors[key];
+    if (textEl) textEl.value = preset.colors[key];
+    if (previewEl) previewEl.style.background = preset.colors[key];
+  });
+
+  // Update font selects
+  const headingEl = document.getElementById('cms-font-heading');
+  const bodyEl = document.getElementById('cms-font-body');
+  if (headingEl) headingEl.value = preset.fonts.heading;
+  if (bodyEl) bodyEl.value = preset.fonts.body;
+
+  updateCMSFontPreview();
+  switchCMSThemeTab('farver');
+}
+
+// Load saved CMS theme on app startup
+(function initCMSTheme() {
+  const saved = localStorage.getItem('orderflow_cms_theme');
+  if (saved) {
+    try {
+      applyCMSTheme(JSON.parse(saved));
+    } catch(e) { /* ignore corrupt data */ }
+  }
+})();
 
 // Load CMS Data Statistics
 function loadCMSDataStats() {
@@ -32020,7 +32671,77 @@ function loadSupabaseData() {
 }
 
 // Load integrations data
+function getAllConnectedIntegrations() {
+  const integrations = [];
+
+  // 1. CMS-integrationer fra localStorage (e-conomic osv.)
+  const flowIntegrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  flowIntegrations.forEach(fi => {
+    integrations.push({
+      name: fi.name || fi.system,
+      type: 'Regnskab',
+      status: 'OK',
+      statusColor: 'var(--success)',
+      sync: new Date(fi.connectedAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+      activity: Math.floor(Math.random() * 100) + 10,
+      errors: 0
+    });
+  });
+
+  // 2. Leveringsplatforme fra selectedIntegrations
+  const deliveryPlatforms = { wolt: 'Wolt', hungry: 'Hungry', foodora: 'Foodora', justeat: 'Just Eat' };
+  (selectedIntegrations || []).forEach(key => {
+    if (deliveryPlatforms[key]) {
+      integrations.push({
+        name: deliveryPlatforms[key],
+        type: 'Levering',
+        status: 'OK',
+        statusColor: 'var(--success)',
+        sync: new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+        activity: Math.floor(Math.random() * 200) + 20,
+        errors: 0
+      });
+    }
+  });
+
+  // 3. Standard-integrationer (altid tilgængelige)
+  const defaults = [
+    { name: 'Stripe', type: 'Payment', status: 'OK', statusColor: 'var(--success)', sync: '12:01', activity: 234, errors: 0 },
+    { name: 'Instagram', type: 'Social', status: 'OK', statusColor: 'var(--success)', sync: '10:30', activity: 89, errors: 0 },
+    { name: 'Facebook', type: 'Social', status: 'OK', statusColor: 'var(--success)', sync: '09:15', activity: 67, errors: 0 },
+    { name: 'SMS Gateway', type: 'Komm.', status: 'OK', statusColor: 'var(--success)', sync: '11:20', activity: 145, errors: 0 },
+  ];
+
+  // Undgå duplikater (tjek om en integration allerede er tilføjet)
+  const existingNames = integrations.map(i => i.name.toLowerCase());
+  defaults.forEach(d => {
+    if (!existingNames.includes(d.name.toLowerCase())) {
+      integrations.push(d);
+    }
+  });
+
+  return integrations;
+}
+
 function loadIntegrationsData() {
+  // Forbindelser-tabel (dynamisk)
+  const connections = getAllConnectedIntegrations();
+  const connectionsEl = document.getElementById('data-integrations-connections');
+  if (connectionsEl) {
+    if (connections.length === 0) {
+      connectionsEl.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen aktive integrationer</td></tr>';
+    } else {
+      connectionsEl.innerHTML = connections.map(c =>
+        `<tr><td style="padding:10px 12px">${c.name}</td><td>${c.type}</td><td style="color:${c.statusColor}">${c.status}</td><td>${c.sync}</td><td>${c.activity}</td><td>${c.errors}</td></tr>`
+      ).join('');
+    }
+  }
+
+  // Opdater aktive-antal
+  const activeCountEl = document.getElementById('data-integrations-active-count');
+  if (activeCountEl) activeCountEl.textContent = connections.length;
+
+  // Webhook Logs
   const webhooks = [
     { time: '12:01', type: 'OUT', endpoint: '/webhook/stripe', status: '200', latency: '45ms', payload: '{...}' },
     { time: '11:58', type: 'IN', endpoint: '/api/orders', status: '201', latency: '120ms', payload: '{...}' },
@@ -32030,6 +32751,7 @@ function loadIntegrationsData() {
     `<tr><td style="padding:10px 12px">${w.time}</td><td>${w.type}</td><td>${w.endpoint}</td><td style="color:var(--success)">${w.status}</td><td>${w.latency}</td><td style="padding-right:12px"><button class="btn btn-secondary btn-sm">Vis</button></td></tr>`
   ).join('');
 
+  // API Logs
   const apiLogs = [
     { time: '12:02', method: 'POST', endpoint: '/api/orders', status: '201', ip: '192.168.1.45', latency: '89ms' },
     { time: '12:01', method: 'GET', endpoint: '/api/menu', status: '200', ip: '192.168.1.32', latency: '23ms' },
@@ -34224,18 +34946,31 @@ function switchWebBuilderTab(tab) {
   showWebBuilderPage(tab);
 }
 
-// Load Web Builder config from localStorage
+// Load Web Builder config from localStorage (per-template)
 function loadWebBuilderConfig() {
-  const saved = localStorage.getItem('orderflow_webbuilder_config');
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const storageKey = 'orderflow_webbuilder_config_' + templateId;
+
+  // Migration: move old generic key to template-specific key
+  const oldConfig = localStorage.getItem('orderflow_webbuilder_config');
+  if (oldConfig && !localStorage.getItem(storageKey)) {
+    localStorage.setItem(storageKey, oldConfig);
+  }
+
+  const saved = localStorage.getItem(storageKey);
   if (saved) {
     try {
       webBuilderConfig = JSON.parse(saved);
     } catch (e) {
-      webBuilderConfig = { ...defaultWebBuilderConfig };
+      const template = webBuilderTemplates[templateId];
+      webBuilderConfig = template ? JSON.parse(JSON.stringify(template)) : { ...defaultWebBuilderConfig };
     }
   } else {
-    webBuilderConfig = { ...defaultWebBuilderConfig };
+    const template = webBuilderTemplates[templateId];
+    webBuilderConfig = template ? JSON.parse(JSON.stringify(template)) : { ...defaultWebBuilderConfig };
   }
+  webBuilderConfig._templateId = templateId;
 
   // Populate form fields
   populateWebBuilderForms();
@@ -34617,9 +35352,13 @@ function collectWebBuilderFormData() {
   return config;
 }
 
-// Save Web Builder config
+// Save Web Builder config (per-template)
 function saveWebBuilderConfig(section) {
   webBuilderConfig = collectWebBuilderFormData();
+  const templateId = webBuilderConfig._templateId || document.getElementById('wb-template-selector')?.value || 'skabelon-1';
+  const storageKey = 'orderflow_webbuilder_config_' + templateId;
+  localStorage.setItem(storageKey, JSON.stringify(webBuilderConfig));
+  // Keep generic key in sync for backwards compatibility
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(webBuilderConfig));
   toast('Web Builder konfiguration gemt', 'success');
   updateWebBuilderPreview();
@@ -34837,14 +35576,21 @@ function initWebBuilderPreview() {
 
 // Open the full website in a new tab - dynamic based on selected template
 function openFullWebsite() {
-  // Åbn desktop-hjemmeside preview for den valgte skabelon
-  // Begge skabeloner (Roma + Mario) bruger samme preview-fil med dynamisk styling
-  const websiteUrl = './demos/pwa-preview-mario.html';
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const template = webBuilderTemplates[templateId];
+  const websiteUrl = template?.previewFile || './demos/pwa-preview-mario.html';
   window.open(websiteUrl, '_blank');
 }
 
 // Open Web Builder preview in fullscreen modal with device selector
 function openWebBuilderPreviewFullscreen() {
+  // Get active template preview file
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const template = webBuilderTemplates[templateId];
+  const previewSrc = template?.previewFile || './Website%20builder/dist/index.html';
+
   // Check if modal already exists
   let modal = document.getElementById('wb-preview-modal');
   if (!modal) {
@@ -34869,7 +35615,7 @@ function openWebBuilderPreviewFullscreen() {
           <div id="wb-preview-device-frame" class="wb-device-frame mobile" style="background:#000;border-radius:32px;padding:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transition:all 0.3s ease">
             <iframe
               id="wb-fullscreen-preview-frame"
-              src="./Website%20builder/dist/index.html"
+              src="${previewSrc}"
               style="width:100%;height:100%;border:none;border-radius:20px;background:#fff"
               onload="initFullscreenPreview()"
             ></iframe>

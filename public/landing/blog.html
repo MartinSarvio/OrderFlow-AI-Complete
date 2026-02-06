@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Blog | Flow - Restaurant Automation Platform</title>
-  <meta name="description" content="Læs artikel fra Flow Blog om restaurant marketing og automatisering.">
+  <meta name="description" content="Læs de seneste artikler om restaurant marketing, online bestilling og automatisering fra Flow.">
   <meta property="og:title" content="Blog | Flow - Restaurant Automation Platform">
-  <meta property="og:description" content="Læs artikel fra Flow Blog om restaurant marketing og automatisering.">
+  <meta property="og:description" content="Tips, guides og nyheder om restaurant marketing og automatisering.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1390,127 +1390,60 @@
     }
   }
 
-  /* ==================== BLOG POST STYLES ==================== */
-  .post-header {
-    padding: 14rem 4rem 4rem;
+  /* ==================== BLOG STYLES ==================== */
+  .blog-hero {
+    padding: 14rem 4rem 6rem;
     background: var(--color-gray-50);
     text-align: center;
   }
-  .post-category {
-    display: inline-block;
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 1.6rem;
-  }
-  .post-title {
+  .blog-hero h1 {
     font-size: 4.8rem;
     font-weight: 700;
-    line-height: 1.15;
+    margin-bottom: 1.6rem;
     letter-spacing: -0.02em;
     color: var(--color-dark);
-    max-width: 90rem;
-    margin: 0 auto 2.4rem;
   }
-  .post-meta {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 2rem;
-    font-size: 1.4rem;
-    color: var(--color-gray-500);
-    flex-wrap: wrap;
-  }
-  .post-meta span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .post-featured-image {
-    width: 100%;
-    max-width: 100rem;
-    margin: 0 auto;
-    padding: 0 4rem;
-  }
-  .post-featured-image img {
-    width: 100%;
-    height: auto;
-    max-height: 56rem;
-    object-fit: cover;
-    border-radius: 1.6rem;
-    margin-top: -4rem;
-  }
-  .post-content {
-    max-width: 72rem;
-    margin: 0 auto;
-    padding: 4rem 4rem 6rem;
+  .blog-hero p {
     font-size: 1.8rem;
-    line-height: 1.8;
-    color: var(--color-gray-700);
-  }
-  .post-content h2 {
-    font-size: 3.2rem;
-    font-weight: 700;
-    margin: 4rem 0 1.6rem;
-    color: var(--color-dark);
-  }
-  .post-content h3 {
-    font-size: 2.4rem;
-    font-weight: 600;
-    margin: 3.2rem 0 1.2rem;
-    color: var(--color-dark);
-  }
-  .post-content p {
-    margin-bottom: 2rem;
-  }
-  .post-content ul, .post-content ol {
-    margin: 2rem 0;
-    padding-left: 2.4rem;
-  }
-  .post-content li {
-    margin-bottom: 1rem;
-  }
-  .post-content a {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-  .post-content a:hover {
-    text-decoration: none;
-  }
-  .post-content blockquote {
-    margin: 3.2rem 0;
-    padding: 2.4rem 3.2rem;
-    background: var(--color-gray-50);
-    border-left: 4px solid var(--color-primary);
-    border-radius: 0.8rem;
-    font-style: italic;
     color: var(--color-gray-600);
+    max-width: 60rem;
+    margin: 0 auto;
+    line-height: 1.6;
   }
-  .post-content img {
-    width: 100%;
-    border-radius: 1.2rem;
-    margin: 3.2rem 0;
-  }
-  .related-section {
+  .blog-section {
     padding: 6rem 4rem;
-    background: var(--color-gray-50);
+    max-width: var(--container-max);
+    margin: 0 auto;
   }
-  .related-section h2 {
-    font-size: 3.2rem;
-    font-weight: 700;
-    text-align: center;
+  .blog-filters {
+    display: flex;
+    gap: 1.2rem;
     margin-bottom: 4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .blog-filter-btn {
+    padding: 1rem 2rem;
+    border: 1px solid var(--color-gray-300);
+    border-radius: 10rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
     color: var(--color-dark);
   }
-  .related-posts {
+  .blog-filter-btn:hover,
+  .blog-filter-btn.active {
+    background: var(--color-dark);
+    color: var(--color-white);
+    border-color: var(--color-dark);
+  }
+  .blog-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 3.2rem;
-    max-width: var(--container-max);
-    margin: 0 auto;
   }
   .blog-card {
     background: var(--color-white);
@@ -1525,7 +1458,7 @@
   }
   .blog-card-image {
     width: 100%;
-    height: 20rem;
+    height: 22rem;
     object-fit: cover;
   }
   .blog-card-content {
@@ -1541,7 +1474,7 @@
     margin-bottom: 1.2rem;
   }
   .blog-card-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 600;
     margin-bottom: 1.2rem;
     line-height: 1.35;
@@ -1556,38 +1489,87 @@
     color: var(--color-primary);
   }
   .blog-card-excerpt {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     color: var(--color-gray-600);
-    line-height: 1.6;
+    line-height: 1.65;
     margin-bottom: 1.6rem;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
   .blog-card-meta {
     display: flex;
     justify-content: space-between;
-    font-size: 1.2rem;
+    align-items: center;
+    font-size: 1.3rem;
     color: var(--color-gray-500);
     padding-top: 1.6rem;
     border-top: 1px solid var(--color-gray-200);
   }
+  .blog-featured {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 4rem;
+    align-items: center;
+    background: var(--color-white);
+    border-radius: 2rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    margin-bottom: 2rem;
+  }
+  .blog-featured:hover {
+    box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+  }
+  .blog-featured .blog-card-image {
+    height: 40rem;
+    border-radius: 0;
+  }
+  .blog-featured .blog-card-content {
+    padding: 3.2rem 4rem 3.2rem 0;
+  }
+  .blog-featured .blog-card-title {
+    font-size: 3.2rem;
+    line-height: 1.25;
+    margin-bottom: 1.6rem;
+  }
+  .blog-featured .blog-card-excerpt {
+    font-size: 1.6rem;
+    -webkit-line-clamp: 4;
+  }
+  .blog-featured-image-link {
+    display: block;
+    overflow: hidden;
+  }
+  .blog-featured-image-link .blog-card-image {
+    transition: transform 0.4s ease;
+  }
+  .blog-featured:hover .blog-featured-image-link .blog-card-image {
+    transform: scale(1.03);
+  }
+  .blog-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 8rem 2rem;
+    color: var(--color-gray-500);
+  }
+  .blog-empty p {
+    font-size: 1.8rem;
+  }
   @media (max-width: 1024px) {
-    .related-posts { grid-template-columns: repeat(2, 1fr); }
+    .blog-grid { grid-template-columns: repeat(2, 1fr); }
+    .blog-featured { grid-template-columns: 1fr; }
+    .blog-featured .blog-card-content { padding: 2.4rem; }
+    .blog-featured .blog-card-image { height: 30rem; }
   }
   @media (max-width: 768px) {
-    .post-header { padding: 12rem 2rem 3rem; }
-    .post-title { font-size: 3.2rem; }
-    .post-meta { gap: 1.2rem; font-size: 1.3rem; }
-    .post-featured-image { padding: 0 2rem; }
-    .post-featured-image img { margin-top: -2rem; }
-    .post-content { padding: 3.2rem 2rem 5rem; font-size: 1.7rem; }
-    .post-content h2 { font-size: 2.6rem; }
-    .post-content h3 { font-size: 2rem; }
-    .related-section { padding: 4rem 2rem; }
-    .related-section h2 { font-size: 2.4rem; margin-bottom: 3rem; }
-    .related-posts { grid-template-columns: 1fr; gap: 2rem; }
+    .blog-hero { padding: 12rem 2rem 4rem; }
+    .blog-hero h1 { font-size: 3.6rem; }
+    .blog-section { padding: 4rem 2rem; }
+    .blog-grid { grid-template-columns: 1fr; gap: 2.4rem; }
+    .blog-featured .blog-card-title { font-size: 2.4rem; }
+    .blog-featured .blog-card-image { height: 24rem; }
   }
 
 </style>
@@ -1638,38 +1620,32 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
 
-    <!-- Post Header -->
-    <header class="post-header">
-      <span class="post-category" id="postCategory"></span>
-      <h1 class="post-title" id="postTitle">Indlæg</h1>
-      <div class="post-meta">
-        <span id="postAuthor"></span>
-        <span id="postDate"></span>
-        <span id="postReadTime"></span>
+    <!-- Blog Hero -->
+    <section class="blog-hero hero" data-cms="hero">
+      <h1>Flow Blog</h1>
+      <p>Tips, guides og nyheder om restaurant marketing, online bestilling og automatisering</p>
+    </section>
+
+    <!-- Blog Content -->
+    <section class="blog-section">
+      <!-- Category Filters -->
+      <div class="blog-filters" id="blogFilters">
+        <button class="blog-filter-btn active" data-category="all">Alle</button>
       </div>
-    </header>
 
-    <!-- Featured Image -->
-    <div class="post-featured-image">
-      <img id="postFeaturedImage" src="" alt="">
-    </div>
-
-    <!-- Post Content -->
-    <article class="post-content" id="postContent">
-      <p>Indlæser indhold...</p>
-    </article>
-
-    <!-- Related Posts -->
-    <section class="related-section">
-      <h2>Relaterede artikler</h2>
-      <div class="related-posts" id="relatedPosts"></div>
+      <!-- Blog Grid -->
+      <div class="blog-grid" id="blogGrid">
+        <div class="blog-empty">
+          <p>Indlæser blogindlæg...</p>
+        </div>
+      </div>
     </section>
 
   <!-- Footer -->
@@ -1729,27 +1705,18 @@
   </footer>
 </div>
 
+
 <!-- JavaScript -->
 <script>
-  // Mobile menu toggle
-  document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
-    document.querySelector('.nav-links')?.classList.toggle('active');
-    this.classList.toggle('active');
-  });
-
-  // Close dropdowns when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.nav-dropdown')) {
-      document.querySelectorAll('.nav-dropdown').forEach(d => d.classList.remove('active'));
-    }
+  // Scroll effect for nav
+  window.addEventListener('scroll', function() {
+    const nav = document.querySelector('.nav-wrapper');
+    if (window.scrollY > 50) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
   });
 </script>
-
-<!-- Cookie Consent -->
 <script src="/js/cookie-consent.js"></script>
-<!-- Privacy Modal -->
 <script src="/js/privacy-modal.js"></script>
-<!-- Cookie Popup -->
 <script src="/js/cookie-popup.js"></script>
 <!-- Flow CMS Renderer - Enables Side Editor functionality -->
 <script src="/js/flow-cms-render.js"></script>

@@ -31,7 +31,7 @@
   <body>
   	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 	    <div class="container">
-		      <a class="navbar-brand" href="index.html"><span class="flaticon-pizza-1 mr-1"></span>Pizza<br><small>Delicous</small></a>
+		      <a class="navbar-brand" href="index.html"><span class="flaticon-pizza-1 mr-1"></span><span id="restaurant-name">Pizza</span><br><small>Delicous</small></a>
 		      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 		        <span class="oi oi-menu"></span> Menu
 		      </button>
@@ -57,8 +57,8 @@
 
             <div class="col-md-6 col-sm-12 ftco-animate">
             	<span class="subheading">Delicious</span>
-              <h1 class="mb-4">Italian Cuizine</h1>
-              <p class="mb-4 mb-md-5">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
+              <h1 class="mb-4" id="hero-title">Italian Cuizine</h1>
+              <p class="mb-4 mb-md-5" id="hero-description">A small river named Duden flows by their place and supplies it with the necessary regelialia.</p>
               <p><a href="#" class="btn btn-primary p-3 px-xl-4 py-xl-3">Order Now</a> <a href="#" class="btn btn-white btn-outline-white p-3 px-xl-4 py-xl-3">View Menu</a></p>
             </div>
             <div class="col-md-6 ftco-animate">
@@ -753,11 +753,11 @@
           <div class="col-lg-3 col-md-6 mb-5 mb-md-5">
             <div class="ftco-footer-widget mb-4">
               <h2 class="ftco-heading-2">About Us</h2>
-              <p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
+              <p id="footer-about">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.</p>
               <ul class="ftco-footer-social list-unstyled float-md-left float-lft mt-5">
-                <li class="ftco-animate"><a href="#"><span class="icon-twitter"></span></a></li>
-                <li class="ftco-animate"><a href="#"><span class="icon-facebook"></span></a></li>
-                <li class="ftco-animate"><a href="#"><span class="icon-instagram"></span></a></li>
+                <li class="ftco-animate"><a href="#" id="social-twitter"><span class="icon-twitter"></span></a></li>
+                <li class="ftco-animate"><a href="#" id="social-facebook"><span class="icon-facebook"></span></a></li>
+                <li class="ftco-animate"><a href="#" id="social-instagram"><span class="icon-instagram"></span></a></li>
               </ul>
             </div>
           </div>
@@ -804,9 +804,9 @@
             	<h2 class="ftco-heading-2">Have a Questions?</h2>
             	<div class="block-23 mb-3">
 	              <ul>
-	                <li><span class="icon icon-map-marker"></span><span class="text">203 Fake St. Mountain View, San Francisco, California, USA</span></li>
-	                <li><a href="#"><span class="icon icon-phone"></span><span class="text">+2 392 3929 210</span></a></li>
-	                <li><a href="#"><span class="icon icon-envelope"></span><span class="text">info@yourdomain.com</span></a></li>
+	                <li><span class="icon icon-map-marker"></span><span class="text" id="footer-address">203 Fake St. Mountain View, San Francisco, California, USA</span></li>
+	                <li><a href="#"><span class="icon icon-phone"></span><span class="text" id="footer-phone">+2 392 3929 210</span></a></li>
+	                <li><a href="#"><span class="icon icon-envelope"></span><span class="text" id="footer-email">info@yourdomain.com</span></a></li>
 	              </ul>
 	            </div>
             </div>
@@ -815,9 +815,10 @@
         <div class="row">
           <div class="col-md-12 text-center">
 
-            <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-  Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="icon-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-  <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
+            <div id="flow-copyright-footer" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;width:100%;padding:15px 0">
+              <p style="margin:0">Copyright &copy;2026 All rights reserved <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>
+              <p style="margin:0">This template is made with <span style="color:#e25555">&#10084;</span> by <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>
+            </div>
           </div>
         </div>
       </div>
@@ -846,6 +847,107 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
   <script src="js/google-map.js"></script>
   <script src="js/main.js"></script>
-    
+
+  <script>
+    // PostMessage listener for config updates from parent window
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'UPDATE_RESTAURANT_CONFIG') {
+        updatePreview(event.data.config);
+      }
+      if (event.data && event.data.type === 'SCROLL_TO_SECTION') {
+        var section = document.querySelector('.' + event.data.sectionId) || document.getElementById(event.data.sectionId);
+        if (section) section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // Notify parent that preview is ready
+    window.addEventListener('load', function() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'PREVIEW_READY', template: 'skabelon-3' }, '*');
+      }
+    });
+
+    function updatePreview(config) {
+      if (!config) return;
+
+      if (config.branding) {
+        var b = config.branding;
+        if (b.name) {
+          updateText('#restaurant-name', b.name);
+          document.title = b.name + ' - Preview';
+        }
+        if (b.slogan) {
+          updateText('#hero-title', b.slogan);
+        }
+        if (b.description) {
+          updateText('#hero-description', b.description);
+          updateText('#footer-about', b.description);
+        }
+        if (b.colors) {
+          var root = document.documentElement;
+          if (b.colors.primary) {
+            root.style.setProperty('--brand-primary', b.colors.primary);
+            var darker = adjustColor(b.colors.primary, -20);
+            root.style.setProperty('--brand-primary-dark', darker);
+          }
+          if (b.colors.secondary) root.style.setProperty('--brand-secondary', b.colors.secondary);
+          if (b.colors.accent) root.style.setProperty('--brand-accent', b.colors.accent);
+        }
+      }
+
+      if (config.contact) {
+        var c = config.contact;
+        if (c.phone) updateText('#footer-phone', c.phone);
+        if (c.email) updateText('#footer-email', c.email);
+        if (c.address) {
+          var addr = c.address;
+          if (c.postalCode) addr += ', ' + c.postalCode;
+          if (c.city) addr += ' ' + c.city;
+          updateText('#footer-address', addr);
+        }
+        if (c.socialMedia) {
+          if (c.socialMedia.facebook) { var fb = document.getElementById('social-facebook'); if (fb) fb.href = c.socialMedia.facebook; }
+          if (c.socialMedia.instagram) { var ig = document.getElementById('social-instagram'); if (ig) ig.href = c.socialMedia.instagram; }
+          if (c.socialMedia.twitter) { var tw = document.getElementById('social-twitter'); if (tw) tw.href = c.socialMedia.twitter; }
+        }
+      }
+
+      if (config.images && config.images.hero) {
+        var heroSlider = document.querySelector('.home-slider');
+        if (heroSlider) heroSlider.style.backgroundImage = 'url(' + config.images.hero + ')';
+      }
+    }
+
+    function updateText(selector, text) {
+      var el = document.querySelector(selector);
+      if (el) el.textContent = text;
+    }
+
+    function adjustColor(hex, percent) {
+      var r = parseInt(hex.slice(1, 3), 16);
+      var g = parseInt(hex.slice(3, 5), 16);
+      var b = parseInt(hex.slice(5, 7), 16);
+      r = Math.max(0, Math.min(255, r + percent));
+      g = Math.max(0, Math.min(255, g + percent));
+      b = Math.max(0, Math.min(255, b + percent));
+      return '#' + [r, g, b].map(function(x) { return x.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    // Protect FLOW copyright footer from removal
+    var footerObserver = new MutationObserver(function() {
+      if (!document.getElementById('flow-copyright-footer')) {
+        var container = document.querySelector('.ftco-footer .container') || document.querySelector('footer');
+        if (container) {
+          var div = document.createElement('div');
+          div.id = 'flow-copyright-footer';
+          div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;width:100%;padding:15px 0';
+          div.innerHTML = '<p style="margin:0">Copyright &copy;2026 All rights reserved <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p><p style="margin:0">This template is made with <span style="color:#e25555">&#10084;</span> by <a href="../../landing-pages/landing.html" target="_blank" style="color:inherit;font-weight:600">FLOW</a></p>';
+          container.appendChild(div);
+        }
+      }
+    });
+    footerObserver.observe(document.body, { childList: true, subtree: true });
+  </script>
+
   </body>
 </html>

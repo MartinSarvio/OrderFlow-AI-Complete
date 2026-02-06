@@ -213,110 +213,6 @@
       column-gap: 2rem;
     }
 
-    /* ==================== HERO SECTION ==================== */
-    .pricing-hero {
-      position: relative;
-      padding: 16rem 4rem 8rem;
-      background: linear-gradient(180deg, var(--color-gray-50) 0%, var(--color-white) 100%);
-      overflow: hidden;
-    }
-
-    .pricing-hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image:
-        linear-gradient(to right, var(--color-gray-200) 1px, transparent 1px),
-        linear-gradient(to bottom, var(--color-gray-200) 1px, transparent 1px);
-      background-size: 4rem 4rem;
-      opacity: 0.5;
-      -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
-      mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
-    }
-
-    .pricing-hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .pricing-hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.8rem;
-      background: var(--color-primary);
-      color: var(--color-white);
-      padding: 0.6rem 1.6rem;
-      border-radius: 10rem;
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 2.4rem;
-    }
-
-    .pricing-hero-badge-dot {
-      width: 0.8rem;
-      height: 0.8rem;
-      background: var(--color-white);
-      border-radius: 50%;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .pricing-hero h1 {
-      font-size: 5.6rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      letter-spacing: -0.02em;
-      line-height: 1.1;
-      margin-bottom: 2rem;
-    }
-
-    .pricing-hero h1 .gradient {
-      background: linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .pricing-hero p {
-      font-size: 2rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto 3.2rem;
-      line-height: 1.6;
-    }
-
-    .pricing-hero-features {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 3.2rem;
-      flex-wrap: wrap;
-    }
-
-    .pricing-hero-feature {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      font-size: 1.5rem;
-      color: var(--color-gray-600);
-    }
-
-    .pricing-hero-feature svg {
-      width: 2rem;
-      height: 2rem;
-      color: var(--color-primary);
-    }
-
     /* ==================== PRICING SECTION ==================== */
     .pricing-section {
       padding: 12rem 0 10rem;
@@ -849,187 +745,6 @@
       display: none;
     }
 
-    /* ==================== LOGO CLOUD SECTION ==================== */
-    .logo-cloud {
-      background: var(--color-white);
-      padding: 6rem 0;
-      overflow: hidden;
-    }
-
-    .logo-cloud-header {
-      text-align: center;
-      margin-bottom: 4rem;
-      padding: 0 4rem;
-      opacity: 0;
-      transform: translateY(20px);
-      animation: logoCloudFadeIn 0.6s ease forwards;
-    }
-
-    .logo-cloud-header h2 {
-      font-size: 2.8rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1.2rem;
-    }
-
-    .logo-cloud-header p {
-      font-size: 1.6rem;
-      color: var(--color-gray-600);
-    }
-
-    .logo-cloud-wrapper {
-      position: relative;
-      overflow: hidden;
-      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
-      mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
-    }
-
-    .logo-cloud-track {
-      display: flex;
-      gap: 2rem;
-      animation: logo-scroll 25s linear infinite;
-      width: max-content;
-    }
-
-    @keyframes logo-scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-33.333%); }
-    }
-
-    @keyframes logoCloudFadeIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes logoItemFadeIn {
-      from {
-        opacity: 0;
-        transform: scale(0.8);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .logo-cloud-item {
-      flex-shrink: 0;
-      padding: 1.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      opacity: 0;
-      animation: logoItemFadeIn 0.4s ease forwards;
-    }
-
-    .logo-cloud-item:nth-child(1) { animation-delay: 0s; }
-    .logo-cloud-item:nth-child(2) { animation-delay: 0.1s; }
-    .logo-cloud-item:nth-child(3) { animation-delay: 0.2s; }
-    .logo-cloud-item:nth-child(4) { animation-delay: 0.3s; }
-    .logo-cloud-item:nth-child(5) { animation-delay: 0.4s; }
-    .logo-cloud-item:nth-child(6) { animation-delay: 0.5s; }
-    .logo-cloud-item:nth-child(7) { animation-delay: 0.6s; }
-    .logo-cloud-item:nth-child(8) { animation-delay: 0.7s; }
-    .logo-cloud-item:nth-child(n+9) { animation-delay: 0s; opacity: 1; }
-
-    .logo-cloud-item:hover {
-      transform: scale(1.2) rotate(5deg);
-    }
-
-    .logo-cloud-item svg {
-      margin-bottom: 0.8rem;
-      color: var(--color-gray-400);
-      fill: var(--color-gray-400);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .logo-cloud-item span {
-      font-size: 1.4rem;
-      font-weight: 600;
-      color: var(--color-gray-400);
-      white-space: nowrap;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .logo-cloud-item:hover svg {
-      color: var(--color-dark);
-      fill: var(--color-dark);
-    }
-
-    .logo-cloud-item:hover span {
-      color: var(--color-dark);
-    }
-
-    /* ==================== CTA BAND WITH RETRO GRID ==================== */
-    .cta-band {
-      position: relative;
-      background: var(--color-dark);
-      padding: 8rem 4rem;
-      overflow: hidden;
-    }
-
-    .cta-band::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 4rem 4rem;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
-    }
-
-    .cta-band::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      height: 50%;
-      background: radial-gradient(ellipse at center, rgba(1, 91, 248, 0.3) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-band-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .cta-band h2 {
-      font-size: 4.8rem;
-      font-weight: 600;
-      color: var(--color-white);
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-
-    .cta-band p {
-      font-size: 1.8rem;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 3.2rem;
-    }
-
-    .cta-band .button {
-      background: var(--color-primary);
-      color: var(--color-white);
-      padding: 1.6rem 3.2rem;
-      font-size: 1.6rem;
-    }
-
-    .cta-band .button:hover {
-      background: var(--color-primary-hover);
-      transform: translateY(-2px);
-    }
-
     @media (max-width: 768px) {
       .faq-section {
         padding: 6rem 0;
@@ -1052,171 +767,220 @@
         padding: 0 1.6rem 1.6rem;
         font-size: 1.4rem;
       }
-
-      /* Hero responsive */
-      .pricing-hero {
-        padding: 12rem 2rem 6rem;
-      }
-
-      .pricing-hero h1 {
-        font-size: 3.6rem;
-      }
-
-      .pricing-hero p {
-        font-size: 1.6rem;
-      }
-
-      .pricing-hero-features {
-        gap: 1.6rem;
-      }
-
-      /* Logo cloud responsive */
-      .logo-cloud-header {
-        padding: 0 2rem;
-      }
-
-      .logo-cloud-header h2 {
-        font-size: 2.2rem;
-      }
-
-      /* CTA band responsive */
-      .cta-band {
-        padding: 6rem 2rem;
-      }
-
-      .cta-band h2 {
-        font-size: 3.2rem;
-      }
-
-      .cta-band p {
-        font-size: 1.6rem;
-      }
     }
 
-    /* Data Collection Form */
-    .data-form-section {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-      padding: 80px 20px;
-      position: relative;
+    /* ==================== DEMO FORM SECTION ==================== */
+    .demo-section {
+      background: var(--color-white);
+      padding: 10rem 4rem;
     }
-    .data-form-section::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse at 20% 80%, rgba(66, 133, 244, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 20%, rgba(66, 133, 244, 0.1) 0%, transparent 50%);
-      pointer-events: none;
-    }
-    .data-form-container {
-      max-width: 800px;
+
+    .demo-container {
+      max-width: 64rem;
       margin: 0 auto;
-      position: relative;
-      z-index: 1;
     }
-    .data-form-header {
+
+    .demo-text {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 4rem;
     }
-    .data-form-header h2 {
-      color: #fff;
-      font-size: 2.5rem;
-      margin-bottom: 12px;
+
+    .demo-text h2 {
+      font-size: 4.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .demo-text p {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      margin-top: 2rem;
+      line-height: 1.6;
+    }
+
+    .demo-form-card {
+      background: #f1f1f2;
+      border-radius: 1.6rem;
+      padding: 4rem;
+    }
+
+    .demo-form-card h3 {
+      font-size: 2rem;
       font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 2.4rem;
     }
-    .data-form-header p {
-      color: rgba(255,255,255,0.7);
-      font-size: 1.1rem;
-    }
-    .data-form .form-grid {
+
+    .demo-form-row {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6rem;
     }
-    .data-form .form-group {
-      display: flex;
-      flex-direction: column;
+
+    .demo-form-group {
+      margin-bottom: 1.6rem;
     }
-    .data-form .form-group.full-width {
-      grid-column: span 2;
-    }
-    .data-form .form-label {
+
+    .demo-form-label {
       display: block;
-      color: #fff;
-      margin-bottom: 8px;
-      font-size: 14px;
+      font-size: 1.3rem;
       font-weight: 500;
+      color: var(--color-dark);
+      margin-bottom: 0.6rem;
     }
-    .data-form .form-input {
+
+    .demo-form-input,
+    .demo-form-select {
       width: 100%;
-      padding: 14px 16px;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 16px;
-      transition: border-color 0.2s, background 0.2s;
-    }
-    .data-form .form-input::placeholder {
-      color: rgba(255,255,255,0.4);
-    }
-    .data-form .form-input:focus {
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      padding: 1.2rem 1.6rem;
+      border-radius: 0.8rem;
+      font-size: 1.6rem;
+      font-family: inherit;
+      color: var(--color-dark);
+      transition: border-color 0.2s, box-shadow 0.2s;
       outline: none;
-      border-color: #4285f4;
-      background: rgba(255,255,255,0.08);
+      -webkit-appearance: none;
     }
-    .data-form textarea.form-input {
-      resize: vertical;
-      min-height: 100px;
+
+    .demo-form-select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23787a7d' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1.6rem center;
+      padding-right: 4rem;
     }
-    .data-form .form-submit {
+
+    .demo-form-input:focus,
+    .demo-form-select:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(1, 91, 248, 0.12);
+    }
+
+    .demo-form-input.error,
+    .demo-form-select.error {
+      border-color: #e53e3e;
+    }
+
+    .demo-form-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .demo-form-checkbox {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      margin-bottom: 2.4rem;
+    }
+
+    .demo-form-checkbox input[type="checkbox"] {
+      width: 1.8rem;
+      height: 1.8rem;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      accent-color: var(--color-primary);
+    }
+
+    .demo-form-checkbox label {
+      font-size: 1.3rem;
+      color: var(--color-gray-600);
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .demo-form-submit {
       width: 100%;
-      margin-top: 24px;
-      padding: 16px 32px;
-      background: #4285f4;
-      color: #fff;
+      background: var(--color-dark);
+      color: var(--color-white);
+      padding: 1.6rem;
       border: none;
-      border-radius: 8px;
-      font-size: 16px;
+      border-radius: 0.8rem;
+      font-size: 1.6rem;
       font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
     }
-    .data-form .form-submit:hover {
-      background: #3367d6;
-      transform: translateY(-2px);
+
+    .demo-form-submit:hover {
+      background: #1a1b1e;
+      transform: translateY(-1px);
     }
-    .data-form .form-success {
+
+    .demo-form-submit:active {
+      transform: translateY(0);
+    }
+
+    .demo-form-submit.disabled {
+      pointer-events: none;
+      background: #101112;
+    }
+
+    .demo-form-consent {
+      font-size: 1.2rem;
+      color: var(--color-gray-500);
+      margin-top: 1.6rem;
+      line-height: 1.5;
+    }
+
+    .demo-form-consent a {
+      color: var(--color-dark);
+      text-decoration: underline;
+    }
+
+    .demo-form-consent a:hover {
+      color: var(--color-primary);
+    }
+
+    .demo-form-validation {
+      font-size: 1.2rem;
+      color: #e53e3e;
+      margin-top: 0.4rem;
       display: none;
+    }
+
+    .demo-form-success {
       text-align: center;
-      padding: 40px;
-      color: #fff;
+      padding: 4rem 2rem;
     }
-    .data-form .form-success.show {
-      display: block;
+
+    .demo-form-success h3 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
     }
-    .data-form .form-success svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      color: #4ade80;
+
+    .demo-form-success p {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
     }
-    .data-form .form-success h3 {
-      font-size: 1.5rem;
-      margin-bottom: 8px;
+
+    @media (max-width: 768px) {
+      .demo-section {
+        padding: 6rem 2rem;
+      }
+      .demo-text {
+        margin-bottom: 3rem;
+      }
+      .demo-text h2 {
+        font-size: 3.2rem;
+      }
+      .demo-form-card {
+        padding: 3rem;
+      }
     }
-    .data-form .form-success p {
-      color: rgba(255,255,255,0.7);
-    }
-    @media (max-width: 600px) {
-      .data-form .form-grid {
+
+    @media (max-width: 480px) {
+      .demo-form-row {
         grid-template-columns: 1fr;
       }
-      .data-form .form-group.full-width {
-        grid-column: span 1;
-      }
-      .data-form-header h2 {
-        font-size: 1.8rem;
+      .demo-form-card {
+        padding: 2.4rem;
       }
     }
   </style>
@@ -1257,48 +1021,24 @@
                 <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
                 <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
                 <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
               </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
             </div>
           </div>
         </div>
         <div class="nav-right">
-          <a href="../index.html" class="nav-login">Login</a>
-          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+          <a href="../../index.html" class="nav-login">Login</a>
+          <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="pricing-hero">
-      <div class="pricing-hero-content">
-        <div class="pricing-hero-badge">
-          <span class="pricing-hero-badge-dot"></span>
-          Ingen bindingsperiode
-        </div>
-        <h1>Simple, <span class="gradient">gennemsigtige</span> priser</h1>
-        <p>Alle planer inkluderer gratis opsætning, fuld support og ingen skjulte gebyrer. Annuller når som helst.</p>
-        <div class="pricing-hero-features">
-          <div class="pricing-hero-feature">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>Gratis opsætning</span>
-          </div>
-          <div class="pricing-hero-feature">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>Ingen kommission</span>
-          </div>
-          <div class="pricing-hero-feature">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            <span>14 dages gratis prøve</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Pricing Section -->
-    <section class="pricing-section" style="padding-top: 6rem;">
+    <section class="pricing-section">
       <div class="pricing-container">
-        <div class="pricing-header" style="margin-bottom: 4rem;">
+        <div class="pricing-header">
+          <h1>Vælg den rigtige plan til din restaurant</h1>
+          <p>Alle planer inkluderer gratis opsætning, support og ingen bindingsperiode. Annuller når som helst.</p>
           <div class="pricing-toggle">
             <span class="pricing-toggle-label" data-period="monthly">Månedlig</span>
             <div class="pricing-toggle-switch annual" id="pricingToggle">
@@ -1321,7 +1061,7 @@
               </span>
             </div>
             <span class="pricing-period">/måned</span>
-            <a href="landing.html#demo" class="pricing-cta">Kom i gang</a>
+            <a href="#demo" class="pricing-cta">Kom i gang</a>
             <span class="pricing-features-label">Det får du:</span>
             <ul class="pricing-features">
               <li>
@@ -1355,7 +1095,7 @@
               </span>
             </div>
             <span class="pricing-period">/måned</span>
-            <a href="landing.html#demo" class="pricing-cta">Start gratis prøveperiode</a>
+            <a href="#demo" class="pricing-cta">Start gratis prøveperiode</a>
             <span class="pricing-features-label">Alt i Starter, plus:</span>
             <ul class="pricing-features">
               <li>
@@ -1396,7 +1136,7 @@
               </span>
             </div>
             <span class="pricing-period">Tilpasset pris</span>
-            <a href="landing.html#demo" class="pricing-cta">Kontakt salg</a>
+            <a href="#demo" class="pricing-cta">Kontakt salg</a>
             <span class="pricing-features-label">Alt i Pro, plus:</span>
             <ul class="pricing-features">
               <li>
@@ -1565,81 +1305,90 @@
       </div>
     </section>
 
-    <!-- Data Collection Form -->
-    <section class="data-form-section">
-      <div class="data-form-container">
-        <div class="data-form-header">
-          <h2>Kom i gang med Flow</h2>
-          <p>Udfyld formularen og vi kontakter dig inden for 24 timer</p>
+    <!-- Demo Form Section -->
+    <section class="demo-section" id="demo">
+      <div class="demo-container">
+        <div class="demo-text">
+          <h2>Få en demo af Flow til din&nbsp;restaurant</h2>
+          <p>Kontakt os nedenfor, og vi vender tilbage hurtigst muligt.</p>
         </div>
-        <form class="data-form" id="dataCollectionForm" onsubmit="handleDataFormSubmit(event)">
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Navn *</label>
-              <input type="text" class="form-input" name="name" placeholder="Dit fulde navn" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email *</label>
-              <input type="email" class="form-input" name="email" placeholder="din@email.dk" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Telefon</label>
-              <input type="tel" class="form-input" name="phone" placeholder="+45 12 34 56 78">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Restaurant navn *</label>
-              <input type="text" class="form-input" name="restaurant" placeholder="Din restaurants navn" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Nuværende systemer</label>
-              <select class="form-input" name="systems">
-                <option value="">Vælg nuværende setup...</option>
-                <option value="ingen">Ingen / Manuelt</option>
-                <option value="pos">Kun POS system</option>
-                <option value="online">Online bestilling</option>
-                <option value="fuld">Fuld platform</option>
-                <option value="andet">Andet</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Månedligt budget</label>
-              <select class="form-input" name="budget">
-                <option value="">Vælg budget...</option>
-                <option value="0-500">0 - 500 kr</option>
-                <option value="500-1000">500 - 1.000 kr</option>
-                <option value="1000-2500">1.000 - 2.500 kr</option>
-                <option value="2500+">2.500+ kr</option>
-              </select>
-            </div>
-            <div class="form-group full-width">
-              <label class="form-label">Besked</label>
-              <textarea class="form-input" name="message" rows="4" placeholder="Fortæl os om dine behov og hvad du gerne vil opnå med Flow..."></textarea>
-            </div>
+        <div class="demo-form-card">
+          <div id="demoFormWrap">
+            <h3>Book din gratis demo</h3>
+            <form id="demoForm" novalidate>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Din rolle</label>
+                <select class="demo-form-select" name="role" required>
+                  <option value="">Vælg en...</option>
+                  <option value="owner">Jeg er restaurantejer eller manager</option>
+                  <option value="provider">Jeg leverer tjenester til restauranter</option>
+                  <option value="other">Andet</option>
+                </select>
+                <div class="demo-form-validation">Vælg venligst din rolle.</div>
+              </div>
+              <div class="demo-form-row">
+                <div class="demo-form-group">
+                  <label class="demo-form-label">Fornavn</label>
+                  <input type="text" class="demo-form-input" name="firstName" placeholder="Fornavn" required>
+                  <div class="demo-form-validation">Udfyld venligst dit fornavn.</div>
+                </div>
+                <div class="demo-form-group">
+                  <label class="demo-form-label">Efternavn</label>
+                  <input type="text" class="demo-form-input" name="lastName" placeholder="Efternavn" required>
+                  <div class="demo-form-validation">Udfyld venligst dit efternavn.</div>
+                </div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Email</label>
+                <input type="email" class="demo-form-input" name="email" placeholder="Email" required>
+                <div class="demo-form-validation">Udfyld venligst din email.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Telefon</label>
+                <input type="tel" class="demo-form-input" name="phone" placeholder="Telefon" required>
+                <div class="demo-form-validation">Udfyld venligst dit telefonnummer.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Restaurant navn</label>
+                <input type="text" class="demo-form-input" name="restaurantName" placeholder="Søg efter dit restaurant navn..." required>
+                <div style="margin-top: 0.4rem;"><span style="font-size: 1.2rem; color: var(--color-gray-500);">Begynd at skrive, og vælg din restaurant fra listen</span></div>
+                <div class="demo-form-validation">Udfyld venligst restaurant navn.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Hvor mange lokationer ejer eller driver du?</label>
+                <input type="number" class="demo-form-input" name="locations" min="1" value="1" required>
+                <div class="demo-form-validation">Udfyld venligst antal lokationer.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Hvordan hørte du om os?</label>
+                <select class="demo-form-select" name="referral" required>
+                  <option value="">Vælg en...</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="google">Google</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="ai">ChatGPT / AI</option>
+                  <option value="friend">Ven eller kollega</option>
+                  <option value="other">Andet</option>
+                </select>
+                <div class="demo-form-validation">Vælg venligst en mulighed.</div>
+              </div>
+              <div class="demo-form-checkbox">
+                <input type="checkbox" id="smsOptIn" name="smsOptIn">
+                <label for="smsOptIn">Jeg accepterer at modtage automatiske SMS-beskeder fra Flow på det angivne telefonnummer for at hjælpe mig med at planlægge en demo og evaluere platformen. Samtykke er ikke påkrævet.</label>
+              </div>
+              <button type="submit" class="demo-form-submit" id="demoSubmitBtn">Få en gratis demo</button>
+              <p class="demo-form-consent">Ved at give os dine oplysninger samtykker du til indsamling og brug af dine oplysninger i overensstemmelse med vores <a href="terms.html">Vilkår</a> og <a href="privacy.html">Privatlivspolitik</a>.</p>
+            </form>
           </div>
-          <button type="submit" class="form-submit">Send ansøgning</button>
-        </form>
-        <div class="form-success" id="formSuccess">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 12l3 3 5-6"/>
-          </svg>
-          <h3>Tak for din henvendelse!</h3>
-          <p>Vi kontakter dig inden for 24 timer.</p>
+          <div class="demo-form-success" id="demoSuccess" style="display: none;">
+            <h3>Tak for din henvendelse!</h3>
+            <p>Vi kontakter dig hurtigst muligt for at booke din gratis demo.</p>
+          </div>
         </div>
       </div>
     </section>
-    <script>
-      function handleDataFormSubmit(e) {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
-        console.log('Form submission:', data);
-        // Hide form, show success
-        form.style.display = 'none';
-        document.getElementById('formSuccess').classList.add('show');
-      }
-    </script>
 
     <!-- Footer -->
     <footer class="footer">
@@ -1658,7 +1407,6 @@
         <div class="footer-column">
           <h4>RESSOURCER</h4>
           <ul>
-            <li><a href="blog.html">Blog</a></li>
             <li><a href="case-studies.html">Case Studies</a></li>
             <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
             <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
@@ -1839,6 +1587,267 @@
       });
     });
   </script>
+  <!-- Demo Form Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('demoForm');
+      var formWrap = document.getElementById('demoFormWrap');
+      var success = document.getElementById('demoSuccess');
+      var submitBtn = document.getElementById('demoSubmitBtn');
+
+      if (!form) return;
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Reset validation
+        var fields = form.querySelectorAll('.demo-form-input, .demo-form-select');
+        var validations = form.querySelectorAll('.demo-form-validation');
+        fields.forEach(function(f) { f.classList.remove('error'); });
+        validations.forEach(function(v) { v.style.display = 'none'; });
+
+        var valid = true;
+        var requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(function(field) {
+          if (!field.value || field.value.trim() === '') {
+            field.classList.add('error');
+            var validation = field.parentElement.querySelector('.demo-form-validation');
+            if (validation) validation.style.display = 'block';
+            valid = false;
+          }
+        });
+
+        // Email validation
+        var emailField = form.querySelector('[name="email"]');
+        if (emailField && emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
+          emailField.classList.add('error');
+          var ev = emailField.parentElement.querySelector('.demo-form-validation');
+          if (ev) { ev.textContent = 'Udfyld venligst en gyldig email.'; ev.style.display = 'block'; }
+          valid = false;
+        }
+
+        if (!valid) return;
+
+        // Disable submit
+        submitBtn.classList.add('disabled');
+        submitBtn.textContent = 'Sender...';
+
+        // Collect form data
+        var data = {
+          id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          role: form.querySelector('[name="role"]').value,
+          firstName: form.querySelector('[name="firstName"]').value.trim(),
+          lastName: form.querySelector('[name="lastName"]').value.trim(),
+          email: form.querySelector('[name="email"]').value.trim(),
+          phone: form.querySelector('[name="phone"]').value.trim(),
+          restaurantName: form.querySelector('[name="restaurantName"]').value.trim(),
+          locations: parseInt(form.querySelector('[name="locations"]').value) || 1,
+          referral: form.querySelector('[name="referral"]').value,
+          smsOptIn: form.querySelector('[name="smsOptIn"]').checked,
+          submittedAt: new Date().toISOString(),
+          page: 'priser.html'
+        };
+
+        // Save to localStorage
+        var requests = JSON.parse(localStorage.getItem('flow_demo_requests') || '[]');
+        requests.push(data);
+        localStorage.setItem('flow_demo_requests', JSON.stringify(requests));
+
+        // Show success
+        setTimeout(function() {
+          formWrap.style.display = 'none';
+          success.style.display = 'block';
+        }, 500);
+      });
+    });
+  </script>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+
+<!-- Dynamic Pricing from Supabase + Realtime -->
+<script>
+(function() {
+  const SUPABASE_URL = 'https://qymtjhzgtcittohutmay.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjMzNjYsImV4cCI6MjA2NzI5OTM2Nn0.bMCAme1Pz9rT4v6cOEMXRhHczqaRgFv3IxJe8YYPb7Y';
+
+  let sb = null;
+  let isAnnual = true;
+  let plansData = [];
+
+  function formatPrice(price) {
+    if (price >= 1000) {
+      return price.toLocaleString('da-DK');
+    }
+    return String(price);
+  }
+
+  function renderPlans(plans) {
+    plansData = plans;
+    const grid = document.querySelector('.pricing-grid');
+    if (!grid || !plans.length) return;
+
+    grid.innerHTML = plans.map(plan => {
+      const isFeatured = plan.is_popular;
+      const isEnterprise = plan.monthly_price === 0 && plan.annual_price === 0;
+      const cardClass = isFeatured ? 'pricing-card featured' : 'pricing-card';
+      const price = isAnnual ? plan.annual_price : plan.monthly_price;
+      const featuresLabel = plan.sort_order === 1 ? 'Det får du:' : plan.sort_order === 2 ? 'Alt i Starter, plus:' : 'Alt i Pro, plus:';
+      const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      return '<div class="' + cardClass + '" data-plan-id="' + plan.plan_id + '">' +
+        (isFeatured ? '<span class="pricing-card-badge">Mest populære</span>' : '') +
+        '<h3 class="pricing-card-title">' + plan.name + '</h3>' +
+        '<p class="pricing-card-desc">' + plan.description + '</p>' +
+        '<div class="pricing-price">' +
+          (isEnterprise
+            ? '<span class="pricing-currency"></span><span class="pricing-amount" style="font-size:3.6rem"><span class="pricing-amount-inner">Kontakt os</span></span>'
+            : '<span class="pricing-currency">kr.</span><span class="pricing-amount" data-monthly="' + formatPrice(plan.monthly_price) + '" data-annual="' + formatPrice(plan.annual_price) + '"><span class="pricing-amount-inner">' + formatPrice(price) + '</span></span>'
+          ) +
+        '</div>' +
+        '<span class="pricing-period">' + (isEnterprise ? 'Tilpasset pris' : '/måned') + '</span>' +
+        '<a href="#demo" class="pricing-cta">' + plan.button_text + '</a>' +
+        '<span class="pricing-features-label">' + featuresLabel + '</span>' +
+        '<ul class="pricing-features">' +
+          plan.features.map(function(f) {
+            return '<li>' + checkSvg + ' ' + f + '</li>';
+          }).join('') +
+        '</ul>' +
+      '</div>';
+    }).join('');
+
+    rebindToggle();
+  }
+
+  function animatePrice(amountEl, newValue) {
+    var inner = amountEl.querySelector('.pricing-amount-inner');
+    if (!inner) return;
+    inner.style.transform = 'translateY(-100%)';
+    inner.style.opacity = '0';
+    setTimeout(function() {
+      inner.textContent = newValue;
+      inner.style.transform = 'translateY(100%)';
+      requestAnimationFrame(function() {
+        inner.style.transition = 'transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease';
+        inner.style.transform = 'translateY(0)';
+        inner.style.opacity = '1';
+      });
+    }, 200);
+  }
+
+  function rebindToggle() {
+    var toggle = document.getElementById('pricingToggle');
+    var monthlyLabel = document.querySelector('.pricing-toggle-label[data-period="monthly"]');
+    var annualLabel = document.querySelector('.pricing-toggle-label[data-period="annual"]');
+
+    function updatePrices() {
+      var amounts = document.querySelectorAll('.pricing-amount[data-monthly]');
+      amounts.forEach(function(amount) {
+        var val = isAnnual ? amount.dataset.annual : amount.dataset.monthly;
+        animatePrice(amount, val);
+      });
+      if (isAnnual) {
+        toggle.classList.add('annual');
+        monthlyLabel.classList.remove('active');
+        annualLabel.classList.add('active');
+      } else {
+        toggle.classList.remove('annual');
+        monthlyLabel.classList.add('active');
+        annualLabel.classList.remove('active');
+      }
+    }
+
+    toggle.onclick = function() { isAnnual = !isAnnual; updatePrices(); };
+    monthlyLabel.onclick = function() { if (isAnnual) { isAnnual = false; updatePrices(); } };
+    annualLabel.onclick = function() { if (!isAnnual) { isAnnual = true; updatePrices(); } };
+  }
+
+  function updateSinglePlan(updatedPlan) {
+    var card = document.querySelector('[data-plan-id="' + updatedPlan.plan_id + '"]');
+    if (!card) {
+      fetchAndRender();
+      return;
+    }
+
+    var title = card.querySelector('.pricing-card-title');
+    var desc = card.querySelector('.pricing-card-desc');
+    var cta = card.querySelector('.pricing-cta');
+    var amountEl = card.querySelector('.pricing-amount[data-monthly]');
+
+    if (title) title.textContent = updatedPlan.name;
+    if (desc) desc.textContent = updatedPlan.description;
+    if (cta) cta.textContent = updatedPlan.button_text;
+
+    if (amountEl) {
+      amountEl.dataset.monthly = formatPrice(updatedPlan.monthly_price);
+      amountEl.dataset.annual = formatPrice(updatedPlan.annual_price);
+      var newPrice = isAnnual ? formatPrice(updatedPlan.annual_price) : formatPrice(updatedPlan.monthly_price);
+      animatePrice(amountEl, newPrice);
+    }
+
+    var featuresList = card.querySelector('.pricing-features');
+    if (featuresList && updatedPlan.features) {
+      var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+      featuresList.innerHTML = updatedPlan.features.map(function(f) {
+        return '<li>' + checkSvg + ' ' + f + '</li>';
+      }).join('');
+    }
+
+    card.style.outline = '2px solid var(--color-primary)';
+    setTimeout(function() { card.style.outline = ''; }, 1500);
+  }
+
+  async function fetchAndRender() {
+    try {
+      var { data, error } = await sb.from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        renderPlans(data);
+        console.log('✅ Priser hentet fra Supabase:', data.length, 'planer');
+      }
+    } catch (err) {
+      console.warn('⚠️ Kunne ikke hente priser fra Supabase, bruger statiske priser:', err.message);
+    }
+  }
+
+  function subscribeToChanges() {
+    sb.channel('pricing-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'subscription_plans'
+      }, function(payload) {
+        console.log('🔄 Prisændring detekteret:', payload.eventType);
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          updateSinglePlan(payload.new);
+        } else {
+          fetchAndRender();
+        }
+      })
+      .subscribe(function(status) {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Realtime pricing subscription aktiv');
+        }
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (typeof window.supabase === 'undefined') {
+      console.warn('⚠️ Supabase SDK ikke loaded');
+      return;
+    }
+
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    await fetchAndRender();
+    subscribeToChanges();
+  });
+})();
+</script>
+
 <!-- Flow CMS Dynamic Content -->
 <script src="/js/flow-cms-render.js"></script>
 </body>

@@ -8,7 +8,7 @@
         <div class="sidebar-search">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" class="sidebar-search-input" id="command-search" placeholder="Søg..." oninput="handleCommandSearch(this.value)" onfocus="showCommandResults()" autocomplete="off">
-          <span class="sidebar-search-shortcut">⌘K</span>
+          <span class="sidebar-search-shortcut">&#8984;K</span>
           <div class="command-results" id="command-results">
             <div class="command-group">
               <div class="command-group-title">Sider</div>
@@ -45,260 +45,14 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-section-title">Menu</div>
+          <!-- 1. Dashboard (ALLE) -->
           <button class="nav-btn" onclick="showPage('dashboard')" data-tooltip="Dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></button>
-          <button class="nav-btn" onclick="showPage('kunder')" data-tooltip="Kunder" data-role-menu="kunder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Kunder</span></button>
-          
-          <!-- Kunde Context Menu - Tree Structure -->
-          <div class="nav-customer-context" id="nav-customer-context" style="display:none">
-            <div class="nav-customer-header">
-              <div class="nav-customer-avatar" id="nav-customer-avatar">?</div>
-              <div class="nav-customer-info">
-                <div class="nav-customer-name" id="nav-customer-name">Kunde navn</div>
-                <div class="nav-customer-id" id="nav-customer-id">ID: 000000</div>
-              </div>
-              <button class="nav-customer-close" onclick="closeCustomerContext()" title="Luk kunde">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-            <div class="nav-customer-menu">
-              <button class="nav-dropdown-item active" onclick="showCustomerSubpage('stamdata')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Stamdata
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('workflow-kontrol')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                Workflow Kontrol
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('produkter')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-                Produktbibliotek
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('faktura')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                Faktura
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('abonnement')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-                Abonnement
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('beskeder')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Beskeder
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('kundelogs')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Kundelogs
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('aktivitetslogs')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Aktivitetslogs
-              </button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('noegletal')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                Nøgletal
-              </button>
-            </div>
-          </div>
 
-          <!-- Butikindstillinger Dropdown (for kunde/demo view) -->
-          <div class="nav-dropdown" id="nav-butikindstillinger" data-role-menu="nav-butikindstillinger">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('butikindstillinger')" data-tooltip="Butikindstillinger">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>Butikindstillinger</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('stamdata')">Stamdata</button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('faktura')">Faktura</button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('abonnement')">Abonnement</button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('beskeder')">Beskeder</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('moms')">Moms</button>
-            </div>
-          </div>
+          <!-- 2. Workflow (ADMIN) -->
+          <button class="nav-btn" onclick="showPage('workflow')" data-tooltip="Workflow" data-role-menu="workflow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Workflow</span></button>
 
-          <!-- Indsigt Dropdown -->
-          <div class="nav-dropdown" id="nav-indsigt" data-role-menu="nav-indsigt">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('indsigt')" data-tooltip="Indsigt">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              <span>Indsigt</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('kundelogs')">Kundelogs</button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('aktivitetslogs')">Aktivitetslogs</button>
-              <button class="nav-dropdown-item" onclick="showCustomerSubpage('noegletal')">Nøgletal</button>
-            </div>
-          </div>
-
-          <!-- Salg Dropdown -->
-          <div class="nav-dropdown" id="nav-salg">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('salg')" data-tooltip="Salg">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              <span>Salg</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showPage('unified-inbox')">Indbakke</button>
-              <button class="nav-dropdown-item" onclick="showPage('orders')">Ordrer</button>
-              <button class="nav-dropdown-item" onclick="showPage('salgsoversigt')">Salgsoversigt</button>
-              <button class="nav-dropdown-item" onclick="showPage('korttransaktioner')">Korttransaktioner</button>
-            </div>
-          </div>
-          
-          <!-- Rapporter Dropdown -->
-          <div class="nav-dropdown" id="nav-rapporter">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('rapporter')" data-tooltip="Rapporter">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              <span>Rapporter</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showPage('dagsrapport')">Dagsrapport</button>
-              <button class="nav-dropdown-item" onclick="showPage('produktrapport')">Produktrapport</button>
-              <button class="nav-dropdown-item" onclick="showPage('zrapport')">Z-rapport</button>
-              <button class="nav-dropdown-item" onclick="showPage('konverteringsrapport')">Konvertering</button>
-              <button class="nav-dropdown-item" onclick="showPage('genbestillingsrapport')">Genbestilling</button>
-              <button class="nav-dropdown-item" onclick="showPage('anmeldelsesrapport')">Anmeldelser</button>
-              <button class="nav-dropdown-item" onclick="showPage('heatmaprapport')">Heatmap</button>
-            </div>
-          </div>
-
-          <!-- Integrationer Dropdown -->
-          <div class="nav-dropdown" id="nav-integrationer">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('integrationer')" data-tooltip="Integrationer">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-              <span>Integrationer</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showPage('bogholderi')">Bogholderi</button>
-              <button class="nav-dropdown-item" onclick="showPage('betaling')">Betaling</button>
-            </div>
-          </div>
-
-          <!-- Marketing Dropdown -->
-          <div class="nav-dropdown" id="nav-marketing">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('marketing')" data-tooltip="Marketing">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              <span>Marketing</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showPage('loyalty')">Loyalitetsprogram</button>
-              <button class="nav-dropdown-item" onclick="showPage('campaigns')">Kampagner</button>
-              <button class="nav-dropdown-item" onclick="showPage('udsendelser')">Udsendelser</button>
-              <button class="nav-dropdown-item" onclick="showPage('segments')">Kundesegmenter</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('push-notifikationer')">Push Notifikationer</button>
-              <button class="nav-dropdown-item" onclick="showPage('medlemmer')">Medlemmer</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">System</div>
-          <button class="nav-btn" onclick="showPage('workflow')" data-tooltip="Workflow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Workflow</span></button>
-        </div>
-
-        <!-- WEB BUILDER SECTION -->
-        <div class="nav-section" id="nav-webbuilder-section">
-          <div class="nav-section-title">Web Builder</div>
-          <button class="nav-btn" onclick="showWebBuilderPage('branding')" data-tooltip="Branding" id="nav-wb-branding">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            <span>Branding</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('farver')" data-tooltip="Farver" id="nav-wb-farver">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>
-            <span>Farver</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('billeder')" data-tooltip="Billeder" id="nav-wb-billeder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <span>Billeder</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('menu')" data-tooltip="Menu" id="nav-wb-menu">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            <span>Menu</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('timer')" data-tooltip="Åbningstider" id="nav-wb-timer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Åbningstider</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('kontakt')" data-tooltip="Kontakt" id="nav-wb-kontakt">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>Kontakt</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('levering')" data-tooltip="Levering" id="nav-wb-levering">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-            <span>Levering</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('funktioner')" data-tooltip="Funktioner" id="nav-wb-funktioner">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            <span>Funktioner</span>
-          </button>
-          <button class="nav-btn" onclick="showWebBuilderPage('social')" data-tooltip="Sociale Medier" id="nav-wb-social">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-            <span>Sociale Medier</span>
-          </button>
-        </div>
-
-        <!-- APP BUILDER SECTION -->
-        <div class="nav-section">
-          <div class="nav-section-title">App Builder</div>
-          <!-- Analytics - direkte kategori -->
-          <button class="nav-btn" onclick="showPage('analytics')" data-tooltip="Analytics" id="nav-analytics">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            <span>Analytics</span>
-          </button>
-          <div class="nav-dropdown" id="nav-appbuilder">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('appbuilder')" data-tooltip="App Builder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              <span>App Builder</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('branding')">Branding</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('farver')">Farver</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('billeder')">Billeder</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('menu')">Menu</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('timer')">Åbningstider</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('kontakt')">Kontakt</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('levering')">Levering</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('funktioner')">Funktioner</button>
-              <button class="nav-dropdown-item" onclick="showAppBuilderPage('mobilapp')">Mobil App</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">Indstillinger</div>
-          
-          <!-- Indstillinger Dropdown -->
-          <div class="nav-dropdown" id="nav-indstillinger">
-            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('indstillinger')" data-tooltip="Indstillinger">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              <span>Indstillinger</span>
-              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dropdown-menu">
-              <button class="nav-dropdown-item" onclick="showSettingsPage('users')" data-role-menu="settings-users">Brugerindstillinger</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('moms')">Moms</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('sprog')">Sprog</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('billing')" data-role-menu="settings-billing">Abonnement</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('notifications')">Notifikationer</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('passwords')">Adgangskoder</button>
-              <button class="nav-dropdown-item" onclick="showSettingsPage('support')">Support</button>
-            </div>
-          </div>
-          
-        </div>
-
-        <!-- Flow CMS Section - Flyout Menu -->
-        <div class="nav-section">
-          <div class="nav-section-title">Flow CMS</div>
-          <div class="nav-flyout-trigger" id="nav-flow-trigger">
+          <!-- 3. Flow CMS Flyout (ADMIN) -->
+          <div class="nav-flyout-trigger" id="nav-flow-trigger" data-role-menu="nav-flow-cms">
             <button class="nav-flyout-btn" data-tooltip="Flow CMS">
               <svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="5" height="5" rx="1"/><rect x="10" y="3" width="5" height="5" rx="1"/><rect x="17" y="3" width="5" height="5" rx="1"/><rect x="3" y="10" width="5" height="5" rx="1"/><rect x="10" y="10" width="5" height="5" rx="1"/><rect x="17" y="10" width="5" height="5" rx="1"/><rect x="3" y="17" width="5" height="5" rx="1"/><rect x="10" y="17" width="5" height="5" rx="1"/><rect x="17" y="17" width="5" height="5" rx="1"/></svg>
               <span>Flow CMS</span>
@@ -319,6 +73,7 @@
                     <button class="flyout-item" onclick="showFlowCMSPage('theme');closeFlyout()">Farver og Fonts</button>
                     <button class="flyout-item" onclick="showFlowCMSPage('blog');closeFlyout()">Blog</button>
                     <button class="flyout-item" onclick="showSettingsPage('templates');closeFlyout()">Skabeloner</button>
+                    <button class="flyout-item" onclick="showFlowCMSPage('farver-og-fonts');closeFlyout()">Farver og Fonts</button>
                   </div>
                 </div>
                 <div class="flyout-category">
@@ -330,6 +85,7 @@
                     <button class="flyout-item" onclick="showPage('instagram-workflow');closeFlyout()">Instagram Workflow</button>
                     <button class="flyout-item" onclick="showPage('facebook-workflow');closeFlyout()">Facebook Workflow</button>
                     <button class="flyout-item" onclick="showPage('sms-workflows');closeFlyout()">SMS Workflows</button>
+                    <button class="flyout-item" onclick="showPage('search-engine');closeFlyout()">Search Engine</button>
                     <a class="flyout-item" href="/landing-pages/sms-workflow.html" onclick="closeFlyout()">SMS Workflow Info</a>
                     <a class="flyout-item" href="/landing-pages/instagram-workflow.html" onclick="closeFlyout()">Instagram Workflow Info</a>
                     <a class="flyout-item" href="/landing-pages/facebook-workflow.html" onclick="closeFlyout()">Facebook Workflow Info</a>
@@ -376,10 +132,180 @@
               </div>
             </div>
           </div>
+
+          <!-- 4. Kunder (ADMIN) -->
+          <button class="nav-btn" onclick="showPage('kunder')" data-tooltip="Kunder" data-role-menu="kunder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Kunder</span></button>
+
+          <!-- Separator (kun admin/support) -->
+          <div class="nav-separator" id="nav-admin-separator" data-role-menu="admin-separator">
+            <hr>
+          </div>
+
+          <!-- 6. Virksomheds Profil Dropdown (ALLE) -->
+          <div class="nav-dropdown" id="nav-virksomheds-profil">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('virksomheds-profil')" data-tooltip="Virksomheds Profil">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span>Virksomheds Profil</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('stamdata')">Stamdata</button>
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('noegletal')">Nøgletal</button>
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('faktura')">Faktura</button>
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('abonnement')">Abonnement</button>
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('produkter')">Produktbibliotek</button>
+              <button class="nav-dropdown-item" onclick="showCustomerSubpage('workflow-kontrol')">Workflow Kontrol</button>
+            </div>
+          </div>
+
+          <!-- 7. Salg Dropdown (ADMIN) -->
+          <div class="nav-dropdown" id="nav-salg" data-role-menu="nav-salg">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('salg')" data-tooltip="Salg">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              <span>Salg</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showPage('unified-inbox')">Indbakke</button>
+              <button class="nav-dropdown-item" onclick="showPage('orders')">Ordrer</button>
+              <button class="nav-dropdown-item" onclick="showPage('salgsoversigt')">Salgsoversigt</button>
+              <button class="nav-dropdown-item" onclick="showPage('korttransaktioner')">Korttransaktioner</button>
+            </div>
+          </div>
+
+          <!-- 8. Rapporter Dropdown (ALLE) -->
+          <div class="nav-dropdown" id="nav-rapporter">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('rapporter')" data-tooltip="Rapporter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              <span>Rapporter</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showPage('dagsrapport')">Dagsrapport</button>
+              <button class="nav-dropdown-item" onclick="showPage('produktrapport')">Produktrapport</button>
+              <button class="nav-dropdown-item" onclick="showPage('zrapport')">Z-rapport</button>
+              <button class="nav-dropdown-item" onclick="showPage('konverteringsrapport')">Konvertering</button>
+              <button class="nav-dropdown-item" onclick="showPage('genbestillingsrapport')">Genbestilling</button>
+              <button class="nav-dropdown-item" onclick="showPage('anmeldelsesrapport')">Anmeldelser</button>
+              <button class="nav-dropdown-item" onclick="showPage('heatmaprapport')">Heatmap</button>
+            </div>
+          </div>
+
+          <!-- 9. Integrationer Dropdown (ALLE) -->
+          <div class="nav-dropdown" id="nav-integrationer">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('integrationer')" data-tooltip="Integrationer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              <span>Integrationer</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showPage('bogholderi')">Bogholderi</button>
+              <button class="nav-dropdown-item" onclick="showPage('betaling')">Betaling</button>
+            </div>
+          </div>
+
+          <!-- 10. Marketing Dropdown (ALLE) -->
+          <div class="nav-dropdown" id="nav-marketing">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('marketing')" data-tooltip="Marketing">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              <span>Marketing</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showPage('loyalty')">Loyalitetsprogram</button>
+              <button class="nav-dropdown-item" onclick="showPage('campaigns')">Kampagner</button>
+              <button class="nav-dropdown-item" onclick="showPage('udsendelser')">Udsendelser</button>
+              <button class="nav-dropdown-item" onclick="showPage('segments')">Kundesegmenter</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('push-notifikationer')">Push Notifikationer</button>
+              <button class="nav-dropdown-item" onclick="showPage('medlemmer')">Medlemmer</button>
+            </div>
+          </div>
+
+          <!-- 11. Analytics (ALLE) -->
+          <button class="nav-btn" onclick="showPage('analytics')" data-tooltip="Analytics" id="nav-analytics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Analytics</span>
+          </button>
+
+          <!-- 12. App Builder Dropdown (ALLE, ingen sektionstitel) -->
+          <div class="nav-dropdown" id="nav-appbuilder">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('appbuilder')" data-tooltip="App Builder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <span>App Builder</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('branding')">Branding</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('farver')">Farver</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('billeder')">Billeder</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('menu')">Menu</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('timer')">Åbningstider</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('kontakt')">Kontakt</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('funktioner')">Funktioner</button>
+              <button class="nav-dropdown-item" onclick="showAppBuilderPage('mobilapp')">Mobil App</button>
+            </div>
+          </div>
+
+          <!-- 13. Web Builder (ALLE, ingen sektionstitel, direkte knapper) -->
+          <button class="nav-btn" onclick="showWebBuilderPage('branding')" data-tooltip="Branding" id="nav-wb-branding">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span>Branding</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('farver')" data-tooltip="Farver" id="nav-wb-farver">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>
+            <span>Farver</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('billeder')" data-tooltip="Billeder" id="nav-wb-billeder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Billeder</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('menu')" data-tooltip="Menu" id="nav-wb-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>Menu</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('timer')" data-tooltip="Åbningstider" id="nav-wb-timer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Åbningstider</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('kontakt')" data-tooltip="Kontakt" id="nav-wb-kontakt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Kontakt</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('levering')" data-tooltip="Levering" id="nav-wb-levering">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <span>Levering</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('funktioner')" data-tooltip="Funktioner" id="nav-wb-funktioner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Funktioner</span>
+          </button>
+          <button class="nav-btn" onclick="showWebBuilderPage('social')" data-tooltip="Sociale Medier" id="nav-wb-social">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            <span>Sociale Medier</span>
+          </button>
+
+          <!-- 14. Indstillinger Dropdown (ALLE, ingen sektionstitel) -->
+          <div class="nav-dropdown" id="nav-indstillinger">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('indstillinger')" data-tooltip="Indstillinger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span>Indstillinger</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showSettingsPage('users')" data-role-menu="settings-users">Brugerindstillinger</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('sprog')">Sprog</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('billing')" data-role-menu="settings-billing">Abonnement</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('notifications')">Notifikationer</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('passwords')">Adgangskoder</button>
+              <button class="nav-dropdown-item" onclick="showSettingsPage('support')">Support</button>
+            </div>
+          </div>
         </div>
       </nav>
       <div class="sidebar-footer" style="padding:8px">
         <!-- Sidebar footer cleared - Log ud moved to topbar profile dropdown -->
       </div>
     </aside>
-<!-- Force rebuild 1769767884 -->
