@@ -1,0 +1,286 @@
+# OrderFlow Alert Rules for Grafana
+# =================================
+# Import these rules in Grafana → Alerting → Alert Rules → Import
+#
+# Prerequisites:
+# - Loki datasource configured
+# - Slack contact point configured (or modify for your notification channel)
+
+apiVersion: 1
+
+groups:
+  # ============================================================
+  # CRITICAL ALERTS (Page immediately)
+  # ============================================================
+  - name: OrderFlow Critical
+    folder: OrderFlow
+    interval: 1m
+    rules:
+      - uid: orderflow-fatal-errors
+        title: FATAL Errors Detected
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"level":"FATAL"` [5m])
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Fatal error detected in OrderFlow"
+          description: "A FATAL level error occurred. This indicates system instability that requires immediate attention."
+          runbook_url: "https://docs.orderflow.dk/runbooks/fatal-errors"
+        labels:
+          severity: critical
+          team: platform
+
+      - uid: orderflow-error-spike
+        title: Error Rate Spike
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: |
+                sum(count_over_time({service="orderflow-edge"} |= `"level":"ERROR"` [5m])) /
+                sum(count_over_time({service="orderflow-edge"} [5m])) * 100 > 5
+              queryType: range
+        for: 5m
+        annotations:
+          summary: "Error rate exceeds 5%"
+          description: "More than 5% of requests are resulting in errors. Current rate: {{ $value | printf \"%.2f\" }}%"
+        labels:
+          severity: critical
+          team: platform
+
+      - uid: orderflow-sms-outage
+        title: SMS Sending Failures
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"channel.sms.send_failed"` [10m]) > 5
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Multiple SMS sending failures"
+          description: "More than 5 SMS messages failed to send in the last 10 minutes. Check InMobile API status and credentials."
+        labels:
+          severity: critical
+          team: channels
+
+  # ============================================================
+  # WARNING ALERTS (Notify during business hours)
+  # ============================================================
+  - name: OrderFlow Warnings
+    folder: OrderFlow
+    interval: 5m
+    rules:
+      - uid: orderflow-ai-confidence-low
+        title: AI Confidence Dropping
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: avg_over_time({service="orderflow-edge"} |= `"event":"ai.intent.classified"` | json | unwrap confidence [30m]) < 0.6
+              queryType: range
+        for: 15m
+        annotations:
+          summary: "AI confidence score below threshold"
+          description: "Average AI confidence has dropped below 60% for 15 minutes. This may indicate menu changes, unusual requests, or model drift. Current avg: {{ $value | printf \"%.2f\" }}"
+        labels:
+          severity: warning
+          team: ai
+
+      - uid: orderflow-ai-fallbacks
+        title: High AI Fallback Rate
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"ai.fallback.triggered"` [30m]) > 10
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Unusual number of AI fallbacks"
+          description: "More than 10 AI fallbacks in 30 minutes. Users may be getting transferred to humans unnecessarily."
+        labels:
+          severity: warning
+          team: ai
+
+      - uid: orderflow-order-parse-failures
+        title: Order Parsing Failures
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: |
+                sum(count_over_time({service="orderflow-edge"} |= `"event":"order.parse_failed"` [30m])) /
+                sum(count_over_time({service="orderflow-edge"} |= `"event":"order.received"` [30m])) * 100 > 10
+              queryType: range
+        for: 10m
+        annotations:
+          summary: "High order parse failure rate"
+          description: "More than 10% of orders are failing to parse. Check for menu sync issues or unusual order patterns."
+        labels:
+          severity: warning
+          team: orders
+
+      - uid: orderflow-payment-failures
+        title: Payment Processing Issues
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"order.payment_failed"` [15m]) > 3
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Multiple payment failures detected"
+          description: "{{ $value }} payment failures in the last 15 minutes. Check payment provider status."
+        labels:
+          severity: warning
+          team: payments
+
+      - uid: orderflow-slow-responses
+        title: Slow Response Times
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: avg_over_time({service="orderflow-edge"} | json | unwrap duration_ms [10m]) > 2000
+              queryType: range
+        for: 5m
+        annotations:
+          summary: "Response times exceeding 2 seconds"
+          description: "Average response time is {{ $value | printf \"%.0f\" }}ms. Check for database bottlenecks or external API delays."
+        labels:
+          severity: warning
+          team: platform
+
+  # ============================================================
+  # INFO ALERTS (Daily digest or dashboard only)
+  # ============================================================
+  - name: OrderFlow Info
+    folder: OrderFlow
+    interval: 30m
+    rules:
+      - uid: orderflow-rate-limit-warning
+        title: API Rate Limits Approaching
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"ai.rate_limit.hit"` [1h]) > 0
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "AI API rate limits hit"
+          description: "Rate limits were hit {{ $value }} times in the last hour. Consider upgrading API tier or implementing request queuing."
+        labels:
+          severity: info
+          team: ai
+
+      - uid: orderflow-negative-reviews
+        title: Negative Review Alert
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"review.negative_alert"` [1h]) > 0
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Negative reviews received"
+          description: "{{ $value }} negative reviews in the last hour. Restaurant owners should be notified to respond."
+        labels:
+          severity: info
+          team: customer-success
+
+      - uid: orderflow-auth-suspicious
+        title: Suspicious Login Activity
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 1800
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: count_over_time({service="orderflow-edge"} |= `"event":"auth.suspicious_activity"` [30m]) > 0
+              queryType: range
+        for: 0m
+        annotations:
+          summary: "Suspicious authentication activity detected"
+          description: "Unusual login patterns detected. Review auth.suspicious_activity events for details."
+        labels:
+          severity: info
+          team: security
+
+# ============================================================
+# CONTACT POINTS TEMPLATE
+# ============================================================
+# Configure these in Grafana → Alerting → Contact Points
+
+# Slack (recommended for OrderFlow)
+# - Name: orderflow-alerts-critical
+#   Type: Slack
+#   Webhook URL: <your-slack-webhook>
+#   Channel: #orderflow-alerts
+#   Title: "🚨 {{ .Status | toUpper }}: {{ .CommonLabels.alertname }}"
+#   Text: "{{ .CommonAnnotations.summary }}\n\n{{ .CommonAnnotations.description }}"
+
+# - Name: orderflow-alerts-warning
+#   Type: Slack
+#   Webhook URL: <your-slack-webhook>
+#   Channel: #orderflow-monitoring
+#   Title: "⚠️ {{ .CommonLabels.alertname }}"
+#   Text: "{{ .CommonAnnotations.summary }}"
+
+# ============================================================
+# NOTIFICATION POLICIES
+# ============================================================
+# Configure these in Grafana → Alerting → Notification policies
+
+# Root policy:
+#   - severity=critical → orderflow-alerts-critical (repeat every 5m)
+#   - severity=warning → orderflow-alerts-warning (repeat every 30m, mute 22:00-07:00)
+#   - severity=info → Email digest (daily at 09:00)

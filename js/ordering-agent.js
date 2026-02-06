@@ -6,11 +6,16 @@
  * Supports Danish and English with automatic language detection.
  */
 
+// Get loggers from global scope (loaded via logger.js)
+const getLogger = () => window.orderLogger || window.flowLogger || console;
+const getAILogger = () => window.aiLogger || window.flowLogger || console;
+const getChannelLogger = () => window.channelLogger || window.flowLogger || console;
+
 const OrderingAgent = {
     // ============================================================
     // VERSION INFO
     // ============================================================
-    version: '1.1.0',
+    version: '1.2.0',
     buildDate: '2026-02-06',
 
     // ============================================================
@@ -55,7 +60,12 @@ const OrderingAgent = {
                 });
 
                 if (result.success) {
-                    console.log('✅ AI conversation analytics initialized:', conversationId);
+                    getAILogger().info({
+                        event: 'ai.conversation.initialized',
+                        conversation_id: conversationId,
+                        restaurant_id: restaurantId,
+                        channel: channel
+                    });
                 }
             }
 
@@ -66,7 +76,12 @@ const OrderingAgent = {
 
             return conversationId;
         } catch (err) {
-            console.error('Analytics init error:', err);
+            getAILogger().error({
+                event: 'ai.conversation.init_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId,
+                channel: channel
+            });
             return null;
         }
     },
@@ -100,7 +115,11 @@ const OrderingAgent = {
                 );
             }
         } catch (err) {
-            console.error('Analytics log message error:', err);
+            getAILogger().warn({
+                event: 'ai.analytics.log_failed',
+                error_reason: err.message,
+                conversation_id: conversationId
+            });
         }
     },
 
@@ -136,7 +155,12 @@ const OrderingAgent = {
                 );
             }
         } catch (err) {
-            console.error('Analytics update outcome error:', err);
+            getAILogger().warn({
+                event: 'ai.analytics.outcome_update_failed',
+                error_reason: err.message,
+                conversation_id: conversationId,
+                outcome: outcome
+            });
         }
     },
 
@@ -175,10 +199,18 @@ const OrderingAgent = {
                 });
             }
 
-            console.log('✅ Payment integration initialized for restaurant:', restaurantId);
+            getLogger().info({
+                event: 'order.payment.initialized',
+                restaurant_id: restaurantId,
+                provider: paymentConfig.defaultProvider
+            });
             return true;
         } catch (err) {
-            console.error('Payment init error:', err);
+            getLogger().error({
+                event: 'order.payment.init_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return false;
         }
     },
@@ -249,7 +281,12 @@ const OrderingAgent = {
             };
 
         } catch (err) {
-            console.error('Create payment link error:', err);
+            getLogger().error({
+                event: 'order.payment_link.create_failed',
+                error_reason: err.message,
+                order_id: conversation.orderId,
+                channel: conversation.channel
+            });
             return { success: false, error: err.message };
         }
     },
@@ -281,7 +318,11 @@ const OrderingAgent = {
 
             return { status: conversation._paymentStatus || 'unknown' };
         } catch (err) {
-            console.error('Check payment status error:', err);
+            getLogger().error({
+                event: 'order.payment.status_check_failed',
+                error_reason: err.message,
+                payment_id: conversation._paymentId
+            });
             return { status: 'error', error: err.message };
         }
     },
@@ -359,14 +400,23 @@ const OrderingAgent = {
             // Store in Supabase ML training table
             if (window.SupabaseDB?.storeMLConversation) {
                 await window.SupabaseDB.storeMLConversation(trainingData);
-                console.log('✅ ML training data stored:', conversation._analyticsId);
+                getAILogger().info({
+                    event: 'ai.ml.training_data_stored',
+                    conversation_id: conversation._analyticsId,
+                    outcome: outcome,
+                    message_count: trainingData.messageCount
+                });
             }
 
             // Also store individual messages for fine-tuning
             await this.storeMLMessages(conversation);
 
         } catch (err) {
-            console.error('ML storage error:', err);
+            getAILogger().error({
+                event: 'ai.ml.storage_failed',
+                error_reason: err.message,
+                conversation_id: conversation._analyticsId
+            });
         }
     },
 
@@ -392,7 +442,11 @@ const OrderingAgent = {
                 await window.SupabaseDB.storeMLMessages(messages);
             }
         } catch (err) {
-            console.error('ML messages storage error:', err);
+            getAILogger().warn({
+                event: 'ai.ml.messages_storage_failed',
+                error_reason: err.message,
+                conversation_id: conversation._analyticsId
+            });
         }
     },
 
@@ -447,7 +501,11 @@ const OrderingAgent = {
                 peakHours: []
             };
         } catch (err) {
-            console.error('Get ML insights error:', err);
+            getAILogger().warn({
+                event: 'ai.ml.insights_fetch_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return null;
         }
     },
@@ -469,7 +527,11 @@ const OrderingAgent = {
 
             return { success: false, error: 'Export not available' };
         } catch (err) {
-            console.error('Export training data error:', err);
+            getAILogger().error({
+                event: 'ai.ml.export_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return { success: false, error: err.message };
         }
     },
@@ -492,14 +554,22 @@ const OrderingAgent = {
                 });
 
                 if (result.success) {
-                    console.log('✅ Instagram connected for restaurant:', restaurantId);
+                    getChannelLogger().info({
+                        event: 'channel.instagram.connected',
+                        restaurant_id: restaurantId,
+                        channel_id: result.channelId
+                    });
                     return { success: true, channelId: result.channelId };
                 }
             }
 
             return { success: false, error: 'Connection failed' };
         } catch (err) {
-            console.error('Instagram connection error:', err);
+            getChannelLogger().error({
+                event: 'channel.instagram.connect_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return { success: false, error: err.message };
         }
     },
@@ -518,14 +588,22 @@ const OrderingAgent = {
                 });
 
                 if (result.success) {
-                    console.log('✅ Facebook connected for restaurant:', restaurantId);
+                    getChannelLogger().info({
+                        event: 'channel.facebook.connected',
+                        restaurant_id: restaurantId,
+                        channel_id: result.channelId
+                    });
                     return { success: true, channelId: result.channelId };
                 }
             }
 
             return { success: false, error: 'Connection failed' };
         } catch (err) {
-            console.error('Facebook connection error:', err);
+            getChannelLogger().error({
+                event: 'channel.facebook.connect_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return { success: false, error: err.message };
         }
     },
@@ -545,7 +623,11 @@ const OrderingAgent = {
                 payments: { configured: this.paymentProviders.configured }
             };
         } catch (err) {
-            console.error('Get integration status error:', err);
+            getChannelLogger().warn({
+                event: 'channel.integration_status.fetch_failed',
+                error_reason: err.message,
+                restaurant_id: restaurantId
+            });
             return null;
         }
     },
@@ -813,7 +895,12 @@ const OrderingAgent = {
                 );
             }
         } catch (err) {
-            console.error('Error marking attention:', err);
+            getAILogger().warn({
+                event: 'ai.attention.mark_failed',
+                error_reason: err.message,
+                conversation_id: conversation._analyticsId,
+                reason: reason
+            });
         }
     },
 
@@ -1794,7 +1881,12 @@ const OrderingAgent = {
          */
         async createOrder(orderDraft) {
             // Override with actual API call
-            console.log('Creating order:', orderDraft);
+            getLogger().info({
+                event: 'order.creating',
+                channel: orderDraft.channel,
+                item_count: orderDraft.items?.length || 0,
+                fulfillment: orderDraft.fulfillment
+            });
             return {
                 success: true,
                 orderId: 'ORD-' + Date.now(),
@@ -1860,11 +1952,13 @@ const OrderingAgent = {
             }
         }
 
-        console.log('OrderingAgent initialized with:', {
-            menuItems: this.menuCatalog.items.length,
-            paymentsEnabled: this.paymentProviders.configured,
-            mlStorageEnabled: this.config.enableMLStorage,
-            analyticsEnabled: this.config.enableAnalytics
+        getLogger().info({
+            event: 'system.agent.initialized',
+            menu_items: this.menuCatalog.items.length,
+            payments_enabled: this.paymentProviders.configured,
+            ml_storage_enabled: this.config.enableMLStorage,
+            analytics_enabled: this.config.enableAnalytics,
+            version: this.version
         });
 
         return this;

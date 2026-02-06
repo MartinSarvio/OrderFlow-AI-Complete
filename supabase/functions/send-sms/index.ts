@@ -1,19 +1,36 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createRequestLogger, EdgeLogger } from "../_shared/logger.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id, x-restaurant-id',
 }
 
 serve(async (req) => {
+  const log = createRequestLogger(req, { module: 'send-sms', channel: 'sms' })
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  const startTime = Date.now()
+
   try {
-    const { to, message, sender, apiKey } = await req.json()
+    const { to, message, sender, apiKey, restaurantId, orderId } = await req.json()
+
+    // Enrich logger context with request data
+    const enrichedLog = log.child({
+      restaurantId: restaurantId,
+      orderId: orderId
+    })
 
     if (!to || !message) {
+      enrichedLog.warn({
+        event: 'channel.sms.validation_failed',
+        error_reason: 'Missing required fields',
+        has_to: !!to,
+        has_message: !!message
+      })
       return new Response(
         JSON.stringify({ error: 'Missing required fields: to, message' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -23,6 +40,10 @@ serve(async (req) => {
     const inmobileApiKey = apiKey || Deno.env.get('INMOBILE_API_KEY')
 
     if (!inmobileApiKey) {
+      enrichedLog.error({
+        event: 'channel.sms.config_error',
+        error_reason: 'InMobile API key not configured'
+      })
       return new Response(
         JSON.stringify({ error: 'InMobile API key not configured' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -39,10 +60,9 @@ serve(async (req) => {
     }
 
     // InMobile V4 API - uses HTTP Basic Auth with empty username and API key as password
-    // Format: Authorization: Basic base64(:apiKey)
     const basicAuth = btoa(':' + inmobileApiKey)
 
-    // InMobile requires numeric sender (shortcode) - NOT text like "OrderFlow"
+    // InMobile requires numeric sender (shortcode)
     const senderNumber = sender || Deno.env.get('INMOBILE_SENDER') || '54540109'
 
     const requestBody = {
@@ -54,12 +74,12 @@ serve(async (req) => {
       }]
     }
 
-    console.log('InMobile API Request:', {
-      url: 'https://api.inmobile.com/v4/sms/outgoing',
-      phoneNumber,
+    enrichedLog.info({
+      event: 'channel.sms.sending',
+      to: phoneNumber,
       sender: senderNumber,
-      apiKeyPrefix: inmobileApiKey.substring(0, 8) + '...',
-      authHeaderLength: basicAuth.length
+      message_length: message.length,
+      provider: 'inmobile'
     })
 
     const response = await fetch('https://api.inmobile.com/v4/sms/outgoing', {
@@ -72,27 +92,50 @@ serve(async (req) => {
     })
 
     const result = await response.json()
-    console.log('InMobile response:', {
-      status: response.status,
-      statusText: response.statusText,
-      result: JSON.stringify(result)
-    })
+    const duration = Date.now() - startTime
 
     // Check for successful response
     if (response.ok && result.results && result.results.length > 0 && result.results[0].messageId) {
+      const messageId = result.results[0].messageId
+
+      enrichedLog.info({
+        event: 'channel.sms.sent',
+        message_sid: messageId,
+        to: phoneNumber,
+        provider: 'inmobile',
+        duration_ms: duration
+      })
+
       return new Response(
-        JSON.stringify({ success: true, sid: result.results[0].messageId, provider: 'inmobile' }),
+        JSON.stringify({ success: true, sid: messageId, provider: 'inmobile' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     } else {
       const errorMsg = result.errorMessage || result.results?.[0]?.errorMessage || 'Failed to send SMS'
+      const errorCode = result.results?.[0]?.errorCode || response.status
+
+      enrichedLog.error({
+        event: 'channel.sms.send_failed',
+        to: phoneNumber,
+        provider: 'inmobile',
+        error_code: errorCode,
+        error_reason: errorMsg,
+        duration_ms: duration
+      })
+
       return new Response(
         JSON.stringify({ error: errorMsg, details: result }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
   } catch (error) {
-    console.error('InMobile error:', error)
+    const duration = Date.now() - startTime
+    log.error({
+      event: 'channel.sms.error',
+      error_reason: error.message,
+      stack: error.stack,
+      duration_ms: duration
+    })
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
