@@ -203,6 +203,66 @@
   --z-toast: 800;
   --z-max: 9999;
 
+  /* ==================== SHORTHAND ALIASES ==================== */
+  /* These aliases match styles.css for backwards compatibility */
+
+  /* Background Aliases */
+  --bg: var(--color-bg);
+  --bg1: var(--color-bg-2);
+  --bg2: var(--color-bg);
+  --bg3: var(--color-bg-3);
+  --nav-bg: var(--color-nav-bg);
+  --sidebar-bg: var(--color-bg-2);
+  --content-bg: var(--color-content-bg);
+
+  /* Surface Aliases */
+  --card: var(--color-card);
+  --card-hover: var(--color-card-hover);
+  --card-elevated: var(--color-card-elevated);
+
+  /* Border Aliases */
+  --border: var(--color-border);
+  --border-light: var(--color-border-light);
+
+  /* Text Aliases */
+  --text: var(--color-text);
+  --text2: var(--color-text-secondary);
+  --text-inverse: var(--color-bg);
+  --muted: var(--color-text-muted);
+  --text-muted: var(--color-text-secondary);
+  --text-subtle: var(--color-text-secondary);
+
+  /* Brand Aliases */
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-primary-hover);
+  --accent-dim: var(--color-primary-dim);
+  --accent-glow: var(--color-primary-glow);
+  --primary: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --primary-active: var(--color-primary-active);
+  --primary-contrast: #FFFFFF;
+
+  /* State Aliases */
+  --danger: var(--color-danger);
+  --danger-dim: var(--color-danger-dim);
+  --danger-border: var(--color-danger-border);
+  --success: var(--color-success);
+  --success-dim: var(--color-success-dim);
+  --green: var(--color-success);
+  --warning: var(--color-warning);
+  --warn: var(--color-warning);
+  --warning-dim: var(--color-warning-dim);
+  --info: var(--color-info);
+  --info-dim: var(--color-info-dim);
+
+  /* Additional Aliases */
+  --purple: var(--color-purple);
+  --cyan: var(--color-cyan);
+  --orange: var(--color-orange);
+  --link: #60A5FA;
+  --link-hover: #93C5FD;
+  --hover: rgba(255, 255, 255, 0.05);
+
   /* ==================== LAYOUT ==================== */
 
   /* Container Max Widths */
@@ -346,4 +406,63 @@
   /* Shadows - Light mode specific */
   --shadow-1: 0 1px 2px rgba(2, 6, 23, 0.06);
   --shadow-2: 0 8px 24px rgba(2, 6, 23, 0.10);
+
+  /* ==================== LIGHT MODE SHORTHAND ALIASES ==================== */
+
+  /* Background Aliases */
+  --bg: var(--color-bg);
+  --bg1: var(--color-bg);
+  --bg2: var(--n2);
+  --bg3: var(--color-bg);
+  --nav-bg: var(--color-nav-bg);
+  --sidebar-bg: var(--color-nav-bg);
+  --content-bg: var(--color-content-bg);
+
+  /* Surface Aliases */
+  --card: var(--color-card);
+  --card-hover: var(--color-card-hover);
+  --card-elevated: var(--color-card-elevated);
+
+  /* Border Aliases */
+  --border: var(--color-border);
+  --border-light: var(--color-border-light);
+
+  /* Text Aliases */
+  --text: var(--color-text);
+  --text2: var(--color-text-secondary);
+  --text-inverse: #FFFFFF;
+  --muted: var(--color-text-muted);
+  --text-muted: var(--color-text-muted);
+  --text-subtle: var(--color-text-muted);
+
+  /* Brand Aliases */
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-primary-hover);
+  --accent-dim: var(--color-primary-dim);
+  --accent-glow: var(--color-primary-glow);
+  --primary: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --primary-active: var(--color-primary-active);
+  --primary-contrast: #FFFFFF;
+
+  /* State Aliases */
+  --danger: var(--color-danger);
+  --danger-dim: var(--color-danger-dim);
+  --danger-border: var(--color-danger-border);
+  --success: var(--color-success);
+  --success-dim: var(--color-success-dim);
+  --green: var(--color-success);
+  --warning: var(--color-warning);
+  --warn: var(--color-warning);
+  --warning-dim: var(--color-warning-dim);
+  --info: var(--color-info);
+  --info-dim: var(--color-info-dim);
+
+  /* Additional Aliases */
+  --purple: #8B5CF6;
+  --cyan: #0891B2;
+  --orange: #EA580C;
+  --link: var(--primary-700);
+  --link-hover: var(--primary-600);
+  --hover: rgba(0, 0, 0, 0.03);
 }
