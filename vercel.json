@@ -5,7 +5,7 @@
     { "source": "/", "destination": "/landing-pages/landing.html" },
     { "source": "/landing", "destination": "/landing-pages/landing.html" },
     { "source": "/priser", "destination": "/landing-pages/priser.html" },
-    { "source": "/how-it-works", "destination": "/public/pages/marketing/how-it-works.html" },
+    { "source": "/how-it-works", "destination": "/landing-pages/how-it-works.html" },
     { "source": "/business-scanner", "destination": "/demos/business-scanner-demo.html" },
     { "source": "/privacy", "destination": "/public/legal/privacy.html" },
     { "source": "/terms", "destination": "/public/legal/terms.html" },
