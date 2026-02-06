@@ -19849,6 +19849,7 @@ function switchSettingsTab(tab) {
     'maintenance': 'Systemvedligeholdelse',
     'cookies': 'Cookie Samtykke',
     'templates': 'Skabeloner',
+    'domains': 'Custom Domains',
     'bank': 'Bank'
   };
   
@@ -19874,6 +19875,11 @@ function switchSettingsTab(tab) {
   // Load subscription plans config when billing tab is opened
   if (tab === 'billing') {
     renderSubscriptionPlansConfig();
+  }
+
+  // Load custom domains when domains tab is opened
+  if (tab === 'domains') {
+    loadCustomDomains();
   }
 
   // Initialize notification settings when notifications tab is opened
@@ -35683,6 +35689,314 @@ function updateTemplateDropdowns() {
     if (webBuilderTemplates[currentValue]) {
       webBuilderSelect.value = currentValue;
     }
+  }
+}
+
+// =====================================================
+// CUSTOM DOMAINS MANAGEMENT
+// =====================================================
+
+let customDomains = [];
+let pendingDomainVerification = null;
+
+// Load custom domains list
+async function loadCustomDomains() {
+  try {
+    const { data, error } = await supabase
+      .from('domain_mappings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    customDomains = data || [];
+    renderDomainsList();
+  } catch (err) {
+    console.error('Error loading domains:', err);
+    // Show empty state
+    customDomains = [];
+    renderDomainsList();
+  }
+}
+
+// Render domains list
+function renderDomainsList() {
+  const container = document.getElementById('domains-list');
+  if (!container) return;
+
+  if (customDomains.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:32px;color:var(--muted)">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 12px;opacity:0.5">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <p style="font-size:14px">Ingen custom domains tilføjet endnu</p>
+        <p style="font-size:12px;margin-top:4px">Din webshop er tilgængelig på dit subdomain</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = customDomains.map(domain => {
+    const statusColors = {
+      'active': 'var(--success)',
+      'pending_dns': 'var(--warning)',
+      'pending_validation': 'var(--warning)',
+      'pending_cert': 'var(--accent)',
+      'error': 'var(--error)'
+    };
+    const statusLabels = {
+      'active': 'Aktiv',
+      'pending_dns': 'Venter på DNS',
+      'pending_validation': 'Validerer...',
+      'pending_cert': 'Udsteder SSL',
+      'error': 'Fejl'
+    };
+
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--bg2);border-radius:var(--radius-md);margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${statusColors[domain.status] || 'var(--muted)'}"></div>
+          <div>
+            <div style="font-weight:500;font-size:14px">${domain.hostname}</div>
+            <div style="font-size:12px;color:var(--muted)">${statusLabels[domain.status] || domain.status}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${domain.status !== 'active' ? `<button class="btn btn-sm btn-secondary" onclick="showDomainInstructions('${domain.id}')">Se DNS</button>` : ''}
+          <button class="btn btn-sm btn-ghost" onclick="removeDomain('${domain.id}')" style="color:var(--error)">Fjern</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Update SSL status
+  updateSSLStatus();
+}
+
+// Add new custom domain
+async function addCustomDomain() {
+  const input = document.getElementById('new-domain-input');
+  const hostname = input?.value?.trim().toLowerCase();
+
+  if (!hostname) {
+    toast('Indtast et domæne', 'error');
+    return;
+  }
+
+  // Validate hostname format
+  const hostnameRegex = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/;
+  if (!hostnameRegex.test(hostname)) {
+    toast('Ugyldigt domænenavn', 'error');
+    return;
+  }
+
+  try {
+    // Get current tenant ID
+    const tenantId = currentRestaurant?.id;
+    if (!tenantId) {
+      toast('Ingen restaurant valgt', 'error');
+      return;
+    }
+
+    // Call database function to create domain mapping
+    const { data, error } = await supabase.rpc('create_domain_mapping', {
+      p_tenant_id: tenantId,
+      p_hostname: hostname
+    });
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const domainData = data[0];
+      pendingDomainVerification = {
+        id: domainData.domain_id,
+        hostname: hostname,
+        cname_target: domainData.cname_target,
+        validation_record: domainData.validation_record,
+        validation_value: domainData.validation_value
+      };
+
+      // Show DNS instructions
+      showDnsInstructions(pendingDomainVerification);
+
+      // Clear input
+      input.value = '';
+
+      // Reload domains list
+      await loadCustomDomains();
+
+      toast('Domæne tilføjet! Konfigurer DNS for at aktivere.', 'success');
+    }
+  } catch (err) {
+    console.error('Error adding domain:', err);
+    if (err.message?.includes('duplicate')) {
+      toast('Dette domæne er allerede tilføjet', 'error');
+    } else {
+      toast('Kunne ikke tilføje domæne: ' + (err.message || 'Ukendt fejl'), 'error');
+    }
+  }
+}
+
+// Show DNS instructions
+function showDnsInstructions(domain) {
+  const container = document.getElementById('domain-dns-instructions');
+  if (!container) return;
+
+  // Parse hostname to get subdomain part
+  const parts = domain.hostname.split('.');
+  const subdomain = parts.length > 2 ? parts[0] : '@';
+
+  // Update instruction fields
+  document.getElementById('dns-cname-name').textContent = subdomain === '@' ? domain.hostname : subdomain;
+  document.getElementById('dns-cname-value').textContent = domain.cname_target || 'cname.orderflow.dk';
+  document.getElementById('dns-txt-name').textContent = domain.validation_record || `_acme-challenge.${subdomain}`;
+  document.getElementById('dns-txt-value').textContent = domain.validation_value || '';
+
+  // Show instructions
+  container.style.display = 'block';
+
+  // Store for verification
+  pendingDomainVerification = domain;
+}
+
+// Show instructions for existing domain
+async function showDomainInstructions(domainId) {
+  const domain = customDomains.find(d => d.id === domainId);
+  if (domain) {
+    showDnsInstructions({
+      id: domain.id,
+      hostname: domain.hostname,
+      cname_target: domain.dns_target || 'cname.orderflow.dk',
+      validation_record: domain.validation_record,
+      validation_value: domain.validation_value
+    });
+  }
+}
+
+// Copy DNS record to clipboard
+function copyDnsRecord(type) {
+  let text = '';
+  if (type === 'cname') {
+    const name = document.getElementById('dns-cname-name')?.textContent || '';
+    const value = document.getElementById('dns-cname-value')?.textContent || '';
+    text = `${name} CNAME ${value}`;
+  } else if (type === 'txt') {
+    const name = document.getElementById('dns-txt-name')?.textContent || '';
+    const value = document.getElementById('dns-txt-value')?.textContent || '';
+    text = `${name} TXT "${value}"`;
+  }
+
+  navigator.clipboard.writeText(text).then(() => {
+    toast('Kopieret til udklipsholder', 'success');
+  });
+}
+
+// Verify domain now
+async function verifyDomainNow() {
+  if (!pendingDomainVerification?.id) {
+    toast('Ingen domæne at verificere', 'error');
+    return;
+  }
+
+  const spinner = document.getElementById('domain-verify-spinner');
+  const status = document.getElementById('domain-verify-status');
+  const message = document.getElementById('domain-verify-message');
+
+  if (spinner) spinner.style.display = 'block';
+  if (status) status.textContent = 'Verificerer...';
+  if (message) message.textContent = 'Tjekker DNS konfiguration...';
+
+  try {
+    const response = await fetch('/api/domains/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain_id: pendingDomainVerification.id })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      if (result.domain.status === 'active') {
+        if (status) status.textContent = 'Domæne aktiveret!';
+        if (message) message.textContent = 'Dit domæne er nu aktivt og SSL er konfigureret.';
+        if (spinner) spinner.style.display = 'none';
+        toast('Domæne verificeret og aktiveret!', 'success');
+
+        // Hide instructions after short delay
+        setTimeout(() => {
+          document.getElementById('domain-dns-instructions').style.display = 'none';
+          pendingDomainVerification = null;
+        }, 2000);
+      } else {
+        if (status) status.textContent = result.message || 'Venter på DNS...';
+        if (message) message.textContent = 'DNS er endnu ikke konfigureret korrekt. Prøv igen om et par minutter.';
+      }
+    } else {
+      if (status) status.textContent = 'Verificering fejlede';
+      if (message) message.textContent = result.message || 'Tjek din DNS konfiguration.';
+    }
+
+    // Reload domains list
+    await loadCustomDomains();
+  } catch (err) {
+    console.error('Verification error:', err);
+    if (status) status.textContent = 'Netværksfejl';
+    if (message) message.textContent = 'Kunne ikke kontakte verificeringsserveren.';
+  }
+}
+
+// Remove domain
+async function removeDomain(domainId) {
+  if (!confirm('Er du sikker på at du vil fjerne dette domæne?')) return;
+
+  try {
+    const { error } = await supabase
+      .from('domain_mappings')
+      .delete()
+      .eq('id', domainId);
+
+    if (error) throw error;
+
+    toast('Domæne fjernet', 'success');
+    await loadCustomDomains();
+
+    // Hide instructions if this was the pending domain
+    if (pendingDomainVerification?.id === domainId) {
+      document.getElementById('domain-dns-instructions').style.display = 'none';
+      pendingDomainVerification = null;
+    }
+  } catch (err) {
+    console.error('Error removing domain:', err);
+    toast('Kunne ikke fjerne domæne', 'error');
+  }
+}
+
+// Update SSL status display
+function updateSSLStatus() {
+  const sslStatus = document.getElementById('ssl-status');
+  if (!sslStatus) return;
+
+  const activeDomains = customDomains.filter(d => d.status === 'active');
+
+  if (activeDomains.length === 0) {
+    sslStatus.innerHTML = `
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></div>
+      <span style="font-size:13px;color:var(--muted)">Ingen aktive certifikater</span>
+    `;
+  } else {
+    sslStatus.innerHTML = activeDomains.map(domain => {
+      const expiresAt = domain.ssl_expires_at ? new Date(domain.ssl_expires_at) : null;
+      const expiresText = expiresAt ? `Udløber ${expiresAt.toLocaleDateString('da-DK')}` : 'Aktiv';
+
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--success)"></div>
+          <span style="font-size:13px">${domain.hostname}</span>
+          <span style="font-size:11px;color:var(--muted);margin-left:auto">${expiresText}</span>
+        </div>
+      `;
+    }).join('');
   }
 }
 
