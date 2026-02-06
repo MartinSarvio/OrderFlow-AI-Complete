@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flow - Restaurant Automation Platform</title>
-  <meta name="description" content="Flow giver dig de samme værktøjer som store restaurantkæder bruger til at drive salg. Online bestilling, automatisk marketing og mere.">
-  <meta property="og:title" content="Flow - Restaurant Automation Platform">
-  <meta property="og:description" content="Flow giver dig de samme værktøjer som store restaurantkæder bruger til at drive salg.">
+  <title>Blog | Flow - Restaurant Automation Platform</title>
+  <meta name="description" content="Læs artikel fra Flow Blog om restaurant marketing og automatisering.">
+  <meta property="og:title" content="Blog | Flow - Restaurant Automation Platform">
+  <meta property="og:description" content="Læs artikel fra Flow Blog om restaurant marketing og automatisering.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1390,6 +1390,206 @@
     }
   }
 
+  /* ==================== BLOG POST STYLES ==================== */
+  .post-header {
+    padding: 14rem 4rem 4rem;
+    background: var(--color-gray-50);
+    text-align: center;
+  }
+  .post-category {
+    display: inline-block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.6rem;
+  }
+  .post-title {
+    font-size: 4.8rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-dark);
+    max-width: 90rem;
+    margin: 0 auto 2.4rem;
+  }
+  .post-meta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    font-size: 1.4rem;
+    color: var(--color-gray-500);
+    flex-wrap: wrap;
+  }
+  .post-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .post-featured-image {
+    width: 100%;
+    max-width: 100rem;
+    margin: 0 auto;
+    padding: 0 4rem;
+  }
+  .post-featured-image img {
+    width: 100%;
+    height: auto;
+    max-height: 56rem;
+    object-fit: cover;
+    border-radius: 1.6rem;
+    margin-top: -4rem;
+  }
+  .post-content {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 4rem 4rem 6rem;
+    font-size: 1.8rem;
+    line-height: 1.8;
+    color: var(--color-gray-700);
+  }
+  .post-content h2 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    margin: 4rem 0 1.6rem;
+    color: var(--color-dark);
+  }
+  .post-content h3 {
+    font-size: 2.4rem;
+    font-weight: 600;
+    margin: 3.2rem 0 1.2rem;
+    color: var(--color-dark);
+  }
+  .post-content p {
+    margin-bottom: 2rem;
+  }
+  .post-content ul, .post-content ol {
+    margin: 2rem 0;
+    padding-left: 2.4rem;
+  }
+  .post-content li {
+    margin-bottom: 1rem;
+  }
+  .post-content a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .post-content a:hover {
+    text-decoration: none;
+  }
+  .post-content blockquote {
+    margin: 3.2rem 0;
+    padding: 2.4rem 3.2rem;
+    background: var(--color-gray-50);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 0.8rem;
+    font-style: italic;
+    color: var(--color-gray-600);
+  }
+  .post-content img {
+    width: 100%;
+    border-radius: 1.2rem;
+    margin: 3.2rem 0;
+  }
+  .related-section {
+    padding: 6rem 4rem;
+    background: var(--color-gray-50);
+  }
+  .related-section h2 {
+    font-size: 3.2rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 4rem;
+    color: var(--color-dark);
+  }
+  .related-posts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3.2rem;
+    max-width: var(--container-max);
+    margin: 0 auto;
+  }
+  .blog-card {
+    background: var(--color-white);
+    border-radius: 1.6rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .blog-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+  }
+  .blog-card-image {
+    width: 100%;
+    height: 20rem;
+    object-fit: cover;
+  }
+  .blog-card-content {
+    padding: 2.4rem;
+  }
+  .blog-card-category {
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.2rem;
+  }
+  .blog-card-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+    line-height: 1.35;
+    color: var(--color-dark);
+  }
+  .blog-card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .blog-card-title a:hover {
+    color: var(--color-primary);
+  }
+  .blog-card-excerpt {
+    font-size: 1.4rem;
+    color: var(--color-gray-600);
+    line-height: 1.6;
+    margin-bottom: 1.6rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .blog-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.2rem;
+    color: var(--color-gray-500);
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--color-gray-200);
+  }
+  @media (max-width: 1024px) {
+    .related-posts { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .post-header { padding: 12rem 2rem 3rem; }
+    .post-title { font-size: 3.2rem; }
+    .post-meta { gap: 1.2rem; font-size: 1.3rem; }
+    .post-featured-image { padding: 0 2rem; }
+    .post-featured-image img { margin-top: -2rem; }
+    .post-content { padding: 3.2rem 2rem 5rem; font-size: 1.7rem; }
+    .post-content h2 { font-size: 2.6rem; }
+    .post-content h3 { font-size: 2rem; }
+    .related-section { padding: 4rem 2rem; }
+    .related-section h2 { font-size: 2.4rem; margin-bottom: 3rem; }
+    .related-posts { grid-template-columns: 1fr; gap: 2rem; }
+  }
+
 </style>
   <link rel="stylesheet" href="/css/cookie-consent.css">
   <link rel="stylesheet" href="/css/privacy-modal.css">
@@ -1444,499 +1644,33 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
-    <section class="hero-section" data-cms="hero">
-      <div class="hero-video-bg">
-        <video autoplay muted loop playsinline preload="auto" src="/images/hero-video.mp4" type="video/mp4"></video>
+
+    <!-- Post Header -->
+    <header class="post-header">
+      <span class="post-category" id="postCategory"></span>
+      <h1 class="post-title" id="postTitle">Indlæg</h1>
+      <div class="post-meta">
+        <span id="postAuthor"></span>
+        <span id="postDate"></span>
+        <span id="postReadTime"></span>
       </div>
-      <div class="hero-content">
-        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["BYGGET", "DESIGNET", "UDVIKLET", "OPTIMERET"]'>BYGGET</span><span class="typed-cursor typed-cursor--blink" aria-hidden="true">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
-        <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger.</p>
-        <div class="hero-buttons">
-          <a href="#demo" class="button button-interactive-hover">
-            <span class="btn-text">Få en gratis demo</span>
-            <span class="btn-text-hover">
-              Få en gratis demo
-              <svg class="btn-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-              </svg>
-            </span>
-          </a>
-          <a href="priser.html" class="button button-outline">Se priser</a>
-        </div>
-      </div>
+    </header>
+
+    <!-- Featured Image -->
+    <div class="post-featured-image">
+      <img id="postFeaturedImage" src="" alt="">
+    </div>
+
+    <!-- Post Content -->
+    <article class="post-content" id="postContent">
+      <p>Indlæser indhold...</p>
+    </article>
+
+    <!-- Related Posts -->
+    <section class="related-section">
+      <h2>Relaterede artikler</h2>
+      <div class="related-posts" id="relatedPosts"></div>
     </section>
-
-    <!-- Tabs Section (Owner.com style) -->
-    <section class="tabs-section" id="produkt" data-cms="features">
-      <div class="tabs-header">
-        <div class="tab-item active" data-tab="1">
-          <span class="tab-number">1</span>
-          <span class="tab-text">Mere Google Trafik</span>
-        </div>
-        <div class="tab-item" data-tab="2">
-          <span class="tab-number">2</span>
-          <span class="tab-text">Mere Online Salg</span>
-        </div>
-        <div class="tab-item" data-tab="3">
-          <span class="tab-number">3</span>
-          <span class="tab-text">Flere Genbestillinger</span>
-        </div>
-        <div class="tab-item" data-tab="4">
-          <span class="tab-number">4</span>
-          <span class="tab-text">Flere App Downloads</span>
-        </div>
-      </div>
-
-      <div class="tab-content active" data-tab="1">
-        <div class="tab-content-inner">
-          <div class="tab-text-content">
-            <h3>Beløn dine gæster</h3>
-            <p>Giv gæster point når de bruger din brandede mobil app. Øg kundeloyalitet og få flere tilbagevendende kunder med et automatiseret belønningssystem.</p>
-          </div>
-          <div class="tab-visual">
-            <!-- Google Search Mockup with Restaurant Background -->
-            <div style="position: relative; max-width: 568px; border-radius: 16px; overflow: hidden; background: url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=450&fit=crop') center/cover; padding: 24px;">
-              <!-- Google Search Mockup -->
-              <div style="position: relative; z-index: 1; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 24px rgba(0,0,0,0.12);">
-                <!-- Google Search Bar -->
-                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid #dfe1e5; border-radius: 24px; margin-bottom: 24px;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                  <span style="color: #5f6368; font-size: 14px;">pizza restaurant near me</span>
-                </div>
-
-                <!-- Search Result -->
-                <div style="padding: 0 4px;">
-                  <div style="font-size: 12px; color: #202124; margin-bottom: 4px;">
-                    <span style="color: #1a0dab;">www.bellapizza.dk</span>
-                    <span style="color: #5f6368;"> › menu</span>
-                  </div>
-                  <a href="#" style="font-size: 20px; color: #1a0dab; text-decoration: none; display: block; margin-bottom: 8px; font-weight: 400;">Bella Pizza - Autentisk Italiensk Pizza</a>
-
-                  <!-- Rating & Info -->
-                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="color: #202124; font-size: 14px; font-weight: 500;">4.8</span>
-                    <span style="color: #fbbc04;">★★★★★</span>
-                    <span style="color: #70757a; font-size: 14px;">(2.847)</span>
-                    <span style="color: #70757a; font-size: 14px;">· Restaurant</span>
-                  </div>
-
-                  <!-- Meta Description -->
-                  <p style="color: #4d5156; font-size: 14px; line-height: 1.58; margin: 0 0 12px 0;">
-                    Friskbagt pizza med ingredienser af højeste kvalitet. <strong>Bestil online</strong> og få leveret direkte til døren. Åbent dagligt 11-22.
-                  </p>
-
-                  <!-- Quick Links -->
-                  <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                    <a href="#" style="color: #1a0dab; font-size: 14px; text-decoration: none;">Menu</a>
-                    <a href="#" style="color: #1a0dab; font-size: 14px; text-decoration: none;">Bestil Nu</a>
-                    <a href="#" style="color: #1a0dab; font-size: 14px; text-decoration: none;">Kontakt</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="tab-nav">
-          <button class="tab-nav-btn" onclick="prevTab()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Previous
-          </button>
-          <button class="tab-nav-btn" onclick="nextTab()">
-            Next
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="tab-content" data-tab="2">
-        <div class="tab-content-inner">
-          <div class="tab-text-content">
-            <h3>Øg dit online salg</h3>
-            <p>Få flere online ordrer med vores integrerede bestillingssystem. Ingen kommission, fuld kontrol over dine kundedata.</p>
-          </div>
-          <div class="tab-visual">
-            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Mere Online Salg" style="object-fit: contain; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem;">
-          </div>
-        </div>
-        <div class="tab-nav">
-          <button class="tab-nav-btn" onclick="prevTab()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Previous
-          </button>
-          <button class="tab-nav-btn" onclick="nextTab()">
-            Next
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="tab-content" data-tab="3">
-        <div class="tab-content-inner">
-          <div class="tab-text-content">
-            <h3>Få flere genbestillinger</h3>
-            <p>Automatiser din marketing og få kunder til at vende tilbage. SMS-kampagner, push-notifikationer og email marketing.</p>
-          </div>
-          <div class="tab-visual">
-            <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="Flere Genbestillinger" style="object-fit: contain; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 2rem;">
-          </div>
-        </div>
-        <div class="tab-nav">
-          <button class="tab-nav-btn" onclick="prevTab()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Previous
-          </button>
-          <button class="tab-nav-btn" onclick="nextTab()">
-            Next
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="tab-content" data-tab="4">
-        <div class="tab-content-inner">
-          <div class="tab-text-content">
-            <h3>Få flere app downloads</h3>
-            <p>Din egen brandede app i App Store og Google Play. Øg kundeloyalitet og få direkte kontakt med dine gæster.</p>
-          </div>
-          <div class="tab-visual">
-            <div class="iphone-mockup" style="position: relative; width: 180px; height: 370px; margin: 0 auto;">
-              <!-- iPhone 16 frame -->
-              <img src="/images/apple-iphone-16-pro-max-2024-medium.png" alt="iPhone 16" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; z-index: 2; pointer-events: none;">
-              <!-- Video inside the screen -->
-              <video autoplay muted loop playsinline src="/images/Mobilapp reklame.mov" style="position: absolute; top: 3%; left: 5%; width: 90%; height: 94%; object-fit: cover; border-radius: 20px; z-index: 1;"></video>
-            </div>
-          </div>
-        </div>
-        <div class="tab-nav">
-          <button class="tab-nav-btn" onclick="prevTab()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Previous
-          </button>
-          <button class="tab-nav-btn" onclick="nextTab()">
-            Next
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Trusted Section -->
-    <section class="trusted-section" data-cms="trusted">
-      <div class="trusted-header">
-        <h2>Betroet af tusindvis af restauratører</h2>
-      </div>
-      <div class="trusted-carousel-wrapper">
-        <div class="trusted-carousel">
-          <!-- Cards duplicated for infinite scroll - Editable via FLOW CMS -->
-          <div class="trusted-card" data-cms-field="trusted-card-1">
-            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-1">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name" data-cms-field="trusted-name-1">Maria Jensen</div>
-              <div class="trusted-card-role" data-cms-field="trusted-role-1">Café Hygge, København</div>
-            </div>
-          </div>
-          <div class="trusted-card" data-cms-field="trusted-card-2">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-2">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name" data-cms-field="trusted-name-2">Anders Nielsen</div>
-              <div class="trusted-card-role" data-cms-field="trusted-role-2">Pizzeria Napoli, Aarhus</div>
-            </div>
-          </div>
-          <div class="trusted-card" data-cms-field="trusted-card-3">
-            <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-3">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name" data-cms-field="trusted-name-3">Sophie Larsen</div>
-              <div class="trusted-card-role" data-cms-field="trusted-role-3">Sushi House, Odense</div>
-            </div>
-          </div>
-          <div class="trusted-card" data-cms-field="trusted-card-4">
-            <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-4">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name" data-cms-field="trusted-name-4">Thomas Møller</div>
-              <div class="trusted-card-role" data-cms-field="trusted-role-4">Burger Joint, Aalborg</div>
-            </div>
-          </div>
-          <div class="trusted-card" data-cms-field="trusted-card-5">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-5">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name" data-cms-field="trusted-name-5">Emma Christensen</div>
-              <div class="trusted-card-role" data-cms-field="trusted-role-5">Thai Kitchen, Esbjerg</div>
-            </div>
-          </div>
-          <!-- Duplicate for seamless loop -->
-          <div class="trusted-card">
-            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=500&fit=crop" alt="Restaurant Owner">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name">Maria Jensen</div>
-              <div class="trusted-card-role">Café Hygge, København</div>
-            </div>
-          </div>
-          <div class="trusted-card">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=500&fit=crop" alt="Restaurant Owner">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name">Anders Nielsen</div>
-              <div class="trusted-card-role">Pizzeria Napoli, Aarhus</div>
-            </div>
-          </div>
-          <div class="trusted-card">
-            <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=500&fit=crop" alt="Restaurant Owner">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name">Sophie Larsen</div>
-              <div class="trusted-card-role">Sushi House, Odense</div>
-            </div>
-          </div>
-          <div class="trusted-card">
-            <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=500&fit=crop" alt="Restaurant Owner">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name">Thomas Møller</div>
-              <div class="trusted-card-role">Burger Joint, Aalborg</div>
-            </div>
-          </div>
-          <div class="trusted-card">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=500&fit=crop" alt="Restaurant Owner">
-            <div class="trusted-card-overlay">
-              <div class="trusted-card-name">Emma Christensen</div>
-              <div class="trusted-card-role">Thai Kitchen, Esbjerg</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Creations Gallery Section -->
-    <section class="creations-section" data-cms="creations">
-      <div class="creations-header">
-        <h2>Se vores nyeste <span>skabelser</span></h2>
-        <p>En visuel samling af vores seneste arbejde - hvert projekt skabt med intention, følelse og stil.</p>
-      </div>
-      <div class="creations-gallery">
-        <div class="creations-card">
-          <img src="https://images.unsplash.com/photo-1543269865-0a740d43b90c?w=800&h=400&fit=crop" alt="Online Bestilling">
-          <div class="creations-card-overlay">
-            <h3 class="creations-card-title">Online Bestilling</h3>
-            <p class="creations-card-desc">Lad dine kunder bestille direkte fra din hjemmeside med et elegant og brugervenligt system.</p>
-          </div>
-        </div>
-        <div class="creations-card">
-          <img src="https://images.unsplash.com/photo-1714976326351-0ecf0244f0fc?w=800&h=400&fit=crop" alt="Mobile App">
-          <div class="creations-card-overlay">
-            <h3 class="creations-card-title">Mobile App</h3>
-            <p class="creations-card-desc">Din egen brandede app i App Store og Google Play - lige som de store kæder.</p>
-          </div>
-        </div>
-        <div class="creations-card">
-          <img src="https://images.unsplash.com/photo-1736220690062-79e12ca75262?w=800&h=400&fit=crop" alt="Marketing Automation">
-          <div class="creations-card-overlay">
-            <h3 class="creations-card-title">Marketing Automation</h3>
-            <p class="creations-card-desc">Automatisk markedsføring der driver salg og fastholder dine kunder.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Bento Feature Grid (Owner.com Style) -->
-    <section class="bento" id="hvordan" data-cms="bento">
-    <div class="bento-container">
-      <div class="bento-header">
-        <h2 class="bento-title">Giv din restaurant den samme<br>teknologi som de store brands</h2>
-      </div>
-      <!-- Hero billede med overlay -->
-      <div class="bento-hero">
-        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=600&fit=crop" alt="Mobile app bestilling">
-        <div class="bento-hero-overlay">
-          <p>Dine kunder er vant til at bestille på telefonen.<br>Derfor giver vi din restaurant sin egen <strong>mobile app</strong>.</p>
-        </div>
-      </div>
-      <!-- Feature cards -->
-      <div class="bento-grid">
-        <div class="bento-card">
-          <div class="bento-card-content">
-            <div class="bento-card-label">Få højere Google rankings med din AI-powered</div>
-            <div class="bento-card-title">restaurant hjemmeside.</div>
-          </div>
-          <div class="bento-card-image">
-            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop" alt="Restaurant website">
-          </div>
-        </div>
-        <div class="bento-card">
-          <div class="bento-card-content">
-            <div class="bento-card-label">Vækst dit salg med et</div>
-            <div class="bento-card-title">online bestillingssystem modelleret efter de store brands.</div>
-          </div>
-          <div class="bento-card-image">
-            <img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=600&h=400&fit=crop" alt="Online ordering">
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Logo Cloud Animated Section -->
-  <section class="logo-cloud" data-cms="logocloud">
-    <div class="logo-cloud-header">
-      <h2>Trusted by the world's most innovative teams</h2>
-      <p>Join thousands of developers and designers who are already building with Smoothui</p>
-    </div>
-    <div class="logo-cloud-wrapper">
-      <div class="logo-cloud-track">
-        <!-- First set -->
-        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-          <span>Canpoy</span>
-        </a>
-        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-          <span>Canva</span>
-        </a>
-        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-          <span>Casetext</span>
-        </a>
-        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Strava</span>
-        </a>
-        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-          <span>Descript</span>
-        </a>
-        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-          <span>Duolingo</span>
-        </a>
-        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Faire</span>
-        </a>
-        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-          <span>Clearbit</span>
-        </a>
-        <!-- Second set for seamless loop -->
-        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-          <span>Canpoy</span>
-        </a>
-        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-          <span>Canva</span>
-        </a>
-        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-          <span>Casetext</span>
-        </a>
-        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Strava</span>
-        </a>
-        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-          <span>Descript</span>
-        </a>
-        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-          <span>Duolingo</span>
-        </a>
-        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Faire</span>
-        </a>
-        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-          <span>Clearbit</span>
-        </a>
-        <!-- Third set for even smoother loop -->
-        <a href="https://canpoy.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-          <span>Canpoy</span>
-        </a>
-        <a href="https://canva.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-          <span>Canva</span>
-        </a>
-        <a href="https://casetext.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-          <span>Casetext</span>
-        </a>
-        <a href="https://strava.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Strava</span>
-        </a>
-        <a href="https://descript.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-          <span>Descript</span>
-        </a>
-        <a href="https://duolingo.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-          <span>Duolingo</span>
-        </a>
-        <a href="https://faire.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-          <span>Faire</span>
-        </a>
-        <a href="https://clearbit.com" target="_blank" rel="noopener noreferrer" class="logo-cloud-item">
-          <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-          <span>Clearbit</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-    <section class="beliefs" id="om" data-cms="beliefs">
-    <div class="beliefs-container">
-      <div class="beliefs-left">
-        <h2 class="beliefs-title">Tre overbevisninger der guider vores virksomhed</h2>
-        <p class="beliefs-subtitle">Forstå principperne der guider vores beslutninger.</p>
-        <div class="beliefs-author">
-          <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop" alt="CEO">
-          <div>
-            <div class="beliefs-author-name">Adam Guild</div>
-            <div class="beliefs-author-role">Co-Founder and CEO at OrderFlow</div>
-          </div>
-        </div>
-      </div>
-      <div class="beliefs-right">
-        <div class="belief-item">
-          <div class="belief-heading">Salgsvækst er vigtigere end tilpasning.</div>
-          <div class="belief-text">Tredjepartsapps har formet hvordan alle bestiller online. Vi tager deres bedste praksis og giver dem til dig. Det er derfor vi udkonkurrerer dem på salg.</div>
-        </div>
-        <div class="belief-item">
-          <div class="belief-heading">Vi skal tjene din forretning hver måned.</div>
-          <div class="belief-text">Restauranter er hårde nok. Du behøver ikke endnu en tech-leverandør der binder dig. Kunder stemmer med deres fødder. Vi vil have dig skal kunne forlade os nemt hvis vi ikke tilføjer værdi.</div>
-        </div>
-        <div class="belief-item">
-          <div class="belief-heading">Restauranter bør eje deres kunderelationer.</div>
-          <div class="belief-text">En af de grusomste biprodukter af tech "innovation" er hvordan du bliver separeret fra dine kunder. Hvis du beslutter at forlade OrderFlow, får du dine kunder med dig.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-    <!-- Testimonials Section -->
-  <section class="testimonials-section" data-cms="testimonials">
-    <div class="testimonials-content">
-      <div class="testimonial-quote-wrapper">
-        <blockquote class="testimonial-quote" id="testimonialQuote">
-          "Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder."
-        </blockquote>
-      </div>
-      <div class="testimonial-author" id="testimonialAuthor">
-        <img class="testimonial-avatar" id="testimonialAvatar" src="https://i.pravatar.cc/96?img=1" alt="Maria Jensen">
-        <div class="testimonial-divider"></div>
-        <div class="testimonial-info">
-          <div class="testimonial-name" id="testimonialName">Maria Jensen</div>
-          <div class="testimonial-role" id="testimonialRole">Café Hygge, København</div>
-        </div>
-      </div>
-      <div class="testimonial-indicators" id="testimonialIndicators">
-        <span class="testimonial-indicator active" data-index="0"><span class="testimonial-indicator-fill"></span></span>
-        <span class="testimonial-indicator" data-index="1"><span class="testimonial-indicator-fill"></span></span>
-        <span class="testimonial-indicator" data-index="2"><span class="testimonial-indicator-fill"></span></span>
-        <span class="testimonial-indicator" data-index="3"><span class="testimonial-indicator-fill"></span></span>
-      </div>
-    </div>
-  </section>
 
   <!-- Footer -->
   <footer class="footer">
@@ -1997,208 +1731,17 @@
 
 <!-- JavaScript -->
 <script>
-  let currentTab = 1;
-  const totalTabs = 4;
-  let tabTimeout;
-
-  function showTab(tabNumber, fromClick = false) {
-    const tabItems = document.querySelectorAll('.tab-item');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    // Opdater tab items med completed states
-    tabItems.forEach(item => {
-      const itemTab = parseInt(item.dataset.tab);
-      item.classList.remove('active');
-
-      // Marker tidligere tabs som completed
-      if (itemTab < tabNumber) {
-        item.classList.add('completed');
-      } else if (fromClick || tabNumber === 1) {
-        item.classList.remove('completed');
-      }
-
-      if (itemTab === tabNumber) {
-        item.classList.add('active');
-      }
-    });
-
-    // Opdater tab content
-    tabContents.forEach(content => {
-      content.classList.remove('active');
-      if (parseInt(content.dataset.tab) === tabNumber) content.classList.add('active');
-    });
-
-    currentTab = tabNumber;
-
-    // Start timer for næste tab (5 sekunder = animation varighed)
-    clearTimeout(tabTimeout);
-    tabTimeout = setTimeout(() => {
-      const nextTabNum = currentTab >= totalTabs ? 1 : currentTab + 1;
-      // Reset completed states når vi looper tilbage
-      if (nextTabNum === 1) {
-        document.querySelectorAll('.tab-item').forEach(item => {
-          item.classList.remove('completed');
-        });
-      }
-      showTab(nextTabNum);
-    }, 5000);
-  }
-
-  function nextTab() { 
-    const nextTabNum = currentTab >= totalTabs ? 1 : currentTab + 1;
-    if (nextTabNum === 1) {
-      document.querySelectorAll('.tab-item').forEach(item => {
-        item.classList.remove('completed');
-      });
-    }
-    showTab(nextTabNum); 
-  }
-
-  function prevTab() { 
-    document.querySelectorAll('.tab-item').forEach(item => {
-      item.classList.remove('completed');
-    });
-    showTab(currentTab <= 1 ? totalTabs : currentTab - 1, true); 
-  }
-
-  document.querySelectorAll('.tab-item').forEach(item => {
-    item.addEventListener('click', () => {
-      clearTimeout(tabTimeout);
-      // Reset alle completed states ved klik
-      document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('completed'));
-      showTab(parseInt(item.dataset.tab), true);
-    });
+  // Mobile menu toggle
+  document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
+    document.querySelector('.nav-links')?.classList.toggle('active');
+    this.classList.toggle('active');
   });
 
-  // Start med første tab
-  showTab(1);
-</script>
-<script>
-  // Header scroll effect
-  window.addEventListener('scroll', function() {
-    const nav = document.querySelector('.nav-wrapper');
-    if (window.scrollY > 50) {
-      nav.classList.add('scrolled');
-    } else {
-      nav.classList.remove('scrolled');
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.nav-dropdown')) {
+      document.querySelectorAll('.nav-dropdown').forEach(d => d.classList.remove('active'));
     }
-  });
-
-  // Force video autoplay
-  document.addEventListener('DOMContentLoaded', function() {
-    const video = document.querySelector('.hero-video-bg video');
-    if (video) {
-      video.play().catch(function(error) {
-        console.log('Autoplay prevented:', error);
-      });
-    }
-  });
-
-  // Blur video når dropdown åbnes
-  document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
-    dropdown.addEventListener('mouseenter', () => {
-      document.body.classList.add('dropdown-open');
-    });
-    dropdown.addEventListener('mouseleave', () => {
-      document.body.classList.remove('dropdown-open');
-    });
-  });
-
-  // Testimonials Carousel
-  const testimonialsData = [
-    {
-      quote: "Flow har transformeret vores forretning. Vi har øget vores online ordrer med 150% på kun 3 måneder.",
-      avatar: "https://i.pravatar.cc/96?img=1",
-      name: "Maria Jensen",
-      role: "Café Hygge, København"
-    },
-    {
-      quote: "Endelig en platform der forstår restaurantbranchen. Automatiseringen har sparet os timevis af arbejde hver uge.",
-      avatar: "https://i.pravatar.cc/96?img=12",
-      name: "Anders Nielsen",
-      role: "Pizzeria Napoli, Aarhus"
-    },
-    {
-      quote: "Kundeservice er i top, og platformen er utrolig nem at bruge. Vores gæster elsker den nye app.",
-      avatar: "https://i.pravatar.cc/96?img=5",
-      name: "Sophie Larsen",
-      role: "Sushi House, Odense"
-    },
-    {
-      quote: "Vi sparede over 40.000 kr. om måneden ved at skifte væk fra tredjepartsplatforme. Flow betaler sig selv på få uger.",
-      avatar: "https://i.pravatar.cc/96?img=8",
-      name: "Thomas Møller",
-      role: "Burger Joint, Aalborg"
-    }
-  ];
-
-  let currentTestimonial = 0;
-  let testimonialTimer = null;
-  const TESTIMONIAL_DURATION = 5000;
-
-  function updateTestimonial(index) {
-    const quoteEl = document.getElementById('testimonialQuote');
-    const avatarEl = document.getElementById('testimonialAvatar');
-    const nameEl = document.getElementById('testimonialName');
-    const roleEl = document.getElementById('testimonialRole');
-    const authorEl = document.getElementById('testimonialAuthor');
-    const indicators = document.querySelectorAll('.testimonial-indicator');
-
-    if (!quoteEl || !avatarEl || !nameEl || !roleEl || !authorEl) return;
-
-    // Fade out
-    quoteEl.classList.add('fade-out');
-    authorEl.classList.add('fade-out');
-
-    setTimeout(() => {
-      // Update content
-      const testimonial = testimonialsData[index];
-      quoteEl.textContent = '"' + testimonial.quote + '"';
-      avatarEl.src = testimonial.avatar;
-      avatarEl.alt = testimonial.name;
-      nameEl.textContent = testimonial.name;
-      roleEl.textContent = testimonial.role;
-
-      // Update indicators
-      indicators.forEach((ind, i) => {
-        ind.classList.toggle('active', i === index);
-      });
-
-      // Remove fade-out, add fade-in
-      quoteEl.classList.remove('fade-out');
-      authorEl.classList.remove('fade-out');
-      quoteEl.classList.add('fade-in');
-      authorEl.classList.add('fade-in');
-
-      // Remove fade-in after animation
-      setTimeout(() => {
-        quoteEl.classList.remove('fade-in');
-        authorEl.classList.remove('fade-in');
-      }, 50);
-    }, 400);
-  }
-
-  function nextTestimonial() {
-    currentTestimonial = (currentTestimonial + 1) % testimonialsData.length;
-    updateTestimonial(currentTestimonial);
-  }
-
-  function startTestimonialCarousel() {
-    if (testimonialTimer) clearInterval(testimonialTimer);
-    testimonialTimer = setInterval(nextTestimonial, TESTIMONIAL_DURATION);
-  }
-
-  // Initialize testimonials
-  document.addEventListener('DOMContentLoaded', () => {
-    const indicators = document.querySelectorAll('.testimonial-indicator');
-    indicators.forEach((ind, i) => {
-      ind.addEventListener('click', () => {
-        currentTestimonial = i;
-        updateTestimonial(i);
-        startTestimonialCarousel(); // Reset timer
-      });
-    });
-    startTestimonialCarousel();
   });
 </script>
 
@@ -2208,74 +1751,9 @@
 <script src="/js/privacy-modal.js"></script>
 <!-- Cookie Popup -->
 <script src="/js/cookie-popup.js"></script>
-<!-- Flow CMS Dynamic Content -->
+<!-- Flow CMS Renderer - Enables Side Editor functionality -->
 <script src="/js/flow-cms-render.js"></script>
-
-<!-- Typed Text Animation -->
-<script>
-(function() {
-  function initTypedText() {
-    const elements = document.querySelectorAll('.typed-text[data-typed-text]');
-
-    elements.forEach(el => {
-      try {
-        const words = JSON.parse(el.getAttribute('data-typed-text'));
-        if (!words || words.length === 0) return;
-
-        let wordIndex = 0;
-        let charIndex = 0;
-        let isDeleting = false;
-        let currentWord = words[0];
-
-        function type() {
-          if (isDeleting) {
-            el.textContent = currentWord.substring(0, charIndex - 1);
-            charIndex--;
-
-            if (charIndex === 0) {
-              isDeleting = false;
-              wordIndex = (wordIndex + 1) % words.length;
-              currentWord = words[wordIndex];
-              setTimeout(type, 500);
-              return;
-            }
-            setTimeout(type, 50);
-          } else {
-            el.textContent = currentWord.substring(0, charIndex + 1);
-            charIndex++;
-
-            if (charIndex === currentWord.length) {
-              isDeleting = true;
-              setTimeout(type, 2000);
-              return;
-            }
-            setTimeout(type, 100);
-          }
-        }
-
-        el.textContent = '';
-        setTimeout(type, 1000);
-      } catch (e) {
-        console.error('Typed text error:', e);
-      }
-    });
-  }
-
-  // Initialize after a delay to ensure CMS has finished rendering
-  function startTypedText() {
-    // Small delay to ensure CMS script has finished
-    setTimeout(initTypedText, 100);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startTypedText);
-  } else {
-    startTypedText();
-  }
-
-  // Expose for CMS re-initialization
-  window.initTypedText = initTypedText;
-})();
-</script>
+<!-- Blog Renderer -->
+<script src="/js/blog-render.js"></script>
 </body>
 </html>

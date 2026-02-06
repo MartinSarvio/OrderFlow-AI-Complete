@@ -40,8 +40,7 @@
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
     .nav-left { display: flex; align-items: center; gap: 1.2rem; }
     .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
-    .nav-logo img {
-      height: 2.56rem; width: auto; }
+    .nav-logo img { height: 3.2rem; width: auto; }
     .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
     .nav-logo:hover .logo-f { transform: rotate(360deg); }
     .nav-links { display: flex; align-items: center; gap: 0.8rem; }
@@ -142,14 +141,13 @@
       .legal-header h1 { font-size: 2.8rem; }
     }
   </style>
-<link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
   <div class="page-wrapper">
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
-          <a href="landing.html" class="nav-logo"><img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
+          <a href="landing.html" class="nav-logo"><img src="images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f"></a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
               <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
@@ -175,13 +173,13 @@
                 <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
                 <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
                 <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
               </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
             </div>
           </div>
         </div>
         <div class="nav-right">
-          <a href="../index.html" class="nav-login">Login</a>
+          <a href="index.html" class="nav-login">Login</a>
           <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
@@ -524,6 +522,7 @@
         <div class="footer-column">
           <h4>RESSOURCER</h4>
           <ul>
+            <li><a href="blog.html">Blog</a></li>
             <li><a href="case-studies.html">Case Studies</a></li>
             <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
             <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
@@ -548,7 +547,7 @@
             <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
             <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
           </ul>
-          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+          <img src="images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
         </div>
       </div>
       <div class="footer-bottom">
@@ -568,7 +567,5 @@
       if (window.scrollY > 50) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
     });
   </script>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
 </body>
 </html>

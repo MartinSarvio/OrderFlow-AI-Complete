@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facebook Workflow til Restaurant | Flow</title>
+  <title>Facebook Workflow | Flow</title>
   <meta name="description" content="Automatiser din Facebook marketing. Auto-svar på Messenger, kommentarer og anmeldelser. Nå flere kunder.">
-  <meta property="og:title" content="Facebook Workflow til Restaurant | Flow">
+  <meta property="og:title" content="Facebook Workflow | Flow">
   <meta property="og:description" content="Automatiser din Facebook marketing og konverter følgere til kunder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -422,6 +422,37 @@
       background: rgba(0, 0, 0, 0.1);
     }
 
+    .workflow-meta {
+      margin: 2.8rem auto 3.2rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.2rem;
+      max-width: 72rem;
+    }
+
+    .meta-card {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--color-gray-200);
+      border-radius: 1.2rem;
+      padding: 1.6rem;
+      backdrop-filter: blur(8px);
+    }
+
+    .meta-label {
+      font-size: 1.1rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-gray-500);
+      font-weight: 600;
+    }
+
+    .meta-value {
+      margin-top: 0.4rem;
+      font-size: 1.7rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+
     /* ==================== FEATURES SECTION ==================== */
     .features-section {
       background: var(--color-white);
@@ -643,6 +674,9 @@
       .nav-links {
         display: none;
       }
+      .workflow-meta {
+        grid-template-columns: 1fr;
+      }
       .hero-content h1 {
         font-size: 4rem;
       }
@@ -713,7 +747,7 @@
                 <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
                 <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
                 <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="#" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
               </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
             </div>
           </div>
@@ -730,6 +764,20 @@
       <div class="hero-content">
         <h1>Facebook på autopilot</h1>
         <p>Nogen skriver "Hvad koster en burger?" på Messenger. Systemet svarer med det samme med menu og bestillingslink. Du fokuserer på maden - vi håndterer Facebook.</p>
+        <div class="workflow-meta">
+          <div class="meta-card">
+            <div class="meta-label">Agent</div>
+            <div class="meta-value" id="workflow-agent-name">Facebook Bestillingsagent</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Workflow</div>
+            <div class="meta-value">Facebook Workflow</div>
+          </div>
+          <div class="meta-card">
+            <div class="meta-label">Version</div>
+            <div class="meta-value" id="workflow-version">v3.12.0</div>
+          </div>
+        </div>
         <div class="hero-buttons">
           <a href="#demo" class="button button-white">Se hvordan det virker</a>
           <a href="#features" class="button button-outline">Hvad du kan gøre</a>
@@ -858,6 +906,8 @@
       </div>
       <div class="footer-column">
         <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="blog.html">Blog</a></li>
         <ul>
           <li><a href="case-studies.html">Case Studies</a></li>
           <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
@@ -910,7 +960,26 @@
       }
     });
   </script>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
+  <script src="/config/version.js"></script>
+  <script>
+    (function() {
+      const agentEl = document.getElementById('workflow-agent-name');
+      const versionEl = document.getElementById('workflow-version');
+
+      try {
+        const agents = JSON.parse(localStorage.getItem('orderflow_ai_agents') || '[]');
+        const match = agents.find(agent => (agent.channel || '').toLowerCase() === 'facebook');
+        if (agentEl && match?.name) agentEl.textContent = match.name;
+      } catch (err) {
+        // Ignore missing/blocked localStorage
+      }
+
+      const version = window.VERSION_CONFIG?.getDisplayVersion?.() ||
+        (window.VERSION_CONFIG?.version ? `v${window.VERSION_CONFIG.version}` : null);
+      if (versionEl && version) versionEl.textContent = version;
+    })();
+  </script>
+  <!-- Flow CMS Dynamic Content -->
+  <script src="/js/flow-cms-render.js"></script>
 </body>
 </html>
