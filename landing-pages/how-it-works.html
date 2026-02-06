@@ -3215,8 +3215,9 @@
         address: selectedPlace.address || ''
       });
 
-      // Redirect to business-scanner-demo.html in same tab with business data
-      window.location.href = `business-scanner-demo.html?${params.toString()}`;
+      // Redirect to search-engine in same tab with business data
+      // URL params (name, place_id, address) skip the search page and go directly to scanner
+      window.location.href = `/search-engine?${params.toString()}`;
     }
 
     // ============================================================================
