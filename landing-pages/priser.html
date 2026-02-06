@@ -1662,6 +1662,192 @@
     });
   </script>
 
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+
+<!-- Dynamic Pricing from Supabase + Realtime -->
+<script>
+(function() {
+  const SUPABASE_URL = 'https://qymtjhzgtcittohutmay.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjMzNjYsImV4cCI6MjA2NzI5OTM2Nn0.bMCAme1Pz9rT4v6cOEMXRhHczqaRgFv3IxJe8YYPb7Y';
+
+  let sb = null;
+  let isAnnual = true;
+  let plansData = [];
+
+  function formatPrice(price) {
+    if (price >= 1000) {
+      return price.toLocaleString('da-DK');
+    }
+    return String(price);
+  }
+
+  function renderPlans(plans) {
+    plansData = plans;
+    const grid = document.querySelector('.pricing-grid');
+    if (!grid || !plans.length) return;
+
+    grid.innerHTML = plans.map(plan => {
+      const isFeatured = plan.is_popular;
+      const isEnterprise = plan.monthly_price === 0 && plan.annual_price === 0;
+      const cardClass = isFeatured ? 'pricing-card featured' : 'pricing-card';
+      const price = isAnnual ? plan.annual_price : plan.monthly_price;
+      const featuresLabel = plan.sort_order === 1 ? 'Det får du:' : plan.sort_order === 2 ? 'Alt i Starter, plus:' : 'Alt i Pro, plus:';
+      const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+
+      return '<div class="' + cardClass + '" data-plan-id="' + plan.plan_id + '">' +
+        (isFeatured ? '<span class="pricing-card-badge">Mest populære</span>' : '') +
+        '<h3 class="pricing-card-title">' + plan.name + '</h3>' +
+        '<p class="pricing-card-desc">' + plan.description + '</p>' +
+        '<div class="pricing-price">' +
+          (isEnterprise
+            ? '<span class="pricing-currency"></span><span class="pricing-amount" style="font-size:3.6rem"><span class="pricing-amount-inner">Kontakt os</span></span>'
+            : '<span class="pricing-currency">kr.</span><span class="pricing-amount" data-monthly="' + formatPrice(plan.monthly_price) + '" data-annual="' + formatPrice(plan.annual_price) + '"><span class="pricing-amount-inner">' + formatPrice(price) + '</span></span>'
+          ) +
+        '</div>' +
+        '<span class="pricing-period">' + (isEnterprise ? 'Tilpasset pris' : '/måned') + '</span>' +
+        '<a href="#demo" class="pricing-cta">' + plan.button_text + '</a>' +
+        '<span class="pricing-features-label">' + featuresLabel + '</span>' +
+        '<ul class="pricing-features">' +
+          plan.features.map(function(f) {
+            return '<li>' + checkSvg + ' ' + f + '</li>';
+          }).join('') +
+        '</ul>' +
+      '</div>';
+    }).join('');
+
+    rebindToggle();
+  }
+
+  function animatePrice(amountEl, newValue) {
+    var inner = amountEl.querySelector('.pricing-amount-inner');
+    if (!inner) return;
+    inner.style.transform = 'translateY(-100%)';
+    inner.style.opacity = '0';
+    setTimeout(function() {
+      inner.textContent = newValue;
+      inner.style.transform = 'translateY(100%)';
+      requestAnimationFrame(function() {
+        inner.style.transition = 'transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s ease';
+        inner.style.transform = 'translateY(0)';
+        inner.style.opacity = '1';
+      });
+    }, 200);
+  }
+
+  function rebindToggle() {
+    var toggle = document.getElementById('pricingToggle');
+    var monthlyLabel = document.querySelector('.pricing-toggle-label[data-period="monthly"]');
+    var annualLabel = document.querySelector('.pricing-toggle-label[data-period="annual"]');
+
+    function updatePrices() {
+      var amounts = document.querySelectorAll('.pricing-amount[data-monthly]');
+      amounts.forEach(function(amount) {
+        var val = isAnnual ? amount.dataset.annual : amount.dataset.monthly;
+        animatePrice(amount, val);
+      });
+      if (isAnnual) {
+        toggle.classList.add('annual');
+        monthlyLabel.classList.remove('active');
+        annualLabel.classList.add('active');
+      } else {
+        toggle.classList.remove('annual');
+        monthlyLabel.classList.add('active');
+        annualLabel.classList.remove('active');
+      }
+    }
+
+    toggle.onclick = function() { isAnnual = !isAnnual; updatePrices(); };
+    monthlyLabel.onclick = function() { if (isAnnual) { isAnnual = false; updatePrices(); } };
+    annualLabel.onclick = function() { if (!isAnnual) { isAnnual = true; updatePrices(); } };
+  }
+
+  function updateSinglePlan(updatedPlan) {
+    var card = document.querySelector('[data-plan-id="' + updatedPlan.plan_id + '"]');
+    if (!card) {
+      fetchAndRender();
+      return;
+    }
+
+    var title = card.querySelector('.pricing-card-title');
+    var desc = card.querySelector('.pricing-card-desc');
+    var cta = card.querySelector('.pricing-cta');
+    var amountEl = card.querySelector('.pricing-amount[data-monthly]');
+
+    if (title) title.textContent = updatedPlan.name;
+    if (desc) desc.textContent = updatedPlan.description;
+    if (cta) cta.textContent = updatedPlan.button_text;
+
+    if (amountEl) {
+      amountEl.dataset.monthly = formatPrice(updatedPlan.monthly_price);
+      amountEl.dataset.annual = formatPrice(updatedPlan.annual_price);
+      var newPrice = isAnnual ? formatPrice(updatedPlan.annual_price) : formatPrice(updatedPlan.monthly_price);
+      animatePrice(amountEl, newPrice);
+    }
+
+    var featuresList = card.querySelector('.pricing-features');
+    if (featuresList && updatedPlan.features) {
+      var checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+      featuresList.innerHTML = updatedPlan.features.map(function(f) {
+        return '<li>' + checkSvg + ' ' + f + '</li>';
+      }).join('');
+    }
+
+    card.style.outline = '2px solid var(--color-primary)';
+    setTimeout(function() { card.style.outline = ''; }, 1500);
+  }
+
+  async function fetchAndRender() {
+    try {
+      var { data, error } = await sb.from('subscription_plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        renderPlans(data);
+        console.log('✅ Priser hentet fra Supabase:', data.length, 'planer');
+      }
+    } catch (err) {
+      console.warn('⚠️ Kunne ikke hente priser fra Supabase, bruger statiske priser:', err.message);
+    }
+  }
+
+  function subscribeToChanges() {
+    sb.channel('pricing-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'subscription_plans'
+      }, function(payload) {
+        console.log('🔄 Prisændring detekteret:', payload.eventType);
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          updateSinglePlan(payload.new);
+        } else {
+          fetchAndRender();
+        }
+      })
+      .subscribe(function(status) {
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ Realtime pricing subscription aktiv');
+        }
+      });
+  }
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    if (typeof window.supabase === 'undefined') {
+      console.warn('⚠️ Supabase SDK ikke loaded');
+      return;
+    }
+
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    await fetchAndRender();
+    subscribeToChanges();
+  });
+})();
+</script>
+
 <!-- Flow CMS Dynamic Content -->
 <script src="/js/flow-cms-render.js"></script>
 </body>

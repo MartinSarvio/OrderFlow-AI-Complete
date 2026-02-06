@@ -747,6 +747,28 @@ const SupabaseDB = {
   },
 
   /**
+   * Subscribe to product changes for a restaurant
+   */
+  subscribeToProducts(restaurantId, callback) {
+    return supabase
+      .channel(`products-${restaurantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: `restaurant_id=eq.${restaurantId}`
+        },
+        (payload) => {
+          console.log('🔄 Product change detected:', payload);
+          callback(payload);
+        }
+      )
+      .subscribe();
+  },
+
+  /**
    * Unsubscribe from all channels
    */
   unsubscribeAll() {
