@@ -11,6 +11,7 @@
     { "source": "/terms", "destination": "/public/legal/terms.html" },
     { "source": "/om-os", "destination": "/public/pages/company/om-os.html" },
     { "source": "/karriere", "destination": "/public/pages/company/karriere.html" },
-    { "source": "/help-center", "destination": "/public/pages/support/help-center.html" }
+    { "source": "/help-center", "destination": "/public/pages/support/help-center.html" },
+    { "source": "/tools/image-generator", "destination": "/tools/image-generator.html" }
   ]
 }

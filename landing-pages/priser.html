@@ -213,6 +213,110 @@
       column-gap: 2rem;
     }
 
+    /* ==================== HERO SECTION ==================== */
+    .pricing-hero {
+      position: relative;
+      padding: 16rem 4rem 8rem;
+      background: linear-gradient(180deg, var(--color-gray-50) 0%, var(--color-white) 100%);
+      overflow: hidden;
+    }
+
+    .pricing-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        linear-gradient(to right, var(--color-gray-200) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--color-gray-200) 1px, transparent 1px);
+      background-size: 4rem 4rem;
+      opacity: 0.5;
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
+      mask-image: linear-gradient(to bottom, black 0%, transparent 80%);
+    }
+
+    .pricing-hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 80rem;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .pricing-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: var(--color-primary);
+      color: var(--color-white);
+      padding: 0.6rem 1.6rem;
+      border-radius: 10rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 2.4rem;
+    }
+
+    .pricing-hero-badge-dot {
+      width: 0.8rem;
+      height: 0.8rem;
+      background: var(--color-white);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .pricing-hero h1 {
+      font-size: 5.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+    }
+
+    .pricing-hero h1 .gradient {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .pricing-hero p {
+      font-size: 2rem;
+      color: var(--color-gray-600);
+      max-width: 60rem;
+      margin: 0 auto 3.2rem;
+      line-height: 1.6;
+    }
+
+    .pricing-hero-features {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3.2rem;
+      flex-wrap: wrap;
+    }
+
+    .pricing-hero-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+    }
+
+    .pricing-hero-feature svg {
+      width: 2rem;
+      height: 2rem;
+      color: var(--color-primary);
+    }
+
     /* ==================== PRICING SECTION ==================== */
     .pricing-section {
       padding: 12rem 0 10rem;
@@ -745,6 +849,187 @@
       display: none;
     }
 
+    /* ==================== LOGO CLOUD SECTION ==================== */
+    .logo-cloud {
+      background: var(--color-white);
+      padding: 6rem 0;
+      overflow: hidden;
+    }
+
+    .logo-cloud-header {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding: 0 4rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: logoCloudFadeIn 0.6s ease forwards;
+    }
+
+    .logo-cloud-header h2 {
+      font-size: 2.8rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .logo-cloud-header p {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+    }
+
+    .logo-cloud-wrapper {
+      position: relative;
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
+    }
+
+    .logo-cloud-track {
+      display: flex;
+      gap: 2rem;
+      animation: logo-scroll 25s linear infinite;
+      width: max-content;
+    }
+
+    @keyframes logo-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-33.333%); }
+    }
+
+    @keyframes logoCloudFadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes logoItemFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .logo-cloud-item {
+      flex-shrink: 0;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      opacity: 0;
+      animation: logoItemFadeIn 0.4s ease forwards;
+    }
+
+    .logo-cloud-item:nth-child(1) { animation-delay: 0s; }
+    .logo-cloud-item:nth-child(2) { animation-delay: 0.1s; }
+    .logo-cloud-item:nth-child(3) { animation-delay: 0.2s; }
+    .logo-cloud-item:nth-child(4) { animation-delay: 0.3s; }
+    .logo-cloud-item:nth-child(5) { animation-delay: 0.4s; }
+    .logo-cloud-item:nth-child(6) { animation-delay: 0.5s; }
+    .logo-cloud-item:nth-child(7) { animation-delay: 0.6s; }
+    .logo-cloud-item:nth-child(8) { animation-delay: 0.7s; }
+    .logo-cloud-item:nth-child(n+9) { animation-delay: 0s; opacity: 1; }
+
+    .logo-cloud-item:hover {
+      transform: scale(1.2) rotate(5deg);
+    }
+
+    .logo-cloud-item svg {
+      margin-bottom: 0.8rem;
+      color: var(--color-gray-400);
+      fill: var(--color-gray-400);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-cloud-item span {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--color-gray-400);
+      white-space: nowrap;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .logo-cloud-item:hover svg {
+      color: var(--color-dark);
+      fill: var(--color-dark);
+    }
+
+    .logo-cloud-item:hover span {
+      color: var(--color-dark);
+    }
+
+    /* ==================== CTA BAND WITH RETRO GRID ==================== */
+    .cta-band {
+      position: relative;
+      background: var(--color-dark);
+      padding: 8rem 4rem;
+      overflow: hidden;
+    }
+
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 4rem 4rem;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+    }
+
+    .cta-band::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 50%;
+      background: radial-gradient(ellipse at center, rgba(1, 91, 248, 0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-band-content {
+      position: relative;
+      z-index: 1;
+      max-width: 80rem;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .cta-band h2 {
+      font-size: 4.8rem;
+      font-weight: 600;
+      color: var(--color-white);
+      margin-bottom: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    .cta-band p {
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 3.2rem;
+    }
+
+    .cta-band .button {
+      background: var(--color-primary);
+      color: var(--color-white);
+      padding: 1.6rem 3.2rem;
+      font-size: 1.6rem;
+    }
+
+    .cta-band .button:hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+    }
+
     @media (max-width: 768px) {
       .faq-section {
         padding: 6rem 0;
@@ -766,6 +1051,45 @@
       .faq-answer-content {
         padding: 0 1.6rem 1.6rem;
         font-size: 1.4rem;
+      }
+
+      /* Hero responsive */
+      .pricing-hero {
+        padding: 12rem 2rem 6rem;
+      }
+
+      .pricing-hero h1 {
+        font-size: 3.6rem;
+      }
+
+      .pricing-hero p {
+        font-size: 1.6rem;
+      }
+
+      .pricing-hero-features {
+        gap: 1.6rem;
+      }
+
+      /* Logo cloud responsive */
+      .logo-cloud-header {
+        padding: 0 2rem;
+      }
+
+      .logo-cloud-header h2 {
+        font-size: 2.2rem;
+      }
+
+      /* CTA band responsive */
+      .cta-band {
+        padding: 6rem 2rem;
+      }
+
+      .cta-band h2 {
+        font-size: 3.2rem;
+      }
+
+      .cta-band p {
+        font-size: 1.6rem;
       }
     }
   </style>
@@ -818,12 +1142,36 @@
       </div>
     </nav>
 
+    <!-- Hero Section -->
+    <section class="pricing-hero">
+      <div class="pricing-hero-content">
+        <div class="pricing-hero-badge">
+          <span class="pricing-hero-badge-dot"></span>
+          Ingen bindingsperiode
+        </div>
+        <h1>Simple, <span class="gradient">gennemsigtige</span> priser</h1>
+        <p>Alle planer inkluderer gratis opsætning, fuld support og ingen skjulte gebyrer. Annuller når som helst.</p>
+        <div class="pricing-hero-features">
+          <div class="pricing-hero-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Gratis opsætning</span>
+          </div>
+          <div class="pricing-hero-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Ingen kommission</span>
+          </div>
+          <div class="pricing-hero-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>14 dages gratis prøve</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Pricing Section -->
-    <section class="pricing-section">
+    <section class="pricing-section" style="padding-top: 6rem;">
       <div class="pricing-container">
-        <div class="pricing-header">
-          <h1>Vælg den rigtige plan til din restaurant</h1>
-          <p>Alle planer inkluderer gratis opsætning, support og ingen bindingsperiode. Annuller når som helst.</p>
+        <div class="pricing-header" style="margin-bottom: 4rem;">
           <div class="pricing-toggle">
             <span class="pricing-toggle-label" data-period="monthly">Månedlig</span>
             <div class="pricing-toggle-switch annual" id="pricingToggle">
@@ -1087,6 +1435,126 @@
         <div class="faq-no-results" id="faqNoResults" style="display: none;">
           <p>Ingen spørgsmål matcher din søgning. Prøv et andet søgeord.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- Logo Cloud Section -->
+    <section class="logo-cloud">
+      <div class="logo-cloud-header">
+        <h2>Brugt af de bedste restauranter i Danmark</h2>
+        <p>Slut dig til hundredvis af restauranter der allerede vækster med Flow</p>
+      </div>
+      <div class="logo-cloud-wrapper">
+        <div class="logo-cloud-track">
+          <!-- First set -->
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+            <span>Madklubben</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+            <span>Cofoco</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+            <span>Burger Shack</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Halifax</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+            <span>Gorm's</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+            <span>Sticks'n'Sushi</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Dalle Valle</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+            <span>Sushi Bansen</span>
+          </div>
+          <!-- Second set for seamless loop -->
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+            <span>Madklubben</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+            <span>Cofoco</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+            <span>Burger Shack</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Halifax</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+            <span>Gorm's</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+            <span>Sticks'n'Sushi</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Dalle Valle</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+            <span>Sushi Bansen</span>
+          </div>
+          <!-- Third set for even smoother loop -->
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
+            <span>Madklubben</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
+            <span>Cofoco</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
+            <span>Burger Shack</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Halifax</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
+            <span>Gorm's</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
+            <span>Sticks'n'Sushi</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
+            <span>Dalle Valle</span>
+          </div>
+          <div class="logo-cloud-item">
+            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
+            <span>Sushi Bansen</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Band with Retro Grid -->
+    <section class="cta-band">
+      <div class="cta-band-content">
+        <h2>Klar til at vækste din restaurant?</h2>
+        <p>Start din gratis 14-dages prøveperiode i dag. Ingen kreditkort påkrævet.</p>
+        <a href="landing.html#demo" class="button">Start gratis prøveperiode</a>
       </div>
     </section>
 

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow Image Generator - Gemini AI</title>
+  <style>
+    :root {
+      --color-primary: #015bf8;
+      --color-dark: #090a0b;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-600: #495057;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--color-gray-100);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: var(--color-dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--color-gray-600);
+      margin-bottom: 2rem;
+    }
+
+    .generator-card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--color-dark);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 1rem;
+      border: 2px solid var(--color-gray-200);
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    .options {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--color-gray-200);
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      background: white;
+      cursor: pointer;
+    }
+
+    .btn {
+      background: var(--color-primary);
+      color: white;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: #0047cc;
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      background: var(--color-gray-200);
+      color: var(--color-gray-600);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .result {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--color-gray-200);
+    }
+
+    .result-image {
+      max-width: 100%;
+      border-radius: 1rem;
+      margin-top: 1rem;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-gray-600);
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--color-gray-200);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .presets {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .preset-btn {
+      background: var(--color-gray-100);
+      border: 1px solid var(--color-gray-200);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .gallery-item {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      display: block;
+    }
+
+    .gallery-item .download {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.5rem;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Flow Image Generator</h1>
+    <p class="subtitle">Generer marketing billeder med Google Gemini AI</p>
+
+    <div class="generator-card">
+      <div class="form-group">
+        <label for="prompt">Beskrivelse af billede</label>
+        <textarea id="prompt" placeholder="Beskriv det billede du vil generere...
+
+Eksempel: A modern restaurant interior with warm lighting, elegant table settings, and a cozy atmosphere. Professional food photography style."></textarea>
+
+        <div class="presets">
+          <button class="preset-btn" onclick="setPreset('hero')">Hero Billede</button>
+          <button class="preset-btn" onclick="setPreset('food')">Mad Foto</button>
+          <button class="preset-btn" onclick="setPreset('team')">Team/Avatar</button>
+          <button class="preset-btn" onclick="setPreset('abstract')">Abstrakt Baggrund</button>
+          <button class="preset-btn" onclick="setPreset('restaurant')">Restaurant Scene</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Indstillinger</label>
+        <div class="options">
+          <select id="style">
+            <option value="photorealistic">Fotorealistisk</option>
+            <option value="illustration">Illustration</option>
+            <option value="3d-render">3D Render</option>
+            <option value="minimalist">Minimalistisk</option>
+          </select>
+
+          <select id="size">
+            <option value="1024x1024">1024x1024 (Square)</option>
+            <option value="1920x1080">1920x1080 (Hero)</option>
+            <option value="800x600">800x600 (Feature)</option>
+          </select>
+
+          <button class="btn" id="generateBtn" onclick="generateImage()">
+            Generer Billede
+          </button>
+        </div>
+      </div>
+
+      <div id="result" class="result" style="display: none;">
+        <h3>Resultat</h3>
+        <div id="resultContent"></div>
+      </div>
+    </div>
+
+    <div id="gallery" class="gallery"></div>
+  </div>
+
+  <script>
+    const presets = {
+      hero: 'A stunning hero image for a restaurant technology platform. Modern, professional, warm lighting. Shows a busy restaurant with happy customers and staff using tablets for ordering. Clean, high-end aesthetic.',
+      food: 'Beautiful food photography. Gourmet dish on a white plate, professional studio lighting, shallow depth of field. Restaurant quality presentation.',
+      team: 'Professional headshot of a friendly restaurant manager or tech founder. Clean background, confident smile, business casual attire. Natural lighting.',
+      abstract: 'Abstract geometric background with soft gradients. Blue and purple tones. Modern, tech-inspired. Suitable for website sections.',
+      restaurant: 'Interior of a modern Danish restaurant. Scandinavian design, natural materials, warm atmosphere. Evening lighting with candles. Elegant but welcoming.'
+    };
+
+    function setPreset(key) {
+      document.getElementById('prompt').value = presets[key];
+    }
+
+    async function generateImage() {
+      const prompt = document.getElementById('prompt').value.trim();
+      const style = document.getElementById('style').value;
+      const size = document.getElementById('size').value;
+      const btn = document.getElementById('generateBtn');
+      const result = document.getElementById('result');
+      const resultContent = document.getElementById('resultContent');
+
+      if (!prompt) {
+        alert('Indtast venligst en beskrivelse');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Genererer...';
+      result.style.display = 'block';
+      resultContent.innerHTML = '<div class="loading"><div class="spinner"></div> Genererer billede med Gemini AI...</div>';
+
+      try {
+        const response = await fetch('/api/generate-image', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ prompt, style, size })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          resultContent.innerHTML = `<div class="error"><strong>Fejl:</strong> ${data.error}<br><small>${data.message || ''}</small></div>`;
+          return;
+        }
+
+        if (data.success && data.image) {
+          const imgSrc = `data:${data.image.mimeType};base64,${data.image.data}`;
+          resultContent.innerHTML = `
+            <img src="${imgSrc}" alt="Generated image" class="result-image">
+            <p style="margin-top: 1rem; color: var(--color-gray-600);">${data.description || ''}</p>
+            <button class="btn" style="margin-top: 1rem;" onclick="downloadImage('${imgSrc}')">Download Billede</button>
+          `;
+
+          // Add to gallery
+          addToGallery(imgSrc, prompt);
+        } else {
+          resultContent.innerHTML = `
+            <div class="error">
+              <strong>Billedgenerering ikke tilgængelig</strong><br>
+              <small>${data.message || 'Gemini API returnerede ikke et billede for denne prompt.'}</small>
+              ${data.textResponse ? `<p style="margin-top: 0.5rem;">${data.textResponse}</p>` : ''}
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultContent.innerHTML = `<div class="error"><strong>Netværksfejl:</strong> ${error.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Generer Billede';
+      }
+    }
+
+    function downloadImage(src) {
+      const link = document.createElement('a');
+      link.href = src;
+      link.download = `flow-image-${Date.now()}.png`;
+      link.click();
+    }
+
+    function addToGallery(src, prompt) {
+      const gallery = document.getElementById('gallery');
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      item.innerHTML = `
+        <img src="${src}" alt="${prompt.substring(0, 50)}...">
+        <a class="download" onclick="downloadImage('${src}')">Download</a>
+      `;
+      gallery.insertBefore(item, gallery.firstChild);
+    }
+  </script>
+</body>
+</html>
