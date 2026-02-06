@@ -3797,6 +3797,13 @@ function showPage(page) {
     loadOrdersPage();
   }
 
+  // Initialize Unified Inbox
+  if (page === 'unified-inbox') {
+    if (window.UnifiedInbox) {
+      window.UnifiedInbox.init();
+    }
+  }
+
   // Load leads når lead-siderne vises
   if (page === 'leads') {
     loadLeadsPage();
@@ -31371,6 +31378,231 @@ function loadChangesData() {
   ).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen fejl</td></tr>';
 }
 
+// Load products data
+function loadProductsData() {
+  // Stats
+  document.getElementById('prod-total').textContent = '156';
+  document.getElementById('prod-active').textContent = '142';
+  document.getElementById('prod-categories').textContent = '12';
+  document.getElementById('prod-variants').textContent = '234';
+  document.getElementById('prod-low-stock').textContent = '5';
+  document.getElementById('prod-out-stock').textContent = '3';
+
+  // Products catalog table
+  const products = [
+    { id: 'PRD001', name: 'Margherita Pizza', category: 'Pizza', price: '99 kr', variants: 3, stock: 'In stock', sold: 234, status: 'Aktiv' },
+    { id: 'PRD002', name: 'Pepperoni Pizza', category: 'Pizza', price: '119 kr', variants: 3, stock: 'In stock', sold: 189, status: 'Aktiv' },
+    { id: 'PRD003', name: 'Caesar Salat', category: 'Salat', price: '89 kr', variants: 2, stock: 'In stock', sold: 156, status: 'Aktiv' },
+    { id: 'PRD004', name: 'Pasta Carbonara', category: 'Pasta', price: '109 kr', variants: 1, stock: 'Lav', sold: 123, status: 'Aktiv' },
+    { id: 'PRD005', name: 'Tiramisu', category: 'Dessert', price: '59 kr', variants: 0, stock: 'Udsolgt', sold: 87, status: 'Inaktiv' },
+  ];
+  const stockColors = { 'In stock': 'var(--success)', 'Lav': 'var(--warning)', 'Udsolgt': 'var(--error)' };
+  document.getElementById('data-products-table').innerHTML = products.map(p =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.id}</td><td>${p.name}</td><td>${p.category}</td><td>${p.price}</td><td>${p.variants}</td><td style="color:${stockColors[p.stock] || 'inherit'}">${p.stock}</td><td>${p.sold}</td><td style="padding-right:12px">${p.status}</td></tr>`
+  ).join('');
+
+  // Categories table
+  const categories = [
+    { id: 1, name: 'Pizza', products: 24, sort: 1, visible: true, updated: '2026-02-05' },
+    { id: 2, name: 'Pasta', products: 18, sort: 2, visible: true, updated: '2026-02-04' },
+    { id: 3, name: 'Salat', products: 12, sort: 3, visible: true, updated: '2026-02-03' },
+    { id: 4, name: 'Dessert', products: 8, sort: 4, visible: true, updated: '2026-02-01' },
+    { id: 5, name: 'Drikkevarer', products: 15, sort: 5, visible: true, updated: '2026-01-28' },
+  ];
+  document.getElementById('data-categories-table').innerHTML = categories.map(c =>
+    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.name}</td><td>${c.products}</td><td>${c.sort}</td><td style="color:${c.visible ? 'var(--success)' : 'var(--muted)'}">${c.visible ? 'Ja' : 'Nej'}</td><td style="padding-right:12px">${c.updated}</td></tr>`
+  ).join('');
+
+  // Variants table
+  const variants = [
+    { id: 'VAR01', product: 'Margherita Pizza', variant: 'Lille', type: 'Størrelse', price: '-20 kr', stock: 15 },
+    { id: 'VAR02', product: 'Margherita Pizza', variant: 'Stor', type: 'Størrelse', price: '+25 kr', stock: 22 },
+    { id: 'VAR03', product: 'Pepperoni Pizza', variant: 'Ekstra ost', type: 'Tilføjelse', price: '+15 kr', stock: 100 },
+    { id: 'VAR04', product: 'Caesar Salat', variant: 'Med kylling', type: 'Tilføjelse', price: '+35 kr', stock: 45 },
+  ];
+  document.getElementById('data-variants-table').innerHTML = variants.map(v =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${v.id}</td><td>${v.product}</td><td>${v.variant}</td><td>${v.type}</td><td>${v.price}</td><td style="padding-right:12px">${v.stock}</td></tr>`
+  ).join('');
+}
+
+// Load marketing data
+function loadMarketingData() {
+  // Stats
+  document.getElementById('mkt-campaigns').textContent = '8';
+  document.getElementById('mkt-emails-sent').textContent = '12,456';
+  document.getElementById('mkt-sms-sent').textContent = '3,421';
+  document.getElementById('mkt-open-rate').textContent = '24.5%';
+  document.getElementById('mkt-click-rate').textContent = '8.2%';
+  document.getElementById('mkt-conversions').textContent = '156';
+
+  // UTM tracking table (Kilde, Medium, Kampagne, Besøg, Ordrer, Omsætning, Konv. %)
+  const utmData = [
+    { source: 'google', medium: 'cpc', campaign: 'winter_sale', visits: 1234, orders: 45, revenue: '12,500 kr', convRate: '3.6%' },
+    { source: 'facebook', medium: 'social', campaign: 'new_menu', visits: 876, orders: 32, revenue: '8,900 kr', convRate: '3.7%' },
+    { source: 'instagram', medium: 'social', campaign: 'story_ad', visits: 654, orders: 28, revenue: '7,200 kr', convRate: '4.3%' },
+    { source: 'email', medium: 'newsletter', campaign: 'feb_promo', visits: 432, orders: 67, revenue: '15,800 kr', convRate: '15.5%' },
+  ];
+  document.getElementById('data-utm-table').innerHTML = utmData.map(u =>
+    `<tr><td style="padding:10px 12px">${u.source}</td><td>${u.medium}</td><td>${u.campaign}</td><td>${u.visits}</td><td>${u.orders}</td><td>${u.revenue}</td><td style="padding-right:12px">${u.convRate}</td></tr>`
+  ).join('');
+
+  // Email campaigns table (Kampagne, Sendt, Leveret, Åbnet, Klikket, Konv., Dato)
+  const emailCampaigns = [
+    { name: 'Februar Tilbud', sent: 3456, delivered: 3412, opened: 1234, clicked: 456, conversions: 45, date: '2026-02-01' },
+    { name: 'Ny Menu Lancering', sent: 3456, delivered: 3398, opened: 987, clicked: 345, conversions: 32, date: '2026-01-28' },
+    { name: 'Vinter Special', sent: 2890, delivered: 2856, opened: 876, clicked: 234, conversions: 28, date: '2026-01-15' },
+    { name: 'Påske Kampagne', sent: 0, delivered: 0, opened: 0, clicked: 0, conversions: 0, date: '-' },
+  ];
+  document.getElementById('data-email-campaigns-table').innerHTML = emailCampaigns.map(e =>
+    `<tr><td style="padding:10px 12px">${e.name}</td><td>${e.sent}</td><td>${e.delivered}</td><td>${e.opened}</td><td>${e.clicked}</td><td>${e.conversions}</td><td style="padding-right:12px">${e.date}</td></tr>`
+  ).join('');
+
+  // SMS logs table (Tid, Modtager, Type, Besked, Status, Pris)
+  const smsLogs = [
+    { time: '12:30', recipient: '+45 12 34 56 78', type: 'Order', message: 'Din ordre er klar...', status: 'Leveret', cost: '0.35 kr' },
+    { time: '11:45', recipient: '+45 23 45 67 89', type: 'Order', message: 'Tak for din ordre...', status: 'Leveret', cost: '0.35 kr' },
+    { time: '10:00', recipient: '+45 34 56 78 90', type: 'Marketing', message: 'Husk vores tilbud...', status: 'Fejl', cost: '0.00 kr' },
+  ];
+  const smsStatusColors = { 'Leveret': 'var(--success)', 'Afventer': 'var(--warning)', 'Fejl': 'var(--error)' };
+  document.getElementById('data-sms-logs-table').innerHTML = smsLogs.map(s =>
+    `<tr><td style="padding:10px 12px">${s.time}</td><td>${s.recipient}</td><td>${s.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.message}</td><td style="color:${smsStatusColors[s.status]}">${s.status}</td><td style="padding-right:12px">${s.cost}</td></tr>`
+  ).join('');
+}
+
+// Load consent/GDPR data
+function loadConsentData() {
+  // Stats
+  document.getElementById('consent-total').textContent = '4,567';
+  document.getElementById('consent-marketing').textContent = '78%';
+  document.getElementById('consent-analytics').textContent = '89%';
+  document.getElementById('consent-requests').textContent = '12';
+  document.getElementById('consent-deletions').textContent = '3';
+  document.getElementById('consent-exports').textContent = '8';
+
+  // User consents table (Bruger, Marketing, Analytics, Personalisering, Givet, Opdateret)
+  const consents = [
+    { user: 'anders@example.dk', marketing: true, analytics: true, personalization: false, given: '2026-02-01', updated: '2026-02-01' },
+    { user: 'maria@example.dk', marketing: true, analytics: true, personalization: true, given: '2026-01-28', updated: '2026-01-30' },
+    { user: 'peter@example.dk', marketing: false, analytics: true, personalization: false, given: '2026-01-25', updated: '2026-01-25' },
+    { user: 'louise@example.dk', marketing: true, analytics: false, personalization: false, given: '2026-01-20', updated: '2026-02-03' },
+  ];
+  document.getElementById('data-consents-table').innerHTML = consents.map(c =>
+    `<tr><td style="padding:10px 12px">${c.user}</td><td style="color:${c.marketing ? 'var(--success)' : 'var(--error)'}">${c.marketing ? 'Ja' : 'Nej'}</td><td style="color:${c.analytics ? 'var(--success)' : 'var(--error)'}">${c.analytics ? 'Ja' : 'Nej'}</td><td style="color:${c.personalization ? 'var(--success)' : 'var(--error)'}">${c.personalization ? 'Ja' : 'Nej'}</td><td>${c.given}</td><td style="padding-right:12px">${c.updated}</td></tr>`
+  ).join('');
+
+  // GDPR data requests table (ID, Bruger, Type, Status, Anmodet, Fuldført)
+  const dataRequests = [
+    { id: 'GDPR001', user: 'user1@example.dk', type: 'Indsigt', status: 'Fuldført', requested: '2026-01-15', completed: '2026-01-16' },
+    { id: 'GDPR002', user: 'user2@example.dk', type: 'Indsigt', status: 'Fuldført', requested: '2026-01-20', completed: '2026-01-21' },
+    { id: 'GDPR003', user: 'user3@example.dk', type: 'Sletning', status: 'Afventer', requested: '2026-02-04', completed: '-' },
+  ];
+  const gdprStatusColors = { 'Fuldført': 'var(--success)', 'Afventer': 'var(--warning)', 'Afvist': 'var(--error)' };
+  document.getElementById('data-gdpr-requests-table').innerHTML = dataRequests.map(r =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${r.id}</td><td>${r.user}</td><td>${r.type}</td><td style="color:${gdprStatusColors[r.status]}">${r.status}</td><td>${r.requested}</td><td style="padding-right:12px">${r.completed}</td></tr>`
+  ).join('');
+
+  // Data deletions table (ID, Bruger, Data type, Records, Slettet, Af)
+  const deletions = [
+    { id: 'DEL001', user: 'old@example.dk', dataType: 'Personlige data', records: 156, deleted: '2026-01-10', by: 'admin@flow.dk' },
+    { id: 'DEL002', user: 'former@example.dk', dataType: 'Profil, Ordrer', records: 45, deleted: '2026-01-05', by: 'system' },
+  ];
+  document.getElementById('data-deletions-table').innerHTML = deletions.map(d =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${d.id}</td><td>${d.user}</td><td>${d.dataType}</td><td>${d.records}</td><td>${d.deleted}</td><td style="padding-right:12px">${d.by}</td></tr>`
+  ).join('');
+}
+
+// Load performance data
+function loadPerformanceData() {
+  // Stats
+  document.getElementById('perf-uptime').textContent = '99.9%';
+  document.getElementById('perf-avg-response').textContent = '45ms';
+  document.getElementById('perf-p95').textContent = '120ms';
+  document.getElementById('perf-errors').textContent = '0.1%';
+  document.getElementById('perf-requests').textContent = '234/min';
+  document.getElementById('perf-db-time').textContent = '12ms';
+
+  // API performance table (Endpoint, Requests, Avg (ms), P50, P95, P99, Errors)
+  const apiPerformance = [
+    { endpoint: '/api/orders', requests: 1234, avg: 23, p50: 18, p95: 45, p99: 120, errors: 0 },
+    { endpoint: '/api/orders (POST)', requests: 456, avg: 67, p50: 55, p95: 150, p99: 280, errors: 1 },
+    { endpoint: '/api/products', requests: 2345, avg: 15, p50: 12, p95: 35, p99: 80, errors: 0 },
+    { endpoint: '/api/users', requests: 876, avg: 28, p50: 22, p95: 55, p99: 130, errors: 0 },
+    { endpoint: '/api/analytics', requests: 345, avg: 89, p50: 75, p95: 180, p99: 350, errors: 1 },
+  ];
+  document.getElementById('data-api-perf-table').innerHTML = apiPerformance.map(a =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${a.endpoint}</td><td>${a.requests}</td><td>${a.avg}</td><td>${a.p50}</td><td>${a.p95}</td><td>${a.p99}</td><td style="padding-right:12px;color:${a.errors > 0 ? 'var(--error)' : 'var(--success)'}">${a.errors}</td></tr>`
+  ).join('');
+
+  // Page load times table (Side, Visninger, Avg Load, FCP, LCP, CLS)
+  const pageLoads = [
+    { page: '/menu', views: 4567, avg: '0.8s', fcp: '0.5s', lcp: '1.2s', cls: '0.05' },
+    { page: '/checkout', views: 1234, avg: '1.1s', fcp: '0.7s', lcp: '1.8s', cls: '0.08' },
+    { page: '/orders', views: 876, avg: '0.9s', fcp: '0.6s', lcp: '1.4s', cls: '0.03' },
+    { page: '/', views: 5678, avg: '0.6s', fcp: '0.3s', lcp: '1.0s', cls: '0.02' },
+  ];
+  document.getElementById('data-page-perf-table').innerHTML = pageLoads.map(p =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.page}</td><td>${p.views}</td><td>${p.avg}</td><td>${p.fcp}</td><td>${p.lcp}</td><td style="padding-right:12px">${p.cls}</td></tr>`
+  ).join('');
+
+  // Database performance table (Query, Calls, Avg (ms), Max, Rows, Cache)
+  const dbPerformance = [
+    { query: 'SELECT * FROM orders...', calls: 1234, avg: 5, max: 45, rows: '50 avg', cache: '78%' },
+    { query: 'INSERT INTO events...', calls: 5678, avg: 2, max: 15, rows: '1', cache: '-' },
+    { query: 'SELECT * FROM products...', calls: 2345, avg: 3, max: 25, rows: '156', cache: '95%' },
+    { query: 'UPDATE sessions...', calls: 890, avg: 4, max: 35, rows: '1', cache: '-' },
+  ];
+  document.getElementById('data-db-perf-table').innerHTML = dbPerformance.map(d =>
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${d.query}</td><td>${d.calls}</td><td>${d.avg}</td><td>${d.max}</td><td>${d.rows}</td><td style="padding-right:12px">${d.cache}</td></tr>`
+  ).join('');
+}
+
+// Load geographic and device data
+function loadGeoData() {
+  // Stats
+  document.getElementById('geo-countries').textContent = '12';
+  document.getElementById('geo-cities').textContent = '45';
+  document.getElementById('geo-mobile').textContent = '68%';
+  document.getElementById('geo-desktop').textContent = '28%';
+  document.getElementById('geo-browsers').textContent = '8';
+  document.getElementById('geo-os').textContent = '5';
+
+  // Geographic data table (Land, By, Besøg, Ordrer, Omsætning, Konv. %)
+  const geoData = [
+    { country: 'Danmark', city: 'København', visits: 4567, orders: 234, revenue: '67,500 kr', convRate: '5.1%' },
+    { country: 'Danmark', city: 'Aarhus', visits: 1234, orders: 89, revenue: '24,300 kr', convRate: '7.2%' },
+    { country: 'Danmark', city: 'Odense', visits: 567, orders: 45, revenue: '12,100 kr', convRate: '7.9%' },
+    { country: 'Sverige', city: 'Malmö', visits: 345, orders: 23, revenue: '6,200 kr', convRate: '6.7%' },
+    { country: 'Tyskland', city: 'Hamburg', visits: 123, orders: 12, revenue: '3,400 kr', convRate: '9.8%' },
+  ];
+  document.getElementById('data-geo-table').innerHTML = geoData.map(g =>
+    `<tr><td style="padding:10px 12px">${g.country}</td><td>${g.city}</td><td>${g.visits}</td><td>${g.orders}</td><td>${g.revenue}</td><td style="padding-right:12px">${g.convRate}</td></tr>`
+  ).join('');
+
+  // Device types table (Device Type, Model, Sessions, Bounce %, Avg Duration, Konv. %)
+  const devices = [
+    { type: 'Mobile', model: 'iPhone', sessions: 2345, bounce: '42%', avgDuration: '2:45', convRate: '6.7%' },
+    { type: 'Mobile', model: 'Samsung Galaxy', sessions: 1234, bounce: '45%', avgDuration: '2:30', convRate: '7.2%' },
+    { type: 'Desktop', model: 'Mac', sessions: 876, bounce: '35%', avgDuration: '4:20', convRate: '8.9%' },
+    { type: 'Desktop', model: 'Windows PC', sessions: 567, bounce: '38%', avgDuration: '3:55', convRate: '7.9%' },
+    { type: 'Tablet', model: 'iPad', sessions: 234, bounce: '32%', avgDuration: '5:10', convRate: '9.8%' },
+  ];
+  document.getElementById('data-devices-table').innerHTML = devices.map(d =>
+    `<tr><td style="padding:10px 12px">${d.type}</td><td>${d.model}</td><td>${d.sessions}</td><td>${d.bounce}</td><td>${d.avgDuration}</td><td style="padding-right:12px">${d.convRate}</td></tr>`
+  ).join('');
+
+  // Browsers table (Browser, Version, OS, Sessions, Share %, Issues)
+  const browsers = [
+    { browser: 'Chrome', version: '121', os: 'iOS', sessions: 2345, share: '45%', issues: 0 },
+    { browser: 'Safari', version: '17', os: 'iOS', sessions: 1567, share: '30%', issues: 0 },
+    { browser: 'Chrome', version: '121', os: 'Windows', sessions: 678, share: '13%', issues: 1 },
+    { browser: 'Firefox', version: '122', os: 'macOS', sessions: 345, share: '7%', issues: 0 },
+    { browser: 'Edge', version: '121', os: 'Windows', sessions: 234, share: '5%', issues: 0 },
+  ];
+  document.getElementById('data-browsers-table').innerHTML = browsers.map(b =>
+    `<tr><td style="padding:10px 12px">${b.browser}</td><td>${b.version}</td><td>${b.os}</td><td>${b.sessions}</td><td>${b.share}</td><td style="padding-right:12px;color:${b.issues > 0 ? 'var(--warning)' : 'var(--success)'}">${b.issues}</td></tr>`
+  ).join('');
+}
+
 // View table data in Supabase viewer
 function viewTableData(table) {
   document.getElementById('supabase-table-select').value = table;
@@ -32069,10 +32301,13 @@ function loadFlowPagesList() {
   if (!grid) return;
 
   grid.innerHTML = flowPagesList.map(page => `
-    <div class="flow-page-card" onclick="editFlowPage('${page.slug}')">
+    <div class="flow-page-card">
       <h3>${page.title}</h3>
       <p>${page.description}</p>
-      <button class="btn btn-primary btn-sm">Rediger indhold</button>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="editFlowPage('${page.slug}')">Rediger indhold</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.open('/landing-pages/${page.slug}.html', '_blank')">Besøg side</button>
+      </div>
     </div>
   `).join('');
 }
