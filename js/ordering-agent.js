@@ -10,8 +10,8 @@ const OrderingAgent = {
     // ============================================================
     // VERSION INFO
     // ============================================================
-    version: '1.0.0',
-    buildDate: '2026-02-05',
+    version: '1.1.0',
+    buildDate: '2026-02-06',
 
     // ============================================================
     // CONFIGURATION
@@ -551,56 +551,270 @@ const OrderingAgent = {
     },
 
     /**
-     * Detect intent from user message
+     * Detect intent from user message with confidence scoring
      */
     detectIntent(text, context = {}) {
         const lowerText = text.toLowerCase().trim();
+        const result = {
+            intent: 'unknown',
+            confidence: 0.5,
+            entities: [],
+            factors: {}
+        };
 
-        // Order intent patterns
-        const orderPatterns = [
-            /\b(bestil|order|køb|buy|vil have|i want|jeg vil)\b/i,
-            /\b(pizza|burger|salat|mad|food|menu)\b/i
-        ];
+        // Intent patterns with weights
+        const intents = {
+            order_food: {
+                patterns: [
+                    { regex: /\b(bestil|order|køb|buy)\b/i, weight: 0.9 },
+                    { regex: /\b(vil have|i want|jeg vil|gerne)\b/i, weight: 0.85 },
+                    { regex: /\b(pizza|burger|salat|mad|food)\b/i, weight: 0.8 },
+                    { regex: /\b(menu|menuen)\b/i, weight: 0.7 },
+                    { regex: /\d+\s*(stk|x|gange)/i, weight: 0.85 } // "2 stk", "3x"
+                ],
+                entityPatterns: [
+                    { regex: /(\d+)\s*(stk|x)?/g, type: 'quantity' },
+                    { regex: /\b(stor|mellem|lille|large|medium|small)\b/gi, type: 'size' }
+                ]
+            },
+            check_info: {
+                patterns: [
+                    { regex: /\b(åbningstider|opening|hours)\b/i, weight: 0.9 },
+                    { regex: /\b(hvornår|when|åben|open|lukket|closed)\b/i, weight: 0.85 },
+                    { regex: /\b(pris|price|kost|cost|hvor meget)\b/i, weight: 0.85 },
+                    { regex: /\b(adresse|address|hvor ligger)\b/i, weight: 0.85 },
+                    { regex: /\b(levering|delivery|leverer i)\b/i, weight: 0.8 }
+                ],
+                entityPatterns: []
+            },
+            confirm: {
+                patterns: [
+                    { regex: /^(ja|yes|ok|jep|yep|yeah|sure|bestil)$/i, weight: 0.95 },
+                    { regex: /\b(bekræft|confirm|godkend)\b/i, weight: 0.9 },
+                    { regex: /^(1|y)$/i, weight: 0.85 }
+                ],
+                entityPatterns: []
+            },
+            cancel: {
+                patterns: [
+                    { regex: /^(nej|no|nope|annuller|cancel|stop)$/i, weight: 0.95 },
+                    { regex: /\b(fortryd|undo|afbestil)\b/i, weight: 0.9 },
+                    { regex: /^(0|n)$/i, weight: 0.85 }
+                ],
+                entityPatterns: []
+            },
+            support: {
+                patterns: [
+                    { regex: /\b(hjælp|help|support)\b/i, weight: 0.9 },
+                    { regex: /\b(problem|fejl|error|virker ikke)\b/i, weight: 0.85 },
+                    { regex: /\b(klage|complaint|utilfreds|unhappy)\b/i, weight: 0.9 },
+                    { regex: /\b(refund|refundering|penge tilbage)\b/i, weight: 0.95 },
+                    { regex: /\b(tale med|speak to|kontakt|contact)\b/i, weight: 0.85 }
+                ],
+                entityPatterns: []
+            },
+            greeting: {
+                patterns: [
+                    { regex: /^(hej|hi|hello|goddag|hey|hallo)[\s!]*$/i, weight: 0.95 },
+                    { regex: /^(god morgen|good morning|godaften|good evening)[\s!]*$/i, weight: 0.9 }
+                ],
+                entityPatterns: []
+            },
+            fulfillment: {
+                patterns: [
+                    { regex: /\b(afhentning|pickup|pick up|hente)\b/i, weight: 0.95, subtype: 'pickup' },
+                    { regex: /\b(levering|delivery|lever|bringe|kør)\b/i, weight: 0.95, subtype: 'delivery' }
+                ],
+                entityPatterns: [
+                    { regex: /\b(\d{4})\b/g, type: 'postal_code' },
+                    { regex: /\b(kl\.?\s*)?(\d{1,2}[:.]\d{2})\b/gi, type: 'time' }
+                ]
+            }
+        };
 
-        // Info intent patterns
-        const infoPatterns = [
-            /\b(åbningstider|opening|hours|hvornår|when|åben|open)\b/i,
-            /\b(pris|price|kost|cost|hvor meget)\b/i,
-            /\b(menu|menuen|kort|card)\b/i
-        ];
+        // Score each intent
+        const scores = {};
+        for (const [intentName, intentDef] of Object.entries(intents)) {
+            let maxScore = 0;
+            let matchedPattern = null;
 
-        // Support intent patterns
-        const supportPatterns = [
-            /\b(hjælp|help|support|problem|fejl|error)\b/i,
-            /\b(klage|complaint|utilfreds|unhappy)\b/i
-        ];
+            for (const pattern of intentDef.patterns) {
+                if (pattern.regex.test(lowerText)) {
+                    if (pattern.weight > maxScore) {
+                        maxScore = pattern.weight;
+                        matchedPattern = pattern;
+                    }
+                }
+            }
 
-        // Check patterns
-        for (const pattern of orderPatterns) {
-            if (pattern.test(lowerText)) {
-                return { intent: 'order_food', confidence: 0.85 };
+            if (maxScore > 0) {
+                scores[intentName] = { score: maxScore, pattern: matchedPattern };
+
+                // Extract entities
+                for (const entityPattern of intentDef.entityPatterns) {
+                    const matches = lowerText.matchAll(entityPattern.regex);
+                    for (const match of matches) {
+                        result.entities.push({
+                            type: entityPattern.type,
+                            value: match[1] || match[0],
+                            position: match.index
+                        });
+                    }
+                }
             }
         }
 
-        for (const pattern of infoPatterns) {
-            if (pattern.test(lowerText)) {
-                return { intent: 'check_info', confidence: 0.8 };
+        // Find best intent
+        let bestIntent = 'unknown';
+        let bestScore = 0.5;
+
+        for (const [intentName, data] of Object.entries(scores)) {
+            if (data.score > bestScore) {
+                bestScore = data.score;
+                bestIntent = intentName;
             }
         }
 
-        for (const pattern of supportPatterns) {
-            if (pattern.test(lowerText)) {
-                return { intent: 'support', confidence: 0.8 };
+        result.intent = bestIntent;
+        result.confidence = bestScore;
+        result.factors = {
+            patternMatchScore: bestScore,
+            entityCount: result.entities.length,
+            textLength: text.length,
+            hasNumbers: /\d/.test(text),
+            hasQuestion: /\?/.test(text)
+        };
+
+        // Boost confidence if entities support intent
+        if (result.entities.length > 0 && bestIntent === 'order_food') {
+            result.confidence = Math.min(0.95, result.confidence + 0.05);
+        }
+
+        // Lower confidence for very short or very long messages
+        if (text.length < 3) {
+            result.confidence *= 0.7;
+        } else if (text.length > 200) {
+            result.confidence *= 0.85;
+        }
+
+        return result;
+    },
+
+    /**
+     * Calculate overall conversation confidence
+     * Used to determine if human intervention is needed
+     */
+    calculateConversationConfidence(conversation) {
+        const factors = {
+            stateProgress: 0,
+            itemsValid: 0,
+            customerDetailsComplete: 0,
+            noFrustration: 0,
+            recentConfidence: 0
+        };
+
+        // State progress (further = more confident)
+        const stateOrder = [
+            this.states.GREETING,
+            this.states.IDENTIFY_INTENT,
+            this.states.ITEM_SELECTION,
+            this.states.FULFILLMENT_CHOICE,
+            this.states.CUSTOMER_DETAILS,
+            this.states.CONFIRMATION,
+            this.states.AWAITING_PAYMENT,
+            this.states.SUBMIT,
+            this.states.POST_SUBMIT
+        ];
+        const stateIndex = stateOrder.indexOf(conversation.state);
+        factors.stateProgress = Math.max(0, stateIndex / (stateOrder.length - 1));
+
+        // Items validity
+        if (conversation.items && conversation.items.length > 0) {
+            const validItems = conversation.items.filter(i => i.name && i.quantity > 0);
+            factors.itemsValid = validItems.length / conversation.items.length;
+        }
+
+        // Customer details completeness
+        const requiredFields = ['customerName', 'phone'];
+        if (conversation.fulfillment === 'delivery') {
+            requiredFields.push('deliveryAddress');
+        }
+        const filledFields = requiredFields.filter(f => conversation[f]);
+        factors.customerDetailsComplete = filledFields.length / requiredFields.length;
+
+        // Frustration penalty
+        const frustrationRatio = (conversation.metadata?.frustrationCount || 0) / this.config.escalationThreshold;
+        factors.noFrustration = 1 - frustrationRatio;
+
+        // Recent message confidence (from last intent detection)
+        factors.recentConfidence = conversation._lastIntentConfidence || 0.7;
+
+        // Weighted average
+        const weights = {
+            stateProgress: 0.25,
+            itemsValid: 0.2,
+            customerDetailsComplete: 0.2,
+            noFrustration: 0.2,
+            recentConfidence: 0.15
+        };
+
+        let totalConfidence = 0;
+        let totalWeight = 0;
+
+        for (const [factor, value] of Object.entries(factors)) {
+            totalConfidence += value * weights[factor];
+            totalWeight += weights[factor];
+        }
+
+        const confidence = totalConfidence / totalWeight;
+
+        return {
+            confidence: Math.round(confidence * 100) / 100,
+            factors,
+            requiresAttention: confidence < 0.7,
+            reason: confidence < 0.7
+                ? this.getConfidenceIssueReason(factors)
+                : null
+        };
+    },
+
+    /**
+     * Get reason for low confidence
+     */
+    getConfidenceIssueReason(factors) {
+        if (factors.noFrustration < 0.5) return 'customer_frustrated';
+        if (factors.itemsValid < 0.5) return 'unclear_items';
+        if (factors.recentConfidence < 0.5) return 'unclear_intent';
+        if (factors.stateProgress < 0.2) return 'stuck_early';
+        return 'general_uncertainty';
+    },
+
+    /**
+     * Mark conversation as requiring attention in database
+     */
+    async markRequiresAttention(conversation, reason) {
+        if (!conversation._analyticsId) return;
+
+        try {
+            if (window.SupabaseDB?.markConversationAttention) {
+                await window.SupabaseDB.markConversationAttention(
+                    conversation._analyticsId,
+                    true,
+                    reason
+                );
             }
-        }
 
-        // Greeting
-        if (/^(hej|hi|hello|goddag|hey)\b/i.test(lowerText)) {
-            return { intent: 'greeting', confidence: 0.9 };
+            // Track event
+            if (window.flowAnalytics?.trackAIEscalation) {
+                window.flowAnalytics.trackAIEscalation(
+                    conversation._analyticsId,
+                    reason,
+                    (conversation.metadata?.frustrationCount || 0) / this.config.escalationThreshold
+                );
+            }
+        } catch (err) {
+            console.error('Error marking attention:', err);
         }
-
-        // Unknown
-        return { intent: 'unknown', confidence: 0.5 };
     },
 
     // ============================================================
