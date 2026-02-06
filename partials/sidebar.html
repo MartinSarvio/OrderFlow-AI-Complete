@@ -273,8 +273,48 @@
         </div>
 
         <div class="nav-section">
+          <div class="nav-section-title">Min Profil</div>
+
+          <!-- Admin Profil Dropdown (admin/employee only) -->
+          <div class="nav-dropdown" id="nav-admin-profil" data-role-menu="nav-admin-profil">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('admin-profil')" data-tooltip="Min Profil">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Min Profil</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-profil')">Profiloversigt</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-oplysninger')">Personlige Oplysninger</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-team')">Team Oversigt</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-virksomhed')">Virksomhedsinfo</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-sikkerhed')">Sikkerhed</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-aktivitet')">Aktivitetslog</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('admin-abonnement')">Abonnement</button>
+            </div>
+          </div>
+
+          <!-- Kunde Profil Dropdown (customer/demo only) -->
+          <div class="nav-dropdown" id="nav-kunde-profil" data-role-menu="nav-kunde-profil">
+            <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('kunde-profil')" data-tooltip="Min Profil">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Min Profil</span>
+              <svg class="nav-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="nav-dropdown-menu">
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-profil')">Profiloversigt</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-oplysninger')">Personlige Oplysninger</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-ordrer')">Ordrehistorik</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-betaling')">Betalingsmetoder</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-adresser')">Leveringsadresser</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-loyalitet')">Loyalitet</button>
+              <button class="nav-dropdown-item" onclick="showProfilePage('kunde-praeferencer')">Præferencer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-section">
           <div class="nav-section-title">Indstillinger</div>
-          
+
           <!-- Indstillinger Dropdown -->
           <div class="nav-dropdown" id="nav-indstillinger">
             <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('indstillinger')" data-tooltip="Indstillinger">
@@ -329,6 +369,7 @@
                     <button class="flyout-item" onclick="showPage('instagram-workflow');closeFlyout()">Instagram Workflow</button>
                     <button class="flyout-item" onclick="showPage('facebook-workflow');closeFlyout()">Facebook Workflow</button>
                     <button class="flyout-item" onclick="showPage('sms-workflows');closeFlyout()">SMS Workflows</button>
+                    <button class="flyout-item" onclick="showPage('search-engine');closeFlyout()">Search Engine</button>
                     <a class="flyout-item" href="/landing-pages/sms-workflow.html" onclick="closeFlyout()">SMS Workflow Info</a>
                     <a class="flyout-item" href="/landing-pages/instagram-workflow.html" onclick="closeFlyout()">Instagram Workflow Info</a>
                     <a class="flyout-item" href="/landing-pages/facebook-workflow.html" onclick="closeFlyout()">Facebook Workflow Info</a>

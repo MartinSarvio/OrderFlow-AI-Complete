@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-06
-**Version:** 3.14.0
-**Total antal sider:** 72+
+**Version:** 3.26.0
+**Total antal sider:** 86+
 
 ---
 
@@ -35,6 +35,7 @@
 | `page-instagram-workflow` | Instagram AI Agent (OrderingAgent for DM) |
 | `page-facebook-workflow` | Facebook AI Agent (OrderingAgent for Messenger) |
 | `page-sms-workflows` | SMS Workflows (Restaurant/Håndværker varianter) |
+| `page-search-engine` | Search Engine (SEO-værktøjer og søgemaskine-optimering) |
 | `page-workflow-kontrol` | Workflow kontrol |
 
 ### Leads & CRM
@@ -94,14 +95,36 @@
 | `page-flow-cms` | FLOW CMS |
 | `page-landing-cms` | Landing Page CMS |
 
+### Admin Profil (admin/employee)
+| Side ID | Beskrivelse |
+|---------|-------------|
+| `page-admin-profil` | Admin profiloversigt |
+| `page-admin-oplysninger` | Admin personlige oplysninger |
+| `page-admin-team` | Team oversigt |
+| `page-admin-virksomhed` | Virksomhedsinfo |
+| `page-admin-sikkerhed` | Sikkerhed (adgangskode, 2FA, sessioner) |
+| `page-admin-aktivitet` | Admin aktivitetslog |
+| `page-admin-abonnement` | Abonnement og fakturering |
+
+### Kunde Profil (customer/demo)
+| Side ID | Beskrivelse |
+|---------|-------------|
+| `page-kunde-profil` | Kunde profiloversigt |
+| `page-kunde-oplysninger` | Kunde personlige oplysninger |
+| `page-kunde-ordrer` | Kunde ordrehistorik |
+| `page-kunde-betaling` | Kunde betalingsmetoder |
+| `page-kunde-adresser` | Kunde leveringsadresser |
+| `page-kunde-loyalitet` | Loyalitetsprogram (point, belønninger, tier) |
+| `page-kunde-praeferencer` | Præferencer (notifikationer, sprog, kostpræferencer) |
+
 ### Indstillinger
 | Side ID | Beskrivelse |
 |---------|-------------|
 | `page-settings` | Indstillinger |
-| `page-mine-oplysninger` | Mine oplysninger |
-| `page-ordrehistorik` | Ordrehistorik |
-| `page-betalingsmetoder` | Betalingsmetoder |
-| `page-leveringsadresser` | Leveringsadresser |
+| `page-mine-oplysninger` | Mine oplysninger (legacy) |
+| `page-ordrehistorik` | Ordrehistorik (legacy) |
+| `page-betalingsmetoder` | Betalingsmetoder (legacy) |
+| `page-leveringsadresser` | Leveringsadresser (legacy) |
 | `page-bogholderi` | Bogholderi |
 | `page-betaling` | Betaling |
 

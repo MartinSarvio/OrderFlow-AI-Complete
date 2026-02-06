@@ -732,6 +732,7 @@ const ADMIN_ONLY_MENUS = {
   'nav-salg': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-rapporter': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-integrationer': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'nav-admin-profil': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE], // Real test only for admin
   'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
@@ -743,7 +744,8 @@ const ADMIN_ONLY_MENUS = {
 // Customer/Demo only menus (hidden for admin/employee)
 const CUSTOMER_ONLY_MENUS = {
   'nav-butikindstillinger': [ROLES.CUSTOMER, ROLES.DEMO],
-  'nav-indsigt': [ROLES.CUSTOMER, ROLES.DEMO]
+  'nav-indsigt': [ROLES.CUSTOMER, ROLES.DEMO],
+  'nav-kunde-profil': [ROLES.CUSTOMER, ROLES.DEMO]
 };
 
 function hasRoleAccess(menuItem) {
@@ -26750,6 +26752,491 @@ function showAccountPage(page) {
         break;
     }
   }
+}
+
+// ========== Profile Pages Navigation ==========
+
+function showProfilePage(page) {
+  // Close any open dropdowns
+  const dropdown = document.getElementById('profile-dropdown');
+  if (dropdown) dropdown.classList.remove('active');
+
+  // Hide all pages
+  document.querySelectorAll('.page, .workflow-page').forEach(p => p.classList.remove('active'));
+
+  // Clear all active states
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
+
+  // Show requested profile page
+  const targetPage = document.getElementById('page-' + page);
+  if (targetPage) {
+    targetPage.classList.add('active');
+
+    // Set active state on sidebar item
+    const items = document.querySelectorAll('.nav-dropdown-item');
+    items.forEach(item => {
+      if (item.getAttribute('onclick') === `showProfilePage('${page}')`) {
+        item.classList.add('active');
+      }
+    });
+
+    // Scroll to top
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTop = 0;
+
+    // Load data based on page
+    switch(page) {
+      case 'admin-profil':
+        loadAdminProfileOverview();
+        break;
+      case 'admin-oplysninger':
+        loadAdminOplysninger();
+        break;
+      case 'admin-team':
+        loadAdminTeam();
+        break;
+      case 'admin-virksomhed':
+        loadAdminVirksomhed();
+        break;
+      case 'admin-sikkerhed':
+        loadAdminSikkerhed();
+        break;
+      case 'admin-aktivitet':
+        loadAdminAktivitet();
+        break;
+      case 'admin-abonnement':
+        loadAdminAbonnement();
+        break;
+      case 'kunde-profil':
+        loadKundeProfileOverview();
+        break;
+      case 'kunde-oplysninger':
+        loadKundeOplysninger();
+        break;
+      case 'kunde-ordrer':
+        loadKundeOrdrer();
+        break;
+      case 'kunde-betaling':
+        loadKundeBetaling();
+        break;
+      case 'kunde-adresser':
+        loadKundeAdresser();
+        break;
+      case 'kunde-loyalitet':
+        loadKundeLoyalitet();
+        break;
+      case 'kunde-praeferencer':
+        loadKundePraeferencer();
+        break;
+    }
+  }
+}
+
+// ========== Admin Profile Functions ==========
+
+function loadAdminProfileOverview() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_admin_profile') || '{}');
+  const name = (profile.firstName || 'Admin') + ' ' + (profile.lastName || '');
+  const el = document.getElementById('admin-profile-name');
+  if (el) el.textContent = name.trim();
+
+  const emailEl = document.getElementById('admin-profile-email');
+  if (emailEl) emailEl.textContent = profile.email || currentUser?.email || 'admin@flow.dk';
+
+  const titleEl = document.getElementById('admin-profile-title');
+  if (titleEl) titleEl.textContent = profile.title || 'Administrator';
+
+  // Update avatar initial
+  const avatarEl = document.getElementById('admin-profile-avatar');
+  if (avatarEl) avatarEl.textContent = (profile.firstName || 'A').charAt(0).toUpperCase();
+
+  // Load stats
+  const teamCount = JSON.parse(localStorage.getItem('orderflow_admin_team') || '[]').length;
+  const statTeam = document.getElementById('admin-stat-team');
+  if (statTeam) statTeam.textContent = teamCount || '3';
+
+  const statKunder = document.getElementById('admin-stat-kunder');
+  if (statKunder) statKunder.textContent = restaurants?.length || '12';
+}
+
+function loadAdminOplysninger() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_admin_profile') || '{}');
+  const fields = {
+    'admin-firstname': profile.firstName || '',
+    'admin-lastname': profile.lastName || '',
+    'admin-email': profile.email || currentUser?.email || '',
+    'admin-phone': profile.phone || '',
+    'admin-title': profile.title || '',
+    'admin-position': profile.position || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveAdminOplysninger() {
+  const profile = {
+    firstName: document.getElementById('admin-firstname')?.value || '',
+    lastName: document.getElementById('admin-lastname')?.value || '',
+    email: document.getElementById('admin-email')?.value || '',
+    phone: document.getElementById('admin-phone')?.value || '',
+    title: document.getElementById('admin-title')?.value || '',
+    position: document.getElementById('admin-position')?.value || ''
+  };
+  localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
+  showSaveStatus('admin-oplysninger-status', 'saved');
+}
+
+function loadAdminTeam() {
+  const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || 'null') || [
+    { name: 'Martin Sarvio', email: 'martin@flow.dk', role: 'Admin', status: 'Aktiv' },
+    { name: 'Emma Nielsen', email: 'emma@flow.dk', role: 'Medarbejder', status: 'Aktiv' },
+    { name: 'Lars Petersen', email: 'lars@flow.dk', role: 'Medarbejder', status: 'Inviteret' }
+  ];
+  const container = document.getElementById('admin-team-list');
+  if (!container) return;
+
+  container.innerHTML = team.map((m, i) => `
+    <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary);display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;font-size:14px">${m.name.charAt(0)}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px">${m.name}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">${m.email}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:${m.role === 'Admin' ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.08)'};color:${m.role === 'Admin' ? 'var(--color-primary)' : 'var(--color-text-muted)'}">${m.role}</span>
+        <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:${m.status === 'Aktiv' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'};color:${m.status === 'Aktiv' ? 'var(--color-success)' : '#F59E0B'}">${m.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminVirksomhed() {
+  const company = JSON.parse(localStorage.getItem('orderflow_admin_company') || '{}');
+  const fields = {
+    'company-name': company.name || '',
+    'company-cvr': company.cvr || '',
+    'company-address': company.address || '',
+    'company-city': company.city || '',
+    'company-zip': company.zip || '',
+    'company-phone': company.phone || '',
+    'company-email': company.email || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveAdminVirksomhed() {
+  const company = {
+    name: document.getElementById('company-name')?.value || '',
+    cvr: document.getElementById('company-cvr')?.value || '',
+    address: document.getElementById('company-address')?.value || '',
+    city: document.getElementById('company-city')?.value || '',
+    zip: document.getElementById('company-zip')?.value || '',
+    phone: document.getElementById('company-phone')?.value || '',
+    email: document.getElementById('company-email')?.value || ''
+  };
+  localStorage.setItem('orderflow_admin_company', JSON.stringify(company));
+  showSaveStatus('company-save-status', 'saved');
+}
+
+function loadAdminSikkerhed() {
+  const sessions = [
+    { device: 'Chrome - macOS', location: 'København, DK', time: 'Aktiv nu', current: true },
+    { device: 'Safari - iPhone', location: 'Aarhus, DK', time: '2 timer siden', current: false },
+    { device: 'Firefox - Windows', location: 'Odense, DK', time: '1 dag siden', current: false }
+  ];
+  const container = document.getElementById('admin-sessions-list');
+  if (!container) return;
+
+  container.innerHTML = sessions.map(s => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--color-border)">
+      <div>
+        <div style="font-size:13px;font-weight:500">${s.device}</div>
+        <div style="font-size:12px;color:var(--color-text-muted)">${s.location}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:${s.current ? 'var(--color-success)' : 'var(--color-text-muted)'}">${s.time}</span>
+        ${!s.current ? '<button class="btn btn-ghost" style="font-size:11px;padding:4px 8px">Afslut</button>' : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminAktivitet() {
+  const activities = [
+    { action: 'Opdaterede virksomhedsoplysninger', type: 'Profil', time: '10 min siden' },
+    { action: 'Tilføjede ny medarbejder: Emma Nielsen', type: 'Team', time: '1 time siden' },
+    { action: 'Ændrede abonnementsplan til Pro', type: 'Fakturering', time: '3 timer siden' },
+    { action: 'Opdaterede API-nøgler', type: 'System', time: '1 dag siden' },
+    { action: 'Loggede ind fra ny enhed', type: 'Sikkerhed', time: '2 dage siden' },
+    { action: 'Eksporterede kundedata', type: 'Data', time: '3 dage siden' },
+    { action: 'Ændrede rolletilladelser', type: 'Team', time: '1 uge siden' },
+    { action: 'Oprettede ny kampagne', type: 'Marketing', time: '1 uge siden' }
+  ];
+  const container = document.getElementById('admin-activity-list');
+  if (!container) return;
+
+  const typeColors = {
+    'Profil': '#6366F1', 'Team': '#10B981', 'Fakturering': '#F59E0B',
+    'System': '#06B6D4', 'Sikkerhed': '#EF4444', 'Data': '#8B5CF6', 'Marketing': '#EC4899'
+  };
+
+  container.innerHTML = activities.map(a => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${typeColors[a.type] || '#6366F1'};margin-top:6px;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500">${a.action}</div>
+        <div style="display:flex;gap:12px;margin-top:4px">
+          <span style="font-size:11px;padding:2px 8px;border-radius:12px;background:rgba(${typeColors[a.type] === '#6366F1' ? '99,102,241' : '255,255,255'},0.1);color:${typeColors[a.type] || 'var(--color-text-muted)'}">${a.type}</span>
+          <span style="font-size:11px;color:var(--color-text-muted)">${a.time}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadAdminAbonnement() {
+  // Placeholder data for subscription
+  const sub = JSON.parse(localStorage.getItem('orderflow_admin_subscription') || 'null') || {
+    plan: 'Pro', price: '599', period: 'måned', nextBilling: '2026-03-06',
+    usage: { kunder: 12, maxKunder: 50, ordrer: 342, storage: '2.1 GB' }
+  };
+  const planEl = document.getElementById('admin-plan-name');
+  if (planEl) planEl.textContent = sub.plan;
+
+  const priceEl = document.getElementById('admin-plan-price');
+  if (priceEl) priceEl.textContent = sub.price + ' kr/' + sub.period;
+
+  const nextEl = document.getElementById('admin-next-billing');
+  if (nextEl) nextEl.textContent = sub.nextBilling;
+
+  const usageBar = document.getElementById('admin-usage-bar');
+  if (usageBar) usageBar.style.width = Math.round((sub.usage.kunder / sub.usage.maxKunder) * 100) + '%';
+
+  const usageText = document.getElementById('admin-usage-text');
+  if (usageText) usageText.textContent = `${sub.usage.kunder} / ${sub.usage.maxKunder} kunder`;
+}
+
+// ========== Kunde Profile Functions ==========
+
+function loadKundeProfileOverview() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_kunde_profile') || '{}');
+  const name = (profile.firstName || 'Kunde') + ' ' + (profile.lastName || '');
+  const el = document.getElementById('kunde-profile-name');
+  if (el) el.textContent = name.trim();
+
+  const emailEl = document.getElementById('kunde-profile-email');
+  if (emailEl) emailEl.textContent = profile.email || currentUser?.email || 'kunde@example.dk';
+
+  const avatarEl = document.getElementById('kunde-profile-avatar');
+  if (avatarEl) avatarEl.textContent = (profile.firstName || 'K').charAt(0).toUpperCase();
+
+  // Load loyalty status
+  const loyalty = JSON.parse(localStorage.getItem('orderflow_kunde_loyalty') || '{}');
+  const pointsEl = document.getElementById('kunde-stat-points');
+  if (pointsEl) pointsEl.textContent = loyalty.points || '2.450';
+
+  const tierEl = document.getElementById('kunde-stat-tier');
+  if (tierEl) tierEl.textContent = loyalty.tier || 'Guld';
+}
+
+function loadKundeOplysninger() {
+  const profile = JSON.parse(localStorage.getItem('orderflow_kunde_profile') || '{}');
+  const fields = {
+    'kunde-firstname': profile.firstName || '',
+    'kunde-lastname': profile.lastName || '',
+    'kunde-email': profile.email || currentUser?.email || '',
+    'kunde-phone': profile.phone || ''
+  };
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+}
+
+function saveKundeOplysninger() {
+  const profile = {
+    firstName: document.getElementById('kunde-firstname')?.value || '',
+    lastName: document.getElementById('kunde-lastname')?.value || '',
+    email: document.getElementById('kunde-email')?.value || '',
+    phone: document.getElementById('kunde-phone')?.value || ''
+  };
+  localStorage.setItem('orderflow_kunde_profile', JSON.stringify(profile));
+  showSaveStatus('kunde-oplysninger-status', 'saved');
+}
+
+function loadKundeOrdrer() {
+  const orders = [
+    { id: '#ORD-2847', date: '2026-02-06', restaurant: 'Pizza Palace', total: '189 kr', status: 'Leveret' },
+    { id: '#ORD-2831', date: '2026-02-04', restaurant: 'Sushi House', total: '342 kr', status: 'Leveret' },
+    { id: '#ORD-2815', date: '2026-02-01', restaurant: 'Burger Bar', total: '145 kr', status: 'Leveret' },
+    { id: '#ORD-2798', date: '2026-01-28', restaurant: 'Thai Garden', total: '278 kr', status: 'Leveret' },
+    { id: '#ORD-2776', date: '2026-01-25', restaurant: 'Pizza Palace', total: '212 kr', status: 'Leveret' }
+  ];
+  const container = document.getElementById('kunde-orders-list');
+  if (!container) return;
+
+  container.innerHTML = orders.map(o => `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--color-border);font-size:13px">
+      <span style="font-weight:600;color:var(--color-primary)">${o.id}</span>
+      <span style="color:var(--color-text-muted)">${o.date}</span>
+      <span>${o.restaurant}</span>
+      <span style="font-weight:600">${o.total}</span>
+      <span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;background:rgba(16,185,129,0.15);color:var(--color-success);display:inline-block;width:fit-content">${o.status}</span>
+    </div>
+  `).join('');
+}
+
+function loadKundeBetaling() {
+  const cards = JSON.parse(localStorage.getItem('orderflow_kunde_cards') || 'null') || [
+    { type: 'Visa', last4: '4242', expiry: '12/27', default: true },
+    { type: 'Mastercard', last4: '8888', expiry: '06/28', default: false }
+  ];
+  const container = document.getElementById('kunde-cards-list');
+  if (!container) return;
+
+  container.innerHTML = cards.map((c, i) => `
+    <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:48px;height:32px;border-radius:6px;background:${c.type === 'Visa' ? 'linear-gradient(135deg,#1a1f71,#2a3eb1)' : 'linear-gradient(135deg,#eb001b,#f79e1b)'};display:flex;align-items:center;justify-content:center">
+          <span style="color:#fff;font-size:10px;font-weight:700">${c.type}</span>
+        </div>
+        <div>
+          <div style="font-size:14px;font-weight:600">•••• •••• •••• ${c.last4}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">Udløber ${c.expiry}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${c.default ? '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(99,102,241,0.15);color:var(--color-primary)">Standard</span>' : ''}
+        <button class="btn btn-ghost" style="font-size:12px">Fjern</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadKundeAdresser() {
+  const addresses = JSON.parse(localStorage.getItem('orderflow_kunde_addresses') || 'null') || [
+    { label: 'Hjem', address: 'Vesterbrogade 42, 3. th', city: '1620 København V', default: true },
+    { label: 'Arbejde', address: 'Kongens Nytorv 15', city: '1050 København K', default: false }
+  ];
+  const container = document.getElementById('kunde-addresses-list');
+  if (!container) return;
+
+  container.innerHTML = addresses.map((a, i) => `
+    <div class="card" style="padding:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:14px;font-weight:600">${a.label}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${a.default ? '<span style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(99,102,241,0.15);color:var(--color-primary)">Standard</span>' : ''}
+          <button class="btn btn-ghost" style="font-size:12px">Rediger</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--color-text-muted)">${a.address}</div>
+      <div style="font-size:13px;color:var(--color-text-muted)">${a.city}</div>
+    </div>
+  `).join('');
+}
+
+function loadKundeLoyalitet() {
+  const loyalty = JSON.parse(localStorage.getItem('orderflow_kunde_loyalty') || 'null') || {
+    points: 2450, tier: 'Guld', nextTier: 'Platin', pointsToNext: 550,
+    history: [
+      { action: 'Ordre #ORD-2847', points: '+45', date: '2026-02-06' },
+      { action: 'Ordre #ORD-2831', points: '+68', date: '2026-02-04' },
+      { action: 'Indløst belønning', points: '-500', date: '2026-02-02' },
+      { action: 'Ordre #ORD-2815', points: '+29', date: '2026-02-01' },
+      { action: 'Bonus - Guld tier', points: '+100', date: '2026-01-31' }
+    ],
+    rewards: [
+      { name: 'Gratis levering', cost: 200, available: true },
+      { name: '10% rabat på næste ordre', cost: 500, available: true },
+      { name: 'Gratis dessert', cost: 300, available: true },
+      { name: 'VIP adgang til nye restauranter', cost: 1000, available: true }
+    ]
+  };
+
+  const pointsEl = document.getElementById('loyalty-points-value');
+  if (pointsEl) pointsEl.textContent = loyalty.points.toLocaleString('da-DK');
+
+  const tierEl = document.getElementById('loyalty-tier-name');
+  if (tierEl) tierEl.textContent = loyalty.tier;
+
+  const progressEl = document.getElementById('loyalty-progress-bar');
+  if (progressEl) {
+    const progress = Math.round(((3000 - loyalty.pointsToNext) / 3000) * 100);
+    progressEl.style.width = progress + '%';
+  }
+
+  const nextEl = document.getElementById('loyalty-next-tier');
+  if (nextEl) nextEl.textContent = `${loyalty.pointsToNext} point til ${loyalty.nextTier}`;
+
+  // Render history
+  const historyContainer = document.getElementById('loyalty-history-list');
+  if (historyContainer) {
+    historyContainer.innerHTML = loyalty.history.map(h => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--color-border)">
+        <div>
+          <div style="font-size:13px;font-weight:500">${h.action}</div>
+          <div style="font-size:11px;color:var(--color-text-muted)">${h.date}</div>
+        </div>
+        <span style="font-size:13px;font-weight:600;color:${h.points.startsWith('+') ? 'var(--color-success)' : 'var(--color-danger)'}">${h.points}</span>
+      </div>
+    `).join('');
+  }
+
+  // Render rewards
+  const rewardsContainer = document.getElementById('loyalty-rewards-list');
+  if (rewardsContainer) {
+    rewardsContainer.innerHTML = loyalty.rewards.map(r => `
+      <div class="card" style="padding:16px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:600">${r.name}</div>
+          <div style="font-size:12px;color:var(--color-text-muted)">${r.cost} point</div>
+        </div>
+        <button class="btn btn-${loyalty.points >= r.cost ? 'primary' : 'secondary'}" style="font-size:12px;padding:6px 14px" ${loyalty.points < r.cost ? 'disabled' : ''}>Indløs</button>
+      </div>
+    `).join('');
+  }
+}
+
+function loadKundePraeferencer() {
+  const prefs = JSON.parse(localStorage.getItem('orderflow_kunde_preferences') || '{}');
+
+  const fields = {
+    'pref-language': prefs.language || 'da',
+    'pref-email-notif': prefs.emailNotif !== false,
+    'pref-sms-notif': prefs.smsNotif !== false,
+    'pref-push-notif': prefs.pushNotif !== false,
+    'pref-marketing': prefs.marketing || false,
+    'pref-dietary': prefs.dietary || ''
+  };
+
+  Object.entries(fields).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = val;
+    else el.value = val;
+  });
+}
+
+function saveKundePraeferencer() {
+  const prefs = {
+    language: document.getElementById('pref-language')?.value || 'da',
+    emailNotif: document.getElementById('pref-email-notif')?.checked ?? true,
+    smsNotif: document.getElementById('pref-sms-notif')?.checked ?? true,
+    pushNotif: document.getElementById('pref-push-notif')?.checked ?? true,
+    marketing: document.getElementById('pref-marketing')?.checked ?? false,
+    dietary: document.getElementById('pref-dietary')?.value || ''
+  };
+  localStorage.setItem('orderflow_kunde_preferences', JSON.stringify(prefs));
+  showSaveStatus('kunde-prefs-status', 'saved');
 }
 
 // ========== Mine Oplysninger ==========

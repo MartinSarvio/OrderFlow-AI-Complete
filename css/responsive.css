@@ -349,7 +349,7 @@ textarea {
     max-width: none !important;
     max-height: 60vh;
     overflow-y: auto;
-    border-radius: 12px;
+    border-radius: 6px;
   }
 
   /* Charts */
@@ -389,7 +389,7 @@ textarea {
     width: 100% !important;
     height: auto !important;
     max-height: 50vh;
-    border-radius: 16px 16px 0 0;
+    border-radius: 8px 8px 0 0;
     z-index: 100;
   }
 
@@ -540,7 +540,7 @@ textarea {
     height: auto !important;
     max-height: 90vh !important;
     margin: 5vh auto !important;
-    border-radius: 12px !important;
+    border-radius: 6px !important;
   }
 
   /* Quick actions */
