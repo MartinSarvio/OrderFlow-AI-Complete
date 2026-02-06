@@ -768,6 +768,221 @@
         font-size: 1.4rem;
       }
     }
+
+    /* ==================== DEMO FORM SECTION ==================== */
+    .demo-section {
+      background: var(--color-white);
+      padding: 10rem 4rem;
+    }
+
+    .demo-container {
+      max-width: 64rem;
+      margin: 0 auto;
+    }
+
+    .demo-text {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .demo-text h2 {
+      font-size: 4.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    .demo-text p {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      margin-top: 2rem;
+      line-height: 1.6;
+    }
+
+    .demo-form-card {
+      background: #f1f1f2;
+      border-radius: 1.6rem;
+      padding: 4rem;
+    }
+
+    .demo-form-card h3 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 2.4rem;
+    }
+
+    .demo-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6rem;
+    }
+
+    .demo-form-group {
+      margin-bottom: 1.6rem;
+    }
+
+    .demo-form-label {
+      display: block;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      margin-bottom: 0.6rem;
+    }
+
+    .demo-form-input,
+    .demo-form-select {
+      width: 100%;
+      background: var(--color-white);
+      border: 1px solid var(--color-gray-300);
+      padding: 1.2rem 1.6rem;
+      border-radius: 0.8rem;
+      font-size: 1.6rem;
+      font-family: inherit;
+      color: var(--color-dark);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .demo-form-select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23787a7d' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1.6rem center;
+      padding-right: 4rem;
+    }
+
+    .demo-form-input:focus,
+    .demo-form-select:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(1, 91, 248, 0.12);
+    }
+
+    .demo-form-input.error,
+    .demo-form-select.error {
+      border-color: #e53e3e;
+    }
+
+    .demo-form-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .demo-form-checkbox {
+      display: flex;
+      gap: 1.2rem;
+      align-items: flex-start;
+      margin-bottom: 2.4rem;
+    }
+
+    .demo-form-checkbox input[type="checkbox"] {
+      width: 1.8rem;
+      height: 1.8rem;
+      margin-top: 0.2rem;
+      flex-shrink: 0;
+      accent-color: var(--color-primary);
+    }
+
+    .demo-form-checkbox label {
+      font-size: 1.3rem;
+      color: var(--color-gray-600);
+      line-height: 1.5;
+      cursor: pointer;
+    }
+
+    .demo-form-submit {
+      width: 100%;
+      background: var(--color-dark);
+      color: var(--color-white);
+      padding: 1.6rem;
+      border: none;
+      border-radius: 0.8rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .demo-form-submit:hover {
+      background: #1a1b1e;
+      transform: translateY(-1px);
+    }
+
+    .demo-form-submit:active {
+      transform: translateY(0);
+    }
+
+    .demo-form-submit.disabled {
+      pointer-events: none;
+      background: #101112;
+    }
+
+    .demo-form-consent {
+      font-size: 1.2rem;
+      color: var(--color-gray-500);
+      margin-top: 1.6rem;
+      line-height: 1.5;
+    }
+
+    .demo-form-consent a {
+      color: var(--color-dark);
+      text-decoration: underline;
+    }
+
+    .demo-form-consent a:hover {
+      color: var(--color-primary);
+    }
+
+    .demo-form-validation {
+      font-size: 1.2rem;
+      color: #e53e3e;
+      margin-top: 0.4rem;
+      display: none;
+    }
+
+    .demo-form-success {
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+
+    .demo-form-success h3 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .demo-form-success p {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      .demo-section {
+        padding: 6rem 2rem;
+      }
+      .demo-text {
+        margin-bottom: 3rem;
+      }
+      .demo-text h2 {
+        font-size: 3.2rem;
+      }
+      .demo-form-card {
+        padding: 3rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .demo-form-row {
+        grid-template-columns: 1fr;
+      }
+      .demo-form-card {
+        padding: 2.4rem;
+      }
+    }
   </style>
 <link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
@@ -812,8 +1027,8 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login">Login</a>
-          <a href="landing.html#demo" class="nav-cta">Få en gratis demo</a>
+          <a href="../../../index.html" class="nav-login">Login</a>
+          <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
@@ -846,7 +1061,7 @@
               </span>
             </div>
             <span class="pricing-period">/måned</span>
-            <a href="landing.html#demo" class="pricing-cta">Kom i gang</a>
+            <a href="#demo" class="pricing-cta">Kom i gang</a>
             <span class="pricing-features-label">Det får du:</span>
             <ul class="pricing-features">
               <li>
@@ -880,7 +1095,7 @@
               </span>
             </div>
             <span class="pricing-period">/måned</span>
-            <a href="landing.html#demo" class="pricing-cta">Start gratis prøveperiode</a>
+            <a href="#demo" class="pricing-cta">Start gratis prøveperiode</a>
             <span class="pricing-features-label">Alt i Starter, plus:</span>
             <ul class="pricing-features">
               <li>
@@ -921,7 +1136,7 @@
               </span>
             </div>
             <span class="pricing-period">Tilpasset pris</span>
-            <a href="landing.html#demo" class="pricing-cta">Kontakt salg</a>
+            <a href="#demo" class="pricing-cta">Kontakt salg</a>
             <span class="pricing-features-label">Alt i Pro, plus:</span>
             <ul class="pricing-features">
               <li>
@@ -1086,6 +1301,91 @@
 
         <div class="faq-no-results" id="faqNoResults" style="display: none;">
           <p>Ingen spørgsmål matcher din søgning. Prøv et andet søgeord.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Form Section -->
+    <section class="demo-section" id="demo">
+      <div class="demo-container">
+        <div class="demo-text">
+          <h2>Få en demo af Flow til din&nbsp;restaurant</h2>
+          <p>Kontakt os nedenfor, og vi vender tilbage hurtigst muligt.</p>
+        </div>
+        <div class="demo-form-card">
+          <div id="demoFormWrap">
+            <h3>Book din gratis demo</h3>
+            <form id="demoForm" novalidate>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Din rolle</label>
+                <select class="demo-form-select" name="role" required>
+                  <option value="">Vælg en...</option>
+                  <option value="owner">Jeg er restaurantejer eller manager</option>
+                  <option value="provider">Jeg leverer tjenester til restauranter</option>
+                  <option value="other">Andet</option>
+                </select>
+                <div class="demo-form-validation">Vælg venligst din rolle.</div>
+              </div>
+              <div class="demo-form-row">
+                <div class="demo-form-group">
+                  <label class="demo-form-label">Fornavn</label>
+                  <input type="text" class="demo-form-input" name="firstName" placeholder="Fornavn" required>
+                  <div class="demo-form-validation">Udfyld venligst dit fornavn.</div>
+                </div>
+                <div class="demo-form-group">
+                  <label class="demo-form-label">Efternavn</label>
+                  <input type="text" class="demo-form-input" name="lastName" placeholder="Efternavn" required>
+                  <div class="demo-form-validation">Udfyld venligst dit efternavn.</div>
+                </div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Email</label>
+                <input type="email" class="demo-form-input" name="email" placeholder="Email" required>
+                <div class="demo-form-validation">Udfyld venligst din email.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Telefon</label>
+                <input type="tel" class="demo-form-input" name="phone" placeholder="Telefon" required>
+                <div class="demo-form-validation">Udfyld venligst dit telefonnummer.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Restaurant navn</label>
+                <input type="text" class="demo-form-input" name="restaurantName" placeholder="Søg efter dit restaurant navn..." required>
+                <div style="margin-top: 0.4rem;"><span style="font-size: 1.2rem; color: var(--color-gray-500);">Begynd at skrive, og vælg din restaurant fra listen</span></div>
+                <div class="demo-form-validation">Udfyld venligst restaurant navn.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Hvor mange lokationer ejer eller driver du?</label>
+                <input type="number" class="demo-form-input" name="locations" min="1" value="1" required>
+                <div class="demo-form-validation">Udfyld venligst antal lokationer.</div>
+              </div>
+              <div class="demo-form-group">
+                <label class="demo-form-label">Hvordan hørte du om os?</label>
+                <select class="demo-form-select" name="referral" required>
+                  <option value="">Vælg en...</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="google">Google</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="ai">ChatGPT / AI</option>
+                  <option value="friend">Ven eller kollega</option>
+                  <option value="other">Andet</option>
+                </select>
+                <div class="demo-form-validation">Vælg venligst en mulighed.</div>
+              </div>
+              <div class="demo-form-checkbox">
+                <input type="checkbox" id="smsOptIn" name="smsOptIn">
+                <label for="smsOptIn">Jeg accepterer at modtage automatiske SMS-beskeder fra Flow på det angivne telefonnummer for at hjælpe mig med at planlægge en demo og evaluere platformen. Samtykke er ikke påkrævet.</label>
+              </div>
+              <button type="submit" class="demo-form-submit" id="demoSubmitBtn">Få en gratis demo</button>
+              <p class="demo-form-consent">Ved at give os dine oplysninger samtykker du til indsamling og brug af dine oplysninger i overensstemmelse med vores <a href="terms.html">Vilkår</a> og <a href="privacy.html">Privatlivspolitik</a>.</p>
+            </form>
+          </div>
+          <div class="demo-form-success" id="demoSuccess" style="display: none;">
+            <h3>Tak for din henvendelse!</h3>
+            <p>Vi kontakter dig hurtigst muligt for at booke din gratis demo.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -1287,6 +1587,81 @@
       });
     });
   </script>
+  <!-- Demo Form Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('demoForm');
+      var formWrap = document.getElementById('demoFormWrap');
+      var success = document.getElementById('demoSuccess');
+      var submitBtn = document.getElementById('demoSubmitBtn');
+
+      if (!form) return;
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Reset validation
+        var fields = form.querySelectorAll('.demo-form-input, .demo-form-select');
+        var validations = form.querySelectorAll('.demo-form-validation');
+        fields.forEach(function(f) { f.classList.remove('error'); });
+        validations.forEach(function(v) { v.style.display = 'none'; });
+
+        var valid = true;
+        var requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(function(field) {
+          if (!field.value || field.value.trim() === '') {
+            field.classList.add('error');
+            var validation = field.parentElement.querySelector('.demo-form-validation');
+            if (validation) validation.style.display = 'block';
+            valid = false;
+          }
+        });
+
+        // Email validation
+        var emailField = form.querySelector('[name="email"]');
+        if (emailField && emailField.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailField.value)) {
+          emailField.classList.add('error');
+          var ev = emailField.parentElement.querySelector('.demo-form-validation');
+          if (ev) { ev.textContent = 'Udfyld venligst en gyldig email.'; ev.style.display = 'block'; }
+          valid = false;
+        }
+
+        if (!valid) return;
+
+        // Disable submit
+        submitBtn.classList.add('disabled');
+        submitBtn.textContent = 'Sender...';
+
+        // Collect form data
+        var data = {
+          id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          role: form.querySelector('[name="role"]').value,
+          firstName: form.querySelector('[name="firstName"]').value.trim(),
+          lastName: form.querySelector('[name="lastName"]').value.trim(),
+          email: form.querySelector('[name="email"]').value.trim(),
+          phone: form.querySelector('[name="phone"]').value.trim(),
+          restaurantName: form.querySelector('[name="restaurantName"]').value.trim(),
+          locations: parseInt(form.querySelector('[name="locations"]').value) || 1,
+          referral: form.querySelector('[name="referral"]').value,
+          smsOptIn: form.querySelector('[name="smsOptIn"]').checked,
+          submittedAt: new Date().toISOString(),
+          page: 'priser.html'
+        };
+
+        // Save to localStorage
+        var requests = JSON.parse(localStorage.getItem('flow_demo_requests') || '[]');
+        requests.push(data);
+        localStorage.setItem('flow_demo_requests', JSON.stringify(requests));
+
+        // Show success
+        setTimeout(function() {
+          formWrap.style.display = 'none';
+          success.style.display = 'block';
+        }, 500);
+      });
+    });
+  </script>
+
 <!-- Flow CMS Dynamic Content -->
 <script src="/js/flow-cms-render.js"></script>
 </body>

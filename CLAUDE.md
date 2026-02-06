@@ -106,18 +106,27 @@ done
 
 ### Web Builder Skabeloner (MÅ IKKE SLETTES)
 
-| Skabelon | Mappe | Status | Bruges til |
-|----------|-------|--------|------------|
-| **Roma** | `templates/roma/` | PLANLAGT (skal oprettes) | Website skabelon 1 - konfigureres via Web Builder |
-| **Mario** | `templates/mario/` | AKTIV | Website skabelon 2 - konfigureres via Web Builder |
+| Skabelon | Mappe | Type | Status | Preview |
+|----------|-------|------|--------|---------|
+| **Skabelon 1** (Pizzeria Roma) | `templates/skabelon-1/` | React/Vite | AKTIV | `templates/skabelon-1/dist/index.html` |
+| **Skabelon 2** (Feane Restaurant) | `templates/skabelon-2/` | jQuery/Bootstrap | AKTIV | `templates/skabelon-2/index.html` |
+| **Skabelon 3** (Pizza Delicious) | `templates/skabelon-3/` | jQuery/Bootstrap | AKTIV | `templates/skabelon-3/index.html` |
 
 **Vigtig regel for Web Builder skabeloner:**
 - Al data i skabelonen (menu, oplysninger, åbningstider) vises som DEFAULT i Web Builder
 - Brugeren SKAL ændre/slette denne data for at tilpasse deres hjemmeside
 - Når "Hjemmeside" knappen trykkes, vises den konfigurerede data fra Web Builder
 - Skabelonens data erstattes af brugerens konfiguration
-- **DYNAMISK:** Data og layout er dynamisk baseret på den VALGTE skabelon
-- Roma og Mario har FORSKELLIGE designs - systemet skal tilpasse sig den aktive skabelon
+- **DYNAMISK:** Data og layout er dynamisk baseret på den VALGTE skabelon via postMessage
+- Alle 3 skabeloner har FORSKELLIGE designs - systemet tilpasser sig den aktive skabelon
+- Config gemmes per template: `orderflow_webbuilder_config_{templateId}`
+
+**Copyright footer (MÅ IKKE FJERNES):**
+- Venstre: "Copyright ©2026 All rights reserved FLOW"
+- Højre: "This template is made with ❤ by FLOW"
+- FLOW linker til landing.html
+- MutationObserver beskytter mod fjernelse
+- Sprog: kun dansk/engelsk
 
 ### App Builder Skabeloner (MÅ IKKE SLETTES)
 

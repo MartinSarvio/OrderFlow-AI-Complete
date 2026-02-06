@@ -148,6 +148,93 @@
 
 ---
 
+## Landing Pages (34 sider)
+
+Udvikling i `landing-pages/` → Produktion i `public/landing/`
+
+### Produkt
+| Fil | Titel |
+|-----|-------|
+| `landing.html` | Flow - Restaurant Automation Platform |
+| `how-it-works.html` | Sådan virker det |
+| `priser.html` | Priser |
+| `online-bestilling.html` | Online Bestilling uden Kommission |
+| `custom-mobile-app.html` | Custom Mobile App |
+| `zero-commission-delivery.html` | Kommissionsfri Levering |
+| `loyalitetsprogram.html` | Loyalitetsprogram til Restaurant |
+
+### Guides
+| Fil | Titel |
+|-----|-------|
+| `online-bestillingssystemer.html` | Online Bestillingssystemer Guide |
+| `restaurant-hjemmeside.html` | Restaurant Hjemmeside |
+| `restaurant-mobile-app.html` | Restaurant Mobile App Guide |
+| `restaurant-marketing-guide.html` | Restaurant Marketing Guide 2024 |
+| `restaurant-email-marketing.html` | Restaurant Email Marketing Guide |
+| `seo-for-restauranter.html` | SEO for Restauranter |
+
+### Workflow
+| Fil | Titel |
+|-----|-------|
+| `automatiseret-marketing.html` | Automatiseret Marketing til Restaurant |
+| `facebook-workflow.html` | Facebook Workflow |
+| `instagram-workflow.html` | Instagram Workflow |
+| `sms-workflow.html` | SMS Workflow til Restaurant |
+
+### Virksomhed
+| Fil | Titel |
+|-----|-------|
+| `case-studies.html` | Case Studies |
+| `om-os.html` | Om os |
+| `karriere.html` | Karriere |
+| `ledelse.html` | Ledelse |
+| `presse.html` | Presse |
+| `partner.html` | Partner med Flow |
+
+### Blog
+| Fil | Titel |
+|-----|-------|
+| `blog.html` | Blog |
+| `blog-post.html` | Blog Post |
+
+### Juridisk
+| Fil | Titel |
+|-----|-------|
+| `privacy.html` | Privatlivspolitik |
+| `terms.html` | Vilkår og betingelser |
+| `legal.html` | Juridisk |
+| `disclaimer.html` | Ansvarsfraskrivelse |
+| `cookie-settings.html` | Cookie-indstillinger |
+| `platform-terms.html` | Platform Vilkår |
+| `restaurant-agreement.html` | Restaurant Aftale |
+| `accessibility.html` | Tilgængelighed |
+
+### Support
+| Fil | Titel |
+|-----|-------|
+| `help-center.html` | Flow Hjælp Center |
+
+---
+
+## Web Builder Skabeloner
+
+| Mappe | Navn | Type | Preview |
+|-------|------|------|---------|
+| `templates/skabelon-1/` | Pizzeria Roma | React/Vite | `dist/index.html` |
+| `templates/skabelon-2/` | Feane Restaurant | jQuery/Bootstrap | `index.html` |
+| `templates/skabelon-3/` | Pizza Delicious | jQuery/Bootstrap | `index.html` |
+
+Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
+
+## App Builder Skabeloner
+
+| ID | Navn | Preview | Status |
+|----|------|---------|--------|
+| `app-skabelon-1` | App Skabelon 1 | `demos/app-preview.html` | Aktiv |
+| `app-skabelon-2` | App Skabelon 2 | `demos/app-preview-v2.html` | Planlagt |
+
+---
+
 ## Database Tabeller
 
 ### Nye tabeller (v3.12.0)

@@ -28519,19 +28519,22 @@ function loadWebBuilderTemplate(templateId) {
 
   // Switch preview iframe source based on template type
   const previewFile = template.previewFile || './demos/pwa-preview-mario.html';
-  const iframeIds = ['pwa-preview-branding', 'pwa-preview-farver', 'pwa-preview-billeder',
-                     'pwa-preview-timer', 'pwa-preview-kontakt', 'pwa-preview-levering',
-                     'webbuilder-preview-frame'];
 
-  iframeIds.forEach(id => {
-    const iframe = document.getElementById(id);
-    if (iframe) {
-      // Only reload if src is different
-      const currentSrc = iframe.src.split('/').pop();
-      const newSrc = previewFile.split('/').pop();
-      if (currentSrc !== newSrc) {
-        iframe.src = previewFile;
-      }
+  // Target Web Builder iframes by ID and class
+  const frames = [];
+  const mainFrame = document.getElementById('webbuilder-preview-frame');
+  if (mainFrame) frames.push(mainFrame);
+  document.querySelectorAll('.webbuilder-preview-frame').forEach(f => {
+    if (!frames.includes(f)) frames.push(f);
+  });
+  const fullscreenFrame = document.getElementById('wb-fullscreen-preview-frame');
+  if (fullscreenFrame && !frames.includes(fullscreenFrame)) frames.push(fullscreenFrame);
+
+  frames.forEach(iframe => {
+    const currentSrc = iframe.src.split('/').pop();
+    const newSrc = previewFile.split('/').pop();
+    if (currentSrc !== newSrc) {
+      iframe.src = previewFile;
     }
   });
 
@@ -34632,18 +34635,31 @@ function switchWebBuilderTab(tab) {
   showWebBuilderPage(tab);
 }
 
-// Load Web Builder config from localStorage
+// Load Web Builder config from localStorage (per-template)
 function loadWebBuilderConfig() {
-  const saved = localStorage.getItem('orderflow_webbuilder_config');
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const storageKey = 'orderflow_webbuilder_config_' + templateId;
+
+  // Migration: move old generic key to template-specific key
+  const oldConfig = localStorage.getItem('orderflow_webbuilder_config');
+  if (oldConfig && !localStorage.getItem(storageKey)) {
+    localStorage.setItem(storageKey, oldConfig);
+  }
+
+  const saved = localStorage.getItem(storageKey);
   if (saved) {
     try {
       webBuilderConfig = JSON.parse(saved);
     } catch (e) {
-      webBuilderConfig = { ...defaultWebBuilderConfig };
+      const template = webBuilderTemplates[templateId];
+      webBuilderConfig = template ? JSON.parse(JSON.stringify(template)) : { ...defaultWebBuilderConfig };
     }
   } else {
-    webBuilderConfig = { ...defaultWebBuilderConfig };
+    const template = webBuilderTemplates[templateId];
+    webBuilderConfig = template ? JSON.parse(JSON.stringify(template)) : { ...defaultWebBuilderConfig };
   }
+  webBuilderConfig._templateId = templateId;
 
   // Populate form fields
   populateWebBuilderForms();
@@ -35025,9 +35041,13 @@ function collectWebBuilderFormData() {
   return config;
 }
 
-// Save Web Builder config
+// Save Web Builder config (per-template)
 function saveWebBuilderConfig(section) {
   webBuilderConfig = collectWebBuilderFormData();
+  const templateId = webBuilderConfig._templateId || document.getElementById('wb-template-selector')?.value || 'skabelon-1';
+  const storageKey = 'orderflow_webbuilder_config_' + templateId;
+  localStorage.setItem(storageKey, JSON.stringify(webBuilderConfig));
+  // Keep generic key in sync for backwards compatibility
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(webBuilderConfig));
   toast('Web Builder konfiguration gemt', 'success');
   updateWebBuilderPreview();
@@ -35245,14 +35265,21 @@ function initWebBuilderPreview() {
 
 // Open the full website in a new tab - dynamic based on selected template
 function openFullWebsite() {
-  // Åbn desktop-hjemmeside preview for den valgte skabelon
-  // Begge skabeloner (Roma + Mario) bruger samme preview-fil med dynamisk styling
-  const websiteUrl = './demos/pwa-preview-mario.html';
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const template = webBuilderTemplates[templateId];
+  const websiteUrl = template?.previewFile || './demos/pwa-preview-mario.html';
   window.open(websiteUrl, '_blank');
 }
 
 // Open Web Builder preview in fullscreen modal with device selector
 function openWebBuilderPreviewFullscreen() {
+  // Get active template preview file
+  const selector = document.getElementById('wb-template-selector');
+  const templateId = selector?.value || 'skabelon-1';
+  const template = webBuilderTemplates[templateId];
+  const previewSrc = template?.previewFile || './Website%20builder/dist/index.html';
+
   // Check if modal already exists
   let modal = document.getElementById('wb-preview-modal');
   if (!modal) {
@@ -35277,7 +35304,7 @@ function openWebBuilderPreviewFullscreen() {
           <div id="wb-preview-device-frame" class="wb-device-frame mobile" style="background:#000;border-radius:32px;padding:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);transition:all 0.3s ease">
             <iframe
               id="wb-fullscreen-preview-frame"
-              src="./Website%20builder/dist/index.html"
+              src="${previewSrc}"
               style="width:100%;height:100%;border:none;border-radius:20px;background:#fff"
               onload="initFullscreenPreview()"
             ></iframe>
