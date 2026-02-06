@@ -729,11 +729,10 @@ const ROLES = {
 const ADMIN_ONLY_MENUS = {
   'kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'alle-kunder': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'leads': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'workflow': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'nav-indsigt': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-salg': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'nav-flow-cms': [ROLES.ADMIN, ROLES.EMPLOYEE],
+  'admin-separator': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
@@ -778,17 +777,12 @@ function applyRoleBasedSidebar() {
   setDisplay(templateBtn, role === ROLES.ADMIN);
 
   // === ADMIN-ONLY SIDEBAR ELEMENTER ===
-  // Kunder, Workflow, Indsigt, Salg, Lead Management: Kun admin/employee
-  ['kunder', 'workflow', 'nav-indsigt', 'nav-salg', 'leads'].forEach(menuKey => {
+  // Kunder, Workflow, Salg, Flow CMS, Separator: Kun admin/employee
+  ['kunder', 'workflow', 'nav-salg', 'nav-flow-cms', 'admin-separator'].forEach(menuKey => {
     const el = document.querySelector(`[data-role-menu="${menuKey}"]`);
     setDisplay(el, !isCustomerView);
     if (el) console.log(`  - ${menuKey}: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
   });
-
-  // === FLOW CMS: Kun admin/employee ===
-  const flowCmsSection = document.querySelector('[data-role-menu="nav-flow-cms"]');
-  setDisplay(flowCmsSection, !isCustomerView);
-  if (flowCmsSection) console.log(`  - Flow CMS: ${isCustomerView ? '✗ hidden' : '✓ visible'}`);
 
   // === RAPPORTER, INTEGRATIONER: Synlige for ALLE ===
   ['nav-rapporter', 'nav-integrationer'].forEach(id => {
@@ -799,8 +793,8 @@ function applyRoleBasedSidebar() {
     }
   });
 
-  // === VIRKSOMHEDS PROFIL, BUTIKINDSTILLINGER, MARKETING: Synlige for ALLE ===
-  ['nav-virksomheds-profil', 'nav-butikindstillinger', 'nav-marketing'].forEach(id => {
+  // === VIRKSOMHEDS PROFIL, MARKETING: Synlige for ALLE ===
+  ['nav-virksomheds-profil', 'nav-marketing'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.style.setProperty('display', '', 'important');
@@ -3101,6 +3095,7 @@ async function loginDemo() {
 
   // Sæt demo restaurant som aktiv (for subpages)
   currentProfileRestaurantId = restaurants[0]?.id || 'demo-restaurant-1';
+  localStorage.setItem('lastViewedCustomerId', currentProfileRestaurantId);
   console.log('📍 Demo restaurant ID sat:', currentProfileRestaurantId);
 
   // Play login transition animation
@@ -3688,12 +3683,8 @@ document.addEventListener('DOMContentLoaded', function() {
 let isNavigatingFromHistory = false;
 
 function showPage(page) {
-  // Luk kunde-kontekst menu når man navigerer til en anden side (kun for admin)
+  // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
-    const customerContext = document.getElementById('nav-customer-context');
-    if (customerContext) {
-      customerContext.style.display = 'none';
-    }
     currentProfileRestaurantId = null;
   }
 
@@ -5113,6 +5104,397 @@ function exportDagsrapportExcel() {
 }
 
 // =====================================================
+// RAPPORT FUNKTIONER - Alle rapporter med tabeller
+// =====================================================
+let produktrapportData = null;
+let zrapportData = null;
+let konverteringsrapportData = null;
+let genbestillingsrapportData = null;
+let anmeldelsesrapportData = null;
+let heatmaprapportData = null;
+
+// Shared seeded random helper
+function _reportRandom(seed, min, max, offset) {
+  offset = offset || 0;
+  const x = Math.sin((seed + offset) * 9999 + min) * 10000;
+  return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
+}
+
+function _fmtDKK(n) {
+  return n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' kr';
+}
+
+function _fmtPct(n) {
+  return n.toLocaleString('da-DK', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+}
+
+function _fmtDateDK(d) {
+  if (typeof d === 'string') d = new Date(d);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return day + '.' + month + '.' + d.getFullYear();
+}
+
+// --- PRODUKTRAPPORT ---
+function generateProduktrapport() {
+  const fra = document.getElementById('produktrapport-fra').value;
+  const til = document.getElementById('produktrapport-til').value;
+  if (!fra || !til) { toast('Vælg venligst et datointerval', 'error'); return; }
+
+  const seed = new Date(fra).getDate() + new Date(fra).getMonth() * 31 + new Date(til).getDate();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const products = [
+    { name: 'Margherita Pizza', cat: 'Pizza', base: 99 },
+    { name: 'Pepperoni Pizza', cat: 'Pizza', base: 109 },
+    { name: 'Hawaii Pizza', cat: 'Pizza', base: 109 },
+    { name: 'Caesar Salat', cat: 'Salater', base: 79 },
+    { name: 'Pasta Carbonara', cat: 'Pasta', base: 119 },
+    { name: 'Pasta Bolognese', cat: 'Pasta', base: 109 },
+    { name: 'Tiramisu', cat: 'Dessert', base: 59 },
+    { name: 'Cola 0.5L', cat: 'Drikkevarer', base: 35 },
+    { name: 'Fadøl 0.4L', cat: 'Drikkevarer', base: 55 },
+    { name: 'Husets Rødvin', cat: 'Vin', base: 149 },
+    { name: 'Bruschetta', cat: 'Forretter', base: 69 },
+    { name: 'Moules Frites', cat: 'Hovedretter', base: 169 }
+  ];
+
+  const rows = products.map((p, i) => {
+    const sold = r(20, 350, i);
+    const price = p.base + r(-10, 20, i + 100);
+    const revenue = sold * price;
+    const margin = r(55, 82, i + 200);
+    return { name: p.name, cat: p.cat, sold, revenue, avgPrice: price, margin };
+  });
+  rows.sort((a, b) => b.revenue - a.revenue);
+
+  const totalSold = rows.reduce((s, x) => s + x.sold, 0);
+  const totalRevenue = rows.reduce((s, x) => s + x.revenue, 0);
+  const avgMargin = rows.reduce((s, x) => s + x.margin, 0) / rows.length;
+
+  produktrapportData = {
+    title: 'Produktoversigt',
+    period: _fmtDateDK(fra) + ' - ' + _fmtDateDK(til),
+    headers: ['Produkt', 'Kategori', 'Solgt', 'Omsætning', 'Gns. pris', 'Avance'],
+    rows: rows.map(x => [x.name, x.cat, x.sold.toLocaleString('da-DK'), _fmtDKK(x.revenue), _fmtDKK(x.avgPrice), x.margin + '%']),
+    _raw: rows,
+    summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
+  };
+  renderProduktrapport();
+  toast('Produktrapport genereret', 'success');
+}
+
+function renderProduktrapport() {
+  if (!produktrapportData) return;
+  const d = produktrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Produktoversigt — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Produkt</th><th class="hide-mobile">Kategori</th><th style="text-align:right">Solgt</th><th style="text-align:right">Omsætning</th><th style="text-align:right" class="hide-mobile">Gns. pris</th><th style="text-align:right;padding-right:16px">Avance</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td class="hide-mobile">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('produktrapport-content').innerHTML = html;
+}
+
+// --- Z-RAPPORT ---
+function generateZrapport() {
+  const dato = document.getElementById('zrapport-dato').value;
+  if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
+
+  const dateObj = new Date(dato);
+  const seed = dateObj.getDate() + dateObj.getMonth() * 31 + dateObj.getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const lines = [
+    { desc: 'Kontant salg', count: r(30, 80, 1), amount: r(8000, 25000, 2) + r(0, 99, 3) / 100 },
+    { desc: 'Kort salg (Dankort)', count: r(100, 300, 4), amount: r(30000, 80000, 5) + r(0, 99, 6) / 100 },
+    { desc: 'Kort salg (Visa/MC)', count: r(20, 80, 7), amount: r(8000, 25000, 8) + r(0, 99, 9) / 100 },
+    { desc: 'MobilePay', count: r(15, 60, 10), amount: r(4000, 15000, 11) + r(0, 99, 12) / 100 },
+    { desc: 'Online betaling', count: r(10, 40, 13), amount: r(3000, 12000, 14) + r(0, 99, 15) / 100 },
+    { desc: 'Gavekort', count: r(2, 15, 16), amount: r(500, 5000, 17) + r(0, 99, 18) / 100 },
+    { desc: 'Rabatter givet', count: r(5, 30, 19), amount: -(r(500, 5000, 20) + r(0, 99, 21) / 100) },
+    { desc: 'Returneringer', count: r(0, 5, 22), amount: -(r(0, 2000, 23) + r(0, 99, 24) / 100) }
+  ];
+
+  const brutto = lines.filter(l => l.amount > 0).reduce((s, l) => s + l.amount, 0);
+  const netto = lines.reduce((s, l) => s + l.amount, 0);
+  const moms = netto * 0.25 / 1.25;
+  const diff = r(-50, 50, 30) + r(0, 99, 31) / 100;
+  const zNr = 'Z-' + dateObj.getFullYear() + '-' + String(r(1, 9999, 32)).padStart(4, '0');
+
+  zrapportData = {
+    title: 'Z-Rapport',
+    period: _fmtDateDK(dato),
+    headers: ['Beskrivelse', 'Antal', 'Beløb (DKK)'],
+    rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
+    summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
+  };
+  renderZrapport();
+  toast('Z-rapport genereret', 'success');
+}
+
+function renderZrapport() {
+  if (!zrapportData) return;
+  const d = zrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Z-rapport — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Beskrivelse</th><th style="text-align:right">Antal</th><th style="text-align:right;padding-right:16px">Beløb (DKK)</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    const isNeg = r[2].indexOf('-') !== -1;
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right;padding-right:16px' + (isNeg ? ';color:var(--danger)' : '') + '">' + r[2] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => {
+    const hl = k === 'Netto omsætning' ? ' highlight' : '';
+    html += '<div class="report-row' + hl + '"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>';
+  });
+  html += '</div></div>';
+  document.getElementById('zrapport-content').innerHTML = html;
+}
+
+// --- KONVERTERINGSRAPPORT ---
+function generateKonverteringsrapport() {
+  const periode = parseInt(document.getElementById('konverteringsrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const sources = ['Direkte', 'Google Søgning', 'Facebook Ads', 'Instagram', 'Email kampagner', 'Henvisninger', 'Google Maps', 'TikTok'];
+  const rows = sources.map((src, i) => {
+    const visitors = r(200, 3000, i);
+    const convRate = (r(50, 250, i + 100) / 10);
+    const orders = Math.round(visitors * convRate / 100);
+    const avgOrder = r(150, 450, i + 200) + r(0, 99, i + 300) / 100;
+    const revenue = orders * avgOrder;
+    return { src, visitors, orders, convRate, avgOrder, revenue };
+  });
+  rows.sort((a, b) => b.revenue - a.revenue);
+
+  const totalVisitors = rows.reduce((s, x) => s + x.visitors, 0);
+  const totalOrders = rows.reduce((s, x) => s + x.orders, 0);
+  const totalRevenue = rows.reduce((s, x) => s + x.revenue, 0);
+  const avgConv = totalVisitors > 0 ? (totalOrders / totalVisitors * 100) : 0;
+
+  konverteringsrapportData = {
+    title: 'Konverteringsrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Kilde / Kanal', 'Besøgende', 'Ordrer', 'Konvertering', 'Gns. ordre', 'Omsætning'],
+    rows: rows.map(x => [x.src, x.visitors.toLocaleString('da-DK'), x.orders.toLocaleString('da-DK'), _fmtPct(x.convRate), _fmtDKK(x.avgOrder), _fmtDKK(x.revenue)]),
+    summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
+  };
+  renderKonverteringsrapport();
+  toast('Konverteringsrapport genereret', 'success');
+}
+
+function renderKonverteringsrapport() {
+  if (!konverteringsrapportData) return;
+  const d = konverteringsrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Konvertering — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kilde / Kanal</th><th style="text-align:right">Besøgende</th><th style="text-align:right">Ordrer</th><th style="text-align:right">Konvertering</th><th style="text-align:right" class="hide-mobile">Gns. ordre</th><th style="text-align:right;padding-right:16px">Omsætning</th></tr></thead><tbody>';
+  d.rows.forEach(r => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('konverteringsrapport-content').innerHTML = html;
+}
+
+// --- GENBESTILLINGSRAPPORT ---
+function generateGenbestillingsrapport() {
+  const periode = parseInt(document.getElementById('genbestillingsrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const customers = ['Anders Jensen', 'Maria Nielsen', 'Peter Hansen', 'Louise Pedersen', 'Thomas Andersen', 'Sofie Larsen', 'Mikkel Christensen', 'Emma Rasmussen', 'Frederik Møller', 'Line Jørgensen', 'Kasper Thomsen', 'Ida Madsen'];
+  const today = new Date();
+  const rows = customers.map((name, i) => {
+    const orders = r(2, 25, i);
+    const daysSinceLast = r(1, 60, i + 100);
+    const lastDate = new Date(today);
+    lastDate.setDate(lastDate.getDate() - daysSinceLast);
+    const totalSpent = orders * (r(150, 500, i + 200) + r(0, 99, i + 300) / 100);
+    const avgInterval = r(3, 35, i + 400);
+    let status, badgeClass;
+    if (avgInterval < 14) { status = 'Aktiv'; badgeClass = 'badge-success'; }
+    else if (avgInterval < 30) { status = 'Aftagende'; badgeClass = 'badge-warning'; }
+    else { status = 'Inaktiv'; badgeClass = 'badge-danger'; }
+    return { name, orders, lastDate: _fmtDateDK(lastDate), totalSpent, avgInterval, status, badgeClass };
+  });
+  rows.sort((a, b) => b.orders - a.orders);
+
+  const totalCustomers = rows.length;
+  const avgOrders = rows.reduce((s, x) => s + x.orders, 0) / totalCustomers;
+  const avgInterval = rows.reduce((s, x) => s + x.avgInterval, 0) / totalCustomers;
+  const activeCount = rows.filter(x => x.status === 'Aktiv').length;
+  const retention = (activeCount / totalCustomers * 100);
+
+  genbestillingsrapportData = {
+    title: 'Genbestillingsrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Kunde', 'Ordrer', 'Sidste ordre', 'Total forbrugt', 'Gns. interval', 'Status'],
+    rows: rows.map(x => [x.name, x.orders.toLocaleString('da-DK'), x.lastDate, _fmtDKK(x.totalSpent), x.avgInterval + ' dage', x.status]),
+    _raw: rows,
+    summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
+  };
+  renderGenbestillingsrapport();
+  toast('Genbestillingsrapport genereret', 'success');
+}
+
+function renderGenbestillingsrapport() {
+  if (!genbestillingsrapportData) return;
+  const d = genbestillingsrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Genbestilling — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kunde</th><th style="text-align:right">Ordrer</th><th class="hide-mobile">Sidste ordre</th><th style="text-align:right">Total forbrugt</th><th style="text-align:right" class="hide-mobile">Gns. interval</th><th style="text-align:center;padding-right:16px">Status</th></tr></thead><tbody>';
+  d._raw.forEach(x => {
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.name + '</td><td style="text-align:right">' + x.orders.toLocaleString('da-DK') + '</td><td class="hide-mobile">' + x.lastDate + '</td><td style="text-align:right">' + _fmtDKK(x.totalSpent) + '</td><td style="text-align:right" class="hide-mobile">' + x.avgInterval + ' dage</td><td style="text-align:center;padding-right:16px"><span class="badge ' + x.badgeClass + '">' + x.status + '</span></td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('genbestillingsrapport-content').innerHTML = html;
+}
+
+// --- ANMELDELSESRAPPORT ---
+function generateAnmeldelsesrapport() {
+  const periode = parseInt(document.getElementById('anmeldelsesrapport-periode').value);
+  const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const platforms = [
+    { name: 'Google', baseReviews: 40 },
+    { name: 'Trustpilot', baseReviews: 20 },
+    { name: 'Facebook', baseReviews: 15 },
+    { name: 'TripAdvisor', baseReviews: 10 },
+    { name: 'Intern feedback', baseReviews: 50 }
+  ];
+
+  const rows = platforms.map((p, i) => {
+    const reviews = p.baseReviews + r(0, 30, i);
+    const rating = (r(35, 49, i + 100) / 10);
+    const positive = Math.round(reviews * (r(65, 95, i + 200) / 100));
+    const negative = reviews - positive;
+    const conv = r(50, 200, i + 300) / 10;
+    return { platform: p.name, reviews, rating, positive, negative, conv };
+  });
+
+  const totalReviews = rows.reduce((s, x) => s + x.reviews, 0);
+  const avgRating = rows.reduce((s, x) => s + x.rating * x.reviews, 0) / totalReviews;
+  const totalPositive = rows.reduce((s, x) => s + x.positive, 0);
+  const avgConv = rows.reduce((s, x) => s + x.conv, 0) / rows.length;
+
+  anmeldelsesrapportData = {
+    title: 'Anmeldelsesrapport',
+    period: 'Sidste ' + periode + ' dage',
+    headers: ['Platform', 'Anmeldelser', 'Gns. rating', 'Positive', 'Negative', 'Konvertering'],
+    rows: rows.map(x => [x.platform, x.reviews.toLocaleString('da-DK'), x.rating.toFixed(1), x.positive.toLocaleString('da-DK'), x.negative.toLocaleString('da-DK'), _fmtPct(x.conv)]),
+    _raw: rows,
+    summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
+  };
+  renderAnmeldelsesrapport();
+  toast('Anmeldelsesrapport genereret', 'success');
+}
+
+function renderAnmeldelsesrapport() {
+  if (!anmeldelsesrapportData) return;
+  const d = anmeldelsesrapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Anmeldelser — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Platform</th><th style="text-align:right">Anmeldelser</th><th style="text-align:center">Gns. rating</th><th style="text-align:right" class="hide-mobile">Positive</th><th style="text-align:right" class="hide-mobile">Negative</th><th style="text-align:right;padding-right:16px">Konvertering</th></tr></thead><tbody>';
+  d._raw.forEach(x => {
+    const stars = '&#9733;'.repeat(Math.round(x.rating)) + '&#9734;'.repeat(5 - Math.round(x.rating));
+    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.platform + '</td><td style="text-align:right">' + x.reviews.toLocaleString('da-DK') + '</td><td style="text-align:center"><span style="color:#f59e0b">' + stars + '</span> ' + x.rating.toFixed(1) + '</td><td style="text-align:right" class="hide-mobile"><span style="color:var(--success)">' + x.positive + '</span></td><td style="text-align:right" class="hide-mobile"><span style="color:var(--danger)">' + x.negative + '</span></td><td style="text-align:right;padding-right:16px">' + _fmtPct(x.conv) + '</td></tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('anmeldelsesrapport-content').innerHTML = html;
+}
+
+// --- HEATMAPRAPPORT ---
+function generateHeatmaprapport() {
+  const dato = document.getElementById('heatmaprapport-dato').value;
+  if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
+
+  const dateObj = new Date(dato);
+  const seed = dateObj.getDate() + dateObj.getMonth() * 31 + dateObj.getFullYear();
+  const r = (min, max, off) => _reportRandom(seed, min, max, off);
+
+  const days = ['Man', 'Tir', 'Ons', 'Tor', 'Fre', 'Lør', 'Søn'];
+  const timeSlots = ['10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00', '16:00-17:00', '17:00-18:00', '18:00-19:00', '19:00-20:00', '20:00-21:00', '21:00-22:00'];
+  const grid = [];
+  let maxVal = 0;
+  let totalOrders = 0;
+  let busiestDay = { day: '', total: 0 };
+  let busiestSlot = { slot: '', total: 0 };
+  const dayTotals = days.map(() => 0);
+  const slotTotals = timeSlots.map(() => 0);
+
+  timeSlots.forEach((slot, si) => {
+    const row = [];
+    const hour = 10 + si;
+    days.forEach((day, di) => {
+      let base = r(2, 15, si * 7 + di);
+      if (hour >= 12 && hour < 14) base += r(8, 20, si * 7 + di + 100);
+      if (hour >= 18 && hour < 21) base += r(10, 25, si * 7 + di + 200);
+      if (di >= 4) base = Math.round(base * 1.3);
+      if (hour < 11 || hour >= 21) base = Math.max(1, Math.round(base * 0.4));
+      row.push(base);
+      if (base > maxVal) maxVal = base;
+      totalOrders += base;
+      dayTotals[di] += base;
+      slotTotals[si] += base;
+    });
+    grid.push(row);
+  });
+
+  dayTotals.forEach((t, i) => { if (t > busiestDay.total) { busiestDay = { day: days[i], total: t }; } });
+  slotTotals.forEach((t, i) => { if (t > busiestSlot.total) { busiestSlot = { slot: timeSlots[i], total: t }; } });
+
+  const avgPerHour = (totalOrders / (timeSlots.length * days.length)).toFixed(1);
+
+  heatmaprapportData = {
+    title: 'Heatmap Rapport',
+    period: 'Uge fra ' + _fmtDateDK(dato),
+    headers: ['Tidspunkt', ...days],
+    rows: timeSlots.map((slot, si) => [slot, ...grid[si].map(v => v.toString())]),
+    _grid: grid, _maxVal: maxVal, _timeSlots: timeSlots, _days: days,
+    summary: { 'Travleste dag': busiestDay.day + ' (' + busiestDay.total + ' ordrer)', 'Travleste time': busiestSlot.slot + ' (' + busiestSlot.total + ' ordrer)', 'Total ordrer (ugen)': totalOrders.toLocaleString('da-DK'), 'Gns. ordrer pr. time': avgPerHour }
+  };
+  renderHeatmaprapport();
+  toast('Heatmap genereret', 'success');
+}
+
+function _heatColor(value, max) {
+  const intensity = value / max;
+  if (intensity > 0.8) return 'background:rgba(239,68,68,0.3);color:#ef4444;font-weight:600';
+  if (intensity > 0.6) return 'background:rgba(251,191,36,0.25);color:#f59e0b;font-weight:600';
+  if (intensity > 0.4) return 'background:rgba(251,191,36,0.1)';
+  if (intensity > 0.2) return 'background:rgba(99,102,241,0.08)';
+  return '';
+}
+
+function renderHeatmaprapport() {
+  if (!heatmaprapportData) return;
+  const d = heatmaprapportData;
+  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Heatmap — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Tidspunkt</th>';
+  d._days.forEach(day => { html += '<th style="text-align:center">' + day + '</th>'; });
+  html += '</tr></thead><tbody>';
+  d._timeSlots.forEach((slot, si) => {
+    html += '<tr><td style="padding-left:16px;font-weight:500;white-space:nowrap">' + slot + '</td>';
+    d._grid[si].forEach(val => {
+      const style = _heatColor(val, d._maxVal);
+      html += '<td style="text-align:center;' + style + '">' + val + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div></div>';
+  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
+  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div></div>';
+  document.getElementById('heatmaprapport-content').innerHTML = html;
+}
+
+// =====================================================
 // =====================================================
 // EXPORT SERVICE - Enhanced with Logo & Professional Wrapper
 // =====================================================
@@ -5203,17 +5585,17 @@ const ExportService = {
       case 'dagsrapport':
         return typeof dagsrapportData !== 'undefined' ? dagsrapportData : null;
       case 'produktrapport':
-        return this.getProduktrapportData();
+        return produktrapportData || this.getProduktrapportData();
       case 'zrapport':
-        return this.getZrapportData();
+        return zrapportData || this.getZrapportData();
       case 'konverteringsrapport':
-        return this.getKonverteringsrapportData();
+        return konverteringsrapportData || this.getKonverteringsrapportData();
       case 'genbestillingsrapport':
-        return this.getGenbestillingsrapportData();
+        return genbestillingsrapportData || this.getGenbestillingsrapportData();
       case 'anmeldelsesrapport':
-        return this.getAnmeldelsesrapportData();
+        return anmeldelsesrapportData || this.getAnmeldelsesrapportData();
       case 'heatmaprapport':
-        return this.getHeatmaprapportData();
+        return heatmaprapportData || this.getHeatmaprapportData();
       default:
         return null;
     }
@@ -7487,12 +7869,10 @@ function showCrmSearchView() {
   document.getElementById('crm-search-view').style.display = 'block';
   document.getElementById('crm-profile-view').style.display = 'none';
   currentProfileRestaurantId = null;
+  localStorage.removeItem('lastViewedCustomerId');
   document.getElementById('crm-search').value = '';
   initCrmTable();
-  
-  // Hide customer context menu
-  document.getElementById('nav-customer-context').style.display = 'none';
-  
+
   // Update breadcrumb
   updateBreadcrumb('kunder');
 }
@@ -7505,6 +7885,11 @@ function closeCustomerContext() {
 // Show customer sub-page
 function showCustomerSubpage(subpage) {
   const isCustomerView = currentUser?.role && [ROLES.CUSTOMER, ROLES.DEMO].includes(currentUser.role);
+  // Fallback til localStorage hvis currentProfileRestaurantId er null
+  if (!currentProfileRestaurantId) {
+    const lastViewed = localStorage.getItem('lastViewedCustomerId');
+    if (lastViewed) currentProfileRestaurantId = lastViewed;
+  }
   const restaurantId = currentProfileRestaurantId || (restaurants[0]?.id);
 
   console.log('📄 showCustomerSubpage:', subpage, 'isCustomerView:', isCustomerView, 'restaurantId:', restaurantId);
@@ -11378,8 +11763,9 @@ function showCrmProfileView(id) {
   }
   
   currentProfileRestaurantId = id;
+  localStorage.setItem('lastViewedCustomerId', id);
   const userId = generateUserId(id);
-  
+
   // Load saved products for this restaurant
   loadSavedProducts(restaurant);
   
@@ -11390,13 +11776,6 @@ function showCrmProfileView(id) {
   // Remove active indicator from Kunder nav button (the green dot)
   document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
 
-  // Show customer context menu in sidebar
-  const contextMenu = document.getElementById('nav-customer-context');
-  contextMenu.style.display = 'block';
-  document.getElementById('nav-customer-name').textContent = restaurant.name;
-  document.getElementById('nav-customer-id').textContent = 'ID: ' + userId;
-  document.getElementById('nav-customer-avatar').textContent = restaurant.name.charAt(0).toUpperCase();
-  
   // Reset to first subpage (dashboard)
   document.querySelectorAll('.customer-subpage').forEach(sp => sp.classList.remove('active'));
   document.getElementById('subpage-dashboard').classList.add('active');
