@@ -7,6 +7,7 @@
     { "source": "/priser", "destination": "/landing-pages/priser.html" },
     { "source": "/how-it-works", "destination": "/landing-pages/how-it-works.html" },
     { "source": "/business-scanner", "destination": "/demos/business-scanner-demo.html" },
+    { "source": "/search-engine", "destination": "/landing-pages/search-engine.html" },
     { "source": "/privacy", "destination": "/public/legal/privacy.html" },
     { "source": "/terms", "destination": "/public/legal/terms.html" },
     { "source": "/om-os", "destination": "/public/pages/company/om-os.html" },
