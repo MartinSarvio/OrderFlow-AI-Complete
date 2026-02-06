@@ -187,13 +187,10 @@
 .card {
   background: var(--color-card);
   border: none;
-  border-radius: var(--radius-lg);  /* 16px */
+  border-radius: var(--radius-lg);  /* 12px - Craftwork card-radius */
   padding: var(--card-padding-md);  /* 24px */
+  box-shadow: var(--shadow-sm);  /* Craftwork subtle shadow */
   transition: var(--transition-fast);
-}
-
-.card:hover {
-  background: var(--color-card-hover);
 }
 
 /* Card Sizes */

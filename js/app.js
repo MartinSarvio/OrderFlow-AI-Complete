@@ -17,7 +17,7 @@ function toggleTheme() {
   // Update meta theme-color for mobile browsers
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', newTheme === 'light' ? '#ffffff' : '#0a0a0a');
+    metaTheme.setAttribute('content', newTheme === 'light' ? '#F0F2F5' : '#13131F');
   }
 
   // Update logos based on theme
@@ -64,7 +64,7 @@ function initTheme() {
   // Update meta theme-color
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', theme === 'light' ? '#ffffff' : '#0a0a0a');
+    metaTheme.setAttribute('content', theme === 'light' ? '#F0F2F5' : '#13131F');
   }
 
   // Update logos and tooltip when DOM is ready
@@ -29298,11 +29298,9 @@ function switchCMSEditorTab(tab) {
     // Hide all tabs (with null checks)
     const contentTab = document.getElementById('cms-tab-content');
     const seoTab = document.getElementById('cms-tab-seo');
-    const settingsTab = document.getElementById('cms-tab-settings');
 
     if (contentTab) contentTab.style.display = 'none';
     if (seoTab) seoTab.style.display = 'none';
-    if (settingsTab) settingsTab.style.display = 'none';
 
     // Show selected tab
     const tabEl = document.getElementById('cms-tab-' + tab);
@@ -29332,23 +29330,6 @@ function switchCMSEditorTab(tab) {
       if (seoTitle) seoTitle.value = page.seo?.title || '';
       if (seoDesc) seoDesc.value = page.seo?.description || '';
       if (seoKeywords) seoKeywords.value = (page.seo?.keywords || []).join(', ');
-    } else if (tab === 'settings') {
-      // Ensure empty state is hidden
-      const emptyEl = document.getElementById('cms-editor-empty');
-      if (emptyEl) emptyEl.style.display = 'none';
-
-      const slugEl = document.getElementById('cms-page-slug');
-      const templateEl = document.getElementById('cms-page-template');
-      const activeEl = document.getElementById('cms-page-active');
-      const cookieEl = document.getElementById('cms-page-cookie-banner');
-
-      if (slugEl) slugEl.value = page.slug.replace('.html', '');
-      if (templateEl) templateEl.value = page.template || 'landing';
-      if (activeEl) activeEl.checked = page.isActive !== false;
-      if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
-
-      console.log('Settings tab loaded for:', page.slug);
-      console.log('Empty state hidden:', emptyEl?.style.display);
     }
   } catch (e) {
     console.error('Error in switchCMSEditorTab:', e);
@@ -31015,6 +30996,24 @@ function updateCurrentPageCookieBanner() {
   }
 }
 
+// Open CMS Page Settings Modal
+function openCMSSettingsModal() {
+  const page = getCurrentCMSPage();
+  if (!page) return;
+
+  const slugEl = document.getElementById('cms-page-slug');
+  const templateEl = document.getElementById('cms-page-template');
+  const activeEl = document.getElementById('cms-page-active');
+  const cookieEl = document.getElementById('cms-page-cookie-banner');
+
+  if (slugEl) slugEl.value = page.slug.replace('.html', '');
+  if (templateEl) templateEl.value = page.template || 'landing';
+  if (activeEl) activeEl.checked = page.isActive !== false;
+  if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
+
+  showModal('cms-settings');
+}
+
 // Navigate to Flow CMS page
 function showFlowCMSPage(tab) {
   showPage('flow-cms');
@@ -31287,7 +31286,77 @@ function loadSupabaseData() {
 }
 
 // Load integrations data
+function getAllConnectedIntegrations() {
+  const integrations = [];
+
+  // 1. CMS-integrationer fra localStorage (e-conomic osv.)
+  const flowIntegrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  flowIntegrations.forEach(fi => {
+    integrations.push({
+      name: fi.name || fi.system,
+      type: 'Regnskab',
+      status: 'OK',
+      statusColor: 'var(--success)',
+      sync: new Date(fi.connectedAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+      activity: Math.floor(Math.random() * 100) + 10,
+      errors: 0
+    });
+  });
+
+  // 2. Leveringsplatforme fra selectedIntegrations
+  const deliveryPlatforms = { wolt: 'Wolt', hungry: 'Hungry', foodora: 'Foodora', justeat: 'Just Eat' };
+  (selectedIntegrations || []).forEach(key => {
+    if (deliveryPlatforms[key]) {
+      integrations.push({
+        name: deliveryPlatforms[key],
+        type: 'Levering',
+        status: 'OK',
+        statusColor: 'var(--success)',
+        sync: new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
+        activity: Math.floor(Math.random() * 200) + 20,
+        errors: 0
+      });
+    }
+  });
+
+  // 3. Standard-integrationer (altid tilgængelige)
+  const defaults = [
+    { name: 'Stripe', type: 'Payment', status: 'OK', statusColor: 'var(--success)', sync: '12:01', activity: 234, errors: 0 },
+    { name: 'Instagram', type: 'Social', status: 'OK', statusColor: 'var(--success)', sync: '10:30', activity: 89, errors: 0 },
+    { name: 'Facebook', type: 'Social', status: 'OK', statusColor: 'var(--success)', sync: '09:15', activity: 67, errors: 0 },
+    { name: 'SMS Gateway', type: 'Komm.', status: 'OK', statusColor: 'var(--success)', sync: '11:20', activity: 145, errors: 0 },
+  ];
+
+  // Undgå duplikater (tjek om en integration allerede er tilføjet)
+  const existingNames = integrations.map(i => i.name.toLowerCase());
+  defaults.forEach(d => {
+    if (!existingNames.includes(d.name.toLowerCase())) {
+      integrations.push(d);
+    }
+  });
+
+  return integrations;
+}
+
 function loadIntegrationsData() {
+  // Forbindelser-tabel (dynamisk)
+  const connections = getAllConnectedIntegrations();
+  const connectionsEl = document.getElementById('data-integrations-connections');
+  if (connectionsEl) {
+    if (connections.length === 0) {
+      connectionsEl.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen aktive integrationer</td></tr>';
+    } else {
+      connectionsEl.innerHTML = connections.map(c =>
+        `<tr><td style="padding:10px 12px">${c.name}</td><td>${c.type}</td><td style="color:${c.statusColor}">${c.status}</td><td>${c.sync}</td><td>${c.activity}</td><td>${c.errors}</td></tr>`
+      ).join('');
+    }
+  }
+
+  // Opdater aktive-antal
+  const activeCountEl = document.getElementById('data-integrations-active-count');
+  if (activeCountEl) activeCountEl.textContent = connections.length;
+
+  // Webhook Logs
   const webhooks = [
     { time: '12:01', type: 'OUT', endpoint: '/webhook/stripe', status: '200', latency: '45ms', payload: '{...}' },
     { time: '11:58', type: 'IN', endpoint: '/api/orders', status: '201', latency: '120ms', payload: '{...}' },
@@ -31297,6 +31366,7 @@ function loadIntegrationsData() {
     `<tr><td style="padding:10px 12px">${w.time}</td><td>${w.type}</td><td>${w.endpoint}</td><td style="color:var(--success)">${w.status}</td><td>${w.latency}</td><td style="padding-right:12px"><button class="btn btn-secondary btn-sm">Vis</button></td></tr>`
   ).join('');
 
+  // API Logs
   const apiLogs = [
     { time: '12:02', method: 'POST', endpoint: '/api/orders', status: '201', ip: '192.168.1.45', latency: '89ms' },
     { time: '12:01', method: 'GET', endpoint: '/api/menu', status: '200', ip: '192.168.1.32', latency: '23ms' },

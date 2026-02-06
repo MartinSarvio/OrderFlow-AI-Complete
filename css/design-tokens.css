@@ -6,71 +6,71 @@
 :root {
   /* ==================== COLORS ==================== */
 
-  /* Base Colors - Slate Scale Dark Mode */
-  --color-bg: #0F172A;           /* slate-900 - Hovedbaggrund */
-  --color-bg-2: #020617;         /* slate-950 - Sidebar */
-  --color-bg-3: #1E293B;         /* slate-800 - Header */
-  --color-nav-bg: #020617;       /* slate-950 - Navigation */
-  --color-content-bg: #0F172A;   /* slate-900 - Indholdsområde */
-  --color-card: #1E293B;         /* slate-800 - Kort baggrund */
-  --color-card-hover: #334155;   /* slate-700 - Kort hover */
-  --color-card-elevated: #334155; /* slate-700 - Hævet kort */
+  /* Base Colors - Craftwork-inspired Dark Mode */
+  --color-bg: #13131F;           /* Navy dark - Hovedbaggrund */
+  --color-bg-2: #1B1B2F;         /* Craftwork sidebar navy */
+  --color-bg-3: #1E1E30;         /* Elevated surface */
+  --color-nav-bg: #1B1B2F;       /* Craftwork sidebar navy */
+  --color-content-bg: #13131F;   /* Navy dark - Indholdsområde */
+  --color-card: #1E1E30;         /* Navy card */
+  --color-card-hover: #2A2A40;   /* Card hover */
+  --color-card-elevated: #2A2A40; /* Elevated card */
 
   /* Borders */
-  --color-border: #334155;       /* slate-700 */
-  --color-border-light: #475569; /* slate-600 */
+  --color-border: rgba(255,255,255,0.08); /* Craftwork divider */
+  --color-border-light: rgba(255,255,255,0.12);
 
   /* Text Colors */
-  --color-text: #F1F5F9;         /* slate-100 - Primær tekst */
-  --color-text-secondary: #94A3B8; /* slate-400 - Sekundær */
-  --color-text-muted: #64748B;   /* slate-500 - Dæmpet tekst */
-  --color-text-disabled: rgba(241, 245, 249, 0.4);
+  --color-text: #F0F2F5;         /* Craftwork light text */
+  --color-text-secondary: rgba(255,255,255,0.5); /* Craftwork sidebar-text */
+  --color-text-muted: #9CA3AF;   /* Craftwork text-muted */
+  --color-text-disabled: rgba(240, 242, 245, 0.4);
 
-  /* Brand Colors - Blue (SAME as light mode) */
-  --color-primary: #2563EB;      /* blue-600 */
-  --color-primary-hover: #3B82F6; /* blue-500 - Lighter on hover */
-  --color-primary-active: #1D4ED8; /* blue-700 */
-  --color-primary-dim: rgba(37, 99, 235, 0.15);
-  --color-primary-glow: rgba(37, 99, 235, 0.35);
+  /* Brand Colors - Indigo (Craftwork) */
+  --color-primary: #6366F1;      /* Craftwork indigo */
+  --color-primary-hover: #818CF8; /* Lighter indigo on hover */
+  --color-primary-active: #4F46E5; /* Darker indigo */
+  --color-primary-dim: rgba(99, 102, 241, 0.15);
+  --color-primary-glow: rgba(99, 102, 241, 0.35);
 
-  /* Semantic Colors (adjusted for dark backgrounds) */
-  --color-danger: #EF4444;       /* red-500 */
+  /* Semantic Colors */
+  --color-danger: #EF4444;       /* Craftwork red */
   --color-danger-dim: rgba(239, 68, 68, 0.15);
   --color-danger-border: rgba(239, 68, 68, 0.30);
 
   --color-warning: #F59E0B;      /* amber-500 */
   --color-warning-dim: rgba(245, 158, 11, 0.15);
 
-  --color-success: #22C55E;      /* green-500 */
-  --color-success-dim: rgba(34, 197, 94, 0.15);
+  --color-success: #10B981;      /* Craftwork green */
+  --color-success-dim: rgba(16, 185, 129, 0.15);
 
   --color-info: #06B6D4;         /* cyan-500 */
   --color-info-dim: rgba(6, 182, 212, 0.15);
 
   /* Additional Colors */
   --color-purple: #8B5CF6;       /* violet-500 */
-  --color-accent: #2563EB;       /* blue-600 - Matcher primary */
+  --color-accent: #6366F1;       /* Craftwork indigo - Matcher primary */
   --color-cyan: #06B6D4;         /* cyan-500 */
   --color-orange: #F97316;       /* orange-500 */
 
-  /* Neutral Scale (Dark Mode - same values, inverted use) */
-  --n1: #F8FAFC;   /* slate-50 - Lightest */
-  --n2: #F1F5F9;   /* slate-100 */
-  --n3: #E2E8F0;   /* slate-200 */
-  --n4: #CBD5E1;   /* slate-300 */
-  --n5: #94A3B8;   /* slate-400 */
-  --n6: #64748B;   /* slate-500 */
-  --n7: #475569;   /* slate-600 */
-  --n8: #334155;   /* slate-700 */
-  --n9: #1E293B;   /* slate-800 - Dark */
-  --n10: #0F172A;  /* slate-900 - Darker */
-  --n11: #0B1220;  /* Extra dark */
-  --n12: #020617;  /* slate-950 - Darkest */
+  /* Neutral Scale (Craftwork-inspired dark) */
+  --n1: #F8FAFC;   /* Lightest */
+  --n2: #F0F2F5;   /* Craftwork bg */
+  --n3: #E2E8F0;   /* Light surface */
+  --n4: #CBD5E1;   /* Light border */
+  --n5: #9CA3AF;   /* Muted */
+  --n6: #6B7280;   /* Secondary */
+  --n7: #3A3A55;   /* Dark muted */
+  --n8: #2A2A40;   /* Dark border */
+  --n9: #1E1E30;   /* Dark surface */
+  --n10: #13131F;  /* Dark bg */
+  --n11: #0D0D19;  /* Deepest dark */
+  --n12: #080812;  /* Absolute dark */
 
   /* Surface colors for dark mode */
-  --surface: #1E293B;
-  --surface-2: #334155;
-  --surface-3: #475569;
+  --surface: #1E1E30;
+  --surface-2: #2A2A40;
+  --surface-3: #3A3A55;
 
   /* ==================== SPACING ==================== */
   /* 4px base scale - strict adherence */
@@ -133,30 +133,30 @@
   --border-width-medium: 2px;
   --border-width-thick: 4px;
 
-  /* Border Radius - Strict values only */
+  /* Border Radius - Craftwork aligned */
   --radius-none: 0;
-  --radius-sm: 4px;     /* Small - buttons, small cards */
-  --radius-md: 6px;    /* Medium - default cards */
-  --radius-lg: 8px;    /* Large - hero sections */
-  --radius-xl: 10px;    /* Extra large */
-  --radius-2xl: 12px;   /* 2X large */
+  --radius-sm: 4px;     /* Small - badges, small elements */
+  --radius-md: 8px;     /* Medium - buttons, inputs */
+  --radius-lg: 12px;    /* Large - cards (Craftwork card-radius) */
+  --radius-xl: 16px;    /* Extra large */
+  --radius-2xl: 20px;   /* 2X large */
   --radius-full: 9999px; /* Circular */
 
   /* ==================== SHADOWS ==================== */
 
   --shadow-none: none;
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.20);
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.55);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.20);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.30);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.40);
   --shadow-glow: 0 0 20px var(--color-primary-glow);
   --shadow-glow-lg: 0 0 40px var(--color-primary-glow);
-  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.30);
-  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.40);
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.25);
 
-  /* Focus Shadow */
-  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.45);
+  /* Focus Shadow - Indigo */
+  --shadow-focus: 0 0 0 3px rgba(99, 102, 241, 0.45);
 
   /* ==================== ICONS ==================== */
 
@@ -245,105 +245,105 @@
   --avatar-2xl: 96px;
 }
 
-/* ==================== LIGHT MODE - Professional Clean Design ==================== */
+/* ==================== LIGHT MODE - Craftwork Design ==================== */
 [data-theme="light"] {
   /* ========== NEUTRAL SCALE ========== */
-  --n1: #ececec;   /* App baggrund */
-  --n2: #F1F5F9;   /* Surface, cards */
-  --n3: #E2E8F0;   /* Surface 2, table header */
-  --n4: #CBD5E1;   /* Border */
-  --n5: #94A3B8;   /* Subtle tekst, icons */
-  --n6: #64748B;   /* Muted tekst */
-  --n7: #475569;   /* Strong muted, labels */
-  --n8: #334155;   /* Overskrifter på lys flade */
-  --n9: #1E293B;   /* Næsten sort */
-  --n10: #0F172A;  /* Primær tekst */
-  --n11: #0B1220;  /* Extra kontrast */
-  --n12: #020617;  /* Max kontrast */
+  --n1: #F0F2F5;   /* App baggrund (Craftwork --bg) */
+  --n2: #F9FAFB;   /* Surface, cards */
+  --n3: #F3F4F6;   /* Surface 2 */
+  --n4: #E5E7EB;   /* Border (Craftwork subtle) */
+  --n5: #D1D5DB;   /* Light elements */
+  --n6: #9CA3AF;   /* Muted (Craftwork --text-muted) */
+  --n7: #6B7280;   /* Secondary (Craftwork --text-secondary) */
+  --n8: #4B5563;   /* Strong labels */
+  --n9: #374151;   /* Dark text */
+  --n10: #1F2937;  /* Near-black */
+  --n11: #1A1A2E;  /* Craftwork --text-primary */
+  --n12: #111827;  /* Max kontrast */
 
   /* ========== BRAND COLORS ========== */
-  --primary-600: #2563EB;
-  --primary-700: #1D4ED8;
+  --primary-600: #6366F1;
+  --primary-700: #4F46E5;
   --secondary-700: #0F766E;
-  --accent-600: #7C3AED;
+  --accent-600: #6366F1;
 
   /* ========== STATE COLORS ========== */
-  --success-600: #16A34A;
+  --success-600: #10B981;
   --warning-600: #D97706;
-  --danger-600: #DC2626;
+  --danger-600: #EF4444;
   --info-600: #0891B2;
 
   /* ========== SEMANTIC TOKENS ========== */
-  /* Backgrounds */
-  --color-bg: #f3f3f3;
-  --color-bg-2: #8d8d8d;
-  --color-bg-3: #8d8d8d;
-  --color-nav-bg: #8d8d8d;
-  --color-content-bg: #f3f3f3;
+  /* Backgrounds - Craftwork */
+  --color-bg: #F0F2F5;
+  --color-bg-2: #1B1B2F;
+  --color-bg-3: #F0F2F5;
+  --color-nav-bg: #1B1B2F;
+  --color-content-bg: #F0F2F5;
   --color-card: #FFFFFF;
-  --color-card-hover: var(--n2);
+  --color-card-hover: #F9FAFB;
   --color-card-elevated: #FFFFFF;
 
   /* Surfaces */
-  --surface: #f3f3f3;
-  --surface-2: var(--n2);
-  --surface-3: var(--n3);
+  --surface: #F0F2F5;
+  --surface-2: #F9FAFB;
+  --surface-3: #F3F4F6;
 
   /* Borders */
-  --color-border: var(--n4);
-  --color-border-light: var(--n3);
+  --color-border: #E5E7EB;
+  --color-border-light: #F3F4F6;
 
-  /* Text Colors - All black */
-  --color-text: #000000;
-  --color-text-secondary: #000000;
-  --color-text-muted: #000000;
-  --color-text-subtle: #000000;
-  --color-text-disabled: rgba(0, 0, 0, 0.4);
+  /* Text Colors - Craftwork 4-level hierarchy */
+  --color-text: #1A1A2E;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-text-subtle: #D1D5DB;
+  --color-text-disabled: rgba(26, 26, 46, 0.4);
   --color-text-inverse: #FFFFFF;
 
   /* Links */
-  --link: var(--primary-700);
-  --link-hover: var(--primary-600);
+  --link: #6366F1;
+  --link-hover: #4F46E5;
 
-  /* Brand Colors - Primary Blue */
-  --color-primary: var(--primary-600);
-  --color-primary-hover: var(--primary-700);
-  --color-primary-active: #1e40af;
-  --color-primary-dim: rgba(37, 99, 235, 0.1);
-  --color-primary-glow: rgba(37, 99, 235, 0.2);
+  /* Brand Colors - Indigo (Craftwork) */
+  --color-primary: #6366F1;
+  --color-primary-hover: #4F46E5;
+  --color-primary-active: #4338CA;
+  --color-primary-dim: rgba(99, 102, 241, 0.1);
+  --color-primary-glow: rgba(99, 102, 241, 0.2);
   --primary-contrast: #FFFFFF;
 
   /* Secondary */
-  --color-secondary: var(--secondary-700);
+  --color-secondary: #0F766E;
   --secondary-hover: #0B5F59;
   --secondary-contrast: #FFFFFF;
 
   /* Accent */
-  --color-accent: var(--accent-600);
+  --color-accent: #6366F1;
   --accent-contrast: #FFFFFF;
 
   /* Semantic Colors */
-  --color-danger: var(--danger-600);
-  --color-danger-dim: rgba(220, 38, 38, 0.1);
-  --color-danger-border: rgba(220, 38, 38, 0.25);
+  --color-danger: #EF4444;
+  --color-danger-dim: rgba(239, 68, 68, 0.1);
+  --color-danger-border: rgba(239, 68, 68, 0.25);
 
-  --color-warning: var(--warning-600);
+  --color-warning: #D97706;
   --color-warning-dim: rgba(217, 119, 6, 0.1);
   --color-warning-border: rgba(217, 119, 6, 0.28);
 
-  --color-success: var(--success-600);
-  --color-success-dim: rgba(22, 163, 74, 0.1);
-  --color-success-border: rgba(22, 163, 74, 0.25);
+  --color-success: #10B981;
+  --color-success-dim: rgba(16, 185, 129, 0.1);
+  --color-success-border: rgba(16, 185, 129, 0.25);
 
-  --color-info: var(--info-600);
+  --color-info: #0891B2;
   --color-info-dim: rgba(8, 145, 178, 0.1);
   --color-info-border: rgba(8, 145, 178, 0.28);
 
-  /* Focus & Selection */
-  --focus-ring: rgba(37, 99, 235, 0.35);
-  --selection: rgba(37, 99, 235, 0.22);
+  /* Focus & Selection - Indigo */
+  --focus-ring: rgba(99, 102, 241, 0.35);
+  --selection: rgba(99, 102, 241, 0.22);
 
-  /* Shadows - Light mode specific */
-  --shadow-1: 0 1px 2px rgba(2, 6, 23, 0.06);
-  --shadow-2: 0 8px 24px rgba(2, 6, 23, 0.10);
+  /* Shadows - Craftwork subtle */
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.10);
 }
