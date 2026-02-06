@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-06
-**Version:** 3.14.0
-**Total antal sider:** 72+
+**Version:** 3.18.1
+**Total antal sider:** 74+
 
 ---
 
@@ -92,7 +92,9 @@
 | Side ID | Beskrivelse |
 |---------|-------------|
 | `page-flow-cms` | FLOW CMS |
+| `flow-cms-content-theme` | Farver og Fonts (tema editor) |
 | `page-landing-cms` | Landing Page CMS |
+| `flow-cms-content-theme` | Flow CMS – Farver og Fonts editor |
 
 ### Indstillinger
 | Side ID | Beskrivelse |
@@ -141,6 +143,10 @@
 ---
 
 ## Changelog
+
+### v3.18.0 (2026-02-06)
+- Tilføjet Flow CMS “Farver og Fonts” side til tema- og typography overrides
+- Opdateret flyout navigation med nyt tema-link
 
 ### v3.14.0 (2026-02-06)
 - Tilføjet API Integration sektion til Instagram/Facebook workflow sider

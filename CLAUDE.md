@@ -138,6 +138,53 @@ done
 - Dette forbinder hele systemet uden at miste data eller struktur
 - Flow: FLOW CMS → Landing Page → Login → Hovedapplikation
 
+## System Integrationer (VIGTIGT)
+
+Integrationer med eksterne regnskabssystemer håndteres via **FLOW CMS → Analytics → Integrationer** siden.
+
+### Integrations-sidens Formål
+1. **FLOW ID** - Unikt ID som eksterne systemer bruger til at identificere OrderFlow kontoen
+2. **API Nøgle Generator** - Opret nøgler med specifikke tilladelser til eksterne systemer
+3. **Eksterne Integrationer** - Indtast API nøgler fra regnskabssystemer (e-conomic, Dinero, etc.)
+4. **Tilsluttede Integrationer** - Oversigt over aktive forbindelser
+
+### Ved Tilføjelse af Ny Integration
+Når en ny ekstern integration tilføjes (f.eks. nyt regnskabssystem):
+
+1. **Tilføj system til dropdown** i `index.html` (flow-cms-content-integrationer):
+   ```html
+   <option value="systemnavn">Systemnavn</option>
+   ```
+
+2. **Opret fields container** i samme sektion:
+   ```html
+   <div id="integration-fields-systemnavn" style="display:none">
+     <!-- Systemspecifikke input felter -->
+   </div>
+   ```
+
+3. **Opdater showIntegrationFields()** i `js/app.js` til at vise/skjule felter
+
+4. **Opdater addIntegration()** i `js/app.js` til at håndtere det nye system
+
+5. **Opret connector** i `js/integrations/connectors/systemnavn/`:
+   - `index.js` - Connector klasse der extender BaseConnector
+   - `mappers.js` - Data transformation mellem kanonisk og system format
+
+### Tilgængelige Integrationer
+| System | Status | Placering |
+|--------|--------|-----------|
+| e-conomic | ✅ Aktiv | `js/integrations/connectors/economic/` |
+| Dinero | 🔜 Q1 2026 | Planlagt |
+| Billy | 🔜 Q2 2026 | Planlagt |
+| Visma.net | 🔜 Q3 2026 | Planlagt |
+
+### Integrations Arkitektur
+- **Base Connector:** `js/integrations/core/connector.js`
+- **Kanonisk Model:** `js/integrations/core/canonical-model.js`
+- **Sync Engine:** `js/integrations/core/sync-engine.js`
+- **Dokumentation:** `docs/INTEGRATION_ARCHITECTURE_ACCOUNTING.md`
+
 ## Automatisk CMS Integration (VIGTIGT)
 
 Når du opretter nye elementer, tekst, animationer eller sider, SKAL du automatisk opsætte redigeringsmuligheder i FLOW CMS:

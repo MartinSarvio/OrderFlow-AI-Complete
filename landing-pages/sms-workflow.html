@@ -10,22 +10,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            secondary: '#015bf8',
-            background: '#ffffff',
-            border: '#e5e5e5',
-            accent: '#f9fafb',
-            'muted-foreground': '#6c6f75'
-          }
-        }
-      }
-    }
-  </script>
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
@@ -50,17 +34,8 @@
     }
 
     /* ==================== RESET & BASE ==================== */
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      font-size: 62.5%;
-      scroll-behavior: smooth;
-    }
-
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 1.6rem;
@@ -73,110 +48,16 @@
       overflow-x: hidden;
     }
 
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-    }
-
-    *:hover {
-      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-    }
-
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: transparent;
-      border-radius: 10px;
-      transition: background 0.3s ease;
-    }
-
-    *:hover::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    *:hover::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
-    .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
-    .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
-    .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
-    .h15 { font-size: 1.5rem; font-weight: 500; line-height: 1.5; }
-    .h14 { font-size: 1.4rem; font-weight: 400; line-height: 1.5; }
-    .h13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; }
-    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
-    .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
-    .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
-
-    /* ==================== UTILITY CLASSES ==================== */
-    .text-color-content-secondary { color: var(--color-gray-600); }
-    .text-color-content-tertiary { color: var(--color-gray-500); }
-    .text-color-white { color: var(--color-white); }
-    .text-align-center { text-align: center; }
-    .max-width-460 { max-width: 46rem; }
-    .max-width-560 { max-width: 56rem; }
-    .max-width-580 { max-width: 58rem; }
-    .margin-bottom { margin-bottom: 0; }
-    .margin-bottom.margin-8 { margin-bottom: 0.8rem; }
-    .margin-bottom.margin-12 { margin-bottom: 1.2rem; }
-    .margin-bottom.margin-16 { margin-bottom: 1.6rem; }
-    .margin-bottom.margin-32 { margin-bottom: 3.2rem; }
-
-    /* ==================== LAYOUT ==================== */
-    .page-wrapper {
-      overflow: hidden;
-    }
-
-    .padding-global {
-      padding-left: 4rem;
-      padding-right: 4rem;
-    }
-
-    .container-large {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-
-    .container-huge {
-      max-width: var(--container-huge);
-      margin: 0 auto;
-    }
-
-    section {
-      position: relative;
-      z-index: 1;
-    }
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+    *:hover::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
     /* ==================== BUTTONS ==================== */
     .button {
@@ -194,48 +75,11 @@
       cursor: pointer;
       border: none;
     }
-
-    .button:hover {
-      background: var(--color-primary-hover);
-    }
-
-    .button.is-secondary {
-      background: transparent;
-      color: var(--color-dark);
-      border: 1px solid var(--color-gray-300);
-    }
-
-    .button.is-secondary:hover {
-      background: var(--color-gray-100);
-    }
-
-    .button.is-black {
-      background: var(--color-dark);
-    }
-
-    .button.is-black:hover {
-      background: var(--color-gray-800);
-    }
-
-    .button.button-white {
-      background: var(--color-white);
-      color: var(--color-dark);
-      border: none;
-    }
-
-    .button.button-white:hover {
-      background: var(--color-gray-100);
-    }
-
-    .button.button-outline {
-      background: transparent;
-      color: var(--color-white);
-      border: 2px solid var(--color-white);
-    }
-
-    .button.button-outline:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    .button:hover { background: var(--color-primary-hover); }
+    .button.is-black { background: var(--color-dark); }
+    .button.is-black:hover { background: var(--color-gray-800); }
+    .button.is-secondary { background: transparent; color: var(--color-dark); border: 1px solid var(--color-gray-300); }
+    .button.is-secondary:hover { background: var(--color-gray-100); }
 
     /* ==================== NAVIGATION ==================== */
     .nav-wrapper {
@@ -253,86 +97,19 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
-
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 2.56rem;
-      width: auto;
-    }
-
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1rem 1.8rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
 
     /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
@@ -342,7 +119,6 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
@@ -362,270 +138,309 @@
     .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
     .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
     .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .nav-dropdown:first-of-type .dropdown-left {
-      flex: 1;
-      max-width: 100%;
+    /* ==================== PAGE SPECIFIC STYLES ==================== */
+    .page-wrapper { overflow: hidden; }
+
+    /* Product Showcase Section */
+    .product-showcase {
+      padding: 12rem 4rem 8rem;
+      background: var(--color-white);
     }
-
-    .nav-dropdown:first-of-type .dropdown-links {
+    .product-container {
+      max-width: 140rem;
+      margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
-      column-gap: 2rem;
-    }
-
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 80vh;
-      display: flex;
+      gap: 8rem;
       align-items: center;
-      padding-top: 8rem;
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      overflow: hidden;
     }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      padding: 8rem 4rem;
-      margin: 0 auto;
-      text-align: center;
+    .product-content {
+      max-width: 54rem;
     }
-
-    .hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      line-height: 1.1;
+    .product-label {
+      display: inline-block;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-primary);
+      background: rgba(1, 91, 248, 0.1);
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.4rem;
       margin-bottom: 2rem;
-      letter-spacing: -0.02em;
     }
-
-    .hero-content p {
-      font-size: 2rem;
-      color: var(--color-gray-700);
-      margin: 0 auto 3rem auto;
-      max-width: 60rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .hero-buttons .button {
-      background: var(--color-dark);
-      color: var(--color-white);
-    }
-
-    .hero-buttons .button:hover {
-      background: var(--color-gray-800);
-    }
-
-    .hero-buttons .button-outline {
-      background: transparent;
-      color: var(--color-dark);
-      border: 2px solid var(--color-dark);
-    }
-
-    .hero-buttons .button-outline:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    /* ==================== FEATURES SECTION ==================== */
-    .features-section {
-      background: var(--color-white);
-      padding: 10rem 0;
-    }
-
-    .features-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-
-    .features-header h2 {
+    .product-title {
       font-size: 4.8rem;
       font-weight: 600;
+      line-height: 1.1;
       color: var(--color-dark);
-      margin-bottom: 1.6rem;
-    }
-
-    .features-header p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 4rem;
-    }
-
-    .feature-card {
-      background: var(--color-gray-50);
-      border-radius: 1.6rem;
-      padding: 3rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-    }
-
-    .feature-icon {
-      width: 4.8rem;
-      height: 4.8rem;
-      background: var(--color-primary);
-      border-radius: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       margin-bottom: 2rem;
     }
-
-    .feature-icon svg {
-      width: 2.4rem;
-      height: 2.4rem;
-      color: var(--color-white);
-    }
-
-    .feature-card h3 {
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1rem;
-    }
-
-    .feature-card p {
-      font-size: 1.5rem;
+    .product-desc {
+      font-size: 1.8rem;
       color: var(--color-gray-600);
       line-height: 1.6;
+      margin-bottom: 3.2rem;
     }
-
-    /* ==================== BENEFITS SECTION ==================== */
-    .benefits-section {
-      background: var(--color-gray-100);
-      padding: 10rem 0;
+    .product-buttons {
+      display: flex;
+      gap: 1.6rem;
+      margin-bottom: 4rem;
     }
-
-    .benefits-container {
-      max-width: 1200px;
+    .product-visual {
+      position: relative;
+    }
+    .phone-mockup {
+      width: 32rem;
       margin: 0 auto;
-      padding: 0 4rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
+      background: var(--color-dark);
+      border-radius: 4rem;
+      padding: 1.2rem;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.2);
     }
-
-    .benefits-content h2 {
-      font-size: 4.4rem;
+    .phone-screen {
+      background: var(--color-white);
+      border-radius: 3.2rem;
+      overflow: hidden;
+      min-height: 56rem;
+    }
+    .phone-header {
+      background: var(--color-gray-100);
+      padding: 1.6rem;
+      text-align: center;
+      font-size: 1.4rem;
       font-weight: 600;
       color: var(--color-dark);
-      margin-bottom: 2rem;
-      line-height: 1.15;
+      border-bottom: 1px solid var(--color-gray-200);
     }
-
-    .benefits-content p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      margin-bottom: 3rem;
-    }
-
-    .benefits-list {
+    .sms-thread {
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       gap: 1.6rem;
     }
-
-    .benefit-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.2rem;
+    .sms-bubble {
+      max-width: 85%;
+      padding: 1.2rem 1.6rem;
+      border-radius: 1.6rem;
+      font-size: 1.4rem;
+      line-height: 1.5;
+    }
+    .sms-bubble.incoming {
+      background: var(--color-gray-100);
+      color: var(--color-dark);
+      align-self: flex-start;
+      border-bottom-left-radius: 0.4rem;
+    }
+    .sms-bubble.outgoing {
+      background: #34c759;
+      color: var(--color-white);
+      align-self: flex-end;
+      border-bottom-right-radius: 0.4rem;
+    }
+    .sms-time {
+      font-size: 1.1rem;
+      color: var(--color-gray-500);
+      text-align: center;
+      margin: 0.8rem 0;
     }
 
-    .benefit-icon {
-      width: 2.4rem;
-      height: 2.4rem;
-      background: var(--color-primary);
-      border-radius: 50%;
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+      background: var(--color-gray-50);
+      border-radius: 1.2rem;
+    }
+    .stat-value {
+      font-size: 3.6rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      margin-bottom: 0.4rem;
+    }
+    .stat-label {
+      font-size: 1.3rem;
+      color: var(--color-gray-600);
+    }
+
+    /* Use Cases Section */
+    .use-cases {
+      padding: 8rem 4rem;
+      background: var(--color-gray-50);
+    }
+    .use-cases-container {
+      max-width: 120rem;
+      margin: 0 auto;
+    }
+    .use-cases-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+    .use-cases-title {
+      font-size: 4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+    .use-cases-desc {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+    .use-cases-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.4rem;
+    }
+    .use-case-card {
+      background: var(--color-white);
+      border-radius: 1.6rem;
+      padding: 3.2rem;
+      display: flex;
+      gap: 2.4rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .use-case-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    }
+    .use-case-icon {
+      width: 5.6rem;
+      height: 5.6rem;
+      background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+      border-radius: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
-
-    .benefit-icon svg {
-      width: 1.4rem;
-      height: 1.4rem;
+    .use-case-icon svg {
+      width: 2.8rem;
+      height: 2.8rem;
       color: var(--color-white);
     }
-
-    .benefit-text {
-      font-size: 1.6rem;
+    .use-case-content h3 {
+      font-size: 2rem;
+      font-weight: 600;
       color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+    .use-case-content p {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+      margin-bottom: 1.2rem;
+    }
+    .use-case-stat {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #34c759;
     }
 
-    .benefits-image {
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    /* How It Works Section */
+    .how-it-works {
+      padding: 8rem 4rem;
+      background: var(--color-white);
     }
-
-    .benefits-image img {
-      width: 100%;
-      height: auto;
+    .how-it-works-container {
+      max-width: 100rem;
+      margin: 0 auto;
     }
-
-    /* ==================== CTA SECTION ==================== */
-    .cta-section {
-      background: var(--color-dark);
-      padding: 10rem 0;
-    }
-
-    .cta-content {
+    .how-it-works-header {
       text-align: center;
+      margin-bottom: 6rem;
+    }
+    .how-it-works-title {
+      font-size: 4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+    }
+    .step-item {
+      display: flex;
+      gap: 3.2rem;
+      align-items: flex-start;
+    }
+    .step-number {
+      width: 6rem;
+      height: 6rem;
+      background: var(--color-dark);
+      color: var(--color-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-content h3 {
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+    .step-content p {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+    }
+
+    /* CTA Section */
+    .cta-section {
+      padding: 8rem 4rem;
+      background: var(--color-dark);
+    }
+    .cta-content {
       max-width: 80rem;
       margin: 0 auto;
-      padding: 0 4rem;
+      text-align: center;
     }
-
-    .cta-content h2 {
-      font-size: 4.8rem;
+    .cta-title {
+      font-size: 4rem;
       font-weight: 600;
       color: var(--color-white);
-      margin-bottom: 2rem;
+      margin-bottom: 1.6rem;
     }
-
-    .cta-content p {
+    .cta-desc {
       font-size: 1.8rem;
       color: rgba(255,255,255,0.7);
-      margin-bottom: 3rem;
+      margin-bottom: 3.2rem;
     }
-
-    /* ==================== PRE-FOOTER ==================== */
-    .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-    .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-    .pre-footer-brand { flex-shrink: 0; }
-    .pre-footer-logo { height: 4rem; width: auto; }
-    .pre-footer-cards { display: flex; gap: 2rem; }
-    .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-    .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-    .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-    .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
+    .cta-buttons {
+      display: flex;
+      gap: 1.6rem;
+      justify-content: center;
+    }
+    .cta-buttons .button {
+      background: var(--color-white);
+      color: var(--color-dark);
+    }
+    .cta-buttons .button:hover {
+      background: var(--color-gray-100);
+    }
+    .cta-buttons .button.is-outline {
+      background: transparent;
+      color: var(--color-white);
+      border: 2px solid var(--color-white);
+    }
+    .cta-buttons .button.is-outline:hover {
+      background: rgba(255,255,255,0.1);
+    }
 
     /* ==================== FOOTER ==================== */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
@@ -641,352 +456,29 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    /* ==================== AI HERO SECTION ==================== */
-    .ai-hero-section {
-      padding: 12rem 4rem 8rem;
-      background: var(--color-gray-50);
-      min-height: 80vh;
-      display: flex;
-      align-items: center;
-    }
-
-    .ai-hero-container {
-      max-width: 140rem;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
-      width: 100%;
-    }
-
-    .ai-hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 600;
-      line-height: 1.1;
-      color: var(--color-dark);
-      margin-bottom: 2.4rem;
-    }
-
-    .ai-hero-content p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      line-height: 1.6;
-      margin-bottom: 3.2rem;
-      max-width: 48rem;
-    }
-
-    .ai-hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-    }
-
-    /* Chat Component */
-    .ai-chat-component {
-      background: var(--color-white);
-      border-radius: 2rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
-
-    .ai-chat-header {
-      padding: 2rem;
-      background: var(--color-dark);
-      color: var(--color-white);
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .ai-chat-avatar {
-      width: 4rem;
-      height: 4rem;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .ai-chat-avatar svg {
-      width: 2rem;
-      height: 2rem;
-      color: var(--color-white);
-    }
-
-    .ai-chat-info {
-      flex: 1;
-    }
-
-    .ai-chat-name {
-      font-size: 1.6rem;
-      font-weight: 600;
-    }
-
-    .ai-chat-status {
-      font-size: 1.2rem;
-      opacity: 0.7;
-    }
-
-    .ai-chat-messages {
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.6rem;
-      min-height: 32rem;
-    }
-
-    .ai-message {
-      padding: 1.6rem;
-      border-radius: 1.2rem;
-      max-width: 85%;
-      font-size: 1.4rem;
-      line-height: 1.5;
-    }
-
-    .ai-message.bot {
-      background: var(--color-gray-100);
-      align-self: flex-start;
-      border-bottom-left-radius: 0.4rem;
-    }
-
-    .ai-message.user {
-      background: var(--color-primary);
-      color: var(--color-white);
-      align-self: flex-end;
-      border-bottom-right-radius: 0.4rem;
-    }
-
-    .ai-chat-input {
-      padding: 2rem;
-      border-top: 1px solid var(--color-gray-200);
-      display: flex;
-      gap: 1.2rem;
-    }
-
-    .ai-chat-input input {
-      flex: 1;
-      padding: 1.2rem 1.6rem;
-      border: 1px solid var(--color-gray-300);
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-family: inherit;
-    }
-
-    .ai-chat-input button {
-      padding: 1.2rem 2rem;
-      background: var(--color-dark);
-      color: var(--color-white);
-      border: none;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-
-    .ai-chat-input button:hover {
-      background: var(--color-gray-800);
-    }
-
-    /* ==================== BENTO SOLUTION SECTION ==================== */
-    .bento-solution {
-      background: var(--color-gray-100);
-      padding: 8rem 0;
-    }
-
-    .bento-container {
-      max-width: 140rem;
-      margin: 0 auto;
-      padding: 0 4rem;
-    }
-
-    .bento-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-
-    .bento-label {
-      font-size: 1.2rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-primary);
-      font-family: monospace;
-    }
-
-    .bento-title {
-      font-size: 4.8rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-top: 1.6rem;
-      line-height: 1.1;
-    }
-
-    .bento-desc {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      margin-top: 2.4rem;
-      max-width: 60rem;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.6;
-    }
-
-    .bento-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: auto auto;
-      gap: 2.4rem;
-      max-width: 120rem;
-      margin: 0 auto;
-    }
-
-    .bento-card {
-      position: relative;
-      background: var(--color-gray-50);
-      border-radius: 2rem;
-      padding: 2.4rem;
-      overflow: hidden;
-      transition: all 0.5s ease;
-    }
-
-    .bento-card:hover { transform: translateY(-4px); }
-    .bento-card.hover-red:hover { background: rgba(239, 68, 68, 0.1); }
-    .bento-card.hover-blue:hover { background: rgba(59, 130, 246, 0.1); }
-    .bento-card.hover-orange:hover { background: rgba(249, 115, 22, 0.1); }
-    .bento-card.hover-green:hover { background: rgba(34, 197, 94, 0.1); }
-
-    .bento-card.span-row { grid-row: span 2; }
-    .bento-card.span-col { grid-column: span 2; }
-
-    .bento-card-content h3 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      color: var(--color-primary);
-      margin-bottom: 0.8rem;
-    }
-
-    .bento-card-content p {
-      font-size: 1.5rem;
-      color: var(--color-dark);
-      line-height: 1.6;
-    }
-
-    .bento-card-image {
-      margin-top: 2rem;
-      position: relative;
-      transition: transform 0.3s ease;
-    }
-
-    .bento-card:hover .bento-card-image {
-      transform: translateY(-10px);
-    }
-
-    .bento-card.span-row .bento-card-image {
-      margin-left: 2rem;
-    }
-
-    .bento-card.span-row:hover .bento-card-image {
-      transform: translateX(-10px);
-    }
-
-    .bento-card-fade {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 12rem;
-      background: linear-gradient(to top, var(--color-gray-50), transparent);
-      pointer-events: none;
-    }
-
-    .browser-frame {
-      width: 100%;
-      max-height: 25rem;
-      border-radius: 1.2rem;
-      box-shadow: 0 0 28px rgba(0, 0, 0, 0.1);
-    }
-
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
-      .ai-hero-container {
-        grid-template-columns: 1fr;
-        gap: 4rem;
-      }
-      .bento-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .bento-card.span-row { grid-row: span 1; }
-      .bento-card.span-col { grid-column: span 2; }
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .benefits-container {
-        grid-template-columns: 1fr;
-        gap: 4rem;
-      }
+      .product-container { grid-template-columns: 1fr; gap: 4rem; }
+      .product-content { max-width: 100%; }
+      .phone-mockup { width: 28rem; }
+      .use-cases-grid { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 768px) {
-      html {
-        font-size: 56.25%;
-      }
-      .nav-links {
-        display: none;
-      }
-      .ai-hero-content h1 {
-        font-size: 4rem;
-      }
-      .ai-hero-section {
-        padding: 10rem 2rem 6rem;
-      }
-      .bento-solution {
-        padding: 6rem 0;
-      }
-      .bento-grid {
-        grid-template-columns: 1fr;
-      }
-      .bento-title {
-        font-size: 3.6rem;
-      }
-      .bento-card.span-col { grid-column: span 1; }
-      .hero-content h1 {
-        font-size: 4rem;
-      }
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-      .footer-content {
-        grid-template-columns: 1fr 1fr;
-      }
+      html { font-size: 56.25%; }
+      .nav-links { display: none; }
+      .product-showcase { padding: 10rem 2rem 6rem; }
+      .product-title { font-size: 3.6rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .step-item { flex-direction: column; gap: 1.6rem; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
     }
-
     @media (max-width: 480px) {
-      .padding-global {
-        padding-left: 2rem;
-        padding-right: 2rem;
-      }
-      .ai-hero-buttons {
-        flex-direction: column;
-      }
-      .hero-buttons {
-        flex-direction: column;
-      }
-      .footer-content {
-        grid-template-columns: 1fr;
-      }
-      .pre-footer-content {
-        flex-direction: column;
-      }
-      .pre-footer-cards {
-        flex-direction: column;
-        width: 100%;
-      }
+      .product-buttons { flex-direction: column; }
+      .cta-buttons { flex-direction: column; }
+      .footer-content { grid-template-columns: 1fr; }
     }
   </style>
-<link rel="stylesheet" href="/css/cookie-popup.css">
+  <link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -1037,55 +529,52 @@
       </div>
     </nav>
 
-    <!-- AI Hero Section -->
-    <section class="ai-hero-section">
-      <div class="ai-hero-container">
-        <div class="ai-hero-content">
-          <h1>Automatiser din kommunikation med AI</h1>
-          <p>Lad AI håndtere dine kundehenvendelser, marketing-beskeder og reservationsbekræftelser. Alt sammen automatisk og personligt tilpasset.</p>
-          <div class="ai-hero-buttons">
-            <a href="#demo" class="button is-black">Kom i gang</a>
-            <a href="#solutions" class="button is-secondary">Se løsninger</a>
+    <!-- Product Showcase Section -->
+    <section class="product-showcase">
+      <div class="product-container">
+        <div class="product-content">
+          <span class="product-label">SMS Workflow</span>
+          <h1 class="product-title">SMS med 98% åbningsrate. Automatisk.</h1>
+          <p class="product-desc">Dine kunder læser SMS'er inden for 3 minutter. Vi sender de rigtige beskeder på de rigtige tidspunkter - automatisk.</p>
+          <div class="product-buttons">
+            <a href="#demo" class="button is-black">Start gratis prøveperiode</a>
+            <a href="#use-cases" class="button is-secondary">Se eksempler</a>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">98%</div>
+              <div class="stat-label">Åbningsrate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">45%</div>
+              <div class="stat-label">Klik-rate</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">3 min</div>
+              <div class="stat-label">Gns. læsetid</div>
+            </div>
           </div>
         </div>
-        <div class="w-full h-full p-4 flex flex-col items-center justify-center gap-5 relative bg-white rounded-2xl shadow-xl min-h-[400px]">
-          <div class="pointer-events-none absolute bottom-0 left-0 h-20 w-full bg-gradient-to-t from-white to-transparent z-20"></div>
-          <div class="max-w-md mx-auto w-full flex flex-col gap-2" style="transform: translateY(-75px);">
-            <div class="flex items-end justify-end gap-3">
-              <div class="max-w-[280px] bg-secondary text-white p-4 rounded-2xl ml-auto shadow-[0_0_10px_rgba(0,0,0,0.05)] chat-message" data-cms-field="userMessage" style="opacity: 0; transform: translateY(20px);">
-                <p class="text-sm">Hej, jeg vil gerne bestille 2x Margherita og 1x Pepperoni til levering kl. 18:30</p>
-              </div>
-              <div class="flex items-center bg-background rounded-full w-fit border border-border flex-shrink-0">
-                <img src="https://randomuser.me/api/portraits/women/79.jpg" alt="User Avatar" class="size-8 rounded-full flex-shrink-0" data-cms-field="userAvatar">
-              </div>
-            </div>
-            <div class="flex items-start gap-2">
-              <div class="flex items-center bg-background rounded-full size-10 flex-shrink-0 justify-center shadow-[0_0_10px_rgba(0,0,0,0.05)] border border-border">
-                <svg width="42" height="24" viewBox="0 0 42 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="size-4" style="fill: #015bf8;">
-                  <g clip-path="url(#clip0_322_9172)">
-                    <path d="M22.3546 0.96832C22.9097 0.390834 23.6636 0.0664062 24.4487 0.0664062C27.9806 0.0664062 31.3091 0.066408 34.587 0.0664146C41.1797 0.0664284 44.481 8.35854 39.8193 13.2082L29.6649 23.7718C29.1987 24.2568 28.4016 23.9133 28.4016 23.2274V13.9234L29.5751 12.7025C30.5075 11.7326 29.8472 10.0742 28.5286 10.0742H13.6016L22.3546 0.96832Z" fill="currentColor"></path>
-                    <path d="M19.6469 23.0305C19.0919 23.608 18.338 23.9324 17.5529 23.9324C14.021 23.9324 10.6925 23.9324 7.41462 23.9324C0.821896 23.9324 -2.47942 15.6403 2.18232 10.7906L12.3367 0.227022C12.8029 -0.257945 13.6 0.0855283 13.6 0.771372L13.6 10.0754L12.4265 11.2963C11.4941 12.2662 12.1544 13.9246 13.473 13.9246L28.4001 13.9246L19.6469 23.0305Z" fill="currentColor"></path>
-                  </g>
-                  <defs>
-                    <clipPath id="clip0_322_9172">
-                      <rect width="42" height="24" fill="white"></rect>
-                    </clipPath>
-                  </defs>
-                </svg>
-              </div>
-              <div class="relative">
-                <div class="absolute left-0 top-0 md:min-w-[300px] min-w-[220px] p-4 bg-accent border border-border rounded-xl shadow-[0_0_10px_rgba(0,0,0,0.05)] chat-response" style="opacity: 0; transform: translateY(20px);">
-                  <div>
-                    <div class="overflow-hidden transition-[max-height] duration-300 ease-out" style="max-height: 0px;">
-                      <div>
-                        <div class="text-muted-foreground prose prose-sm dark:prose-invert text-sm transition-opacity duration-300 ease-out" data-cms-field="botMessage" style="opacity: 0;">
-                          <div>
-                            <p>Tak for din bestilling! Jeg har modtaget: 2x Margherita (178 kr) og 1x Pepperoni (99 kr). Total: 277 kr. Levering kl. 18:30 til din adresse. Du modtager SMS når maden er på vej!</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        <div class="product-visual">
+          <div class="phone-mockup">
+            <div class="phone-screen">
+              <div class="phone-header">Beskeder</div>
+              <div class="sms-thread">
+                <div class="sms-time">I dag 12:34</div>
+                <div class="sms-bubble outgoing">
+                  Hej Martin! Vi savner dig hos Napoli Pizza. Her er 15% rabat på din næste ordre: VELKOMMEN15. Bestil her: napoli.flow.dk
+                </div>
+                <div class="sms-time">I dag 18:22</div>
+                <div class="sms-bubble incoming">
+                  Tak! Bestiller lige nu
+                </div>
+                <div class="sms-time">I dag 18:45</div>
+                <div class="sms-bubble outgoing">
+                  Din ordre #4521 er bekræftet! Forventet levering kl. 19:15. Tak fordi du valgte Napoli Pizza!
+                </div>
+                <div class="sms-time">I dag 19:10</div>
+                <div class="sms-bubble outgoing">
+                  Din mad er på vej! Chauffør Anders leverer om ca. 5 min.
                 </div>
               </div>
             </div>
@@ -1094,181 +583,161 @@
       </div>
     </section>
 
-    <!-- Bento Solution Section -->
-    <section class="bento-solution" id="solutions">
-      <div class="bento-container">
-        <div class="bento-header">
-          <span class="bento-label">Solution</span>
-          <h2 class="bento-title">Styrk din virksomhed med AI Workflows</h2>
-          <p class="bento-desc">Generiske AI-værktøjer er ikke nok. Vores platform er bygget specifikt til at levere exceptionelle AI-drevne løsninger til dine unikke forretningsbehov.</p>
+    <!-- Use Cases Section -->
+    <section class="use-cases" id="use-cases">
+      <div class="use-cases-container">
+        <div class="use-cases-header">
+          <h2 class="use-cases-title">Automatiske SMS-kampagner</h2>
+          <p class="use-cases-desc">Fire workflows der kører 24/7 og genererer salg uden din indsats.</p>
         </div>
-        <div class="bento-grid">
-          <!-- Card 1: SMS -->
-          <a href="sms-workflow.html" class="bento-card hover-red">
-            <div class="bento-card-content">
-              <h3>SMS Automation</h3>
-              <p>98% åbningsrate. Automatiske påmindelser, win-back kampagner og fødselsdagstilbud direkte til kundens lomme.</p>
+        <div class="use-cases-grid">
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <div class="bento-card-image">
-              <svg width="100%" height="200" viewBox="0 0 400 250" fill="none" xmlns="http://www.w3.org/2000/svg" class="browser-frame">
-                <rect width="400" height="250" rx="12" fill="#E5E5E5"/>
-                <rect x="1" y="1" width="398" height="40" rx="11" fill="white"/>
-                <circle cx="20" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="36" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="52" cy="21" r="5" fill="#E5E5E5"/>
-                <rect x="100" y="14" width="200" height="14" rx="7" fill="#F5F5F5"/>
-                <rect x="1" y="42" width="398" height="207" fill="white"/>
-                <rect x="20" y="60" width="120" height="16" rx="4" fill="#34d399"/>
-                <rect x="20" y="90" width="280" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="110" width="240" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="140" width="100" height="32" rx="8" fill="#059669"/>
-              </svg>
+            <div class="use-case-content">
+              <h3>Win-Back Kampagne</h3>
+              <p>Kunde har ikke bestilt i 30 dage? Automatisk SMS med personlig rabatkode får dem tilbage.</p>
+              <span class="use-case-stat">32% kommer tilbage</span>
             </div>
-            <div class="bento-card-fade"></div>
-          </a>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15.546c-.523 0-1.046.151-1.5.454a2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.704 2.704 0 00-3 0 2.704 2.704 0 01-3 0 2.701 2.701 0 00-1.5-.454M9 6v2m3-2v2m3-2v2M9 3h.01M12 3h.01M15 3h.01M21 21v-7a2 2 0 00-2-2H5a2 2 0 00-2 2v7h18zm-3-9v-2a2 2 0 00-2-2H8a2 2 0 00-2 2v2h12z"/></svg>
+            </div>
+            <div class="use-case-content">
+              <h3>Fødselsdagstilbud</h3>
+              <p>Automatisk fødselsdags-SMS med gratis dessert eller special rabat. Personligt og effektivt.</p>
+              <span class="use-case-stat">68% bruger tilbuddet</span>
+            </div>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </div>
+            <div class="use-case-content">
+              <h3>Ordrebekræftelse</h3>
+              <p>Automatisk SMS når ordre modtages, mad tilberedes og chauffør er på vej. Færre opkald.</p>
+              <span class="use-case-stat">90% færre "hvor er min mad?" opkald</span>
+            </div>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+            </div>
+            <div class="use-case-content">
+              <h3>Anmeldelse Opfordring</h3>
+              <p>24 timer efter levering: "Hvordan var maden?" med link til Google anmeldelse.</p>
+              <span class="use-case-stat">4.2x flere anmeldelser</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-          <!-- Card 2: Instagram -->
-          <a href="instagram-workflow.html" class="bento-card hover-blue">
-            <div class="bento-card-content">
-              <h3>Instagram Workflow</h3>
-              <p>Automatisk svar på DM'er, kommentarer og story-mentions. Engager følgere 24/7 uden ekstra arbejde.</p>
+    <!-- How It Works Section -->
+    <section class="how-it-works">
+      <div class="how-it-works-container">
+        <div class="how-it-works-header">
+          <h2 class="how-it-works-title">Sådan kommer du i gang</h2>
+        </div>
+        <div class="steps-list">
+          <div class="step-item">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h3>Forbind dit system</h3>
+              <p>Vi integrerer med dit eksisterende kassesystem eller bestillingsplatform. Ingen teknisk viden krævet - vi klarer det hele.</p>
             </div>
-            <div class="bento-card-image">
-              <svg width="100%" height="200" viewBox="0 0 400 250" fill="none" xmlns="http://www.w3.org/2000/svg" class="browser-frame">
-                <rect width="400" height="250" rx="12" fill="#E5E5E5"/>
-                <rect x="1" y="1" width="398" height="40" rx="11" fill="white"/>
-                <circle cx="20" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="36" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="52" cy="21" r="5" fill="#E5E5E5"/>
-                <rect x="100" y="14" width="200" height="14" rx="7" fill="#F5F5F5"/>
-                <rect x="1" y="42" width="398" height="207" fill="white"/>
-                <rect x="20" y="60" width="120" height="16" rx="4" fill="#f472b6"/>
-                <rect x="20" y="90" width="280" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="110" width="240" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="140" width="100" height="32" rx="8" fill="#ec4899"/>
-              </svg>
+          </div>
+          <div class="step-item">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h3>Vælg dine workflows</h3>
+              <p>Vælg hvilke automatiske SMS'er du vil sende. Win-back, fødselsdage, ordrebekræftelser - eller alle sammen.</p>
             </div>
-            <div class="bento-card-fade"></div>
-          </a>
+          </div>
+          <div class="step-item">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h3>Se resultaterne</h3>
+              <p>Systemet kører automatisk. Du følger med i dit dashboard og ser salget stige. Gennemsnitlig ROI: 12x.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-          <!-- Card 3: Facebook (spans 2 rows) -->
-          <a href="facebook-workflow.html" class="bento-card hover-orange span-row">
-            <div class="bento-card-content">
-              <h3>Facebook Integration</h3>
-              <p>Messenger automation og kommentar-svar. Aldrig gå glip af en kunde på Facebook.</p>
-            </div>
-            <div class="bento-card-image">
-              <svg width="100%" height="320" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" class="browser-frame">
-                <rect width="400" height="400" rx="12" fill="#E5E5E5"/>
-                <rect x="1" y="1" width="398" height="40" rx="11" fill="white"/>
-                <circle cx="20" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="36" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="52" cy="21" r="5" fill="#E5E5E5"/>
-                <rect x="100" y="14" width="200" height="14" rx="7" fill="#F5F5F5"/>
-                <rect x="1" y="42" width="398" height="357" fill="white"/>
-                <rect x="20" y="60" width="120" height="16" rx="4" fill="#60a5fa"/>
-                <rect x="20" y="90" width="280" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="110" width="240" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="140" width="360" height="100" rx="8" fill="#F5F5F5"/>
-                <rect x="20" y="260" width="100" height="32" rx="8" fill="#3b82f6"/>
-              </svg>
-            </div>
-            <div class="bento-card-fade"></div>
-          </a>
-
-          <!-- Card 4: Website (spans 2 columns) -->
-          <a href="restaurant-hjemmeside.html" class="bento-card hover-green span-col">
-            <div class="bento-card-content">
-              <h3>Website Chatbot</h3>
-              <p>Chatbot og bestillingsintegration på din hjemmeside. Konverter besøgende til betalende kunder automatisk.</p>
-            </div>
-            <div class="bento-card-image">
-              <svg width="100%" height="200" viewBox="0 0 700 250" fill="none" xmlns="http://www.w3.org/2000/svg" class="browser-frame">
-                <rect width="700" height="250" rx="12" fill="#E5E5E5"/>
-                <rect x="1" y="1" width="698" height="40" rx="11" fill="white"/>
-                <circle cx="20" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="36" cy="21" r="5" fill="#E5E5E5"/>
-                <circle cx="52" cy="21" r="5" fill="#E5E5E5"/>
-                <rect x="200" y="14" width="300" height="14" rx="7" fill="#F5F5F5"/>
-                <rect x="1" y="42" width="698" height="207" fill="white"/>
-                <rect x="20" y="60" width="160" height="16" rx="4" fill="#a78bfa"/>
-                <rect x="20" y="90" width="400" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="110" width="350" height="12" rx="4" fill="#E5E5E5"/>
-                <rect x="20" y="140" width="120" height="32" rx="8" fill="#8b5cf6"/>
-                <rect x="500" y="60" width="180" height="140" rx="12" fill="#F5F5F5"/>
-                <rect x="520" y="80" width="140" height="10" rx="4" fill="#a78bfa"/>
-                <rect x="520" y="100" width="100" height="8" rx="4" fill="#E5E5E5"/>
-                <rect x="520" y="120" width="120" height="8" rx="4" fill="#E5E5E5"/>
-                <rect x="520" y="150" width="80" height="24" rx="6" fill="#8b5cf6"/>
-              </svg>
-            </div>
-            <div class="bento-card-fade"></div>
-          </a>
+    <!-- CTA Section -->
+    <section class="cta-section" id="demo">
+      <div class="cta-content">
+        <h2 class="cta-title">Klar til at automatisere din SMS marketing?</h2>
+        <p class="cta-desc">Start med en gratis prøveperiode. Ingen binding, ingen kreditkort.</p>
+        <div class="cta-buttons">
+          <a href="#" class="button">Book en demo</a>
+          <a href="landing.html" class="button is-outline">Se alle funktioner</a>
         </div>
       </div>
     </section>
 
     <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h4>PRODUKTER</h4>
-        <ul>
-          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-          <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-        <ul>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-        </ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>VIRKSOMHED</h4>
-        <ul>
-          <li><a href="om-os.html">Om os</a></li>
-          <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="#">Cookie Settings</a>
+          <a href="#">Privacy</a>
+          <a href="#">Website Terms</a>
+          <a href="#">Disclaimer</a>
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>SUPPORT</h4>
-        <ul>
-          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-        </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>2026 © Flow. All rights reserved.</p>
-      <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
   </div>
 
   <!-- JavaScript -->
   <script>
-    // Header scroll effect
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
       if (window.scrollY > 50) {
@@ -1277,54 +746,7 @@
         nav.classList.remove('scrolled');
       }
     });
-
-    // Chat animation
-    function animateChat() {
-      const userMessage = document.querySelector('.chat-message');
-      const aiResponse = document.querySelector('.chat-response');
-      const responseContent = aiResponse.querySelector('.overflow-hidden');
-      const responseText = aiResponse.querySelector('.prose');
-
-      // Animate user message
-      setTimeout(() => {
-        userMessage.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        userMessage.style.opacity = '1';
-        userMessage.style.transform = 'translateY(0)';
-      }, 500);
-
-      // Animate AI response bubble
-      setTimeout(() => {
-        aiResponse.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-        aiResponse.style.opacity = '1';
-        aiResponse.style.transform = 'translateY(0)';
-      }, 1200);
-
-      // Expand text content
-      setTimeout(() => {
-        responseContent.style.maxHeight = '120px';
-        responseText.style.opacity = '1';
-      }, 1800);
-    }
-
-    // Run animation when page loads
-    document.addEventListener('DOMContentLoaded', animateChat);
-
-    // Also run animation when element is in viewport
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          animateChat();
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.3 });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      const chatContainer = document.querySelector('.ai-hero-section');
-      if (chatContainer) observer.observe(chatContainer);
-    });
   </script>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
+  <script src="/js/flow-cms-render.js"></script>
 </body>
 </html>

@@ -27,24 +27,14 @@
       --color-gray-600: #495057;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
-      --section-radius: 2.4rem;
-      --section-overlap: -2.4rem;
+      --color-instagram: #E1306C;
       --container-max: 1200px;
       --container-huge: 1400px;
     }
 
     /* ==================== RESET & BASE ==================== */
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      font-size: 62.5%;
-      scroll-behavior: smooth;
-    }
-
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 1.6rem;
@@ -57,110 +47,15 @@
       overflow-x: hidden;
     }
 
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-    }
-
-    *:hover {
-      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-    }
-
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: transparent;
-      border-radius: 10px;
-      transition: background 0.3s ease;
-    }
-
-    *:hover::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    *:hover::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
-    .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
-    .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
-    .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
-    .h15 { font-size: 1.5rem; font-weight: 500; line-height: 1.5; }
-    .h14 { font-size: 1.4rem; font-weight: 400; line-height: 1.5; }
-    .h13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; }
-    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
-    .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
-    .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
-
-    /* ==================== UTILITY CLASSES ==================== */
-    .text-color-content-secondary { color: var(--color-gray-600); }
-    .text-color-content-tertiary { color: var(--color-gray-500); }
-    .text-color-white { color: var(--color-white); }
-    .text-align-center { text-align: center; }
-    .max-width-460 { max-width: 46rem; }
-    .max-width-560 { max-width: 56rem; }
-    .max-width-580 { max-width: 58rem; }
-    .margin-bottom { margin-bottom: 0; }
-    .margin-bottom.margin-8 { margin-bottom: 0.8rem; }
-    .margin-bottom.margin-12 { margin-bottom: 1.2rem; }
-    .margin-bottom.margin-16 { margin-bottom: 1.6rem; }
-    .margin-bottom.margin-32 { margin-bottom: 3.2rem; }
-
-    /* ==================== LAYOUT ==================== */
-    .page-wrapper {
-      overflow: hidden;
-    }
-
-    .padding-global {
-      padding-left: 4rem;
-      padding-right: 4rem;
-    }
-
-    .container-large {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-
-    .container-huge {
-      max-width: var(--container-huge);
-      margin: 0 auto;
-    }
-
-    section {
-      position: relative;
-      z-index: 1;
-    }
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
     /* ==================== BUTTONS ==================== */
     .button {
@@ -178,48 +73,13 @@
       cursor: pointer;
       border: none;
     }
-
-    .button:hover {
-      background: var(--color-primary-hover);
-    }
-
-    .button.is-secondary {
-      background: transparent;
-      color: var(--color-dark);
-      border: 1px solid var(--color-gray-300);
-    }
-
-    .button.is-secondary:hover {
-      background: var(--color-gray-100);
-    }
-
-    .button.is-black {
-      background: var(--color-dark);
-    }
-
-    .button.is-black:hover {
-      background: var(--color-gray-800);
-    }
-
-    .button.button-white {
-      background: var(--color-white);
-      color: var(--color-dark);
-      border: none;
-    }
-
-    .button.button-white:hover {
-      background: var(--color-gray-100);
-    }
-
-    .button.button-outline {
-      background: transparent;
-      color: var(--color-white);
-      border: 2px solid var(--color-white);
-    }
-
-    .button.button-outline:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    .button:hover { background: var(--color-primary-hover); }
+    .button.is-black { background: var(--color-dark); }
+    .button.is-black:hover { background: var(--color-gray-800); }
+    .button.is-secondary { background: transparent; color: var(--color-dark); border: 1px solid var(--color-gray-300); }
+    .button.is-secondary:hover { background: var(--color-gray-100); }
+    .button.is-instagram { background: var(--color-instagram); }
+    .button.is-instagram:hover { background: #c4275b; }
 
     /* ==================== NAVIGATION ==================== */
     .nav-wrapper {
@@ -237,86 +97,19 @@
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
-
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 2.56rem;
-      width: auto;
-    }
-
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1rem 1.8rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
 
     /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
@@ -326,7 +119,6 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
@@ -346,301 +138,321 @@
     .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
     .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
     .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .nav-dropdown:first-of-type .dropdown-left {
-      flex: 1;
-      max-width: 100%;
+    /* ==================== PAGE SPECIFIC STYLES ==================== */
+    .page-wrapper { overflow: hidden; }
+
+    /* Before/After Intro Section */
+    .intro-section {
+      padding: 12rem 4rem 6rem;
+      background: var(--color-white);
     }
-
-    .nav-dropdown:first-of-type .dropdown-links {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
-      column-gap: 2rem;
-    }
-
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 80vh;
-      display: flex;
-      align-items: center;
-      padding-top: 8rem;
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      overflow: hidden;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      padding: 8rem 4rem;
+    .intro-container {
+      max-width: 100rem;
       margin: 0 auto;
       text-align: center;
     }
-
-    .hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      line-height: 1.1;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content p {
-      font-size: 2rem;
-      color: var(--color-gray-700);
-      margin: 0 auto 3rem auto;
-      max-width: 60rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .hero-buttons .button {
-      background: var(--color-dark);
-      color: var(--color-white);
-    }
-
-    .hero-buttons .button:hover {
-      background: var(--color-gray-800);
-    }
-
-    .hero-buttons .button-outline {
-      background: transparent;
-      color: var(--color-dark);
-      border: 2px solid var(--color-dark);
-    }
-
-    .hero-buttons .button-outline:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    .workflow-meta {
-      margin: 2.8rem auto 3.2rem;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.2rem;
-      max-width: 72rem;
-    }
-
-    .meta-card {
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid var(--color-gray-200);
-      border-radius: 1.2rem;
-      padding: 1.6rem;
-      backdrop-filter: blur(8px);
-    }
-
-    .meta-label {
-      font-size: 1.1rem;
-      letter-spacing: 0.12em;
+    .intro-label {
+      display: inline-block;
+      font-size: 1.2rem;
+      font-weight: 600;
       text-transform: uppercase;
-      color: var(--color-gray-500);
-      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--color-instagram);
+      background: rgba(225, 48, 108, 0.1);
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.4rem;
+      margin-bottom: 2rem;
     }
-
-    .meta-value {
-      margin-top: 0.4rem;
-      font-size: 1.7rem;
-      font-weight: 600;
-      color: var(--color-dark);
-    }
-
-    /* ==================== FEATURES SECTION ==================== */
-    .features-section {
-      background: var(--color-white);
-      padding: 10rem 0;
-    }
-
-    .features-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-
-    .features-header h2 {
+    .intro-title {
       font-size: 4.8rem;
       font-weight: 600;
+      line-height: 1.1;
       color: var(--color-dark);
-      margin-bottom: 1.6rem;
-    }
-
-    .features-header p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3rem;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 4rem;
-    }
-
-    .feature-card {
-      background: var(--color-gray-50);
-      border-radius: 1.6rem;
-      padding: 3rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-    }
-
-    .feature-icon {
-      width: 4.8rem;
-      height: 4.8rem;
-      background: var(--color-primary);
-      border-radius: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       margin-bottom: 2rem;
     }
-
-    .feature-icon svg {
-      width: 2.4rem;
-      height: 2.4rem;
-      color: var(--color-white);
-    }
-
-    .feature-card h3 {
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1rem;
-    }
-
-    .feature-card p {
-      font-size: 1.5rem;
+    .intro-desc {
+      font-size: 1.8rem;
       color: var(--color-gray-600);
-      line-height: 1.6;
+      max-width: 64rem;
+      margin: 0 auto 4rem;
     }
 
-    /* ==================== BENEFITS SECTION ==================== */
-    .benefits-section {
-      background: var(--color-gray-100);
-      padding: 10rem 0;
+    /* Before/After Comparison */
+    .comparison-section {
+      padding: 4rem 4rem 8rem;
+      background: var(--color-gray-50);
     }
-
-    .benefits-container {
-      max-width: 1200px;
+    .comparison-container {
+      max-width: 120rem;
       margin: 0 auto;
-      padding: 0 4rem;
+    }
+    .comparison-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
+      gap: 4rem;
     }
-
-    .benefits-content h2 {
-      font-size: 4.4rem;
+    .comparison-card {
+      background: var(--color-white);
+      border-radius: 2rem;
+      padding: 4rem;
+      position: relative;
+    }
+    .comparison-card.before {
+      border: 2px solid var(--color-gray-200);
+    }
+    .comparison-card.after {
+      border: 2px solid var(--color-instagram);
+      box-shadow: 0 20px 60px rgba(225, 48, 108, 0.15);
+    }
+    .comparison-badge {
+      position: absolute;
+      top: -1.4rem;
+      left: 3rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.6rem 1.6rem;
+      border-radius: 0.4rem;
+    }
+    .comparison-card.before .comparison-badge {
+      background: var(--color-gray-200);
+      color: var(--color-gray-600);
+    }
+    .comparison-card.after .comparison-badge {
+      background: var(--color-instagram);
+      color: var(--color-white);
+    }
+    .comparison-title {
+      font-size: 2.4rem;
       font-weight: 600;
       color: var(--color-dark);
-      margin-bottom: 2rem;
-      line-height: 1.15;
+      margin-bottom: 2.4rem;
     }
-
-    .benefits-content p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      margin-bottom: 3rem;
-    }
-
-    .benefits-list {
+    .comparison-list {
       display: flex;
       flex-direction: column;
       gap: 1.6rem;
     }
-
-    .benefit-item {
+    .comparison-item {
       display: flex;
       align-items: flex-start;
       gap: 1.2rem;
+      font-size: 1.5rem;
+      line-height: 1.5;
     }
-
-    .benefit-icon {
+    .comparison-card.before .comparison-item {
+      color: var(--color-gray-600);
+    }
+    .comparison-card.after .comparison-item {
+      color: var(--color-dark);
+    }
+    .comparison-icon {
       width: 2.4rem;
       height: 2.4rem;
-      background: var(--color-primary);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      margin-top: 0.2rem;
     }
-
-    .benefit-icon svg {
+    .comparison-card.before .comparison-icon {
+      background: var(--color-gray-100);
+      color: var(--color-gray-500);
+    }
+    .comparison-card.after .comparison-icon {
+      background: rgba(225, 48, 108, 0.1);
+      color: var(--color-instagram);
+    }
+    .comparison-icon svg {
       width: 1.4rem;
       height: 1.4rem;
-      color: var(--color-white);
+    }
+    .comparison-result {
+      margin-top: 3rem;
+      padding-top: 2.4rem;
+      border-top: 1px solid var(--color-gray-200);
+    }
+    .comparison-result-label {
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-gray-500);
+      margin-bottom: 0.8rem;
+    }
+    .comparison-result-value {
+      font-size: 3.6rem;
+      font-weight: 700;
+    }
+    .comparison-card.before .comparison-result-value {
+      color: var(--color-gray-400);
+    }
+    .comparison-card.after .comparison-result-value {
+      color: var(--color-instagram);
     }
 
-    .benefit-text {
-      font-size: 1.6rem;
-      color: var(--color-dark);
+    /* Workflow Steps Section */
+    .workflow-section {
+      padding: 8rem 4rem;
+      background: var(--color-white);
     }
-
-    .benefits-image {
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    .workflow-container {
+      max-width: 120rem;
+      margin: 0 auto;
     }
-
-    .benefits-image img {
-      width: 100%;
-      height: auto;
-    }
-
-    /* ==================== CTA SECTION ==================== */
-    .cta-section {
-      background: var(--color-dark);
-      padding: 10rem 0;
-    }
-
-    .cta-content {
+    .workflow-header {
       text-align: center;
+      margin-bottom: 6rem;
+    }
+    .workflow-title {
+      font-size: 4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+    .workflow-desc {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.4rem;
+    }
+    .workflow-step {
+      text-align: center;
+      padding: 2.4rem;
+    }
+    .workflow-step-number {
+      width: 4.8rem;
+      height: 4.8rem;
+      background: linear-gradient(135deg, var(--color-instagram) 0%, #833AB4 100%);
+      color: var(--color-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 auto 1.6rem;
+    }
+    .workflow-step h3 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+    .workflow-step p {
+      font-size: 1.4rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+    }
+    .workflow-connector {
+      position: relative;
+    }
+    .workflow-connector::after {
+      content: '';
+      position: absolute;
+      top: 2.4rem;
+      right: -1.2rem;
+      width: 2.4rem;
+      height: 2px;
+      background: var(--color-gray-200);
+    }
+    .workflow-connector:last-child::after {
+      display: none;
+    }
+
+    /* Testimonial Section */
+    .testimonial-section {
+      padding: 8rem 4rem;
+      background: var(--color-gray-50);
+    }
+    .testimonial-container {
       max-width: 80rem;
       margin: 0 auto;
-      padding: 0 4rem;
+      text-align: center;
+    }
+    .testimonial-quote {
+      font-size: 2.8rem;
+      font-weight: 400;
+      color: var(--color-dark);
+      line-height: 1.5;
+      margin-bottom: 3.2rem;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.6rem;
+    }
+    .testimonial-avatar {
+      width: 6rem;
+      height: 6rem;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .testimonial-info {
+      text-align: left;
+    }
+    .testimonial-name {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+    .testimonial-role {
+      font-size: 1.4rem;
+      color: var(--color-gray-500);
     }
 
-    .cta-content h2 {
-      font-size: 4.8rem;
+    /* CTA Section */
+    .cta-section {
+      padding: 8rem 4rem;
+      background: linear-gradient(135deg, var(--color-instagram) 0%, #833AB4 100%);
+    }
+    .cta-content {
+      max-width: 80rem;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .cta-title {
+      font-size: 4rem;
       font-weight: 600;
       color: var(--color-white);
-      margin-bottom: 2rem;
+      margin-bottom: 1.6rem;
     }
-
-    .cta-content p {
+    .cta-desc {
       font-size: 1.8rem;
-      color: rgba(255,255,255,0.7);
-      margin-bottom: 3rem;
+      color: rgba(255,255,255,0.85);
+      margin-bottom: 3.2rem;
     }
-
-    /* ==================== PRE-FOOTER ==================== */
-    .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-    .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-    .pre-footer-brand { flex-shrink: 0; }
-    .pre-footer-logo { height: 4rem; width: auto; }
-    .pre-footer-cards { display: flex; gap: 2rem; }
-    .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-    .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-    .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-    .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
+    .cta-buttons {
+      display: flex;
+      gap: 1.6rem;
+      justify-content: center;
+    }
+    .cta-buttons .button {
+      background: var(--color-white);
+      color: var(--color-instagram);
+    }
+    .cta-buttons .button:hover {
+      background: var(--color-gray-100);
+    }
+    .cta-buttons .button.is-outline {
+      background: transparent;
+      color: var(--color-white);
+      border: 2px solid var(--color-white);
+    }
+    .cta-buttons .button.is-outline:hover {
+      background: rgba(255,255,255,0.1);
+    }
 
     /* ==================== FOOTER ==================== */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
@@ -658,57 +470,24 @@
 
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .benefits-container {
-        grid-template-columns: 1fr;
-        gap: 4rem;
-      }
+      .comparison-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .workflow-grid { grid-template-columns: repeat(2, 1fr); }
+      .workflow-connector::after { display: none; }
     }
-
     @media (max-width: 768px) {
-      html {
-        font-size: 56.25%;
-      }
-      .nav-links {
-        display: none;
-      }
-      .workflow-meta {
-        grid-template-columns: 1fr;
-      }
-      .hero-content h1 {
-        font-size: 4rem;
-      }
-      .features-grid {
-        grid-template-columns: 1fr;
-      }
-      .footer-content {
-        grid-template-columns: 1fr 1fr;
-      }
+      html { font-size: 56.25%; }
+      .nav-links { display: none; }
+      .intro-section { padding: 10rem 2rem 4rem; }
+      .intro-title { font-size: 3.6rem; }
+      .workflow-grid { grid-template-columns: 1fr; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
     }
-
     @media (max-width: 480px) {
-      .padding-global {
-        padding-left: 2rem;
-        padding-right: 2rem;
-      }
-      .hero-buttons {
-        flex-direction: column;
-      }
-      .footer-content {
-        grid-template-columns: 1fr;
-      }
-      .pre-footer-content {
-        flex-direction: column;
-      }
-      .pre-footer-cards {
-        flex-direction: column;
-        width: 100%;
-      }
+      .cta-buttons { flex-direction: column; }
+      .footer-content { grid-template-columns: 1fr; }
     }
   </style>
-<link rel="stylesheet" href="/css/cookie-popup.css">
+  <link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -759,119 +538,125 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Din Instagram kører på autopilot</h1>
-        <p>Nogen kommenterer "Åbningstider?" på dit opslag. Systemet svarer med det samme. En story mention? Automatisk tak-besked med link til bestilling. Du fokuserer på maden, vi håndterer Instagram.</p>
-        <div class="workflow-meta">
-          <div class="meta-card">
-            <div class="meta-label">Agent</div>
-            <div class="meta-value" id="workflow-agent-name">Instagram Bestillingsagent</div>
+    <!-- Intro Section -->
+    <section class="intro-section">
+      <div class="intro-container">
+        <span class="intro-label">Instagram Workflow</span>
+        <h1 class="intro-title">Stop med at misse DMs. Start med at sælge.</h1>
+        <p class="intro-desc">Hver ubesvaret besked er en tabt kunde. Se forskellen mellem manuel og automatiseret Instagram-håndtering.</p>
+      </div>
+    </section>
+
+    <!-- Before/After Comparison -->
+    <section class="comparison-section">
+      <div class="comparison-container">
+        <div class="comparison-grid">
+          <div class="comparison-card before">
+            <span class="comparison-badge">Uden Flow</span>
+            <h2 class="comparison-title">Manuel Instagram</h2>
+            <div class="comparison-list">
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
+                <span>DMs besvares timer eller dage senere</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
+                <span>Kommentarer med spørgsmål ignoreres</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
+                <span>Story mentions opdages for sent</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
+                <span>Nye følgere får ingen velkomst</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
+                <span>2-3 timer dagligt på Instagram</span>
+              </div>
+            </div>
+            <div class="comparison-result">
+              <div class="comparison-result-label">Gennemsnitlig konvertering</div>
+              <div class="comparison-result-value">2-4%</div>
+            </div>
           </div>
-          <div class="meta-card">
-            <div class="meta-label">Workflow</div>
-            <div class="meta-value">Instagram Workflow</div>
+          <div class="comparison-card after">
+            <span class="comparison-badge">Med Flow</span>
+            <h2 class="comparison-title">Automatiseret Instagram</h2>
+            <div class="comparison-list">
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+                <span>DMs besvares inden for sekunder</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+                <span>Automatisk svar med link til bestilling</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+                <span>Story mentions takkes automatisk</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+                <span>Nye følgere får rabatkode</span>
+              </div>
+              <div class="comparison-item">
+                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
+                <span>0 timer - systemet kører 24/7</span>
+              </div>
+            </div>
+            <div class="comparison-result">
+              <div class="comparison-result-label">Gennemsnitlig konvertering</div>
+              <div class="comparison-result-value">18-24%</div>
+            </div>
           </div>
-          <div class="meta-card">
-            <div class="meta-label">Version</div>
-            <div class="meta-value" id="workflow-version">v3.12.0</div>
-          </div>
-        </div>
-        <div class="hero-buttons">
-          <a href="#demo" class="button button-white">Se hvordan det virker</a>
-          <a href="#features" class="button button-outline">Hvad du kan gøre</a>
         </div>
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-      <div class="features-header">
-        <h2>Instagram automation der konverterer</h2>
-        <p>Automatiske svar på DMs, kommentarer og story mentions. Konverter følgere til kunder mens du sover.</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <h3>Auto-svar på DMs</h3>
-          <p>"Hvad koster en pizza?" - Systemet svarer med det samme med menu-link. Du behøver ikke tjekke telefonen hele tiden.</p>
+    <!-- Workflow Steps -->
+    <section class="workflow-section">
+      <div class="workflow-container">
+        <div class="workflow-header">
+          <h2 class="workflow-title">Sådan fungerer det</h2>
+          <p class="workflow-desc">Fire automatiseringer der kører 24/7 og konverterer følgere til kunder.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        <div class="workflow-grid">
+          <div class="workflow-step workflow-connector">
+            <div class="workflow-step-number">1</div>
+            <h3>Ny følger</h3>
+            <p>Automatisk velkomst-DM med 10% rabatkode sendes inden for 60 sekunder.</p>
           </div>
-          <h3>Kommentar-svar</h3>
-          <p>Nogen spørger om åbningstider i en kommentar? Automatisk svar med de rigtige tider og link til bestilling.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div class="workflow-step workflow-connector">
+            <div class="workflow-step-number">2</div>
+            <h3>DM modtaget</h3>
+            <p>AI genkender spørgsmål om menu, priser og åbningstider og svarer med det samme.</p>
           </div>
-          <h3>Story Mentions</h3>
-          <p>En kunde tagger dig i deres story? Send automatisk en tak-besked med rabatkode til næste besøg.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+          <div class="workflow-step workflow-connector">
+            <div class="workflow-step-number">3</div>
+            <h3>Story mention</h3>
+            <p>Kunde tagger dig? Automatisk tak-besked + anmodning om at reposte.</p>
           </div>
-          <h3>Like → Følger → Kunde</h3>
-          <p>Automatisk DM til nye følgere med velkomstbesked og eksklusive tilbud. Konverter interesse til salg.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <div class="workflow-step">
+            <div class="workflow-step-number">4</div>
+            <h3>Konvertering</h3>
+            <p>Alle beskeder inkluderer bestillingslink. Du ser salget i dit dashboard.</p>
           </div>
-          <h3>UGC Indsamling</h3>
-          <p>Kunder poster billeder af din mad? Automatisk anmod om tilladelse til at reposte. Gratis content til din profil.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          </div>
-          <h3>Instagram Analytics</h3>
-          <p>Se hvilke opslag der driver mest trafik til din side. Data du kan bruge til at lave mere af det der virker.</p>
         </div>
       </div>
     </section>
 
-    <!-- Benefits Section -->
-    <section class="benefits-section">
-      <div class="benefits-container">
-        <div class="benefits-content">
-          <h2>Instagram workflows der virker</h2>
-          <p>Fire automatiseringer der kører 24/7 og konverterer følgere til kunder.</p>
-          <div class="benefits-list">
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Ny følger" → Velkomst-DM med 10% rabatkode (28% bruger den)</span>
-            </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Story mention" → Tak-besked + repost anmodning (84% godkender)</span>
-            </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"DM med nøgleord" → Auto-svar med bestillingslink (sparer 2+ timer/dag)</span>
-            </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Kommentar med spørgsmål" → Svar med FAQ + link (øger engagement 45%)</span>
-            </div>
+    <!-- Testimonial -->
+    <section class="testimonial-section">
+      <div class="testimonial-container">
+        <p class="testimonial-quote">"Vi gik fra at bruge 3 timer dagligt på Instagram til næsten ingenting. Og vores salg fra Instagram steg med 340% på 2 måneder."</p>
+        <div class="testimonial-author">
+          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop" alt="Restaurant ejer" class="testimonial-avatar">
+          <div class="testimonial-info">
+            <div class="testimonial-name">Marco Rossi</div>
+            <div class="testimonial-role">Ejer, Napoli Pizza, København</div>
           </div>
-        </div>
-        <div class="benefits-image">
-          <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&h=600&fit=crop" alt="Instagram på mobil">
         </div>
       </div>
     </section>
@@ -879,78 +664,74 @@
     <!-- CTA Section -->
     <section class="cta-section" id="demo">
       <div class="cta-content">
-        <h2>Lad os sætte din Instagram på autopilot</h2>
-        <p>Vi kigger på din Instagram-profil og foreslår de workflows der giver mest mening for din restaurant.</p>
-        <div class="hero-buttons">
-          <a href="#" class="button button-white">Book en gennemgang</a>
-          <a href="landing.html#priser" class="button button-outline">Se priser</a>
+        <h2 class="cta-title">Klar til at automatisere din Instagram?</h2>
+        <p class="cta-desc">Vi sætter det hele op for dig. Ingen teknisk viden krævet.</p>
+        <div class="cta-buttons">
+          <a href="#" class="button">Book en demo</a>
+          <a href="landing.html" class="button is-outline">Se alle funktioner</a>
         </div>
       </div>
     </section>
 
-    <!-- Pre-Footer Section -->
-
     <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h4>PRODUKTER</h4>
-        <ul>
-          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-          <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-        <ul>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-        </ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>VIRKSOMHED</h4>
-        <ul>
-          <li><a href="om-os.html">Om os</a></li>
-          <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="#">Cookie Settings</a>
+          <a href="#">Privacy</a>
+          <a href="#">Website Terms</a>
+          <a href="#">Disclaimer</a>
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>SUPPORT</h4>
-        <ul>
-          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-        </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>2026 © Flow. All rights reserved.</p>
-      <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
   </div>
 
   <!-- JavaScript -->
   <script>
-    // Header scroll effect
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
       if (window.scrollY > 50) {
@@ -960,26 +741,6 @@
       }
     });
   </script>
-  <script src="/config/version.js"></script>
-  <script>
-    (function() {
-      const agentEl = document.getElementById('workflow-agent-name');
-      const versionEl = document.getElementById('workflow-version');
-
-      try {
-        const agents = JSON.parse(localStorage.getItem('orderflow_ai_agents') || '[]');
-        const match = agents.find(agent => (agent.channel || '').toLowerCase() === 'instagram');
-        if (agentEl && match?.name) agentEl.textContent = match.name;
-      } catch (err) {
-        // Ignore missing/blocked localStorage
-      }
-
-      const version = window.VERSION_CONFIG?.getDisplayVersion?.() ||
-        (window.VERSION_CONFIG?.version ? `v${window.VERSION_CONFIG.version}` : null);
-      if (versionEl && version) versionEl.textContent = version;
-    })();
-  </script>
-  <!-- Flow CMS Dynamic Content -->
   <script src="/js/flow-cms-render.js"></script>
 </body>
 </html>

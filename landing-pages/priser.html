@@ -1092,6 +1092,133 @@
         font-size: 1.6rem;
       }
     }
+
+    /* Data Collection Form */
+    .data-form-section {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+      padding: 80px 20px;
+      position: relative;
+    }
+    .data-form-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 80%, rgba(66, 133, 244, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(66, 133, 244, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .data-form-container {
+      max-width: 800px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .data-form-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .data-form-header h2 {
+      color: #fff;
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .data-form-header p {
+      color: rgba(255,255,255,0.7);
+      font-size: 1.1rem;
+    }
+    .data-form .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .data-form .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .data-form .form-group.full-width {
+      grid-column: span 2;
+    }
+    .data-form .form-label {
+      display: block;
+      color: #fff;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .data-form .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 16px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .data-form .form-input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    .data-form .form-input:focus {
+      outline: none;
+      border-color: #4285f4;
+      background: rgba(255,255,255,0.08);
+    }
+    .data-form textarea.form-input {
+      resize: vertical;
+      min-height: 100px;
+    }
+    .data-form .form-submit {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px 32px;
+      background: #4285f4;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .data-form .form-submit:hover {
+      background: #3367d6;
+      transform: translateY(-2px);
+    }
+    .data-form .form-success {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: #fff;
+    }
+    .data-form .form-success.show {
+      display: block;
+    }
+    .data-form .form-success svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      color: #4ade80;
+    }
+    .data-form .form-success h3 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+    .data-form .form-success p {
+      color: rgba(255,255,255,0.7);
+    }
+    @media (max-width: 600px) {
+      .data-form .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .data-form .form-group.full-width {
+        grid-column: span 1;
+      }
+      .data-form-header h2 {
+        font-size: 1.8rem;
+      }
+    }
   </style>
 <link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
@@ -1438,125 +1565,81 @@
       </div>
     </section>
 
-    <!-- Logo Cloud Section -->
-    <section class="logo-cloud">
-      <div class="logo-cloud-header">
-        <h2>Brugt af de bedste restauranter i Danmark</h2>
-        <p>Slut dig til hundredvis af restauranter der allerede vækster med Flow</p>
-      </div>
-      <div class="logo-cloud-wrapper">
-        <div class="logo-cloud-track">
-          <!-- First set -->
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-            <span>Madklubben</span>
+    <!-- Data Collection Form -->
+    <section class="data-form-section">
+      <div class="data-form-container">
+        <div class="data-form-header">
+          <h2>Kom i gang med Flow</h2>
+          <p>Udfyld formularen og vi kontakter dig inden for 24 timer</p>
+        </div>
+        <form class="data-form" id="dataCollectionForm" onsubmit="handleDataFormSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Navn *</label>
+              <input type="text" class="form-input" name="name" placeholder="Dit fulde navn" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-input" name="email" placeholder="din@email.dk" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Telefon</label>
+              <input type="tel" class="form-input" name="phone" placeholder="+45 12 34 56 78">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Restaurant navn *</label>
+              <input type="text" class="form-input" name="restaurant" placeholder="Din restaurants navn" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nuværende systemer</label>
+              <select class="form-input" name="systems">
+                <option value="">Vælg nuværende setup...</option>
+                <option value="ingen">Ingen / Manuelt</option>
+                <option value="pos">Kun POS system</option>
+                <option value="online">Online bestilling</option>
+                <option value="fuld">Fuld platform</option>
+                <option value="andet">Andet</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Månedligt budget</label>
+              <select class="form-input" name="budget">
+                <option value="">Vælg budget...</option>
+                <option value="0-500">0 - 500 kr</option>
+                <option value="500-1000">500 - 1.000 kr</option>
+                <option value="1000-2500">1.000 - 2.500 kr</option>
+                <option value="2500+">2.500+ kr</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <label class="form-label">Besked</label>
+              <textarea class="form-input" name="message" rows="4" placeholder="Fortæl os om dine behov og hvad du gerne vil opnå med Flow..."></textarea>
+            </div>
           </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-            <span>Cofoco</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-            <span>Burger Shack</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Halifax</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-            <span>Gorm's</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-            <span>Sticks'n'Sushi</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Dalle Valle</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-            <span>Sushi Bansen</span>
-          </div>
-          <!-- Second set for seamless loop -->
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-            <span>Madklubben</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-            <span>Cofoco</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-            <span>Burger Shack</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Halifax</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-            <span>Gorm's</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-            <span>Sticks'n'Sushi</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Dalle Valle</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-            <span>Sushi Bansen</span>
-          </div>
-          <!-- Third set for even smoother loop -->
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="5" y="5" width="30" height="30" rx="6" fill="currentColor"/></svg>
-            <span>Madklubben</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="currentColor"/></svg>
-            <span>Cofoco</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><rect x="8" y="4" width="24" height="32" rx="3" fill="currentColor"/></svg>
-            <span>Burger Shack</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M12 32 L20 12 L28 32 M20 12 L28 4 L36 12" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Halifax</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M6 6 L26 6 L26 14 L14 14 L14 26 L26 26 L26 34 L6 34 Z" fill="currentColor"/></svg>
-            <span>Gorm's</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="14" ry="17" fill="currentColor"/></svg>
-            <span>Sticks'n'Sushi</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><path d="M8 36 L20 8 L32 36 M12 28 L28 28" stroke="currentColor" stroke-width="3" fill="none"/></svg>
-            <span>Dalle Valle</span>
-          </div>
-          <div class="logo-cloud-item">
-            <svg width="40" height="40" viewBox="0 0 40 40"><polygon points="20,4 36,20 20,36 4,20" fill="currentColor"/></svg>
-            <span>Sushi Bansen</span>
-          </div>
+          <button type="submit" class="form-submit">Send ansøgning</button>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 12l3 3 5-6"/>
+          </svg>
+          <h3>Tak for din henvendelse!</h3>
+          <p>Vi kontakter dig inden for 24 timer.</p>
         </div>
       </div>
     </section>
-
-    <!-- CTA Band with Retro Grid -->
-    <section class="cta-band">
-      <div class="cta-band-content">
-        <h2>Klar til at vækste din restaurant?</h2>
-        <p>Start din gratis 14-dages prøveperiode i dag. Ingen kreditkort påkrævet.</p>
-        <a href="landing.html#demo" class="button">Start gratis prøveperiode</a>
-      </div>
-    </section>
+    <script>
+      function handleDataFormSubmit(e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+        console.log('Form submission:', data);
+        // Hide form, show success
+        form.style.display = 'none';
+        document.getElementById('formSuccess').classList.add('show');
+      }
+    </script>
 
     <!-- Footer -->
     <footer class="footer">

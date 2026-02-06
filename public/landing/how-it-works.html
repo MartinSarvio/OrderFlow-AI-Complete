@@ -846,13 +846,6 @@
       min-height: 280px;
     }
 
-    .preview-website {
-      padding: 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 280px;
-      color: white;
-    }
-
     /* Mobile Device Mockup */
     .mobile-device {
       width: 140px;
@@ -1355,116 +1348,128 @@
 
     /* ==================== ZIGZAG TIMELINE (DASHED) ==================== */
     /* Linjer går UDEN OM indholdet - aldrig gennem tekst eller billeder */
-    /* 2cm margin fra tekst og billeder */
 
-    /* Skjul alle timeline elementer */
+    /* Skjul alle timeline elementer - vi bruger kun ::before og ::after på .how-steps */
+    .how-step-row::before,
+    .how-step-row::after,
     .timeline-vertical,
     .timeline-horizontal,
     .timeline-down {
       display: none;
     }
 
-    /* Fjern global ::before på .how-steps */
+    /* Tegn hele timeline som én sammenhængende SVG-lignende struktur */
     .how-steps::before {
-      display: none;
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -3rem;
+      width: 2px;
+      height: 100%;
+      background:
+        /* Sektion 1: vertikal ned på venstre */
+        repeating-linear-gradient(to bottom, #d0d0d0 0, #d0d0d0 8px, transparent 8px, transparent 16px);
+      z-index: 1;
     }
+
+    /* Brug separate divs for hver linje-segment */
+    /* Vi gør dette med CSS custom properties og beregninger */
 
     /* Container til timeline */
     .how-steps {
-      --timeline-color: #c4c4c4;
-      --timeline-offset: 2rem; /* 2cm afstand fra indhold */
+      --timeline-color: #d0d0d0;
+      --dash-size: 8px;
+      --gap-size: 8px;
     }
 
-    /* Alle step rows skal have position relative */
-    .how-step-row {
+    /* Sektion 1: Kun vertikal linje på venstre side */
+    .how-step-row:nth-child(1) {
       position: relative;
     }
-
-    /* Sektion 1: Vertikal linje NED i venstre side (mellem tekst og kant) */
     .how-step-row:nth-child(1)::before {
       content: '';
       display: block;
       position: absolute;
-      left: calc(-4rem - var(--timeline-offset));
-      top: 50%;
-      bottom: 0;
+      left: -3rem;
+      top: 0;
+      bottom: -3rem;
       width: 0;
-      border-left: 2px dashed var(--timeline-color);
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
-    /* Horisontal linje i bunden af sektion 1 - går fra venstre til højre */
+    /* Horisontal linje UNDER sektion 1 (i gap-området) */
     .how-step-row:nth-child(1)::after {
       content: '';
       display: block;
       position: absolute;
-      left: calc(-4rem - var(--timeline-offset));
-      bottom: 0;
+      left: -3rem;
+      bottom: -3rem;
       height: 0;
-      width: calc(100% + 8rem + var(--timeline-offset) * 2);
-      border-top: 2px dashed var(--timeline-color);
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
 
-    /* Sektion 2: Vertikal linje i højre side */
+    /* Sektion 2: Vertikal linje på højre side */
     .how-step-row:nth-child(2)::before {
       content: '';
       display: block;
       position: absolute;
-      right: calc(-4rem - var(--timeline-offset));
-      top: 0;
-      bottom: 0;
+      right: -3rem;
+      top: -3rem;
+      bottom: -3rem;
       width: 0;
-      border-left: 2px dashed var(--timeline-color);
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
-    /* Horisontal linje i bunden af sektion 2 - går fra højre til venstre */
+    /* Horisontal linje UNDER sektion 2 (i gap-området) */
     .how-step-row:nth-child(2)::after {
       content: '';
       display: block;
       position: absolute;
-      left: calc(-4rem - var(--timeline-offset));
-      bottom: 0;
+      left: -3rem;
+      bottom: -3rem;
       height: 0;
-      width: calc(100% + 8rem + var(--timeline-offset) * 2);
-      border-top: 2px dashed var(--timeline-color);
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
 
-    /* Sektion 3: Vertikal linje i venstre side */
+    /* Sektion 3: Vertikal linje på venstre side */
     .how-step-row:nth-child(3)::before {
       content: '';
       display: block;
       position: absolute;
-      left: calc(-4rem - var(--timeline-offset));
-      top: 0;
-      bottom: 0;
+      left: -3rem;
+      top: -3rem;
+      bottom: -3rem;
       width: 0;
-      border-left: 2px dashed var(--timeline-color);
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
-    /* Horisontal linje i bunden af sektion 3 - går fra venstre til højre */
+    /* Horisontal linje UNDER sektion 3 (i gap-området) */
     .how-step-row:nth-child(3)::after {
       content: '';
       display: block;
       position: absolute;
-      left: calc(-4rem - var(--timeline-offset));
-      bottom: 0;
+      left: -3rem;
+      bottom: -3rem;
       height: 0;
-      width: calc(100% + 8rem + var(--timeline-offset) * 2);
-      border-top: 2px dashed var(--timeline-color);
+      width: calc(100% + 6rem);
+      border-top: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
 
-    /* Sektion 4: Vertikal linje i højre side (kun ned til midten) */
+    /* Sektion 4: Vertikal linje på højre side (kun ned) */
     .how-step-row:nth-child(4)::before {
       content: '';
       display: block;
       position: absolute;
-      right: calc(-4rem - var(--timeline-offset));
-      top: 0;
-      height: 50%;
+      right: -3rem;
+      top: -3rem;
+      height: calc(100% + 3rem);
       width: 0;
-      border-left: 2px dashed var(--timeline-color);
+      border-left: 2px dashed var(--timeline-color, #d0d0d0);
       z-index: 1;
     }
     /* Ingen horisontal linje efter sektion 4 */
@@ -1656,228 +1661,8 @@
         font-size: 2.4rem;
       }
     }
-
-    /* ==================== TESTIMONIAL MARQUEE ==================== */
-    .testimonial-section {
-      padding: 5.6rem 0;
-    }
-
-    .testimonial-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-      padding: 0 1.6rem;
-    }
-
-    .testimonial-box {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      border-radius: 2rem;
-      padding: 4rem;
-      padding-top: 5.6rem;
-    }
-
-    .testimonial-marquee-wrapper {
-      position: absolute;
-      transform: rotate(35deg);
-      width: 200%;
-      left: -50%;
-    }
-
-    .testimonial-marquee-group {
-      display: flex;
-      overflow: hidden;
-      padding: 0.8rem;
-      gap: 1rem;
-    }
-
-    .testimonial-marquee-row {
-      display: flex;
-      flex-shrink: 0;
-      justify-content: space-around;
-      gap: 1rem;
-      animation: marquee 20s linear infinite;
-    }
-
-    .testimonial-marquee-group:hover .testimonial-marquee-row {
-      animation-play-state: paused;
-    }
-
-    .testimonial-marquee-row.reverse {
-      animation-direction: reverse;
-    }
-
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(calc(-100% - 1rem)); }
-    }
-
-    .testimonial-card {
-      position: relative;
-      width: 25.6rem;
-      cursor: pointer;
-      overflow: hidden;
-      border-radius: 2rem;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      padding: 1.6rem;
-      background: rgba(0, 0, 0, 0.01);
-      transition: background 0.2s ease;
-    }
-
-    .testimonial-card:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .testimonial-header {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .testimonial-avatar {
-      width: 3.2rem;
-      height: 3.2rem;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .testimonial-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .testimonial-name {
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: #111827;
-    }
-
-    .testimonial-handle {
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: rgba(0, 0, 0, 0.4);
-    }
-
-    .testimonial-quote {
-      margin-top: 0.8rem;
-      font-size: 1.4rem;
-      line-height: 1.5;
-      color: #374151;
-    }
-
-    .testimonial-center {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      margin-top: 1.6rem;
-    }
-
-    .testimonial-icon {
-      width: 9.6rem;
-      height: 9.6rem;
-      border-radius: 2rem;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 1.2rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .testimonial-icon svg {
-      width: 6.4rem;
-      height: 6.4rem;
-      color: #111827;
-    }
-
-    .testimonial-headline {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: 3rem;
-      font-weight: 700;
-      color: #111827;
-      margin-top: 1.6rem;
-      line-height: 1.2;
-    }
-
-    .testimonial-subheadline {
-      font-size: 1.6rem;
-      color: #6b7280;
-      margin-top: 0.8rem;
-    }
-
-    .testimonial-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-      font-size: 1.4rem;
-      font-weight: 500;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      background: #fff;
-      height: 4.4rem;
-      margin-top: 1.6rem;
-      border-radius: 2rem;
-      padding: 0 2.4rem;
-      transition: all 0.2s ease;
-    }
-
-    .testimonial-cta:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-
-    .testimonial-cta svg {
-      margin-left: 0.4rem;
-      width: 1.6rem;
-      height: 1.6rem;
-      transition: transform 0.3s ease;
-    }
-
-    .testimonial-cta:hover svg {
-      transform: translateX(4px);
-    }
-
-    .testimonial-gradient {
-      position: absolute;
-      inset: 0;
-      bottom: 0;
-      background: linear-gradient(to bottom, transparent 0%, #fff 70%);
-      pointer-events: none;
-    }
-
-    @media (max-width: 1024px) {
-      .testimonial-icon {
-        width: 8rem;
-        height: 8rem;
-      }
-
-      .testimonial-icon svg {
-        width: 4.8rem;
-        height: 4.8rem;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .testimonial-headline {
-        font-size: 2.4rem;
-      }
-
-      .testimonial-card {
-        width: 22rem;
-      }
-    }
   </style>
-
-  <!-- Google Maps Places API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&libraries=places" async defer></script>
-<link rel="stylesheet" href="/css/cookie-popup.css">
+  <link rel="stylesheet" href="css/cookie-consent.css">
 </head>
 <body>
   <!-- Navigation -->
@@ -1885,7 +1670,7 @@
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
-            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+            <img src="images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
           </a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
@@ -1921,7 +1706,7 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login">Login</a>
+          <a href="index.html" class="nav-login">Login</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
@@ -2336,634 +2121,14 @@
 
       </div>
 
-    </div>
-  </section>
-
-  <!-- Testimonial Marquee Section -->
-  <section class="testimonial-section">
-    <div class="testimonial-container">
-      <div class="testimonial-box">
-        <!-- Rotated Marquee Background -->
-        <div class="testimonial-marquee-wrapper" id="hiw-testimonials-wrapper">
-          <!-- Row 1 - Forward -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Martin</figcaption>
-                    <p class="testimonial-handle">@cafe_amalfi</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sarah</figcaption>
-                    <p class="testimonial-handle">@pasta_mia</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Jakob</figcaption>
-                    <p class="testimonial-handle">@sushi_house</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Martin</figcaption>
-                    <p class="testimonial-handle">@cafe_amalfi</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sarah</figcaption>
-                    <p class="testimonial-handle">@pasta_mia</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Jakob</figcaption>
-                    <p class="testimonial-handle">@sushi_house</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Martin</figcaption>
-                    <p class="testimonial-handle">@cafe_amalfi</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sarah</figcaption>
-                    <p class="testimonial-handle">@pasta_mia</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Jakob</figcaption>
-                    <p class="testimonial-handle">@sushi_house</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
-              </figure>
-            </div>
-          </div>
-
-          <!-- Row 2 - Reverse -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Louise</figcaption>
-                    <p class="testimonial-handle">@gronne_cafe</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Thomas</figcaption>
-                    <p class="testimonial-handle">@burger_joint</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anna</figcaption>
-                    <p class="testimonial-handle">@mikkels_pizza</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Louise</figcaption>
-                    <p class="testimonial-handle">@gronne_cafe</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Thomas</figcaption>
-                    <p class="testimonial-handle">@burger_joint</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anna</figcaption>
-                    <p class="testimonial-handle">@mikkels_pizza</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Louise</figcaption>
-                    <p class="testimonial-handle">@gronne_cafe</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Thomas</figcaption>
-                    <p class="testimonial-handle">@burger_joint</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anna</figcaption>
-                    <p class="testimonial-handle">@mikkels_pizza</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
-              </figure>
-            </div>
-          </div>
-
-          <!-- Row 3 - Forward -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Peter</figcaption>
-                    <p class="testimonial-handle">@thai_garden</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Maria</figcaption>
-                    <p class="testimonial-handle">@cafe_hygge</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Henrik</figcaption>
-                    <p class="testimonial-handle">@bistro_nord</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Peter</figcaption>
-                    <p class="testimonial-handle">@thai_garden</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Maria</figcaption>
-                    <p class="testimonial-handle">@cafe_hygge</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Henrik</figcaption>
-                    <p class="testimonial-handle">@bistro_nord</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Peter</figcaption>
-                    <p class="testimonial-handle">@thai_garden</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Maria</figcaption>
-                    <p class="testimonial-handle">@cafe_hygge</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Henrik</figcaption>
-                    <p class="testimonial-handle">@bistro_nord</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
-              </figure>
-            </div>
-          </div>
-
-          <!-- Row 4 - Reverse -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sofie</figcaption>
-                    <p class="testimonial-handle">@brasserie_syd</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Lars</figcaption>
-                    <p class="testimonial-handle">@pizza_palace</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mette</figcaption>
-                    <p class="testimonial-handle">@cafe_central</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sofie</figcaption>
-                    <p class="testimonial-handle">@brasserie_syd</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Lars</figcaption>
-                    <p class="testimonial-handle">@pizza_palace</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mette</figcaption>
-                    <p class="testimonial-handle">@cafe_central</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Sofie</figcaption>
-                    <p class="testimonial-handle">@brasserie_syd</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Lars</figcaption>
-                    <p class="testimonial-handle">@pizza_palace</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mette</figcaption>
-                    <p class="testimonial-handle">@cafe_central</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
-              </figure>
-            </div>
-          </div>
-
-          <!-- Row 5 - Forward -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Kasper</figcaption>
-                    <p class="testimonial-handle">@wok_express</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Ida</figcaption>
-                    <p class="testimonial-handle">@bageren</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mikkel</figcaption>
-                    <p class="testimonial-handle">@steakhouse</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Kasper</figcaption>
-                    <p class="testimonial-handle">@wok_express</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Ida</figcaption>
-                    <p class="testimonial-handle">@bageren</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mikkel</figcaption>
-                    <p class="testimonial-handle">@steakhouse</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Kasper</figcaption>
-                    <p class="testimonial-handle">@wok_express</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Ida</figcaption>
-                    <p class="testimonial-handle">@bageren</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Mikkel</figcaption>
-                    <p class="testimonial-handle">@steakhouse</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
-              </figure>
-            </div>
-          </div>
-
-          <!-- Row 6 - Reverse -->
-          <div class="testimonial-marquee-group">
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Line</figcaption>
-                    <p class="testimonial-handle">@juice_bar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anders</figcaption>
-                    <p class="testimonial-handle">@gastropub</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Camilla</figcaption>
-                    <p class="testimonial-handle">@isbar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Line</figcaption>
-                    <p class="testimonial-handle">@juice_bar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anders</figcaption>
-                    <p class="testimonial-handle">@gastropub</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Camilla</figcaption>
-                    <p class="testimonial-handle">@isbar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
-              </figure>
-            </div>
-            <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Line</figcaption>
-                    <p class="testimonial-handle">@juice_bar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Anders</figcaption>
-                    <p class="testimonial-handle">@gastropub</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
-              </figure>
-              <figure class="testimonial-card">
-                <div class="testimonial-header">
-                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
-                  <div class="testimonial-info">
-                    <figcaption class="testimonial-name">Camilla</figcaption>
-                    <p class="testimonial-handle">@isbar</p>
-                  </div>
-                </div>
-                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
-              </figure>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center Icon -->
-        <div class="testimonial-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
-            <path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path>
-            <path d="m18 15-2-2"></path>
-            <path d="m15 18-2-2"></path>
+      <!-- CTA -->
+      <div class="how-cta">
+        <a href="index.html" class="button">
+          Start gratis nu
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
           </svg>
-        </div>
-
-        <!-- Center Content -->
-        <div class="testimonial-center">
-          <h1 class="testimonial-headline" id="hiw-headline">Elsket af restauranter i hele Danmark</h1>
-          <p class="testimonial-subheadline" id="hiw-subheadline">Start din gratis prøveperiode. Ingen kreditkort påkrævet.</p>
-        </div>
-
-        <!-- Gradient Overlay -->
-        <div class="testimonial-gradient"></div>
+        </a>
       </div>
     </div>
   </section>
@@ -3009,16 +2174,16 @@
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
           <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        <img src="images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 3rem; margin-top: 2rem;">
       </div>
     </div>
     <div class="footer-bottom">
       <p>2026 © Flow. All rights reserved.</p>
       <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
+        <a href="legal.html#cookies">Cookie Settings</a>
+        <a href="legal.html#privacy">Privacy</a>
+        <a href="legal.html#terms">Website Terms</a>
+        <a href="legal.html#disclaimer">Disclaimer</a>
       </div>
     </div>
   </footer>
@@ -3027,8 +2192,6 @@
     // State
     let selectedPlace = null;
     let searchTimeout = null;
-    let autocompleteService = null;
-    let placesService = null;
 
     // DOM Elements
     const searchInput = document.getElementById('searchInput');
@@ -3037,16 +2200,6 @@
     const heroSection = document.getElementById('heroSection');
     const loadingSection = document.getElementById('loadingSection');
     const reportSection = document.getElementById('reportSection');
-
-    // Initialize Google Places services when API is loaded
-    function initGooglePlaces() {
-      if (window.google && google.maps && google.maps.places) {
-        autocompleteService = new google.maps.places.AutocompleteService();
-        // Create a hidden div for PlacesService (required)
-        const placesDiv = document.createElement('div');
-        placesService = new google.maps.places.PlacesService(placesDiv);
-      }
-    }
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
@@ -3059,9 +2212,6 @@
           nav.classList.remove('scrolled');
         }
       });
-
-      // Initialize Google Places if already loaded
-      initGooglePlaces();
 
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
@@ -3095,79 +2245,34 @@
       }, 300);
     }
 
-    // Main search function - tries Google Places first, then Serper fallback
-    function searchPlaces(query) {
+    // Search for places using Google Places API only
+    async function searchPlaces(query) {
       // Show loading state
       autocompleteDropdown.innerHTML = '<div class="autocomplete-item"><span>Søger...</span></div>';
       autocompleteDropdown.classList.add('active');
 
-      // Try Google Places AutocompleteService first
-      if (autocompleteService) {
-        autocompleteService.getPlacePredictions({
-          input: query,
-          componentRestrictions: { country: 'dk' }
-        }, (predictions, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && predictions && predictions.length > 0) {
-            // Map Google predictions to our format
-            const results = predictions.map(prediction => ({
-              place_id: prediction.place_id,
-              name: prediction.structured_formatting.main_text,
-              address: prediction.structured_formatting.secondary_text || 'Danmark',
-              type: getPlaceType(prediction.types)
-            }));
-            renderAutocomplete(results);
-          } else {
-            // Google failed - fallback to Serper
-            searchWithSerper(query);
-          }
-        });
-      } else {
-        // Google not available - use Serper
-        searchWithSerper(query);
-      }
-    }
-
-    // Fallback search using Serper.dev API
-    async function searchWithSerper(query) {
       try {
+        // Call our API endpoint
         const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
           renderAutocomplete(data.results);
         } else {
+          // No results - show message, no manual entry allowed
           autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
         }
       } catch (error) {
-        console.error('Serper search error:', error);
+        console.error('Search error:', error);
+        // Show error message, no fallback to manual entry
         autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Der opstod en fejl ved søgning. Prøv igen.</div>';
       }
-    }
-
-    // Get readable place type from Google types array
-    function getPlaceType(types) {
-      if (!types || types.length === 0) return 'Virksomhed';
-      const typeMap = {
-        'restaurant': 'Restaurant',
-        'food': 'Mad & Drikke',
-        'cafe': 'Cafe',
-        'bar': 'Bar',
-        'bakery': 'Bageri',
-        'meal_takeaway': 'Takeaway',
-        'meal_delivery': 'Levering',
-        'store': 'Butik',
-        'establishment': 'Virksomhed'
-      };
-      for (const type of types) {
-        if (typeMap[type]) return typeMap[type];
-      }
-      return 'Virksomhed';
     }
 
     // Render autocomplete results
     function renderAutocomplete(results) {
       autocompleteDropdown.innerHTML = results.map(place => `
-        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}">
+        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}"> 
           <div class="autocomplete-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
@@ -3177,7 +2282,7 @@
             <div class="autocomplete-name">${place.name}</div>
             <div class="autocomplete-address">${place.address || 'Danmark'}</div>
           </div>
-          <span class="autocomplete-type">${place.type || 'Virksomhed'}</span>
+          <span class="autocomplete-type">${place.type || 'Restaurant'}</span>
         </div>
       `).join('');
 
@@ -3190,7 +2295,7 @@
     // Select a place
     function selectPlace(item) {
       const placeId = item.dataset.placeId;
-
+      
       selectedPlace = {
         place_id: placeId,
         name: item.dataset.name,
@@ -3265,46 +2370,9 @@
         preview: 'mobile',
         step: 6,
       },
-      {
-        id: 7,
-        name: 'Website indhold scanning',
-        duration: 9000,
-        preview: 'website',
-        step: 7,
-      },
     ];
 
     const TOTAL_SCAN_DURATION = SCAN_ENDPOINTS.reduce((sum, e) => sum + e.duration, 0);
-
-    // ============================================================================
-    // FIRECRAWL API INTEGRATION
-    // ============================================================================
-
-    const FIRECRAWL_API_KEY = 'fc-c12a209b1d6d44939e0b8faa393515e3';
-    const FIRECRAWL_API_URL = 'https://api.firecrawl.dev/v2/scrape';
-
-    // Scrape website using Firecrawl
-    async function scrapeWebsite(url) {
-      try {
-        const response = await fetch(FIRECRAWL_API_URL, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ url: url })
-        });
-
-        if (!response.ok) throw new Error('Firecrawl API error');
-
-        const data = await response.json();
-        console.log('Firecrawl data:', data);
-        return data;
-      } catch (error) {
-        console.error('Firecrawl scraping failed:', error);
-        return null;
-      }
-    }
 
     // ============================================================================
     // PREVIEW TEMPLATES
@@ -3436,42 +2504,6 @@
               </div>
             </div>
             <div style="font-size: 12px; color: #666;">Mobil Score</div>
-          </div>
-        </div>
-      `,
-
-      website: (data) => `
-        <div class="preview-website">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-            <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-              <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </div>
-            <div>
-              <div style="font-weight: 600; font-size: 16px;">Website Analyse</div>
-              <div style="font-size: 12px; opacity: 0.8;">Firecrawl AI Scanning</div>
-            </div>
-          </div>
-          <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              <span style="font-size: 13px;">Indhold scannet og analyseret</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              <span style="font-size: 13px;">SEO metadata udtrukket</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              <span style="font-size: 13px;">Kontaktoplysninger fundet</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              <span style="font-size: 13px;">Menu og priser identificeret</span>
-            </div>
           </div>
         </div>
       `,
@@ -3895,124 +2927,9 @@
       };
     }
   </script>
+<!-- Cookie Consent -->
+<script src="js/cookie-consent.js"></script>
 <!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
-
-<!-- Dynamic HIW Testimonials -->
-<script>
-(function() {
-  // Default testimonials
-  const defaultTestimonials = {
-    headline: 'Elsket af restauranter i hele Danmark',
-    subheadline: 'Start din gratis prøveperiode. Ingen kreditkort påkrævet.',
-    testimonials: [
-      { name: 'Martin', handle: '@cafe_amalfi', quote: 'Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!' },
-      { name: 'Sarah', handle: '@pasta_mia', quote: 'Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!' },
-      { name: 'Jakob', handle: '@sushi_house', quote: 'Endelig et system der bare virker. Ingen hovedpiner, bare resultater.' },
-      { name: 'Emma', handle: '@burger_joint', quote: 'Den bedste investering vi har gjort. ROI var positiv efter 2 uger.' },
-      { name: 'Anders', handle: '@pizza_palace', quote: 'Support teamet er fantastisk. De hjalp os med alt fra start til slut.' },
-      { name: 'Mette', handle: '@cafe_hygge', quote: 'Vi sparer 10 timer om ugen på administration. Det er uvurderligt.' },
-      { name: 'Thomas', handle: '@thai_garden', quote: 'Leveringsintegrationen er perfekt. Alt kører automatisk nu.' },
-      { name: 'Louise', handle: '@french_bistro', quote: 'Vores omsætning er steget 60% på 3 måneder. Utroligt resultat.' },
-      { name: 'Kasper', handle: '@grill_house', quote: 'Systemet er så intuitivt at selv min bedstemor kunne bruge det.' },
-      { name: 'Sofie', handle: '@salad_bar', quote: 'Push notifikationer har øget vores genbestillinger markant.' },
-      { name: 'Nikolaj', handle: '@taco_town', quote: 'Vi har fået 500+ nye kunder gennem appen på bare 2 måneder.' },
-      { name: 'Camilla', handle: '@dessert_heaven', quote: 'Analytics dashboardet giver os indsigt vi aldrig har haft før.' },
-      { name: 'Frederik', handle: '@seafood_shack', quote: 'Booking systemet har elimineret no-shows fuldstændigt.' },
-      { name: 'Ida', handle: '@vegan_vibes', quote: 'Flow integrerer perfekt med vores eksisterende systemer.' },
-      { name: 'Christian', handle: '@steakhouse_dk', quote: 'Kundeservice svarer altid inden for minutter. Imponerende.' },
-      { name: 'Julie', handle: '@breakfast_club', quote: 'Menuen er nem at opdatere og ændringerne vises med det samme.' },
-      { name: 'Mikkel', handle: '@wings_n_things', quote: 'QR-kode bestilling har reduceret ventetiden med 70%.' },
-      { name: 'Anna', handle: '@smoothie_spot', quote: 'Loyalitetsprogrammet har skabt en fast kundebase for os.' }
-    ]
-  };
-
-  // Load config from localStorage
-  function loadConfig() {
-    try {
-      const saved = localStorage.getItem('orderflow_hiw_testimonials');
-      return saved ? JSON.parse(saved) : defaultTestimonials;
-    } catch (e) {
-      return defaultTestimonials;
-    }
-  }
-
-  // Generate testimonial card HTML
-  function createCard(t) {
-    return `
-      <figure class="testimonial-card">
-        <div class="testimonial-header">
-          <img class="testimonial-avatar" src="https://avatar.vercel.sh/${encodeURIComponent(t.name)}" alt="">
-          <div class="testimonial-info">
-            <figcaption class="testimonial-name">${t.name}</figcaption>
-            <p class="testimonial-handle">${t.handle}</p>
-          </div>
-        </div>
-        <blockquote class="testimonial-quote">${t.quote}</blockquote>
-      </figure>
-    `;
-  }
-
-  // Generate row HTML (3 testimonials per row, duplicated for infinite scroll)
-  function createRow(testimonials, reverse = false) {
-    const cards = testimonials.map(createCard).join('');
-    return `
-      <div class="testimonial-marquee-group">
-        <div class="testimonial-marquee-row${reverse ? ' reverse' : ''}">${cards}</div>
-        <div class="testimonial-marquee-row${reverse ? ' reverse' : ''}">${cards}</div>
-      </div>
-    `;
-  }
-
-  // Render testimonials
-  function renderTestimonials() {
-    const config = loadConfig();
-    const testimonials = config.testimonials;
-
-    // Update headline and subheadline
-    const headlineEl = document.getElementById('hiw-headline');
-    const subheadlineEl = document.getElementById('hiw-subheadline');
-    if (headlineEl) headlineEl.textContent = config.headline;
-    if (subheadlineEl) subheadlineEl.textContent = config.subheadline;
-
-    // Split testimonials into groups for 6 rows
-    const wrapper = document.getElementById('hiw-testimonials-wrapper');
-    if (!wrapper) return;
-
-    // Need at least 3 testimonials per row for good scrolling
-    const testimonialsPerRow = 3;
-    const numRows = 6;
-    const totalNeeded = testimonialsPerRow * numRows;
-
-    // Duplicate testimonials if we don't have enough
-    let allTestimonials = [...testimonials];
-    while (allTestimonials.length < totalNeeded) {
-      allTestimonials = allTestimonials.concat(testimonials);
-    }
-
-    // Create rows
-    const rows = [];
-    for (let i = 0; i < numRows; i++) {
-      const start = (i * testimonialsPerRow) % allTestimonials.length;
-      const rowTestimonials = [];
-      for (let j = 0; j < testimonialsPerRow; j++) {
-        rowTestimonials.push(allTestimonials[(start + j) % allTestimonials.length]);
-      }
-      // Rows 3, 4, 5 (index 3-5) go in reverse
-      const reverse = i >= 3;
-      rows.push(createRow(rowTestimonials, reverse));
-    }
-
-    wrapper.innerHTML = rows.join('');
-  }
-
-  // Run on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderTestimonials);
-  } else {
-    renderTestimonials();
-  }
-})();
-</script>
+<script src="js/flow-cms-render.js"></script>
 </body>
 </html>
