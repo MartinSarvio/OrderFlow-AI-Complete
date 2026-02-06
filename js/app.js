@@ -3775,10 +3775,10 @@ function showPage(page) {
     loadPipelinePage();
   }
 
-  // Set dagsrapport dato til i dag
-  if (page === 'dagsrapport') {
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dagsrapport-dato').value = today;
+  // Rapport-sider: populer filtre og vis demo data hvis aktiv
+  var _reportPages = ['dagsrapport','produktrapport','zrapport','konverteringsrapport','genbestillingsrapport','anmeldelsesrapport','heatmaprapport'];
+  if (_reportPages.indexOf(page) !== -1) {
+    populateReportFiltersAndRender(page);
   }
   
   // Load aktiviteter når activities-siden vises
@@ -4646,8 +4646,8 @@ function showSettingsPage(tab) {
 // =====================================================
 let dagsrapportData = null;
 
-function generateDagsrapport() {
-  const dato = document.getElementById('dagsrapport-dato').value;
+function generateDagsrapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('dagsrapport-dato').value;
   if (!dato) {
     toast('Vælg venligst en dato', 'error');
     return;
@@ -4714,7 +4714,7 @@ function generateDagsrapport() {
   };
   
   renderDagsrapport();
-  toast('Dagsrapport genereret', 'success');
+  if (!silent) toast('Dagsrapport genereret', 'success');
 }
 
 function renderDagsrapport() {
@@ -5136,9 +5136,9 @@ function _fmtDateDK(d) {
 }
 
 // --- PRODUKTRAPPORT ---
-function generateProduktrapport() {
-  const fra = document.getElementById('produktrapport-fra').value;
-  const til = document.getElementById('produktrapport-til').value;
+function generateProduktrapport(demoFra, demoTil, silent) {
+  const fra = demoFra || document.getElementById('produktrapport-fra').value;
+  const til = demoTil || document.getElementById('produktrapport-til').value;
   if (!fra || !til) { toast('Vælg venligst et datointerval', 'error'); return; }
 
   const seed = new Date(fra).getDate() + new Date(fra).getMonth() * 31 + new Date(til).getDate();
@@ -5181,7 +5181,7 @@ function generateProduktrapport() {
     summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
   };
   renderProduktrapport();
-  toast('Produktrapport genereret', 'success');
+  if (!silent) toast('Produktrapport genereret', 'success');
 }
 
 function renderProduktrapport() {
@@ -5199,8 +5199,8 @@ function renderProduktrapport() {
 }
 
 // --- Z-RAPPORT ---
-function generateZrapport() {
-  const dato = document.getElementById('zrapport-dato').value;
+function generateZrapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('zrapport-dato').value;
   if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
 
   const dateObj = new Date(dato);
@@ -5232,7 +5232,7 @@ function generateZrapport() {
     summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
   };
   renderZrapport();
-  toast('Z-rapport genereret', 'success');
+  if (!silent) toast('Z-rapport genereret', 'success');
 }
 
 function renderZrapport() {
@@ -5254,8 +5254,8 @@ function renderZrapport() {
 }
 
 // --- KONVERTERINGSRAPPORT ---
-function generateKonverteringsrapport() {
-  const periode = parseInt(document.getElementById('konverteringsrapport-periode').value);
+function generateKonverteringsrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('konverteringsrapport-periode').value);
   const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
   const r = (min, max, off) => _reportRandom(seed, min, max, off);
 
@@ -5283,7 +5283,7 @@ function generateKonverteringsrapport() {
     summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
   };
   renderKonverteringsrapport();
-  toast('Konverteringsrapport genereret', 'success');
+  if (!silent) toast('Konverteringsrapport genereret', 'success');
 }
 
 function renderKonverteringsrapport() {
@@ -5301,8 +5301,8 @@ function renderKonverteringsrapport() {
 }
 
 // --- GENBESTILLINGSRAPPORT ---
-function generateGenbestillingsrapport() {
-  const periode = parseInt(document.getElementById('genbestillingsrapport-periode').value);
+function generateGenbestillingsrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('genbestillingsrapport-periode').value);
   const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
   const r = (min, max, off) => _reportRandom(seed, min, max, off);
 
@@ -5338,7 +5338,7 @@ function generateGenbestillingsrapport() {
     summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
   };
   renderGenbestillingsrapport();
-  toast('Genbestillingsrapport genereret', 'success');
+  if (!silent) toast('Genbestillingsrapport genereret', 'success');
 }
 
 function renderGenbestillingsrapport() {
@@ -5356,8 +5356,8 @@ function renderGenbestillingsrapport() {
 }
 
 // --- ANMELDELSESRAPPORT ---
-function generateAnmeldelsesrapport() {
-  const periode = parseInt(document.getElementById('anmeldelsesrapport-periode').value);
+function generateAnmeldelsesrapport(demoPeriode, silent) {
+  const periode = demoPeriode || parseInt(document.getElementById('anmeldelsesrapport-periode').value);
   const seed = periode + new Date().getMonth() * 31 + new Date().getFullYear();
   const r = (min, max, off) => _reportRandom(seed, min, max, off);
 
@@ -5392,7 +5392,7 @@ function generateAnmeldelsesrapport() {
     summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
   };
   renderAnmeldelsesrapport();
-  toast('Anmeldelsesrapport genereret', 'success');
+  if (!silent) toast('Anmeldelsesrapport genereret', 'success');
 }
 
 function renderAnmeldelsesrapport() {
@@ -5411,8 +5411,8 @@ function renderAnmeldelsesrapport() {
 }
 
 // --- HEATMAPRAPPORT ---
-function generateHeatmaprapport() {
-  const dato = document.getElementById('heatmaprapport-dato').value;
+function generateHeatmaprapport(demoDato, silent) {
+  const dato = demoDato || document.getElementById('heatmaprapport-dato').value;
   if (!dato) { toast('Vælg venligst en dato', 'error'); return; }
 
   const dateObj = new Date(dato);
@@ -5461,7 +5461,7 @@ function generateHeatmaprapport() {
     summary: { 'Travleste dag': busiestDay.day + ' (' + busiestDay.total + ' ordrer)', 'Travleste time': busiestSlot.slot + ' (' + busiestSlot.total + ' ordrer)', 'Total ordrer (ugen)': totalOrders.toLocaleString('da-DK'), 'Gns. ordrer pr. time': avgPerHour }
   };
   renderHeatmaprapport();
-  toast('Heatmap genereret', 'success');
+  if (!silent) toast('Heatmap genereret', 'success');
 }
 
 function _heatColor(value, max) {
@@ -8507,6 +8507,9 @@ function loadAllDemoData() {
   localStorage.setItem('orderflow_demo_activities', JSON.stringify(activities));
   localStorage.setItem('orderflow_demo_invoices', JSON.stringify(invoices));
 
+  // Generate demo reports
+  generateAllDemoReports();
+
   console.log('✅ Demo data loaded:', {
     customers: customers.length,
     orders: orders.length,
@@ -8514,8 +8517,37 @@ function loadAllDemoData() {
     products: products.items?.length || 0,
     campaigns: campaigns.length,
     activities: activities.length,
-    invoices: invoices.length
+    invoices: invoices.length,
+    reports: 7
   });
+}
+
+// Generate all 7 demo reports with default date ranges
+function generateAllDemoReports() {
+  const today = new Date();
+  const todayISO = today.toISOString().split('T')[0];
+  const ago30 = new Date(today); ago30.setDate(ago30.getDate() - 30);
+  const ago30ISO = ago30.toISOString().split('T')[0];
+  const monday = new Date(today); monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const mondayISO = monday.toISOString().split('T')[0];
+
+  generateDagsrapport(todayISO, true);
+  generateProduktrapport(ago30ISO, todayISO, true);
+  generateZrapport(todayISO, true);
+  generateKonverteringsrapport(30, true);
+  generateGenbestillingsrapport(90, true);
+  generateAnmeldelsesrapport(30, true);
+  generateHeatmaprapport(mondayISO, true);
+
+  localStorage.setItem('orderflow_demo_report_params', JSON.stringify({
+    dagsrapport: { dato: todayISO },
+    produktrapport: { fra: ago30ISO, til: todayISO },
+    zrapport: { dato: todayISO },
+    konverteringsrapport: { periode: 30 },
+    genbestillingsrapport: { periode: 90 },
+    anmeldelsesrapport: { periode: 30 },
+    heatmaprapport: { dato: mondayISO }
+  }));
 }
 
 // Clear all demo data from localStorage
@@ -8527,10 +8559,134 @@ function clearAllDemoData() {
     'orderflow_demo_products',
     'orderflow_demo_campaigns',
     'orderflow_demo_activities',
-    'orderflow_demo_invoices'
+    'orderflow_demo_invoices',
+    'orderflow_demo_report_params'
   ];
   demoKeys.forEach(key => localStorage.removeItem(key));
+
+  // Clear report global variables
+  dagsrapportData = null;
+  produktrapportData = null;
+  zrapportData = null;
+  konverteringsrapportData = null;
+  genbestillingsrapportData = null;
+  anmeldelsesrapportData = null;
+  heatmaprapportData = null;
+
+  // Restore empty state on report pages
+  clearAllReportContent();
+
   console.log('🗑️ Demo data cleared');
+}
+
+function clearAllReportContent() {
+  const emptyStates = {
+    'dagsrapport-content': { icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', text: 'Vælg en dato for at generere dagsrapport', sub: 'Rapporten viser salgsdata, betalinger og momsspecifikation' },
+    'produktrapport-content': { icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', text: 'Vælg datointerval for at generere produktrapport', sub: 'Se hvilke produkter der sælger bedst' },
+    'zrapport-content': { icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>', text: 'Vælg en dato for at generere Z-rapport', sub: 'Daglig kasserapport med afstemning' },
+    'konverteringsrapport-content': { icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>', text: 'Vælg en periode for at generere konverteringsrapport', sub: 'Se hvor mange kunder SAAS-systemet konverterer' },
+    'genbestillingsrapport-content': { icon: '<polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>', text: 'Vælg en periode for at generere genbestillingsrapport', sub: 'Se genbestillingsprocenter' },
+    'anmeldelsesrapport-content': { icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', text: 'Vælg en periode for at generere anmeldelsesrapport', sub: 'Se konvertering fra anmeldelser' },
+    'heatmaprapport-content': { icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', text: 'Vælg en uge for at generere heatmap', sub: 'Oversigt over hvornår ordretrykket er størst' }
+  };
+  Object.entries(emptyStates).forEach(([id, cfg]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<div class="card" style="padding:24px"><div class="empty"><div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">' + cfg.icon + '</svg></div><div>' + cfg.text + '</div><div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">' + cfg.sub + '</div></div></div>';
+  });
+  ['dagsrapport-dato','produktrapport-fra','produktrapport-til','zrapport-dato','heatmaprapport-dato'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['konverteringsrapport-periode','genbestillingsrapport-periode','anmeldelsesrapport-periode'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = el.querySelector('[selected]')?.index || 0;
+  });
+}
+
+// Populate report filters and auto-render when navigating to report pages
+function populateReportFiltersAndRender(page) {
+  // Always set dagsrapport date to today (existing behavior)
+  if (page === 'dagsrapport') {
+    var dagEl = document.getElementById('dagsrapport-dato');
+    if (dagEl && !dagEl.value) dagEl.value = new Date().toISOString().split('T')[0];
+  }
+
+  if (typeof isDemoDataEnabled !== 'function' || !isDemoDataEnabled()) return;
+
+  var params = JSON.parse(localStorage.getItem('orderflow_demo_report_params') || '{}');
+  var p = params[page];
+  if (!p) return;
+
+  // Populate filter inputs with demo values
+  switch (page) {
+    case 'dagsrapport':
+      var d1 = document.getElementById('dagsrapport-dato');
+      if (d1) d1.value = p.dato;
+      break;
+    case 'produktrapport':
+      var f1 = document.getElementById('produktrapport-fra');
+      var t1 = document.getElementById('produktrapport-til');
+      if (f1) f1.value = p.fra;
+      if (t1) t1.value = p.til;
+      break;
+    case 'zrapport':
+      var z1 = document.getElementById('zrapport-dato');
+      if (z1) z1.value = p.dato;
+      break;
+    case 'konverteringsrapport':
+      var k1 = document.getElementById('konverteringsrapport-periode');
+      if (k1) k1.value = p.periode;
+      break;
+    case 'genbestillingsrapport':
+      var g1 = document.getElementById('genbestillingsrapport-periode');
+      if (g1) g1.value = p.periode;
+      break;
+    case 'anmeldelsesrapport':
+      var a1 = document.getElementById('anmeldelsesrapport-periode');
+      if (a1) a1.value = p.periode;
+      break;
+    case 'heatmaprapport':
+      var h1 = document.getElementById('heatmaprapport-dato');
+      if (h1) h1.value = p.dato;
+      break;
+  }
+
+  // Check if data exists in global variable, render if so
+  var dataMap = {
+    'dagsrapport': dagsrapportData,
+    'produktrapport': produktrapportData,
+    'zrapport': zrapportData,
+    'konverteringsrapport': konverteringsrapportData,
+    'genbestillingsrapport': genbestillingsrapportData,
+    'anmeldelsesrapport': anmeldelsesrapportData,
+    'heatmaprapport': heatmaprapportData
+  };
+  var renderMap = {
+    'dagsrapport': renderDagsrapport,
+    'produktrapport': renderProduktrapport,
+    'zrapport': renderZrapport,
+    'konverteringsrapport': renderKonverteringsrapport,
+    'genbestillingsrapport': renderGenbestillingsrapport,
+    'anmeldelsesrapport': renderAnmeldelsesrapport,
+    'heatmaprapport': renderHeatmaprapport
+  };
+
+  if (dataMap[page]) {
+    // Data exists, just render
+    renderMap[page]();
+  } else {
+    // Data null (e.g., after page reload) — regenerate silently from saved params
+    var regenMap = {
+      'dagsrapport': function() { generateDagsrapport(p.dato, true); },
+      'produktrapport': function() { generateProduktrapport(p.fra, p.til, true); },
+      'zrapport': function() { generateZrapport(p.dato, true); },
+      'konverteringsrapport': function() { generateKonverteringsrapport(p.periode, true); },
+      'genbestillingsrapport': function() { generateGenbestillingsrapport(p.periode, true); },
+      'anmeldelsesrapport': function() { generateAnmeldelsesrapport(p.periode, true); },
+      'heatmaprapport': function() { generateHeatmaprapport(p.dato, true); }
+    };
+    if (regenMap[page]) regenMap[page]();
+  }
 }
 
 // Update demo data status display
@@ -8541,6 +8697,7 @@ function updateDemoDataStatus() {
   const customersCount = document.getElementById('demo-data-customers-count');
   const ordersCount = document.getElementById('demo-data-orders-count');
   const leadsCount = document.getElementById('demo-data-leads-count');
+  const reportsCountEl = document.getElementById('demo-data-reports-count');
 
   if (toggle) toggle.checked = enabled;
 
@@ -8553,10 +8710,12 @@ function updateDemoDataStatus() {
     const customers = JSON.parse(localStorage.getItem('orderflow_demo_customers') || '[]');
     const orders = JSON.parse(localStorage.getItem('orderflow_demo_orders') || '[]');
     const leads = JSON.parse(localStorage.getItem('orderflow_demo_leads') || '[]');
+    const reportsCount = [dagsrapportData, produktrapportData, zrapportData, konverteringsrapportData, genbestillingsrapportData, anmeldelsesrapportData, heatmaprapportData].filter(d => d !== null).length;
 
     if (customersCount) customersCount.textContent = customers.length;
     if (ordersCount) ordersCount.textContent = orders.length;
     if (leadsCount) leadsCount.textContent = leads.length;
+    if (reportsCountEl) reportsCountEl.textContent = reportsCount;
   } else {
     if (statusText) {
       statusText.textContent = 'Deaktiveret';
@@ -8565,6 +8724,7 @@ function updateDemoDataStatus() {
     if (customersCount) customersCount.textContent = '0';
     if (ordersCount) ordersCount.textContent = '0';
     if (leadsCount) leadsCount.textContent = '0';
+    if (reportsCountEl) reportsCountEl.textContent = '0';
   }
 }
 
