@@ -97,8 +97,12 @@ async function startDebuggingScheduler(): Promise<void> {
 let workflowInterval: ReturnType<typeof setInterval> | null = null;
 let lastCheckedTimestamp = new Date().toISOString();
 let processedMessages = 0;
+let workflowPollInFlight = false;
 
 async function pollForNewMessages(): Promise<void> {
+  if (workflowPollInFlight) return;
+  workflowPollInFlight = true;
+
   try {
     const supabase = createClient(config.supabaseUrl, config.supabaseKey);
 
@@ -163,6 +167,8 @@ async function pollForNewMessages(): Promise<void> {
     }
   } catch (err) {
     console.error('   ❌ Workflow poll error:', err);
+  } finally {
+    workflowPollInFlight = false;
   }
 }
 

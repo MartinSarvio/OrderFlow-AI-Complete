@@ -24,7 +24,7 @@ export const config = {
 
   // Scheduler intervals
   debugIntervalMs: parseInt(process.env.DEBUG_INTERVAL_MS || '300000'),   // 5 min
-  workflowPollMs: parseInt(process.env.WORKFLOW_POLL_INTERVAL_MS || '30000'), // 30s
+  workflowPollMs: parseInt(process.env.WORKFLOW_POLL_INTERVAL_MS || '5000'), // 5s
   inmobilePollMs: parseInt(process.env.INMOBILE_POLL_INTERVAL_MS || '15000'), // 15s
 
   // Thresholds

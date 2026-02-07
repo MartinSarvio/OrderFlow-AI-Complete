@@ -7,6 +7,43 @@ import { config } from '../config.js';
 
 let supabase: SupabaseClient | null = null;
 
+function normalizePhone(raw: string): string {
+  let digits = String(raw || '').replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('45')) return `+${digits}`;
+  if (digits.length === 8) return `+45${digits}`;
+  return `+${digits}`;
+}
+
+function buildPhoneCandidates(raw: string): string[] {
+  const candidates: string[] = [];
+  const push = (value: string) => {
+    if (!value) return;
+    if (!candidates.includes(value)) candidates.push(value);
+  };
+
+  const trimmed = String(raw || '').trim();
+  const normalized = normalizePhone(trimmed);
+  const digits = trimmed.replace(/[^0-9]/g, '');
+
+  push(trimmed);
+  push(normalized);
+  if (digits) {
+    push(digits);
+    if (digits.startsWith('45') && digits.length === 10) {
+      const local = digits.slice(2);
+      push(local);
+      push(`+45${local}`);
+    } else if (digits.length === 8) {
+      push(`45${digits}`);
+      push(`+45${digits}`);
+    }
+  }
+
+  return candidates.filter(Boolean);
+}
+
 /**
  * Get or create Supabase client
  */
@@ -230,22 +267,29 @@ export async function findOrderByPhone(phone: string): Promise<{
 }> {
   try {
     const client = getClient();
+    const candidates = buildPhoneCandidates(phone);
 
-    // Normalize phone number (remove spaces, ensure +45 prefix for Danish numbers)
-    const normalizedPhone = phone.replace(/\s+/g, '');
+    for (const candidate of candidates) {
+      const { data, error } = await client
+        .from('unified_orders')
+        .select('*')
+        .eq('customer_phone', candidate)
+        .not('status', 'in', '("completed","cancelled","delivered")')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    const { data, error } = await client
-      .from('unified_orders')
-      .select('*')
-      .eq('customer_phone', normalizedPhone)
-      .not('status', 'in', '("completed","cancelled","delivered")')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      if (!error && data) {
+        return {
+          data: data as Record<string, unknown>,
+          error: null,
+        };
+      }
+    }
 
     return {
-      data: (data as Record<string, unknown>) || null,
-      error: error ? error.message : null,
+      data: null,
+      error: null,
     };
   } catch (err) {
     return {
@@ -264,19 +308,29 @@ export async function findThreadByPhone(phone: string): Promise<{
 }> {
   try {
     const client = getClient();
-    const normalizedPhone = phone.replace(/\s+/g, '');
+    const candidates = buildPhoneCandidates(phone);
 
-    const { data, error } = await client
-      .from('conversation_threads')
-      .select('*')
-      .eq('customer_phone', normalizedPhone)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .single();
+    for (const candidate of candidates) {
+      const { data, error } = await client
+        .from('conversation_threads')
+        .select('*, customers!inner(phone)')
+        .eq('channel', 'sms')
+        .eq('customers.phone', candidate)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!error && data) {
+        return {
+          data: data as Record<string, unknown>,
+          error: null,
+        };
+      }
+    }
 
     return {
-      data: (data as Record<string, unknown>) || null,
-      error: error ? error.message : null,
+      data: null,
+      error: null,
     };
   } catch (err) {
     return {
@@ -289,18 +343,24 @@ export async function findThreadByPhone(phone: string): Promise<{
 /**
  * Check message idempotency (prevent duplicate processing)
  */
-export async function checkIdempotency(messageId: string): Promise<{
+export async function checkIdempotency(messageId: string, tenantId?: string): Promise<{
   isDuplicate: boolean;
   error: string | null;
 }> {
   try {
     const client = getClient();
 
-    const { data, error } = await client
+    let lookup = client
       .from('message_idempotency')
       .select('id')
-      .eq('message_id', messageId)
-      .maybeSingle();
+      .eq('channel', 'sms')
+      .eq('external_message_id', messageId);
+
+    if (tenantId) {
+      lookup = lookup.eq('tenant_id', tenantId);
+    }
+
+    const { data, error } = await lookup.limit(1).maybeSingle();
 
     if (error) {
       return { isDuplicate: false, error: error.message };
@@ -312,7 +372,9 @@ export async function checkIdempotency(messageId: string): Promise<{
 
     // Insert idempotency record
     await client.from('message_idempotency').insert({
-      message_id: messageId,
+      channel: 'sms',
+      external_message_id: messageId,
+      tenant_id: tenantId || null,
       processed_at: new Date().toISOString(),
     });
 

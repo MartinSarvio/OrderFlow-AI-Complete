@@ -120,7 +120,7 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
 
   // Step 1: Idempotency check
   steps.push('idempotency_check');
-  const { isDuplicate } = await checkIdempotency(sms.messageId);
+  const { isDuplicate } = await checkIdempotency(sms.messageId, sms.tenantId);
   if (isDuplicate) {
     console.log(`[WorkflowAgent] Duplicate SMS ignored: ${sms.messageId}`);
     auditLogger.logAgentStop({ result: 'duplicate_ignored' });
@@ -154,22 +154,28 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
 
   if (!orderId) {
     console.log(`[WorkflowAgent] No active order found for ${sms.from}`);
-    // Still process if it's an allergy alert
-    if (parsed.intent !== 'allergy') {
+    // Still process unknown/question via AI even without an active order.
+    if (parsed.intent !== 'allergy' && parsed.intent !== 'unknown' && parsed.intent !== 'question') {
       steps.push('no_order_found');
-      auditLogger.logAgentStop({ result: 'no_order' });
+      auditLogger.logAgentStop({ result: 'no_order_clarify' });
       return {
         messageId: sms.messageId,
         intent: parsed.intent,
         confidence: parsed.confidence,
-        action: 'ignore',
-        smsReply: null,
+        action: 'clarify',
+        smsReply: parsed.language === 'en'
+          ? 'Thanks for your message. Write your order in one SMS, and we will help you right away.'
+          : 'Tak for din besked. Skriv din bestilling i en SMS, sa hjalper vi dig med det samme.',
         statusUpdate: null,
         escalation: null,
         orderId: null,
         threadId,
         processing: { durationMs: Math.round(performance.now() - startTime), steps },
       };
+    }
+
+    if (parsed.intent === 'unknown' || parsed.intent === 'question') {
+      steps.push('no_order_continue_ai');
     }
   }
 
@@ -221,7 +227,7 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
         const messages = await queryMessages({ thread_id: threadId, limit: 5 });
         if (messages.data.length > 0) {
           contextStr = `\n\nSeneste beskeder i samtalen:\n${messages.data
-            .map((m: Record<string, unknown>) => `[${m.direction}] ${m.body}`)
+            .map((m: Record<string, unknown>) => `[${m.direction}] ${m.content}`)
             .join('\n')}`;
         }
       }
@@ -291,14 +297,18 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
 
     // Fallback: send clarification
     steps.push('send_clarification');
+    const clarifyWithoutOrder = parsed.language === 'en'
+      ? 'Thanks for your message. Please write what you want to order, and we will continue from there.'
+      : 'Tak for din besked. Skriv gerne hvad du vil bestille, sa fortsaetter vi herfra.';
+    const clarifyWithOrder = parsed.language === 'en'
+      ? "Sorry, we didn't understand your message. Please reply YES to confirm or NO to cancel your order."
+      : 'Undskyld, vi forstod ikke dit svar. Svar venligst JA for at bekraefte eller NEJ for at annullere din ordre.';
     return {
       messageId: sms.messageId,
       intent: parsed.intent,
       confidence: parsed.confidence,
       action: 'clarify',
-      smsReply: parsed.language === 'en'
-        ? "Sorry, we didn't understand your message. Please reply YES to confirm or NO to cancel your order."
-        : 'Undskyld, vi forstod ikke dit svar. Svar venligst JA for at bekr\u00e6fte eller NEJ for at annullere din ordre.',
+      smsReply: orderId ? clarifyWithOrder : clarifyWithoutOrder,
       statusUpdate: null,
       escalation: null,
       orderId,
@@ -422,9 +432,13 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
 
     default: {
       action = 'clarify';
-      smsReply = parsed.language === 'en'
-        ? "Sorry, we didn't understand your message. Please reply YES to confirm or NO to cancel."
-        : 'Undskyld, vi forstod ikke dit svar. Svar venligst JA for at bekr\u00e6fte eller NEJ for at annullere.';
+      smsReply = orderId
+        ? (parsed.language === 'en'
+          ? "Sorry, we didn't understand your message. Please reply YES to confirm or NO to cancel."
+          : 'Undskyld, vi forstod ikke dit svar. Svar venligst JA for at bekraefte eller NEJ for at annullere.')
+        : (parsed.language === 'en'
+          ? 'Thanks for your message. Please write what you want to order, and we will continue from there.'
+          : 'Tak for din besked. Skriv gerne hvad du vil bestille, sa fortsaetter vi herfra.');
     }
   }
 
