@@ -182,12 +182,34 @@ serve(async (req) => {
       provider: 'inmobile'
     })
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("ANON_KEY")
+    const messagesInsertKey = serviceRoleKey || anonKey
+    const warnings: string[] = []
 
-    const supabaseHeaders = {
+    if (!supabaseUrl || !messagesInsertKey) {
+      log.error({
+        event: "channel.sms.config_error",
+        error_reason: "Missing SUPABASE_URL or insert key",
+      })
+      return new Response(
+        JSON.stringify({ status: "error", reason: "server_config" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    const messagesInsertHeaders = {
       "Content-Type": "application/json",
-      "apikey": serviceRoleKey!,
-      "Authorization": `Bearer ${serviceRoleKey}`,
+      "apikey": messagesInsertKey,
+      "Authorization": `Bearer ${messagesInsertKey}`,
       "Prefer": "return=representation",
+    }
+
+    if (!serviceRoleKey && anonKey) {
+      warnings.push("service_role_missing_thread_processing_skipped")
+      log.warn({
+        event: "channel.sms.partial_mode",
+        warning_reason: "SERVICE_ROLE_KEY missing - only messages insert is enabled",
+      })
     }
 
     // Insert into messages table (backward compatibility)
@@ -203,7 +225,7 @@ serve(async (req) => {
 
     const insertResponse = await fetch(`${supabaseUrl}/rest/v1/messages`, {
       method: "POST",
-      headers: supabaseHeaders,
+      headers: messagesInsertHeaders,
       body: JSON.stringify(insertPayload),
     })
 
@@ -219,13 +241,31 @@ serve(async (req) => {
       await insertResponse.json()
     }
 
+    // If service role is missing, return early after storing message for realtime/UI.
+    if (!serviceRoleKey) {
+      return new Response(
+        JSON.stringify({ success: true, thread_id: null, warnings }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
+    const serviceAuthHeaders = {
+      "apikey": serviceRoleKey,
+      "Authorization": `Bearer ${serviceRoleKey}`,
+    }
+    const serviceHeaders = {
+      ...serviceAuthHeaders,
+      "Content-Type": "application/json",
+      "Prefer": "return=representation",
+    }
+
     // Bridge to conversation thread system
     // Step 1: Resolve tenant
     let tenantId: string | null = null
     if (normalizedReceiver) {
       const tenantRes = await fetch(
         `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(normalizedReceiver)}&select=id&limit=1`,
-        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+        { headers: serviceAuthHeaders }
       )
       if (tenantRes.ok) {
         const tenants = await tenantRes.json()
@@ -235,7 +275,7 @@ serve(async (req) => {
     if (!tenantId) {
       const fallbackRes = await fetch(
         `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
-        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+        { headers: serviceAuthHeaders }
       )
       if (fallbackRes.ok) {
         const fallback = await fallbackRes.json()
@@ -243,12 +283,20 @@ serve(async (req) => {
       }
     }
 
+    if (!tenantId) {
+      warnings.push("no_tenant")
+      return new Response(
+        JSON.stringify({ success: true, thread_id: null, warnings }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      )
+    }
+
     // Step 2: Find or create customer
     let customerId: string | null = null
     if (tenantId) {
       const custRes = await fetch(`${supabaseUrl}/rest/v1/rpc/get_or_create_customer`, {
         method: "POST",
-        headers: supabaseHeaders,
+        headers: serviceHeaders,
         body: JSON.stringify({ p_tenant_id: tenantId, p_phone: normalizedSender, p_email: null, p_name: null }),
       })
       if (custRes.ok) {
@@ -260,7 +308,7 @@ serve(async (req) => {
       if (!customerId) {
         const lookupRes = await fetch(
           `${supabaseUrl}/rest/v1/customers?phone=eq.${encodeURIComponent(normalizedSender)}&tenant_id=eq.${tenantId}&select=id&limit=1`,
-          { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+          { headers: serviceAuthHeaders }
         )
         if (lookupRes.ok) {
           const existing = await lookupRes.json()
@@ -269,7 +317,7 @@ serve(async (req) => {
           } else {
             const insRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
               method: "POST",
-              headers: supabaseHeaders,
+              headers: serviceHeaders,
               body: JSON.stringify({ tenant_id: tenantId, phone: normalizedSender }),
             })
             if (insRes.ok) {
@@ -286,7 +334,7 @@ serve(async (req) => {
     if (tenantId && customerId) {
       const threadRes = await fetch(
         `${supabaseUrl}/rest/v1/conversation_threads?tenant_id=eq.${tenantId}&customer_id=eq.${customerId}&channel=eq.sms&status=eq.open&order=created_at.desc&limit=1`,
-        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+        { headers: serviceAuthHeaders }
       )
       if (threadRes.ok) {
         const threads = await threadRes.json()
@@ -294,7 +342,7 @@ serve(async (req) => {
           threadId = threads[0].id
           await fetch(`${supabaseUrl}/rest/v1/conversation_threads?id=eq.${threadId}`, {
             method: "PATCH",
-            headers: { ...supabaseHeaders, "Prefer": "return=minimal" },
+            headers: { ...serviceHeaders, "Prefer": "return=minimal" },
             body: JSON.stringify({ last_message_at: new Date().toISOString() }),
           })
         }
@@ -303,7 +351,7 @@ serve(async (req) => {
       if (!threadId) {
         const newRes = await fetch(`${supabaseUrl}/rest/v1/conversation_threads`, {
           method: "POST",
-          headers: supabaseHeaders,
+          headers: serviceHeaders,
           body: JSON.stringify({
             tenant_id: tenantId,
             customer_id: customerId,
@@ -323,7 +371,7 @@ serve(async (req) => {
       if (threadId) {
         await fetch(`${supabaseUrl}/rest/v1/thread_messages`, {
           method: "POST",
-          headers: supabaseHeaders,
+          headers: serviceHeaders,
           body: JSON.stringify({
             thread_id: threadId,
             direction: "inbound",
@@ -349,7 +397,7 @@ serve(async (req) => {
     })
 
     return new Response(
-      JSON.stringify({ success: true, thread_id: threadId }),
+      JSON.stringify({ success: true, thread_id: threadId, warnings }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   } catch (error) {
