@@ -1,6 +1,6 @@
 // OrderFlow PWA Generator - Header Component
 import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, Clock, MapPin, Phone } from 'lucide-react';
+import { ShoppingCart, User, Menu, Clock, MapPin, Phone, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,24 @@ interface HeaderProps {
 export function Header({ restaurant, itemCount, onCartClick, onNavigate, currentView }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check FlowAuth session
+  useEffect(() => {
+    const checkAuth = async () => {
+      const FlowAuth = (window as any).FlowAuth;
+      if (FlowAuth) {
+        const user = await FlowAuth.checkSession();
+        setIsLoggedIn(!!user);
+      }
+    };
+    checkAuth();
+    const interval = setInterval(() => {
+      const FlowAuth = (window as any).FlowAuth;
+      if (FlowAuth) setIsLoggedIn(!!FlowAuth.getUser());
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Track scroll position for active section
   useEffect(() => {
@@ -168,17 +186,31 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
             )}
           </Button>
 
-          {/* Profile Button (Desktop) */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
-              scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-            }`}
-            onClick={() => onNavigate('profile')}
-          >
-            <User className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
-          </Button>
+          {/* Profile / Auth Button (Desktop) */}
+          {isLoggedIn ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
+                scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+              }`}
+              onClick={() => (window as any).FlowAuth?.goToAdmin()}
+              title="Admin Dashboard"
+            >
+              <Settings className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
+                scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+              }`}
+              onClick={() => onNavigate('profile')}
+            >
+              <User className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
+            </Button>
+          )}
 
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -238,19 +270,32 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
                         {item.label}
                       </button>
                     ))}
-                    <button
-                      onClick={() => {
-                        onNavigate('profile');
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
-                      style={{
-                        color: isActive('profile') ? branding.colors.primary : branding.colors.text,
-                        backgroundColor: isActive('profile') ? `${branding.colors.primary}10` : 'transparent'
-                      }}
-                    >
-                      Min profil
-                    </button>
+                    {isLoggedIn ? (
+                      <button
+                        onClick={() => {
+                          (window as any).FlowAuth?.goToAdmin();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
+                        style={{ color: branding.colors.primary }}
+                      >
+                        Admin Dashboard
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          onNavigate('profile');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
+                        style={{
+                          color: isActive('profile') ? branding.colors.primary : branding.colors.text,
+                          backgroundColor: isActive('profile') ? `${branding.colors.primary}10` : 'transparent'
+                        }}
+                      >
+                        Min profil
+                      </button>
+                    )}
                   </div>
                 </nav>
 

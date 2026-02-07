@@ -4713,8 +4713,11 @@ function generateDagsrapport(demoDato, silent) {
     }
   };
   
-  renderDagsrapport();
-  if (!silent) toast('Dagsrapport genereret', 'success');
+  // Generate report files and show file table
+  generateReportFiles('dagsrapport', dato).then(() => {
+    renderReportFileTable('dagsrapport', dato);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderDagsrapport() {
@@ -5180,8 +5183,11 @@ function generateProduktrapport(demoFra, demoTil, silent) {
     _raw: rows,
     summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
   };
-  renderProduktrapport();
-  if (!silent) toast('Produktrapport genereret', 'success');
+  const reportDate = til;
+  generateReportFiles('produktrapport', reportDate).then(() => {
+    renderReportFileTable('produktrapport', reportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderProduktrapport() {
@@ -5231,8 +5237,10 @@ function generateZrapport(demoDato, silent) {
     rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
     summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
   };
-  renderZrapport();
-  if (!silent) toast('Z-rapport genereret', 'success');
+  generateReportFiles('zrapport', dato).then(() => {
+    renderReportFileTable('zrapport', dato);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderZrapport() {
@@ -5282,8 +5290,11 @@ function generateKonverteringsrapport(demoPeriode, silent) {
     rows: rows.map(x => [x.src, x.visitors.toLocaleString('da-DK'), x.orders.toLocaleString('da-DK'), _fmtPct(x.convRate), _fmtDKK(x.avgOrder), _fmtDKK(x.revenue)]),
     summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
   };
-  renderKonverteringsrapport();
-  if (!silent) toast('Konverteringsrapport genereret', 'success');
+  const konvReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('konverteringsrapport', konvReportDate).then(() => {
+    renderReportFileTable('konverteringsrapport', konvReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderKonverteringsrapport() {
@@ -5337,8 +5348,11 @@ function generateGenbestillingsrapport(demoPeriode, silent) {
     _raw: rows,
     summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
   };
-  renderGenbestillingsrapport();
-  if (!silent) toast('Genbestillingsrapport genereret', 'success');
+  const genbestReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('genbestillingsrapport', genbestReportDate).then(() => {
+    renderReportFileTable('genbestillingsrapport', genbestReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderGenbestillingsrapport() {
@@ -5391,8 +5405,11 @@ function generateAnmeldelsesrapport(demoPeriode, silent) {
     _raw: rows,
     summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
   };
-  renderAnmeldelsesrapport();
-  if (!silent) toast('Anmeldelsesrapport genereret', 'success');
+  const anmReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('anmeldelsesrapport', anmReportDate).then(() => {
+    renderReportFileTable('anmeldelsesrapport', anmReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderAnmeldelsesrapport() {
@@ -5757,10 +5774,10 @@ const ExportService = {
     this.generateProfessionalPDF(reportType, data);
   },
 
-  generateProfessionalPDF(reportType, data) {
+  generateProfessionalPDF(reportType, data, returnBlob) {
     if (typeof window.jspdf === 'undefined') {
       toast('PDF bibliotek indlæses...', 'info');
-      setTimeout(() => this.generateProfessionalPDF(reportType, data), 500);
+      setTimeout(() => this.generateProfessionalPDF(reportType, data, returnBlob), 500);
       return;
     }
 
@@ -5954,6 +5971,7 @@ const ExportService = {
 
     // Save PDF
     const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.pdf`;
+    if (returnBlob) return { blob: doc.output('blob'), filename };
     doc.save(filename);
     closeExportDropdown();
   },
@@ -6115,8 +6133,169 @@ const ExportService = {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
+  },
+
+  // === BLOB GENERATORS (for report file tables) ===
+  getPDFBlob(reportType) {
+    const data = this.getReportData(reportType);
+    return this.generateProfessionalPDF(reportType, data, true);
+  },
+
+  getExcelBlob(reportType) {
+    const data = this.getReportData(reportType);
+    const rows = this.buildDataRows(reportType, data);
+    const xmlContent = this.generateExcelXML(reportType, rows, data);
+    const blob = new Blob([xmlContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.xlsx`;
+    return { blob, filename };
+  },
+
+  getCSVBlob(reportType) {
+    const data = this.getReportData(reportType);
+    const rows = this.buildDataRows(reportType, data);
+    const csv = rows.map(row =>
+      (Array.isArray(row) ? row : [row]).map(cell => {
+        const str = String(cell === undefined || cell === null ? '' : cell);
+        if (str.includes(';') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g, '""') + '"';
+        return str;
+      }).join(';')
+    ).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.csv`;
+    return { blob, filename };
   }
 };
+
+// === REPORT FILE MANAGEMENT ===
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function getReportStorageKey(reportType, dato) {
+  return `orderflow_report_files_${reportType}_${dato}`;
+}
+
+async function generateReportFiles(reportType, dato) {
+  const storageKey = getReportStorageKey(reportType, dato);
+  const title = ExportService.titles[reportType] || reportType;
+  const dateStr = dato.replace(/-/g, '');
+  const now = new Date().toISOString();
+  const files = [];
+
+  try {
+    // Generate PDF
+    const pdf = ExportService.getPDFBlob(reportType);
+    if (pdf && pdf.blob) {
+      const reader = new FileReader();
+      const pdfBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(pdf.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.pdf`, format: 'pdf', size: pdf.blob.size, generated: now, data: pdfBase64 });
+    }
+
+    // Generate Excel
+    const xls = ExportService.getExcelBlob(reportType);
+    if (xls && xls.blob) {
+      const reader = new FileReader();
+      const xlsBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(xls.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.xlsx`, format: 'xlsx', size: xls.blob.size, generated: now, data: xlsBase64 });
+    }
+
+    // Generate CSV
+    const csv = ExportService.getCSVBlob(reportType);
+    if (csv && csv.blob) {
+      const reader = new FileReader();
+      const csvBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(csv.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.csv`, format: 'csv', size: csv.blob.size, generated: now, data: csvBase64 });
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify({ files }));
+    return files;
+  } catch (e) {
+    console.error('generateReportFiles error:', e);
+    return [];
+  }
+}
+
+function loadReportFiles(reportType, dato) {
+  const storageKey = getReportStorageKey(reportType, dato);
+  const stored = localStorage.getItem(storageKey);
+  if (!stored) return [];
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed.files || [];
+  } catch (e) { return []; }
+}
+
+function downloadReportFile(reportType, dato, format) {
+  const files = loadReportFiles(reportType, dato);
+  const file = files.find(f => f.format === format);
+  if (!file) { toast('Fil ikke fundet', 'error'); return; }
+
+  const link = document.createElement('a');
+  link.href = file.data;
+  link.download = file.name;
+  link.click();
+}
+
+function renderReportFileTable(reportType, dato) {
+  const containerId = `${reportType}-content`;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const files = loadReportFiles(reportType, dato);
+
+  if (!files || files.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="padding:24px">
+        <div class="empty">
+          <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div>Ingen rapportfiler for denne dato</div>
+          <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">Klik "Generer rapport" for at oprette filer</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const formatBadge = (fmt) => {
+    const colors = { pdf: '#dc2626', xlsx: '#16a34a', csv: '#2563eb' };
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;background:${colors[fmt] || '#6b7280'}">${fmt.toUpperCase()}</span>`;
+  };
+
+  const formatDate = (iso) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return iso; }
+  };
+
+  container.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 80px 90px 150px 100px;gap:var(--space-3);padding:12px 16px;background:var(--bg);border-bottom:2px solid var(--border);font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold);color:var(--muted)">
+        <span>Filnavn</span><span>Format</span><span>Størrelse</span><span>Genereret</span><span style="text-align:center">Download</span>
+      </div>
+      ${files.map(file => `
+        <div style="display:grid;grid-template-columns:1fr 80px 90px 150px 100px;gap:var(--space-3);padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:var(--font-size-sm)">
+          <span style="font-weight:var(--font-weight-medium)">${file.name}</span>
+          <span>${formatBadge(file.format)}</span>
+          <span style="color:var(--muted)">${formatFileSize(file.size)}</span>
+          <span style="color:var(--muted)">${formatDate(file.generated)}</span>
+          <span style="text-align:center"><button class="btn btn-secondary btn-sm" onclick="downloadReportFile('${reportType}','${dato}','${file.format}')">Download</button></span>
+        </div>
+      `).join('')}
+    </div>`;
+}
 
 // === EXPORT DROPDOWN FUNCTIONS ===
 function toggleExportDropdown(id) {
@@ -20022,7 +20201,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'google', 'trustpilot', 'webhook'].forEach(api => {
+      ['openai', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -20087,7 +20266,9 @@ async function saveAllApiSettings() {
     google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
     google_api_key: document.getElementById('google-api-key')?.value.trim() || '',
     trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
-    trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || ''
+    trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || '',
+    firecrawl_api_key: document.getElementById('firecrawl-api-key')?.value.trim() || '',
+    googleapi_api_key: document.getElementById('googleapi-api-key')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -22828,78 +23009,108 @@ async function setup2FATOTP() {
   }
 }
 
+/**
+ * Generate a branded FLOW QR code with circular dots, black background, and FLOW logo
+ * @param {string} data - URL or text to encode
+ * @param {HTMLElement} container - DOM element to render into
+ * @param {Object} [options] - Override options
+ * @param {number} [options.width=280] - QR code width
+ * @param {number} [options.height=280] - QR code height
+ * @param {boolean} [options.showLogo=true] - Show FLOW logo in center
+ */
+function generateBrandedQR(data, container, options = {}) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  const width = options.width || 280;
+  const height = options.height || 280;
+  const showLogo = options.showLogo !== false;
+
+  // Use qr-code-styling if available
+  if (typeof QRCodeStyling !== 'undefined') {
+    const qrConfig = {
+      width,
+      height,
+      data,
+      type: 'canvas',
+      dotsOptions: {
+        color: '#ffffff',
+        type: 'dots'
+      },
+      backgroundOptions: {
+        color: '#000000'
+      },
+      cornersSquareOptions: {
+        type: 'extra-rounded',
+        color: '#ffffff'
+      },
+      cornersDotOptions: {
+        type: 'dot',
+        color: '#ffffff'
+      },
+      qrOptions: {
+        errorCorrectionLevel: showLogo ? 'H' : 'M'
+      }
+    };
+
+    if (showLogo) {
+      qrConfig.image = 'images/FLOW-logo-hvid-4K.png';
+      qrConfig.imageOptions = {
+        crossOrigin: 'anonymous',
+        margin: 6,
+        imageSize: 0.3,
+        hideBackgroundDots: true
+      };
+    }
+
+    const qrCode = new QRCodeStyling(qrConfig);
+    qrCode.append(container);
+    console.log('✅ Branded FLOW QR code generated');
+    return qrCode;
+  }
+
+  // Fallback to standard QRCode
+  console.warn('QRCodeStyling not available, falling back to standard QR');
+  if (typeof QRCode !== 'undefined') {
+    const wrapper = document.createElement('div');
+    wrapper.style.background = '#000';
+    wrapper.style.padding = '16px';
+    wrapper.style.borderRadius = '12px';
+    wrapper.style.display = 'inline-block';
+    container.appendChild(wrapper);
+
+    if (typeof QRCode.toDataURL === 'function') {
+      QRCode.toDataURL(data, { width: width, margin: 1, color: { dark: '#ffffff', light: '#000000' } })
+        .then(url => {
+          const img = document.createElement('img');
+          img.width = width;
+          img.height = height;
+          img.alt = 'QR Code';
+          img.style.display = 'block';
+          img.src = url;
+          wrapper.appendChild(img);
+        })
+        .catch(() => {
+          wrapper.innerHTML = `<p style="color:#fff;font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+        });
+    } else if (typeof QRCode === 'function') {
+      new QRCode(wrapper, { text: data, width, height, colorDark: '#ffffff', colorLight: '#000000' });
+    }
+    return null;
+  }
+
+  container.innerHTML = `<p style="color:var(--muted);font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+  return null;
+}
+
 function render2FAQrCode(otpauthUrl) {
   const container = document.getElementById('2fa-qr-container');
   if (!container) return;
-
-  // Clear previous QR content
   container.innerHTML = '';
-
-  // Try QRCode.toDataURL first (from qrcode npm package)
-  if (typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function') {
-    QRCode.toDataURL(otpauthUrl, {
-      width: 200,
-      margin: 1,
-      color: { dark: '#000000', light: '#ffffff' }
-    }).then((qrDataUrl) => {
-      const img = document.createElement('img');
-      img.width = 200;
-      img.height = 200;
-      img.alt = 'QR Code';
-      img.style.display = 'block';
-      img.src = qrDataUrl;
-      container.appendChild(img);
-      console.log('✅ QR code generated with toDataURL');
-    }).catch((qrErr) => {
-      console.error('QR code generation error:', qrErr);
-      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-    });
-    return;
-  }
-
-  // Fallback to QRCode constructor (from qrcodejs library)
-  if (typeof QRCode !== 'undefined' && typeof QRCode === 'function') {
-    try {
-      const temp = document.createElement('div');
-      temp.style.position = 'fixed';
-      temp.style.left = '-9999px';
-      temp.style.top = '-9999px';
-      document.body.appendChild(temp);
-
-      new QRCode(temp, {
-        text: otpauthUrl,
-        width: 200,
-        height: 200,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
-      });
-
-      setTimeout(() => {
-        const rendered = temp.querySelector('img') || temp.querySelector('canvas');
-        if (rendered) {
-          const img = document.createElement('img');
-          img.width = 200;
-          img.height = 200;
-          img.alt = 'QR Code';
-          img.style.display = 'block';
-          img.src = rendered.tagName === 'CANVAS' ? rendered.toDataURL('image/png') : rendered.src;
-          container.appendChild(img);
-          console.log('✅ QR code generated with constructor');
-        } else {
-          container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-        }
-        temp.remove();
-      }, 100);
-    } catch (e) {
-      console.error('QRCode constructor error:', e);
-      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-    }
-    return;
-  }
-
-  console.warn('QRCode library not available');
-  container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '16px';
+  generateBrandedQR(otpauthUrl, container, { width: 200, height: 200 });
 }
 
 /**
@@ -26627,28 +26838,19 @@ function initAppBuilder() {
   }
 }
 
-// Show QR code for mobile app preview (uses API-based QR generation for reliability)
+// Show QR code for mobile app preview (branded FLOW QR)
 function showAppPreviewQR() {
-  // Sync config to all previews first
   syncAppBuilderConfig();
 
   const container = document.getElementById('app-preview-qr-container');
   if (!container) return;
 
   const previewUrl = getAppPreviewUrl();
-  const encodedUrl = encodeURIComponent(previewUrl);
-
-  // Use API-based QR code generation (more reliable than JS library)
-  container.innerHTML = `
-    <img
-      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&format=png"
-      alt="QR kode til app preview"
-      width="200"
-      height="200"
-      style="display:block;border-radius:8px"
-      onerror="this.parentElement.innerHTML='<p style=\\'color:var(--muted);text-align:center\\'>Kunne ikke generere QR-kode<br><small>${previewUrl}</small></p>'"
-    >
-  `;
+  container.innerHTML = '';
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '20px';
+  generateBrandedQR(previewUrl, container, { width: 240, height: 240 });
 
   showModal('app-preview-qr');
 }
@@ -29044,6 +29246,149 @@ function showFlowPage(slug) {
 
   const pagePath = pageMap[slug] || slug + '.html';
   window.open(pagePath, '_blank');
+}
+
+// =====================================================
+// TEMPLATE EDITOR FUNCTIONS
+// =====================================================
+
+const templateEditorState = {
+  currentTemplate: null,
+  currentFile: null,
+  files: {},
+  unsaved: false
+};
+
+const templateEditorFiles = {
+  'skabelon-1': [
+    { name: 'index.html', path: 'templates/skabelon-1/index.html', type: 'html' },
+    { name: 'src/App.tsx', path: 'templates/skabelon-1/src/App.tsx', type: 'tsx' },
+    { name: 'src/components/Header.tsx', path: 'templates/skabelon-1/src/components/Header.tsx', type: 'tsx' },
+    { name: 'src/components/Hero.tsx', path: 'templates/skabelon-1/src/components/Hero.tsx', type: 'tsx' },
+    { name: 'src/components/MenuSection.tsx', path: 'templates/skabelon-1/src/components/MenuSection.tsx', type: 'tsx' },
+    { name: 'src/components/Footer.tsx', path: 'templates/skabelon-1/src/components/Footer.tsx', type: 'tsx' },
+    { name: 'src/data/mockData.ts', path: 'templates/skabelon-1/src/data/mockData.ts', type: 'ts' },
+    { name: 'src/types/index.ts', path: 'templates/skabelon-1/src/types/index.ts', type: 'ts' }
+  ],
+  'skabelon-2': [
+    { name: 'index.html', path: 'templates/skabelon-2/index.html', type: 'html' },
+    { name: 'css/style.css', path: 'templates/skabelon-2/css/style.css', type: 'css' },
+    { name: 'css/responsive.css', path: 'templates/skabelon-2/css/responsive.css', type: 'css' },
+    { name: 'js/custom.js', path: 'templates/skabelon-2/js/custom.js', type: 'js' }
+  ],
+  'skabelon-3': [
+    { name: 'index.html', path: 'templates/skabelon-3/index.html', type: 'html' },
+    { name: 'css/style.css', path: 'templates/skabelon-3/css/style.css', type: 'css' },
+    { name: 'js/main.js', path: 'templates/skabelon-3/js/main.js', type: 'js' }
+  ]
+};
+
+function loadTemplateEditorFiles(templateId) {
+  templateEditorState.currentTemplate = templateId;
+  templateEditorState.currentFile = null;
+  templateEditorState.files = {};
+  templateEditorState.unsaved = false;
+
+  const files = templateEditorFiles[templateId] || [];
+  const listEl = document.getElementById('te-file-list');
+  if (!listEl) return;
+
+  const typeIcons = { html: '&#128196;', css: '&#127912;', js: '&#9889;', ts: '&#9889;', tsx: '&#9889;' };
+
+  listEl.innerHTML = files.map(f =>
+    `<button onclick="loadTemplateFile('${f.path}','${f.name}')" class="te-file-btn" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="if(!this.classList.contains('active'))this.style.background='none'">${typeIcons[f.type] || '&#128196;'} ${f.name}</button>`
+  ).join('');
+
+  const previewFrame = document.getElementById('te-preview-frame');
+  if (previewFrame) {
+    previewFrame.src = 'templates/' + templateId + '/index.html';
+  }
+
+  document.getElementById('te-current-file').textContent = 'Ingen fil valgt';
+  document.getElementById('te-code-editor').value = '';
+}
+
+async function loadTemplateFile(path, name) {
+  if (templateEditorState.unsaved) {
+    if (!confirm('Du har ugemte \u00e6ndringer. Vil du forts\u00e6tte?')) return;
+  }
+
+  const storageKey = 'te_file_' + path;
+  const savedContent = localStorage.getItem(storageKey);
+
+  if (savedContent !== null) {
+    templateEditorState.currentFile = path;
+    templateEditorState.files[path] = savedContent;
+    templateEditorState.unsaved = false;
+    document.getElementById('te-current-file').textContent = name;
+    document.getElementById('te-code-editor').value = savedContent;
+    highlightActiveFile(path);
+    return;
+  }
+
+  try {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error('Kunne ikke hente filen');
+    const content = await response.text();
+
+    templateEditorState.currentFile = path;
+    templateEditorState.files[path] = content;
+    templateEditorState.unsaved = false;
+    document.getElementById('te-current-file').textContent = name;
+    document.getElementById('te-code-editor').value = content;
+    highlightActiveFile(path);
+  } catch (err) {
+    toast('Kunne ikke indl\u00e6se filen: ' + err.message, 'error');
+  }
+}
+
+function highlightActiveFile(path) {
+  document.querySelectorAll('.te-file-btn').forEach(function(btn) {
+    var isActive = btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf(path) !== -1;
+    btn.classList.toggle('active', isActive);
+    btn.style.background = isActive ? 'var(--bg2)' : 'none';
+    btn.style.fontWeight = isActive ? '600' : 'normal';
+  });
+}
+
+function markTemplateFileUnsaved() {
+  templateEditorState.unsaved = true;
+  var statusEl = document.getElementById('te-save-status');
+  if (statusEl) {
+    statusEl.textContent = 'Ugemte \u00e6ndringer';
+    statusEl.style.display = '';
+    statusEl.style.color = 'var(--warning)';
+  }
+}
+
+function saveTemplateFile() {
+  if (!templateEditorState.currentFile) {
+    toast('Ingen fil valgt', 'warning');
+    return;
+  }
+
+  var content = document.getElementById('te-code-editor').value;
+  var storageKey = 'te_file_' + templateEditorState.currentFile;
+  localStorage.setItem(storageKey, content);
+  templateEditorState.files[templateEditorState.currentFile] = content;
+  templateEditorState.unsaved = false;
+
+  var statusEl = document.getElementById('te-save-status');
+  if (statusEl) {
+    statusEl.textContent = '\u2713 Gemt';
+    statusEl.style.display = '';
+    statusEl.style.color = 'var(--success)';
+    setTimeout(function() { statusEl.style.display = 'none'; }, 2000);
+  }
+
+  toast('Fil gemt', 'success');
+}
+
+function refreshTemplatePreview() {
+  var previewFrame = document.getElementById('te-preview-frame');
+  if (previewFrame && templateEditorState.currentTemplate) {
+    previewFrame.src = 'templates/' + templateEditorState.currentTemplate + '/index.html';
+  }
 }
 
 // =====================================================
@@ -33733,26 +34078,49 @@ function generateApiKey() {
 
 // Load API keys list
 function loadApiKeysList() {
-  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  const userKeys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  const disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
   const tbody = document.getElementById('api-keys-list');
   if (!tbody) return;
 
-  if (keys.length === 0) {
-    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API nøgler oprettet endnu</td></tr>';
+  // System API keys (always shown, cannot be deleted)
+  const sysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+  const systemRows = sysKeys.map(function(sKey) {
+    var isDisabled = disabledStates[sKey.id] === true;
+    var statusColor = isDisabled ? 'var(--danger)' : 'var(--success)';
+    var statusText = isDisabled ? 'Deaktiveret' : 'Aktiv';
+    var masked = maskApiKey(sKey.key);
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:12px 8px;font-size:14px">' + sKey.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + sKey.service + ')</span></td>' +
+      '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + sKey.id + '" data-visible="false">' + masked + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + sKey.type + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:' + statusColor + '">' + statusText + '</td>' +
+      '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' +
+        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + sKey.id + '\')" title="Vis/skjul nøgle" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyActive(\'' + sKey.id + '\')" title="' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '" style="padding:4px 8px;margin-right:4px">' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Konfigurer" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>' +
+      '</td></tr>';
+  });
+
+  // User-generated keys
+  var userRows = userKeys.map(function(key) {
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:12px 8px;font-size:14px">' + key.name + '</td>' +
+      '<td style="padding:12px 8px;font-size:14px;font-family:monospace;color:var(--muted)">' + key.keyPrefix + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">Bruger</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:var(--success)">Aktiv</td>' +
+      '<td style="padding:12px 8px;text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteApiKey(\'' + key.id + '\')">Slet</button></td>' +
+    '</tr>';
+  });
+
+  var allRows = systemRows.concat(userRows);
+
+  if (allRows.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API nøgler</td></tr>';
     return;
   }
 
-  tbody.innerHTML = keys.map(key => `
-    <tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:12px 8px;font-size:14px">${key.name}</td>
-      <td style="padding:12px 8px;font-size:14px;font-family:monospace;color:var(--muted)">${key.keyPrefix}</td>
-      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${new Date(key.createdAt).toLocaleDateString('da-DK')}</td>
-      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('da-DK') : 'Aldrig'}</td>
-      <td style="padding:12px 8px;text-align:right">
-        <button class="btn btn-danger btn-sm" onclick="deleteApiKey('${key.id}')">Slet</button>
-      </td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = allRows.join('');
 }
 
 // Delete API key
@@ -39010,495 +39378,141 @@ const SEAnalysisService = {
   }
 };
 
-// --- Search Handler ---
-let seSearchDebounceTimer = null;
-let seSearchResults = [];
-let seSelectedBusiness = null;
-let seAnalysisResults = {};
-let seFindings = [];
-let seIsScanning = false;
-
-function seHandleSearchInput(query) {
-  clearTimeout(seSearchDebounceTimer);
-  const resultsEl = document.getElementById('se-search-results');
-  const loadingEl = document.getElementById('se-search-loading');
-  const errorEl = document.getElementById('se-search-error');
-  if (query.length < 2) { resultsEl.style.display='none'; loadingEl.style.display='none'; return; }
-  loadingEl.style.display='block'; errorEl.style.display='none';
-  seSearchDebounceTimer = setTimeout(async () => {
-    try {
-      seSearchResults = await SEAnalysisService.searchBusiness(query);
-      loadingEl.style.display='none';
-      if (seSearchResults.length === 0) {
-        resultsEl.innerHTML = '<div style="padding:var(--space-4);text-align:center;color:var(--muted);font-size:var(--font-size-sm)">Ingen resultater fundet</div>';
-      } else {
-        resultsEl.innerHTML = seSearchResults.map((r,i) =>
-          '<div onclick="seSelectBusiness('+i+')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'transparent\'">' +
-          '<div style="font-weight:500;font-size:14px">' + (r.name||'').replace(/</g,'&lt;') + '</div>' +
-          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + (r.address||'').replace(/</g,'&lt;') + '</div></div>'
-        ).join('');
-      }
-      resultsEl.style.display='block';
-    } catch (e) {
-      loadingEl.style.display='none';
-      errorEl.textContent = 'Søgning fejlede. Prøv igen.';
-      errorEl.style.display='block';
-    }
-  }, 300);
-}
-
-function seSelectBusiness(index) {
-  seSelectedBusiness = seSearchResults[index];
-  document.getElementById('se-search-results').style.display='none';
-  document.getElementById('se-search-input').value = seSelectedBusiness.name;
-  document.getElementById('se-selected-name').textContent = seSelectedBusiness.name;
-  document.getElementById('se-selected-address').textContent = seSelectedBusiness.address || '';
-  document.getElementById('se-selected-business').style.display='block';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = false; btn.style.opacity = '1';
-}
-
-function seClearSelection() {
-  seSelectedBusiness = null;
-  document.getElementById('se-selected-business').style.display='none';
-  document.getElementById('se-search-input').value = '';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = true; btn.style.opacity = '0.5';
-}
-
-// --- Findings Extraction ---
-function seExtractFindings(moduleId, moduleName, result) {
-  const findings = [];
-  if (result?.findings) {
-    result.findings.forEach((f,i) => {
-      findings.push({ id:moduleId+'_'+i+'_'+Date.now(), module:moduleId, moduleName, category:f.type||'warning', title:f.title, description:f.description, confidence:result.confidence||'indicator', dataSource:result.dataSource||'demo_data' });
-    });
-  }
-  if (moduleId==='googleProfile' && result) {
-    if (result.rating>=4.0) findings.push({id:moduleId+'_rating',module:moduleId,moduleName,category:'positive',title:'God Google rating',description:'Rating på '+result.rating+' stjerner baseret på '+result.totalReviews+' anmeldelser.',confidence:'confirmed'});
-    if (result.profileCompleteness?.score<80) findings.push({id:moduleId+'_incomplete',module:moduleId,moduleName,category:'warning',title:'Ufuldstændig profil',description:'Profilen er kun '+result.profileCompleteness.score+'% komplet.',confidence:'confirmed'});
-  }
-  if (moduleId==='reviews' && result) {
-    if (result.responseMetrics?.responseRate<50) findings.push({id:moduleId+'_response',module:moduleId,moduleName,category:'warning',title:'Lav svarrate',description:'Kun '+result.responseMetrics.responseRate+'% besvaret.',confidence:'confirmed'});
-    if (result.velocity?.monthlyAverage<4) findings.push({id:moduleId+'_velocity',module:moduleId,moduleName,category:'opportunity',title:'Potentiale for flere anmeldelser',description:'Gennemsnit '+result.velocity.monthlyAverage+'/måned.',confidence:'indicator'});
-  }
-  if (moduleId==='images' && result) {
-    if (result.totalImages===0) findings.push({id:moduleId+'_missing',module:moduleId,moduleName,category:'warning',title:'Ingen online billeder',description:'Påvirker troværdighed.',confidence:result.confidence||'indicator'});
-  }
-  if (moduleId==='napConsistency' && result) {
-    const issues = result.issues?.filter(i=>i.severity==='high')||[];
-    if (issues.length>0) findings.push({id:moduleId+'_issues',module:moduleId,moduleName,category:'critical',title:'Inkonsistente oplysninger',description:issues.length+' kritiske problemer.',confidence:'indicator'});
-  }
-  return findings;
-}
-
-// --- Scanner Engine ---
-const SE_ANALYSIS_STEPS = [
-  { id:'googleProfile', name:'Google Business Profile', fn:(b) => SEAnalysisService.getGoogleBusinessProfile(b.place_id, b.name) },
-  { id:'reviews', name:'Anmeldelsesanalyse', fn:(b) => SEAnalysisService.getReviewAnalysis(b.place_id, b.name) },
-  { id:'images', name:'Billeder & Medier', fn:(b) => SEAnalysisService.getBusinessImages(b.name) },
-  { id:'serpVisibility', name:'SERP Synlighed', fn:(b) => SEAnalysisService.getSERPVisibility(b.name, {city: (b.address||'').split(',').pop()?.trim()||'Danmark'}, b.type||'restaurant') },
-  { id:'citations', name:'Citationer', fn:(b) => SEAnalysisService.getCitationPresence(b.name, b.address, b.phone) },
-  { id:'competitors', name:'Konkurrentanalyse', fn:(b) => SEAnalysisService.getCompetitorAnalysis(b.name, {city: (b.address||'').split(',').pop()?.trim()||'Aarhus'}, b.type||'restaurant') },
-  { id:'napConsistency', name:'NAP Konsistens', fn:(b) => SEAnalysisService.checkNAPConsistency(b.name, b.address, b.phone) },
-  { id:'website', name:'Website & Mobil', fn:(b) => SEAnalysisService.analyzeWebsite(seAnalysisResults.googleProfile?.website || 'https://example.dk') },
-  { id:'schemaMarkup', name:'Schema Markup', fn:(b) => SEAnalysisService.detectSchemaMarkup(seAnalysisResults.googleProfile?.website || 'https://example.dk') },
-  { id:'social', name:'Social Media', fn:(b) => SEAnalysisService.analyzeSocialPresence(b.name) }
+// --- System API Keys (for Integrations page) ---
+const SYSTEM_API_KEYS = [
+  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '238621b449ced86740e16a0707be5b8999b87c9e', type: 'System', service: 'SEO Analyse v1.0' },
+  { id: 'sys-serper-images', name: 'Serper Images', key: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba', type: 'System', service: 'SEO Analyse v1.0' },
+  { id: 'sys-serper-maps', name: 'Serper Maps', key: '071a75aeaf9e4434466f91caf455e6ddfe72a76e', type: 'System', service: 'SEO Analyse v1.0' },
+  { id: 'sys-serper-places', name: 'Serper Places', key: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62', type: 'System', service: 'SEO Analyse v1.0' },
+  { id: 'sys-firecrawl', name: 'Firecrawl', key: 'fc-c12a209b1d6d44939e0b8faa393515e3', type: 'System', service: 'SEO Analyse v2.0' },
+  { id: 'sys-google-api', name: 'Google API', key: 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo', type: 'System', service: 'SEO Analyse v2.0' }
 ];
 
-function seUpdateStepUI(stepId, status) {
-  const stepEl = document.getElementById('se-step-' + stepId);
-  if (!stepEl) return;
-  const dot = stepEl.querySelector('.se-step-dot');
-  const label = stepEl.querySelector('span');
-  if (status === 'running') {
-    dot.style.background = 'var(--accent)'; dot.style.borderColor = 'var(--accent)'; dot.style.animation = 'pulse 1.5s infinite';
-    dot.innerHTML = '<div class="spinner spinner-sm" style="width:12px;height:12px;border-width:2px"></div>';
-    label.style.color = 'var(--text)'; label.style.fontWeight = '600';
-  } else if (status === 'completed') {
-    dot.style.background = '#059669'; dot.style.borderColor = '#059669'; dot.style.animation = 'none';
-    dot.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-    label.style.color = 'var(--text)'; label.style.fontWeight = '500';
-  } else if (status === 'error') {
-    dot.style.background = 'var(--danger)'; dot.style.borderColor = 'var(--danger)'; dot.style.animation = 'none';
-    dot.innerHTML = '<span style="color:white;font-size:12px;font-weight:bold">!</span>';
-    label.style.color = 'var(--danger)';
+// --- Mask API key for display ---
+function maskApiKey(key) {
+  if (!key || key.length < 10) return key || '';
+  return key.substring(0, 6) + '****' + key.substring(key.length - 4);
+}
+
+// --- Toggle system key visibility ---
+function toggleSystemKeyVisibility(keyId) {
+  const el = document.getElementById('key-display-' + keyId);
+  if (!el) return;
+  const sysKey = SYSTEM_API_KEYS.find(k => k.id === keyId);
+  if (!sysKey) return;
+  if (el.dataset.visible === 'true') {
+    el.textContent = maskApiKey(sysKey.key);
+    el.dataset.visible = 'false';
+  } else {
+    el.textContent = sysKey.key;
+    el.dataset.visible = 'true';
   }
 }
 
-function seAddFindingToFeed(finding) {
-  const feed = document.getElementById('se-findings-feed');
-  const colors = { positive:'#059669', warning:'#d97706', critical:'#dc2626', opportunity:'#2563eb' };
-  const labels = { positive:'Positivt', warning:'Advarsel', critical:'Kritisk', opportunity:'Mulighed' };
-  const bgColors = { positive:'rgba(5,150,105,0.08)', warning:'rgba(217,119,6,0.08)', critical:'rgba(220,38,38,0.08)', opportunity:'rgba(37,99,235,0.08)' };
-  const color = colors[finding.category] || colors.warning;
-  const label = labels[finding.category] || 'Fund';
-  const bg = bgColors[finding.category] || bgColors.warning;
-  const card = document.createElement('div');
-  card.style.cssText = 'padding:var(--space-3);border-radius:var(--radius-md);background:'+bg+';border-left:3px solid '+color+';animation:seSlideInRight 0.3s ease';
-  card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><span style="font-weight:600;font-size:13px">'+finding.title+'</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:'+color+';color:white;font-weight:500">'+label+'</span></div><div style="font-size:12px;color:var(--muted);line-height:1.4">'+finding.description+'</div><div style="font-size:10px;color:var(--muted);margin-top:4px">'+finding.moduleName+'</div>';
-  if (feed.children.length === 1 && feed.children[0].textContent.includes('vises her')) feed.innerHTML = '';
-  feed.insertBefore(card, feed.firstChild);
-  feed.scrollTop = 0;
+// --- Toggle system key active state ---
+function toggleSystemKeyActive(keyId) {
+  const states = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+  states[keyId] = !states[keyId];
+  if (states[keyId] === false) delete states[keyId]; // default is active
+  localStorage.setItem('flow_system_key_states', JSON.stringify(states));
+  loadApiKeysList();
 }
 
-async function seStartAnalysis() {
-  if (!seSelectedBusiness || seIsScanning) return;
-  seIsScanning = true;
-  seAnalysisResults = {}; seFindings = [];
+// --- SEO Analysis Data Tab ---
+function loadSEOAnalysisData() {
+  try {
+    const raw = localStorage.getItem('flow_seo_analysis_latest');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !data.business) return;
 
-  // Hide search & static sections, show scanner
-  document.getElementById('se-search-section').style.display = 'none';
-  document.getElementById('se-static-sections').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'none';
-  document.getElementById('se-scanner-container').style.display = 'block';
-  document.getElementById('se-completion-card').style.display = 'none';
-  document.getElementById('se-findings-feed').innerHTML = '<div style="text-align:center;padding:var(--space-6);color:var(--muted)"><p style="font-size:var(--font-size-sm)">Analysefund vises her efterhånden...</p></div>';
+    // Stat cards
+    const scoreEl = document.getElementById('seo-data-score');
+    if (scoreEl) scoreEl.textContent = data.score || '-';
 
-  // Set business info in scanner
-  document.getElementById('se-scanner-business-name').textContent = seSelectedBusiness.name;
-  document.getElementById('se-scanner-business-address').textContent = seSelectedBusiness.address || '';
-
-  // Reset all steps
-  SE_ANALYSIS_STEPS.forEach(step => {
-    const el = document.getElementById('se-step-' + step.id);
-    if (el) {
-      const dot = el.querySelector('.se-step-dot');
-      dot.style.background = 'var(--bg2)'; dot.style.borderColor = 'var(--border)'; dot.style.animation = 'none'; dot.innerHTML = '';
-      el.querySelector('span').style.color = 'var(--muted)'; el.querySelector('span').style.fontWeight = '400';
+    const reviewsEl = document.getElementById('seo-data-reviews');
+    if (reviewsEl) {
+      const r = data.results?.[3];
+      reviewsEl.textContent = r?.reviewCount || '-';
     }
-  });
-  document.getElementById('se-scanner-progress-bar').style.width = '0%';
-  document.getElementById('se-scanner-progress-text').textContent = '0/10';
 
-  // Run each step
-  let completed = 0;
-  for (const step of SE_ANALYSIS_STEPS) {
-    if (!seIsScanning) break;
-    seUpdateStepUI(step.id, 'running');
-    document.getElementById('se-scanner-current-module').textContent = step.name + '...';
-    try {
-      const result = await step.fn(seSelectedBusiness);
-      seAnalysisResults[step.id] = result;
-      seUpdateStepUI(step.id, 'completed');
-      const newFindings = seExtractFindings(step.id, step.name, result);
-      newFindings.forEach(f => { seFindings.push(f); seAddFindingToFeed(f); });
-    } catch (e) {
-      console.error('Step failed:', step.id, e);
-      seUpdateStepUI(step.id, 'error');
+    const compEl = document.getElementById('seo-data-competitors');
+    if (compEl) {
+      const m = data.results?.[1];
+      compEl.textContent = m?.competitors?.length || '-';
     }
-    completed++;
-    document.getElementById('se-scanner-progress-bar').style.width = (completed/10*100) + '%';
-    document.getElementById('se-scanner-progress-text').textContent = completed + '/10';
-  }
 
-  // Show completion
-  seIsScanning = false;
-  document.getElementById('se-scanner-module-status').innerHTML = '<span style="color:#059669;font-weight:600">✓ Analyse fuldført</span>';
-  const pos = seFindings.filter(f=>f.category==='positive').length;
-  const warn = seFindings.filter(f=>f.category==='warning'||f.category==='critical').length;
-  const opp = seFindings.filter(f=>f.category==='opportunity').length;
-  document.getElementById('se-completion-summary').textContent = pos+' positive fund · '+warn+' advarsler · '+opp+' muligheder';
-  document.getElementById('se-completion-card').style.display = 'block';
-}
+    const webEl = document.getElementById('seo-data-website-score');
+    if (webEl) {
+      const w = data.results?.[6];
+      webEl.textContent = w?.scores?.mobile ? w.scores.mobile + '/100' : '-';
+    }
 
-// --- Report Renderers ---
-function seShowReport() {
-  document.getElementById('se-scanner-container').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'block';
-  document.getElementById('se-report-business-label').textContent = seSelectedBusiness.name + ' · ' + new Date().toLocaleDateString('da-DK');
+    const socialEl = document.getElementById('seo-data-social');
+    if (socialEl) {
+      const f = data.results?.[5];
+      socialEl.textContent = f?.followers ? f.followers.toLocaleString() : '-';
+    }
 
-  seRenderOverallScore();
-  seRenderGBPSection();
-  seRenderReviewSection();
-  seRenderCompetitorSection();
-  seRenderNAPSection();
-  seRenderWebsiteSection();
-  seRenderSocialSection();
-  seRenderActionPlan();
-  sePopulateStatusCards();
-}
+    // Analyses table
+    const analysesTable = document.getElementById('seo-data-analyses-table');
+    if (analysesTable) {
+      const date = data.timestamp ? new Date(data.timestamp).toLocaleDateString('da-DK') : '-';
+      analysesTable.innerHTML = `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:12px 8px;padding-left:12px;font-size:14px">${data.business.name || '-'}</td>
+        <td style="padding:12px 8px;font-size:14px;font-weight:600">${data.score || '-'}/100</td>
+        <td style="padding:12px 8px;font-size:14px">${data.results?.[3]?.reviewCount || '-'}</td>
+        <td style="padding:12px 8px;font-size:14px">${data.results?.[1]?.competitors?.length || '-'}</td>
+        <td style="padding:12px 8px;padding-right:12px;font-size:14px;color:var(--muted)">${date}</td>
+      </tr>`;
+    }
 
-function seRenderOverallScore() {
-  const score = SEAnalysisService.calculateOverallScore(seAnalysisResults);
-  const color = score >= 75 ? '#059669' : score >= 50 ? '#d97706' : '#dc2626';
-  const label = score >= 75 ? 'God digital tilstedeværelse' : score >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
-  const r = 54; const c = 2 * Math.PI * r; const offset = c - (score/100)*c;
-  const el = document.getElementById('se-report-overall');
-  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-4)">' +
-    '<svg width="140" height="140" viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+r+'" fill="none" stroke="var(--bg2)" stroke-width="8"/>' +
-    '<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+offset+'" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease"/>' +
-    '<text x="60" y="55" text-anchor="middle" fill="'+color+'" font-size="28" font-weight="700">'+score+'</text>' +
-    '<text x="60" y="72" text-anchor="middle" fill="var(--muted)" font-size="10">af 100</text></svg>' +
-    '<div style="text-align:center"><h3 style="font-weight:var(--font-weight-semibold);color:'+color+'">'+label+'</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-top:4px">Baseret på '+seFindings.length+' analysefund</p></div>' +
-    '<div style="display:flex;gap:var(--space-6)">' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.googleProfile?.rating||'-')+'</div><div style="font-size:12px;color:var(--muted)">Rating</div></div>' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.googleProfile?.totalReviews||'-')+'</div><div style="font-size:12px;color:var(--muted)">Anmeldelser</div></div>' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.serpVisibility?.directSearch?.rank||'-')+'</div><div style="font-size:12px;color:var(--muted)">SERP Rank</div></div>' +
-    '</div></div>';
-}
+    // Findings table
+    const findingsTable = document.getElementById('seo-data-findings-table');
+    if (findingsTable && data.results) {
+      const findings = [];
+      const googleData = data.results[2];
+      if (googleData) {
+        findings.push({ cat: 'Google Business', fund: 'Rating: ' + (googleData.rating || '-'), status: (googleData.rating||0) >= 4 ? 'OK' : 'Advarsel', detail: (googleData.totalReviews||0) + ' anmeldelser' });
+      }
+      const reviewData = data.results[3];
+      if (reviewData && reviewData.sentiment) {
+        findings.push({ cat: 'Anmeldelser', fund: 'Positiv: ' + reviewData.sentiment.positive + '%', status: reviewData.sentiment.positive >= 70 ? 'OK' : 'Advarsel', detail: (reviewData.reviewCount||0) + ' reviews analyseret' });
+      }
+      const imgData = data.results[4];
+      if (imgData) {
+        findings.push({ cat: 'Billeder', fund: (imgData.totalPhotos||0) + ' billeder', status: (imgData.totalPhotos||0) > 20 ? 'OK' : 'Advarsel', detail: 'Score: ' + (imgData.qualityAnalysis?.overallScore||'-') });
+      }
+      const webData = data.results[7];
+      if (webData) {
+        findings.push({ cat: 'Website', fund: webData.scraped ? 'Scraped via Firecrawl' : 'Mock data', status: webData.scraped ? 'OK' : 'Info', detail: webData.metadata?.title || '-' });
+      }
 
-function seRenderGBPSection() {
-  const data = seAnalysisResults.googleProfile;
-  if (!data) return;
-  const el = document.getElementById('se-report-gbp');
-  const score = data.profileCompleteness?.score || 0;
-  const scoreColor = score >= 80 ? '#059669' : score >= 60 ? '#d97706' : '#dc2626';
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Google Business Profile</h3>' +
-    '<div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)"><div style="font-size:24px;font-weight:700;color:'+scoreColor+'">'+score+'%</div><div style="font-size:var(--font-size-sm);color:var(--muted)">Profil fuldstændighed</div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+data.rating+'</div><div style="font-size:11px;color:var(--muted)">Rating</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+data.totalReviews+'</div><div style="font-size:11px;color:var(--muted)">Anmeldelser</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+(data.photos?.total||0)+'</div><div style="font-size:11px;color:var(--muted)">Fotos</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+(data.postsActivity?.postsLast90Days||0)+'</div><div style="font-size:11px;color:var(--muted)">Posts (90d)</div></div></div>' +
-    (data.profileCompleteness?.missing?.length > 0 ? '<div style="margin-top:var(--space-3)"><span style="font-size:12px;color:var(--muted)">Mangler: </span>' +
-      data.profileCompleteness.missing.map(m => '<span style="font-size:11px;padding:2px 8px;background:rgba(217,119,6,0.1);color:#d97706;border-radius:4px;margin-right:4px">'+m+'</span>').join('') + '</div>' : '');
-}
+      if (findings.length > 0) {
+        findingsTable.innerHTML = findings.map(function(f) {
+          var statusColor = f.status === 'OK' ? 'var(--success)' : f.status === 'Advarsel' ? 'var(--warning)' : 'var(--muted)';
+          return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 8px;padding-left:12px;font-size:14px">' + f.cat + '</td><td style="padding:10px 8px;font-size:14px">' + f.fund + '</td><td style="padding:10px 8px;font-size:14px;color:' + statusColor + '">' + f.status + '</td><td style="padding:10px 8px;padding-right:12px;font-size:13px;color:var(--muted)">' + f.detail + '</td></tr>';
+        }).join('');
+      }
+    }
 
-function seRenderReviewSection() {
-  const data = seAnalysisResults.reviews;
-  if (!data) return;
-  const el = document.getElementById('se-report-reviews');
-  const distBars = data.distribution.map(d =>
-    '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:14px;text-align:right">'+d.stars+'★</span>' +
-    '<div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+d.percentage+'%;background:'+(d.stars>=4?'#059669':d.stars===3?'#d97706':'#dc2626')+';border-radius:4px"></div></div>' +
-    '<span style="font-size:11px;color:var(--muted);width:32px">'+d.percentage+'%</span></div>'
-  ).join('');
-  const kwHtml = data.topKeywords.map(kw => '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:'+(kw.sentiment==='positive'?'rgba(5,150,105,0.1)':'rgba(220,38,38,0.1)')+';color:'+(kw.sentiment==='positive'?'#059669':'#dc2626')+'">'+kw.term+' ('+kw.count+')</span>').join(' ');
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Anmeldelsesanalyse</h3>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5)">' +
-    '<div><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Vurderingsfordeling ('+data.totalReviews+' anmeldelser)</div><div style="display:flex;flex-direction:column;gap:6px">'+distBars+'</div></div>' +
-    '<div><div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.velocity.last30Days+'</div><div style="font-size:11px;color:var(--muted)">Nye (30 dage)</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.responseMetrics.responseRate+'%</div><div style="font-size:11px;color:var(--muted)">Svarrate</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.responseMetrics.avgResponseTimeHours+'t</div><div style="font-size:11px;color:var(--muted)">Gns. svartid</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.averageRating+'</div><div style="font-size:11px;color:var(--muted)">Gns. rating</div></div>' +
-    '</div></div></div>' +
-    (data.topKeywords.length > 0 ? '<div style="margin-top:var(--space-4)"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Top nøgleord</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+kwHtml+'</div></div>' : '');
-}
-
-function seRenderCompetitorSection() {
-  const data = seAnalysisResults.competitors;
-  if (!data) return;
-  const el = document.getElementById('se-report-competitors');
-  const rows = data.competitors.map(c => {
-    const bg = c.isTarget ? 'background:rgba(16,185,129,0.06);' : '';
-    const nameStyle = c.isTarget ? 'font-weight:700;' : '';
-    return '<tr style="'+bg+'"><td style="padding:8px 12px;border-bottom:1px solid var(--border);'+nameStyle+'">'+c.name+(c.isTarget?' <span style="font-size:10px;color:#059669">(Du)</span>':'')+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.rating+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.reviews+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.responseRate+'%</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.recentActivity+'</td></tr>';
-  }).join('');
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Konkurrentanalyse</h3>' +
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr style="background:var(--bg2)"><th style="padding:8px 12px;text-align:left;font-weight:600;font-size:12px">Virksomhed</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Rating</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Anmeldelser</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Svarrate</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Aktivitet</th></tr></thead>' +
-    '<tbody>'+rows+'</tbody></table></div>' +
-    '<div style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:8px">' +
-    data.insights.map(i => {
-      const c = i.type==='warning'?'#d97706':i.type==='opportunity'?'#2563eb':'#059669';
-      return '<div style="padding:var(--space-3);border-left:3px solid '+c+';background:'+(i.type==='warning'?'rgba(217,119,6,0.06)':i.type==='opportunity'?'rgba(37,99,235,0.06)':'rgba(5,150,105,0.06)')+';border-radius:0 var(--radius-sm) var(--radius-sm) 0"><div style="font-weight:600;font-size:13px;margin-bottom:2px">'+i.title+'</div><div style="font-size:12px;color:var(--muted)">'+i.description+'</div></div>';
-    }).join('') + '</div>';
-}
-
-function seRenderNAPSection() {
-  const data = seAnalysisResults.napConsistency;
-  if (!data) return;
-  const el = document.getElementById('se-report-nap');
-  const check = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-  const cross = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  const dash = '<span style="color:var(--muted)">—</span>';
-  const rows = data.sources.map(s =>
-    '<tr><td style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px">'+s.name+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?check:dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.nameMatch?check:cross):dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.addressMatch?check:cross):dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.phoneMatch?check:cross):dash)+'</td></tr>'
-  ).join('');
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)"><h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">NAP Konsistens</h3><div style="font-size:24px;font-weight:700;color:'+(data.consistencyScore>=70?'#059669':'#d97706')+'">'+data.consistencyScore+'%</div></div>' +
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr style="background:var(--bg2)"><th style="padding:8px 12px;text-align:left;font-weight:600;font-size:12px">Platform</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Fundet</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Navn</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Adresse</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Telefon</th></tr></thead>' +
-    '<tbody>'+rows+'</tbody></table></div>';
-}
-
-function seRenderWebsiteSection() {
-  const data = seAnalysisResults.website;
-  if (!data || !data.hasWebsite) return;
-  const el = document.getElementById('se-report-website');
-  const scoreBox = (label, val) => {
-    const c = val>=80?'#059669':val>=60?'#d97706':'#dc2626';
-    return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:20px;font-weight:700;color:'+c+'">'+val+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+label+'</div></div>';
-  };
-  const vitalBox = (name, vital) => {
-    const c = vital.rating==='good'?'#059669':'#d97706';
-    return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">'+name+'</span><span style="font-size:12px;font-weight:700;color:'+c+'">'+vital.value+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">Mål: '+vital.target+'</div></div>';
-  };
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Website & Mobil</h3>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
-    scoreBox('Mobil',data.scores.mobile) + scoreBox('Desktop',data.scores.desktop) + scoreBox('SEO',data.scores.seo) + scoreBox('Performance',data.scores.performance) + '</div>' +
-    '<div style="margin-bottom:var(--space-4)"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Core Web Vitals</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)">' +
-    vitalBox('LCP',data.coreWebVitals.LCP) + vitalBox('FID',data.coreWebVitals.FID) + vitalBox('CLS',data.coreWebVitals.CLS) + '</div></div>' +
-    '<div style="display:flex;flex-direction:column;gap:6px">' +
-    data.issues.map(i => '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);background:'+(i.severity==='high'?'rgba(220,38,38,0.06)':'rgba(217,119,6,0.06)')+'"><span style="color:'+(i.severity==='high'?'#dc2626':'#d97706')+';font-size:12px;font-weight:600">'+(i.severity==='high'?'●':'○')+'</span><span style="font-size:12px">'+i.issue+'</span></div>').join('') + '</div>';
-}
-
-function seRenderSocialSection() {
-  const data = seAnalysisResults.social;
-  if (!data) return;
-  const el = document.getElementById('se-report-social');
-  const statusColors = { very_active:'#059669', active:'#10b981', low:'#d97706', not_found:'var(--muted)' };
-  const statusLabels = { very_active:'Meget aktiv', active:'Aktiv', low:'Lav', not_found:'Ikke fundet' };
-  const cards = data.platforms.map(p => {
-    const color = statusColors[p.status] || 'var(--muted)';
-    return '<div style="padding:var(--space-4);background:var(--bg2);border-radius:var(--radius-md)">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:14px">'+p.name+'</span><span style="font-size:11px;padding:2px 8px;border-radius:4px;background:'+color+'20;color:'+color+';font-weight:500">'+(statusLabels[p.status]||p.status)+'</span></div>' +
-      (p.found ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
-        '<div><span style="color:var(--muted)">Følgere:</span> <strong>'+(p.followers||'-')+'</strong></div>' +
-        '<div><span style="color:var(--muted)">Posts/30d:</span> <strong>'+(p.posts30Days||'-')+'</strong></div>' +
-        '<div><span style="color:var(--muted)">Engagement:</span> <strong>'+(p.engagement||'-')+'%</strong></div>' +
-        '</div>' : '<div style="font-size:12px;color:var(--muted)">Ingen profil fundet</div>') + '</div>';
-  }).join('');
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)"><h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">Social Media</h3><div style="font-size:20px;font-weight:700;color:'+(data.overallScore>=60?'#059669':'#d97706')+'">'+data.overallScore+'%</div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-3)">'+cards+'</div>' +
-    '<div style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:6px">' +
-    data.insights.map(i => {
-      const c = i.type==='positive'?'#059669':i.type==='warning'?'#d97706':'#2563eb';
-      return '<div style="padding:8px 12px;border-left:3px solid '+c+';background:'+(i.type==='positive'?'rgba(5,150,105,0.06)':i.type==='warning'?'rgba(217,119,6,0.06)':'rgba(37,99,235,0.06)')+';border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12px">'+i.text+'</div>';
-    }).join('') + '</div>';
-}
-
-function seRenderActionPlan() {
-  const el = document.getElementById('se-report-actions');
-  const criticals = seFindings.filter(f=>f.category==='critical');
-  const warnings = seFindings.filter(f=>f.category==='warning');
-  const opportunities = seFindings.filter(f=>f.category==='opportunity');
-  const actions = [
-    ...criticals.map(f=>({priority:'Kritisk',color:'#dc2626',title:f.title,description:f.description,module:f.moduleName})),
-    ...warnings.map(f=>({priority:'Vigtig',color:'#d97706',title:f.title,description:f.description,module:f.moduleName})),
-    ...opportunities.slice(0,3).map(f=>({priority:'Mulighed',color:'#2563eb',title:f.title,description:f.description,module:f.moduleName}))
-  ];
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Prioriteret Handlingsplan</h3>' +
-    '<div style="display:flex;flex-direction:column;gap:var(--space-3)">' +
-    actions.map((a,i) =>
-      '<div style="display:flex;gap:var(--space-3);padding:var(--space-4);background:var(--bg2);border-radius:var(--radius-md);border-left:3px solid '+a.color+'">' +
-      '<div style="width:28px;height:28px;border-radius:50%;background:'+a.color+'15;color:'+a.color+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">'+(i+1)+'</div>' +
-      '<div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="font-weight:600;font-size:13px">'+a.title+'</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:'+a.color+'15;color:'+a.color+';font-weight:500">'+a.priority+'</span></div>' +
-      '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+a.description+'</div>' +
-      '<div style="font-size:10px;color:var(--muted);margin-top:4px">Modul: '+a.module+'</div></div></div>'
-    ).join('') + '</div>';
-}
-
-function sePopulateStatusCards() {
-  const gbp = seAnalysisResults.googleProfile;
-  const serp = seAnalysisResults.serpVisibility;
-  const web = seAnalysisResults.website;
-  if (gbp) {
-    document.getElementById('se-indexed-pages').textContent = web?.localSEO ? Object.values(web.localSEO).filter(v=>v).length + '/6' : '-';
-    document.getElementById('se-avg-position').textContent = seAnalysisResults.competitors?.ranking?.overall || '-';
-    document.getElementById('se-clicks').textContent = serp?.estimatedMonthlySearches?.brandTerms || '0';
-    document.getElementById('se-impressions').textContent = serp?.estimatedMonthlySearches?.categoryTerms || '0';
-  }
-  if (web?.hasWebsite) {
-    document.getElementById('se-page-speed').textContent = web.scores.performance;
-    document.getElementById('se-page-speed').style.color = web.scores.performance>=60?'var(--success)':'var(--warning)';
+    // Competitors table
+    var compTable = document.getElementById('seo-data-competitors-table');
+    if (compTable && data.results && data.results[1] && data.results[1].competitors) {
+      var comps = data.results[1].competitors;
+      if (comps.length > 0) {
+        compTable.innerHTML = comps.map(function(c) {
+          return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 8px;padding-left:12px;font-size:14px">' + c.name + '</td><td style="padding:10px 8px;font-size:14px">' + (c.rating || '-') + '</td><td style="padding:10px 8px;font-size:14px;color:var(--muted)">-</td><td style="padding:10px 8px;padding-right:12px;font-size:14px;color:var(--muted)">' + (c.distance || 'i nærheden') + '</td></tr>';
+        }).join('');
+      }
+    }
+  } catch(e) {
+    console.warn('Could not load SEO analysis data:', e);
   }
 }
 
-// --- PDF Generator ---
-function seDownloadPDF() {
-  if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    script.onload = () => seGeneratePDF();
-    document.head.appendChild(script);
-    return;
-  }
-  seGeneratePDF();
-}
-
-function seGeneratePDF() {
-  const { jsPDF } = window.jspdf || window;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const score = SEAnalysisService.calculateOverallScore(seAnalysisResults);
-  const w = 210; const m = 20;
-
-  // Cover
-  doc.setFillColor(5,150,105); doc.rect(0,0,w,80,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(28); doc.setFont('helvetica','bold');
-  doc.text('Synlighedsrapport', m, 40);
-  doc.setFontSize(14); doc.setFont('helvetica','normal');
-  doc.text(seSelectedBusiness.name, m, 52);
-  doc.setFontSize(11);
-  doc.text(new Date().toLocaleDateString('da-DK'), m, 62);
-
-  doc.setTextColor(0,0,0); doc.setFontSize(48); doc.setFont('helvetica','bold');
-  const scoreColor = score>=75?[5,150,105]:score>=50?[217,119,6]:[220,38,38];
-  doc.setTextColor(...scoreColor);
-  doc.text(score.toString(), w/2, 115, {align:'center'});
-  doc.setFontSize(14); doc.setTextColor(100,100,100);
-  doc.text('af 100 point', w/2, 125, {align:'center'});
-
-  let y = 145;
-  doc.setTextColor(0,0,0); doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('Oversigt', m, y); y += 10;
-  doc.setFontSize(11); doc.setFont('helvetica','normal');
-  const stats = [
-    'Rating: ' + (seAnalysisResults.googleProfile?.rating||'-'),
-    'Anmeldelser: ' + (seAnalysisResults.googleProfile?.totalReviews||'-'),
-    'NAP Score: ' + (seAnalysisResults.napConsistency?.consistencyScore||'-') + '%',
-    'Social Score: ' + (seAnalysisResults.social?.overallScore||'-') + '%'
-  ];
-  stats.forEach(s => { doc.text('• ' + s, m+4, y); y += 7; });
-
-  y += 10;
-  doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('Prioriterede handlinger', m, y); y += 10;
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  const criticals = seFindings.filter(f=>f.category==='critical'||f.category==='warning').slice(0,6);
-  criticals.forEach((f,i) => {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.text((i+1)+'. '+f.title, m+4, y);
-    y += 5;
-    doc.setTextColor(120,120,120);
-    const lines = doc.splitTextToSize(f.description, w-2*m-8);
-    lines.forEach(l => { doc.text(l, m+8, y); y += 4.5; });
-    doc.setTextColor(0,0,0); y += 3;
-  });
-
-  // Footer
-  doc.setFontSize(9); doc.setTextColor(150,150,150);
-  doc.text('Genereret af FLOW SEO Analyse v1.0.0 • ' + new Date().toLocaleDateString('da-DK'), w/2, 288, {align:'center'});
-
-  doc.save('synlighedsrapport_' + seSelectedBusiness.name.replace(/\s+/g,'_') + '.pdf');
-}
-
-// --- Reset ---
-function seResetAnalysis() {
-  seAnalysisResults = {}; seFindings = []; seSelectedBusiness = null; seIsScanning = false;
-  document.getElementById('se-scanner-container').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'none';
-  document.getElementById('se-search-section').style.display = 'block';
-  document.getElementById('se-static-sections').style.display = 'block';
-  document.getElementById('se-search-input').value = '';
-  document.getElementById('se-selected-business').style.display = 'none';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = true; btn.style.opacity = '0.5';
-  // Reset status cards
-  document.getElementById('se-indexed-pages').textContent = '0';
-  document.getElementById('se-avg-position').textContent = '-';
-  document.getElementById('se-clicks').textContent = '0';
-  document.getElementById('se-impressions').textContent = '0';
-  document.getElementById('se-page-speed').textContent = '-';
-  document.getElementById('se-page-speed').style.color = '';
-}
-
-// --- Window Exports ---
-window.seHandleSearchInput = seHandleSearchInput;
-window.seSelectBusiness = seSelectBusiness;
-window.seClearSelection = seClearSelection;
-window.seStartAnalysis = seStartAnalysis;
-window.seShowReport = seShowReport;
-window.seDownloadPDF = seDownloadPDF;
-window.seResetAnalysis = seResetAnalysis;
+// Window exports for new functions
+window.toggleSystemKeyVisibility = toggleSystemKeyVisibility;
+window.toggleSystemKeyActive = toggleSystemKeyActive;
+window.loadSEOAnalysisData = loadSEOAnalysisData;
+window.SYSTEM_API_KEYS = SYSTEM_API_KEYS;

@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
-**Sidst opdateret:** 2026-02-06
-**Version:** 3.28.0
-**Total antal sider:** 87+
+**Sidst opdateret:** 2026-02-07
+**Version:** 3.37.0
+**Total antal sider:** 88+
 
 ---
 
@@ -78,6 +78,7 @@
 | `page-wb-levering` | Levering |
 | `page-wb-funktioner` | Funktioner |
 | `page-wb-social` | Social media |
+| `page-template-editor` | Template Editor (kode-redigering + live preview) |
 
 ### Analytics
 | Side ID | Beskrivelse |
