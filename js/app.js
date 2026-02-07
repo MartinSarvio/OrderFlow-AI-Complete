@@ -39702,10 +39702,11 @@ window.SYSTEM_API_KEYS = SYSTEM_API_KEYS;
 // =====================================================
 
 let seoScannerState = {
-  version: '2.0',
+  version: '3.0',
   scanning: false,
   findings: [],
   results: null,
+  pendingBusiness: null,
   modules: { gbp: 'idle', reviews: 'idle', competitors: 'idle', website: 'idle', social: 'idle' }
 };
 
@@ -40154,8 +40155,14 @@ const SEAnalysisV2 = {
 // SEO SCANNER UI FUNCTIONS
 // =====================================================
 
+function getSEOVersionColor(version) {
+  if (version === '3.0') return '#7c3aed';
+  if (version === '2.0') return '#2563eb';
+  return '#059669';
+}
+
 function startSEOScan(version) {
-  seoScannerState.version = version || '2.0';
+  seoScannerState.version = version || '3.0';
   showPage('page-seo-scanner');
   // Set version toggle
   document.querySelectorAll('.seo-version-btn').forEach(function(btn) {
@@ -40165,7 +40172,7 @@ function startSEOScan(version) {
   var badge = document.getElementById('seo-scanner-version-badge');
   if (badge) {
     badge.textContent = 'v' + seoScannerState.version + '.0';
-    badge.style.background = seoScannerState.version === '2.0' ? '#2563eb' : '#059669';
+    badge.style.background = getSEOVersionColor(seoScannerState.version);
   }
   // Focus input
   var input = document.getElementById('seo-scanner-input');
@@ -40185,7 +40192,52 @@ function selectSEOVersion(version) {
   var badge = document.getElementById('seo-scanner-version-badge');
   if (badge) {
     badge.textContent = 'v' + version + '.0';
-    badge.style.background = version === '2.0' ? '#2563eb' : '#059669';
+    badge.style.background = getSEOVersionColor(version);
+  }
+}
+
+// Check for pending scan from landing page (how-it-works.html redirect)
+function checkPendingSEOScan() {
+  try {
+    var pending = localStorage.getItem('flow_seo_scan_pending');
+    if (!pending) return;
+    var data = JSON.parse(pending);
+    // Only use if less than 5 minutes old
+    if (Date.now() - data.timestamp > 300000) {
+      localStorage.removeItem('flow_seo_scan_pending');
+      return;
+    }
+    localStorage.removeItem('flow_seo_scan_pending');
+    // Set version
+    seoScannerState.version = data.version || '3.0';
+    selectSEOVersion(seoScannerState.version);
+    // Fill input with business name
+    var input = document.getElementById('seo-scanner-input');
+    if (input && data.business && data.business.name) {
+      input.value = data.business.name;
+    }
+    // Store business data for scan
+    seoScannerState.pendingBusiness = data.business;
+    // Auto-start scan after short delay
+    setTimeout(function() { runSEOScan(); }, 500);
+  } catch(e) { console.warn('Pending scan check failed:', e); }
+}
+
+// Handle ?page= URL parameter for direct page navigation
+function handleURLPageParam() {
+  var params = new URLSearchParams(window.location.search);
+  var page = params.get('page');
+  if (page) {
+    // Clean URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+    // Navigate to the requested page
+    if (typeof showPage === 'function') {
+      showPage(page);
+      // If it's the scanner page, check for pending scans
+      if (page === 'page-seo-scanner') {
+        setTimeout(checkPendingSEOScan, 300);
+      }
+    }
   }
 }
 
@@ -40544,3 +40596,10 @@ window.saveSEOAnalysis = saveSEOAnalysis;
 window.loadLastSEOAnalysis = loadLastSEOAnalysis;
 window.generateSEOReportPDF = generateSEOReportPDF;
 window.renderLastScanSummary = renderLastScanSummary;
+window.handleURLPageParam = handleURLPageParam;
+window.checkPendingSEOScan = checkPendingSEOScan;
+
+// Handle ?page= URL parameter on load (for landing page redirects)
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(handleURLPageParam, 200);
+});
