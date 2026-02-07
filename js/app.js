@@ -34255,11 +34255,11 @@ function loadApiKeysList() {
 
   var configuredApiRows = configuredApis.map(function(cfg) {
     var keyValue = localStorage.getItem(cfg.keyField);
-    if (!keyValue) return '';
     var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
-    var statusColor = isEnabled ? 'var(--success)' : 'var(--danger)';
-    var statusText = isEnabled ? 'Aktiv' : 'Deaktiveret';
-    var masked = maskApiKey(keyValue);
+    var hasKey = !!keyValue;
+    var statusColor = !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)');
+    var statusText = !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret');
+    var masked = hasKey ? maskApiKey(keyValue) : '\u2014';
     return '<tr style="border-bottom:1px solid var(--border)">' +
       '<td style="padding:12px 8px;font-size:14px">' + cfg.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + cfg.service + ')</span></td>' +
       '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + masked + '</td>' +
@@ -34268,7 +34268,7 @@ function loadApiKeysList() {
       '<td style="padding:12px 8px;text-align:right">' +
         '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
       '</td></tr>';
-  }).filter(function(row) { return row !== ''; });
+  });
 
   var allRows = systemRows.concat(configuredApiRows).concat(userRows);
 
