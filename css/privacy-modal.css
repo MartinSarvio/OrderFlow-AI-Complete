@@ -115,6 +115,15 @@
   position: relative;
 }
 
+.privacy-modal-header .privacy-title {
+  font-weight: 700;
+  font-size: var(--typography-size-title);
+  color: var(--color-main-text);
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  padding-right: 40px;
+}
+
 /* ==================== Language Selector ==================== */
 .privacy-lang-selector {
   position: relative;
