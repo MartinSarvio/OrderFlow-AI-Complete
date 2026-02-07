@@ -3823,6 +3823,11 @@ function showPage(page) {
     showCrmSearchView();
   }
   
+  // Render API-status når Værktøjer-siden vises
+  if (page === 'vaerktoejer') {
+    if (typeof renderVaerktoejApiStatus === 'function') renderVaerktoejApiStatus();
+  }
+
   // Load ordrer når orders-siden vises
   if (page === 'orders') {
     loadOrdersPage();
@@ -20355,7 +20360,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'];
+  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -20388,7 +20393,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'].forEach(api => {
+      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -20455,7 +20460,10 @@ async function saveAllApiSettings() {
     trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
     trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || '',
     firecrawl_api_key: document.getElementById('firecrawl-api-key')?.value.trim() || '',
-    googleapi_api_key: document.getElementById('googleapi-api-key')?.value.trim() || ''
+    googleapi_api_key: document.getElementById('googleapi-api-key')?.value.trim() || '',
+    serper_reviews_key: document.getElementById('serper-reviews-key')?.value.trim() || '',
+    serper_images_key: document.getElementById('serper-images-key')?.value.trim() || '',
+    serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -20520,7 +20528,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -20536,7 +20544,10 @@ async function loadAllApiSettings() {
     'trustpilot-business-id': 'trustpilot_business_id',
     'trustpilot-api-key': 'trustpilot_api_key',
     'firecrawl-api-key': 'firecrawl_api_key',
-    'googleapi-api-key': 'googleapi_api_key'
+    'googleapi-api-key': 'googleapi_api_key',
+    'serper-reviews-key': 'serper_reviews_key',
+    'serper-images-key': 'serper_images_key',
+    'serper-maps-key': 'serper_maps_key'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
@@ -40942,9 +40953,46 @@ function checkAgentUpdate(agentName) {
   }, 1500);
 }
 
+function renderVaerktoejApiStatus() {
+  const tbody = document.querySelector('#vaerktoejer-api-status tbody');
+  if (!tbody) return;
+
+  const apis = [
+    { name: 'Serper', id: 'serper', keys: ['serper_reviews_key','serper_images_key','serper_maps_key'], agents: 'Agent SEO' },
+    { name: 'Firecrawl', id: 'firecrawl', keys: ['firecrawl_api_key'], agents: 'Agent SEO' },
+    { name: 'Google API', id: 'googleapi', keys: ['googleapi_api_key'], agents: 'Agent SEO' },
+    { name: 'Google Reviews', id: 'google', keys: ['google_api_key'], agents: 'Agent SEO' },
+    { name: 'OpenAI', id: 'openai', keys: ['openai_key'], agents: 'Alle agenter' },
+    { name: 'InMobile SMS', id: 'inmobile', keys: ['inmobile_api_key'], agents: 'Agent Restaurant, Agent H\u00e5ndv\u00e6rker' },
+    { name: 'Trustpilot', id: 'trustpilot', keys: ['trustpilot_api_key'], agents: 'Agent SEO' },
+    { name: 'Webhook', id: 'webhook', keys: [], agents: 'System' }
+  ];
+
+  let html = '';
+  apis.forEach(api => {
+    const enabled = localStorage.getItem('api_' + api.id + '_enabled') !== 'false';
+    const hasKey = api.keys.length === 0 || api.keys.some(k => {
+      const v = localStorage.getItem(k);
+      return v && v.length > 3;
+    });
+    const isActive = enabled && hasKey;
+    const color = isActive ? 'var(--success)' : 'var(--muted)';
+    const label = isActive ? 'Aktiv' : (enabled ? 'Mangler n\u00f8gle' : 'Deaktiveret');
+
+    html += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 12px;font-weight:500">' + api.name + '</td>' +
+      '<td style="padding:10px 12px"><span style="font-size:12px;color:' + color + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + color + ';display:inline-block"></span>' + label + '</span></td>' +
+      '<td style="padding:10px 12px;color:var(--muted)">' + api.agents + '</td>' +
+      '<td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer" onclick="showSettingsPage(\'api\')">Konfigurer</button></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
 window.openAgentPage = openAgentPage;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
+window.renderVaerktoejApiStatus = renderVaerktoejApiStatus;
 
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {
