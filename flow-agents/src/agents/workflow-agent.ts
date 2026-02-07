@@ -436,7 +436,8 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
           0.2,
         );
         smsReply = answer.substring(0, 160);
-      } catch {
+      } catch (err) {
+        console.error('[WorkflowAgent] Question answer generation failed:', err);
         smsReply = parsed.language === 'en'
           ? 'We received your question and will get back to you shortly.'
           : 'Vi har modtaget dit sp\u00f8rgsm\u00e5l og vender tilbage snarest.';
