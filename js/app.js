@@ -20168,7 +20168,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'google', 'trustpilot', 'webhook'];
+  const apis = ['openai', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -20328,7 +20328,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -20342,7 +20342,9 @@ async function loadAllApiSettings() {
     'google-place-id': 'google_place_id',
     'google-api-key': 'google_api_key',
     'trustpilot-business-id': 'trustpilot_business_id',
-    'trustpilot-api-key': 'trustpilot_api_key'
+    'trustpilot-api-key': 'trustpilot_api_key',
+    'firecrawl-api-key': 'firecrawl_api_key',
+    'googleapi-api-key': 'googleapi_api_key'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
@@ -33044,7 +33046,8 @@ function switchDataCategory(category) {
     consent: 'Consent',
     performance: 'Performance',
     geo: 'Geo & Devices',
-    changes: 'Ændringslog'
+    changes: 'Ændringslog',
+    seo: 'SEO Analyse'
   };
 
   tabs.forEach(tab => {
@@ -33074,6 +33077,7 @@ function switchDataCategory(category) {
     case 'performance': loadPerformanceData(); break;
     case 'geo': loadGeoData(); break;
     case 'changes': loadChangesData(); break;
+    case 'seo': loadSEOAnalysisData(); break;
   }
 }
 
