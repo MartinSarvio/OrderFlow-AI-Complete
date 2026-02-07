@@ -40928,7 +40928,7 @@ function handleURLPageParam() {
     if (typeof showPage === 'function') {
       showPage(page);
       // If it's the scanner page, check for pending scans
-      if (page === 'page-seo-scanner') {
+      if (page === 'seo-scanner') {
         setTimeout(checkPendingSEOScan, 300);
       }
     }
