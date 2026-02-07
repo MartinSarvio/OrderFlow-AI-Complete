@@ -6,11 +6,50 @@
 (function() {
   'use strict';
 
+  // Language texts
+  const LANG_TEXTS = {
+    da: {
+      description: 'Vi bruger cookies og lignende teknologier til at forbedre din oplevelse, analysere trafik og personligg\u00f8re indhold. Du kan tilpasse dine pr\u00e6ferencer nedenfor.',
+      btnAccept: 'Accepter alle',
+      btnDeny: 'Kun n\u00f8dvendige',
+      btnSave: 'Gem mine valg',
+      closeLabel: 'Luk',
+      cookiePolicy: 'Cookie-politik',
+      privacyPolicy: 'Privatlivspolitik',
+      categories: {
+        necessary: { name: 'N\u00f8dvendige', description: 'Disse cookies er n\u00f8dvendige for at hjemmesiden kan fungere korrekt.' },
+        functional: { name: 'Funktionelle', description: 'Disse cookies g\u00f8r det muligt at huske dine pr\u00e6ferencer.' },
+        analytics: { name: 'Statistik', description: 'Disse cookies hj\u00e6lper os med at forst\u00e5, hvordan bes\u00f8gende bruger vores hjemmeside.' },
+        marketing: { name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.' }
+      }
+    },
+    en: {
+      description: 'We use cookies and similar technologies to improve your experience, analyze traffic and personalize content. You can customize your preferences below.',
+      btnAccept: 'Accept all',
+      btnDeny: 'Only necessary',
+      btnSave: 'Save my choices',
+      closeLabel: 'Close',
+      cookiePolicy: 'Cookie Policy',
+      privacyPolicy: 'Privacy Policy',
+      categories: {
+        necessary: { name: 'Necessary', description: 'These cookies are essential for the website to function properly.' },
+        functional: { name: 'Functional', description: 'These cookies allow us to remember your preferences.' },
+        analytics: { name: 'Analytics', description: 'These cookies help us understand how visitors use our website.' },
+        marketing: { name: 'Marketing', description: 'These cookies are used to show you relevant advertisements.' }
+      }
+    }
+  };
+
+  // Get current language
+  function getCurrentLang() {
+    return localStorage.getItem('privacy_language') || 'da';
+  }
+
   // Default categories (fallback if none saved)
   const DEFAULT_CATEGORIES = [
-    { id: 'necessary', name: 'Nødvendige', description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt.', required: true },
-    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies gør det muligt at huske dine præferencer.', required: false },
-    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside.', required: false },
+    { id: 'necessary', name: 'N\u00f8dvendige', description: 'Disse cookies er n\u00f8dvendige for at hjemmesiden kan fungere korrekt.', required: true },
+    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies g\u00f8r det muligt at huske dine pr\u00e6ferencer.', required: false },
+    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hj\u00e6lper os med at forst\u00e5, hvordan bes\u00f8gende bruger vores hjemmeside.', required: false },
     { id: 'marketing', name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.', required: false }
   ];
 
@@ -110,16 +149,25 @@
     const currentConsent = getConsent() || {};
     const categories = getPrivacyCategories();
 
+    const lang = getCurrentLang();
+    const t = LANG_TEXTS[lang] || LANG_TEXTS.da;
+
     wrapper.innerHTML = `
       <div class="privacy-modal">
         <div class="privacy-modal-header">
-          <span class="privacy-title">${settings.title}</span>
-          <div class="privacy-language-indicator" style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;font-size:12px;color:#666">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            <span>Dansk (primær) · English (sekundær)</span>
+          <div class="privacy-lang-selector" onclick="PrivacyModal.toggleLangDropdown(event)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <div class="privacy-lang-dropdown" id="privacy-lang-dropdown">
+              <button class="privacy-lang-option${lang === 'da' ? ' active' : ''}" onclick="PrivacyModal.setLanguage('da',event)">
+                <span>\ud83c\udde9\ud83c\uddf0</span> Dansk
+              </button>
+              <button class="privacy-lang-option${lang === 'en' ? ' active' : ''}" onclick="PrivacyModal.setLanguage('en',event)">
+                <span>\ud83c\uddec\ud83c\udde7</span> English
+              </button>
+            </div>
           </div>
-          <p class="privacy-text">${settings.description}</p>
-          <button class="privacy-modal-close" onclick="PrivacyModal.hide()" aria-label="Luk">
+          <p class="privacy-text">${t.description}</p>
+          <button class="privacy-modal-close" onclick="PrivacyModal.hide()" aria-label="${t.closeLabel}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -129,12 +177,14 @@
 
         <div class="privacy-modal-content">
           <div class="privacy-category-list">
-            ${categories.map(cat => `
+            ${categories.map(cat => {
+              const catText = t.categories[cat.id] || { name: cat.name, description: cat.description };
+              return `
               <div class="privacy-category">
                 <div class="privacy-category-header">
                   <div class="privacy-category-info">
-                    <div class="privacy-category-name">${cat.name}</div>
-                    <div class="privacy-category-desc">${cat.description}</div>
+                    <div class="privacy-category-name">${catText.name}</div>
+                    <div class="privacy-category-desc">${catText.description}</div>
                   </div>
                   <label class="privacy-toggle">
                     <input type="checkbox"
@@ -145,21 +195,21 @@
                     <span class="privacy-toggle-slider"></span>
                   </label>
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
 
           <div class="privacy-modal-links">
-            <a href="/landing-pages/cookie-settings.html">Cookie-politik</a>
-            <a href="/landing-pages/privacy.html">Privatlivspolitik</a>
+            <a href="/landing-pages/cookie-settings.html">${t.cookiePolicy}</a>
+            <a href="/landing-pages/privacy.html">${t.privacyPolicy}</a>
           </div>
         </div>
 
         <div class="privacy-modal-footer">
           <div class="privacy-modal-buttons">
-            <button class="privacy-btn-accept" onclick="PrivacyModal.acceptAll()">${settings.btnAccept}</button>
-            <button class="privacy-btn-deny" onclick="PrivacyModal.rejectAll()">${settings.btnDeny}</button>
-            <button class="privacy-btn-save" onclick="PrivacyModal.saveSelection()">${settings.btnSave}</button>
+            <button class="privacy-btn-accept" onclick="PrivacyModal.acceptAll()">${t.btnAccept}</button>
+            <button class="privacy-btn-deny" onclick="PrivacyModal.rejectAll()">${t.btnDeny}</button>
+            <button class="privacy-btn-save" onclick="PrivacyModal.saveSelection()">${t.btnSave}</button>
           </div>
         </div>
       </div>
@@ -267,6 +317,40 @@
     return settings.enabled;
   }
 
+  // Toggle language dropdown
+  function toggleLangDropdown(event) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('privacy-lang-dropdown');
+    if (dropdown) {
+      dropdown.classList.toggle('visible');
+    }
+  }
+
+  // Set language and re-render modal
+  function setLanguage(lang, event) {
+    if (event) event.stopPropagation();
+    localStorage.setItem('privacy_language', lang);
+
+    // Close dropdown
+    const dropdown = document.getElementById('privacy-lang-dropdown');
+    if (dropdown) dropdown.classList.remove('visible');
+
+    // Remove and re-create modal with new language
+    const overlay = document.getElementById('privacy-modal-overlay');
+    const wrapper = document.getElementById('privacy-modal-wrapper');
+    if (overlay) overlay.remove();
+    if (wrapper) wrapper.remove();
+
+    // Re-show with new language
+    show();
+  }
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function() {
+    const dropdown = document.getElementById('privacy-lang-dropdown');
+    if (dropdown) dropdown.classList.remove('visible');
+  });
+
   // Expose API globally
   window.PrivacyModal = {
     show,
@@ -275,7 +359,9 @@
     rejectAll,
     saveSelection,
     isEnabled,
-    getSettings
+    getSettings,
+    toggleLangDropdown,
+    setLanguage
   };
 
 })();
