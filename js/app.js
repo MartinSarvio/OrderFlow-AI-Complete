@@ -29404,7 +29404,8 @@ function loadTemplateEditorFiles(templateId) {
 
   const previewFrame = document.getElementById('te-preview-frame');
   if (previewFrame) {
-    previewFrame.src = 'templates/' + templateId + '/index.html';
+    const template = webBuilderTemplates[templateId];
+    previewFrame.src = template?.previewFile || ('templates/' + templateId + '/index.html');
   }
 
   document.getElementById('te-current-file').textContent = 'Ingen fil valgt';

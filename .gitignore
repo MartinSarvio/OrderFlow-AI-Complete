@@ -4,6 +4,7 @@ node_modules/
 
 # Build output
 dist/
+!templates/skabelon-1/dist/
 OrderFlow-complete.html
 
 # Generated files
