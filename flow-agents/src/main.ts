@@ -102,12 +102,14 @@ async function pollForNewMessages(): Promise<void> {
   try {
     const supabase = createClient(config.supabaseUrl, config.supabaseKey);
 
-    // Query for new inbound SMS messages since last check
-    // NOTE: channel lives on conversation_threads, not thread_messages — use inner join
+    // Query for new inbound customer SMS text messages since last check.
+    // NOTE: channel lives on conversation_threads, not thread_messages — use inner join.
     const { data: messages, error } = await supabase
       .from('thread_messages')
       .select('*, conversation_threads!inner(channel, tenant_id)')
       .eq('direction', 'inbound')
+      .eq('sender_type', 'customer')
+      .eq('message_type', 'text')
       .eq('conversation_threads.channel', 'sms')
       .gt('created_at', lastCheckedTimestamp)
       .order('created_at', { ascending: true })

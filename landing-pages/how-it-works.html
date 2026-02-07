@@ -3001,6 +3001,8 @@
     let searchTimeout = null;
     let autocompleteService = null;
     let placesService = null;
+    let googlePlacesInitAttempts = 0;
+    const MAX_GOOGLE_INIT_ATTEMPTS = 10;
 
     // DOM Elements
     const searchInput = document.getElementById('searchInput');
@@ -3012,12 +3014,24 @@
 
     // Initialize Google Places services when API is loaded
     function initGooglePlaces() {
-      if (window.google && google.maps && google.maps.places) {
+      if (autocompleteService) return true;
+
+      if (window.google && window.google.maps && window.google.maps.places) {
         autocompleteService = new google.maps.places.AutocompleteService();
         // Create a hidden div for PlacesService (required)
         const placesDiv = document.createElement('div');
         placesService = new google.maps.places.PlacesService(placesDiv);
+        return true;
       }
+
+      googlePlacesInitAttempts += 1;
+      if (googlePlacesInitAttempts < MAX_GOOGLE_INIT_ATTEMPTS) {
+        setTimeout(initGooglePlaces, 350);
+      } else {
+        console.warn('Google Places blev ikke initialiseret - bruger fallback søgning.');
+      }
+
+      return false;
     }
 
     // Initialize
@@ -3037,6 +3051,7 @@
 
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
+      searchInput.addEventListener('keydown', handleSearchEnter);
 
       // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
@@ -3049,14 +3064,50 @@
       searchBtn.addEventListener('click', startAnalysis);
     });
 
+    function showSearchSelectionRequired() {
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Vælg en virksomhed fra listen før du starter analysen.</div>';
+      autocompleteDropdown.classList.add('active');
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function mapSerperMapsPlaceToAutocomplete(place, index) {
+      return {
+        place_id: place.cid || place.placeId || `maps_${Date.now()}_${index}`,
+        name: place.title || place.name || 'Ukendt virksomhed',
+        address: place.address || '',
+        type: place.category || place.type || 'Virksomhed',
+        website: place.website || place.link || ''
+      };
+    }
+
+    function handleSearchEnter(e) {
+      if (e.key !== 'Enter') return;
+      if (selectedPlace) return;
+
+      const firstSuggestion = autocompleteDropdown.querySelector('.autocomplete-item[data-place-id]');
+      if (!firstSuggestion) return;
+
+      e.preventDefault();
+      selectPlace(firstSuggestion);
+    }
+
     // Handle search input
     function handleSearchInput(e) {
       const query = e.target.value.trim();
 
+      selectedPlace = null;
+      searchBtn.disabled = true;
+
       if (query.length < 2) {
         autocompleteDropdown.classList.remove('active');
-        searchBtn.disabled = true;
-        selectedPlace = null;
         return;
       }
 
@@ -3108,10 +3159,26 @@
         if (data.results && data.results.length > 0) {
           renderAutocomplete(data.results);
         } else {
-          autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
+          await searchWithSerperMapsFallback(query);
         }
       } catch (error) {
         console.error('Serper search error:', error);
+        await searchWithSerperMapsFallback(query);
+      }
+    }
+
+    async function searchWithSerperMapsFallback(query) {
+      try {
+        const mapsData = await fetchSerperAPI('maps', query);
+        const mappedResults = (mapsData?.places || []).map(mapSerperMapsPlaceToAutocomplete);
+
+        if (mappedResults.length > 0) {
+          renderAutocomplete(mappedResults);
+        } else {
+          autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
+        }
+      } catch (error) {
+        console.error('Serper maps fallback error:', error);
         autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Der opstod en fejl ved søgning. Prøv igen.</div>';
       }
     }
@@ -3138,20 +3205,28 @@
 
     // Render autocomplete results
     function renderAutocomplete(results) {
+      if (!results || results.length === 0) {
+        autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet.</div>';
+        autocompleteDropdown.classList.add('active');
+        return;
+      }
+
       autocompleteDropdown.innerHTML = results.map(place => `
-        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}">
+        <div class="autocomplete-item" data-place-id="${escapeHtml(place.place_id)}" data-name="${escapeHtml(place.name)}" data-address="${escapeHtml(place.address || '')}" data-website="${escapeHtml(place.website || '')}">
           <div class="autocomplete-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
           </div>
           <div class="autocomplete-content">
-            <div class="autocomplete-name">${place.name}</div>
-            <div class="autocomplete-address">${place.address || 'Danmark'}</div>
+            <div class="autocomplete-name">${escapeHtml(place.name)}</div>
+            <div class="autocomplete-address">${escapeHtml(place.address || 'Danmark')}</div>
           </div>
-          <span class="autocomplete-type">${place.type || 'Virksomhed'}</span>
+          <span class="autocomplete-type">${escapeHtml(place.type || 'Virksomhed')}</span>
         </div>
       `).join('');
+
+      autocompleteDropdown.classList.add('active');
 
       // Add click handlers
       autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
@@ -3162,11 +3237,13 @@
     // Select a place
     function selectPlace(item) {
       const placeId = item.dataset.placeId;
+      if (!placeId || !item.dataset.name) return;
 
       selectedPlace = {
         place_id: placeId,
         name: item.dataset.name,
-        address: item.dataset.address
+        address: item.dataset.address,
+        website: item.dataset.website || ''
       };
 
       searchInput.value = selectedPlace.name;
@@ -3174,21 +3251,34 @@
       searchBtn.disabled = false;
     }
 
-    // Start analysis - redirect to main app SEO Analyse Ultimate v3.0.0
-    function startAnalysis() {
-      if (!selectedPlace) return;
+    // Start analysis directly on this page
+    async function startAnalysis() {
+      if (!selectedPlace) {
+        searchBtn.disabled = true;
+        showSearchSelectionRequired();
+        return;
+      }
 
-      // Save selected business to localStorage for the v3.0.0 scanner to pick up
+      const originalButtonText = searchBtn.textContent;
+      searchBtn.disabled = true;
+      searchBtn.textContent = 'Analyserer...';
+
+      heroSection.style.display = 'none';
+      reportSection.classList.remove('active');
+      loadingSection.classList.add('active');
+
       try {
-        localStorage.setItem('flow_seo_scan_pending', JSON.stringify({
-          business: selectedPlace,
-          version: '3.0',
-          timestamp: Date.now()
-        }));
-      } catch(e) { console.warn('Could not save pending scan:', e); }
-
-      // Redirect to main app with scanner page
-      window.location.href = '../index.html?page=seo-scanner';
+        const scanResults = await runEndpointScanner();
+        const reportData = buildReportData(scanResults);
+        showReport(reportData);
+      } catch (error) {
+        console.error('Fejl under SEO analyse, bruger fallback rapport:', error);
+        const fallbackData = generateDemoReport(selectedPlace.name, selectedPlace.address);
+        showReport(fallbackData);
+      } finally {
+        searchBtn.textContent = originalButtonText;
+        searchBtn.disabled = false;
+      }
     }
 
     // Build report data from scanner results
@@ -3911,6 +4001,7 @@
 
     // Show report - clean, professional design
     function showReport(data) {
+      heroSection.style.display = 'none';
       loadingSection.classList.remove('active');
       reportSection.classList.add('active');
 

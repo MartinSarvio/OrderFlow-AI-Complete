@@ -3,3 +3,6 @@ verify_jwt = false
 
 [functions.receive-sms-inmobile]
 verify_jwt = false
+
+[functions.receive-missed-call]
+verify_jwt = false

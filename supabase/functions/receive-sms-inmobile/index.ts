@@ -83,15 +83,35 @@ function parseSingleMessage(msg: Record<string, unknown>, fallbackTime: string):
 
   // Flat webhook format: { msisdn, text, shortcode }
   if (!sender) {
-    sender = String(msg.msisdn || msg.sender || msg.from || "")
+    sender = String(
+      msg.msisdn ||
+      msg.sender ||
+      msg.senderMsisdn ||
+      msg.sender_msisdn ||
+      msg.from ||
+      msg.originator ||
+      msg.source ||
+      msg.sourceAddress ||
+      ""
+    )
   }
   if (!receiver) {
-    receiver = String(msg.shortcode || msg.receiver || msg.to || "")
+    receiver = String(
+      msg.shortcode ||
+      msg.receiver ||
+      msg.targetMsisdn ||
+      msg.target_msisdn ||
+      msg.targetMSISDN ||
+      msg.to ||
+      msg.destination ||
+      msg.recipient ||
+      ""
+    )
   }
 
-  text = String(msg.text || msg.message || msg.body || "")
-  messageId = String(msg.id || msg.messageId || msg.message_id || `inmobile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
-  receivedAt = String(msg.receivedAt || msg.received_at || msg.timestamp || fallbackTime)
+  text = String(msg.text || msg.fulltext || msg.fullText || msg.message || msg.body || msg.sms_text || msg.content || "")
+  messageId = String(msg.id || msg.messageId || msg.message_id || msg.externalId || msg.smsId || `inmobile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
+  receivedAt = String(msg.receivedAt || msg.received_at || msg.createdAt || msg.timestamp || fallbackTime)
 
   if (!text || !sender) return null
 
@@ -102,6 +122,35 @@ function parseSingleMessage(msg: Record<string, unknown>, fallbackTime: string):
     messageId,
     receivedAt,
   }
+}
+
+function looksLikeMissedCall(payload: Record<string, unknown>): boolean {
+  let source = payload
+  if (Array.isArray(payload.events) && payload.events.length > 0) {
+    source = payload.events[0] as Record<string, unknown>
+  } else if (Array.isArray(payload.calls) && payload.calls.length > 0) {
+    source = payload.calls[0] as Record<string, unknown>
+  } else if (Array.isArray(payload.messages) && payload.messages.length > 0) {
+    source = payload.messages[0] as Record<string, unknown>
+  }
+
+  const text = String(source.text || source.fulltext || source.fullText || source.message || source.body || "").trim()
+  if (text) return false
+
+  if (source.missed === true || source.isMissed === true || source.answered === false) {
+    return true
+  }
+
+  const eventType = String(
+    source.event ||
+    source.eventType ||
+    source.callStatus ||
+    source.status ||
+    source.type ||
+    ""
+  ).toLowerCase()
+
+  return /missed|missed_call|no_answer|noanswer|unanswered|busy|failed|not_answered/.test(eventType)
 }
 
 serve(async (req) => {
@@ -131,6 +180,48 @@ serve(async (req) => {
       payload_size: JSON.stringify(payload).length,
     })
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+
+    // Support shared webhook configurations: route call events to dedicated missed-call handler.
+    if (looksLikeMissedCall(payload)) {
+      try {
+        if (!supabaseUrl) {
+          throw new Error("SUPABASE_URL is missing")
+        }
+
+        const routeRes = await fetch(`${supabaseUrl}/functions/v1/receive-missed-call`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+
+        log.info({
+          event: "channel.call.routed_from_receive_sms_inmobile",
+          target_endpoint: "receive-missed-call",
+          route_status: routeRes.status,
+        })
+
+        return new Response(
+          JSON.stringify({
+            status: "routed",
+            endpoint: "receive-missed-call",
+            routeStatus: routeRes.status,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      } catch (routeErr) {
+        log.error({
+          event: "channel.call.route_failed",
+          target_endpoint: "receive-missed-call",
+          error_reason: (routeErr as Error).message,
+        })
+        return new Response(
+          JSON.stringify({ status: "error", reason: "missed_call_route_failed" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      }
+    }
+
     // Parse all messages from the payload
     const messages = parseInMobilePayload(payload)
 
@@ -147,10 +238,13 @@ serve(async (req) => {
       )
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("ANON_KEY")
+    const messagesInsertKey = serviceRoleKey || anonKey
+    const canProcessThreads = Boolean(serviceRoleKey)
+    const warnings: string[] = []
 
-    if (!supabaseUrl || !serviceRoleKey) {
+    if (!supabaseUrl || !messagesInsertKey) {
       log.error({ event: "channel.sms.config_error", error_reason: "Missing Supabase credentials" })
       return new Response(
         JSON.stringify({ status: "error", reason: "server_config" }),
@@ -158,17 +252,39 @@ serve(async (req) => {
       )
     }
 
-    const supabaseHeaders = {
+    if (!serviceRoleKey && anonKey) {
+      warnings.push("service_role_missing_thread_processing_skipped")
+      log.warn({
+        event: "channel.sms.partial_mode",
+        warning_reason: "SERVICE_ROLE_KEY missing - only messages insert is enabled",
+      })
+    }
+
+    const messagesInsertHeaders = {
       "Content-Type": "application/json",
-      "apikey": serviceRoleKey,
-      "Authorization": `Bearer ${serviceRoleKey}`,
+      "apikey": messagesInsertKey,
+      "Authorization": `Bearer ${messagesInsertKey}`,
       "Prefer": "return=representation",
     }
+    const serviceAuthHeaders = serviceRoleKey
+      ? { "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` }
+      : null
+    const serviceHeaders = serviceRoleKey
+      ? { ...serviceAuthHeaders, "Content-Type": "application/json", "Prefer": "return=representation" }
+      : null
 
     const results: Array<{ messageId: string; status: string; error?: string }> = []
 
     for (const sms of messages) {
       try {
+        log.info({
+          event: "channel.sms.parsed_message",
+          message_id: sms.messageId,
+          sender: sms.sender,
+          receiver: sms.receiver || null,
+          text_preview: sms.text.slice(0, 120),
+        })
+
         // Step 1: Insert into messages table (backward compatibility)
         const messagesPayload = {
           phone: sms.sender,
@@ -182,13 +298,25 @@ serve(async (req) => {
 
         const msgRes = await fetch(`${supabaseUrl}/rest/v1/messages`, {
           method: "POST",
-          headers: supabaseHeaders,
+          headers: messagesInsertHeaders,
           body: JSON.stringify(messagesPayload),
         })
 
         if (!msgRes.ok) {
           const err = await msgRes.text()
           log.warn({ event: "channel.sms.messages_insert_failed", error_reason: err, from: sms.sender })
+          results.push({ messageId: sms.messageId, status: "error", error: "messages_insert_failed" })
+          continue
+        }
+
+        // If service role key is missing, we only store to messages for realtime UI.
+        if (!canProcessThreads || !serviceHeaders || !serviceAuthHeaders) {
+          results.push({
+            messageId: sms.messageId,
+            status: "stored_messages_only",
+            error: "thread_processing_skipped_missing_service_role",
+          })
+          continue
         }
 
         // Step 2: Resolve tenant from receiving number
@@ -197,7 +325,7 @@ serve(async (req) => {
         if (sms.receiver) {
           const tenantRes = await fetch(
             `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(sms.receiver)}&select=id&limit=1`,
-            { headers: { "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` } }
+            { headers: serviceAuthHeaders }
           )
           if (tenantRes.ok) {
             const tenants = await tenantRes.json()
@@ -209,7 +337,7 @@ serve(async (req) => {
         if (!tenantId) {
           const fallbackRes = await fetch(
             `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
-            { headers: { "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` } }
+            { headers: serviceAuthHeaders }
           )
           if (fallbackRes.ok) {
             const fallback = await fallbackRes.json()
@@ -229,7 +357,7 @@ serve(async (req) => {
           `${supabaseUrl}/rest/v1/rpc/get_or_create_customer`,
           {
             method: "POST",
-            headers: supabaseHeaders,
+            headers: serviceHeaders,
             body: JSON.stringify({ p_tenant_id: tenantId, p_phone: sms.sender, p_email: null, p_name: null }),
           }
         )
@@ -246,7 +374,7 @@ serve(async (req) => {
         if (!customerId) {
           const lookupRes = await fetch(
             `${supabaseUrl}/rest/v1/customers?phone=eq.${encodeURIComponent(sms.sender)}&tenant_id=eq.${tenantId}&select=id&limit=1`,
-            { headers: { "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` } }
+            { headers: serviceAuthHeaders }
           )
           if (lookupRes.ok) {
             const existing = await lookupRes.json()
@@ -255,7 +383,7 @@ serve(async (req) => {
             } else {
               const insertRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
                 method: "POST",
-                headers: supabaseHeaders,
+                headers: serviceHeaders,
                 body: JSON.stringify({ tenant_id: tenantId, phone: sms.sender }),
               })
               if (insertRes.ok) {
@@ -277,7 +405,7 @@ serve(async (req) => {
 
         const threadRes = await fetch(
           `${supabaseUrl}/rest/v1/conversation_threads?tenant_id=eq.${tenantId}&customer_id=eq.${customerId}&channel=eq.sms&status=eq.open&order=created_at.desc&limit=1`,
-          { headers: { "apikey": serviceRoleKey, "Authorization": `Bearer ${serviceRoleKey}` } }
+          { headers: serviceAuthHeaders }
         )
         if (threadRes.ok) {
           const threads = await threadRes.json()
@@ -286,7 +414,7 @@ serve(async (req) => {
             // Update last_message_at
             await fetch(`${supabaseUrl}/rest/v1/conversation_threads?id=eq.${threadId}`, {
               method: "PATCH",
-              headers: { ...supabaseHeaders, "Prefer": "return=minimal" },
+              headers: { ...serviceHeaders, "Prefer": "return=minimal" },
               body: JSON.stringify({ last_message_at: new Date().toISOString() }),
             })
           }
@@ -295,7 +423,7 @@ serve(async (req) => {
         if (!threadId) {
           const newThreadRes = await fetch(`${supabaseUrl}/rest/v1/conversation_threads`, {
             method: "POST",
-            headers: supabaseHeaders,
+            headers: serviceHeaders,
             body: JSON.stringify({
               tenant_id: tenantId,
               customer_id: customerId,
@@ -320,7 +448,7 @@ serve(async (req) => {
         // Step 5: Insert into thread_messages
         const threadMsgRes = await fetch(`${supabaseUrl}/rest/v1/thread_messages`, {
           method: "POST",
-          headers: supabaseHeaders,
+          headers: serviceHeaders,
           body: JSON.stringify({
             thread_id: threadId,
             direction: "inbound",
@@ -366,12 +494,13 @@ serve(async (req) => {
       event: "channel.sms.webhook_completed",
       total_messages: messages.length,
       successful: results.filter((r) => r.status === "success").length,
+      warnings_count: warnings.length,
       duration_ms: duration,
     })
 
     // Always return 200 to prevent InMobile from retrying
     return new Response(
-      JSON.stringify({ status: "ok", processed: results.length, results }),
+      JSON.stringify({ status: "ok", processed: results.length, results, warnings }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   } catch (error) {

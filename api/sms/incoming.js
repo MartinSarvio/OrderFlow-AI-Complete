@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       .insert({
         phone: phone,
         content: content,
-        direction: 'incoming',
+        direction: 'inbound',
         created_at: new Date().toISOString()
       })
       .select();

@@ -59,6 +59,35 @@ function extractMessage(payload: Record<string, unknown>): { message: string; se
   return { message, sender, receiver, messageId }
 }
 
+function looksLikeMissedCall(payload: Record<string, unknown>): boolean {
+  let source = payload
+  if (Array.isArray(payload.events) && payload.events.length > 0) {
+    source = payload.events[0] as Record<string, unknown>
+  } else if (Array.isArray(payload.calls) && payload.calls.length > 0) {
+    source = payload.calls[0] as Record<string, unknown>
+  } else if (Array.isArray(payload.messages) && payload.messages.length > 0) {
+    source = payload.messages[0] as Record<string, unknown>
+  }
+
+  const text = String(source.text || source.fulltext || source.fullText || source.message || source.body || "").trim()
+  if (text) return false
+
+  if (source.missed === true || source.isMissed === true || source.answered === false) {
+    return true
+  }
+
+  const eventType = String(
+    source.event ||
+    source.eventType ||
+    source.callStatus ||
+    source.status ||
+    source.type ||
+    ""
+  ).toLowerCase()
+
+  return /missed|missed_call|no_answer|noanswer|unanswered|busy|failed|not_answered/.test(eventType)
+}
+
 serve(async (req) => {
   const log = createRequestLogger(req, { module: 'receive-sms', channel: 'sms' })
 
@@ -85,6 +114,48 @@ serve(async (req) => {
       payload_size: JSON.stringify(payload).length
     })
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+
+    // Support a shared webhook setup: route missed-call payloads to the dedicated call endpoint.
+    if (looksLikeMissedCall(payload)) {
+      try {
+        if (!supabaseUrl) {
+          throw new Error("SUPABASE_URL is missing")
+        }
+
+        const routeRes = await fetch(`${supabaseUrl}/functions/v1/receive-missed-call`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+
+        log.info({
+          event: "channel.call.routed_from_receive_sms",
+          target_endpoint: "receive-missed-call",
+          route_status: routeRes.status,
+        })
+
+        return new Response(
+          JSON.stringify({
+            status: "routed",
+            endpoint: "receive-missed-call",
+            routeStatus: routeRes.status,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      } catch (routeErr) {
+        log.error({
+          event: "channel.call.route_failed",
+          target_endpoint: "receive-missed-call",
+          error_reason: (routeErr as Error).message,
+        })
+        return new Response(
+          JSON.stringify({ status: "error", reason: "missed_call_route_failed" }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        )
+      }
+    }
+
     const extracted = extractMessage(payload)
 
     if (!extracted) {
@@ -110,8 +181,6 @@ serve(async (req) => {
       message_length: message.length,
       provider: 'inmobile'
     })
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
     const supabaseHeaders = {
