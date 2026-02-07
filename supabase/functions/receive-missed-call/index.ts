@@ -24,6 +24,78 @@ function normalizePhone(raw: string): string {
   return `+${digits}`
 }
 
+function buildPhoneCandidates(raw: string): string[] {
+  const candidates: string[] = []
+  const push = (value: string) => {
+    if (!value) return
+    if (!candidates.includes(value)) candidates.push(value)
+  }
+
+  const trimmed = String(raw || "").trim()
+  const normalized = normalizePhone(trimmed)
+  const digits = trimmed.replace(/[^0-9]/g, "")
+
+  push(trimmed)
+  push(normalized)
+
+  if (digits) {
+    push(digits)
+    if (digits.startsWith("45") && digits.length === 10) {
+      const local = digits.slice(2)
+      push(local)
+      push(`+45${local}`)
+    } else if (digits.length === 8) {
+      push(`45${digits}`)
+      push(`+45${digits}`)
+    }
+  }
+
+  return candidates.filter(Boolean)
+}
+
+async function resolveTenantForCall(
+  supabaseUrl: string,
+  authHeaders: Record<string, string>,
+  receiver: string,
+  defaultTenantId?: string,
+): Promise<{ id: string; name: string } | null> {
+  const candidates = buildPhoneCandidates(receiver)
+
+  for (const candidate of candidates) {
+    const tenantRes = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(candidate)}&select=id,name&limit=1`,
+      { headers: authHeaders },
+    )
+    if (!tenantRes.ok) continue
+    const rows = await tenantRes.json()
+    if (rows.length > 0) {
+      return { id: rows[0].id, name: rows[0].name || "restauranten" }
+    }
+  }
+
+  if (defaultTenantId) {
+    const defaultRes = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id,name&limit=1`,
+      { headers: authHeaders },
+    )
+    if (defaultRes.ok) {
+      const rows = await defaultRes.json()
+      if (rows.length > 0) {
+        return { id: rows[0].id, name: rows[0].name || "restauranten" }
+      }
+    }
+  }
+
+  const fallbackRes = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?select=id,name&limit=1`,
+    { headers: authHeaders },
+  )
+  if (!fallbackRes.ok) return null
+  const rows = await fallbackRes.json()
+  if (rows.length === 0) return null
+  return { id: rows[0].id, name: rows[0].name || "restauranten" }
+}
+
 function isLikelyMissedCall(source: Record<string, unknown>, eventType: string): boolean {
   const missedExplicit = source.missed === true || source.isMissed === true
   if (missedExplicit) return true
@@ -183,6 +255,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    const defaultTenantId = Deno.env.get("DEFAULT_TENANT_ID") || ""
 
     if (!supabaseUrl || !serviceRoleKey) {
       log.error({ event: "channel.call.config_error", error_reason: "missing_supabase_credentials" })
@@ -203,36 +276,14 @@ serve(async (req) => {
     }
 
     // Resolve tenant by receiving number first.
-    let tenantId: string | null = null
-    let tenantName = "restauranten"
-
-    if (event.receiver) {
-      const tenantRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(event.receiver)}&select=id,name,sms_number&limit=1`,
-        { headers: serviceAuthHeaders }
-      )
-      if (tenantRes.ok) {
-        const tenants = await tenantRes.json()
-        if (tenants.length > 0) {
-          tenantId = tenants[0].id
-          tenantName = tenants[0].name || tenantName
-        }
-      }
-    }
-
-    if (!tenantId) {
-      const fallbackRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?select=id,name,sms_number&limit=1`,
-        { headers: serviceAuthHeaders }
-      )
-      if (fallbackRes.ok) {
-        const tenants = await fallbackRes.json()
-        if (tenants.length > 0) {
-          tenantId = tenants[0].id
-          tenantName = tenants[0].name || tenantName
-        }
-      }
-    }
+    const tenant = await resolveTenantForCall(
+      supabaseUrl,
+      serviceAuthHeaders,
+      event.receiver,
+      defaultTenantId,
+    )
+    const tenantId = tenant?.id || null
+    const tenantName = tenant?.name || "restauranten"
 
     if (!tenantId) {
       log.warn({

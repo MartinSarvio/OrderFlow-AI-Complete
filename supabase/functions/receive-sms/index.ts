@@ -15,6 +15,73 @@ function normalizePhone(raw: string): string {
   return `+${digits}`
 }
 
+function buildPhoneCandidates(raw: string): string[] {
+  const candidates: string[] = []
+  const push = (value: string) => {
+    if (!value) return
+    if (!candidates.includes(value)) candidates.push(value)
+  }
+
+  const trimmed = String(raw || "").trim()
+  const normalized = normalizePhone(trimmed)
+  const digits = trimmed.replace(/[^0-9]/g, "")
+
+  push(trimmed)
+  push(normalized)
+
+  if (digits) {
+    push(digits)
+    if (digits.startsWith("45") && digits.length === 10) {
+      const local = digits.slice(2)
+      push(local)
+      push(`+45${local}`)
+    } else if (digits.length === 8) {
+      push(`45${digits}`)
+      push(`+45${digits}`)
+    }
+  }
+
+  return candidates.filter(Boolean)
+}
+
+async function resolveTenantByReceiver(
+  supabaseUrl: string,
+  authHeaders: Record<string, string>,
+  receiver: string,
+  defaultTenantId?: string,
+): Promise<string | null> {
+  const candidates = buildPhoneCandidates(receiver)
+
+  for (const candidate of candidates) {
+    const tenantRes = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(candidate)}&select=id&limit=1`,
+      { headers: authHeaders },
+    )
+    if (!tenantRes.ok) continue
+    const tenants = await tenantRes.json()
+    if (tenants.length > 0) return tenants[0].id
+  }
+
+  if (defaultTenantId) {
+    const defaultRes = await fetch(
+      `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id&limit=1`,
+      { headers: authHeaders },
+    )
+    if (defaultRes.ok) {
+      const rows = await defaultRes.json()
+      if (rows.length > 0) return rows[0].id
+    }
+  }
+
+  const fallbackRes = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
+    { headers: authHeaders },
+  )
+  if (!fallbackRes.ok) return null
+  const fallback = await fallbackRes.json()
+  return fallback.length > 0 ? fallback[0].id : null
+}
+
 /**
  * Extract sender, receiver, text from various payload formats:
  *   1. Flat webhook:  { msisdn, text, shortcode }
@@ -183,6 +250,7 @@ serve(async (req) => {
     })
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("ANON_KEY")
+    const defaultTenantId = Deno.env.get("DEFAULT_TENANT_ID") || ""
     const messagesInsertKey = serviceRoleKey || anonKey
     const warnings: string[] = []
 
@@ -261,27 +329,12 @@ serve(async (req) => {
 
     // Bridge to conversation thread system
     // Step 1: Resolve tenant
-    let tenantId: string | null = null
-    if (normalizedReceiver) {
-      const tenantRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(normalizedReceiver)}&select=id&limit=1`,
-        { headers: serviceAuthHeaders }
-      )
-      if (tenantRes.ok) {
-        const tenants = await tenantRes.json()
-        if (tenants.length > 0) tenantId = tenants[0].id
-      }
-    }
-    if (!tenantId) {
-      const fallbackRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
-        { headers: serviceAuthHeaders }
-      )
-      if (fallbackRes.ok) {
-        const fallback = await fallbackRes.json()
-        if (fallback.length > 0) tenantId = fallback[0].id
-      }
-    }
+    const tenantId = await resolveTenantByReceiver(
+      supabaseUrl,
+      serviceAuthHeaders,
+      normalizedReceiver || receiver,
+      defaultTenantId,
+    )
 
     if (!tenantId) {
       warnings.push("no_tenant")
