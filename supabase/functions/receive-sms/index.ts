@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createRequestLogger, channelLogger, createAuditEntry } from "../_shared/logger.ts"
+import { createRequestLogger } from "../_shared/logger.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +13,50 @@ function normalizePhone(raw: string): string {
   if (digits.startsWith("45")) return `+${digits}`
   if (digits.length === 8) return `+45${digits}`
   return `+${digits}`
+}
+
+/**
+ * Extract sender, receiver, text from various payload formats:
+ *   1. Flat webhook:  { msisdn, text, shortcode }
+ *   2. InMobile V4:   { from: { rawSource }, to: { msisdn }, text }
+ *   3. V4 array:      { messages: [{ from, to, text }] }
+ */
+function extractMessage(payload: Record<string, unknown>): { message: string; sender: string; receiver: string; messageId: string } | null {
+  // V4 array wrapper — take first message
+  let source = payload
+  if (Array.isArray(payload.messages) && payload.messages.length > 0) {
+    source = payload.messages[0] as Record<string, unknown>
+  }
+
+  // Try V4 nested format first
+  const from = source.from as Record<string, unknown> | undefined
+  const to = source.to as Record<string, unknown> | undefined
+
+  let sender = ""
+  let receiver = ""
+
+  if (from && typeof from === "object") {
+    sender = String(from.rawSource || "")
+    if (!sender && from.phoneNumber) {
+      const cc = String(from.countryCode || "45")
+      sender = cc + String(from.phoneNumber)
+    }
+  }
+
+  if (to && typeof to === "object") {
+    receiver = String(to.msisdn || to.phoneNumber || "")
+  }
+
+  // Fall back to flat fields
+  if (!sender) sender = String(source.msisdn || source.sender || "")
+  if (!receiver) receiver = String(source.shortcode || source.receiver || "")
+
+  const message = String(source.text || source.message || source.body || "")
+  const messageId = String(source.id || source.messageId || source.message_id || `sms-${Date.now()}`)
+
+  if (!message || !sender) return null
+
+  return { message, sender, receiver, messageId }
 }
 
 serve(async (req) => {
@@ -41,23 +85,21 @@ serve(async (req) => {
       payload_size: JSON.stringify(payload).length
     })
 
-    const message = String(payload.text || payload.message || "")
-    const sender = String(payload.msisdn || payload.sender || "")
-    const receiver = String(payload.shortcode || payload.receiver || "")
+    const extracted = extractMessage(payload)
 
-    if (!message || !sender) {
+    if (!extracted) {
       log.warn({
         event: 'channel.sms.validation_failed',
-        error_reason: 'Missing required fields',
-        has_message: !!message,
-        has_sender: !!sender
+        error_reason: 'Missing required fields or unsupported format',
+        payload_keys: Object.keys(payload).join(','),
       })
       return new Response(
-        JSON.stringify({ error: "Missing: msisdn, text" }),
+        JSON.stringify({ error: "Missing: msisdn/from, text" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       )
     }
 
+    const { message, sender, receiver, messageId } = extracted
     const normalizedSender = normalizePhone(sender)
     const normalizedReceiver = normalizePhone(receiver)
 
@@ -72,6 +114,14 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
+    const supabaseHeaders = {
+      "Content-Type": "application/json",
+      "apikey": serviceRoleKey!,
+      "Authorization": `Bearer ${serviceRoleKey}`,
+      "Prefer": "return=representation",
+    }
+
+    // Insert into messages table (backward compatibility)
     const insertPayload = {
       phone: normalizedSender,
       direction: "inbound",
@@ -84,16 +134,9 @@ serve(async (req) => {
 
     const insertResponse = await fetch(`${supabaseUrl}/rest/v1/messages`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": serviceRoleKey!,
-        "Authorization": `Bearer ${serviceRoleKey}`,
-        "Prefer": "return=representation",
-      },
+      headers: supabaseHeaders,
       body: JSON.stringify(insertPayload),
     })
-
-    const duration = Date.now() - startTime
 
     if (!insertResponse.ok) {
       const err = await insertResponse.text()
@@ -102,37 +145,154 @@ serve(async (req) => {
         error_reason: err,
         status_code: insertResponse.status,
         from: normalizedSender,
-        duration_ms: duration
       })
-      return new Response(
-        JSON.stringify({ error: "Insert failed", details: err }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      )
+    } else {
+      await insertResponse.json()
     }
 
-    const insertedData = await insertResponse.json()
+    // Bridge to conversation thread system
+    // Step 1: Resolve tenant
+    let tenantId: string | null = null
+    if (normalizedReceiver) {
+      const tenantRes = await fetch(
+        `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(normalizedReceiver)}&select=id&limit=1`,
+        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+      )
+      if (tenantRes.ok) {
+        const tenants = await tenantRes.json()
+        if (tenants.length > 0) tenantId = tenants[0].id
+      }
+    }
+    if (!tenantId) {
+      const fallbackRes = await fetch(
+        `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
+        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+      )
+      if (fallbackRes.ok) {
+        const fallback = await fallbackRes.json()
+        if (fallback.length > 0) tenantId = fallback[0].id
+      }
+    }
+
+    // Step 2: Find or create customer
+    let customerId: string | null = null
+    if (tenantId) {
+      const custRes = await fetch(`${supabaseUrl}/rest/v1/rpc/get_or_create_customer`, {
+        method: "POST",
+        headers: supabaseHeaders,
+        body: JSON.stringify({ p_tenant_id: tenantId, p_phone: normalizedSender, p_email: null, p_name: null }),
+      })
+      if (custRes.ok) {
+        const custData = await custRes.json()
+        customerId = Array.isArray(custData) ? custData[0]?.id : custData?.id
+      }
+
+      // Fallback: direct lookup/insert
+      if (!customerId) {
+        const lookupRes = await fetch(
+          `${supabaseUrl}/rest/v1/customers?phone=eq.${encodeURIComponent(normalizedSender)}&tenant_id=eq.${tenantId}&select=id&limit=1`,
+          { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+        )
+        if (lookupRes.ok) {
+          const existing = await lookupRes.json()
+          if (existing.length > 0) {
+            customerId = existing[0].id
+          } else {
+            const insRes = await fetch(`${supabaseUrl}/rest/v1/customers`, {
+              method: "POST",
+              headers: supabaseHeaders,
+              body: JSON.stringify({ tenant_id: tenantId, phone: normalizedSender }),
+            })
+            if (insRes.ok) {
+              const inserted = await insRes.json()
+              customerId = inserted[0]?.id || null
+            }
+          }
+        }
+      }
+    }
+
+    // Step 3: Find or create thread + insert thread_message
+    let threadId: string | null = null
+    if (tenantId && customerId) {
+      const threadRes = await fetch(
+        `${supabaseUrl}/rest/v1/conversation_threads?tenant_id=eq.${tenantId}&customer_id=eq.${customerId}&channel=eq.sms&status=eq.open&order=created_at.desc&limit=1`,
+        { headers: { "apikey": serviceRoleKey!, "Authorization": `Bearer ${serviceRoleKey}` } }
+      )
+      if (threadRes.ok) {
+        const threads = await threadRes.json()
+        if (threads.length > 0) {
+          threadId = threads[0].id
+          await fetch(`${supabaseUrl}/rest/v1/conversation_threads?id=eq.${threadId}`, {
+            method: "PATCH",
+            headers: { ...supabaseHeaders, "Prefer": "return=minimal" },
+            body: JSON.stringify({ last_message_at: new Date().toISOString() }),
+          })
+        }
+      }
+
+      if (!threadId) {
+        const newRes = await fetch(`${supabaseUrl}/rest/v1/conversation_threads`, {
+          method: "POST",
+          headers: supabaseHeaders,
+          body: JSON.stringify({
+            tenant_id: tenantId,
+            customer_id: customerId,
+            channel: "sms",
+            external_thread_id: normalizedSender,
+            status: "open",
+            last_message_at: new Date().toISOString(),
+          }),
+        })
+        if (newRes.ok) {
+          const newThread = await newRes.json()
+          threadId = newThread[0]?.id || null
+        }
+      }
+
+      // Insert thread_message
+      if (threadId) {
+        await fetch(`${supabaseUrl}/rest/v1/thread_messages`, {
+          method: "POST",
+          headers: supabaseHeaders,
+          body: JSON.stringify({
+            thread_id: threadId,
+            direction: "inbound",
+            sender_type: "customer",
+            content: message,
+            message_type: "text",
+            external_message_id: messageId,
+            metadata: { phone: normalizedSender, provider: "inmobile", receiver: normalizedReceiver },
+            status: "pending",
+          }),
+        })
+      }
+    }
+
+    const duration = Date.now() - startTime
 
     log.info({
       event: 'channel.sms.stored',
-      message_id: insertedData[0]?.id,
       from: normalizedSender,
-      duration_ms: duration
+      thread_id: threadId,
+      has_thread: !!threadId,
+      duration_ms: duration,
     })
 
     return new Response(
-      JSON.stringify({ success: true, message_id: insertedData[0]?.id }),
+      JSON.stringify({ success: true, thread_id: threadId }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   } catch (error) {
     const duration = Date.now() - startTime
     log.error({
       event: 'channel.sms.error',
-      error_reason: error.message,
-      stack: error.stack,
+      error_reason: (error as Error).message,
+      stack: (error as Error).stack,
       duration_ms: duration
     })
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
   }

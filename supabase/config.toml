@@ -1,2 +1,5 @@
 [functions.receive-sms]
 verify_jwt = false
+
+[functions.receive-sms-inmobile]
+verify_jwt = false

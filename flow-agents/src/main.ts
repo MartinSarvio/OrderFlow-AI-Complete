@@ -10,8 +10,8 @@ import { createClient } from '@supabase/supabase-js';
 
 console.log(`
 ╔═══════════════════════════════════════════╗
-║     FLOW Agent System v1.0.0              ║
-║     Debugging + Workflow Orchestration     ║
+║     FLOW Agent System v1.1.0              ║
+║     Debugging + Workflow + InMobile Poll   ║
 ╚═══════════════════════════════════════════╝
 `);
 
@@ -48,6 +48,17 @@ function validateEnv(): boolean {
   return valid;
 }
 
+// ── Phone normalization ──────────────────────────────────────
+
+function normalizePhone(raw: string): string {
+  let digits = raw.replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('45')) return `+${digits}`;
+  if (digits.length === 8) return `+45${digits}`;
+  return `+${digits}`;
+}
+
 // ── Debugging Agent Scheduler ────────────────────────────────
 
 let debugInterval: ReturnType<typeof setInterval> | null = null;
@@ -56,7 +67,7 @@ let debugCycleCount = 0;
 async function startDebuggingScheduler(): Promise<void> {
   console.log(`\n🔍 Debugging Agent starting...`);
   console.log(`   Interval: ${config.debugIntervalMs / 1000}s`);
-  console.log(`   Endpoints: ${5} configured`);
+  console.log(`   Endpoints: ${6} configured`);
 
   // Run first cycle immediately
   try {
@@ -92,11 +103,12 @@ async function pollForNewMessages(): Promise<void> {
     const supabase = createClient(config.supabaseUrl, config.supabaseKey);
 
     // Query for new inbound SMS messages since last check
+    // NOTE: channel lives on conversation_threads, not thread_messages — use inner join
     const { data: messages, error } = await supabase
       .from('thread_messages')
-      .select('*')
+      .select('*, conversation_threads!inner(channel, tenant_id)')
       .eq('direction', 'inbound')
-      .eq('channel', 'sms')
+      .eq('conversation_threads.channel', 'sms')
       .gt('created_at', lastCheckedTimestamp)
       .order('created_at', { ascending: true })
       .limit(10);
@@ -111,13 +123,19 @@ async function pollForNewMessages(): Promise<void> {
     console.log(`\n📨 ${messages.length} new SMS message(s) found`);
 
     for (const msg of messages) {
+      const threadData = msg.conversation_threads as Record<string, unknown> | undefined;
       const sms: IncomingSMS = {
-        messageId: msg.id || `msg-${Date.now()}`,
-        from: msg.from_number || msg.customer_phone || '',
-        body: msg.body || msg.content || '',
+        messageId: msg.external_message_id || msg.id || `msg-${Date.now()}`,
+        from: (msg.metadata as Record<string, unknown>)?.phone as string || '',
+        body: msg.content || '',
         receivedAt: msg.created_at,
-        tenantId: msg.tenant_id,
+        tenantId: (threadData?.tenant_id as string) || undefined,
       };
+
+      if (!sms.from || !sms.body) {
+        lastCheckedTimestamp = msg.created_at;
+        continue;
+      }
 
       console.log(`   Processing: "${sms.body.substring(0, 50)}${sms.body.length > 50 ? '...' : ''}" from ${sms.from}`);
 
@@ -128,8 +146,8 @@ async function pollForNewMessages(): Promise<void> {
         console.log(`   → Intent: ${result.intent} (${Math.round(result.confidence * 100)}%) → Action: ${result.action}`);
         if (result.smsReply) {
           console.log(`   → Reply: "${result.smsReply.substring(0, 60)}..."`);
-          // TODO: Send SMS reply via Supabase Edge Function
-          // await sendSmsReply(sms.from, result.smsReply, sms.tenantId);
+          // Send SMS reply via Supabase Edge Function
+          await sendSmsReply(sms.from, result.smsReply);
         }
         if (result.escalation) {
           console.log(`   ⚠️ ESCALATION: ${result.escalation}`);
@@ -158,6 +176,287 @@ async function startWorkflowPoller(): Promise<void> {
   await pollForNewMessages();
 }
 
+// ── InMobile Incoming SMS Poller ─────────────────────────────
+// Polls InMobile API for incoming SMS (official documented method).
+// Each message is returned only once by InMobile (marked as read after retrieval).
+
+let inmobileInterval: ReturnType<typeof setInterval> | null = null;
+let inmobilePollCount = 0;
+let inmobileMessagesReceived = 0;
+
+async function pollInMobileIncoming(): Promise<void> {
+  if (!config.inmobileApiKey) return;
+
+  try {
+    inmobilePollCount++;
+    const basicAuth = Buffer.from(':' + config.inmobileApiKey).toString('base64');
+
+    const response = await fetch('https://api.inmobile.com/v4/sms/incoming/messages?limit=250', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${basicAuth}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status !== 204) {
+        console.error(`   ❌ InMobile poll failed: ${response.status} ${response.statusText}`);
+      }
+      return;
+    }
+
+    const data = await response.json();
+    const messages = data?.messages;
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) return;
+
+    console.log(`\n📲 InMobile: ${messages.length} incoming SMS message(s)`);
+
+    const supabase = createClient(config.supabaseUrl, config.supabaseKey);
+
+    for (const msg of messages) {
+      try {
+        const from = msg.from as Record<string, unknown> | undefined;
+        const to = msg.to as Record<string, unknown> | undefined;
+
+        let senderRaw = '';
+        if (from) {
+          senderRaw = String(from.rawSource || '');
+          if (!senderRaw && from.phoneNumber) {
+            senderRaw = String(from.countryCode || '45') + String(from.phoneNumber);
+          }
+        }
+
+        const sender = normalizePhone(senderRaw);
+        const receiver = normalizePhone(String(to?.msisdn || to?.phoneNumber || ''));
+        const text = String(msg.text || '');
+        const receivedAt = String(msg.receivedAt || new Date().toISOString());
+        const messageId = `inmobile-${sender}-${receivedAt}`;
+
+        if (!sender || !text) {
+          console.log(`   Skipping: missing sender or text`);
+          continue;
+        }
+
+        // Idempotency check
+        const { data: existing } = await supabase
+          .from('message_idempotency')
+          .select('id')
+          .eq('channel', 'sms')
+          .eq('external_message_id', messageId)
+          .limit(1);
+
+        if (existing && existing.length > 0) {
+          continue; // Already processed (e.g., via webhook)
+        }
+
+        // Mark as processed
+        await supabase.from('message_idempotency').insert({
+          channel: 'sms',
+          external_message_id: messageId,
+        });
+
+        inmobileMessagesReceived++;
+        console.log(`   From: ${sender}, Text: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+
+        // Insert into messages table (backward compat)
+        await supabase.from('messages').insert({
+          phone: sender,
+          direction: 'inbound',
+          content: text,
+          provider: 'inmobile',
+          receiver: receiver,
+          raw_payload: msg,
+          created_at: receivedAt,
+        });
+
+        // Resolve tenant
+        let tenantId: string | null = null;
+        if (receiver) {
+          const { data: tenants } = await supabase
+            .from('restaurants')
+            .select('id')
+            .eq('sms_number', receiver)
+            .limit(1);
+          if (tenants && tenants.length > 0) tenantId = tenants[0].id;
+        }
+        if (!tenantId) {
+          const { data: fallback } = await supabase
+            .from('restaurants')
+            .select('id')
+            .limit(1);
+          tenantId = fallback?.[0]?.id || null;
+        }
+
+        if (!tenantId) {
+          console.log(`   No tenant found for receiver: ${receiver}`);
+          continue;
+        }
+
+        // Find or create customer
+        let customerId: string | null = null;
+        const { data: custData } = await supabase.rpc('get_or_create_customer', {
+          p_tenant_id: tenantId,
+          p_phone: sender,
+          p_email: null,
+          p_name: null,
+        });
+        if (custData) {
+          customerId = Array.isArray(custData) ? custData[0]?.id : custData?.id;
+        }
+
+        if (!customerId) {
+          const { data: existingCust } = await supabase
+            .from('customers')
+            .select('id')
+            .eq('phone', sender)
+            .eq('tenant_id', tenantId)
+            .limit(1);
+          if (existingCust && existingCust.length > 0) {
+            customerId = existingCust[0].id;
+          } else {
+            const { data: newCust } = await supabase
+              .from('customers')
+              .insert({ tenant_id: tenantId, phone: sender })
+              .select('id')
+              .single();
+            customerId = newCust?.id || null;
+          }
+        }
+
+        if (!customerId) {
+          console.log(`   Could not create customer for: ${sender}`);
+          continue;
+        }
+
+        // Find or create thread
+        let threadId: string | null = null;
+        const { data: threads } = await supabase
+          .from('conversation_threads')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .eq('customer_id', customerId)
+          .eq('channel', 'sms')
+          .eq('status', 'open')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (threads && threads.length > 0) {
+          threadId = threads[0].id;
+          await supabase
+            .from('conversation_threads')
+            .update({ last_message_at: new Date().toISOString() })
+            .eq('id', threadId);
+        } else {
+          const { data: newThread } = await supabase
+            .from('conversation_threads')
+            .insert({
+              tenant_id: tenantId,
+              customer_id: customerId,
+              channel: 'sms',
+              external_thread_id: sender,
+              status: 'open',
+              last_message_at: new Date().toISOString(),
+            })
+            .select('id')
+            .single();
+          threadId = newThread?.id || null;
+        }
+
+        if (!threadId) {
+          console.log(`   Could not create thread for: ${sender}`);
+          continue;
+        }
+
+        // Insert thread_message
+        await supabase.from('thread_messages').insert({
+          thread_id: threadId,
+          direction: 'inbound',
+          sender_type: 'customer',
+          content: text,
+          message_type: 'text',
+          external_message_id: messageId,
+          metadata: { phone: sender, provider: 'inmobile', receiver, source: 'polling' },
+          status: 'pending',
+        });
+
+        // Process through workflow agent
+        const sms: IncomingSMS = {
+          messageId,
+          from: sender,
+          body: text,
+          receivedAt,
+          tenantId,
+        };
+
+        try {
+          const result = await processIncomingSms(sms);
+          processedMessages++;
+          console.log(`   → Intent: ${result.intent} (${Math.round(result.confidence * 100)}%) → Action: ${result.action}`);
+
+          if (result.smsReply) {
+            console.log(`   → Reply: "${result.smsReply.substring(0, 60)}..."`);
+            await sendSmsReply(sender, result.smsReply);
+          }
+          if (result.escalation) {
+            console.log(`   ⚠️ ESCALATION: ${result.escalation}`);
+          }
+        } catch (err) {
+          console.error(`   ❌ Workflow processing failed for ${messageId}:`, err);
+        }
+      } catch (msgErr) {
+        console.error(`   ❌ Failed to process InMobile message:`, msgErr);
+      }
+    }
+  } catch (err) {
+    console.error('   ❌ InMobile poll error:', err);
+  }
+}
+
+async function startInMobilePoller(): Promise<void> {
+  if (!config.inmobileApiKey) {
+    console.log(`\n📲 InMobile Poller skipped (no INMOBILE_API_KEY)`);
+    return;
+  }
+
+  console.log(`\n📲 InMobile Poller starting...`);
+  console.log(`   Poll interval: ${config.inmobilePollMs / 1000}s`);
+  console.log(`   API: GET /v4/sms/incoming/messages`);
+
+  // Initial poll
+  await pollInMobileIncoming();
+
+  // Schedule recurring polls
+  inmobileInterval = setInterval(pollInMobileIncoming, config.inmobilePollMs);
+}
+
+// ── Send SMS Reply Helper ────────────────────────────────────
+
+async function sendSmsReply(to: string, message: string): Promise<void> {
+  try {
+    const response = await fetch(`${config.supabaseUrl}/functions/v1/send-sms`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.supabaseKey}`,
+      },
+      body: JSON.stringify({
+        to,
+        message,
+        apiKey: config.inmobileApiKey || undefined,
+      }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error(`   ❌ SMS reply failed: ${err}`);
+    }
+  } catch (err) {
+    console.error(`   ❌ SMS reply error:`, err);
+  }
+}
+
 // ── Graceful shutdown ────────────────────────────────────────
 
 function setupGracefulShutdown(): void {
@@ -176,10 +475,18 @@ function setupGracefulShutdown(): void {
       console.log('   ✓ Workflow poller stopped');
     }
 
+    if (inmobileInterval) {
+      clearInterval(inmobileInterval);
+      inmobileInterval = null;
+      console.log('   ✓ InMobile poller stopped');
+    }
+
     const state = getAgentState();
     console.log(`\n📊 Session Summary:`);
     console.log(`   Debug cycles: ${debugCycleCount}`);
     console.log(`   Messages processed: ${processedMessages}`);
+    console.log(`   InMobile polls: ${inmobilePollCount}`);
+    console.log(`   InMobile messages received: ${inmobileMessagesReceived}`);
     console.log(`   Last debug status: ${state.lastReport?.overallStatus || 'N/A'}`);
     console.log(`   Debug session: ${state.sessionId || 'N/A'}`);
 
@@ -205,10 +512,11 @@ async function main(): Promise<void> {
   // Setup graceful shutdown
   setupGracefulShutdown();
 
-  // Start both agents
+  // Start all agents
   await Promise.all([
     startDebuggingScheduler(),
     startWorkflowPoller(),
+    startInMobilePoller(),
   ]);
 
   console.log('\n✅ All agents running. Press Ctrl+C to stop.\n');

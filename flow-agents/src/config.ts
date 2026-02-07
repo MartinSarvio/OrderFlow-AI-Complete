@@ -25,6 +25,7 @@ export const config = {
   // Scheduler intervals
   debugIntervalMs: parseInt(process.env.DEBUG_INTERVAL_MS || '300000'),   // 5 min
   workflowPollMs: parseInt(process.env.WORKFLOW_POLL_INTERVAL_MS || '30000'), // 30s
+  inmobilePollMs: parseInt(process.env.INMOBILE_POLL_INTERVAL_MS || '15000'), // 15s
 
   // Thresholds
   responseTimeWarning: 2000,  // ms — mark as degraded
@@ -68,6 +69,13 @@ export const ENDPOINTS = [
     method: 'GET' as const,
     headers: { 'Authorization': `Bearer ${config.supabaseKey}` },
     critical: false,
+  },
+  {
+    name: 'SMS Receive InMobile (Edge Function)',
+    url: `${config.supabaseUrl}/functions/v1/receive-sms-inmobile`,
+    method: 'GET' as const,
+    headers: {},
+    critical: true,
   },
 ] as const;
 
