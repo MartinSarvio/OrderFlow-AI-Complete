@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-07
-**Version:** 3.37.0
-**Total antal sider:** 88+
+**Version:** 3.41.0
+**Total antal sider:** 90+
 
 ---
 
@@ -78,7 +78,7 @@
 | `page-wb-levering` | Levering |
 | `page-wb-funktioner` | Funktioner |
 | `page-wb-social` | Social media |
-| `page-template-editor` | Template Editor (kode-redigering + live preview) |
+| `page-template-editor` | Template Editor (tilg\u00e5s via FLOW CMS \u2192 Skabeloner) |
 
 ### Analytics
 | Side ID | Beskrivelse |
@@ -227,6 +227,20 @@ Udvikling i `landing-pages/` → Produktion i `public/landing/`
 
 Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 
+### Skabelon Checkout-sider
+| Fil | Skabelon | Beskrivelse |
+|-----|----------|-------------|
+| `templates/skabelon-2/checkout.html` | Feane | 3-trins checkout med Stripe |
+| `templates/skabelon-3/checkout.html` | Pizza | 3-trins checkout med Stripe |
+
+### F\u00e6lles Template JS
+| Fil | Beskrivelse |
+|-----|-------------|
+| `js/template-auth.js` | Kundevendt auth (login, signup, g\u00e6stekøb) |
+| `js/order-api.js` | Ordre-API (Supabase + Stripe integration) |
+| `templates/skabelon-2/js/cart.js` | Feane kurvsystem |
+| `templates/skabelon-3/js/cart.js` | Pizza kurvsystem |
+
 ## App Builder Skabeloner
 
 | ID | Navn | Preview | Status |
@@ -244,6 +258,13 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 | `ai_agents` | AI bestillingsagenter til Instagram/Facebook |
 | `sms_workflows` | SMS workflow konfigurationer |
 
+### Nye tabeller (v3.41.0)
+| Tabel | Beskrivelse |
+|-------|-------------|
+| `unified_orders` | Samlede ordrer fra alle kanaler (templates, app, admin) |
+| `order_status_history` | Ordrestatus-historik |
+| `customers` | Kundedata med stats |
+
 ### Eksisterende tabeller
 | Tabel | Beskrivelse |
 |-------|-------------|
@@ -253,6 +274,17 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 ---
 
 ## Changelog
+
+### v3.41.0 (2026-02-07)
+- Komplet k\u00f8bsflow i alle 3 webskabeloner med Stripe integration
+- Nye filer: `order-api.js`, `template-auth.js` (kundevendt), cart.js per skabelon
+- Checkout-sider for skabelon-2 (Feane) og skabelon-3 (Pizza)
+- Skabelon-1 (React): Stripe Payment Element + Supabase ordrer
+- PWA/mobilapp: Checkout-scripts tilf\u00f8jet
+- Supabase Edge Function: `create-payment-intent` (Stripe PaymentIntent)
+- Ordrer fra templates synkroniseres til admin via Supabase Realtime
+- Template Editor flyttet til FLOW CMS \u2192 Skabeloner (fjernet fra Web Builder sidebar)
+- Database: `unified_orders`, `customers`, `order_status_history` tabeller
 
 ### v3.14.0 (2026-02-06)
 - Tilføjet API Integration sektion til Instagram/Facebook workflow sider

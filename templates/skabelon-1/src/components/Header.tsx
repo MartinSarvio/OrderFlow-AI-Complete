@@ -1,6 +1,6 @@
 // OrderFlow PWA Generator - Header Component
 import { useState, useEffect } from 'react';
-import { ShoppingCart, User, Menu, Clock, MapPin, Phone, Settings } from 'lucide-react';
+import { ShoppingCart, User, Menu, Clock, MapPin, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
@@ -186,31 +186,18 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
             )}
           </Button>
 
-          {/* Profile / Auth Button (Desktop) */}
-          {isLoggedIn ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
-                scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-              }`}
-              onClick={() => (window as any).FlowAuth?.goToAdmin()}
-              title="Admin Dashboard"
-            >
-              <Settings className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="icon"
-              className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
-                scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
-              }`}
-              onClick={() => onNavigate('profile')}
-            >
-              <User className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
-            </Button>
-          )}
+          {/* Profile Button (Desktop) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`hidden md:flex rounded-full transition-all duration-300 hover:scale-110 ${
+              scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
+            }`}
+            onClick={() => onNavigate('profile')}
+            title={isLoggedIn ? 'Min profil' : 'Log ind'}
+          >
+            <User className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
+          </Button>
 
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -270,32 +257,19 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
                         {item.label}
                       </button>
                     ))}
-                    {isLoggedIn ? (
-                      <button
-                        onClick={() => {
-                          (window as any).FlowAuth?.goToAdmin();
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
-                        style={{ color: branding.colors.primary }}
-                      >
-                        Admin Dashboard
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          onNavigate('profile');
-                          setMobileMenuOpen(false);
-                        }}
-                        className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
-                        style={{
-                          color: isActive('profile') ? branding.colors.primary : branding.colors.text,
-                          backgroundColor: isActive('profile') ? `${branding.colors.primary}10` : 'transparent'
-                        }}
-                      >
-                        Min profil
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        onNavigate('profile');
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-3.5 rounded-xl font-medium transition-all duration-300 hover:bg-gray-100"
+                      style={{
+                        color: isActive('profile') ? branding.colors.primary : branding.colors.text,
+                        backgroundColor: isActive('profile') ? `${branding.colors.primary}10` : 'transparent'
+                      }}
+                    >
+                      {isLoggedIn ? 'Min profil' : 'Log ind'}
+                    </button>
                   </div>
                 </nav>
 

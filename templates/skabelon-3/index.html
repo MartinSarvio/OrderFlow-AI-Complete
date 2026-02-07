@@ -44,7 +44,8 @@
 	          <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
 	          <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
 	          <li class="nav-item" data-auth="logged-out"><a href="javascript:void(0)" class="nav-link" onclick="FlowAuth.showLoginModal()">Log ind</a></li>
-	          <li class="nav-item" data-auth="logged-in" style="display:none"><a href="javascript:void(0)" class="nav-link" onclick="FlowAuth.goToAdmin()">Admin</a></li>
+	          <li class="nav-item" data-auth="logged-in" style="display:none"><a href="javascript:void(0)" class="nav-link" onclick="FlowAuth.showProfileModal()"><span data-auth-name>Min profil</span></a></li>
+	          <li class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="PizzaCart.open()" style="position:relative"><span class="icon-shopping-cart"></span> Kurv <span id="pizza-cart-badge-nav" style="background:#e25555;color:#fff;border-radius:50%;padding:1px 6px;font-size:11px;display:none"></span></a></li>
 	        </ul>
 	      </div>
 		  </div>
@@ -975,6 +976,9 @@
           <div style="text-align:center;margin-top:16px;font-size:13px">
             Har du ikke en konto? <a href="javascript:void(0)" onclick="$('#flow-login-modal').modal('hide');FlowAuth.showSignupModal();" style="color:#1a1a2e;font-weight:600">Opret konto</a>
           </div>
+          <div style="text-align:center;margin-top:8px">
+            <a href="menu.html" onclick="$('#flow-login-modal').modal('hide');" style="color:#888;font-size:12px">Forts\u00e6t som g\u00e6st &rarr;</a>
+          </div>
         </div>
       </div>
     </div>
@@ -999,6 +1003,10 @@
               <input type="email" class="form-control" id="flow-signup-email" placeholder="din@email.dk" required>
             </div>
             <div class="form-group">
+              <label style="font-weight:500">Telefon</label>
+              <input type="tel" class="form-control" id="flow-signup-phone" placeholder="+45 12 34 56 78">
+            </div>
+            <div class="form-group">
               <label style="font-weight:500">Adgangskode</label>
               <input type="password" class="form-control" id="flow-signup-password" placeholder="Min. 6 tegn" required>
             </div>
@@ -1013,8 +1021,33 @@
     </div>
   </div>
 
-  <!-- FLOW Auth Bridge -->
+  <!-- Supabase + Stripe + FLOW -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
   <script src="../../js/template-auth.js"></script>
+  <script src="../../js/order-api.js"></script>
+  <script src="js/cart.js"></script>
+
+  <!-- Profile Modal -->
+  <div class="modal fade" id="flow-profile-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content" style="border-radius:12px;overflow:hidden">
+        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
+          <h5 class="modal-title" style="font-weight:600">Min profil</h5>
+          <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:24px">
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="width:64px;height:64px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:24px"><span class="icon-user"></span></div>
+            <h6 data-auth-name style="font-weight:600;margin:0"></h6>
+            <small data-auth-email style="color:#888"></small>
+          </div>
+          <a href="checkout.html?tab=orders" class="btn btn-block" style="background:#f8f9fa;color:#333;padding:10px;border-radius:8px;margin-bottom:8px;text-align:left;border:1px solid #eee"><span class="icon-list" style="width:24px;display:inline-block"></span> Mine ordrer</a>
+          <button onclick="FlowAuth.logout();$('#flow-profile-modal').modal('hide');" class="btn btn-block" style="background:#fff;color:#dc3545;padding:10px;border-radius:8px;border:1px solid #dc3545;text-align:left"><span class="icon-power" style="width:24px;display:inline-block"></span> Log ud</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   </body>
 </html>
