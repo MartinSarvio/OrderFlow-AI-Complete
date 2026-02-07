@@ -1,10 +1,8 @@
-import { query } from '@anthropic-ai/claude-code';
-import type { HookCallback } from '@anthropic-ai/claude-code';
 import { config } from '../config.js';
-import { parseSmsReply, validateAgainstOrder, type ParsedSMS } from '../tools/sms-parser.js';
+import { parseSmsReply, validateAgainstOrder } from '../tools/sms-parser.js';
 import { findOrderByPhone, findThreadByPhone, queryMessages, updateOrderStatus, checkIdempotency } from '../tools/supabase-query.js';
-import { createAuditLogger, type AuditLogger } from '../hooks/audit-logger.js';
-import { createErrorNotifier, type ErrorNotifier } from '../hooks/error-notifier.js';
+import { createAuditLogger } from '../hooks/audit-logger.js';
+import { createErrorNotifier } from '../hooks/error-notifier.js';
 
 // ============================================================
 // Workflow Agent — Order SMS orchestration + edge cases
@@ -63,6 +61,55 @@ Svar ALTID med et JSON-objekt:
   "reasoning": "kort forklaring"
 }`;
 
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
+
+function extractFirstJsonObject(text: string): string | null {
+  const match = text.match(/\{[\s\S]*\}/);
+  return match ? match[0] : null;
+}
+
+async function callOpenAIChat(
+  systemPrompt: string,
+  userPrompt: string,
+  maxTokens = 400,
+  temperature = 0.2,
+): Promise<string> {
+  if (!config.openaiApiKey) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+
+  const response = await fetch(OPENAI_API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${config.openaiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: config.openaiModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`OpenAI error ${response.status}: ${errText.slice(0, 300)}`);
+  }
+
+  const data = await response.json() as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error('OpenAI returned empty content');
+  }
+  return content;
+}
+
 // ── Types ────────────────────────────────────────────────────
 
 export interface IncomingSMS {
@@ -91,19 +138,7 @@ export interface WorkflowResult {
 
 // ── State ────────────────────────────────────────────────────
 
-let sessionId: string | undefined;
 let processedCount = 0;
-
-// ── Hooks ────────────────────────────────────────────────────
-
-function createAuditHook(auditLogger: AuditLogger): HookCallback {
-  return async (input, toolUseId, { signal }) => {
-    const toolName = (input as Record<string, unknown>).tool_name as string || 'unknown';
-    const toolInput = (input as Record<string, unknown>).tool_input as Record<string, unknown> || {};
-    auditLogger.logToolCall(toolName, toolInput);
-    return {};
-  };
-}
 
 // ── Main workflow processing ─────────────────────────────────
 
@@ -215,8 +250,8 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
 
   // Step 6: Handle based on confidence level
   if (parsed.confidence < 0.5 || parsed.intent === 'unknown') {
-    // Low confidence or unknown — use Claude for analysis
-    steps.push('claude_analysis');
+    // Low confidence or unknown — use OpenAI (ChatGPT) for analysis
+    steps.push('openai_analysis');
 
     try {
       let agentResult = '';
@@ -245,32 +280,18 @@ ${contextStr}
 
 Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
 
-      for await (const message of query({
-        prompt: agentPrompt,
-        options: {
-          systemPrompt: SYSTEM_PROMPT,
-          allowedTools: ['Read', 'Grep'],
-          maxTurns: 3,
-          model: 'haiku',
-          ...(sessionId ? { resume: sessionId } : {}),
-          hooks: {
-            PreToolUse: [{ hooks: [createAuditHook(auditLogger)] }],
-          },
-        },
-      })) {
-        if (message.type === 'system' && message.subtype === 'init') {
-          sessionId = message.session_id;
-        }
-        if ('result' in message) {
-          agentResult = (message as { result: string }).result;
-        }
-      }
+      agentResult = await callOpenAIChat(
+        `${SYSTEM_PROMPT}\n\nReturner KUN gyldig JSON uden markdown.`,
+        agentPrompt,
+        500,
+        0.2,
+      );
 
       // Parse agent response
-      const jsonMatch = agentResult.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      const jsonCandidate = extractFirstJsonObject(agentResult);
+      if (jsonCandidate) {
         try {
-          const agentDecision = JSON.parse(jsonMatch[0]);
+          const agentDecision = JSON.parse(jsonCandidate);
           processedCount++;
           auditLogger.logAgentStop({ result: agentDecision.action });
 
@@ -403,24 +424,17 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
     }
 
     case 'question': {
-      // Questions need Claude to generate an answer
+      // Questions use OpenAI (ChatGPT) for a concise answer
       action = 'answer';
       steps.push('generate_answer');
 
       try {
-        let answer = '';
-        for await (const message of query({
-          prompt: `Kunde sp\u00f8rger: "${sms.body}"\nOrdre-status: ${orderStatus}\nSvar kort (max 160 tegn) p\u00e5 ${parsed.language === 'en' ? 'engelsk' : 'dansk'}.`,
-          options: {
-            systemPrompt: SYSTEM_PROMPT,
-            maxTurns: 1,
-            model: 'haiku',
-          },
-        })) {
-          if ('result' in message) {
-            answer = (message as { result: string }).result;
-          }
-        }
+        const answer = await callOpenAIChat(
+          'Du skriver korte SMS-svar til restaurantkunder. Svar i max 160 tegn. Ingen markdown.',
+          `Kunde spørger: "${sms.body}"\nOrdre-status: ${orderStatus}\nSprog: ${parsed.language === 'en' ? 'engelsk' : 'dansk'}.`,
+          120,
+          0.2,
+        );
         smsReply = answer.substring(0, 160);
       } catch {
         smsReply = parsed.language === 'en'
@@ -464,7 +478,7 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
  */
 export function getWorkflowState() {
   return {
-    sessionId,
+    openaiModel: config.openaiModel,
     processedCount,
   };
 }
@@ -473,7 +487,6 @@ export function getWorkflowState() {
  * Reset agent state (for testing)
  */
 export function resetWorkflowState() {
-  sessionId = undefined;
   processedCount = 0;
 }
 

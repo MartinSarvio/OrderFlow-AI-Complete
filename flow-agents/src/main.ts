@@ -19,7 +19,6 @@ console.log(`
 
 function validateEnv(): boolean {
   const required = [
-    ['ANTHROPIC_API_KEY', config.anthropicApiKey],
     ['SUPABASE_URL', config.supabaseUrl],
     ['SUPABASE_SERVICE_KEY', config.supabaseKey],
   ];
@@ -33,6 +32,9 @@ function validateEnv(): boolean {
   }
 
   const optional = [
+    ['OPENAI_API_KEY', config.openaiApiKey],
+    ['OPENAI_MODEL', config.openaiModel],
+    ['ANTHROPIC_API_KEY', config.anthropicApiKey],
     ['INMOBILE_API_KEY', config.inmobileApiKey],
     ['STRIPE_SECRET_KEY', config.stripeSecretKey],
     ['SLACK_WEBHOOK_URL', config.slackWebhookUrl],

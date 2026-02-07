@@ -5,8 +5,12 @@ import 'dotenv/config';
 // ============================================================
 
 export const config = {
-  // Anthropic
+  // Anthropic (used by debugging-agent)
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
+
+  // OpenAI (used by workflow-agent)
+  openaiApiKey: process.env.OPENAI_API_KEY || '',
+  openaiModel: process.env.OPENAI_MODEL || 'gpt-4o-mini',
 
   // Supabase
   supabaseUrl: process.env.SUPABASE_URL || 'https://qymtjhzgtcittohutmay.supabase.co',
