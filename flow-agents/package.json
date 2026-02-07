@@ -1,0 +1,23 @@
+{
+  "name": "flow-agents",
+  "version": "1.0.0",
+  "description": "FLOW OrderFlow AI Agents — Debugging & Order Workflow Orchestration",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "tsx src/main.ts",
+    "debug-agent": "tsx src/agents/debugging-agent.ts",
+    "workflow-agent": "tsx src/agents/workflow-agent.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^1.0.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
