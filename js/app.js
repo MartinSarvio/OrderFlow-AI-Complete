@@ -29003,6 +29003,12 @@ function showWebBuilderPage(section) {
     loadWebBuilderConfig();
   }
 
+  // Ensure preview iframes match selected template
+  const selector = document.getElementById('wb-template-selector');
+  if (selector && selector.value) {
+    loadWebBuilderTemplate(selector.value);
+  }
+
   // Update preview after page switch (give iframe time to load)
   setTimeout(() => {
     updateWebBuilderPreview();
@@ -30362,15 +30368,57 @@ function renderCMSPagesList() {
     page.slug.toLowerCase().includes(searchQuery)
   );
 
-  container.innerHTML = filteredPages.map(page => `
-    <div class="cms-page-item ${currentCMSPageId === page.id ? 'active' : ''}" onclick="selectCMSPage('${page.id}')" style="padding:12px;border-radius:8px;cursor:pointer;border:1px solid ${currentCMSPageId === page.id ? 'var(--primary)' : 'transparent'};background:${currentCMSPageId === page.id ? 'var(--primary-light)' : 'transparent'};margin-bottom:4px;transition:all 0.15s ease">
+  container.innerHTML = filteredPages.map(page => {
+    const isActive = currentCMSPageId === page.id;
+    const sectionCount = (page.sections || []).length;
+    const updatedAt = page.updatedAt ? new Date(page.updatedAt).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }) : '';
+
+    return `
+    <div class="cms-page-item ${isActive ? 'active' : ''}" onclick="selectCMSPage('${page.id}')" style="padding:16px;border-radius:10px;cursor:pointer;border:1px solid ${isActive ? 'var(--primary)' : 'var(--border)'};background:${isActive ? 'var(--primary-light)' : 'var(--bg2)'};margin-bottom:6px;transition:all 0.2s ease">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:500;font-size:13px">${page.title}</span>
+        <span style="font-weight:600;font-size:14px">${page.title}</span>
         <span class="badge ${page.status === 'published' ? 'badge-success' : 'badge-warning'}" style="font-size:10px">${page.status === 'published' ? 'Publiceret' : 'Kladde'}</span>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">/${page.slug}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:11px;color:var(--muted)">/${page.slug}</span>
+        <span style="font-size:10px;color:var(--muted)">${sectionCount} sektioner${updatedAt ? ' · ' + updatedAt : ''}</span>
+      </div>
+      <div style="display:flex;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid ${isActive ? 'rgba(255,255,255,0.1)' : 'var(--border)'}">
+        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();openCMSPageInBuilder('${page.id}')">Åbn i Builder</button>
+        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();selectCMSPage('${page.id}')">Rediger</button>
+        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();duplicateCMSPage('${page.id}')">Dupliker</button>
+      </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
+}
+
+// Open CMS page in builder (new tab)
+function openCMSPageInBuilder(pageId) {
+  const page = cmsPages.find(p => p.id === pageId);
+  if (!page) return;
+  const slug = page.slug.replace('.html', '');
+  window.open('/landing-pages/' + slug + '.html', '_blank');
+}
+
+// Duplicate a specific CMS page by ID
+function duplicateCMSPage(pageId) {
+  const page = cmsPages.find(p => p.id === pageId);
+  if (!page) return;
+
+  const duplicated = JSON.parse(JSON.stringify(page));
+  duplicated.id = 'page-' + Date.now();
+  duplicated.title = page.title + ' (Kopi)';
+  duplicated.slug = page.slug.replace('.html', '-kopi.html');
+  duplicated.status = 'draft';
+  duplicated.createdAt = new Date().toISOString();
+  duplicated.updatedAt = new Date().toISOString();
+
+  cmsPages.unshift(duplicated);
+  markCMSChanged();
+  renderCMSPagesList();
+  selectCMSPage(duplicated.id);
+  toast('Side duplikeret', 'success');
 }
 
 // Filter CMS Pages
@@ -31841,73 +31889,70 @@ function previewCurrentPage() {
 
 // Schedule page changes
 function schedulePageChanges() {
-  console.log('schedulePageChanges called');
+  const page = getCurrentCMSPage();
+  if (!page) {
+    toast('Vælg først en side at planlægge', 'warning');
+    return;
+  }
 
-  try {
-    const page = getCurrentCMSPage();
-    console.log('Current page:', page);
+  // Clean up any existing schedule modal
+  const existing = document.getElementById('schedule-modal');
+  if (existing) existing.remove();
 
-    if (!page) {
-      console.warn('No page selected for scheduling');
-      toast('Vælg først en side at planlægge', 'warning');
-      return;
-    }
+  // Get minimum datetime (now + 1 minute)
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 1);
+  const minDatetime = now.toISOString().slice(0, 16);
 
-    // Get minimum datetime (now + 1 minute)
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    const minDatetime = now.toISOString().slice(0, 16);
+  const pendingSchedules = (page.scheduledChanges || []).filter(s => s.status === 'pending');
 
-    const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    modal.id = 'schedule-modal';
-    modal.innerHTML = `
-      <div class="modal" style="max-width:500px">
-        <div class="modal-header">
-          <h3 style="margin:0">Planlæg ændringer</h3>
-          <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
-        </div>
-        <div class="modal-body" style="padding:20px">
-          <div class="form-group" style="margin-bottom:16px">
-            <label class="form-label">Dato og tid for offentliggørelse</label>
-            <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
-          </div>
-          <p style="font-size:12px;color:var(--muted)">
-            De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
-          </p>
-          ${pendingSchedules.length > 0 ? `
-            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-              <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
-              ${pendingSchedules.map(s => `
-                <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                    <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
-                    <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
-                  </div>
-                  <div style="display:flex;gap:8px">
-                    <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="flex:1">Forhåndsvisning</button>
-                    <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
-                    <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
-                  </div>
-                </div>
-              `).join('')}
+  let pendingHTML = '';
+  if (pendingSchedules.length > 0) {
+    pendingHTML = `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
+        ${pendingSchedules.map(s => `
+          <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
+              <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
             </div>
-          ` : ''}
-        </div>
-        <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
-          <button class="btn" onclick="closeScheduleModal()">Luk</button>
-          <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
-        </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
+              <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
-    document.body.appendChild(modal);
-    console.log('Schedule modal opened successfully');
-  } catch (e) {
-    console.error('Error in schedulePageChanges:', e);
-    toast('Fejl ved åbning af planlægning', 'error');
   }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'schedule-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">Planlæg ændringer</div>
+        <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Dato og tid for offentliggørelse</label>
+          <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
+        </div>
+        <p style="font-size:12px;color:var(--muted)">
+          De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
+        </p>
+        ${pendingHTML}
+      </div>
+      <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeScheduleModal()">Luk</button>
+        <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 // Get time until scheduled change
@@ -32146,19 +32191,104 @@ function updateCurrentPageCookieBanner() {
 // Open CMS Page Settings Modal
 function openCMSSettingsModal() {
   const page = getCurrentCMSPage();
+  if (!page) {
+    toast('Vælg først en side', 'warning');
+    return;
+  }
+
+  // Remove existing modal if open
+  const existing = document.getElementById('cms-settings-dynamic-modal');
+  if (existing) existing.remove();
+
+  const slugValue = (page.slug || '').replace('.html', '');
+  const templateValue = page.template || 'landing';
+  const isActive = page.isActive !== false;
+  const showCookie = page.showCookieBanner === true;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'cms-settings-dynamic-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">Side Indstillinger</div>
+        <button class="modal-close" onclick="closeCMSSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">URL Slug</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:var(--muted);font-size:13px">/</span>
+            <input type="text" class="input" id="cms-settings-slug" value="${slugValue}" style="flex:1">
+            <span style="color:var(--muted);font-size:13px">.html</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Template</label>
+          <select class="input" id="cms-settings-template">
+            <option value="landing" ${templateValue === 'landing' ? 'selected' : ''}>Landing Page</option>
+            <option value="standard" ${templateValue === 'standard' ? 'selected' : ''}>Standard</option>
+            <option value="blog" ${templateValue === 'blog' ? 'selected' : ''}>Blog Post</option>
+            <option value="resource" ${templateValue === 'resource' ? 'selected' : ''}>Ressource</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:20px">
+          <label class="form-label">Status</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label class="toggle-switch">
+              <input type="checkbox" id="cms-settings-active" ${isActive ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span style="font-size:13px">Side er aktiv</span>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:20px">
+          <h4 style="margin:0 0 16px 0;font-size:14px;font-weight:600;color:var(--text)">Cookie Samtykke</h4>
+          <div class="form-group">
+            <div style="display:flex;align-items:center;gap:12px">
+              <label class="toggle-switch">
+                <input type="checkbox" id="cms-settings-cookie" ${showCookie ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:13px">Vis cookie banner på denne side</span>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">Når aktiveret vises cookie samtykke banner til nye besøgende</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeCMSSettingsModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveCMSSettingsModal()">Gem indstillinger</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeCMSSettingsModal() {
+  const modal = document.getElementById('cms-settings-dynamic-modal');
+  if (modal) modal.remove();
+}
+
+function saveCMSSettingsModal() {
+  const page = getCurrentCMSPage();
   if (!page) return;
 
-  const slugEl = document.getElementById('cms-page-slug');
-  const templateEl = document.getElementById('cms-page-template');
-  const activeEl = document.getElementById('cms-page-active');
-  const cookieEl = document.getElementById('cms-page-cookie-banner');
+  const slugInput = document.getElementById('cms-settings-slug');
+  const templateSelect = document.getElementById('cms-settings-template');
+  const activeCheckbox = document.getElementById('cms-settings-active');
+  const cookieCheckbox = document.getElementById('cms-settings-cookie');
 
-  if (slugEl) slugEl.value = page.slug.replace('.html', '');
-  if (templateEl) templateEl.value = page.template || 'landing';
-  if (activeEl) activeEl.checked = page.isActive !== false;
-  if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
+  if (slugInput) page.slug = slugInput.value.replace(/[^a-z0-9-]/g, '') + '.html';
+  if (templateSelect) page.template = templateSelect.value;
+  if (activeCheckbox) page.isActive = activeCheckbox.checked;
+  if (cookieCheckbox) page.showCookieBanner = cookieCheckbox.checked;
 
-  showModal('cms-settings');
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSPagesList();
+  toast('Indstillinger gemt', 'success');
+  closeCMSSettingsModal();
 }
 
 // Navigate to Flow CMS page
@@ -32229,7 +32359,18 @@ const CMS_THEME_DEFAULTS = {
     success: '#10B981',
     warning: '#F59E0B',
     danger: '#EF4444',
-    background: '#13131F'
+    background: '#13131F',
+    text: '#F0F2F5',
+    textSecondary: '#808080',
+    textMuted: '#9CA3AF',
+    card: '#1E1E30',
+    cardHover: '#2A2A40',
+    border: '#1F1F2E',
+    borderLight: '#2A2A3D',
+    bg2: '#1B1B2F',
+    bg3: '#1E1E30',
+    navBg: '#1B1B2F',
+    info: '#06B6D4'
   },
   fonts: {
     heading: 'Inter',
@@ -32239,23 +32380,23 @@ const CMS_THEME_DEFAULTS = {
 
 const CMS_THEME_PRESETS = {
   'default-indigo': {
-    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F' },
+    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F', text: '#F0F2F5', textSecondary: '#808080', textMuted: '#9CA3AF', card: '#1E1E30', cardHover: '#2A2A40', border: '#1F1F2E', borderLight: '#2A2A3D', bg2: '#1B1B2F', bg3: '#1E1E30', navBg: '#1B1B2F', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'ocean-blue': {
-    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A' },
+    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A', text: '#E2E8F0', textSecondary: '#64748B', textMuted: '#94A3B8', card: '#1E293B', cardHover: '#334155', border: '#1E293B', borderLight: '#334155', bg2: '#0F172A', bg3: '#1E293B', navBg: '#0F172A', info: '#38BDF8' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'forest-green': {
-    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D' },
+    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D', text: '#ECFDF5', textSecondary: '#6EE7B7', textMuted: '#A7F3D0', card: '#1A3D2E', cardHover: '#234D3B', border: '#1A3D2E', borderLight: '#234D3B', bg2: '#14532D', bg3: '#1A3D2E', navBg: '#14532D', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'sunset-orange': {
-    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917' },
+    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917', text: '#FFF7ED', textSecondary: '#A8A29E', textMuted: '#78716C', card: '#292524', cardHover: '#3B3633', border: '#292524', borderLight: '#3B3633', bg2: '#1C1917', bg3: '#292524', navBg: '#1C1917', info: '#06B6D4' },
     fonts: { heading: 'Poppins', body: 'Inter' }
   },
   'minimal-dark': {
-    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F' },
+    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F', text: '#E4E4E7', textSecondary: '#71717A', textMuted: '#A1A1AA', card: '#18181B', cardHover: '#27272A', border: '#18181B', borderLight: '#27272A', bg2: '#0A0A0F', bg3: '#18181B', navBg: '#0A0A0F', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
   }
 };
@@ -32266,7 +32407,18 @@ const CMS_COLOR_MAP = {
   success: '--color-success',
   warning: '--color-warning',
   danger: '--color-danger',
-  background: '--color-bg'
+  background: '--color-bg',
+  text: '--color-text',
+  textSecondary: '--color-text-secondary',
+  textMuted: '--color-text-muted',
+  card: '--color-card',
+  cardHover: '--color-card-hover',
+  border: '--color-border',
+  borderLight: '--color-border-light',
+  bg2: '--color-bg-2',
+  bg3: '--color-bg-3',
+  navBg: '--color-nav-bg',
+  info: '--color-info'
 };
 
 function loadFarverOgFonts() {
