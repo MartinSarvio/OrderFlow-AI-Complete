@@ -87,6 +87,10 @@ export interface StatusUpdate {
   updated_by: string;
 }
 
+export interface RestaurantConfigQuery {
+  restaurant_id: string;
+}
+
 // ── Query functions ──────────────────────────────────────────
 
 /**
@@ -254,6 +258,38 @@ export async function updateOrderStatus(update: StatusUpdate): Promise<{
       success: false,
       error: err instanceof Error ? err.message : String(err),
       previousStatus: null,
+    };
+  }
+}
+
+/**
+ * Fetch restaurant config/settings by restaurant ID.
+ */
+export async function getRestaurantConfig(query: RestaurantConfigQuery): Promise<{
+  data: Record<string, unknown> | null;
+  error: string | null;
+}> {
+  try {
+    const client = getClient();
+    const { data, error } = await client
+      .from('restaurants')
+      .select('*')
+      .eq('id', query.restaurant_id)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return {
+      data: (data as Record<string, unknown>) || null,
+      error: null,
+    };
+  } catch (err) {
+    return {
+      data: null,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
 }

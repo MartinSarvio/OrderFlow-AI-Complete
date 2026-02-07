@@ -1,6 +1,6 @@
 import { config } from '../config.js';
 import { parseSmsReply, validateAgainstOrder } from '../tools/sms-parser.js';
-import { findOrderByPhone, findThreadByPhone, queryMessages, updateOrderStatus, checkIdempotency } from '../tools/supabase-query.js';
+import { findOrderByPhone, findThreadByPhone, queryMessages, updateOrderStatus, checkIdempotency, getRestaurantConfig } from '../tools/supabase-query.js';
 import { createAuditLogger } from '../hooks/audit-logger.js';
 import { createErrorNotifier } from '../hooks/error-notifier.js';
 
@@ -8,57 +8,40 @@ import { createErrorNotifier } from '../hooks/error-notifier.js';
 // Workflow Agent — Order SMS orchestration + edge cases
 // ============================================================
 
-const SYSTEM_PROMPT = `Du er FLOW Workflow Agent — en intelligent ordreflow-orchestrator for OrderFlow-platformen.
+const SYSTEM_PROMPT = `Du er FLOW-agenten for restaurant- og takeaway-service.
 
-## Din rolle
-Du håndterer indgående SMS-beskeder fra kunder, parser deres intent, validerer mod ordrestatus, og tager passende handlinger. Du specialiserer dig i edge cases som den eksisterende automation ikke kan håndtere.
+## Persona (skal kunne mærkes i hvert svar)
+Du har mere end 20 års erfaring fra service, restaurant, fast food og take away.
+Du møder gæsten med sikkerhed og varme fra første kontakt.
+Du giver præcise og rolige svar, lytter aktivt, og guider kunden hele vejen til færdig bestilling.
+Du er personlig, ærlig og professionel.
 
-## Workflow ved indgående SMS
-1. Parse SMS → intent + confidence + extracted data
-2. Valider mod ordre-status (er ordren allerede færdig?)
-3. Baseret på intent:
-   - **confirm** → Opdater status til "confirmed", send bekræftelses-SMS
-   - **cancel** → Tjek om muligt, opdater til "cancelled", send bekræftelse
-   - **reschedule** → Extract ny tid, valider, opdater, bekræft
-   - **question** → Brug din viden til at svare baseret på ordre-data
-   - **allergy** → STOP ALT → Eskalér til menneske via Slack ØJEBLIKKELIGT
-   - **unknown** → Send klarificerings-SMS til kunde
+## Samtaleregler
+- Svar altid i en menneskelig samtaletone, kort og klart (maks 160 tegn).
+- Svar altid på kundens sprog (dansk/engelsk). Dansk er default.
+- Spørg aldrig om "ordre-ID" fra kunden.
+- Hvis der IKKE er en aktiv ordre og kunden vil bestille:
+  - Spørg altid først: levering eller afhentning.
+  - Men hvis levering er deaktiveret i restaurantens indstillinger/notifikationer, så sig tydeligt at kun afhentning er muligt.
+- Bekræft altid næste konkrete skridt, så kunden ved hvad de skal svare.
 
-## Edge cases du SKAL håndtere
-- "ja tak ændre til kl 19" → Parse som reschedule, extract tid "19:00"
-- Emoji-only svar (👍) → Parse som confirm med lav confidence, send klarificering
-- Kunde skriver på engelsk til dansk restaurant → Detect sprog, svar på kundens sprog
-- SMS med allergi-info efter ordre er startet → KRITISK: Stop tilberedning, eskalér
-- Dobbelt-SMS (samme besked 2 gange) → Idempotency check via message_id
-- SMS fra ukendt nummer → Prøv at matche via conversation_threads, ellers ignorer
-- Ordre allerede "Færdig" men kunde svarer → Informer kunde, tilbyd ny ordre
+## Handlinger
+- confirm: bekræft ordre
+- cancel: annuller ordre (hvis tilladt)
+- reschedule: ændr tidspunkt
+- answer: besvar spørgsmål
+- escalate: eskalér (fx allergi)
+- clarify: afklar næste input fra kunden
+- ignore: ignorer dublet/irrelevant
 
-## Svarsprogregler
-- Detect kundens sprog fra SMS
-- Svar ALTID på kundens sprog (dansk/engelsk)
-- Dansk er default hvis sproget er ukendt
-
-## Confidence thresholds
-- confidence >= 0.8 → Automatisk handling
-- confidence 0.5-0.8 → Handling med bekræftelses-SMS
-- confidence < 0.5 → Send klarificerings-SMS
-
-## SMS svar-format
-Hold svar korte (max 160 tegn per SMS). Vær venlig og professionel.
-Eksempler:
-- Confirm: "Tak! Din ordre er bekræftet ✅ Forventet levering: [tid]"
-- Cancel: "Din ordre er annulleret. Du vil modtage refundering inden 3-5 dage."
-- Reschedule: "Tidspunkt ændret til kl. [tid] ✅"
-- Klarificering: "Undskyld, vi forstod ikke dit svar. Svar venligst JA for at bekræfte eller NEJ for at annullere."
-
-Svar ALTID med et JSON-objekt:
+Returnér altid gyldig JSON:
 {
   "action": "confirm|cancel|reschedule|answer|escalate|clarify|ignore",
-  "smsReply": "SMS tekst til kunden (max 160 tegn)",
-  "statusUpdate": "ny ordre-status eller null",
-  "escalation": "eskalerings-besked eller null",
+  "smsReply": "kort SMS-tekst",
+  "statusUpdate": "ny status eller null",
+  "escalation": "eskaleringsbesked eller null",
   "confidence": 0.0-1.0,
-  "reasoning": "kort forklaring"
+  "reasoning": "kort begrundelse"
 }`;
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
@@ -108,6 +91,91 @@ async function callOpenAIChat(
     throw new Error('OpenAI returned empty content');
   }
   return content;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'ja', 'on', 'enabled'].includes(normalized)) return true;
+    if (['false', '0', 'no', 'nej', 'off', 'disabled'].includes(normalized)) return false;
+  }
+  return undefined;
+}
+
+function readPathBoolean(root: Record<string, unknown>, path: string): boolean | undefined {
+  const parts = path.split('.');
+  let current: unknown = root;
+  for (const part of parts) {
+    current = asRecord(current)[part];
+    if (current === undefined) return undefined;
+  }
+  return readBoolean(current);
+}
+
+function resolveDeliveryEnabled(restaurant: Record<string, unknown> | null): boolean {
+  if (!restaurant) return true;
+
+  const directFalsePaths = [
+    'deliveryEnabled',
+    'delivery_enabled',
+    'settings.deliveryEnabled',
+    'settings.delivery_enabled',
+    'workflow.deliveryEnabled',
+    'workflow.delivery_enabled',
+    'workflowSettings.deliveryEnabled',
+    'metadata.deliveryEnabled',
+    'metadata.delivery_enabled',
+    'notifications.deliveryEnabled',
+    'notifications.delivery_enabled',
+  ];
+  for (const path of directFalsePaths) {
+    const value = readPathBoolean(restaurant, path);
+    if (value !== undefined) return value;
+  }
+
+  const inversePaths = [
+    'notifications.no_delivery',
+    'notifications.noDelivery',
+    'notifications.deliveryDenied',
+  ];
+  for (const path of inversePaths) {
+    const value = readPathBoolean(restaurant, path);
+    if (value !== undefined) return !value;
+  }
+
+  const allowPaths = [
+    'notifications.allow_delivery',
+    'notifications.allowDelivery',
+  ];
+  for (const path of allowPaths) {
+    const value = readPathBoolean(restaurant, path);
+    if (value !== undefined) return value;
+  }
+
+  return true;
+}
+
+function resolveRestaurantName(restaurant: Record<string, unknown> | null): string {
+  const name = String(restaurant?.name || '').trim();
+  return name || 'restauranten';
+}
+
+function buildInitialOrderReply(language: 'da' | 'en' | 'unknown', restaurantName: string, deliveryEnabled: boolean): string {
+  if (deliveryEnabled) {
+    return language === 'en'
+      ? `Great, I can help with that at ${restaurantName}. Do you want delivery or pickup?`
+      : `Perfekt, jeg hjælper dig gerne hos ${restaurantName}. Ønsker du levering eller afhentning?`;
+  }
+
+  return language === 'en'
+    ? `Great, I can help at ${restaurantName}. We currently offer pickup only. What would you like to order?`
+    : `Perfekt, jeg hjælper dig gerne hos ${restaurantName}. Vi tilbyder kun afhentning lige nu. Hvad vil du bestille?`;
 }
 
 // ── Types ────────────────────────────────────────────────────
@@ -186,21 +254,30 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
   const orderId = orderResult.data?.id as string | null;
   const threadId = threadResult.data?.id as string | null;
   const orderStatus = (orderResult.data?.status as string) || 'unknown';
+  const tenantId = sms.tenantId || (threadResult.data?.tenant_id as string | undefined) || undefined;
+
+  // Step 3.1: Load restaurant settings (delivery on/off, name)
+  let restaurantConfig: Record<string, unknown> | null = null;
+  if (tenantId) {
+    steps.push('load_restaurant_settings');
+    const restaurantResult = await getRestaurantConfig({ restaurant_id: tenantId });
+    restaurantConfig = restaurantResult.data;
+  }
+  const deliveryEnabled = resolveDeliveryEnabled(restaurantConfig);
+  const restaurantName = resolveRestaurantName(restaurantConfig);
 
   if (!orderId) {
     console.log(`[WorkflowAgent] No active order found for ${sms.from}`);
-    // Still process unknown/question via AI even without an active order.
-    if (parsed.intent !== 'allergy' && parsed.intent !== 'unknown' && parsed.intent !== 'question') {
+    // Start bestilling-samtale menneskeligt: spørg levering/afhentning (eller kun afhentning hvis levering er slået fra).
+    if (parsed.intent !== 'allergy' && parsed.intent !== 'question') {
       steps.push('no_order_found');
-      auditLogger.logAgentStop({ result: 'no_order_clarify' });
+      auditLogger.logAgentStop({ result: 'no_order_start_order_flow' });
       return {
         messageId: sms.messageId,
         intent: parsed.intent,
         confidence: parsed.confidence,
         action: 'clarify',
-        smsReply: parsed.language === 'en'
-          ? 'Thanks for your message. Write your order in one SMS, and we will help you right away.'
-          : 'Tak for din besked. Skriv din bestilling i en SMS, sa hjalper vi dig med det samme.',
+        smsReply: buildInitialOrderReply(parsed.language, restaurantName, deliveryEnabled),
         statusUpdate: null,
         escalation: null,
         orderId: null,
@@ -209,7 +286,7 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
       };
     }
 
-    if (parsed.intent === 'unknown' || parsed.intent === 'question') {
+    if (parsed.intent === 'question') {
       steps.push('no_order_continue_ai');
     }
   }
@@ -273,6 +350,8 @@ Fra: ${sms.from}
 Besked: "${sms.body}"
 Ordre-ID: ${orderId || 'Ingen aktiv ordre'}
 Ordre-status: ${orderStatus}
+Restaurant: ${restaurantName}
+Levering aktiveret: ${deliveryEnabled ? 'ja' : 'nej'}
 Parsed intent: ${parsed.intent} (confidence: ${parsed.confidence})
 Sprog: ${parsed.language}
 Flags: ${parsed.flags.join(', ') || 'ingen'}
@@ -430,17 +509,30 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
 
       try {
         const answer = await callOpenAIChat(
-          'Du skriver korte SMS-svar til restaurantkunder. Svar i max 160 tegn. Ingen markdown.',
-          `Kunde spørger: "${sms.body}"\nOrdre-status: ${orderStatus}\nSprog: ${parsed.language === 'en' ? 'engelsk' : 'dansk'}.`,
+          `${SYSTEM_PROMPT}\n\nSkriv kun selve SMS-svaret (ingen JSON), max 160 tegn, ingen markdown.`,
+          `Kunde spørger: "${sms.body}"
+Ordre-status: ${orderStatus}
+Restaurant: ${restaurantName}
+Levering aktiveret: ${deliveryEnabled ? 'ja' : 'nej'}
+Sprog: ${parsed.language === 'en' ? 'engelsk' : 'dansk'}.
+Hvis kunden spørger til bestilling og der ikke er aktiv ordre, spørg levering/afhentning (eller kun afhentning hvis levering er deaktiveret).`,
           120,
           0.2,
         );
         smsReply = answer.substring(0, 160);
       } catch (err) {
         console.error('[WorkflowAgent] Question answer generation failed:', err);
-        smsReply = parsed.language === 'en'
-          ? 'We received your question and will get back to you shortly.'
-          : 'Vi har modtaget dit sp\u00f8rgsm\u00e5l og vender tilbage snarest.';
+        const lower = sms.body.toLowerCase();
+        const asksDelivery = /levering|delivery/.test(lower);
+        if (asksDelivery && !deliveryEnabled) {
+          smsReply = parsed.language === 'en'
+            ? 'We currently offer pickup only. What would you like to order?'
+            : 'Vi tilbyder kun afhentning lige nu. Hvad vil du bestille?';
+        } else {
+          smsReply = parsed.language === 'en'
+            ? 'We received your question and will get back to you shortly.'
+            : 'Vi har modtaget dit spørgsmål og vender tilbage snarest.';
+        }
       }
       break;
     }
