@@ -7321,6 +7321,10 @@ function getStatusBadge(status) {
 
 function getFilteredAlleKunder() {
   let filtered = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    filtered = [...filtered, ...demoCustomers];
+  }
 
   // Apply status filter
   if (alleKunderStatusFilter !== 'all') {
@@ -14514,7 +14518,12 @@ function canReceiveWorkflowActions(restaurant) {
 function getSelectedRestaurant() {
   const select = document.getElementById('test-restaurant');
   if (!select || !select.value) return null;
-  return restaurants.find(r => r.id === select.value) || null;
+  let restaurant = restaurants.find(r => r.id === select.value);
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === select.value);
+  }
+  return restaurant || null;
 }
 
 /**
@@ -14531,13 +14540,20 @@ function filterByStatus(status) {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
 
+  // Combine real restaurants with demo customers if enabled
+  let allData = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allData = [...allData, ...demoCustomers];
+  }
+
   // Filter restaurants
-  let filtered = restaurants;
+  let filtered = allData;
   if (status !== 'all') {
     if (status === 'demo') {
-      filtered = restaurants.filter(r => r.status === 'demo' || r.isDemo);
+      filtered = allData.filter(r => r.status === 'demo' || r.isDemo);
     } else {
-      filtered = restaurants.filter(r => r.status === status);
+      filtered = allData.filter(r => r.status === status);
     }
   }
 
@@ -14556,8 +14572,15 @@ function populateTestRestaurants() {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
+  // Combine real restaurants with demo customers if enabled
+  let allRestaurants = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allRestaurants = [...allRestaurants, ...demoCustomers];
+  }
+
   // Get restaurants that can receive workflow actions (active, pending, demo)
-  const workflowRestaurants = restaurants.filter(r => r && canReceiveWorkflowActions(r));
+  const workflowRestaurants = allRestaurants.filter(r => r && canReceiveWorkflowActions(r));
 
   // Build options
   let optionsHtml = '<option value="">Vælg restaurant...</option>';
@@ -16595,7 +16618,11 @@ window.toggleLive = toggleLive;
 
 async function startTest(type) {
   const restaurantId = document.getElementById('test-restaurant').value;
-  const restaurant = restaurants.find(r => r.id === restaurantId);
+  let restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === restaurantId);
+  }
   if (!restaurant) return;
 
   // Check if customer can receive workflow actions
