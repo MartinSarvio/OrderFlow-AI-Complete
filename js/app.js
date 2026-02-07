@@ -17567,14 +17567,14 @@ async function sendSMS(to, message, restaurant) {
     }
 
     // Send SMS via InMobile
-    await sendSMS(phoneNumber, message);
+    await sendSMSViaInMobile(phoneNumber, message);
   }
 
   await sleep(300);
 }
 
 // Send SMS via InMobile
-async function sendSMS(phoneNumber, message) {
+async function sendSMSViaInMobile(phoneNumber, message) {
   // Get InMobile credentials
   const apiKey = localStorage.getItem('inmobile_api_key');
   const sender = localStorage.getItem('inmobile_sender') || 'OrderFlow';
@@ -18280,8 +18280,78 @@ function saveOrderToInternalOrdersPage(orderData) {
   return order;
 }
 
-// Load og vis ordrer på Ordrer-siden
+// Subscribe to realtime order updates from Supabase
+let ordersRealtimeSubscription = null;
+function subscribeToOrderUpdates() {
+  if (ordersRealtimeSubscription) return;
+  if (!window.waitForSupabase) return;
+  window.waitForSupabase().then(sb => {
+    if (!sb) return;
+    ordersRealtimeSubscription = sb
+      .channel('unified-orders-admin')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'unified_orders' }, (payload) => {
+        console.log('New order received via realtime:', payload.new?.order_number);
+        loadOrdersPage._supaFetched = false;
+        loadOrdersPage();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'unified_orders' }, () => {
+        loadOrdersPage._supaFetched = false;
+        loadOrdersPage();
+      })
+      .subscribe();
+  });
+}
+
+// Fetch orders from Supabase unified_orders table
+async function fetchUnifiedOrders() {
+  try {
+    if (!window.waitForSupabase) return [];
+    const sb = await window.waitForSupabase();
+    if (!sb) return [];
+
+    const { data, error } = await sb
+      .from('unified_orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) { console.warn('fetchUnifiedOrders error:', error); return []; }
+
+    // Map Supabase order format to admin display format
+    const statusMap = {
+      'draft': 'Ny', 'pending': 'Ny', 'confirmed': 'Accepteret',
+      'preparing': 'I gang', 'ready': 'F\u00e6rdig', 'completed': 'F\u00e6rdig',
+      'delivered': 'F\u00e6rdig', 'cancelled': 'Afvist', 'refunded': 'Afvist'
+    };
+
+    return (data || []).map(o => ({
+      id: Date.now() + Math.random(),
+      supabaseId: o.id,
+      orderNumber: o.order_number || '',
+      customer: o.customer_name || o.customer_phone || 'Ukendt',
+      phone: o.customer_phone || '',
+      email: o.customer_email || '',
+      items: (o.line_items || []).map(item => `${item.quantity}x ${item.name}`).join(', '),
+      total: parseFloat(o.total) || 0,
+      status: statusMap[o.status] || 'Ny',
+      source: o.source_channel || 'web',
+      type: o.fulfillment_type === 'delivery' ? 'Levering' : 'Afhentning',
+      date: new Date(o.created_at).toLocaleString('da-DK'),
+      paymentStatus: o.payment_status,
+      paymentMethod: o.payment_method,
+      notes: o.customer_notes || ''
+    }));
+  } catch (e) {
+    console.warn('fetchUnifiedOrders failed:', e);
+    return [];
+  }
+}
+
+// Load og vis ordrer p\u00e5 Ordrer-siden
 function loadOrdersPage() {
+  // Start realtime subscription for live order updates
+  subscribeToOrderUpdates();
+
   const ordersList = document.getElementById('orders-list');
   const ordersCount = document.getElementById('orders-count');
   let orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
@@ -18290,6 +18360,25 @@ function loadOrdersPage() {
   if (isDemoDataEnabled()) {
     const demoOrders = getDemoDataOrders();
     orders = [...orders, ...demoOrders];
+  }
+
+  // Also fetch from Supabase unified_orders (async, merges into localStorage)
+  if (!loadOrdersPage._supaFetched) {
+    loadOrdersPage._supaFetched = true;
+    fetchUnifiedOrders().then(supaOrders => {
+      if (supaOrders.length > 0) {
+        const existing = JSON.parse(localStorage.getItem('orders_module') || '[]');
+        const existingIds = new Set(existing.map(o => o.supabaseId || ''));
+        const newOrders = supaOrders.filter(o => !existingIds.has(o.supabaseId));
+        if (newOrders.length > 0) {
+          const merged = [...newOrders, ...existing];
+          localStorage.setItem('orders_module', JSON.stringify(merged));
+          loadOrdersPage._supaFetched = false;
+          loadOrdersPage(); // Re-render with new data
+        }
+      }
+      loadOrdersPage._supaFetched = false;
+    }).catch(() => { loadOrdersPage._supaFetched = false; });
   }
   
   if (ordersCount) {
@@ -30730,11 +30819,6 @@ function renderCMSPagesList() {
         <span style="font-size:11px;color:var(--muted)">/${page.slug}</span>
         <span style="font-size:10px;color:var(--muted)">${sectionCount} sektioner${updatedAt ? ' · ' + updatedAt : ''}</span>
       </div>
-      <div style="display:flex;gap:4px;margin-top:10px;padding-top:10px;border-top:1px solid ${isActive ? 'rgba(255,255,255,0.1)' : 'var(--border)'}">
-        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();openCMSPageInBuilder('${page.id}')">Åbn i Builder</button>
-        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();selectCMSPage('${page.id}')">Rediger</button>
-        <button class="btn btn-sm" style="flex:1;font-size:11px;padding:4px 8px" onclick="event.stopPropagation();duplicateCMSPage('${page.id}')">Dupliker</button>
-      </div>
     </div>
     `;
   }).join('');
@@ -32745,6 +32829,26 @@ const CMS_THEME_PRESETS = {
   'minimal-dark': {
     colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F', text: '#E4E4E7', textSecondary: '#71717A', textMuted: '#A1A1AA', card: '#18181B', cardHover: '#27272A', border: '#18181B', borderLight: '#27272A', bg2: '#0A0A0F', bg3: '#18181B', navBg: '#0A0A0F', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'midnight-blue': {
+    colors: { primary: '#1E3A5F', accent: '#C0C0C0', success: '#2DD4BF', warning: '#FBBF24', danger: '#F87171', background: '#0B1120', text: '#E2E8F0', textSecondary: '#94A3B8', textMuted: '#64748B', card: '#131B2E', cardHover: '#1A2640', border: '#1A2640', borderLight: '#243352', bg2: '#0E1525', bg3: '#131B2E', navBg: '#0B1120', info: '#38BDF8' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'rose-gold': {
+    colors: { primary: '#E8917A', accent: '#D4A574', success: '#6EE7B7', warning: '#FCD34D', danger: '#FB7185', background: '#1A1118', text: '#FDE8E8', textSecondary: '#C9A9A6', textMuted: '#9A7D7A', card: '#241920', cardHover: '#2E2028', border: '#2E2028', borderLight: '#3D2C34', bg2: '#1E141B', bg3: '#241920', navBg: '#1A1118', info: '#67E8F9' },
+    fonts: { heading: 'Playfair Display', body: 'Inter' }
+  },
+  'arctic-white': {
+    colors: { primary: '#3B82F6', accent: '#60A5FA', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#F8FAFC', text: '#0F172A', textSecondary: '#475569', textMuted: '#94A3B8', card: '#FFFFFF', cardHover: '#F1F5F9', border: '#E2E8F0', borderLight: '#CBD5E1', bg2: '#F1F5F9', bg3: '#FFFFFF', navBg: '#FFFFFF', info: '#0EA5E9' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'charcoal': {
+    colors: { primary: '#8B8B8B', accent: '#A3A3A3', success: '#4ADE80', warning: '#FACC15', danger: '#F87171', background: '#171717', text: '#FAFAFA', textSecondary: '#A3A3A3', textMuted: '#737373', card: '#1F1F1F', cardHover: '#2A2A2A', border: '#2A2A2A', borderLight: '#363636', bg2: '#1A1A1A', bg3: '#1F1F1F', navBg: '#171717', info: '#22D3EE' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'emerald': {
+    colors: { primary: '#059669', accent: '#D4A843', success: '#34D399', warning: '#FBBF24', danger: '#F87171', background: '#0C1B14', text: '#ECFDF5', textSecondary: '#86EFAC', textMuted: '#6EE7B7', card: '#132A1E', cardHover: '#1A3D2A', border: '#1A3D2A', borderLight: '#245236', bg2: '#0F2118', bg3: '#132A1E', navBg: '#0C1B14', info: '#2DD4BF' },
+    fonts: { heading: 'Poppins', body: 'Inter' }
   }
 };
 
@@ -34047,16 +34151,16 @@ function generateApiKey() {
     return;
   }
 
-  // Generate key
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const apiKey = 'of_' + Array.from({length: 32}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  // Generate key (40-character hex format)
+  const hexChars = '0123456789abcdef';
+  const apiKey = Array.from({length: 40}, () => hexChars[Math.floor(Math.random() * hexChars.length)]).join('');
 
   // Save to localStorage
   const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
   keys.push({
     id: Date.now().toString(),
     name,
-    keyPrefix: apiKey.substring(0, 10) + '...',
+    keyPrefix: maskApiKey(apiKey),
     permissions,
     createdAt: new Date().toISOString(),
     lastUsed: null
@@ -34087,22 +34191,32 @@ function loadApiKeysList() {
   const tbody = document.getElementById('api-keys-list');
   if (!tbody) return;
 
-  // System API keys (always shown, cannot be deleted)
-  const sysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+  // System API keys (filter deleted)
+  const allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+  const deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+  const sysKeys = allSysKeys.filter(function(k) { return deletedSysKeys.indexOf(k.id) === -1; });
   const systemRows = sysKeys.map(function(sKey) {
     var isDisabled = disabledStates[sKey.id] === true;
     var statusColor = isDisabled ? 'var(--danger)' : 'var(--success)';
     var statusText = isDisabled ? 'Deaktiveret' : 'Aktiv';
     var masked = maskApiKey(sKey.key);
+    var serviceUrl = sKey.url || '#';
     return '<tr style="border-bottom:1px solid var(--border)">' +
       '<td style="padding:12px 8px;font-size:14px">' + sKey.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + sKey.service + ')</span></td>' +
       '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + sKey.id + '" data-visible="false">' + masked + '</td>' +
       '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + sKey.type + '</td>' +
       '<td style="padding:12px 8px;font-size:13px;color:' + statusColor + '">' + statusText + '</td>' +
       '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' +
-        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + sKey.id + '\')" title="Vis/skjul nøgle" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyActive(\'' + sKey.id + '\')" title="' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '" style="padding:4px 8px;margin-right:4px">' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Konfigurer" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>' +
+        '<div style="display:inline-block;position:relative">' +
+          '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + sKey.id + '" onclick="toggleApiKeyDropdown(\'' + sKey.id + '\')" title="Indstillinger" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>' +
+          '<div id="api-key-dropdown-' + sKey.id + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
+            '<button onclick="window.open(\'' + serviceUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">Rediger</button>' +
+            '<button onclick="toggleSystemKeyActive(\'' + sKey.id + '\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
+            '<button onclick="deleteSystemKey(\'' + sKey.id + '\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--danger)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">Slet</button>' +
+          '</div>' +
+        '</div>' +
+        '<button class="btn btn-secondary btn-sm" onclick="window.open(\'' + serviceUrl + '\',\'_blank\')" title="' + serviceUrl + '" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>' +
+        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + sKey.id + '\')" title="Vis/skjul n\u00f8gle" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
       '</td></tr>';
   });
 
@@ -34125,6 +34239,59 @@ function loadApiKeysList() {
   }
 
   tbody.innerHTML = allRows.join('');
+}
+
+// Toggle API key gear dropdown
+function toggleApiKeyDropdown(keyId) {
+  // Close any other open API key dropdowns first
+  document.querySelectorAll('[id^="api-key-dropdown-"]').forEach(function(dd) {
+    if (dd.id !== 'api-key-dropdown-' + keyId) {
+      dd.style.display = 'none';
+    }
+  });
+
+  var dropdown = document.getElementById('api-key-dropdown-' + keyId);
+  if (!dropdown) return;
+
+  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+    dropdown.style.display = 'block';
+    setTimeout(function() {
+      document.addEventListener('click', closeApiKeyDropdownOnOutsideClick);
+    }, 100);
+  } else {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeApiKeyDropdownOnOutsideClick);
+  }
+}
+
+function closeApiKeyDropdownOnOutsideClick(e) {
+  var anyOpen = false;
+  document.querySelectorAll('[id^="api-key-dropdown-"]').forEach(function(dd) {
+    var btnId = dd.id.replace('api-key-dropdown-', 'api-gear-btn-');
+    var btn = document.getElementById(btnId);
+    if (dd.style.display === 'block') {
+      if (!dd.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        dd.style.display = 'none';
+      } else {
+        anyOpen = true;
+      }
+    }
+  });
+  if (!anyOpen) {
+    document.removeEventListener('click', closeApiKeyDropdownOnOutsideClick);
+  }
+}
+
+// Delete system API key (soft delete)
+function deleteSystemKey(keyId) {
+  if (!confirm('Er du sikker p\u00e5 at du vil slette denne system API n\u00f8gle?')) return;
+  var deletedKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+  if (deletedKeys.indexOf(keyId) === -1) {
+    deletedKeys.push(keyId);
+  }
+  localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedKeys));
+  loadApiKeysList();
+  toast('System API n\u00f8gle slettet', 'success');
 }
 
 // Delete API key
@@ -37450,7 +37617,8 @@ function renderInstalledTemplates() {
           <h4 style="margin:0 0 4px;font-size:14px;font-weight:600">${t.branding?.name || id}</h4>
           <p style="margin:0;font-size:12px;color:var(--muted)">${t.branding?.slogan || 'Ingen beskrivelse'}</p>
           <div style="display:flex;gap:8px;margin-top:12px">
-            <button class="btn btn-sm btn-secondary" onclick="previewTemplate('${id}')" style="flex:1">Forhåndsvis</button>
+            <button class="btn btn-sm btn-secondary" onclick="previewTemplate('${id}')" style="flex:1">Forh\u00e5ndsvis</button>
+            ${!isCustom ? `<button class="btn btn-sm btn-secondary" onclick="openTemplateEditor('${id}')" style="flex:1">Rediger kode</button>` : ''}
             ${isCustom ? `<button class="btn btn-sm" style="background:var(--danger);color:white" onclick="deleteTemplate('${id}')">Slet</button>` : ''}
           </div>
         </div>
@@ -37469,6 +37637,14 @@ function previewTemplate(templateId) {
   } else {
     toast('Kunne ikke finde preview for denne skabelon', 'error');
   }
+}
+
+// Open template editor for a specific template (from FLOW CMS → Skabeloner)
+function openTemplateEditor(templateId) {
+  showPage('page-template-editor');
+  const selector = document.getElementById('te-template-selector');
+  if (selector) selector.value = templateId;
+  loadTemplateEditorFiles(templateId);
 }
 
 // Delete a custom template
@@ -39384,12 +39560,12 @@ const SEAnalysisService = {
 
 // --- System API Keys (for Integrations page) ---
 const SYSTEM_API_KEYS = [
-  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '238621b449ced86740e16a0707be5b8999b87c9e', type: 'System', service: 'SEO Analyse v1.0' },
-  { id: 'sys-serper-images', name: 'Serper Images', key: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba', type: 'System', service: 'SEO Analyse v1.0' },
-  { id: 'sys-serper-maps', name: 'Serper Maps', key: '071a75aeaf9e4434466f91caf455e6ddfe72a76e', type: 'System', service: 'SEO Analyse v1.0' },
-  { id: 'sys-serper-places', name: 'Serper Places', key: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62', type: 'System', service: 'SEO Analyse v1.0' },
-  { id: 'sys-firecrawl', name: 'Firecrawl', key: 'fc-c12a209b1d6d44939e0b8faa393515e3', type: 'System', service: 'SEO Analyse v2.0' },
-  { id: 'sys-google-api', name: 'Google API', key: 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo', type: 'System', service: 'SEO Analyse v2.0' }
+  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '238621b449ced86740e16a0707be5b8999b87c9e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-images', name: 'Serper Images', key: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-maps', name: 'Serper Maps', key: '071a75aeaf9e4434466f91caf455e6ddfe72a76e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-places', name: 'Serper Places', key: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-firecrawl', name: 'Firecrawl', key: 'fc-c12a209b1d6d44939e0b8faa393515e3', type: 'System', service: 'SEO Analyse v2.0', url: 'https://firecrawl.dev' },
+  { id: 'sys-google-api', name: 'Google API', key: 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo', type: 'System', service: 'SEO Analyse v2.0', url: 'https://console.cloud.google.com' }
 ];
 
 // --- Mask API key for display ---
