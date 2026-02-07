@@ -3823,10 +3823,6 @@ function showPage(page) {
     showCrmSearchView();
   }
   
-  // Render API-status når Værktøjer-siden vises
-  if (page === 'vaerktoejer') {
-    if (typeof renderVaerktoejApiStatus === 'function') renderVaerktoejApiStatus();
-  }
 
   // Load ordrer når orders-siden vises
   if (page === 'orders') {
@@ -41319,7 +41315,7 @@ function switchVaerktoejTab(tab) {
       tabBtn.style.fontWeight = (t === tab) ? 'var(--font-weight-semibold)' : '500';
     }
   });
-  if (tab === 'apikeys') renderCustomerApiKeys();
+  if (tab === 'apikeys') renderCustomerIntegrations();
   if (tab === 'statistik') renderAgentStatistics();
   if (tab === 'agentstatus') renderAgentStatusDashboard();
 }
@@ -41337,41 +41333,6 @@ function checkAgentUpdate(agentName) {
   }, 1500);
 }
 
-function renderVaerktoejApiStatus() {
-  const tbody = document.querySelector('#vaerktoejer-api-status tbody');
-  if (!tbody) return;
-
-  const apis = [
-    { name: 'Serper', id: 'serper', keys: ['serper_reviews_key','serper_images_key','serper_maps_key'], agents: 'Agent SEO' },
-    { name: 'Firecrawl', id: 'firecrawl', keys: ['firecrawl_api_key'], agents: 'Agent SEO' },
-    { name: 'Google API', id: 'googleapi', keys: ['googleapi_api_key'], agents: 'Agent SEO' },
-    { name: 'Google Reviews', id: 'google', keys: ['google_api_key'], agents: 'Agent SEO' },
-    { name: 'OpenAI', id: 'openai', keys: ['openai_key'], agents: 'Alle agenter' },
-    { name: 'InMobile SMS', id: 'inmobile', keys: ['inmobile_api_key'], agents: 'Agent Restaurant, Agent H\u00e5ndv\u00e6rker' },
-    { name: 'Trustpilot', id: 'trustpilot', keys: ['trustpilot_api_key'], agents: 'Agent SEO' },
-    { name: 'Webhook', id: 'webhook', keys: [], agents: 'System' }
-  ];
-
-  let html = '';
-  apis.forEach(api => {
-    const enabled = localStorage.getItem('api_' + api.id + '_enabled') !== 'false';
-    const hasKey = api.keys.length === 0 || api.keys.some(k => {
-      const v = localStorage.getItem(k);
-      return v && v.length > 3;
-    });
-    const isActive = enabled && hasKey;
-    const color = isActive ? 'var(--success)' : 'var(--muted)';
-    const label = isActive ? 'Aktiv' : (enabled ? 'Mangler n\u00f8gle' : 'Deaktiveret');
-
-    html += '<tr style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:10px 12px;font-weight:500">' + api.name + '</td>' +
-      '<td style="padding:10px 12px"><span style="font-size:12px;color:' + color + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + color + ';display:inline-block"></span>' + label + '</span></td>' +
-      '<td style="padding:10px 12px;color:var(--muted)">' + api.agents + '</td>' +
-      '<td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer" onclick="showSettingsPage(\'api\')">Konfigurer</button></td>' +
-      '</tr>';
-  });
-  tbody.innerHTML = html;
-}
 
 // ============================================
 // AGENT CONFIGURATION PANEL
@@ -41410,7 +41371,6 @@ var agentConfigDefinitions = {
     title: 'Agent Restaurant', color: '#f97316', workflowPage: 'sms-workflows',
     sections: [
       { type: 'status', key: 'restaurant' },
-      { type: 'field', key: 'inmobile_api_key', label: 'InMobile API N\u00f8gle', sensitive: true, placeholder: 'Din InMobile API n\u00f8gle...' },
       { type: 'field', key: 'restaurant_phone', label: 'Afsendernummer', placeholder: '+45...' },
       { type: 'toggle', key: 'sms_order_confirm', label: 'Ordrebekr\u00e6ftelse SMS', desc: 'Send automatisk SMS n\u00e5r ordre modtages' },
       { type: 'toggle', key: 'sms_delivery_update', label: 'Leveringsstatus SMS', desc: 'Opdater kunde om leveringsstatus' },
@@ -41421,7 +41381,6 @@ var agentConfigDefinitions = {
     title: 'Agent H\u00e5ndv\u00e6rker', color: '#14b8a6', workflowPage: 'sms-workflows',
     sections: [
       { type: 'status', key: 'haandvaerker' },
-      { type: 'field', key: 'inmobile_api_key_hv', label: 'InMobile API N\u00f8gle', sensitive: true, placeholder: 'Din InMobile API n\u00f8gle...' },
       { type: 'field', key: 'haandvaerker_phone', label: 'Afsendernummer', placeholder: '+45...' },
       { type: 'toggle', key: 'sms_booking_confirm', label: 'Booking-bekr\u00e6ftelse', desc: 'SMS ved ny booking' },
       { type: 'toggle', key: 'sms_reminder', label: 'P\u00e5mindelser', desc: 'P\u00e5mindelse f\u00f8r aftale' },
@@ -41432,9 +41391,6 @@ var agentConfigDefinitions = {
     title: 'Agent SEO', color: '#7c3aed', workflowPage: 'search-engine',
     sections: [
       { type: 'status', key: 'seo' },
-      { type: 'field', key: 'firecrawl_api_key', label: 'Firecrawl API N\u00f8gle', sensitive: true, placeholder: 'fc-...' },
-      { type: 'field', key: 'serper_reviews_key', label: 'Serper API N\u00f8gle', sensitive: true, placeholder: 'Din Serper n\u00f8gle...' },
-      { type: 'field', key: 'google_api_key', label: 'Google API N\u00f8gle', sensitive: true, placeholder: 'AIza...' },
       { type: 'field', key: 'site_url', label: 'Hjemmeside URL', placeholder: 'https://din-restaurant.dk' },
       { type: 'toggle', key: 'seo_auto_scan', label: 'Automatisk scanning', desc: 'K\u00f8r SEO-analyse automatisk' }
     ]
@@ -41627,59 +41583,217 @@ function showInstagramConfig() { openAgentConfigPanel('instagram'); }
 function showFacebookConfig() { openAgentConfigPanel('facebook'); }
 
 // ============================================
-// CUSTOMER API KEYS TAB
+// CUSTOMER INTEGRATIONS TAB
 // ============================================
 
-function renderCustomerApiKeys() {
+function renderCustomerIntegrations() {
   var container = document.getElementById('vaerktoejer-content-apikeys');
   if (!container) return;
-  var platforms = [
-    { name: 'Meta (Instagram/Facebook)', key: 'meta_app_id', desc: 'Meta App ID fra developers.facebook.com' },
-    { name: 'Meta App Secret', key: 'meta_app_secret', desc: 'Bruges til webhook-signaturverifikation', sensitive: true },
-    { name: 'InMobile SMS', key: 'inmobile_api_key', desc: 'API n\u00f8gle til SMS-udsendelse', sensitive: true },
-    { name: 'Stripe', key: 'stripe_publishable_key', desc: 'Publishable key til betalinger' },
-    { name: 'Firecrawl', key: 'firecrawl_api_key', desc: 'API n\u00f8gle til SEO web-crawling', sensitive: true },
-    { name: 'Serper', key: 'serper_reviews_key', desc: 'API n\u00f8gle til s\u00f8geresultater', sensitive: true },
-    { name: 'Google API', key: 'google_api_key', desc: 'Google Places/Reviews API', sensitive: true },
-    { name: 'OpenAI', key: 'openai_key', desc: 'GPT API n\u00f8gle til AI-agenter', sensitive: true }
+
+  var integrations = [
+    {
+      id: 'betalinger', title: 'Betalinger', color: '#10b981',
+      desc: 'Modtag betalinger via Stripe, MobilePay og andre betalingsl\u00f8sninger',
+      providers: 'Stripe, MobilePay',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+      statusKey: 'integration_betalinger',
+      action: 'connect'
+    },
+    {
+      id: 'pos', title: 'POS Terminal', color: '#f59e0b',
+      desc: 'Forbind din fysiske betalingsterminal til ordresystemet',
+      providers: 'SumUp, Zettle',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><rect x="6" y="7" width="12" height="6" rx="1"/></svg>',
+      statusKey: 'integration_pos',
+      action: 'connect'
+    },
+    {
+      id: 'levering', title: 'Levering', color: '#3b82f6',
+      desc: 'Automatisk synkronisering med leveringsplatforme',
+      providers: 'Wolt, Just Eat, Hungr',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+      statusKey: 'integration_levering',
+      action: 'connect'
+    },
+    {
+      id: 'regnskab', title: 'Regnskab', color: '#8b5cf6',
+      desc: 'Automatisk bogf\u00f8ring af ordrer og fakturaer',
+      providers: 'e-conomic, Dinero, Billy',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+      statusKey: 'integration_regnskab',
+      action: 'connect'
+    },
+    {
+      id: 'social', title: 'Social Media', color: '#ec4899',
+      desc: 'Instagram og Facebook er forbundet via dine agenter',
+      providers: 'Instagram, Facebook',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
+      statusKey: 'integration_social',
+      action: 'agents'
+    },
+    {
+      id: 'sms', title: 'SMS & Kommunikation', color: '#f97316',
+      desc: 'SMS-udsendelse er inkluderet i din plan og h\u00e5ndteres af FLOW',
+      providers: 'Inkluderet',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+      statusKey: 'integration_sms',
+      action: 'included'
+    }
   ];
-  var html = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
-    '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine API N\u00f8gler</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-4)">Administrer API-n\u00f8gler fra dine eksterne platforme. Disse n\u00f8gler bruges af dine agenter.</p>' +
-    '<table style="width:100%;border-collapse:collapse;font-size:var(--font-size-sm)"><thead><tr style="border-bottom:1px solid var(--border)">' +
-    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">Platform</th>' +
-    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">N\u00f8gle</th>' +
-    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">Status</th>' +
-    '<th style="text-align:right;padding:10px 12px;color:var(--muted);font-weight:500"></th></tr></thead><tbody>';
-  platforms.forEach(function(p) {
-    var val = localStorage.getItem(p.key) || '';
-    var hasKey = val && val.length > 2;
-    var masked = hasKey ? (p.sensitive ? '\u2022\u2022\u2022\u2022' + val.slice(-4) : val) : '\u2014';
-    var statusColor = hasKey ? 'var(--success)' : 'var(--muted)';
-    var statusText = hasKey ? 'Konfigureret' : 'Mangler';
-    html += '<tr style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:10px 12px"><div style="font-weight:500">' + p.name + '</div><div style="font-size:11px;color:var(--muted)">' + p.desc + '</div></td>' +
-      '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:var(--muted)">' + masked + '</td>' +
-      '<td style="padding:10px 12px"><span style="font-size:12px;color:' + statusColor + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + statusText + '</span></td>' +
-      '<td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="font-size:11px;padding:4px 10px" onclick="editCustomerApiKey(\'' + p.key + '\',\'' + p.name + '\')">' + (hasKey ? 'Rediger' : 'Tilf\u00f8j') + '</button></td></tr>';
+
+  var html = '<div style="margin-bottom:var(--space-4)">' +
+    '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine Integrationer</h3>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsv\u00e6rkt\u00f8jer med \u00e9t klik. Alle integrationer er fuldt h\u00e5ndteret af FLOW.</p></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
+
+  integrations.forEach(function(ig) {
+    var isConnected = localStorage.getItem(ig.statusKey) === 'connected';
+    var isIncluded = ig.action === 'included';
+    var isAgents = ig.action === 'agents';
+    var statusColor = (isConnected || isIncluded) ? ig.color : 'var(--muted)';
+    var statusText = isIncluded ? 'Inkluderet' : (isConnected ? 'Forbundet' : 'Ej forbundet');
+    var statusBg = (isConnected || isIncluded) ? 'rgba(' + hexToRgb(ig.color) + ',0.1)' : 'var(--bg2)';
+
+    var btnHtml = '';
+    if (isIncluded) {
+      btnHtml = '<span style="font-size:12px;color:' + ig.color + ';font-weight:500">Aktiv</span>';
+    } else if (isAgents) {
+      btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid ' + ig.color + ';color:' + ig.color + ';background:none;border-radius:var(--radius-sm);cursor:pointer" onclick="switchVaerktoejTab(\'agenter\')">Se Agenter</button>';
+    } else if (isConnected) {
+      btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);color:var(--color-text);background:var(--card);border-radius:var(--radius-sm);cursor:pointer" onclick="openIntegrationConfig(\'' + ig.id + '\')">Administrer</button>';
+    } else {
+      btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;background:' + ig.color + ';color:white;border:none;border-radius:var(--radius-sm);cursor:pointer" onclick="openIntegrationConfig(\'' + ig.id + '\')">Forbind</button>';
+    }
+
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);transition:all 0.2s" onmouseover="this.style.borderColor=\'' + ig.color + '\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.transform=\'translateY(0)\'">' +
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--space-3)">' +
+      '<div style="display:flex;align-items:center;gap:var(--space-3)">' +
+      '<div style="width:44px;height:44px;background:linear-gradient(135deg,' + ig.color + ',' + ig.color + 'dd);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0">' + ig.icon + '</div>' +
+      '<div><h4 style="font-weight:var(--font-weight-semibold);margin:0;font-size:var(--font-size-base)">' + ig.title + '</h4>' +
+      '<span style="color:var(--muted);font-size:12px">' + ig.providers + '</span></div></div>' +
+      '</div>' +
+      '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-4);line-height:1.5">' + ig.desc + '</p>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:var(--space-3);border-top:1px solid var(--border)">' +
+      '<span style="font-size:12px;color:' + statusColor + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + statusText + '</span>' +
+      btnHtml + '</div></div>';
   });
-  html += '</tbody></table></div>';
+
+  html += '</div>';
   container.innerHTML = html;
 }
 
-function editCustomerApiKey(key, name) {
-  var current = localStorage.getItem(key) || '';
-  var newVal = prompt(name + ' API N\u00f8gle:', current);
-  if (newVal !== null) {
-    if (newVal.trim()) {
-      localStorage.setItem(key, newVal.trim());
-      showToast(name + ' API n\u00f8gle gemt', 'success');
-    } else {
-      localStorage.removeItem(key);
-      showToast(name + ' API n\u00f8gle fjernet', 'info');
+function openIntegrationConfig(integrationId) {
+  var configs = {
+    betalinger: {
+      title: 'Betalinger', color: '#10b981',
+      sections: [
+        { type: 'info', text: 'Forbind din betalingsl\u00f8sning for at modtage betalinger direkte via OrderFlow.' },
+        { type: 'select', key: 'payment_provider', label: 'Betalingsudbyder', options: ['Stripe', 'MobilePay', 'Vipps'] },
+        { type: 'toggle', key: 'payment_auto_capture', label: 'Automatisk capture', desc: 'Tr\u00e6k betaling automatisk n\u00e5r ordren bekr\u00e6ftes' },
+        { type: 'toggle', key: 'payment_receipt_email', label: 'Email-kvittering', desc: 'Send kvittering til kunden efter betaling' }
+      ]
+    },
+    pos: {
+      title: 'POS Terminal', color: '#f59e0b',
+      sections: [
+        { type: 'info', text: 'Par din POS-terminal for at modtage fysiske betalinger via ordresystemet.' },
+        { type: 'select', key: 'pos_provider', label: 'POS-udbyder', options: ['SumUp', 'Zettle (iZettle)', 'Nets'] },
+        { type: 'field', key: 'pos_terminal_id', label: 'Terminal ID', placeholder: 'F.eks. SU-XXXXX' },
+        { type: 'toggle', key: 'pos_auto_print', label: 'Automatisk kvittering', desc: 'Print kvittering ved betaling' }
+      ]
+    },
+    levering: {
+      title: 'Levering', color: '#3b82f6',
+      sections: [
+        { type: 'info', text: 'Synkroniser ordrer automatisk med din leveringsplatform.' },
+        { type: 'select', key: 'delivery_provider', label: 'Leveringsplatform', options: ['Wolt', 'Just Eat', 'Hungr', 'Egen levering'] },
+        { type: 'toggle', key: 'delivery_auto_accept', label: 'Auto-accept ordrer', desc: 'Accepter leveringsordrer automatisk' },
+        { type: 'toggle', key: 'delivery_status_sync', label: 'Status-synkronisering', desc: 'Synkroniser leveringsstatus i realtid' }
+      ]
+    },
+    regnskab: {
+      title: 'Regnskab', color: '#8b5cf6',
+      sections: [
+        { type: 'info', text: 'Automatiser bogf\u00f8ring af ordrer, fakturaer og udgifter.' },
+        { type: 'select', key: 'accounting_provider', label: 'Regnskabssystem', options: ['e-conomic', 'Dinero', 'Billy', 'Visma'] },
+        { type: 'toggle', key: 'accounting_auto_book', label: 'Automatisk bogf\u00f8ring', desc: 'Bogf\u00f8r ordrer automatisk i dit regnskabssystem' },
+        { type: 'toggle', key: 'accounting_invoice', label: 'Automatiske fakturaer', desc: 'Opret fakturaer automatisk ved ordre' }
+      ]
     }
-    renderCustomerApiKeys();
-  }
+  };
+
+  var config = configs[integrationId];
+  if (!config) return;
+
+  var panel = document.getElementById('agent-config-panel');
+  var title = document.getElementById('agent-config-title');
+  var body = document.getElementById('agent-config-body');
+  var footer = document.getElementById('agent-config-footer');
+
+  title.textContent = config.title + ' \u2014 Integration';
+  title.style.color = config.color;
+
+  var bodyHtml = '';
+  config.sections.forEach(function(s) {
+    bodyHtml += '<div style="margin-bottom:var(--space-4)">';
+    if (s.type === 'info') {
+      bodyHtml += '<div style="padding:var(--space-3);background:rgba(' + hexToRgb(config.color) + ',0.05);border:1px solid rgba(' + hexToRgb(config.color) + ',0.2);border-radius:var(--radius-sm);font-size:var(--font-size-sm);color:var(--color-text);line-height:1.5">' + s.text + '</div>';
+    } else if (s.type === 'select') {
+      var current = localStorage.getItem(s.key) || s.options[0];
+      bodyHtml += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
+        '<select class="input" id="intconfig-' + s.key + '" style="width:100%;font-size:var(--font-size-sm)">';
+      s.options.forEach(function(opt) { bodyHtml += '<option value="' + opt + '"' + (opt === current ? ' selected' : '') + '>' + opt + '</option>'; });
+      bodyHtml += '</select>';
+    } else if (s.type === 'field') {
+      var val = localStorage.getItem(s.key) || '';
+      bodyHtml += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
+        '<input class="input" id="intconfig-' + s.key + '" type="text" value="' + escapeHtml(val) + '" placeholder="' + (s.placeholder || '') + '" style="width:100%;font-size:var(--font-size-sm)">';
+    } else if (s.type === 'toggle') {
+      var checked = localStorage.getItem(s.key) === 'true';
+      bodyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+        '<div><span style="font-weight:500;font-size:var(--font-size-sm)">' + s.label + '</span>' + (s.desc ? '<br><span style="font-size:11px;color:var(--muted)">' + s.desc + '</span>' : '') + '</div>' +
+        '<label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer"><input type="checkbox" id="intconfig-' + s.key + '"' + (checked ? ' checked' : '') + ' style="opacity:0;width:0;height:0" onchange="this.nextElementSibling.style.background=this.checked?\'' + config.color + '\':\'var(--muted)\';this.nextElementSibling.querySelector(\'span\').style.transform=this.checked?\'translateX(18px)\':\'translateX(0)\'">' +
+        '<div style="position:absolute;inset:0;background:' + (checked ? config.color : 'var(--muted)') + ';border-radius:11px;transition:0.2s"><span style="position:absolute;left:2px;top:2px;width:18px;height:18px;background:white;border-radius:50%;transition:0.2s;transform:' + (checked ? 'translateX(18px)' : 'translateX(0)') + '"></span></div></label></div>';
+    }
+    bodyHtml += '</div>';
+  });
+  body.innerHTML = bodyHtml;
+
+  var isConnected = localStorage.getItem('integration_' + integrationId) === 'connected';
+  footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
+    (isConnected ? '<button class="btn btn-sm" style="font-size:var(--font-size-sm);color:var(--danger);background:none;border:none;cursor:pointer" onclick="disconnectIntegration(\'' + integrationId + '\')">Afbryd forbindelse</button>' : '<span></span>') +
+    '<button class="btn btn-primary" onclick="saveIntegrationConfig(\'' + integrationId + '\')" style="font-size:var(--font-size-sm)">' + (isConnected ? 'Gem \u00e6ndringer' : 'Forbind') + '</button>' +
+    '</div>';
+
+  panel.style.display = 'flex';
+  requestAnimationFrame(function() {
+    document.getElementById('agent-config-drawer').style.transform = 'translateX(0)';
+  });
+}
+
+function saveIntegrationConfig(integrationId) {
+  var panel = document.getElementById('agent-config-body');
+  if (!panel) return;
+  var inputs = panel.querySelectorAll('[id^="intconfig-"]');
+  inputs.forEach(function(el) {
+    var key = el.id.replace('intconfig-', '');
+    if (el.type === 'checkbox') {
+      localStorage.setItem(key, el.checked ? 'true' : 'false');
+    } else {
+      if (el.value) localStorage.setItem(key, el.value);
+    }
+  });
+  localStorage.setItem('integration_' + integrationId, 'connected');
+  showToast('Integration forbundet', 'success');
+  closeAgentConfigPanel();
+  renderCustomerIntegrations();
+}
+
+function disconnectIntegration(integrationId) {
+  localStorage.removeItem('integration_' + integrationId);
+  showToast('Integration afbrudt', 'info');
+  closeAgentConfigPanel();
+  renderCustomerIntegrations();
 }
 
 // ============================================
@@ -41734,12 +41848,14 @@ window.showFacebookIntegrationModal = showFacebookIntegrationModal;
 window.showInstagramConfig = showInstagramConfig;
 window.showFacebookConfig = showFacebookConfig;
 window.editCustomerApiKey = editCustomerApiKey;
-window.renderCustomerApiKeys = renderCustomerApiKeys;
+window.renderCustomerIntegrations = renderCustomerIntegrations;
+window.openIntegrationConfig = openIntegrationConfig;
+window.saveIntegrationConfig = saveIntegrationConfig;
+window.disconnectIntegration = disconnectIntegration;
 window.renderAgentStatistics = renderAgentStatistics;
 window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
-window.renderVaerktoejApiStatus = renderVaerktoejApiStatus;
 
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {
