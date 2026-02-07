@@ -3174,21 +3174,39 @@
       searchBtn.disabled = false;
     }
 
-    // Start analysis - redirect to main SPA scanner page (with sidebar)
+    // Start analysis - run scanner and show report on this page
     function startAnalysis() {
       if (!selectedPlace) return;
 
-      // Save selected business to localStorage for the SPA scanner to pick up
-      try {
-        localStorage.setItem('flow_seo_scan_pending', JSON.stringify({
-          business: selectedPlace,
-          version: '3.0',
-          timestamp: Date.now()
-        }));
-      } catch(e) { console.warn('Could not save pending scan:', e); }
+      // Hide hero, show loading section
+      heroSection.style.display = 'none';
+      loadingSection.classList.add('active');
 
-      // Redirect to main app with scanner page
-      window.location.href = '../index.html?page=page-seo-scanner';
+      // Scroll to loading section
+      loadingSection.scrollIntoView({ behavior: 'smooth' });
+
+      // Run the endpoint scanner with real API calls
+      runEndpointScanner().then(results => {
+        // Build report data from scan results
+        const reportData = buildReportData(results);
+
+        // Save to localStorage for Flow CMS Data tab
+        try {
+          localStorage.setItem('flow_seo_analysis_latest', JSON.stringify({
+            business: selectedPlace,
+            results: results,
+            score: reportData.score,
+            timestamp: Date.now()
+          }));
+        } catch(e) { console.warn('Could not save analysis data:', e); }
+
+        // Show report
+        showReport(reportData);
+      }).catch(err => {
+        console.error('Scanner error:', err);
+        // Fallback: show report with mock data
+        showReport(buildReportData({}));
+      });
     }
 
     // Build report data from scanner results
