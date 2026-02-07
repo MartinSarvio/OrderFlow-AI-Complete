@@ -34095,6 +34095,12 @@ function exportCMSData(format) {
 
 // Load integrations page
 function loadIntegrationsPage() {
+  // Reset search and pagination state
+  apiKeysSearchQuery = '';
+  apiKeysCurrentPage = 1;
+  var searchInput = document.getElementById('api-keys-search');
+  if (searchInput) searchInput.value = '';
+
   // Generate FLOW ID if not exists
   let flowId = localStorage.getItem('flow_id');
   if (!flowId) {
@@ -34197,88 +34203,248 @@ function generateApiKey() {
   toast('API nøgle genereret', 'success');
 }
 
-// Load API keys list
+// --- API Keys Pagination & Search State ---
+var apiKeysCurrentPage = 1;
+var apiKeysPageSize = 12;
+var apiKeysSearchQuery = '';
+
+// SVG icons for API key row actions
+var apiKeyEyeSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var apiKeyGearSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
+var apiKeyTrashSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>';
+
+// Configured APIs definition (shared between functions)
+var CONFIGURED_APIS = [
+  { name: 'OpenAI', keyField: 'openai_key', toggleName: 'openai', service: 'AI Assistent', inputId: 'openai-api-key-input' },
+  { name: 'InMobile SMS', keyField: 'inmobile_api_key', toggleName: 'inmobile', service: 'SMS Service', inputId: 'inmobile-api-key', relatedFields: ['inmobile_sender'] },
+  { name: 'Google Reviews', keyField: 'google_api_key', toggleName: 'google', service: 'Anmeldelser', inputId: 'google-api-key', relatedFields: ['google_place_id'] },
+  { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser', inputId: 'trustpilot-api-key', relatedFields: ['trustpilot_business_id'] },
+  { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling', inputId: 'firecrawl-api-key' },
+  { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services', inputId: 'googleapi-api-key' }
+];
+
+// Load API keys list with search and pagination
 function loadApiKeysList() {
-  const userKeys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-  const disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
-  const tbody = document.getElementById('api-keys-list');
+  var tbody = document.getElementById('api-keys-list');
   if (!tbody) return;
 
-  // System API keys (filter deleted)
-  const allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
-  const deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
-  const sysKeys = allSysKeys.filter(function(k) { return deletedSysKeys.indexOf(k.id) === -1; });
-  const systemRows = sysKeys.map(function(sKey) {
+  var disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+  var deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+  var userKeys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  var allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+
+  // Build unified data model
+  var allKeys = [];
+
+  // A. System keys (filter deleted)
+  allSysKeys.forEach(function(sKey) {
+    if (deletedSysKeys.indexOf(sKey.id) !== -1) return;
     var isDisabled = disabledStates[sKey.id] === true;
-    var statusColor = isDisabled ? 'var(--danger)' : 'var(--success)';
-    var statusText = isDisabled ? 'Deaktiveret' : 'Aktiv';
-    var masked = maskApiKey(sKey.key);
-    var serviceUrl = sKey.url || '#';
-    return '<tr style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:12px 8px;font-size:14px">' + sKey.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + sKey.service + ')</span></td>' +
-      '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + sKey.id + '" data-visible="false">' + masked + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + sKey.type + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:' + statusColor + '">' + statusText + '</td>' +
-      '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' +
-        '<div style="display:inline-block;position:relative">' +
-          '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + sKey.id + '" onclick="toggleApiKeyDropdown(\'' + sKey.id + '\')" title="Indstillinger" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>' +
-          '<div id="api-key-dropdown-' + sKey.id + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
-            '<button onclick="window.open(\'' + serviceUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">Rediger</button>' +
-            '<button onclick="toggleSystemKeyActive(\'' + sKey.id + '\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
-            '<button onclick="deleteSystemKey(\'' + sKey.id + '\');toggleApiKeyDropdown(\'' + sKey.id + '\')" style="display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--danger)" onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'">Slet</button>' +
-          '</div>' +
-        '</div>' +
-        '<button class="btn btn-secondary btn-sm" onclick="window.open(\'' + serviceUrl + '\',\'_blank\')" title="' + serviceUrl + '" style="padding:4px 8px;margin-right:4px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>' +
-        '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + sKey.id + '\')" title="Vis/skjul nøgle" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>' +
-      '</td></tr>';
+    allKeys.push({
+      id: sKey.id, name: sKey.name, service: sKey.service,
+      keyValue: sKey.key, maskedKey: maskApiKey(sKey.key),
+      type: 'System', keyType: 'system',
+      status: isDisabled ? 'Deaktiveret' : 'Aktiv',
+      statusColor: isDisabled ? 'var(--danger)' : 'var(--success)',
+      hasFullKey: true, serviceUrl: sKey.url || '#',
+      toggleName: null, keyField: null
+    });
   });
 
-  // User-generated keys
-  var userRows = userKeys.map(function(key) {
-    return '<tr style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:12px 8px;font-size:14px">' + key.name + '</td>' +
-      '<td style="padding:12px 8px;font-size:14px;font-family:monospace;color:var(--muted)">' + key.keyPrefix + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">Bruger</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:var(--success)">Aktiv</td>' +
-      '<td style="padding:12px 8px;text-align:right"><button class="btn btn-danger btn-sm" onclick="deleteApiKey(\'' + key.id + '\')">Slet</button></td>' +
-    '</tr>';
-  });
-
-  // Konfigurerede API-forbindelser (fra Indstillinger > API Adgang)
-  var configuredApis = [
-    { name: 'OpenAI', keyField: 'openai_key', toggleName: 'openai', service: 'AI Assistent' },
-    { name: 'InMobile SMS', keyField: 'inmobile_api_key', toggleName: 'inmobile', service: 'SMS Service' },
-    { name: 'Google Reviews', keyField: 'google_api_key', toggleName: 'google', service: 'Anmeldelser' },
-    { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser' },
-    { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling' },
-    { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services' }
-  ];
-
-  var configuredApiRows = configuredApis.map(function(cfg) {
+  // B. Configured API connections
+  CONFIGURED_APIS.forEach(function(cfg) {
     var keyValue = localStorage.getItem(cfg.keyField);
     var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
     var hasKey = !!keyValue;
-    var statusColor = !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)');
-    var statusText = !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret');
-    var masked = hasKey ? maskApiKey(keyValue) : '\u2014';
-    return '<tr style="border-bottom:1px solid var(--border)">' +
-      '<td style="padding:12px 8px;font-size:14px">' + cfg.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + cfg.service + ')</span></td>' +
-      '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + masked + '</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">Konfigureret</td>' +
-      '<td style="padding:12px 8px;font-size:13px;color:' + statusColor + '">' + statusText + '</td>' +
-      '<td style="padding:12px 8px;text-align:right">' +
-        '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
-      '</td></tr>';
+    allKeys.push({
+      id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
+      keyValue: keyValue || '', maskedKey: hasKey ? maskApiKey(keyValue) : '\u2014',
+      type: 'Konfigureret', keyType: 'configured',
+      status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
+      statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
+      hasFullKey: hasKey, serviceUrl: null,
+      toggleName: cfg.toggleName, keyField: cfg.keyField
+    });
   });
 
-  var allRows = systemRows.concat(configuredApiRows).concat(userRows);
+  // C. User-generated keys
+  userKeys.forEach(function(key) {
+    allKeys.push({
+      id: key.id, name: key.name, service: null,
+      keyValue: null, maskedKey: key.keyPrefix,
+      type: 'Bruger', keyType: 'user',
+      status: 'Aktiv', statusColor: 'var(--success)',
+      hasFullKey: false, serviceUrl: null,
+      toggleName: null, keyField: null
+    });
+  });
 
-  if (allRows.length === 0) {
-    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API n\u00f8gler</td></tr>';
-    return;
+  // Apply search filter
+  var query = apiKeysSearchQuery.toLowerCase();
+  var filtered = allKeys;
+  if (query) {
+    filtered = allKeys.filter(function(k) {
+      return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
+             (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
+             (k.maskedKey && k.maskedKey.toLowerCase().indexOf(query) !== -1) ||
+             (k.type && k.type.toLowerCase().indexOf(query) !== -1);
+    });
   }
 
-  tbody.innerHTML = allRows.join('');
+  // Pagination
+  var totalPages = Math.max(1, Math.ceil(filtered.length / apiKeysPageSize));
+  if (apiKeysCurrentPage > totalPages) apiKeysCurrentPage = totalPages;
+  var startIdx = (apiKeysCurrentPage - 1) * apiKeysPageSize;
+  var pageItems = filtered.slice(startIdx, startIdx + apiKeysPageSize);
+
+  // Render rows
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">' +
+      (query ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
+  } else {
+    tbody.innerHTML = pageItems.map(function(k) {
+      return renderApiKeyRow(k, disabledStates);
+    }).join('');
+  }
+
+  // Render pagination
+  renderApiKeysPagination(totalPages);
+}
+
+// Render a single API key table row with consistent actions
+function renderApiKeyRow(k, disabledStates) {
+  var nameCell = k.name;
+  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
+
+  var actions = '';
+  var btnStyle = 'padding:4px 8px;margin-right:4px';
+
+  // Eye icon (only if full key available)
+  if (k.hasFullKey) {
+    if (k.keyType === 'system') {
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + k.id + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+    } else if (k.keyType === 'configured') {
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + k.id + '\',\'' + k.keyField + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+    }
+  }
+
+  // Gear icon
+  if (k.keyType === 'system') {
+    var isDisabled = disabledStates[k.id] === true;
+    var serviceUrl = k.serviceUrl;
+    var ddBtnStyle = 'display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)';
+    var ddHover = 'onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'"';
+    actions += '<div style="display:inline-block;position:relative">' +
+      '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + k.id + '" onclick="toggleApiKeyDropdown(\'' + k.id + '\')" title="Indstillinger" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>' +
+      '<div id="api-key-dropdown-' + k.id + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
+        '<button onclick="window.open(\'' + serviceUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>Rediger</button>' +
+        '<button onclick="toggleSystemKeyActive(\'' + k.id + '\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
+      '</div></div>';
+  } else if (k.keyType === 'configured') {
+    actions += '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>';
+  }
+
+  // Delete icon (all types)
+  var escapedName = k.name.replace(/'/g, "\\'");
+  actions += '<button class="btn btn-secondary btn-sm" onclick="confirmDeleteApiKey(\'' + k.id + '\',\'' + escapedName + '\',\'' + k.keyType + '\')" title="Slet" style="padding:4px 8px;color:var(--danger)">' + apiKeyTrashSvg + '</button>';
+
+  return '<tr style="border-bottom:1px solid var(--border)">' +
+    '<td style="padding:12px 8px;font-size:14px">' + nameCell + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + k.id + '" data-visible="false">' + k.maskedKey + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + k.type + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:' + k.statusColor + '">' + k.status + '</td>' +
+    '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' + actions + '</td></tr>';
+}
+
+// Render pagination controls
+function renderApiKeysPagination(totalPages) {
+  var container = document.getElementById('api-keys-pagination');
+  if (!container) return;
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  var html = '';
+  if (apiKeysCurrentPage > 1) {
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage - 1) + ')">\u2190</button>';
+  }
+  for (var i = 1; i <= totalPages; i++) {
+    html += '<button class="btn ' + (i === apiKeysCurrentPage ? 'btn-primary' : 'btn-secondary') + '" style="padding:6px 12px;min-width:36px" onclick="goToApiKeysPage(' + i + ')">' + i + '</button>';
+  }
+  if (apiKeysCurrentPage < totalPages) {
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage + 1) + ')">\u2192</button>';
+  }
+  container.innerHTML = html;
+}
+
+function goToApiKeysPage(page) {
+  apiKeysCurrentPage = page;
+  loadApiKeysList();
+}
+
+// Search/filter API keys
+function filterApiKeys(query) {
+  apiKeysSearchQuery = (query || '').trim();
+  apiKeysCurrentPage = 1;
+  loadApiKeysList();
+}
+
+// Scroll to API key generator section
+function scrollToApiKeyGenerator() {
+  var el = document.getElementById('api-key-name');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function() { el.focus(); }, 500);
+  }
+}
+
+// Toggle visibility for configured API keys
+function toggleConfiguredKeyVisibility(keyId, keyField) {
+  var el = document.getElementById('key-display-' + keyId);
+  if (!el) return;
+  var fullKey = localStorage.getItem(keyField);
+  if (!fullKey) return;
+  if (el.dataset.visible === 'true') {
+    el.textContent = maskApiKey(fullKey);
+    el.dataset.visible = 'false';
+  } else {
+    el.textContent = fullKey;
+    el.dataset.visible = 'true';
+  }
+}
+
+// Confirm delete API key using modal
+function confirmDeleteApiKey(keyId, keyName, keyType) {
+  document.getElementById('delete-confirm-message').textContent =
+    'Er du sikker p\u00e5 at du vil slette API n\u00f8glen "' + keyName + '"?';
+  document.getElementById('delete-confirm-btn').onclick = function() {
+    executeDeleteApiKey(keyId, keyType);
+  };
+  document.getElementById('delete-confirm-modal').style.display = 'flex';
+}
+
+// Execute API key deletion
+function executeDeleteApiKey(keyId, keyType) {
+  if (keyType === 'system') {
+    var deletedKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+    if (deletedKeys.indexOf(keyId) === -1) deletedKeys.push(keyId);
+    localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedKeys));
+  } else if (keyType === 'configured') {
+    var toggleName = keyId.replace('cfg-', '');
+    var cfg = CONFIGURED_APIS.find(function(c) { return c.toggleName === toggleName; });
+    if (cfg) {
+      localStorage.removeItem(cfg.keyField);
+      if (cfg.relatedFields) cfg.relatedFields.forEach(function(f) { localStorage.removeItem(f); });
+      var inputEl = document.getElementById(cfg.inputId);
+      if (inputEl) inputEl.value = '';
+    }
+  } else if (keyType === 'user') {
+    var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+    localStorage.setItem('flow_api_keys', JSON.stringify(keys.filter(function(k) { return k.id !== keyId; })));
+  }
+
+  closeDeleteConfirmModal();
+  loadApiKeysList();
+  updateApiStatus();
+  toast('API n\u00f8gle slettet', 'success');
 }
 
 // Toggle API key gear dropdown
@@ -34322,27 +34488,17 @@ function closeApiKeyDropdownOnOutsideClick(e) {
   }
 }
 
-// Delete system API key (soft delete)
+// Delete system API key (delegates to modal)
 function deleteSystemKey(keyId) {
-  if (!confirm('Er du sikker på at du vil slette denne system API nøgle?')) return;
-  var deletedKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
-  if (deletedKeys.indexOf(keyId) === -1) {
-    deletedKeys.push(keyId);
-  }
-  localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedKeys));
-  loadApiKeysList();
-  toast('System API nøgle slettet', 'success');
+  var sysKey = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []).find(function(k) { return k.id === keyId; });
+  confirmDeleteApiKey(keyId, sysKey ? sysKey.name : 'System n\u00f8gle', 'system');
 }
 
-// Delete API key
+// Delete user API key (delegates to modal)
 function deleteApiKey(keyId) {
-  if (!confirm('Er du sikker på at du vil slette denne API nøgle?')) return;
-
-  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-  const filtered = keys.filter(k => k.id !== keyId);
-  localStorage.setItem('flow_api_keys', JSON.stringify(filtered));
-  loadApiKeysList();
-  toast('API nøgle slettet', 'success');
+  var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  var key = keys.find(function(k) { return k.id === keyId; });
+  confirmDeleteApiKey(keyId, key ? key.name : 'API n\u00f8gle', 'user');
 }
 
 // Show integration fields based on selected system
