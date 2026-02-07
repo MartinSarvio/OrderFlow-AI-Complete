@@ -26945,6 +26945,11 @@ function getAppPreviewBasePath() {
 }
 
 function getAppPreviewUrl() {
+  if (window.APP_PREVIEW_URL) return window.APP_PREVIEW_URL;
+  const basePath = getAppPreviewBasePath();
+  if (basePath) {
+    return basePath + 'demos/pwa-preview.html';
+  }
   return 'https://flow-lime-rho.vercel.app/pwa-preview.html';
 }
 
@@ -27043,10 +27048,37 @@ function showAppPreviewQR() {
 
   const previewUrl = getAppPreviewUrl();
   container.innerHTML = '';
-  container.style.background = '#000';
-  container.style.borderRadius = '12px';
-  container.style.padding = '20px';
-  generateBrandedQR(previewUrl, container, { width: 240, height: 240 });
+
+  const fallbackToApi = () => {
+    const encodedUrl = encodeURIComponent(previewUrl);
+    container.innerHTML = `
+      <img
+        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&format=png"
+        alt="QR kode til app preview"
+        width="200"
+        height="200"
+        style="display:block;border-radius:8px"
+        onerror="this.parentElement.innerHTML='<p style=\\'color:var(--muted);text-align:center\\'>Kunne ikke generere QR-kode<br><small>${previewUrl}</small></p>'"
+      >
+    `;
+  };
+
+  ensureQRCodeLibrary().then((loaded) => {
+    if (loaded && typeof QRCode !== 'undefined') {
+      try {
+        new QRCode(container, {
+          text: previewUrl,
+          width: 200,
+          height: 200,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        return;
+      } catch (err) {
+        console.warn('Local QR generation failed:', err);
+      }
+    }
+    fallbackToApi();
+  });
 
   showModal('app-preview-qr');
 }
@@ -29220,7 +29252,7 @@ function initAppBuilderTemplate() {
 
 // Load Web Builder template
 function loadWebBuilderTemplate(templateId) {
-  const template = webBuilderTemplates[templateId];
+  const template = resolveTemplateById(templateId);
   if (!template) {
     toast('Skabelon ikke fundet', 'error');
     return;
@@ -29228,6 +29260,9 @@ function loadWebBuilderTemplate(templateId) {
 
   // Switch preview iframe source based on template type
   const previewFile = template.previewFile || './demos/pwa-preview-mario.html';
+  const override = getTemplateOverride(templateId);
+  const baseHref = getTemplateBaseHref(template);
+  const overrideHtml = override ? injectBaseTag(override, baseHref) : null;
 
   // Target Web Builder iframes by ID and class
   const frames = [];
@@ -29240,6 +29275,13 @@ function loadWebBuilderTemplate(templateId) {
   if (fullscreenFrame && !frames.includes(fullscreenFrame)) frames.push(fullscreenFrame);
 
   frames.forEach(iframe => {
+    if (overrideHtml) {
+      iframe.src = 'about:blank';
+      iframe.srcdoc = overrideHtml;
+      return;
+    }
+
+    if (iframe.hasAttribute('srcdoc')) iframe.removeAttribute('srcdoc');
     const currentSrc = iframe.src.split('/').pop();
     const newSrc = previewFile.split('/').pop();
     if (currentSrc !== newSrc) {
@@ -36741,7 +36783,10 @@ function openWebBuilderPreviewFullscreen() {
   const selector = document.getElementById('wb-template-selector');
   const templateId = selector?.value || 'skabelon-1';
   const template = webBuilderTemplates[templateId];
-  const previewSrc = template?.previewFile || './Website%20builder/dist/index.html';
+  const override = getTemplateOverride(templateId);
+  const baseHref = getTemplateBaseHref(template);
+  const overrideHtml = override ? injectBaseTag(override, baseHref) : null;
+  const previewSrc = overrideHtml ? 'about:blank' : (template?.previewFile || './Website%20builder/dist/index.html');
 
   // Check if modal already exists
   let modal = document.getElementById('wb-preview-modal');
@@ -36793,6 +36838,17 @@ function openWebBuilderPreviewFullscreen() {
   }
 
   modal.style.display = 'flex';
+
+  const fullscreenFrame = document.getElementById('wb-fullscreen-preview-frame');
+  if (fullscreenFrame) {
+    if (overrideHtml) {
+      fullscreenFrame.src = 'about:blank';
+      fullscreenFrame.srcdoc = overrideHtml;
+    } else {
+      if (fullscreenFrame.hasAttribute('srcdoc')) fullscreenFrame.removeAttribute('srcdoc');
+      if (fullscreenFrame.src !== previewSrc) fullscreenFrame.src = previewSrc;
+    }
+  }
 
   // Add click-outside handler to close modal
   modal.onclick = (e) => {
@@ -38040,6 +38096,149 @@ function saveHIWTestimonials() {
 // =====================================================
 
 let uploadedTemplateFile = null;
+let currentTemplateCodeId = null;
+
+function getTemplateOverrides() {
+  return JSON.parse(localStorage.getItem('orderflow_template_overrides') || '{}');
+}
+
+function setTemplateOverrides(overrides) {
+  localStorage.setItem('orderflow_template_overrides', JSON.stringify(overrides));
+}
+
+function getTemplateOverride(templateId) {
+  const overrides = getTemplateOverrides();
+  return overrides[templateId] || null;
+}
+
+function setTemplateOverride(templateId, html) {
+  const overrides = getTemplateOverrides();
+  overrides[templateId] = html;
+  setTemplateOverrides(overrides);
+}
+
+function clearTemplateOverride(templateId) {
+  const overrides = getTemplateOverrides();
+  if (overrides[templateId]) delete overrides[templateId];
+  setTemplateOverrides(overrides);
+}
+
+function resolveTemplateById(templateId) {
+  if (webBuilderTemplates[templateId]) return webBuilderTemplates[templateId];
+  const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+  return customTemplates.find(t => t.id === templateId) || null;
+}
+
+function getTemplateBaseHref(template) {
+  const previewFile = template?.previewFile || (template?.templatePath ? template.templatePath + 'index.html' : '');
+  if (!previewFile) return '';
+  try {
+    return new URL(previewFile, window.location.href).href.replace(/[^/]*$/, '');
+  } catch (e) {
+    return previewFile.replace(/[^/]*$/, '');
+  }
+}
+
+function injectBaseTag(html, baseHref) {
+  if (!html || !baseHref) return html;
+  if (/<base\\s/i.test(html)) return html;
+  const headMatch = html.match(/<head[^>]*>/i);
+  if (headMatch) {
+    return html.replace(headMatch[0], `${headMatch[0]}<base href="${baseHref}">`);
+  }
+  return `<base href="${baseHref}">` + html;
+}
+
+function applyTemplateOverrideToPreview(templateId) {
+  const template = resolveTemplateById(templateId);
+  if (!template) return false;
+
+  const override = getTemplateOverride(templateId);
+  const baseHref = getTemplateBaseHref(template);
+  const frames = [];
+
+  const frameIds = ['webbuilder-preview-frame', 'wb-fullscreen-preview-frame'];
+  frameIds.forEach(id => {
+    const frame = document.getElementById(id);
+    if (frame) frames.push(frame);
+  });
+
+  document.querySelectorAll('.webbuilder-preview-frame').forEach(frame => {
+    if (!frames.includes(frame)) frames.push(frame);
+  });
+
+  if (override) {
+    const html = injectBaseTag(override, baseHref);
+    frames.forEach(iframe => {
+      iframe.src = 'about:blank';
+      iframe.srcdoc = html;
+    });
+    return true;
+  }
+
+  const previewFile = template.previewFile || (template.templatePath ? template.templatePath + 'index.html' : '');
+  frames.forEach(iframe => {
+    if (iframe.hasAttribute('srcdoc')) iframe.removeAttribute('srcdoc');
+    if (previewFile) iframe.src = previewFile;
+  });
+  return false;
+}
+
+async function openTemplateCodeEditor(templateId) {
+  currentTemplateCodeId = templateId;
+
+  const titleEl = document.getElementById('template-code-editor-title');
+  if (titleEl) titleEl.textContent = templateId;
+
+  const editor = document.getElementById('template-code-editor');
+  if (!editor) return;
+
+  const override = getTemplateOverride(templateId);
+  if (override) {
+    editor.value = override;
+    showModal('template-code-editor');
+    return;
+  }
+
+  editor.value = 'Indlæser...';
+  showModal('template-code-editor');
+
+  const template = webBuilderTemplates[templateId];
+  const previewFile = template?.previewFile || (template?.templatePath ? template.templatePath + 'index.html' : '');
+  if (!previewFile) {
+    editor.value = '';
+    toast('Kunne ikke finde skabelon', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch(previewFile, { cache: 'no-cache' });
+    if (!response.ok) throw new Error('Kunne ikke indlæse skabelon');
+    const html = await response.text();
+    editor.value = html;
+  } catch (err) {
+    editor.value = '';
+    toast('Kunne ikke indlæse skabelon', 'error');
+  }
+}
+
+function saveTemplateCode() {
+  const editor = document.getElementById('template-code-editor');
+  if (!editor || !currentTemplateCodeId) return;
+  setTemplateOverride(currentTemplateCodeId, editor.value);
+  applyTemplateOverrideToPreview(currentTemplateCodeId);
+  renderInstalledTemplates();
+  toast('Skabelon gemt!', 'success');
+}
+
+function resetTemplateCode() {
+  if (!currentTemplateCodeId) return;
+  clearTemplateOverride(currentTemplateCodeId);
+  applyTemplateOverrideToPreview(currentTemplateCodeId);
+  renderInstalledTemplates();
+  openTemplateCodeEditor(currentTemplateCodeId);
+  toast('Skabelon nulstillet', 'success');
+}
 
 // Render installed templates list
 function renderInstalledTemplates() {
@@ -38053,6 +38252,9 @@ function renderInstalledTemplates() {
   // Add custom templates
   customTemplates.forEach(t => {
     allTemplates[t.id] = t;
+    if (!webBuilderTemplates[t.id]) {
+      webBuilderTemplates[t.id] = t;
+    }
   });
 
   const templateIds = Object.keys(allTemplates);
@@ -38066,12 +38268,14 @@ function renderInstalledTemplates() {
     const t = allTemplates[id];
     const isCustom = customTemplates.some(ct => ct.id === id);
     const colors = t.branding?.colors || {};
+    const hasOverride = !!getTemplateOverride(id);
 
     return `
       <div class="template-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden">
         <div style="height:120px;background:linear-gradient(135deg, ${colors.primary || '#2563EB'} 0%, ${colors.secondary || '#1E293B'} 100%);position:relative">
           <div style="position:absolute;bottom:12px;left:12px;right:12px">
             <span class="badge ${isCustom ? 'badge-accent' : 'badge-success'}" style="font-size:10px">${isCustom ? 'Brugerdefineret' : 'Standard'}</span>
+            ${hasOverride ? `<span class="badge" style="font-size:10px;background:var(--warn);color:#111;margin-left:6px">Override</span>` : ''}
           </div>
         </div>
         <div style="padding:16px">
@@ -38079,7 +38283,10 @@ function renderInstalledTemplates() {
           <p style="margin:0;font-size:12px;color:var(--muted)">${t.branding?.slogan || 'Ingen beskrivelse'}</p>
           <div style="display:flex;gap:8px;margin-top:12px">
             <button class="btn btn-sm btn-secondary" onclick="previewTemplate('${id}')" style="flex:1">Forhåndsvis</button>
-            ${!isCustom ? `<button class="btn btn-sm btn-secondary" onclick="openTemplateEditor('${id}')" style="flex:1">Rediger kode</button>` : ''}
+            <button class="btn btn-sm btn-secondary" onclick="openTemplateCodeEditor('${id}')" style="flex:1">Rediger kode</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-sm btn-secondary" onclick="openTemplateCodeEditor('${id}')" style="flex:1">Åben editor</button>
             ${isCustom ? `<button class="btn btn-sm" style="background:var(--danger);color:white" onclick="deleteTemplate('${id}')">Slet</button>` : ''}
           </div>
         </div>
@@ -38090,7 +38297,27 @@ function renderInstalledTemplates() {
 
 // Preview a template
 function previewTemplate(templateId) {
-  const template = webBuilderTemplates[templateId];
+  const template = resolveTemplateById(templateId);
+  if (!template) {
+    toast('Kunne ikke finde preview for denne skabelon', 'error');
+    return;
+  }
+  const override = getTemplateOverride(templateId);
+
+  if (override) {
+    const baseHref = getTemplateBaseHref(template);
+    const html = injectBaseTag(override, baseHref);
+    const win = window.open('', '_blank', 'noopener');
+    if (!win) {
+      toast('Popup blev blokeret. Tillad popups for at åbne skabelonen.', 'warning');
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    return;
+  }
+
   if (template?.previewFile) {
     window.open(template.previewFile, '_blank');
   } else if (template?.templatePath) {
@@ -38313,6 +38540,11 @@ function updateTemplateDropdowns() {
 
     // Get all templates including custom
     const customTemplates = JSON.parse(localStorage.getItem('orderflow_custom_templates') || '[]');
+    customTemplates.forEach(t => {
+      if (!webBuilderTemplates[t.id]) {
+        webBuilderTemplates[t.id] = t;
+      }
+    });
 
     // Build options HTML
     let optionsHtml = '';

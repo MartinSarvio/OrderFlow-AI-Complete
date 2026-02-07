@@ -92,12 +92,15 @@ function CustomerApp() {
     setCheckoutOpen(true);
   };
 
-  const handleOrderComplete = () => {
-    setCheckoutOpen(false);
+  const handleOrderComplete = (orderNumber?: string) => {
     clearCart();
-    setOrderHistory(prev => [...prev, `ORD-${Date.now()}`]);
+    if (orderNumber) {
+      setOrderHistory(prev => [...prev, orderNumber]);
+    } else {
+      setOrderHistory(prev => [...prev, `ORD-${Date.now()}`]);
+    }
     toast.success('Ordren er gennemført!', {
-      description: 'Tak for din bestilling'
+      description: orderNumber ? `Ordrenummer: ${orderNumber}` : 'Tak for din bestilling'
     });
   };
 

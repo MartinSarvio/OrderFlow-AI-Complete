@@ -24,7 +24,7 @@ interface CheckoutModalProps {
   };
   isOpen: boolean;
   onClose: () => void;
-  onOrderComplete: () => void;
+  onOrderComplete: (orderNumber?: string) => void;
 }
 
 export function CheckoutModal({ 
@@ -39,6 +39,9 @@ export function CheckoutModal({
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [completedOrderNumber, setCompletedOrderNumber] = useState('');
+  const [completedOrderType, setCompletedOrderType] = useState<'delivery' | 'pickup' | 'table'>('delivery');
   
   // Customer details
   const [customerName, setCustomerName] = useState('');
@@ -111,81 +114,84 @@ export function CheckoutModal({
   }
 
   const handlePlaceOrder = async () => {
+    if (!isPaymentValid()) return;
+
+    setOrderError(null);
     setIsProcessing(true);
 
     try {
-      const FlowOrders = (window as any).FlowOrders;
-      const FlowAuth = (window as any).FlowAuth;
-
-      const orderData = {
-        template: 'skabelon-1',
-        sourceChannel: 'web',
-        orderType: cart.type || 'pickup',
-        paymentMethod,
+      const payload = {
+        items: cart.items.map((item) => ({
+          name: item.menuItem.name,
+          quantity: item.quantity,
+          unit_price: item.menuItem.price,
+          notes: item.notes || '',
+          modifiers: {
+            options: item.options || [],
+            addons: item.addons || []
+          }
+        })),
         customer: {
           name: customerName,
           phone: customerPhone,
-          email: customerEmail
+          email: customerEmail || undefined
         },
-        items: cart.items.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          options: item.selectedOptions || [],
-          notes: item.notes || ''
-        })),
-        subtotal: totals.subtotal,
-        tax: totals.tax,
-        deliveryFee: totals.deliveryFee,
-        total: totals.total,
-        notes: deliveryNotes,
-        deliveryAddress: cart.type === 'delivery' ? {
-          street, postalCode, city, floor, doorCode
-        } : null
+        fulfillment: {
+          type: cart.type,
+          address: cart.type === 'delivery' ? {
+            street,
+            postalCode,
+            city,
+            floor,
+            doorCode,
+            notes: deliveryNotes
+          } : undefined
+        },
+        payment_method: paymentMethod,
+        tip: totals.tip || 0,
+        discount: totals.discount || 0
       };
 
-      if (paymentMethod === 'card' && stripeElements && FlowOrders) {
-        const result = await FlowOrders.checkout(orderData, stripeElements, window.location.href);
-        if (result.error) {
-          alert(result.error);
-          setIsProcessing(false);
-          return;
+      const response = await fetch('/api/public/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        let errorMessage = 'Kunne ikke gennemføre ordren';
+        try {
+          const errorData = await response.json();
+          if (errorData?.error) errorMessage = errorData.error;
+        } catch (e) {
+          // Ignore JSON parsing errors
         }
-        setOrderNumber(result.order?.order_number || '');
-      } else if (FlowOrders) {
-        const result = await FlowOrders.createOrder(orderData);
-        if (result.error && !result.order) {
-          alert('Kunne ikke oprette ordre: ' + result.error);
-          setIsProcessing(false);
-          return;
-        }
-        setOrderNumber(result.order?.order_number || '');
+        throw new Error(errorMessage);
       }
 
-      // Save guest data if not logged in
-      if (FlowAuth && !FlowAuth.isLoggedIn()) {
-        FlowAuth.setGuestData({ name: customerName, email: customerEmail, phone: customerPhone });
-      }
-
-      setIsProcessing(false);
+      const data = await response.json();
+      const orderNumber = data?.order_number || '';
+      setCompletedOrderNumber(orderNumber);
+      setCompletedOrderType(cart.type);
       setOrderComplete(true);
       setStep('confirmation');
-    } catch (err: any) {
-      console.error('Checkout error:', err);
-      alert('Betaling fejlede: ' + (err.message || 'Ukendt fejl'));
+      onOrderComplete(orderNumber);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Kunne ikke gennemføre ordren';
+      setOrderError(message);
+    } finally {
       setIsProcessing(false);
     }
   };
 
   const handleClose = () => {
-    if (orderComplete) {
-      onOrderComplete();
-    }
     onClose();
     // Reset state
     setStep('details');
     setOrderComplete(false);
+    setOrderError(null);
+    setCompletedOrderNumber('');
+    setCompletedOrderType('delivery');
   };
 
   // Initialize Stripe Payment Element when payment step is shown
@@ -451,6 +457,14 @@ export function CheckoutModal({
           {/* Step 2: Payment */}
           {step === 'payment' && (
             <div className="p-6 space-y-6">
+              {orderError && (
+                <div
+                  className="p-4 rounded-xl text-sm"
+                  style={{ backgroundColor: `${branding.colors.error}15`, color: branding.colors.error }}
+                >
+                  {orderError}
+                </div>
+              )}
               {/* Payment Methods */}
               <div className="space-y-4">
                 <h3 
@@ -624,12 +638,12 @@ export function CheckoutModal({
               >
                 <p className="text-sm mb-1" style={{ color: branding.colors.textMuted }}>Ordrenummer</p>
                 <p className="text-xl font-bold font-mono" style={{ color: branding.colors.text }}>
-                  #{(Math.random() * 10000).toFixed(0).padStart(4, '0')}
+                  {completedOrderNumber ? `#${completedOrderNumber}` : '—'}
                 </p>
               </div>
               
               <div className="space-y-2 text-sm" style={{ color: branding.colors.textMuted }}>
-                <p>Estimeret {cart.type === 'delivery' ? 'levering' : 'afhentning'}:</p>
+                <p>Estimeret {completedOrderType === 'delivery' ? 'levering' : 'afhentning'}:</p>
                 <p className="font-semibold text-lg" style={{ color: branding.colors.text }}>
                   {new Date(Date.now() + 45 * 60000).toLocaleTimeString('da-DK', { 
                     hour: '2-digit', 

@@ -29,6 +29,7 @@
   <link href="css/style.css" rel="stylesheet" />
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/orderflow-cart.css" />
 
 </head>
 
@@ -68,14 +69,10 @@
               </li>
             </ul>
             <div class="user_option">
-              <a href="javascript:void(0)" class="user_link" data-auth="logged-out" onclick="FlowAuth.showLoginModal()">
+              <a href="" class="user_link">
                 <i class="fa fa-user" aria-hidden="true"></i>
               </a>
-              <a href="javascript:void(0)" class="user_link" data-auth="logged-in" style="display:none" onclick="FlowAuth.showProfileModal()" title="Min profil">
-                <i class="fa fa-user" aria-hidden="true"></i>
-                <span data-auth-name style="font-size:12px;margin-left:4px"></span>
-              </a>
-              <a class="cart_link" href="#">
+              <a class="cart_link" href="#" data-of-cart-open>
                 <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 456.029 456.029" style="enable-background:new 0 0 456.029 456.029;" xml:space="preserve">
                   <g>
                     <g>
@@ -134,7 +131,7 @@
                   <i class="fa fa-search" aria-hidden="true"></i>
                 </button>
               </form>
-              <a href="" class="order_online">
+              <a href="#" class="order_online" data-of-cart-open>
                 Order Online
               </a>
             </div>
@@ -1449,102 +1446,7 @@
     footerObserver.observe(document.body, { childList: true, subtree: true });
   </script>
 
-  <!-- Login Modal -->
-  <div class="modal fade" id="flow-login-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
-          <h5 class="modal-title" style="font-weight:600">Log ind</h5>
-          <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body" style="padding:24px">
-          <form onsubmit="FlowAuth.handleLogin(event)">
-            <div class="form-group">
-              <label style="font-weight:500">Email</label>
-              <input type="email" class="form-control" id="flow-login-email" placeholder="din@email.dk" required>
-            </div>
-            <div class="form-group">
-              <label style="font-weight:500">Adgangskode</label>
-              <input type="password" class="form-control" id="flow-login-password" placeholder="Adgangskode" required>
-            </div>
-            <div id="flow-login-error" style="color:#dc3545;font-size:13px;margin-bottom:12px"></div>
-            <button type="submit" id="flow-login-btn" class="btn btn-block" style="background:#1a1a2e;color:#fff;padding:10px;font-weight:600;border-radius:8px">Log ind</button>
-          </form>
-          <div style="text-align:center;margin-top:16px;font-size:13px">
-            Har du ikke en konto? <a href="javascript:void(0)" onclick="$('#flow-login-modal').modal('hide');FlowAuth.showSignupModal();" style="color:#1a1a2e;font-weight:600">Opret konto</a>
-          </div>
-          <div style="text-align:center;margin-top:8px">
-            <a href="menu.html" onclick="$('#flow-login-modal').modal('hide');" style="color:#888;font-size:12px">Forts\u00e6t som g\u00e6st &rarr;</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Signup Modal -->
-  <div class="modal fade" id="flow-signup-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
-          <h5 class="modal-title" style="font-weight:600">Opret konto</h5>
-          <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body" style="padding:24px">
-          <form onsubmit="FlowAuth.handleSignup(event)">
-            <div class="form-group">
-              <label style="font-weight:500">Navn</label>
-              <input type="text" class="form-control" id="flow-signup-name" placeholder="Dit navn">
-            </div>
-            <div class="form-group">
-              <label style="font-weight:500">Email</label>
-              <input type="email" class="form-control" id="flow-signup-email" placeholder="din@email.dk" required>
-            </div>
-            <div class="form-group">
-              <label style="font-weight:500">Telefon</label>
-              <input type="tel" class="form-control" id="flow-signup-phone" placeholder="+45 12 34 56 78">
-            </div>
-            <div class="form-group">
-              <label style="font-weight:500">Adgangskode</label>
-              <input type="password" class="form-control" id="flow-signup-password" placeholder="Min. 6 tegn" required>
-            </div>
-            <div id="flow-signup-error" style="color:#dc3545;font-size:13px;margin-bottom:12px"></div>
-            <button type="submit" id="flow-signup-btn" class="btn btn-block" style="background:#1a1a2e;color:#fff;padding:10px;font-weight:600;border-radius:8px">Opret konto</button>
-          </form>
-          <div style="text-align:center;margin-top:16px;font-size:13px">
-            Har du allerede en konto? <a href="javascript:void(0)" onclick="$('#flow-signup-modal').modal('hide');FlowAuth.showLoginModal();" style="color:#1a1a2e;font-weight:600">Log ind</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Supabase + Stripe + FLOW -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://js.stripe.com/v3/"></script>
-  <script src="../../js/template-auth.js"></script>
-  <script src="../../js/order-api.js"></script>
-  <script src="js/cart.js"></script>
-
-  <!-- Profile Modal -->
-  <div class="modal fade" id="flow-profile-modal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
-          <h5 class="modal-title" style="font-weight:600">Min profil</h5>
-          <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body" style="padding:24px">
-          <div style="text-align:center;margin-bottom:20px">
-            <div style="width:64px;height:64px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:24px"><i class="fa fa-user"></i></div>
-            <h6 data-auth-name style="font-weight:600;margin:0"></h6>
-            <small data-auth-email style="color:#888"></small>
-          </div>
-          <a href="checkout.html?tab=orders" class="btn btn-block" style="background:#f8f9fa;color:#333;padding:10px;border-radius:8px;margin-bottom:8px;text-align:left;border:1px solid #eee"><i class="fa fa-list" style="width:24px"></i> Mine ordrer</a>
-          <button onclick="FlowAuth.logout();$('#flow-profile-modal').modal('hide');" class="btn btn-block" style="background:#fff;color:#dc3545;padding:10px;border-radius:8px;border:1px solid #dc3545;text-align:left"><i class="fa fa-sign-out" style="width:24px"></i> Log ud</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <script src="../shared/orderflow-cart.js"></script>
 
 </body>
 
