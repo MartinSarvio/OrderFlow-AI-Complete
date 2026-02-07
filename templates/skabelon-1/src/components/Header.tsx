@@ -17,6 +17,24 @@ interface HeaderProps {
 export function Header({ restaurant, itemCount, onCartClick, onNavigate, currentView }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check FlowAuth session
+  useEffect(() => {
+    const checkAuth = async () => {
+      const FlowAuth = (window as any).FlowAuth;
+      if (FlowAuth) {
+        const user = await FlowAuth.checkSession();
+        setIsLoggedIn(!!user);
+      }
+    };
+    checkAuth();
+    const interval = setInterval(() => {
+      const FlowAuth = (window as any).FlowAuth;
+      if (FlowAuth) setIsLoggedIn(!!FlowAuth.getUser());
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Track scroll position for active section
   useEffect(() => {
@@ -176,6 +194,7 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
               scrolled ? 'hover:bg-gray-100' : 'hover:bg-white/20'
             }`}
             onClick={() => onNavigate('profile')}
+            title={isLoggedIn ? 'Min profil' : 'Log ind'}
           >
             <User className={`w-5 h-5 ${scrolled ? '' : 'text-white'}`} style={{ color: scrolled ? branding.colors.text : undefined }} />
           </Button>
@@ -249,7 +268,7 @@ export function Header({ restaurant, itemCount, onCartClick, onNavigate, current
                         backgroundColor: isActive('profile') ? `${branding.colors.primary}10` : 'transparent'
                       }}
                     >
-                      Min profil
+                      {isLoggedIn ? 'Min profil' : 'Log ind'}
                     </button>
                   </div>
                 </nav>

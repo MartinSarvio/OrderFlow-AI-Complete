@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Checkout - Pizza Delicious</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Josefin+Sans:400,700" rel="stylesheet">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/icomoon.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    body { background: #f5f5f5; font-family: 'Poppins', sans-serif; }
+    .checkout-header { background: #000; padding: 16px 0; }
+    .checkout-header a { color: #fff; text-decoration: none; }
+    .checkout-header .brand { font-family: 'Josefin Sans', sans-serif; font-size: 20px; font-weight: 700; }
+    .checkout-page { padding: 40px 0; min-height: 80vh; }
+    .checkout-container { max-width: 960px; margin: 0 auto; }
+    .checkout-steps { display: flex; gap: 8px; margin-bottom: 32px; }
+    .checkout-step { flex: 1; text-align: center; padding: 12px; background: #e0e0e0; border-radius: 8px; font-weight: 600; color: #888; font-size: 14px; transition: all 0.3s; }
+    .checkout-step.active { background: #000; color: #fff; }
+    .checkout-step.completed { background: #28a745; color: #fff; }
+    .checkout-card { background: #fff; border-radius: 12px; padding: 28px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .checkout-card h4 { font-weight: 700; margin-bottom: 20px; font-size: 18px; font-family: 'Josefin Sans', sans-serif; }
+    .checkout-row { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+    @media (max-width: 768px) { .checkout-row { grid-template-columns: 1fr; } }
+    .form-label { font-weight: 600; font-size: 13px; margin-bottom: 4px; display: block; }
+    .checkout-input { width: 100%; padding: 10px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; transition: border 0.2s; }
+    .checkout-input:focus { border-color: #000; outline: none; }
+    .order-summary-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+    .order-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; padding-top: 12px; border-top: 2px solid #000; margin-top: 12px; }
+    .btn-checkout { width: 100%; padding: 14px; background: #000; color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    .btn-checkout:hover { opacity: 0.9; }
+    .btn-checkout:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-back { background: none; border: 1px solid #ddd; color: #333; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 500; }
+    .delivery-fields { display: none; }
+    .delivery-fields.show { display: block; }
+    .order-type-btn { flex: 1; padding: 12px; border: 2px solid #000; border-radius: 8px; text-align: center; cursor: pointer; font-weight: 600; background: #fff; color: #000; transition: all 0.2s; }
+    .order-type-btn.active { background: #000; color: #fff; }
+    #stripe-payment-element { min-height: 120px; padding: 16px; border: 1.5px solid #ddd; border-radius: 8px; }
+    .confirmation-box { text-align: center; padding: 40px 20px; }
+    .confirmation-box .check-icon { width: 80px; height: 80px; background: #28a745; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="checkout-header">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center">
+      <a href="index.html" class="brand"><span class="flaticon-pizza-1" style="margin-right:6px"></span>Pizza Delicious</a>
+      <a href="menu.html" style="font-size:14px"><span class="icon-arrow-left"></span> Tilbage til menu</a>
+    </div>
+  </div>
+
+  <!-- Checkout -->
+  <section class="checkout-page">
+    <div class="container checkout-container">
+      <div class="checkout-steps">
+        <div class="checkout-step active" data-step="1">1. Oplysninger</div>
+        <div class="checkout-step" data-step="2">2. Betaling</div>
+        <div class="checkout-step" data-step="3">3. Bekr\u00e6ftelse</div>
+      </div>
+
+      <div class="checkout-row">
+        <div>
+          <!-- STEP 1 -->
+          <div id="checkout-step-1">
+            <div class="checkout-card">
+              <h4>Bestillingstype</h4>
+              <div style="display:flex;gap:8px">
+                <div class="order-type-btn active" data-type="pickup" onclick="setOrderType('pickup')"><span class="icon-shopping-bag"></span><br>Afhentning</div>
+                <div class="order-type-btn" data-type="delivery" onclick="setOrderType('delivery')"><span class="icon-truck"></span><br>Levering (+35 kr.)</div>
+              </div>
+            </div>
+
+            <div class="checkout-card">
+              <h4>Dine oplysninger</h4>
+              <div id="guest-notice" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px;font-size:13px;margin-bottom:16px">
+                <strong>G\u00e6stekasse</strong> &mdash; <a href="javascript:void(0)" onclick="FlowAuth.showLoginModal()">Log ind</a> for at gemme dine oplysninger.
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><label class="form-label">Navn *</label><input type="text" class="checkout-input" id="customer-name" required></div>
+                <div><label class="form-label">Telefon *</label><input type="tel" class="checkout-input" id="customer-phone" required></div>
+              </div>
+              <div style="margin-top:12px"><label class="form-label">Email *</label><input type="email" class="checkout-input" id="customer-email" required></div>
+            </div>
+
+            <div class="checkout-card delivery-fields" id="delivery-fields">
+              <h4>Leveringsadresse</h4>
+              <div style="margin-bottom:12px"><label class="form-label">Adresse *</label><input type="text" class="checkout-input" id="delivery-street"></div>
+              <div style="display:grid;grid-template-columns:120px 1fr;gap:12px;margin-bottom:12px">
+                <div><label class="form-label">Postnr. *</label><input type="text" class="checkout-input" id="delivery-postal"></div>
+                <div><label class="form-label">By *</label><input type="text" class="checkout-input" id="delivery-city"></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div><label class="form-label">Etage</label><input type="text" class="checkout-input" id="delivery-floor"></div>
+                <div><label class="form-label">D\u00f8rkode</label><input type="text" class="checkout-input" id="delivery-doorcode"></div>
+              </div>
+            </div>
+
+            <div class="checkout-card">
+              <h4>Bem\u00e6rkninger</h4>
+              <textarea class="checkout-input" id="order-notes" rows="3" placeholder="Allergier, specielle \u00f8nsker..."></textarea>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;margin-top:16px">
+              <a href="menu.html" class="btn-back"><span class="icon-arrow-left"></span> Tilbage</a>
+              <button class="btn-checkout" style="width:auto;padding:14px 40px" onclick="goToStep(2)">Forts\u00e6t til betaling</button>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div id="checkout-step-2" style="display:none">
+            <div class="checkout-card">
+              <h4>Betalingsmetode</h4>
+              <div style="display:flex;gap:8px;margin-bottom:16px">
+                <div class="order-type-btn active" data-pay="card" onclick="setPaymentMethod('card')"><span class="icon-credit-card"></span> Kort</div>
+                <div class="order-type-btn" data-pay="cash" onclick="setPaymentMethod('cash')"><span class="icon-money"></span> Kontant</div>
+              </div>
+              <div id="card-payment-section">
+                <div id="stripe-payment-element"></div>
+                <div id="payment-error" style="color:#dc3545;font-size:13px;margin-top:8px"></div>
+              </div>
+              <div id="cash-payment-section" style="display:none">
+                <div style="background:#f8f9fa;padding:16px;border-radius:8px;text-align:center;color:#666">
+                  <span class="icon-money" style="font-size:32px;display:block;margin-bottom:8px;color:#28a745"></span>
+                  Betal kontant ved afhentning/levering
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:16px">
+              <button class="btn-back" onclick="goToStep(1)"><span class="icon-arrow-left"></span> Tilbage</button>
+              <button class="btn-checkout" style="width:auto;padding:14px 40px" id="place-order-btn" onclick="placeOrder()">Betal og bestil</button>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div id="checkout-step-3" style="display:none">
+            <div class="checkout-card">
+              <div class="confirmation-box">
+                <div class="check-icon"><span class="icon-check"></span></div>
+                <h3 style="font-weight:700;font-family:'Josefin Sans',sans-serif;margin-bottom:8px">Tak for din bestilling!</h3>
+                <p style="color:#666;margin-bottom:20px">Din ordre er modtaget og behandles nu.</p>
+                <div style="background:#f8f9fa;border-radius:8px;padding:16px;display:inline-block;margin-bottom:20px">
+                  <div style="font-size:13px;color:#888">Ordrenummer</div>
+                  <div id="confirmation-order-number" style="font-size:24px;font-weight:700">#---</div>
+                </div>
+                <div id="confirmation-details" style="text-align:left;max-width:400px;margin:0 auto"></div>
+                <div style="margin-top:24px"><a href="menu.html" class="btn-checkout" style="display:inline-block;width:auto;padding:14px 40px;text-decoration:none;color:#fff">Bestil mere</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div>
+          <div class="checkout-card" style="position:sticky;top:20px">
+            <h4>Din ordre</h4>
+            <div id="order-summary-items"></div>
+            <div id="order-summary-totals" style="margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/popper.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="../../js/template-auth.js"></script>
+  <script src="../../js/order-api.js"></script>
+  <script src="js/cart.js"></script>
+
+  <script>
+  (function() {
+    'use strict';
+
+    var currentStep = 1;
+    var paymentMethod = 'card';
+    var orderType = 'pickup';
+    var stripeElements = null;
+    var clientSecret = null;
+
+    var CART_KEY = 'flow_pizza_cart';
+    var cartItems = [];
+    try { cartItems = JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) {}
+
+    if (cartItems.length === 0) { window.location.href = 'menu.html'; return; }
+    if (window.PizzaCart) orderType = PizzaCart.orderType || 'pickup';
+
+    $(function() {
+      renderOrderSummary();
+      prefillCustomerData();
+      initStripePayment();
+    });
+
+    function prefillCustomerData() {
+      if (window.FlowAuth) {
+        var data = FlowAuth.getCustomerData();
+        if (data) {
+          if (data.name) $('#customer-name').val(data.name);
+          if (data.email) $('#customer-email').val(data.email);
+          if (data.phone) $('#customer-phone').val(data.phone);
+          if (data.isGuest) $('#guest-notice').show();
+        } else {
+          $('#guest-notice').show();
+        }
+      }
+    }
+
+    function renderOrderSummary() {
+      var subtotal = cartItems.reduce(function(s, i) { return s + (i.price * i.quantity); }, 0);
+      var tax = subtotal * 0.25;
+      var deliveryFee = orderType === 'delivery' ? 35 : 0;
+      var total = subtotal + tax + deliveryFee;
+
+      var html = '';
+      cartItems.forEach(function(item) {
+        html += '<div class="order-summary-item"><div><span style="font-weight:600">' + item.quantity + 'x</span> ' + item.name + '</div><span style="font-weight:600">' + (item.price * item.quantity).toFixed(2).replace('.', ',') + ' kr.</span></div>';
+      });
+      $('#order-summary-items').html(html);
+
+      var totals = '<div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px"><span>Subtotal</span><span>' + subtotal.toFixed(2).replace('.', ',') + ' kr.</span></div>';
+      totals += '<div style="display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:6px"><span>Moms (25%)</span><span>' + tax.toFixed(2).replace('.', ',') + ' kr.</span></div>';
+      if (deliveryFee > 0) totals += '<div style="display:flex;justify-content:space-between;font-size:13px;color:#888;margin-bottom:6px"><span>Levering</span><span>' + deliveryFee.toFixed(2).replace('.', ',') + ' kr.</span></div>';
+      totals += '<div class="order-total"><span>Total</span><span>' + total.toFixed(2).replace('.', ',') + ' kr.</span></div>';
+      $('#order-summary-totals').html(totals);
+    }
+
+    window.goToStep = function(step) {
+      if (step === 2 && currentStep === 1) {
+        if (!$('#customer-name').val().trim() || !$('#customer-phone').val().trim() || !$('#customer-email').val().trim()) {
+          alert('Udfyld venligst navn, telefon og email'); return;
+        }
+        if (orderType === 'delivery' && (!$('#delivery-street').val().trim() || !$('#delivery-postal').val().trim() || !$('#delivery-city').val().trim())) {
+          alert('Udfyld venligst leveringsadressen'); return;
+        }
+        if (window.FlowAuth && !FlowAuth.isLoggedIn()) {
+          FlowAuth.setGuestData({ name: $('#customer-name').val().trim(), email: $('#customer-email').val().trim(), phone: $('#customer-phone').val().trim() });
+        }
+      }
+      currentStep = step;
+      $('#checkout-step-1,#checkout-step-2,#checkout-step-3').hide();
+      $('#checkout-step-' + step).show();
+      $('.checkout-step').each(function() {
+        var s = parseInt($(this).data('step'));
+        $(this).toggleClass('active', s === step).toggleClass('completed', s < step);
+      });
+      window.scrollTo(0, 0);
+    };
+
+    window.setOrderType = function(type) {
+      orderType = type;
+      $('[data-type]').each(function() { $(this).toggleClass('active', $(this).data('type') === type); });
+      if (type === 'delivery') $('#delivery-fields').addClass('show'); else $('#delivery-fields').removeClass('show');
+      renderOrderSummary();
+    };
+
+    window.setPaymentMethod = function(method) {
+      paymentMethod = method;
+      $('[data-pay]').each(function() { $(this).toggleClass('active', $(this).data('pay') === method); });
+      $('#card-payment-section').toggle(method === 'card');
+      $('#cash-payment-section').toggle(method === 'cash');
+    };
+
+    async function initStripePayment() {
+      if (!window.FlowOrders) return;
+      var subtotal = cartItems.reduce(function(s, i) { return s + (i.price * i.quantity); }, 0);
+      var total = subtotal + (subtotal * 0.25) + (orderType === 'delivery' ? 35 : 0);
+
+      var result = await FlowOrders.createPaymentIntent(total, { template: 'skabelon-3', source: 'web-checkout' });
+      if (result.error) { $('#payment-error').text('Betalingssystem fejl: ' + result.error); return; }
+
+      clientSecret = result.clientSecret;
+      var mounted = FlowOrders.mountPaymentElement(clientSecret, document.getElementById('stripe-payment-element'));
+      if (mounted.elements) stripeElements = mounted.elements;
+    }
+
+    window.placeOrder = async function() {
+      var $btn = $('#place-order-btn');
+      $btn.prop('disabled', true).text('Behandler bestilling...');
+      $('#payment-error').text('');
+
+      try {
+        var subtotal = cartItems.reduce(function(s, i) { return s + (i.price * i.quantity); }, 0);
+        var tax = subtotal * 0.25;
+        var deliveryFee = orderType === 'delivery' ? 35 : 0;
+        var total = subtotal + tax + deliveryFee;
+
+        var orderData = {
+          template: 'skabelon-3',
+          sourceChannel: 'web',
+          orderType: orderType,
+          paymentMethod: paymentMethod,
+          customer: { name: $('#customer-name').val().trim(), phone: $('#customer-phone').val().trim(), email: $('#customer-email').val().trim() },
+          items: cartItems,
+          subtotal: subtotal, tax: tax, deliveryFee: deliveryFee, total: total,
+          notes: $('#order-notes').val().trim(),
+          deliveryAddress: orderType === 'delivery' ? { street: $('#delivery-street').val().trim(), postalCode: $('#delivery-postal').val().trim(), city: $('#delivery-city').val().trim(), floor: $('#delivery-floor').val().trim(), doorCode: $('#delivery-doorcode').val().trim() } : null
+        };
+
+        if (paymentMethod === 'card' && stripeElements) {
+          var result = await FlowOrders.checkout(orderData, stripeElements, window.location.href);
+          if (result.error) { $('#payment-error').text(result.error); $btn.prop('disabled', false).text('Betal og bestil'); return; }
+          showConfirmation(result.order);
+        } else {
+          var result = await FlowOrders.createOrder(orderData);
+          if (result.error && !result.order) { $('#payment-error').text('Fejl: ' + result.error); $btn.prop('disabled', false).text('Betal og bestil'); return; }
+          showConfirmation(result.order);
+        }
+      } catch (err) {
+        $('#payment-error').text('Fejl: ' + err.message);
+        $btn.prop('disabled', false).text('Betal og bestil');
+      }
+    };
+
+    function showConfirmation(order) {
+      localStorage.removeItem(CART_KEY);
+      if (window.PizzaCart) PizzaCart.clear();
+      var num = order && (order.order_number || (order.id ? order.id.substring(0, 8) : '---'));
+      $('#confirmation-order-number').text('#' + num);
+      var d = '<div style="padding:8px 0;border-bottom:1px solid #eee"><strong>Type:</strong> ' + (orderType === 'delivery' ? 'Levering' : 'Afhentning') + '</div>';
+      d += '<div style="padding:8px 0"><strong>Betaling:</strong> ' + (paymentMethod === 'card' ? 'Kort' : 'Kontant') + '</div>';
+      $('#confirmation-details').html(d);
+      goToStep(3);
+    }
+  })();
+  </script>
+
+</body>
+</html>

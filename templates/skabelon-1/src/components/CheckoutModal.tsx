@@ -54,11 +54,10 @@ export function CheckoutModal({
   const [doorCode, setDoorCode] = useState('');
   const [deliveryNotes, setDeliveryNotes] = useState('');
   
-  // Card details (mock)
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardName, setCardName] = useState('');
+  // Stripe Payment Element state
+  const [stripeElements, setStripeElements] = useState<any>(null);
+  const [stripeReady, setStripeReady] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
 
   if (!restaurant) return null;
 
@@ -82,30 +81,101 @@ export function CheckoutModal({
   };
 
   const isPaymentValid = () => {
-    if (paymentMethod === 'cash') return true;
-    if (paymentMethod === 'card') {
-      return cardNumber && cardExpiry && cardCvv && cardName;
-    }
+    // Stripe Payment Element handles card validation
     return true;
   };
 
   const handleProceedToPayment = () => {
     if (isCustomerValid() && isDeliveryValid()) {
       setStep('payment');
+      // Stripe element will be initialized via ref callback
     }
   };
 
+  // Prefill customer data from FlowAuth on mount
+  const prefillFromAuth = () => {
+    const FlowAuth = (window as any).FlowAuth;
+    if (FlowAuth) {
+      const data = FlowAuth.getCustomerData();
+      if (data) {
+        if (data.name && !customerName) setCustomerName(data.name);
+        if (data.email && !customerEmail) setCustomerEmail(data.email);
+        if (data.phone && !customerPhone) setCustomerPhone(data.phone);
+      }
+    }
+  };
+
+  // Run prefill when dialog opens
+  if (isOpen && !customerName) {
+    setTimeout(prefillFromAuth, 100);
+  }
+
   const handlePlaceOrder = async () => {
-    if (!isPaymentValid()) return;
-    
     setIsProcessing(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setOrderComplete(true);
-    setStep('confirmation');
+
+    try {
+      const FlowOrders = (window as any).FlowOrders;
+      const FlowAuth = (window as any).FlowAuth;
+
+      const orderData = {
+        template: 'skabelon-1',
+        sourceChannel: 'web',
+        orderType: cart.type || 'pickup',
+        paymentMethod,
+        customer: {
+          name: customerName,
+          phone: customerPhone,
+          email: customerEmail
+        },
+        items: cart.items.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          options: item.selectedOptions || [],
+          notes: item.notes || ''
+        })),
+        subtotal: totals.subtotal,
+        tax: totals.tax,
+        deliveryFee: totals.deliveryFee,
+        total: totals.total,
+        notes: deliveryNotes,
+        deliveryAddress: cart.type === 'delivery' ? {
+          street, postalCode, city, floor, doorCode
+        } : null
+      };
+
+      if (paymentMethod === 'card' && stripeElements && FlowOrders) {
+        const result = await FlowOrders.checkout(orderData, stripeElements, window.location.href);
+        if (result.error) {
+          alert(result.error);
+          setIsProcessing(false);
+          return;
+        }
+        setOrderNumber(result.order?.order_number || '');
+      } else if (FlowOrders) {
+        const result = await FlowOrders.createOrder(orderData);
+        if (result.error && !result.order) {
+          alert('Kunne ikke oprette ordre: ' + result.error);
+          setIsProcessing(false);
+          return;
+        }
+        setOrderNumber(result.order?.order_number || '');
+      }
+
+      // Save guest data if not logged in
+      if (FlowAuth && !FlowAuth.isLoggedIn()) {
+        FlowAuth.setGuestData({ name: customerName, email: customerEmail, phone: customerPhone });
+      }
+
+      setIsProcessing(false);
+      setOrderComplete(true);
+      setStep('confirmation');
+    } catch (err: any) {
+      console.error('Checkout error:', err);
+      alert('Betaling fejlede: ' + (err.message || 'Ukendt fejl'));
+      setIsProcessing(false);
+    }
   };
 
   const handleClose = () => {
@@ -118,27 +188,33 @@ export function CheckoutModal({
     setOrderComplete(false);
   };
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
+  // Initialize Stripe Payment Element when payment step is shown
+  const initStripeElement = async () => {
+    const FlowOrders = (window as any).FlowOrders;
+    if (!FlowOrders || stripeReady) return;
 
-  const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
+    try {
+      const result = await FlowOrders.createPaymentIntent(totals.total, {
+        template: 'skabelon-1',
+        source: 'web-checkout'
+      });
+
+      if (result.error) {
+        console.error('Stripe init error:', result.error);
+        return;
+      }
+
+      const container = document.getElementById('roma-stripe-payment');
+      if (container) {
+        const mounted = FlowOrders.mountPaymentElement(result.clientSecret, container);
+        if (mounted.elements) {
+          setStripeElements(mounted.elements);
+          setStripeReady(true);
+        }
+      }
+    } catch (err) {
+      console.error('Stripe init failed:', err);
     }
-    return v;
   };
 
   return (
@@ -466,52 +542,20 @@ export function CheckoutModal({
                 </RadioGroup>
               </div>
 
-              {/* Card Form */}
+              {/* Stripe Payment Element */}
               {paymentMethod === 'card' && (
                 <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardNumber">Kortnummer</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                      maxLength={19}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor="expiry">Udløbsdato</Label>
-                      <Input
-                        id="expiry"
-                        placeholder="MM/ÅÅ"
-                        value={cardExpiry}
-                        onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                        maxLength={5}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                        maxLength={3}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="cardName">Navn på kortet</Label>
-                    <Input
-                      id="cardName"
-                      placeholder="JENS JENSEN"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
-                    />
-                  </div>
+                  <div
+                    id="roma-stripe-payment"
+                    className="p-4 border rounded-lg min-h-[120px]"
+                    style={{ borderColor: '#e5e5e5' }}
+                    ref={() => { setTimeout(initStripeElement, 100); }}
+                  />
+                  {!stripeReady && (
+                    <p className="text-sm text-center" style={{ color: branding.colors.textMuted }}>
+                      Indl\u00e6ser betalingsformular...
+                    </p>
+                  )}
                 </div>
               )}
 

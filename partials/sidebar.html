@@ -86,9 +86,7 @@
                     <button class="flyout-item" onclick="showPage('facebook-workflow');closeFlyout()">Facebook Workflow</button>
                     <button class="flyout-item" onclick="showPage('sms-workflows');closeFlyout()">SMS Workflows</button>
                     <button class="flyout-item" onclick="showPage('search-engine');closeFlyout()">Search Engine</button>
-                    <a class="flyout-item" href="/landing-pages/sms-workflow.html" onclick="closeFlyout()">SMS Workflow Info</a>
-                    <a class="flyout-item" href="/landing-pages/instagram-workflow.html" onclick="closeFlyout()">Instagram Workflow Info</a>
-                    <a class="flyout-item" href="/landing-pages/facebook-workflow.html" onclick="closeFlyout()">Facebook Workflow Info</a>
+                    <button class="flyout-item" onclick="showPage('vaerktoejer');closeFlyout()">V&aelig;rkt&oslash;jer</button>
                   </div>
                 </div>
                 <div class="flyout-category">
@@ -110,8 +108,9 @@
                     ANALYTICS
                   </div>
                   <div class="flyout-category-items">
-                    <button class="flyout-item" onclick="showSettingsPage('api');closeFlyout()">API nøgler</button>
-                    <button class="flyout-item" onclick="showFlowCMSPage('data');closeFlyout()">Data</button>
+                    <button class="flyout-item" onclick="showFlowCMSPage('analytics-oversigt');closeFlyout()">Oversigt</button>
+                    <button class="flyout-item" onclick="showSettingsPage('api');closeFlyout()">API n\u00f8gler</button>
+                    <button class="flyout-item" onclick="showFlowCMSPage('raw-data');closeFlyout()">Data</button>
                     <button class="flyout-item" onclick="showFlowCMSPage('integrationer');closeFlyout()">Integrationer<span class="flyout-badge-new">New</span></button>
                   </div>
                 </div>
@@ -201,6 +200,7 @@
             <div class="nav-dropdown-menu">
               <button class="nav-dropdown-item" onclick="showPage('bogholderi')">Bogholderi</button>
               <button class="nav-dropdown-item" onclick="showPage('betaling')">Betaling</button>
+              <button class="nav-dropdown-item" onclick="showPage('vaerktoejer')">V&aelig;rkt&oslash;jer</button>
             </div>
           </div>
 
@@ -286,7 +286,6 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             <span>Sociale Medier</span>
           </button>
-
           <!-- 14. Indstillinger Dropdown (ALLE, ingen sektionstitel) -->
           <div class="nav-dropdown" id="nav-indstillinger">
             <button class="nav-dropdown-toggle" onclick="toggleNavDropdown('indstillinger')" data-tooltip="Indstillinger">

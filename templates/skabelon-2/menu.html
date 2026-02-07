@@ -960,6 +960,36 @@
   </script>
   <!-- End Google Map -->
 
+  <!-- FLOW Order System -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="../../js/template-auth.js"></script>
+  <script src="../../js/order-api.js"></script>
+  <script src="js/cart.js"></script>
+
+  <script>
+  // Auto-convert existing cart SVG links to add-to-cart buttons
+  $(function() {
+    var counter = 0;
+    $('.options a').each(function() {
+      var $link = $(this);
+      if ($link.find('svg').length) {
+        counter++;
+        var $box = $link.closest('.box').find('> div').first();
+        var itemId = 'feane-item-' + counter;
+        var name = $box.find('.detail-box h5').text().trim();
+        var priceText = $box.find('.options h6').text().trim();
+        var price = parseFloat(priceText.replace(/[^0-9.,]/g, '').replace(',', '.')) || 0;
+        var image = $box.find('.img-box img').attr('src') || '';
+
+        $link.attr('href', 'javascript:void(0)');
+        $link.attr('data-add-to-cart', '1');
+        $link.closest('.col-sm-6, .col-lg-4').attr('data-item-id', itemId).attr('data-item-price', price);
+      }
+    });
+  });
+  </script>
+
 </body>
 
 </html>

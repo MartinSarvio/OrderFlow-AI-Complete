@@ -14,7 +14,15 @@ import { AdminApp } from '@/admin/AdminApp';
 import { useRestaurant } from '@/hooks/useRestaurant';
 import { useCart } from '@/hooks/useCart';
 import { useOffline } from '@/hooks/useOffline';
-import { mockUser } from '@/data/mockData';
+// Customer data from FlowAuth (replaces mockUser)
+const getFlowUser = () => {
+  const FlowAuth = (window as any).FlowAuth;
+  if (FlowAuth) {
+    const data = FlowAuth.getCustomerData();
+    if (data) return { name: data.name, email: data.email, phone: data.phone, loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
+  }
+  return { name: 'G\u00e6st', email: '', phone: '', loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
+};
 import type { MenuItem } from '@/types';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
@@ -161,7 +169,7 @@ function CustomerApp() {
         {/* Loyalty Section */}
         <LoyaltySection 
           restaurant={restaurant}
-          user={mockUser}
+          user={getFlowUser()}
         />
 
         {/* About Section */}

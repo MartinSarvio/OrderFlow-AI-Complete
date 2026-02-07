@@ -93,8 +93,7 @@ initTheme();
     'api_twilio_enabled',
     'gatewayapi_token',
     'gatewayapi_sender',
-    'api_gatewayapi_enabled',
-    'api_inmobile_enabled' // Not needed anymore since InMobile is the only provider
+    'api_gatewayapi_enabled'
   ];
 
   oldKeys.forEach(key => localStorage.removeItem(key));
@@ -1340,8 +1339,8 @@ function updateActivityIndicators() {
     'ordrer': ['ordrer'],
     'indstillinger': ['indstillinger', 'settings'],
     'integrationer': ['integrationer'],
-    'pages': ['pages'],             // FASE 7: Side-aktiviteter (omd\u00f8bning, nye sider, etc.)
-    'dashboard': ['pages']          // FASE 7: Dashboard viser ogs\u00e5 'pages' aktiviteter
+    'pages': ['pages'],             // FASE 7: Side-aktiviteter (omdøbning, nye sider, etc.)
+    'dashboard': ['pages']          // FASE 7: Dashboard viser også 'pages' aktiviteter
   };
   
   Object.entries(categoryMappings).forEach(([navId, categories]) => {
@@ -2473,12 +2472,141 @@ supabase = null;
 // =====================================================
 // AUTH
 // =====================================================
+// Auth view navigation — replaces old showAuthTab
+function showAuthView(viewName) {
+  var views = document.querySelectorAll('.auth-view');
+  views.forEach(function(v) { v.classList.remove('active'); });
+  var target = document.getElementById('auth-view-' + viewName);
+  if (target) target.classList.add('active');
+  // Also hide 2FA form when switching views
+  var twoFa = document.getElementById('2fa-challenge-form');
+  if (twoFa && viewName !== '2fa') twoFa.style.display = 'none';
+  // Clear error
+  var err = document.getElementById('auth-error');
+  if (err) err.style.display = 'none';
+}
+
+// Backwards compatibility
 function showAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.auth-tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active');
-  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
-  document.getElementById('auth-error').style.display = 'none';
+  showAuthView(tab === 'signup' ? 'signup' : 'login');
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// Forgot password — send reset email via Supabase
+var forgotPasswordEmail = '';
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  var email = document.getElementById('forgot-email').value;
+  if (!email) return;
+  forgotPasswordEmail = email;
+
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var redirectUrl = window.location.origin + window.location.pathname;
+      var result = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+      if (result.error) {
+        showAuthError(result.error.message);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Password reset error:', err);
+  }
+
+  // Show email sent view regardless (don't reveal if email exists)
+  var display = document.getElementById('forgot-email-display');
+  if (display) display.textContent = email;
+  showAuthView('email-sent');
+  startResendTimer();
+}
+
+// Resend timer
+var resendTimerInterval = null;
+function startResendTimer() {
+  var seconds = 30;
+  var timerEl = document.getElementById('resend-timer');
+  var btnEl = document.getElementById('resend-btn');
+  var textEl = document.getElementById('resend-timer-text');
+  if (btnEl) btnEl.disabled = true;
+  if (textEl) textEl.style.display = 'inline';
+  if (btnEl) btnEl.style.display = 'none';
+
+  if (resendTimerInterval) clearInterval(resendTimerInterval);
+  resendTimerInterval = setInterval(function() {
+    seconds--;
+    if (timerEl) {
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      timerEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    if (seconds <= 0) {
+      clearInterval(resendTimerInterval);
+      if (textEl) textEl.style.display = 'none';
+      if (btnEl) { btnEl.style.display = 'inline'; btnEl.disabled = false; }
+    }
+  }, 1000);
+}
+
+// Resend reset email
+async function resendResetEmail() {
+  if (!forgotPasswordEmail) return;
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var redirectUrl = window.location.origin + window.location.pathname;
+      await supabaseClient.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: redirectUrl
+      });
+    }
+  } catch (err) {
+    console.warn('Resend error:', err);
+  }
+  startResendTimer();
+}
+
+// Reset password — called after PASSWORD_RECOVERY event
+async function handleResetPassword(e) {
+  e.preventDefault();
+  var pw = document.getElementById('reset-password').value;
+  var pwConfirm = document.getElementById('reset-password-confirm').value;
+
+  if (pw !== pwConfirm) {
+    showAuthError('Adgangskoderne matcher ikke.');
+    return;
+  }
+  if (pw.length < 6) {
+    showAuthError('Adgangskoden skal v\u00e6re mindst 6 tegn.');
+    return;
+  }
+
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var result = await supabaseClient.auth.updateUser({ password: pw });
+      if (result.error) {
+        showAuthError(result.error.message);
+        return;
+      }
+      if (typeof toast === 'function') toast('Adgangskode nulstillet!', 'success');
+      showAuthView('login');
+    }
+  } catch (err) {
+    showAuthError('Kunne ikke nulstille adgangskode. Pr\u00f8v igen.');
+  }
+}
+
+// Social login placeholders
+function socialLoginGoogle() {
+  if (typeof toast === 'function') toast('Google login kommer snart', 'info');
+}
+function socialLoginFacebook() {
+  if (typeof toast === 'function') toast('Facebook login kommer snart', 'info');
 }
 
 async function handleLogin(e) {
@@ -2983,27 +3111,11 @@ function resetSignupForm() {
 async function handleSignup(e) {
   e.preventDefault();
 
-  // Step 1 data
+  // New simplified signup form data
+  const firstName = document.getElementById('signup-firstname')?.value || '';
+  const lastName = document.getElementById('signup-lastname')?.value || '';
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-password').value;
-
-  // Step 2 data
-  const company = document.getElementById('signup-company').value;
-  const cvr = document.getElementById('signup-cvr')?.value || '';
-  const owner = document.getElementById('signup-owner')?.value || '';
-  const contactName = document.getElementById('signup-contact-name')?.value || '';
-  const contactEmail = document.getElementById('signup-contact-email')?.value || '';
-  const phone = document.getElementById('signup-phone')?.value || '';
-  const address = document.getElementById('signup-address')?.value || '';
-  const website = document.getElementById('signup-website')?.value || '';
-  const industry = document.getElementById('signup-industry')?.value || 'restaurant';
-  const role = document.getElementById('signup-role')?.value || 'owner';
-
-  // Step 3 data
-  const notifications = document.getElementById('setting-notifications')?.checked ?? true;
-  const aiEnabled = document.getElementById('setting-ai')?.checked ?? true;
-  const smsEnabled = document.getElementById('setting-sms')?.checked ?? true;
-  const integrations = getSelectedIntegrations();
 
   if (CONFIG.DEMO_MODE || !supabase) {
     loginDemo();
@@ -3011,69 +3123,24 @@ async function handleSignup(e) {
   }
 
   try {
-    // 1. Opret bruger i Supabase Auth
+    // Opret bruger i Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          company, cvr, owner, contact_name: contactName,
-          contact_email: contactEmail, phone, address, website,
-          industry, user_role: role,
-          settings: { notifications, ai_enabled: aiEnabled, sms_enabled: smsEnabled }
+          first_name: firstName,
+          last_name: lastName,
+          full_name: (firstName + ' ' + lastName).trim()
         }
       }
     });
 
     if (error) throw error;
 
-    // 2. Opret automatisk første restaurant
-    let restaurantId = null;
-    if (data.user && company && typeof SupabaseDB !== 'undefined') {
-      try {
-        const restaurant = await SupabaseDB.createRestaurant(data.user.id, {
-          name: company,
-          cvr: cvr,
-          contact_name: contactName || owner,
-          contact_email: contactEmail || email,
-          contact_phone: phone,
-          address: address,
-          status: 'pending',
-          ai_enabled: aiEnabled,
-          integration_status: integrations.length > 0 ? 'pending' : 'none',
-          metadata: {
-            owner: owner,
-            website: website,
-            industry: industry,
-            integrations: integrations,
-            features: {
-              ai: aiEnabled,
-              sms: smsEnabled,
-              notifications: notifications
-            }
-          }
-        });
-        restaurantId = restaurant?.id;
-        console.log('✅ Restaurant oprettet:', restaurantId);
-      } catch (restErr) {
-        console.warn('⚠️ Kunne ikke oprette restaurant:', restErr.message);
-      }
-    }
-
-    // 3. Send team invitationer (fra Trin 3)
-    if (data.user && restaurantId) {
-      await sendTeamInvitations(data.user.id, restaurantId);
-    }
-
-    // 4. Process pending CSV imports (fra Trin 3)
-    if (data.user && restaurantId) {
-      await processPendingImports(data.user.id, restaurantId);
-    }
-
-    // 5. Success
-    toast('Konto oprettet! Tjek din email for bekræftelse.', 'success');
-    resetSignupForm();
-    showAuthTab('login');
+    // Success
+    toast('Konto oprettet! Tjek din email for bekr\u00e6ftelse.', 'success');
+    showAuthView('login');
   } catch (err) {
     showAuthError(err.message);
   }
@@ -3353,17 +3420,12 @@ function resetAuthUI() {
   window._pending2FALogin = null;
   document.getElementById('app').classList.remove('active');
   document.getElementById('auth-screen').style.display = 'flex';
-  const loginForm = document.getElementById('login-form');
+  showAuthView('login');
   const challengeForm = document.getElementById('2fa-challenge-form');
   const setupRequired = document.getElementById('2fa-setup-required');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
 
-  if (loginForm) loginForm.style.display = 'block';
   if (challengeForm) challengeForm.style.display = 'none';
   if (setupRequired) setupRequired.style.display = 'none';
-  if (authTabs) authTabs.style.display = 'flex';
-  if (demoButtons) demoButtons.style.display = 'block';
 
   const codeInput = document.getElementById('2fa-code-input');
   const emailCodeInput = document.getElementById('2fa-email-code-input');
@@ -3390,6 +3452,12 @@ async function initAuthStateListener() {
     supabaseClient.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
         resetAuthUI();
+      }
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked the reset link from email — show reset password form
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app').classList.remove('active');
+        showAuthView('reset');
       }
     });
   }
@@ -3755,6 +3823,11 @@ function showPage(page) {
     showCrmSearchView();
   }
   
+  // Render API-status når Værktøjer-siden vises
+  if (page === 'vaerktoejer') {
+    if (typeof renderVaerktoejApiStatus === 'function') renderVaerktoejApiStatus();
+  }
+
   // Load ordrer når orders-siden vises
   if (page === 'orders') {
     loadOrdersPage();
@@ -4636,9 +4709,6 @@ function filterDocsNav(query) {
 function showSettingsPage(tab) {
   showPage('settings');
   setTimeout(() => switchSettingsTab(tab), 50);
-  
-  // Open indstillinger dropdown
-  document.getElementById('nav-indstillinger')?.classList.add('open');
 }
 
 // =====================================================
@@ -4713,8 +4783,11 @@ function generateDagsrapport(demoDato, silent) {
     }
   };
   
-  renderDagsrapport();
-  if (!silent) toast('Dagsrapport genereret', 'success');
+  // Generate report files and show file table
+  generateReportFiles('dagsrapport', dato).then(() => {
+    renderReportFileTable('dagsrapport', dato);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderDagsrapport() {
@@ -5180,8 +5253,11 @@ function generateProduktrapport(demoFra, demoTil, silent) {
     _raw: rows,
     summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
   };
-  renderProduktrapport();
-  if (!silent) toast('Produktrapport genereret', 'success');
+  const reportDate = til;
+  generateReportFiles('produktrapport', reportDate).then(() => {
+    renderReportFileTable('produktrapport', reportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderProduktrapport() {
@@ -5231,8 +5307,10 @@ function generateZrapport(demoDato, silent) {
     rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
     summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
   };
-  renderZrapport();
-  if (!silent) toast('Z-rapport genereret', 'success');
+  generateReportFiles('zrapport', dato).then(() => {
+    renderReportFileTable('zrapport', dato);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderZrapport() {
@@ -5282,8 +5360,11 @@ function generateKonverteringsrapport(demoPeriode, silent) {
     rows: rows.map(x => [x.src, x.visitors.toLocaleString('da-DK'), x.orders.toLocaleString('da-DK'), _fmtPct(x.convRate), _fmtDKK(x.avgOrder), _fmtDKK(x.revenue)]),
     summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
   };
-  renderKonverteringsrapport();
-  if (!silent) toast('Konverteringsrapport genereret', 'success');
+  const konvReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('konverteringsrapport', konvReportDate).then(() => {
+    renderReportFileTable('konverteringsrapport', konvReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderKonverteringsrapport() {
@@ -5337,8 +5418,11 @@ function generateGenbestillingsrapport(demoPeriode, silent) {
     _raw: rows,
     summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
   };
-  renderGenbestillingsrapport();
-  if (!silent) toast('Genbestillingsrapport genereret', 'success');
+  const genbestReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('genbestillingsrapport', genbestReportDate).then(() => {
+    renderReportFileTable('genbestillingsrapport', genbestReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderGenbestillingsrapport() {
@@ -5391,8 +5475,11 @@ function generateAnmeldelsesrapport(demoPeriode, silent) {
     _raw: rows,
     summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
   };
-  renderAnmeldelsesrapport();
-  if (!silent) toast('Anmeldelsesrapport genereret', 'success');
+  const anmReportDate = new Date().toISOString().split('T')[0];
+  generateReportFiles('anmeldelsesrapport', anmReportDate).then(() => {
+    renderReportFileTable('anmeldelsesrapport', anmReportDate);
+  });
+  if (!silent) toast('Rapportfiler genereret', 'success');
 }
 
 function renderAnmeldelsesrapport() {
@@ -5757,10 +5844,10 @@ const ExportService = {
     this.generateProfessionalPDF(reportType, data);
   },
 
-  generateProfessionalPDF(reportType, data) {
+  generateProfessionalPDF(reportType, data, returnBlob) {
     if (typeof window.jspdf === 'undefined') {
       toast('PDF bibliotek indlæses...', 'info');
-      setTimeout(() => this.generateProfessionalPDF(reportType, data), 500);
+      setTimeout(() => this.generateProfessionalPDF(reportType, data, returnBlob), 500);
       return;
     }
 
@@ -5954,6 +6041,7 @@ const ExportService = {
 
     // Save PDF
     const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.pdf`;
+    if (returnBlob) return { blob: doc.output('blob'), filename };
     doc.save(filename);
     closeExportDropdown();
   },
@@ -6115,8 +6203,169 @@ const ExportService = {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
+  },
+
+  // === BLOB GENERATORS (for report file tables) ===
+  getPDFBlob(reportType) {
+    const data = this.getReportData(reportType);
+    return this.generateProfessionalPDF(reportType, data, true);
+  },
+
+  getExcelBlob(reportType) {
+    const data = this.getReportData(reportType);
+    const rows = this.buildDataRows(reportType, data);
+    const xmlContent = this.generateExcelXML(reportType, rows, data);
+    const blob = new Blob([xmlContent], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.xlsx`;
+    return { blob, filename };
+  },
+
+  getCSVBlob(reportType) {
+    const data = this.getReportData(reportType);
+    const rows = this.buildDataRows(reportType, data);
+    const csv = rows.map(row =>
+      (Array.isArray(row) ? row : [row]).map(cell => {
+        const str = String(cell === undefined || cell === null ? '' : cell);
+        if (str.includes(';') || str.includes('"') || str.includes('\n')) return '"' + str.replace(/"/g, '""') + '"';
+        return str;
+      }).join(';')
+    ).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const filename = `${this.titles[reportType] || reportType}_${this.getShortDate().replace(/\./g, '-')}.csv`;
+    return { blob, filename };
   }
 };
+
+// === REPORT FILE MANAGEMENT ===
+function formatFileSize(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function getReportStorageKey(reportType, dato) {
+  return `orderflow_report_files_${reportType}_${dato}`;
+}
+
+async function generateReportFiles(reportType, dato) {
+  const storageKey = getReportStorageKey(reportType, dato);
+  const title = ExportService.titles[reportType] || reportType;
+  const dateStr = dato.replace(/-/g, '');
+  const now = new Date().toISOString();
+  const files = [];
+
+  try {
+    // Generate PDF
+    const pdf = ExportService.getPDFBlob(reportType);
+    if (pdf && pdf.blob) {
+      const reader = new FileReader();
+      const pdfBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(pdf.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.pdf`, format: 'pdf', size: pdf.blob.size, generated: now, data: pdfBase64 });
+    }
+
+    // Generate Excel
+    const xls = ExportService.getExcelBlob(reportType);
+    if (xls && xls.blob) {
+      const reader = new FileReader();
+      const xlsBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(xls.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.xlsx`, format: 'xlsx', size: xls.blob.size, generated: now, data: xlsBase64 });
+    }
+
+    // Generate CSV
+    const csv = ExportService.getCSVBlob(reportType);
+    if (csv && csv.blob) {
+      const reader = new FileReader();
+      const csvBase64 = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(csv.blob);
+      });
+      files.push({ name: `${title}_${dateStr}.csv`, format: 'csv', size: csv.blob.size, generated: now, data: csvBase64 });
+    }
+
+    localStorage.setItem(storageKey, JSON.stringify({ files }));
+    return files;
+  } catch (e) {
+    console.error('generateReportFiles error:', e);
+    return [];
+  }
+}
+
+function loadReportFiles(reportType, dato) {
+  const storageKey = getReportStorageKey(reportType, dato);
+  const stored = localStorage.getItem(storageKey);
+  if (!stored) return [];
+  try {
+    const parsed = JSON.parse(stored);
+    return parsed.files || [];
+  } catch (e) { return []; }
+}
+
+function downloadReportFile(reportType, dato, format) {
+  const files = loadReportFiles(reportType, dato);
+  const file = files.find(f => f.format === format);
+  if (!file) { toast('Fil ikke fundet', 'error'); return; }
+
+  const link = document.createElement('a');
+  link.href = file.data;
+  link.download = file.name;
+  link.click();
+}
+
+function renderReportFileTable(reportType, dato) {
+  const containerId = `${reportType}-content`;
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const files = loadReportFiles(reportType, dato);
+
+  if (!files || files.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="padding:24px">
+        <div class="empty">
+          <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div>Ingen rapportfiler for denne dato</div>
+          <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">Klik "Generer rapport" for at oprette filer</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const formatBadge = (fmt) => {
+    const colors = { pdf: '#dc2626', xlsx: '#16a34a', csv: '#2563eb' };
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;color:#fff;background:${colors[fmt] || '#6b7280'}">${fmt.toUpperCase()}</span>`;
+  };
+
+  const formatDate = (iso) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('da-DK', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return iso; }
+  };
+
+  container.innerHTML = `
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:grid;grid-template-columns:1fr 80px 90px 150px 100px;gap:var(--space-3);padding:12px 16px;background:var(--bg);border-bottom:2px solid var(--border);font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold);color:var(--muted)">
+        <span>Filnavn</span><span>Format</span><span>Størrelse</span><span>Genereret</span><span style="text-align:center">Download</span>
+      </div>
+      ${files.map(file => `
+        <div style="display:grid;grid-template-columns:1fr 80px 90px 150px 100px;gap:var(--space-3);padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:var(--font-size-sm)">
+          <span style="font-weight:var(--font-weight-medium)">${file.name}</span>
+          <span>${formatBadge(file.format)}</span>
+          <span style="color:var(--muted)">${formatFileSize(file.size)}</span>
+          <span style="color:var(--muted)">${formatDate(file.generated)}</span>
+          <span style="text-align:center"><button class="btn btn-secondary btn-sm" onclick="downloadReportFile('${reportType}','${dato}','${file.format}')">Download</button></span>
+        </div>
+      `).join('')}
+    </div>`;
+}
 
 // === EXPORT DROPDOWN FUNCTIONS ===
 function toggleExportDropdown(id) {
@@ -7077,6 +7326,10 @@ function getStatusBadge(status) {
 
 function getFilteredAlleKunder() {
   let filtered = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    filtered = [...filtered, ...demoCustomers];
+  }
 
   // Apply status filter
   if (alleKunderStatusFilter !== 'all') {
@@ -14270,7 +14523,12 @@ function canReceiveWorkflowActions(restaurant) {
 function getSelectedRestaurant() {
   const select = document.getElementById('test-restaurant');
   if (!select || !select.value) return null;
-  return restaurants.find(r => r.id === select.value) || null;
+  let restaurant = restaurants.find(r => r.id === select.value);
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === select.value);
+  }
+  return restaurant || null;
 }
 
 /**
@@ -14287,13 +14545,20 @@ function filterByStatus(status) {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
 
+  // Combine real restaurants with demo customers if enabled
+  let allData = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allData = [...allData, ...demoCustomers];
+  }
+
   // Filter restaurants
-  let filtered = restaurants;
+  let filtered = allData;
   if (status !== 'all') {
     if (status === 'demo') {
-      filtered = restaurants.filter(r => r.status === 'demo' || r.isDemo);
+      filtered = allData.filter(r => r.status === 'demo' || r.isDemo);
     } else {
-      filtered = restaurants.filter(r => r.status === status);
+      filtered = allData.filter(r => r.status === status);
     }
   }
 
@@ -14312,8 +14577,15 @@ function populateTestRestaurants() {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   };
 
+  // Combine real restaurants with demo customers if enabled
+  let allRestaurants = [...restaurants];
+  if (isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    allRestaurants = [...allRestaurants, ...demoCustomers];
+  }
+
   // Get restaurants that can receive workflow actions (active, pending, demo)
-  const workflowRestaurants = restaurants.filter(r => r && canReceiveWorkflowActions(r));
+  const workflowRestaurants = allRestaurants.filter(r => r && canReceiveWorkflowActions(r));
 
   // Build options
   let optionsHtml = '<option value="">Vælg restaurant...</option>';
@@ -16351,7 +16623,11 @@ window.toggleLive = toggleLive;
 
 async function startTest(type) {
   const restaurantId = document.getElementById('test-restaurant').value;
-  const restaurant = restaurants.find(r => r.id === restaurantId);
+  let restaurant = restaurants.find(r => r.id === restaurantId);
+  if (!restaurant && isDemoDataEnabled()) {
+    const demoCustomers = getDemoDataCustomers();
+    restaurant = demoCustomers.find(r => r.id === restaurantId);
+  }
   if (!restaurant) return;
 
   // Check if customer can receive workflow actions
@@ -17388,14 +17664,14 @@ async function sendSMS(to, message, restaurant) {
     }
 
     // Send SMS via InMobile
-    await sendSMS(phoneNumber, message);
+    await sendSMSViaInMobile(phoneNumber, message);
   }
 
   await sleep(300);
 }
 
 // Send SMS via InMobile
-async function sendSMS(phoneNumber, message) {
+async function sendSMSViaInMobile(phoneNumber, message) {
   // Get InMobile credentials
   const apiKey = localStorage.getItem('inmobile_api_key');
   const sender = localStorage.getItem('inmobile_sender') || 'OrderFlow';
@@ -18101,8 +18377,78 @@ function saveOrderToInternalOrdersPage(orderData) {
   return order;
 }
 
+// Subscribe to realtime order updates from Supabase
+let ordersRealtimeSubscription = null;
+function subscribeToOrderUpdates() {
+  if (ordersRealtimeSubscription) return;
+  if (!window.waitForSupabase) return;
+  window.waitForSupabase().then(sb => {
+    if (!sb) return;
+    ordersRealtimeSubscription = sb
+      .channel('unified-orders-admin')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'unified_orders' }, (payload) => {
+        console.log('New order received via realtime:', payload.new?.order_number);
+        loadOrdersPage._supaFetched = false;
+        loadOrdersPage();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'unified_orders' }, () => {
+        loadOrdersPage._supaFetched = false;
+        loadOrdersPage();
+      })
+      .subscribe();
+  });
+}
+
+// Fetch orders from Supabase unified_orders table
+async function fetchUnifiedOrders() {
+  try {
+    if (!window.waitForSupabase) return [];
+    const sb = await window.waitForSupabase();
+    if (!sb) return [];
+
+    const { data, error } = await sb
+      .from('unified_orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) { console.warn('fetchUnifiedOrders error:', error); return []; }
+
+    // Map Supabase order format to admin display format
+    const statusMap = {
+      'draft': 'Ny', 'pending': 'Ny', 'confirmed': 'Accepteret',
+      'preparing': 'I gang', 'ready': 'Færdig', 'completed': 'Færdig',
+      'delivered': 'Færdig', 'cancelled': 'Afvist', 'refunded': 'Afvist'
+    };
+
+    return (data || []).map(o => ({
+      id: Date.now() + Math.random(),
+      supabaseId: o.id,
+      orderNumber: o.order_number || '',
+      customer: o.customer_name || o.customer_phone || 'Ukendt',
+      phone: o.customer_phone || '',
+      email: o.customer_email || '',
+      items: (o.line_items || []).map(item => `${item.quantity}x ${item.name}`).join(', '),
+      total: parseFloat(o.total) || 0,
+      status: statusMap[o.status] || 'Ny',
+      source: o.source_channel || 'web',
+      type: o.fulfillment_type === 'delivery' ? 'Levering' : 'Afhentning',
+      date: new Date(o.created_at).toLocaleString('da-DK'),
+      paymentStatus: o.payment_status,
+      paymentMethod: o.payment_method,
+      notes: o.customer_notes || ''
+    }));
+  } catch (e) {
+    console.warn('fetchUnifiedOrders failed:', e);
+    return [];
+  }
+}
+
 // Load og vis ordrer på Ordrer-siden
 function loadOrdersPage() {
+  // Start realtime subscription for live order updates
+  subscribeToOrderUpdates();
+
   const ordersList = document.getElementById('orders-list');
   const ordersCount = document.getElementById('orders-count');
   let orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
@@ -18111,6 +18457,25 @@ function loadOrdersPage() {
   if (isDemoDataEnabled()) {
     const demoOrders = getDemoDataOrders();
     orders = [...orders, ...demoOrders];
+  }
+
+  // Also fetch from Supabase unified_orders (async, merges into localStorage)
+  if (!loadOrdersPage._supaFetched) {
+    loadOrdersPage._supaFetched = true;
+    fetchUnifiedOrders().then(supaOrders => {
+      if (supaOrders.length > 0) {
+        const existing = JSON.parse(localStorage.getItem('orders_module') || '[]');
+        const existingIds = new Set(existing.map(o => o.supabaseId || ''));
+        const newOrders = supaOrders.filter(o => !existingIds.has(o.supabaseId));
+        if (newOrders.length > 0) {
+          const merged = [...newOrders, ...existing];
+          localStorage.setItem('orders_module', JSON.stringify(merged));
+          loadOrdersPage._supaFetched = false;
+          loadOrdersPage(); // Re-render with new data
+        }
+      }
+      loadOrdersPage._supaFetched = false;
+    }).catch(() => { loadOrdersPage._supaFetched = false; });
   }
   
   if (ordersCount) {
@@ -19959,6 +20324,9 @@ function updateApiStatus() {
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
+  const firecrawlOk = localStorage.getItem('firecrawl_api_key');
+  const googleapiOk = localStorage.getItem('googleapi_api_key');
+  const webhookOk = localStorage.getItem('api_webhook_enabled') !== 'false';
 
   // Status elements
   const smsStatusEl = document.getElementById('status-sms');
@@ -19973,7 +20341,10 @@ function updateApiStatus() {
     'sms-indicator': smsOk,
     'inmobile-indicator': smsOk,
     'google-indicator': googleOk,
-    'trustpilot-indicator': trustpilotOk
+    'trustpilot-indicator': trustpilotOk,
+    'firecrawl-indicator': firecrawlOk,
+    'googleapi-indicator': googleapiOk,
+    'webhook-indicator': webhookOk
   };
 
   Object.entries(indicators).forEach(([id, isConnected]) => {
@@ -19989,7 +20360,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'google', 'trustpilot', 'webhook'];
+  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -20022,7 +20393,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'google', 'trustpilot', 'webhook'].forEach(api => {
+      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -20087,7 +20458,12 @@ async function saveAllApiSettings() {
     google_place_id: document.getElementById('google-place-id')?.value.trim() || '',
     google_api_key: document.getElementById('google-api-key')?.value.trim() || '',
     trustpilot_business_id: document.getElementById('trustpilot-business-id')?.value.trim() || '',
-    trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || ''
+    trustpilot_api_key: document.getElementById('trustpilot-api-key')?.value.trim() || '',
+    firecrawl_api_key: document.getElementById('firecrawl-api-key')?.value.trim() || '',
+    googleapi_api_key: document.getElementById('googleapi-api-key')?.value.trim() || '',
+    serper_reviews_key: document.getElementById('serper-reviews-key')?.value.trim() || '',
+    serper_images_key: document.getElementById('serper-images-key')?.value.trim() || '',
+    serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -20121,6 +20497,11 @@ async function saveAllApiSettings() {
   }
 
   updateApiStatus();
+
+  // Refresh "Aktive API Nøgler" table if rendered
+  if (typeof loadApiKeysList === 'function') {
+    loadApiKeysList();
+  }
 }
 
 // Load all API settings from Supabase or localStorage
@@ -20147,7 +20528,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -20161,7 +20542,12 @@ async function loadAllApiSettings() {
     'google-place-id': 'google_place_id',
     'google-api-key': 'google_api_key',
     'trustpilot-business-id': 'trustpilot_business_id',
-    'trustpilot-api-key': 'trustpilot_api_key'
+    'trustpilot-api-key': 'trustpilot_api_key',
+    'firecrawl-api-key': 'firecrawl_api_key',
+    'googleapi-api-key': 'googleapi_api_key',
+    'serper-reviews-key': 'serper_reviews_key',
+    'serper-images-key': 'serper_images_key',
+    'serper-maps-key': 'serper_maps_key'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
@@ -20175,6 +20561,9 @@ async function loadAllApiSettings() {
   await loadApiEnabledStates();
 
   updateApiStatus();
+
+  // Also populate the API keys summary table on API Adgang page
+  loadApiKeysList();
 }
 
 // =====================================================
@@ -20584,6 +20973,11 @@ function switchSettingsTab(tab) {
   // Load templates when templates tab is opened
   if (tab === 'templates') {
     renderInstalledTemplates();
+  }
+
+  // Refresh API status and toggles when API tab is opened
+  if (tab === 'api') {
+    loadAllApiSettings();
   }
 }
 
@@ -22194,16 +22588,10 @@ function show2FAChallenge(user, settings) {
   pending2FAUser = user;
   pending2FASettings = settings;
 
-  // Hide login form, show 2FA challenge
-  const loginForm = document.getElementById('login-form');
+  // Hide all auth views, show 2FA challenge
+  document.querySelectorAll('.auth-view').forEach(function(v) { v.classList.remove('active'); });
   const challengeForm = document.getElementById('2fa-challenge-form');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
-
-  if (loginForm) loginForm.style.display = 'none';
   if (challengeForm) challengeForm.style.display = 'block';
-  if (authTabs) authTabs.style.display = 'none';
-  if (demoButtons) demoButtons.style.display = 'none';
 
   const cancelBtn = document.getElementById('2fa-cancel-btn');
   if (cancelBtn) {
@@ -22273,18 +22661,13 @@ function attach2FAEnterHandlers() {
 function show2FASetupRequired(user) {
   pending2FAUser = user;
 
-  // Hide all forms, show setup required
-  const loginForm = document.getElementById('login-form');
+  // Hide all auth views, show setup required
+  document.querySelectorAll('.auth-view').forEach(function(v) { v.classList.remove('active'); });
   const challengeForm = document.getElementById('2fa-challenge-form');
   const setupRequired = document.getElementById('2fa-setup-required');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
 
-  if (loginForm) loginForm.style.display = 'none';
   if (challengeForm) challengeForm.style.display = 'none';
   if (setupRequired) setupRequired.style.display = 'block';
-  if (authTabs) authTabs.style.display = 'none';
-  if (demoButtons) demoButtons.style.display = 'none';
 }
 
 /**
@@ -22548,16 +22931,10 @@ function cancel2FAChallenge() {
     });
   }
 
-  // Show login form, hide challenge
-  const loginForm = document.getElementById('login-form');
+  // Show login view, hide challenge
   const challengeForm = document.getElementById('2fa-challenge-form');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
-
-  if (loginForm) loginForm.style.display = 'block';
   if (challengeForm) challengeForm.style.display = 'none';
-  if (authTabs) authTabs.style.display = 'flex';
-  if (demoButtons) demoButtons.style.display = 'block';
+  showAuthView('login');
 
   // Clear inputs
   const codeInput = document.getElementById('2fa-code-input');
@@ -22828,78 +23205,108 @@ async function setup2FATOTP() {
   }
 }
 
+/**
+ * Generate a branded FLOW QR code with circular dots, black background, and FLOW logo
+ * @param {string} data - URL or text to encode
+ * @param {HTMLElement} container - DOM element to render into
+ * @param {Object} [options] - Override options
+ * @param {number} [options.width=280] - QR code width
+ * @param {number} [options.height=280] - QR code height
+ * @param {boolean} [options.showLogo=true] - Show FLOW logo in center
+ */
+function generateBrandedQR(data, container, options = {}) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  const width = options.width || 280;
+  const height = options.height || 280;
+  const showLogo = options.showLogo !== false;
+
+  // Use qr-code-styling if available
+  if (typeof QRCodeStyling !== 'undefined') {
+    const qrConfig = {
+      width,
+      height,
+      data,
+      type: 'canvas',
+      dotsOptions: {
+        color: '#ffffff',
+        type: 'dots'
+      },
+      backgroundOptions: {
+        color: '#000000'
+      },
+      cornersSquareOptions: {
+        type: 'extra-rounded',
+        color: '#ffffff'
+      },
+      cornersDotOptions: {
+        type: 'dot',
+        color: '#ffffff'
+      },
+      qrOptions: {
+        errorCorrectionLevel: showLogo ? 'H' : 'M'
+      }
+    };
+
+    if (showLogo) {
+      qrConfig.image = 'images/FLOW-logo-hvid-4K.png';
+      qrConfig.imageOptions = {
+        crossOrigin: 'anonymous',
+        margin: 6,
+        imageSize: 0.3,
+        hideBackgroundDots: true
+      };
+    }
+
+    const qrCode = new QRCodeStyling(qrConfig);
+    qrCode.append(container);
+    console.log('✅ Branded FLOW QR code generated');
+    return qrCode;
+  }
+
+  // Fallback to standard QRCode
+  console.warn('QRCodeStyling not available, falling back to standard QR');
+  if (typeof QRCode !== 'undefined') {
+    const wrapper = document.createElement('div');
+    wrapper.style.background = '#000';
+    wrapper.style.padding = '16px';
+    wrapper.style.borderRadius = '12px';
+    wrapper.style.display = 'inline-block';
+    container.appendChild(wrapper);
+
+    if (typeof QRCode.toDataURL === 'function') {
+      QRCode.toDataURL(data, { width: width, margin: 1, color: { dark: '#ffffff', light: '#000000' } })
+        .then(url => {
+          const img = document.createElement('img');
+          img.width = width;
+          img.height = height;
+          img.alt = 'QR Code';
+          img.style.display = 'block';
+          img.src = url;
+          wrapper.appendChild(img);
+        })
+        .catch(() => {
+          wrapper.innerHTML = `<p style="color:#fff;font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+        });
+    } else if (typeof QRCode === 'function') {
+      new QRCode(wrapper, { text: data, width, height, colorDark: '#ffffff', colorLight: '#000000' });
+    }
+    return null;
+  }
+
+  container.innerHTML = `<p style="color:var(--muted);font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+  return null;
+}
+
 function render2FAQrCode(otpauthUrl) {
   const container = document.getElementById('2fa-qr-container');
   if (!container) return;
-
-  // Clear previous QR content
   container.innerHTML = '';
-
-  // Try QRCode.toDataURL first (from qrcode npm package)
-  if (typeof QRCode !== 'undefined' && typeof QRCode.toDataURL === 'function') {
-    QRCode.toDataURL(otpauthUrl, {
-      width: 200,
-      margin: 1,
-      color: { dark: '#000000', light: '#ffffff' }
-    }).then((qrDataUrl) => {
-      const img = document.createElement('img');
-      img.width = 200;
-      img.height = 200;
-      img.alt = 'QR Code';
-      img.style.display = 'block';
-      img.src = qrDataUrl;
-      container.appendChild(img);
-      console.log('✅ QR code generated with toDataURL');
-    }).catch((qrErr) => {
-      console.error('QR code generation error:', qrErr);
-      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-    });
-    return;
-  }
-
-  // Fallback to QRCode constructor (from qrcodejs library)
-  if (typeof QRCode !== 'undefined' && typeof QRCode === 'function') {
-    try {
-      const temp = document.createElement('div');
-      temp.style.position = 'fixed';
-      temp.style.left = '-9999px';
-      temp.style.top = '-9999px';
-      document.body.appendChild(temp);
-
-      new QRCode(temp, {
-        text: otpauthUrl,
-        width: 200,
-        height: 200,
-        colorDark: '#000000',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.M : 2
-      });
-
-      setTimeout(() => {
-        const rendered = temp.querySelector('img') || temp.querySelector('canvas');
-        if (rendered) {
-          const img = document.createElement('img');
-          img.width = 200;
-          img.height = 200;
-          img.alt = 'QR Code';
-          img.style.display = 'block';
-          img.src = rendered.tagName === 'CANVAS' ? rendered.toDataURL('image/png') : rendered.src;
-          container.appendChild(img);
-          console.log('✅ QR code generated with constructor');
-        } else {
-          container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-        }
-        temp.remove();
-      }, 100);
-    } catch (e) {
-      console.error('QRCode constructor error:', e);
-      container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
-    }
-    return;
-  }
-
-  console.warn('QRCode library not available');
-  container.innerHTML = `<p style="color:#000;font-size:12px;word-break:break-all;padding:10px;">${otpauthUrl}</p>`;
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '16px';
+  generateBrandedQR(otpauthUrl, container, { width: 200, height: 200 });
 }
 
 /**
@@ -26627,28 +27034,19 @@ function initAppBuilder() {
   }
 }
 
-// Show QR code for mobile app preview (uses API-based QR generation for reliability)
+// Show QR code for mobile app preview (branded FLOW QR)
 function showAppPreviewQR() {
-  // Sync config to all previews first
   syncAppBuilderConfig();
 
   const container = document.getElementById('app-preview-qr-container');
   if (!container) return;
 
   const previewUrl = getAppPreviewUrl();
-  const encodedUrl = encodeURIComponent(previewUrl);
-
-  // Use API-based QR code generation (more reliable than JS library)
-  container.innerHTML = `
-    <img
-      src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&format=png"
-      alt="QR kode til app preview"
-      width="200"
-      height="200"
-      style="display:block;border-radius:8px"
-      onerror="this.parentElement.innerHTML='<p style=\\'color:var(--muted);text-align:center\\'>Kunne ikke generere QR-kode<br><small>${previewUrl}</small></p>'"
-    >
-  `;
+  container.innerHTML = '';
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '20px';
+  generateBrandedQR(previewUrl, container, { width: 240, height: 240 });
 
   showModal('app-preview-qr');
 }
@@ -29003,6 +29401,12 @@ function showWebBuilderPage(section) {
     loadWebBuilderConfig();
   }
 
+  // Ensure preview iframes match selected template
+  const selector = document.getElementById('wb-template-selector');
+  if (selector && selector.value) {
+    loadWebBuilderTemplate(selector.value);
+  }
+
   // Update preview after page switch (give iframe time to load)
   setTimeout(() => {
     updateWebBuilderPreview();
@@ -29038,6 +29442,150 @@ function showFlowPage(slug) {
 
   const pagePath = pageMap[slug] || slug + '.html';
   window.open(pagePath, '_blank');
+}
+
+// =====================================================
+// TEMPLATE EDITOR FUNCTIONS
+// =====================================================
+
+const templateEditorState = {
+  currentTemplate: null,
+  currentFile: null,
+  files: {},
+  unsaved: false
+};
+
+const templateEditorFiles = {
+  'skabelon-1': [
+    { name: 'index.html', path: 'templates/skabelon-1/index.html', type: 'html' },
+    { name: 'src/App.tsx', path: 'templates/skabelon-1/src/App.tsx', type: 'tsx' },
+    { name: 'src/components/Header.tsx', path: 'templates/skabelon-1/src/components/Header.tsx', type: 'tsx' },
+    { name: 'src/components/Hero.tsx', path: 'templates/skabelon-1/src/components/Hero.tsx', type: 'tsx' },
+    { name: 'src/components/MenuSection.tsx', path: 'templates/skabelon-1/src/components/MenuSection.tsx', type: 'tsx' },
+    { name: 'src/components/Footer.tsx', path: 'templates/skabelon-1/src/components/Footer.tsx', type: 'tsx' },
+    { name: 'src/data/mockData.ts', path: 'templates/skabelon-1/src/data/mockData.ts', type: 'ts' },
+    { name: 'src/types/index.ts', path: 'templates/skabelon-1/src/types/index.ts', type: 'ts' }
+  ],
+  'skabelon-2': [
+    { name: 'index.html', path: 'templates/skabelon-2/index.html', type: 'html' },
+    { name: 'css/style.css', path: 'templates/skabelon-2/css/style.css', type: 'css' },
+    { name: 'css/responsive.css', path: 'templates/skabelon-2/css/responsive.css', type: 'css' },
+    { name: 'js/custom.js', path: 'templates/skabelon-2/js/custom.js', type: 'js' }
+  ],
+  'skabelon-3': [
+    { name: 'index.html', path: 'templates/skabelon-3/index.html', type: 'html' },
+    { name: 'css/style.css', path: 'templates/skabelon-3/css/style.css', type: 'css' },
+    { name: 'js/main.js', path: 'templates/skabelon-3/js/main.js', type: 'js' }
+  ]
+};
+
+function loadTemplateEditorFiles(templateId) {
+  templateEditorState.currentTemplate = templateId;
+  templateEditorState.currentFile = null;
+  templateEditorState.files = {};
+  templateEditorState.unsaved = false;
+
+  const files = templateEditorFiles[templateId] || [];
+  const listEl = document.getElementById('te-file-list');
+  if (!listEl) return;
+
+  const typeIcons = { html: '&#128196;', css: '&#127912;', js: '&#9889;', ts: '&#9889;', tsx: '&#9889;' };
+
+  listEl.innerHTML = files.map(f =>
+    `<button onclick="loadTemplateFile('${f.path}','${f.name}')" class="te-file-btn" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:12px;color:var(--text);transition:background 0.15s" onmouseover="this.style.background='var(--bg2)'" onmouseout="if(!this.classList.contains('active'))this.style.background='none'">${typeIcons[f.type] || '&#128196;'} ${f.name}</button>`
+  ).join('');
+
+  const previewFrame = document.getElementById('te-preview-frame');
+  if (previewFrame) {
+    const template = webBuilderTemplates[templateId];
+    previewFrame.src = template?.previewFile || ('templates/' + templateId + '/index.html');
+  }
+
+  document.getElementById('te-current-file').textContent = 'Ingen fil valgt';
+  document.getElementById('te-code-editor').value = '';
+}
+
+async function loadTemplateFile(path, name) {
+  if (templateEditorState.unsaved) {
+    if (!confirm('Du har ugemte ændringer. Vil du fortsætte?')) return;
+  }
+
+  const storageKey = 'te_file_' + path;
+  const savedContent = localStorage.getItem(storageKey);
+
+  if (savedContent !== null) {
+    templateEditorState.currentFile = path;
+    templateEditorState.files[path] = savedContent;
+    templateEditorState.unsaved = false;
+    document.getElementById('te-current-file').textContent = name;
+    document.getElementById('te-code-editor').value = savedContent;
+    highlightActiveFile(path);
+    return;
+  }
+
+  try {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error('Kunne ikke hente filen');
+    const content = await response.text();
+
+    templateEditorState.currentFile = path;
+    templateEditorState.files[path] = content;
+    templateEditorState.unsaved = false;
+    document.getElementById('te-current-file').textContent = name;
+    document.getElementById('te-code-editor').value = content;
+    highlightActiveFile(path);
+  } catch (err) {
+    toast('Kunne ikke indlæse filen: ' + err.message, 'error');
+  }
+}
+
+function highlightActiveFile(path) {
+  document.querySelectorAll('.te-file-btn').forEach(function(btn) {
+    var isActive = btn.getAttribute('onclick') && btn.getAttribute('onclick').indexOf(path) !== -1;
+    btn.classList.toggle('active', isActive);
+    btn.style.background = isActive ? 'var(--bg2)' : 'none';
+    btn.style.fontWeight = isActive ? '600' : 'normal';
+  });
+}
+
+function markTemplateFileUnsaved() {
+  templateEditorState.unsaved = true;
+  var statusEl = document.getElementById('te-save-status');
+  if (statusEl) {
+    statusEl.textContent = 'Ugemte ændringer';
+    statusEl.style.display = '';
+    statusEl.style.color = 'var(--warning)';
+  }
+}
+
+function saveTemplateFile() {
+  if (!templateEditorState.currentFile) {
+    toast('Ingen fil valgt', 'warning');
+    return;
+  }
+
+  var content = document.getElementById('te-code-editor').value;
+  var storageKey = 'te_file_' + templateEditorState.currentFile;
+  localStorage.setItem(storageKey, content);
+  templateEditorState.files[templateEditorState.currentFile] = content;
+  templateEditorState.unsaved = false;
+
+  var statusEl = document.getElementById('te-save-status');
+  if (statusEl) {
+    statusEl.textContent = '\u2713 Gemt';
+    statusEl.style.display = '';
+    statusEl.style.color = 'var(--success)';
+    setTimeout(function() { statusEl.style.display = 'none'; }, 2000);
+  }
+
+  toast('Fil gemt', 'success');
+}
+
+function refreshTemplatePreview() {
+  var previewFrame = document.getElementById('te-preview-frame');
+  if (previewFrame && templateEditorState.currentTemplate) {
+    previewFrame.src = 'templates/' + templateEditorState.currentTemplate + '/index.html';
+  }
 }
 
 // =====================================================
@@ -30362,15 +30910,52 @@ function renderCMSPagesList() {
     page.slug.toLowerCase().includes(searchQuery)
   );
 
-  container.innerHTML = filteredPages.map(page => `
-    <div class="cms-page-item ${currentCMSPageId === page.id ? 'active' : ''}" onclick="selectCMSPage('${page.id}')" style="padding:12px;border-radius:8px;cursor:pointer;border:1px solid ${currentCMSPageId === page.id ? 'var(--primary)' : 'transparent'};background:${currentCMSPageId === page.id ? 'var(--primary-light)' : 'transparent'};margin-bottom:4px;transition:all 0.15s ease">
+  container.innerHTML = filteredPages.map(page => {
+    const isActive = currentCMSPageId === page.id;
+    const sectionCount = (page.sections || []).length;
+    const updatedAt = page.updatedAt ? new Date(page.updatedAt).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' }) : '';
+
+    return `
+    <div class="cms-page-item ${isActive ? 'active' : ''}" onclick="selectCMSPage('${page.id}')" style="padding:16px;border-radius:10px;cursor:pointer;border:1px solid ${isActive ? 'var(--primary)' : 'var(--border)'};background:${isActive ? 'var(--primary-light)' : 'var(--bg2)'};margin-bottom:6px;transition:all 0.2s ease">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="font-weight:500;font-size:13px">${page.title}</span>
+        <span style="font-weight:600;font-size:14px">${page.title}</span>
         <span class="badge ${page.status === 'published' ? 'badge-success' : 'badge-warning'}" style="font-size:10px">${page.status === 'published' ? 'Publiceret' : 'Kladde'}</span>
       </div>
-      <div style="font-size:11px;color:var(--muted);margin-top:4px">/${page.slug}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span style="font-size:11px;color:var(--muted)">/${page.slug}</span>
+        <span style="font-size:10px;color:var(--muted)">${sectionCount} sektioner${updatedAt ? ' · ' + updatedAt : ''}</span>
+      </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
+}
+
+// Open CMS page in builder (new tab)
+function openCMSPageInBuilder(pageId) {
+  const page = cmsPages.find(p => p.id === pageId);
+  if (!page) return;
+  const slug = page.slug.replace('.html', '');
+  window.open('/landing-pages/' + slug + '.html', '_blank');
+}
+
+// Duplicate a specific CMS page by ID
+function duplicateCMSPage(pageId) {
+  const page = cmsPages.find(p => p.id === pageId);
+  if (!page) return;
+
+  const duplicated = JSON.parse(JSON.stringify(page));
+  duplicated.id = 'page-' + Date.now();
+  duplicated.title = page.title + ' (Kopi)';
+  duplicated.slug = page.slug.replace('.html', '-kopi.html');
+  duplicated.status = 'draft';
+  duplicated.createdAt = new Date().toISOString();
+  duplicated.updatedAt = new Date().toISOString();
+
+  cmsPages.unshift(duplicated);
+  markCMSChanged();
+  renderCMSPagesList();
+  selectCMSPage(duplicated.id);
+  toast('Side duplikeret', 'success');
 }
 
 // Filter CMS Pages
@@ -30963,7 +31548,7 @@ function renderSectionEditor(section) {
               </details>
             `).join('')}
           </div>
-          <button class="btn btn-sm" onclick="addTestimonialItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j citat</button>
+          <button class="btn btn-sm" onclick="addTestimonialItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilføj citat</button>
         </div>
       `;
     case 'faq':
@@ -31016,7 +31601,7 @@ function renderSectionEditor(section) {
               </div>
             `).join('')}
           </div>
-          <button class="btn btn-sm" onclick="addGalleryImage('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j billede</button>
+          <button class="btn btn-sm" onclick="addGalleryImage('${section.id}')" style="margin-top:8px;width:100%">+ Tilføj billede</button>
         </div>
       `;
     case 'trusted':
@@ -31087,7 +31672,7 @@ function renderSectionEditor(section) {
               </details>
             `).join('')}
           </div>
-          <button class="btn btn-sm" onclick="addReviewItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilf\u00f8j udtalelse</button>
+          <button class="btn btn-sm" onclick="addReviewItem('${section.id}')" style="margin-top:8px;width:100%">+ Tilføj udtalelse</button>
         </div>
       `;
     case 'appleFeatures':
@@ -31841,73 +32426,70 @@ function previewCurrentPage() {
 
 // Schedule page changes
 function schedulePageChanges() {
-  console.log('schedulePageChanges called');
+  const page = getCurrentCMSPage();
+  if (!page) {
+    toast('Vælg først en side at planlægge', 'warning');
+    return;
+  }
 
-  try {
-    const page = getCurrentCMSPage();
-    console.log('Current page:', page);
+  // Clean up any existing schedule modal
+  const existing = document.getElementById('schedule-modal');
+  if (existing) existing.remove();
 
-    if (!page) {
-      console.warn('No page selected for scheduling');
-      toast('Vælg først en side at planlægge', 'warning');
-      return;
-    }
+  // Get minimum datetime (now + 1 minute)
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 1);
+  const minDatetime = now.toISOString().slice(0, 16);
 
-    // Get minimum datetime (now + 1 minute)
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
-    const minDatetime = now.toISOString().slice(0, 16);
+  const pendingSchedules = (page.scheduledChanges || []).filter(s => s.status === 'pending');
 
-    const pendingSchedules = page.scheduledChanges?.filter(s => s.status === 'pending') || [];
-
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay active';
-    modal.id = 'schedule-modal';
-    modal.innerHTML = `
-      <div class="modal" style="max-width:500px">
-        <div class="modal-header">
-          <h3 style="margin:0">Planlæg ændringer</h3>
-          <button class="modal-close" onclick="closeScheduleModal()" style="background:none;border:none;font-size:20px;cursor:pointer">&times;</button>
-        </div>
-        <div class="modal-body" style="padding:20px">
-          <div class="form-group" style="margin-bottom:16px">
-            <label class="form-label">Dato og tid for offentliggørelse</label>
-            <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
-          </div>
-          <p style="font-size:12px;color:var(--muted)">
-            De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
-          </p>
-          ${pendingSchedules.length > 0 ? `
-            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-              <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
-              ${pendingSchedules.map(s => `
-                <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
-                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                    <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
-                    <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
-                  </div>
-                  <div style="display:flex;gap:8px">
-                    <button class="btn btn-sm" onclick="previewScheduledChanges('${s.id}')" style="flex:1">Forhåndsvisning</button>
-                    <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
-                    <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
-                  </div>
-                </div>
-              `).join('')}
+  let pendingHTML = '';
+  if (pendingSchedules.length > 0) {
+    pendingHTML = `
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+        <label class="form-label">Planlagte ændringer (${pendingSchedules.length})</label>
+        ${pendingSchedules.map(s => `
+          <div style="padding:12px;background:var(--bg2);border-radius:8px;margin-top:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:500">${new Date(s.scheduledFor).toLocaleString('da-DK')}</span>
+              <span style="font-size:11px;color:var(--muted)">${getTimeUntil(s.scheduledFor)}</span>
             </div>
-          ` : ''}
-        </div>
-        <div class="modal-footer" style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
-          <button class="btn" onclick="closeScheduleModal()">Luk</button>
-          <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
-        </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" onclick="editScheduledChange('${s.id}')" style="flex:1">Rediger tid</button>
+              <button class="btn btn-sm" style="background:var(--danger);color:white" onclick="cancelScheduledChange('${s.id}')">Slet</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
-    document.body.appendChild(modal);
-    console.log('Schedule modal opened successfully');
-  } catch (e) {
-    console.error('Error in schedulePageChanges:', e);
-    toast('Fejl ved åbning af planlægning', 'error');
   }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'schedule-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">Planlæg ændringer</div>
+        <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Dato og tid for offentliggørelse</label>
+          <input type="datetime-local" class="input" id="schedule-datetime" min="${minDatetime}" style="width:100%">
+        </div>
+        <p style="font-size:12px;color:var(--muted)">
+          De nuværende ændringer vil blive gemt og automatisk publiceret på det valgte tidspunkt.
+        </p>
+        ${pendingHTML}
+      </div>
+      <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeScheduleModal()">Luk</button>
+        <button class="btn btn-primary" onclick="confirmSchedule()">Planlæg nu</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 // Get time until scheduled change
@@ -32146,19 +32728,104 @@ function updateCurrentPageCookieBanner() {
 // Open CMS Page Settings Modal
 function openCMSSettingsModal() {
   const page = getCurrentCMSPage();
+  if (!page) {
+    toast('Vælg først en side', 'warning');
+    return;
+  }
+
+  // Remove existing modal if open
+  const existing = document.getElementById('cms-settings-dynamic-modal');
+  if (existing) existing.remove();
+
+  const slugValue = (page.slug || '').replace('.html', '');
+  const templateValue = page.template || 'landing';
+  const isActive = page.isActive !== false;
+  const showCookie = page.showCookieBanner === true;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay active';
+  modal.id = 'cms-settings-dynamic-modal';
+  modal.innerHTML = `
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">Side Indstillinger</div>
+        <button class="modal-close" onclick="closeCMSSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">URL Slug</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="color:var(--muted);font-size:13px">/</span>
+            <input type="text" class="input" id="cms-settings-slug" value="${slugValue}" style="flex:1">
+            <span style="color:var(--muted);font-size:13px">.html</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="form-label">Template</label>
+          <select class="input" id="cms-settings-template">
+            <option value="landing" ${templateValue === 'landing' ? 'selected' : ''}>Landing Page</option>
+            <option value="standard" ${templateValue === 'standard' ? 'selected' : ''}>Standard</option>
+            <option value="blog" ${templateValue === 'blog' ? 'selected' : ''}>Blog Post</option>
+            <option value="resource" ${templateValue === 'resource' ? 'selected' : ''}>Ressource</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:20px">
+          <label class="form-label">Status</label>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label class="toggle-switch">
+              <input type="checkbox" id="cms-settings-active" ${isActive ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span style="font-size:13px">Side er aktiv</span>
+          </div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:20px">
+          <h4 style="margin:0 0 16px 0;font-size:14px;font-weight:600;color:var(--text)">Cookie Samtykke</h4>
+          <div class="form-group">
+            <div style="display:flex;align-items:center;gap:12px">
+              <label class="toggle-switch">
+                <input type="checkbox" id="cms-settings-cookie" ${showCookie ? 'checked' : ''}>
+                <span class="toggle-slider"></span>
+              </label>
+              <span style="font-size:13px">Vis cookie banner på denne side</span>
+            </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">Når aktiveret vises cookie samtykke banner til nye besøgende</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">
+        <button class="btn btn-secondary" onclick="closeCMSSettingsModal()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveCMSSettingsModal()">Gem indstillinger</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+function closeCMSSettingsModal() {
+  const modal = document.getElementById('cms-settings-dynamic-modal');
+  if (modal) modal.remove();
+}
+
+function saveCMSSettingsModal() {
+  const page = getCurrentCMSPage();
   if (!page) return;
 
-  const slugEl = document.getElementById('cms-page-slug');
-  const templateEl = document.getElementById('cms-page-template');
-  const activeEl = document.getElementById('cms-page-active');
-  const cookieEl = document.getElementById('cms-page-cookie-banner');
+  const slugInput = document.getElementById('cms-settings-slug');
+  const templateSelect = document.getElementById('cms-settings-template');
+  const activeCheckbox = document.getElementById('cms-settings-active');
+  const cookieCheckbox = document.getElementById('cms-settings-cookie');
 
-  if (slugEl) slugEl.value = page.slug.replace('.html', '');
-  if (templateEl) templateEl.value = page.template || 'landing';
-  if (activeEl) activeEl.checked = page.isActive !== false;
-  if (cookieEl) cookieEl.checked = page.showCookieBanner === true;
+  if (slugInput) page.slug = slugInput.value.replace(/[^a-z0-9-]/g, '') + '.html';
+  if (templateSelect) page.template = templateSelect.value;
+  if (activeCheckbox) page.isActive = activeCheckbox.checked;
+  if (cookieCheckbox) page.showCookieBanner = cookieCheckbox.checked;
 
-  showModal('cms-settings');
+  page.updatedAt = new Date().toISOString();
+  markCMSChanged();
+  renderCMSPagesList();
+  toast('Indstillinger gemt', 'success');
+  closeCMSSettingsModal();
 }
 
 // Navigate to Flow CMS page
@@ -32229,7 +32896,18 @@ const CMS_THEME_DEFAULTS = {
     success: '#10B981',
     warning: '#F59E0B',
     danger: '#EF4444',
-    background: '#13131F'
+    background: '#13131F',
+    text: '#F0F2F5',
+    textSecondary: '#808080',
+    textMuted: '#9CA3AF',
+    card: '#1E1E30',
+    cardHover: '#2A2A40',
+    border: '#1F1F2E',
+    borderLight: '#2A2A3D',
+    bg2: '#1B1B2F',
+    bg3: '#1E1E30',
+    navBg: '#1B1B2F',
+    info: '#06B6D4'
   },
   fonts: {
     heading: 'Inter',
@@ -32239,24 +32917,44 @@ const CMS_THEME_DEFAULTS = {
 
 const CMS_THEME_PRESETS = {
   'default-indigo': {
-    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F' },
+    colors: { primary: '#6366F1', accent: '#6366F1', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#13131F', text: '#F0F2F5', textSecondary: '#808080', textMuted: '#9CA3AF', card: '#1E1E30', cardHover: '#2A2A40', border: '#1F1F2E', borderLight: '#2A2A3D', bg2: '#1B1B2F', bg3: '#1E1E30', navBg: '#1B1B2F', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'ocean-blue': {
-    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A' },
+    colors: { primary: '#3B82F6', accent: '#06B6D4', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#0F172A', text: '#E2E8F0', textSecondary: '#64748B', textMuted: '#94A3B8', card: '#1E293B', cardHover: '#334155', border: '#1E293B', borderLight: '#334155', bg2: '#0F172A', bg3: '#1E293B', navBg: '#0F172A', info: '#38BDF8' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'forest-green': {
-    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D' },
+    colors: { primary: '#059669', accent: '#10B981', success: '#34D399', warning: '#F59E0B', danger: '#EF4444', background: '#14532D', text: '#ECFDF5', textSecondary: '#6EE7B7', textMuted: '#A7F3D0', card: '#1A3D2E', cardHover: '#234D3B', border: '#1A3D2E', borderLight: '#234D3B', bg2: '#14532D', bg3: '#1A3D2E', navBg: '#14532D', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
   },
   'sunset-orange': {
-    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917' },
+    colors: { primary: '#F97316', accent: '#FB923C', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#1C1917', text: '#FFF7ED', textSecondary: '#A8A29E', textMuted: '#78716C', card: '#292524', cardHover: '#3B3633', border: '#292524', borderLight: '#3B3633', bg2: '#1C1917', bg3: '#292524', navBg: '#1C1917', info: '#06B6D4' },
     fonts: { heading: 'Poppins', body: 'Inter' }
   },
   'minimal-dark': {
-    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F' },
+    colors: { primary: '#A78BFA', accent: '#818CF8', success: '#34D399', warning: '#FBBF24', danger: '#EF4444', background: '#0A0A0F', text: '#E4E4E7', textSecondary: '#71717A', textMuted: '#A1A1AA', card: '#18181B', cardHover: '#27272A', border: '#18181B', borderLight: '#27272A', bg2: '#0A0A0F', bg3: '#18181B', navBg: '#0A0A0F', info: '#06B6D4' },
     fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'midnight-blue': {
+    colors: { primary: '#1E3A5F', accent: '#C0C0C0', success: '#2DD4BF', warning: '#FBBF24', danger: '#F87171', background: '#0B1120', text: '#E2E8F0', textSecondary: '#94A3B8', textMuted: '#64748B', card: '#131B2E', cardHover: '#1A2640', border: '#1A2640', borderLight: '#243352', bg2: '#0E1525', bg3: '#131B2E', navBg: '#0B1120', info: '#38BDF8' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'rose-gold': {
+    colors: { primary: '#E8917A', accent: '#D4A574', success: '#6EE7B7', warning: '#FCD34D', danger: '#FB7185', background: '#1A1118', text: '#FDE8E8', textSecondary: '#C9A9A6', textMuted: '#9A7D7A', card: '#241920', cardHover: '#2E2028', border: '#2E2028', borderLight: '#3D2C34', bg2: '#1E141B', bg3: '#241920', navBg: '#1A1118', info: '#67E8F9' },
+    fonts: { heading: 'Playfair Display', body: 'Inter' }
+  },
+  'arctic-white': {
+    colors: { primary: '#3B82F6', accent: '#60A5FA', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', background: '#F8FAFC', text: '#0F172A', textSecondary: '#475569', textMuted: '#94A3B8', card: '#FFFFFF', cardHover: '#F1F5F9', border: '#E2E8F0', borderLight: '#CBD5E1', bg2: '#F1F5F9', bg3: '#FFFFFF', navBg: '#FFFFFF', info: '#0EA5E9' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'charcoal': {
+    colors: { primary: '#8B8B8B', accent: '#A3A3A3', success: '#4ADE80', warning: '#FACC15', danger: '#F87171', background: '#171717', text: '#FAFAFA', textSecondary: '#A3A3A3', textMuted: '#737373', card: '#1F1F1F', cardHover: '#2A2A2A', border: '#2A2A2A', borderLight: '#363636', bg2: '#1A1A1A', bg3: '#1F1F1F', navBg: '#171717', info: '#22D3EE' },
+    fonts: { heading: 'Inter', body: 'Inter' }
+  },
+  'emerald': {
+    colors: { primary: '#059669', accent: '#D4A843', success: '#34D399', warning: '#FBBF24', danger: '#F87171', background: '#0C1B14', text: '#ECFDF5', textSecondary: '#86EFAC', textMuted: '#6EE7B7', card: '#132A1E', cardHover: '#1A3D2A', border: '#1A3D2A', borderLight: '#245236', bg2: '#0F2118', bg3: '#132A1E', navBg: '#0C1B14', info: '#2DD4BF' },
+    fonts: { heading: 'Poppins', body: 'Inter' }
   }
 };
 
@@ -32266,7 +32964,18 @@ const CMS_COLOR_MAP = {
   success: '--color-success',
   warning: '--color-warning',
   danger: '--color-danger',
-  background: '--color-bg'
+  background: '--color-bg',
+  text: '--color-text',
+  textSecondary: '--color-text-secondary',
+  textMuted: '--color-text-muted',
+  card: '--color-card',
+  cardHover: '--color-card-hover',
+  border: '--color-border',
+  borderLight: '--color-border-light',
+  bg2: '--color-bg-2',
+  bg3: '--color-bg-3',
+  navBg: '--color-nav-bg',
+  info: '--color-info'
 };
 
 function loadFarverOgFonts() {
@@ -32547,7 +33256,8 @@ function switchDataCategory(category) {
     consent: 'Consent',
     performance: 'Performance',
     geo: 'Geo & Devices',
-    changes: 'Ændringslog'
+    changes: 'Ændringslog',
+    seo: 'SEO Analyse'
   };
 
   tabs.forEach(tab => {
@@ -32577,6 +33287,7 @@ function switchDataCategory(category) {
     case 'performance': loadPerformanceData(); break;
     case 'geo': loadGeoData(); break;
     case 'changes': loadChangesData(); break;
+    case 'seo': loadSEOAnalysisData(); break;
   }
 }
 
@@ -33284,17 +33995,73 @@ function refreshAnalyticsInline() {
   toast('Analytics opdateret', 'success');
 }
 
-function loadAnalyticsOverview() {
-  // Demo data - replace with real Supabase data
-  const demoData = {
-    revenue: '47.850 kr',
-    orders: '156',
-    aov: '307 kr',
-    visitors: '1.247',
-    aiConversations: '89',
-    aiCompletion: '94%'
-  };
+async function loadAnalyticsOverview() {
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1';
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
+  // Fallback demo data
+  let revenue = 0, orderCount = 0, aov = 0, visitorCount = 0, aiConv = 0, aiComp = 0;
+  let channelData = {}, topProductsList = [];
+
+  try {
+    // Fetch orders (last 30 days)
+    const ordersRes = await fetch(base + '/unified_orders?select=total,source_channel,line_items,status&created_at=gte.' + thirtyDaysAgo, { headers });
+    if (ordersRes.ok) {
+      const orders = await ordersRes.json();
+      const completed = orders.filter(o => !['cancelled','refunded','draft'].includes(o.status));
+      revenue = completed.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      orderCount = completed.length;
+      aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
+
+      // Channel distribution
+      completed.forEach(o => {
+        const ch = o.source_channel || 'unknown';
+        channelData[ch] = (channelData[ch] || 0) + 1;
+      });
+
+      // Top products from line_items
+      const productCounts = {};
+      completed.forEach(o => {
+        (o.line_items || []).forEach(item => {
+          const name = item.name || 'Ukendt';
+          productCounts[name] = (productCounts[name] || 0) + (item.quantity || 1);
+        });
+      });
+      topProductsList = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    }
+
+    // Fetch visitors (page_views last 30 days)
+    const viewsRes = await fetch(base + '/page_views?select=visitor_id&created_at=gte.' + thirtyDaysAgo, { headers });
+    if (viewsRes.ok) {
+      const views = await viewsRes.json();
+      const unique = new Set(views.map(v => v.visitor_id).filter(Boolean));
+      visitorCount = unique.size || views.length;
+    }
+
+    // Fetch AI conversations
+    const aiRes = await fetch(base + '/ai_conversations?select=outcome&started_at=gte.' + thirtyDaysAgo, { headers });
+    if (aiRes.ok) {
+      const convs = await aiRes.json();
+      aiConv = convs.length;
+      const completed = convs.filter(c => c.outcome === 'completed').length;
+      aiComp = aiConv > 0 ? Math.round((completed / aiConv) * 100) : 0;
+    }
+  } catch (e) {
+    console.warn('[Analytics] Supabase fetch fejl, viser demo-data:', e);
+    revenue = 47850; orderCount = 156; aov = 307; visitorCount = 1247; aiConv = 89; aiComp = 94;
+    channelData = { app: 70, web: 47, sms: 23, walkin: 16 };
+    topProductsList = [['Margherita Pizza', 47], ['Pepperoni Pizza', 38], ['Quattro Formaggi', 29], ['Tiramisu', 24], ['Cola', 21]];
+  }
+
+  // Use demo fallback if no real data
+  if (orderCount === 0 && revenue === 0) {
+    revenue = 47850; orderCount = 156; aov = 307; visitorCount = 1247; aiConv = 89; aiComp = 94;
+    channelData = { app: 70, web: 47, sms: 23, walkin: 16 };
+    topProductsList = [['Margherita Pizza', 47], ['Pepperoni Pizza', 38], ['Quattro Formaggi', 29], ['Tiramisu', 24], ['Cola', 21]];
+  }
+
+  const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
   const revenueEl = document.getElementById('inline-stat-revenue');
   const ordersEl = document.getElementById('inline-stat-orders');
   const aovEl = document.getElementById('inline-stat-aov');
@@ -33302,126 +34069,220 @@ function loadAnalyticsOverview() {
   const aiConvEl = document.getElementById('inline-ai-conversations');
   const aiCompEl = document.getElementById('inline-ai-completion');
 
-  if (revenueEl) revenueEl.textContent = demoData.revenue;
-  if (ordersEl) ordersEl.textContent = demoData.orders;
-  if (aovEl) aovEl.textContent = demoData.aov;
-  if (visitorsEl) visitorsEl.textContent = demoData.visitors;
-  if (aiConvEl) aiConvEl.textContent = demoData.aiConversations;
-  if (aiCompEl) aiCompEl.textContent = demoData.aiCompletion;
+  if (revenueEl) revenueEl.textContent = fmt(revenue);
+  if (ordersEl) ordersEl.textContent = orderCount.toLocaleString('da-DK');
+  if (aovEl) aovEl.textContent = fmt(aov);
+  if (visitorsEl) visitorsEl.textContent = visitorCount.toLocaleString('da-DK');
+  if (aiConvEl) aiConvEl.textContent = aiConv.toLocaleString('da-DK');
+  if (aiCompEl) aiCompEl.textContent = aiComp + '%';
 
-  // Channel bars demo
+  // Channel bars
   const channelBars = document.getElementById('inline-channel-bars');
   if (channelBars) {
-    channelBars.innerHTML = `
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="width:80px;font-size:13px">App</span>
+    const total = Object.values(channelData).reduce((s, v) => s + v, 0) || 1;
+    const channelLabels = { app: 'App', web: 'Website', website: 'Website', sms: 'SMS', phone: 'Telefon', walkin: 'Walk-in', instagram: 'Instagram', facebook: 'Facebook' };
+    const channelColors = { app: 'var(--primary)', web: 'var(--success)', website: 'var(--success)', sms: 'var(--info, #3B82F6)', phone: 'var(--warning)', walkin: 'var(--accent)', instagram: '#E1306C', facebook: '#1877F2' };
+    const sorted = Object.entries(channelData).sort((a, b) => b[1] - a[1]);
+    channelBars.innerHTML = sorted.map(([ch, count]) => {
+      const pct = Math.round((count / total) * 100);
+      const label = channelLabels[ch] || ch;
+      const color = channelColors[ch] || 'var(--primary)';
+      return `<div style="display:flex;align-items:center;gap:12px">
+        <span style="width:80px;font-size:13px">${label}</span>
         <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
-          <div style="width:45%;height:100%;background:var(--primary)"></div>
+          <div style="width:${pct}%;height:100%;background:${color}"></div>
         </div>
-        <span style="font-size:13px;width:40px;text-align:right">45%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="width:80px;font-size:13px">Website</span>
-        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
-          <div style="width:30%;height:100%;background:var(--success)"></div>
-        </div>
-        <span style="font-size:13px;width:40px;text-align:right">30%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="width:80px;font-size:13px">Telefon</span>
-        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
-          <div style="width:15%;height:100%;background:var(--warning)"></div>
-        </div>
-        <span style="font-size:13px;width:40px;text-align:right">15%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="width:80px;font-size:13px">Walk-in</span>
-        <div style="flex:1;height:24px;background:var(--bg-secondary);border-radius:4px;overflow:hidden">
-          <div style="width:10%;height:100%;background:var(--accent)"></div>
-        </div>
-        <span style="font-size:13px;width:40px;text-align:right">10%</span>
-      </div>
-    `;
+        <span style="font-size:13px;width:40px;text-align:right">${pct}%</span>
+      </div>`;
+    }).join('');
   }
 
-  // Top products demo
+  // Top products
   const topProducts = document.getElementById('inline-top-products');
   if (topProducts) {
-    topProducts.innerHTML = `
-      <tr><td style="padding:12px 16px">Margherita Pizza</td><td style="text-align:right;padding-right:16px">47</td></tr>
-      <tr><td style="padding:12px 16px">Pepperoni Pizza</td><td style="text-align:right;padding-right:16px">38</td></tr>
-      <tr><td style="padding:12px 16px">Quattro Formaggi</td><td style="text-align:right;padding-right:16px">29</td></tr>
-      <tr><td style="padding:12px 16px">Tiramisu</td><td style="text-align:right;padding-right:16px">24</td></tr>
-      <tr><td style="padding:12px 16px">Cola</td><td style="text-align:right;padding-right:16px">21</td></tr>
-    `;
+    topProducts.innerHTML = topProductsList.map(([name, count]) =>
+      `<tr><td style="padding:12px 16px">${name}</td><td style="text-align:right;padding-right:16px">${count}</td></tr>`
+    ).join('');
   }
 }
 
-function loadAnalyticsSales() {
+async function loadAnalyticsSales() {
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1';
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
+
+  let total = 47850, orders = 156, avg = 307, growth = '+12%';
+
+  try {
+    // Current period
+    const currRes = await fetch(base + '/unified_orders?select=total,status&created_at=gte.' + thirtyDaysAgo, { headers });
+    if (currRes.ok) {
+      const currOrders = (await currRes.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+      if (currOrders.length > 0) {
+        total = currOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+        orders = currOrders.length;
+        avg = Math.round(total / orders);
+
+        // Previous period for growth
+        const prevRes = await fetch(base + '/unified_orders?select=total,status&created_at=gte.' + sixtyDaysAgo + '&created_at=lt.' + thirtyDaysAgo, { headers });
+        if (prevRes.ok) {
+          const prevOrders = (await prevRes.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+          const prevTotal = prevOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          if (prevTotal > 0) {
+            const pct = Math.round(((total - prevTotal) / prevTotal) * 100);
+            growth = (pct >= 0 ? '+' : '') + pct + '%';
+          }
+        }
+      }
+    }
+  } catch (e) { console.warn('[Analytics Sales] Fejl:', e); }
+
+  const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
   const salesTotalEl = document.getElementById('sales-total');
   const salesOrdersEl = document.getElementById('sales-orders');
   const salesAvgEl = document.getElementById('sales-avg');
   const salesGrowthEl = document.getElementById('sales-growth');
 
-  if (salesTotalEl) salesTotalEl.textContent = '47.850 kr';
-  if (salesOrdersEl) salesOrdersEl.textContent = '156';
-  if (salesAvgEl) salesAvgEl.textContent = '307 kr';
-  if (salesGrowthEl) salesGrowthEl.textContent = '+12%';
+  if (salesTotalEl) salesTotalEl.textContent = fmt(total);
+  if (salesOrdersEl) salesOrdersEl.textContent = orders.toLocaleString('da-DK');
+  if (salesAvgEl) salesAvgEl.textContent = fmt(avg);
+  if (salesGrowthEl) salesGrowthEl.textContent = growth;
 }
 
-function loadAnalyticsProducts() {
+async function loadAnalyticsProducts() {
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1';
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+
+  let products = [
+    { name: 'Margherita Pizza', qty: 47, revenue: 4230, trend: 15 },
+    { name: 'Pepperoni Pizza', qty: 38, revenue: 3800, trend: 8 },
+    { name: 'Quattro Formaggi', qty: 29, revenue: 3190, trend: -3 },
+    { name: 'Tiramisu', qty: 24, revenue: 1440, trend: 22 },
+    { name: 'Cola', qty: 21, revenue: 630, trend: 0 }
+  ];
+
+  try {
+    const res = await fetch(base + '/unified_orders?select=line_items,status&created_at=gte.' + thirtyDaysAgo, { headers });
+    if (res.ok) {
+      const orders = (await res.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+      if (orders.length > 0) {
+        const productMap = {};
+        orders.forEach(o => {
+          (o.line_items || []).forEach(item => {
+            const name = item.name || 'Ukendt';
+            if (!productMap[name]) productMap[name] = { qty: 0, revenue: 0 };
+            productMap[name].qty += (item.quantity || 1);
+            productMap[name].revenue += (item.unit_price || 0) * (item.quantity || 1);
+          });
+        });
+        const sorted = Object.entries(productMap).sort((a, b) => b[1].qty - a[1].qty);
+        if (sorted.length > 0) {
+          products = sorted.slice(0, 10).map(([name, data]) => ({
+            name, qty: data.qty, revenue: Math.round(data.revenue), trend: 0
+          }));
+        }
+      }
+    }
+  } catch (e) { console.warn('[Analytics Products] Fejl:', e); }
+
   const table = document.getElementById('products-analytics-table');
   if (table) {
-    table.innerHTML = `
-      <tr><td style="padding:12px 16px">Margherita Pizza</td><td style="text-align:right">47</td><td style="text-align:right">4.230 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 15%</td></tr>
-      <tr><td style="padding:12px 16px">Pepperoni Pizza</td><td style="text-align:right">38</td><td style="text-align:right">3.800 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 8%</td></tr>
-      <tr><td style="padding:12px 16px">Quattro Formaggi</td><td style="text-align:right">29</td><td style="text-align:right">3.190 kr</td><td style="text-align:right;padding-right:16px;color:var(--danger)">↓ 3%</td></tr>
-      <tr><td style="padding:12px 16px">Tiramisu</td><td style="text-align:right">24</td><td style="text-align:right">1.440 kr</td><td style="text-align:right;padding-right:16px;color:var(--success)">↑ 22%</td></tr>
-      <tr><td style="padding:12px 16px">Cola</td><td style="text-align:right">21</td><td style="text-align:right">630 kr</td><td style="text-align:right;padding-right:16px">→ 0%</td></tr>
-    `;
+    const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
+    table.innerHTML = products.map(p => {
+      const trendColor = p.trend > 0 ? 'var(--success)' : p.trend < 0 ? 'var(--danger)' : 'var(--muted)';
+      const trendIcon = p.trend > 0 ? '\u2191' : p.trend < 0 ? '\u2193' : '\u2192';
+      return `<tr><td style="padding:12px 16px">${p.name}</td><td style="text-align:right">${p.qty}</td><td style="text-align:right">${fmt(p.revenue)}</td><td style="text-align:right;padding-right:16px;color:${trendColor}">${trendIcon} ${Math.abs(p.trend)}%</td></tr>`;
+    }).join('');
   }
 }
 
-function loadAnalyticsAI() {
+async function loadAnalyticsAI() {
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1';
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+
+  let totalConv = 89, compRate = 94, ordersCreated = 67, escRate = 6;
+  let recentConvs = [
+    { label: 'Kunde #1247', desc: 'Bestilling: 2x Margherita, 1x Cola', outcome: 'completed' },
+    { label: 'Kunde #1246', desc: 'Sp\u00f8rgsm\u00e5l: \u00c5bningstider', outcome: 'completed' },
+    { label: 'Kunde #1245', desc: 'Bestilling: 3x Pepperoni', outcome: 'escalated' }
+  ];
+
+  try {
+    const res = await fetch(base + '/ai_conversations?select=*&started_at=gte.' + thirtyDaysAgo + '&order=started_at.desc&limit=100', { headers });
+    if (res.ok) {
+      const convs = await res.json();
+      if (convs.length > 0) {
+        totalConv = convs.length;
+        const completed = convs.filter(c => c.outcome === 'completed').length;
+        const escalated = convs.filter(c => c.escalated).length;
+        const withOrders = convs.filter(c => c.order_created).length;
+        compRate = totalConv > 0 ? Math.round((completed / totalConv) * 100) : 0;
+        ordersCreated = withOrders;
+        escRate = totalConv > 0 ? Math.round((escalated / totalConv) * 100) : 0;
+        recentConvs = convs.slice(0, 5).map(c => ({
+          label: 'Samtale #' + (c.id || '').substring(0, 6),
+          desc: c.intent || (c.order_created ? 'Ordre oprettet' : 'Samtale'),
+          outcome: c.outcome || 'in_progress'
+        }));
+      }
+    }
+  } catch (e) { console.warn('[Analytics AI] Fejl:', e); }
+
   const convEl = document.getElementById('ai-total-conversations');
   const compEl = document.getElementById('ai-completion-rate');
   const ordersEl = document.getElementById('ai-orders-created');
   const escEl = document.getElementById('ai-escalation-rate');
 
-  if (convEl) convEl.textContent = '89';
-  if (compEl) compEl.textContent = '94%';
-  if (ordersEl) ordersEl.textContent = '67';
-  if (escEl) escEl.textContent = '6%';
+  if (convEl) convEl.textContent = totalConv.toLocaleString('da-DK');
+  if (compEl) compEl.textContent = compRate + '%';
+  if (ordersEl) ordersEl.textContent = ordersCreated.toLocaleString('da-DK');
+  if (escEl) escEl.textContent = escRate + '%';
 
+  const outcomeColors = { completed: 'var(--success)', escalated: 'var(--warning)', abandoned: 'var(--danger)', in_progress: 'var(--muted)' };
+  const outcomeLabels = { completed: 'Fuldf\u00f8rt', escalated: 'Eskaleret', abandoned: 'Forladt', in_progress: 'I gang' };
   const convList = document.getElementById('ai-conversations-list');
   if (convList) {
-    convList.innerHTML = `
+    convList.innerHTML = recentConvs.map(c => `
       <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Kunde #1247</strong><div style="font-size:12px;color:var(--muted)">Bestilling: 2x Margherita, 1x Cola</div></div>
-        <span style="font-size:12px;color:var(--success)">Fuldført</span>
+        <div><strong>${c.label}</strong><div style="font-size:12px;color:var(--muted)">${c.desc}</div></div>
+        <span style="font-size:12px;color:${outcomeColors[c.outcome] || 'var(--muted)'}">${outcomeLabels[c.outcome] || c.outcome}</span>
       </div>
-      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Kunde #1246</strong><div style="font-size:12px;color:var(--muted)">Spørgsmål: Åbningstider</div></div>
-        <span style="font-size:12px;color:var(--success)">Fuldført</span>
-      </div>
-      <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
-        <div><strong>Kunde #1245</strong><div style="font-size:12px;color:var(--muted)">Bestilling: 3x Pepperoni</div></div>
-        <span style="font-size:12px;color:var(--warning)">Eskaleret</span>
-      </div>
-    `;
+    `).join('');
   }
 }
 
-function loadAnalyticsChannels() {
-  const appEl = document.getElementById('channel-app');
-  const webEl = document.getElementById('channel-website');
-  const phoneEl = document.getElementById('channel-phone');
-  const walkinEl = document.getElementById('channel-walkin');
+async function loadAnalyticsChannels() {
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+  const base = CONFIG.SUPABASE_URL + '/rest/v1';
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  if (appEl) appEl.textContent = '70';
-  if (webEl) webEl.textContent = '47';
-  if (phoneEl) phoneEl.textContent = '23';
-  if (walkinEl) walkinEl.textContent = '16';
+  let channelCounts = { app: 70, web: 47, phone: 23, walkin: 16 };
+
+  try {
+    const res = await fetch(base + '/unified_orders?select=source_channel,status&created_at=gte.' + thirtyDaysAgo, { headers });
+    if (res.ok) {
+      const orders = (await res.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+      if (orders.length > 0) {
+        channelCounts = {};
+        orders.forEach(o => {
+          const ch = o.source_channel || 'unknown';
+          channelCounts[ch] = (channelCounts[ch] || 0) + 1;
+        });
+      }
+    }
+  } catch (e) { console.warn('[Analytics Channels] Fejl:', e); }
+
+  const channelMap = { app: 'channel-app', web: 'channel-website', website: 'channel-website', phone: 'channel-phone', sms: 'channel-phone', walkin: 'channel-walkin' };
+  Object.entries(channelCounts).forEach(([ch, count]) => {
+    const elId = channelMap[ch];
+    if (elId) {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = count.toLocaleString('da-DK');
+    }
+  });
 }
 
 // Export CMS Data
@@ -33477,6 +34338,12 @@ function exportCMSData(format) {
 
 // Load integrations page
 function loadIntegrationsPage() {
+  // Reset search and pagination state
+  apiKeysSearchQuery = '';
+  apiKeysCurrentPage = 1;
+  var searchInput = document.getElementById('api-keys-search');
+  if (searchInput) searchInput.value = '';
+
   // Generate FLOW ID if not exists
   let flowId = localStorage.getItem('flow_id');
   if (!flowId) {
@@ -33546,16 +34413,16 @@ function generateApiKey() {
     return;
   }
 
-  // Generate key
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const apiKey = 'of_' + Array.from({length: 32}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  // Generate key (40-character hex format)
+  const hexChars = '0123456789abcdef';
+  const apiKey = Array.from({length: 40}, () => hexChars[Math.floor(Math.random() * hexChars.length)]).join('');
 
   // Save to localStorage
   const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
   keys.push({
     id: Date.now().toString(),
     name,
-    keyPrefix: apiKey.substring(0, 10) + '...',
+    keyPrefix: maskApiKey(apiKey),
     permissions,
     createdAt: new Date().toISOString(),
     lastUsed: null
@@ -33579,39 +34446,324 @@ function generateApiKey() {
   toast('API nøgle genereret', 'success');
 }
 
-// Load API keys list
+// --- API Keys Pagination & Search State ---
+var apiKeysCurrentPage = 1;
+var apiKeysPageSize = 12;
+var apiKeysSearchQuery = '';
+
+// SVG icons for API key row actions
+var apiKeyEyeSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var apiKeyGearSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>';
+var apiKeyTrashSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>';
+
+// Configured APIs definition (shared between functions)
+var CONFIGURED_APIS = [
+  { name: 'OpenAI', keyField: 'openai_key', toggleName: 'openai', service: 'AI Assistent', inputId: 'openai-api-key-input' },
+  { name: 'InMobile SMS', keyField: 'inmobile_api_key', toggleName: 'inmobile', service: 'SMS Service', inputId: 'inmobile-api-key', relatedFields: ['inmobile_sender'] },
+  { name: 'Google Reviews', keyField: 'google_api_key', toggleName: 'google', service: 'Anmeldelser', inputId: 'google-api-key', relatedFields: ['google_place_id'] },
+  { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser', inputId: 'trustpilot-api-key', relatedFields: ['trustpilot_business_id'] },
+  { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling', inputId: 'firecrawl-api-key' },
+  { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services', inputId: 'googleapi-api-key' }
+];
+
+// Load API keys list with search and pagination
 function loadApiKeysList() {
-  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-  const tbody = document.getElementById('api-keys-list');
+  var tbody = document.getElementById('api-keys-list');
   if (!tbody) return;
 
-  if (keys.length === 0) {
-    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API nøgler oprettet endnu</td></tr>';
-    return;
+  var disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+  var deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+  var userKeys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  var allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+
+  // Build unified data model
+  var allKeys = [];
+
+  // A. System keys (filter deleted)
+  allSysKeys.forEach(function(sKey) {
+    if (deletedSysKeys.indexOf(sKey.id) !== -1) return;
+    var isDisabled = disabledStates[sKey.id] === true;
+    allKeys.push({
+      id: sKey.id, name: sKey.name, service: sKey.service,
+      keyValue: sKey.key, maskedKey: maskApiKey(sKey.key),
+      type: 'System', keyType: 'system',
+      status: isDisabled ? 'Deaktiveret' : 'Aktiv',
+      statusColor: isDisabled ? 'var(--danger)' : 'var(--success)',
+      hasFullKey: true, serviceUrl: sKey.url || '#',
+      toggleName: null, keyField: null
+    });
+  });
+
+  // B. Configured API connections
+  CONFIGURED_APIS.forEach(function(cfg) {
+    var keyValue = localStorage.getItem(cfg.keyField);
+    var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
+    var hasKey = !!keyValue;
+    allKeys.push({
+      id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
+      keyValue: keyValue || '', maskedKey: hasKey ? maskApiKey(keyValue) : '\u2014',
+      type: 'Konfigureret', keyType: 'configured',
+      status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
+      statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
+      hasFullKey: hasKey, serviceUrl: null,
+      toggleName: cfg.toggleName, keyField: cfg.keyField
+    });
+  });
+
+  // C. User-generated keys
+  userKeys.forEach(function(key) {
+    allKeys.push({
+      id: key.id, name: key.name, service: null,
+      keyValue: null, maskedKey: key.keyPrefix,
+      type: 'Bruger', keyType: 'user',
+      status: 'Aktiv', statusColor: 'var(--success)',
+      hasFullKey: false, serviceUrl: null,
+      toggleName: null, keyField: null
+    });
+  });
+
+  // Apply search filter
+  var query = apiKeysSearchQuery.toLowerCase();
+  var filtered = allKeys;
+  if (query) {
+    filtered = allKeys.filter(function(k) {
+      return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
+             (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
+             (k.maskedKey && k.maskedKey.toLowerCase().indexOf(query) !== -1) ||
+             (k.type && k.type.toLowerCase().indexOf(query) !== -1);
+    });
   }
 
-  tbody.innerHTML = keys.map(key => `
-    <tr style="border-bottom:1px solid var(--border)">
-      <td style="padding:12px 8px;font-size:14px">${key.name}</td>
-      <td style="padding:12px 8px;font-size:14px;font-family:monospace;color:var(--muted)">${key.keyPrefix}</td>
-      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${new Date(key.createdAt).toLocaleDateString('da-DK')}</td>
-      <td style="padding:12px 8px;font-size:14px;color:var(--muted)">${key.lastUsed ? new Date(key.lastUsed).toLocaleDateString('da-DK') : 'Aldrig'}</td>
-      <td style="padding:12px 8px;text-align:right">
-        <button class="btn btn-danger btn-sm" onclick="deleteApiKey('${key.id}')">Slet</button>
-      </td>
-    </tr>
-  `).join('');
+  // Pagination
+  var totalPages = Math.max(1, Math.ceil(filtered.length / apiKeysPageSize));
+  if (apiKeysCurrentPage > totalPages) apiKeysCurrentPage = totalPages;
+  var startIdx = (apiKeysCurrentPage - 1) * apiKeysPageSize;
+  var pageItems = filtered.slice(startIdx, startIdx + apiKeysPageSize);
+
+  // Render rows
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">' +
+      (query ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
+  } else {
+    tbody.innerHTML = pageItems.map(function(k) {
+      return renderApiKeyRow(k, disabledStates);
+    }).join('');
+  }
+
+  // Render pagination
+  renderApiKeysPagination(totalPages);
+
+  // Also render to API Adgang settings page (read-only summary)
+  var adgangTbody = document.getElementById('api-adgang-keys-list');
+  if (adgangTbody) {
+    if (allKeys.length === 0) {
+      adgangTbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Ingen API n\u00f8gler</td></tr>';
+    } else {
+      adgangTbody.innerHTML = allKeys.map(renderApiAdgangRow).join('');
+    }
+  }
 }
 
-// Delete API key
-function deleteApiKey(keyId) {
-  if (!confirm('Er du sikker på at du vil slette denne API nøgle?')) return;
+// Render a read-only row for the API Adgang keys summary table
+function renderApiAdgangRow(k) {
+  var nameCell = k.name;
+  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
+  return '<tr style="border-bottom:1px solid var(--border)">' +
+    '<td style="padding:10px 8px;font-size:13px">' + nameCell + '</td>' +
+    '<td style="padding:10px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + (k.maskedKey || '\u2014') + '</td>' +
+    '<td style="padding:10px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2)">' + k.type + '</span></td>' +
+    '<td style="padding:10px 8px"><span style="font-size:12px;font-weight:500;color:' + k.statusColor + '">' + k.status + '</span></td>' +
+    '</tr>';
+}
 
-  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-  const filtered = keys.filter(k => k.id !== keyId);
-  localStorage.setItem('flow_api_keys', JSON.stringify(filtered));
+// Render a single API key table row with consistent actions
+function renderApiKeyRow(k, disabledStates) {
+  var nameCell = k.name;
+  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
+
+  var actions = '';
+  var btnStyle = 'padding:4px 8px;margin-right:4px';
+
+  // Eye icon (only if full key available)
+  if (k.hasFullKey) {
+    if (k.keyType === 'system') {
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + k.id + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+    } else if (k.keyType === 'configured') {
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + k.id + '\',\'' + k.keyField + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+    }
+  }
+
+  // Gear icon
+  if (k.keyType === 'system') {
+    var isDisabled = disabledStates[k.id] === true;
+    var serviceUrl = k.serviceUrl;
+    var ddBtnStyle = 'display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)';
+    var ddHover = 'onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'"';
+    actions += '<div style="display:inline-block;position:relative">' +
+      '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + k.id + '" onclick="toggleApiKeyDropdown(\'' + k.id + '\')" title="Indstillinger" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>' +
+      '<div id="api-key-dropdown-' + k.id + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
+        '<button onclick="window.open(\'' + serviceUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>Rediger</button>' +
+        '<button onclick="toggleSystemKeyActive(\'' + k.id + '\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
+      '</div></div>';
+  } else if (k.keyType === 'configured') {
+    actions += '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>';
+  }
+
+  // Delete icon (all types)
+  var escapedName = k.name.replace(/'/g, "\\'");
+  actions += '<button class="btn btn-secondary btn-sm" onclick="confirmDeleteApiKey(\'' + k.id + '\',\'' + escapedName + '\',\'' + k.keyType + '\')" title="Slet" style="padding:4px 8px;color:var(--danger)">' + apiKeyTrashSvg + '</button>';
+
+  return '<tr style="border-bottom:1px solid var(--border)">' +
+    '<td style="padding:12px 8px;font-size:14px">' + nameCell + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + k.id + '" data-visible="false">' + k.maskedKey + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + k.type + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:' + k.statusColor + '">' + k.status + '</td>' +
+    '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' + actions + '</td></tr>';
+}
+
+// Render pagination controls
+function renderApiKeysPagination(totalPages) {
+  var container = document.getElementById('api-keys-pagination');
+  if (!container) return;
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+  var html = '';
+  if (apiKeysCurrentPage > 1) {
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage - 1) + ')">\u2190</button>';
+  }
+  for (var i = 1; i <= totalPages; i++) {
+    html += '<button class="btn ' + (i === apiKeysCurrentPage ? 'btn-primary' : 'btn-secondary') + '" style="padding:6px 12px;min-width:36px" onclick="goToApiKeysPage(' + i + ')">' + i + '</button>';
+  }
+  if (apiKeysCurrentPage < totalPages) {
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage + 1) + ')">\u2192</button>';
+  }
+  container.innerHTML = html;
+}
+
+function goToApiKeysPage(page) {
+  apiKeysCurrentPage = page;
   loadApiKeysList();
-  toast('API nøgle slettet', 'success');
+}
+
+// Search/filter API keys
+function filterApiKeys(query) {
+  apiKeysSearchQuery = (query || '').trim();
+  apiKeysCurrentPage = 1;
+  loadApiKeysList();
+}
+
+// Scroll to API key generator section
+function scrollToApiKeyGenerator() {
+  var el = document.getElementById('api-key-name');
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function() { el.focus(); }, 500);
+  }
+}
+
+// Toggle visibility for configured API keys
+function toggleConfiguredKeyVisibility(keyId, keyField) {
+  var el = document.getElementById('key-display-' + keyId);
+  if (!el) return;
+  var fullKey = localStorage.getItem(keyField);
+  if (!fullKey) return;
+  if (el.dataset.visible === 'true') {
+    el.textContent = maskApiKey(fullKey);
+    el.dataset.visible = 'false';
+  } else {
+    el.textContent = fullKey;
+    el.dataset.visible = 'true';
+  }
+}
+
+// Confirm delete API key using modal
+function confirmDeleteApiKey(keyId, keyName, keyType) {
+  document.getElementById('delete-confirm-message').textContent =
+    'Er du sikker p\u00e5 at du vil slette API n\u00f8glen "' + keyName + '"?';
+  document.getElementById('delete-confirm-btn').onclick = function() {
+    executeDeleteApiKey(keyId, keyType);
+  };
+  document.getElementById('delete-confirm-modal').style.display = 'flex';
+}
+
+// Execute API key deletion
+function executeDeleteApiKey(keyId, keyType) {
+  if (keyType === 'system') {
+    var deletedKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+    if (deletedKeys.indexOf(keyId) === -1) deletedKeys.push(keyId);
+    localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedKeys));
+  } else if (keyType === 'configured') {
+    var toggleName = keyId.replace('cfg-', '');
+    var cfg = CONFIGURED_APIS.find(function(c) { return c.toggleName === toggleName; });
+    if (cfg) {
+      localStorage.removeItem(cfg.keyField);
+      if (cfg.relatedFields) cfg.relatedFields.forEach(function(f) { localStorage.removeItem(f); });
+      var inputEl = document.getElementById(cfg.inputId);
+      if (inputEl) inputEl.value = '';
+    }
+  } else if (keyType === 'user') {
+    var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+    localStorage.setItem('flow_api_keys', JSON.stringify(keys.filter(function(k) { return k.id !== keyId; })));
+  }
+
+  closeDeleteConfirmModal();
+  loadApiKeysList();
+  updateApiStatus();
+  toast('API n\u00f8gle slettet', 'success');
+}
+
+// Toggle API key gear dropdown
+function toggleApiKeyDropdown(keyId) {
+  // Close any other open API key dropdowns first
+  document.querySelectorAll('[id^="api-key-dropdown-"]').forEach(function(dd) {
+    if (dd.id !== 'api-key-dropdown-' + keyId) {
+      dd.style.display = 'none';
+    }
+  });
+
+  var dropdown = document.getElementById('api-key-dropdown-' + keyId);
+  if (!dropdown) return;
+
+  if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+    dropdown.style.display = 'block';
+    setTimeout(function() {
+      document.addEventListener('click', closeApiKeyDropdownOnOutsideClick);
+    }, 100);
+  } else {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeApiKeyDropdownOnOutsideClick);
+  }
+}
+
+function closeApiKeyDropdownOnOutsideClick(e) {
+  var anyOpen = false;
+  document.querySelectorAll('[id^="api-key-dropdown-"]').forEach(function(dd) {
+    var btnId = dd.id.replace('api-key-dropdown-', 'api-gear-btn-');
+    var btn = document.getElementById(btnId);
+    if (dd.style.display === 'block') {
+      if (!dd.contains(e.target) && (!btn || !btn.contains(e.target))) {
+        dd.style.display = 'none';
+      } else {
+        anyOpen = true;
+      }
+    }
+  });
+  if (!anyOpen) {
+    document.removeEventListener('click', closeApiKeyDropdownOnOutsideClick);
+  }
+}
+
+// Delete system API key (delegates to modal)
+function deleteSystemKey(keyId) {
+  var sysKey = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []).find(function(k) { return k.id === keyId; });
+  confirmDeleteApiKey(keyId, sysKey ? sysKey.name : 'System n\u00f8gle', 'system');
+}
+
+// Delete user API key (delegates to modal)
+function deleteApiKey(keyId) {
+  var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  var key = keys.find(function(k) { return k.id === keyId; });
+  confirmDeleteApiKey(keyId, key ? key.name : 'API n\u00f8gle', 'user');
 }
 
 // Show integration fields based on selected system
@@ -36927,6 +38079,7 @@ function renderInstalledTemplates() {
           <p style="margin:0;font-size:12px;color:var(--muted)">${t.branding?.slogan || 'Ingen beskrivelse'}</p>
           <div style="display:flex;gap:8px;margin-top:12px">
             <button class="btn btn-sm btn-secondary" onclick="previewTemplate('${id}')" style="flex:1">Forhåndsvis</button>
+            ${!isCustom ? `<button class="btn btn-sm btn-secondary" onclick="openTemplateEditor('${id}')" style="flex:1">Rediger kode</button>` : ''}
             ${isCustom ? `<button class="btn btn-sm" style="background:var(--danger);color:white" onclick="deleteTemplate('${id}')">Slet</button>` : ''}
           </div>
         </div>
@@ -36945,6 +38098,14 @@ function previewTemplate(templateId) {
   } else {
     toast('Kunne ikke finde preview for denne skabelon', 'error');
   }
+}
+
+// Open template editor for a specific template (from FLOW CMS → Skabeloner)
+function openTemplateEditor(templateId) {
+  showPage('page-template-editor');
+  const selector = document.getElementById('te-template-selector');
+  if (selector) selector.value = templateId;
+  loadTemplateEditorFiles(templateId);
 }
 
 // Delete a custom template
@@ -38858,495 +40019,1132 @@ const SEAnalysisService = {
   }
 };
 
-// --- Search Handler ---
-let seSearchDebounceTimer = null;
-let seSearchResults = [];
-let seSelectedBusiness = null;
-let seAnalysisResults = {};
-let seFindings = [];
-let seIsScanning = false;
-
-function seHandleSearchInput(query) {
-  clearTimeout(seSearchDebounceTimer);
-  const resultsEl = document.getElementById('se-search-results');
-  const loadingEl = document.getElementById('se-search-loading');
-  const errorEl = document.getElementById('se-search-error');
-  if (query.length < 2) { resultsEl.style.display='none'; loadingEl.style.display='none'; return; }
-  loadingEl.style.display='block'; errorEl.style.display='none';
-  seSearchDebounceTimer = setTimeout(async () => {
-    try {
-      seSearchResults = await SEAnalysisService.searchBusiness(query);
-      loadingEl.style.display='none';
-      if (seSearchResults.length === 0) {
-        resultsEl.innerHTML = '<div style="padding:var(--space-4);text-align:center;color:var(--muted);font-size:var(--font-size-sm)">Ingen resultater fundet</div>';
-      } else {
-        resultsEl.innerHTML = seSearchResults.map((r,i) =>
-          '<div onclick="seSelectBusiness('+i+')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.15s" onmouseover="this.style.background=\'var(--bg2)\'" onmouseout="this.style.background=\'transparent\'">' +
-          '<div style="font-weight:500;font-size:14px">' + (r.name||'').replace(/</g,'&lt;') + '</div>' +
-          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + (r.address||'').replace(/</g,'&lt;') + '</div></div>'
-        ).join('');
-      }
-      resultsEl.style.display='block';
-    } catch (e) {
-      loadingEl.style.display='none';
-      errorEl.textContent = 'Søgning fejlede. Prøv igen.';
-      errorEl.style.display='block';
-    }
-  }, 300);
-}
-
-function seSelectBusiness(index) {
-  seSelectedBusiness = seSearchResults[index];
-  document.getElementById('se-search-results').style.display='none';
-  document.getElementById('se-search-input').value = seSelectedBusiness.name;
-  document.getElementById('se-selected-name').textContent = seSelectedBusiness.name;
-  document.getElementById('se-selected-address').textContent = seSelectedBusiness.address || '';
-  document.getElementById('se-selected-business').style.display='block';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = false; btn.style.opacity = '1';
-}
-
-function seClearSelection() {
-  seSelectedBusiness = null;
-  document.getElementById('se-selected-business').style.display='none';
-  document.getElementById('se-search-input').value = '';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = true; btn.style.opacity = '0.5';
-}
-
-// --- Findings Extraction ---
-function seExtractFindings(moduleId, moduleName, result) {
-  const findings = [];
-  if (result?.findings) {
-    result.findings.forEach((f,i) => {
-      findings.push({ id:moduleId+'_'+i+'_'+Date.now(), module:moduleId, moduleName, category:f.type||'warning', title:f.title, description:f.description, confidence:result.confidence||'indicator', dataSource:result.dataSource||'demo_data' });
-    });
-  }
-  if (moduleId==='googleProfile' && result) {
-    if (result.rating>=4.0) findings.push({id:moduleId+'_rating',module:moduleId,moduleName,category:'positive',title:'God Google rating',description:'Rating på '+result.rating+' stjerner baseret på '+result.totalReviews+' anmeldelser.',confidence:'confirmed'});
-    if (result.profileCompleteness?.score<80) findings.push({id:moduleId+'_incomplete',module:moduleId,moduleName,category:'warning',title:'Ufuldstændig profil',description:'Profilen er kun '+result.profileCompleteness.score+'% komplet.',confidence:'confirmed'});
-  }
-  if (moduleId==='reviews' && result) {
-    if (result.responseMetrics?.responseRate<50) findings.push({id:moduleId+'_response',module:moduleId,moduleName,category:'warning',title:'Lav svarrate',description:'Kun '+result.responseMetrics.responseRate+'% besvaret.',confidence:'confirmed'});
-    if (result.velocity?.monthlyAverage<4) findings.push({id:moduleId+'_velocity',module:moduleId,moduleName,category:'opportunity',title:'Potentiale for flere anmeldelser',description:'Gennemsnit '+result.velocity.monthlyAverage+'/måned.',confidence:'indicator'});
-  }
-  if (moduleId==='images' && result) {
-    if (result.totalImages===0) findings.push({id:moduleId+'_missing',module:moduleId,moduleName,category:'warning',title:'Ingen online billeder',description:'Påvirker troværdighed.',confidence:result.confidence||'indicator'});
-  }
-  if (moduleId==='napConsistency' && result) {
-    const issues = result.issues?.filter(i=>i.severity==='high')||[];
-    if (issues.length>0) findings.push({id:moduleId+'_issues',module:moduleId,moduleName,category:'critical',title:'Inkonsistente oplysninger',description:issues.length+' kritiske problemer.',confidence:'indicator'});
-  }
-  return findings;
-}
-
-// --- Scanner Engine ---
-const SE_ANALYSIS_STEPS = [
-  { id:'googleProfile', name:'Google Business Profile', fn:(b) => SEAnalysisService.getGoogleBusinessProfile(b.place_id, b.name) },
-  { id:'reviews', name:'Anmeldelsesanalyse', fn:(b) => SEAnalysisService.getReviewAnalysis(b.place_id, b.name) },
-  { id:'images', name:'Billeder & Medier', fn:(b) => SEAnalysisService.getBusinessImages(b.name) },
-  { id:'serpVisibility', name:'SERP Synlighed', fn:(b) => SEAnalysisService.getSERPVisibility(b.name, {city: (b.address||'').split(',').pop()?.trim()||'Danmark'}, b.type||'restaurant') },
-  { id:'citations', name:'Citationer', fn:(b) => SEAnalysisService.getCitationPresence(b.name, b.address, b.phone) },
-  { id:'competitors', name:'Konkurrentanalyse', fn:(b) => SEAnalysisService.getCompetitorAnalysis(b.name, {city: (b.address||'').split(',').pop()?.trim()||'Aarhus'}, b.type||'restaurant') },
-  { id:'napConsistency', name:'NAP Konsistens', fn:(b) => SEAnalysisService.checkNAPConsistency(b.name, b.address, b.phone) },
-  { id:'website', name:'Website & Mobil', fn:(b) => SEAnalysisService.analyzeWebsite(seAnalysisResults.googleProfile?.website || 'https://example.dk') },
-  { id:'schemaMarkup', name:'Schema Markup', fn:(b) => SEAnalysisService.detectSchemaMarkup(seAnalysisResults.googleProfile?.website || 'https://example.dk') },
-  { id:'social', name:'Social Media', fn:(b) => SEAnalysisService.analyzeSocialPresence(b.name) }
+// --- System API Keys (for Integrations page) ---
+const SYSTEM_API_KEYS = [
+  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '238621b449ced86740e16a0707be5b8999b87c9e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-images', name: 'Serper Images', key: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-maps', name: 'Serper Maps', key: '071a75aeaf9e4434466f91caf455e6ddfe72a76e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-places', name: 'Serper Places', key: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-firecrawl', name: 'Firecrawl', key: 'fc-c12a209b1d6d44939e0b8faa393515e3', type: 'System', service: 'SEO Analyse v2.0', url: 'https://firecrawl.dev' },
+  { id: 'sys-google-api', name: 'Google API', key: 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo', type: 'System', service: 'SEO Analyse v2.0', url: 'https://console.cloud.google.com' }
 ];
 
-function seUpdateStepUI(stepId, status) {
-  const stepEl = document.getElementById('se-step-' + stepId);
-  if (!stepEl) return;
-  const dot = stepEl.querySelector('.se-step-dot');
-  const label = stepEl.querySelector('span');
-  if (status === 'running') {
-    dot.style.background = 'var(--accent)'; dot.style.borderColor = 'var(--accent)'; dot.style.animation = 'pulse 1.5s infinite';
-    dot.innerHTML = '<div class="spinner spinner-sm" style="width:12px;height:12px;border-width:2px"></div>';
-    label.style.color = 'var(--text)'; label.style.fontWeight = '600';
-  } else if (status === 'completed') {
-    dot.style.background = '#059669'; dot.style.borderColor = '#059669'; dot.style.animation = 'none';
-    dot.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-    label.style.color = 'var(--text)'; label.style.fontWeight = '500';
-  } else if (status === 'error') {
-    dot.style.background = 'var(--danger)'; dot.style.borderColor = 'var(--danger)'; dot.style.animation = 'none';
-    dot.innerHTML = '<span style="color:white;font-size:12px;font-weight:bold">!</span>';
-    label.style.color = 'var(--danger)';
+// --- Mask API key for display ---
+function maskApiKey(key) {
+  if (!key || key.length < 10) return key || '';
+  return key.substring(0, 6) + '****' + key.substring(key.length - 4);
+}
+
+// --- Toggle system key visibility ---
+function toggleSystemKeyVisibility(keyId) {
+  const el = document.getElementById('key-display-' + keyId);
+  if (!el) return;
+  const sysKey = SYSTEM_API_KEYS.find(k => k.id === keyId);
+  if (!sysKey) return;
+  if (el.dataset.visible === 'true') {
+    el.textContent = maskApiKey(sysKey.key);
+    el.dataset.visible = 'false';
+  } else {
+    el.textContent = sysKey.key;
+    el.dataset.visible = 'true';
   }
 }
 
-function seAddFindingToFeed(finding) {
-  const feed = document.getElementById('se-findings-feed');
-  const colors = { positive:'#059669', warning:'#d97706', critical:'#dc2626', opportunity:'#2563eb' };
-  const labels = { positive:'Positivt', warning:'Advarsel', critical:'Kritisk', opportunity:'Mulighed' };
-  const bgColors = { positive:'rgba(5,150,105,0.08)', warning:'rgba(217,119,6,0.08)', critical:'rgba(220,38,38,0.08)', opportunity:'rgba(37,99,235,0.08)' };
-  const color = colors[finding.category] || colors.warning;
-  const label = labels[finding.category] || 'Fund';
-  const bg = bgColors[finding.category] || bgColors.warning;
-  const card = document.createElement('div');
-  card.style.cssText = 'padding:var(--space-3);border-radius:var(--radius-md);background:'+bg+';border-left:3px solid '+color+';animation:seSlideInRight 0.3s ease';
-  card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px"><span style="font-weight:600;font-size:13px">'+finding.title+'</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:'+color+';color:white;font-weight:500">'+label+'</span></div><div style="font-size:12px;color:var(--muted);line-height:1.4">'+finding.description+'</div><div style="font-size:10px;color:var(--muted);margin-top:4px">'+finding.moduleName+'</div>';
-  if (feed.children.length === 1 && feed.children[0].textContent.includes('vises her')) feed.innerHTML = '';
-  feed.insertBefore(card, feed.firstChild);
-  feed.scrollTop = 0;
+// --- Toggle system key active state ---
+function toggleSystemKeyActive(keyId) {
+  const states = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+  states[keyId] = !states[keyId];
+  if (states[keyId] === false) delete states[keyId]; // default is active
+  localStorage.setItem('flow_system_key_states', JSON.stringify(states));
+  loadApiKeysList();
 }
 
-async function seStartAnalysis() {
-  if (!seSelectedBusiness || seIsScanning) return;
-  seIsScanning = true;
-  seAnalysisResults = {}; seFindings = [];
+// --- SEO Analysis Data Tab ---
+function loadSEOAnalysisData() {
+  try {
+    const raw = localStorage.getItem('flow_seo_analysis_latest');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || !data.business) return;
 
-  // Hide search & static sections, show scanner
-  document.getElementById('se-search-section').style.display = 'none';
-  document.getElementById('se-static-sections').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'none';
-  document.getElementById('se-scanner-container').style.display = 'block';
-  document.getElementById('se-completion-card').style.display = 'none';
-  document.getElementById('se-findings-feed').innerHTML = '<div style="text-align:center;padding:var(--space-6);color:var(--muted)"><p style="font-size:var(--font-size-sm)">Analysefund vises her efterhånden...</p></div>';
+    // Stat cards
+    const scoreEl = document.getElementById('seo-data-score');
+    if (scoreEl) scoreEl.textContent = data.score || '-';
 
-  // Set business info in scanner
-  document.getElementById('se-scanner-business-name').textContent = seSelectedBusiness.name;
-  document.getElementById('se-scanner-business-address').textContent = seSelectedBusiness.address || '';
-
-  // Reset all steps
-  SE_ANALYSIS_STEPS.forEach(step => {
-    const el = document.getElementById('se-step-' + step.id);
-    if (el) {
-      const dot = el.querySelector('.se-step-dot');
-      dot.style.background = 'var(--bg2)'; dot.style.borderColor = 'var(--border)'; dot.style.animation = 'none'; dot.innerHTML = '';
-      el.querySelector('span').style.color = 'var(--muted)'; el.querySelector('span').style.fontWeight = '400';
+    const reviewsEl = document.getElementById('seo-data-reviews');
+    if (reviewsEl) {
+      const r = data.results?.[3];
+      reviewsEl.textContent = r?.reviewCount || '-';
     }
-  });
-  document.getElementById('se-scanner-progress-bar').style.width = '0%';
-  document.getElementById('se-scanner-progress-text').textContent = '0/10';
 
-  // Run each step
-  let completed = 0;
-  for (const step of SE_ANALYSIS_STEPS) {
-    if (!seIsScanning) break;
-    seUpdateStepUI(step.id, 'running');
-    document.getElementById('se-scanner-current-module').textContent = step.name + '...';
+    const compEl = document.getElementById('seo-data-competitors');
+    if (compEl) {
+      const m = data.results?.[1];
+      compEl.textContent = m?.competitors?.length || '-';
+    }
+
+    const webEl = document.getElementById('seo-data-website-score');
+    if (webEl) {
+      const w = data.results?.[6];
+      webEl.textContent = w?.scores?.mobile ? w.scores.mobile + '/100' : '-';
+    }
+
+    const socialEl = document.getElementById('seo-data-social');
+    if (socialEl) {
+      const f = data.results?.[5];
+      socialEl.textContent = f?.followers ? f.followers.toLocaleString() : '-';
+    }
+
+    // Analyses table
+    const analysesTable = document.getElementById('seo-data-analyses-table');
+    if (analysesTable) {
+      const date = data.timestamp ? new Date(data.timestamp).toLocaleDateString('da-DK') : '-';
+      analysesTable.innerHTML = `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:12px 8px;padding-left:12px;font-size:14px">${data.business.name || '-'}</td>
+        <td style="padding:12px 8px;font-size:14px;font-weight:600">${data.score || '-'}/100</td>
+        <td style="padding:12px 8px;font-size:14px">${data.results?.[3]?.reviewCount || '-'}</td>
+        <td style="padding:12px 8px;font-size:14px">${data.results?.[1]?.competitors?.length || '-'}</td>
+        <td style="padding:12px 8px;padding-right:12px;font-size:14px;color:var(--muted)">${date}</td>
+      </tr>`;
+    }
+
+    // Findings table
+    const findingsTable = document.getElementById('seo-data-findings-table');
+    if (findingsTable && data.results) {
+      const findings = [];
+      const googleData = data.results[2];
+      if (googleData) {
+        findings.push({ cat: 'Google Business', fund: 'Rating: ' + (googleData.rating || '-'), status: (googleData.rating||0) >= 4 ? 'OK' : 'Advarsel', detail: (googleData.totalReviews||0) + ' anmeldelser' });
+      }
+      const reviewData = data.results[3];
+      if (reviewData && reviewData.sentiment) {
+        findings.push({ cat: 'Anmeldelser', fund: 'Positiv: ' + reviewData.sentiment.positive + '%', status: reviewData.sentiment.positive >= 70 ? 'OK' : 'Advarsel', detail: (reviewData.reviewCount||0) + ' reviews analyseret' });
+      }
+      const imgData = data.results[4];
+      if (imgData) {
+        findings.push({ cat: 'Billeder', fund: (imgData.totalPhotos||0) + ' billeder', status: (imgData.totalPhotos||0) > 20 ? 'OK' : 'Advarsel', detail: 'Score: ' + (imgData.qualityAnalysis?.overallScore||'-') });
+      }
+      const webData = data.results[7];
+      if (webData) {
+        findings.push({ cat: 'Website', fund: webData.scraped ? 'Scraped via Firecrawl' : 'Mock data', status: webData.scraped ? 'OK' : 'Info', detail: webData.metadata?.title || '-' });
+      }
+
+      if (findings.length > 0) {
+        findingsTable.innerHTML = findings.map(function(f) {
+          var statusColor = f.status === 'OK' ? 'var(--success)' : f.status === 'Advarsel' ? 'var(--warning)' : 'var(--muted)';
+          return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 8px;padding-left:12px;font-size:14px">' + f.cat + '</td><td style="padding:10px 8px;font-size:14px">' + f.fund + '</td><td style="padding:10px 8px;font-size:14px;color:' + statusColor + '">' + f.status + '</td><td style="padding:10px 8px;padding-right:12px;font-size:13px;color:var(--muted)">' + f.detail + '</td></tr>';
+        }).join('');
+      }
+    }
+
+    // Competitors table
+    var compTable = document.getElementById('seo-data-competitors-table');
+    if (compTable && data.results && data.results[1] && data.results[1].competitors) {
+      var comps = data.results[1].competitors;
+      if (comps.length > 0) {
+        compTable.innerHTML = comps.map(function(c) {
+          return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:10px 8px;padding-left:12px;font-size:14px">' + c.name + '</td><td style="padding:10px 8px;font-size:14px">' + (c.rating || '-') + '</td><td style="padding:10px 8px;font-size:14px;color:var(--muted)">-</td><td style="padding:10px 8px;padding-right:12px;font-size:14px;color:var(--muted)">' + (c.distance || 'i nærheden') + '</td></tr>';
+        }).join('');
+      }
+    }
+  } catch(e) {
+    console.warn('Could not load SEO analysis data:', e);
+  }
+}
+
+// Window exports for new functions
+window.toggleSystemKeyVisibility = toggleSystemKeyVisibility;
+window.toggleSystemKeyActive = toggleSystemKeyActive;
+window.loadSEOAnalysisData = loadSEOAnalysisData;
+window.SYSTEM_API_KEYS = SYSTEM_API_KEYS;
+
+// =====================================================
+// SEO ANALYSE PRO v2.0.0 — Integreret Scanner
+// =====================================================
+
+let seoScannerState = {
+  version: '3.0',
+  scanning: false,
+  findings: [],
+  results: null,
+  pendingBusiness: null,
+  modules: { gbp: 'idle', reviews: 'idle', competitors: 'idle', website: 'idle', social: 'idle' }
+};
+
+// --- Firecrawl v2 Integration ---
+async function firecrawlScrape(url) {
+  const apiKey = 'fc-c12a209b1d6d44939e0b8faa393515e3';
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, formats: ['markdown', 'html', 'links', 'metadata'] })
+    });
+    if (!response.ok) throw new Error('Firecrawl error: ' + response.status);
+    const data = await response.json();
+    return data.success ? data.data : null;
+  } catch (e) {
+    console.warn('Firecrawl scrape failed:', e);
+    return null;
+  }
+}
+
+// --- Google Places Details (real API) ---
+async function googlePlacesDetails(placeId) {
+  const apiKey = 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo';
+  try {
+    const response = await fetch('https://maps.googleapis.com/maps/api/place/details/json?place_id=' + encodeURIComponent(placeId) + '&key=' + apiKey + '&fields=name,rating,user_ratings_total,formatted_address,formatted_phone_number,website,opening_hours,photos,types,price_level,reviews,business_status&language=da');
+    if (!response.ok) throw new Error('Google Places error: ' + response.status);
+    return await response.json();
+  } catch (e) {
+    console.warn('Google Places Details failed:', e);
+    return null;
+  }
+}
+
+// --- v2 Analysis Methods ---
+const SEAnalysisV2 = {
+
+  // Firecrawl website analysis
+  async analyzeWebsite(websiteUrl) {
+    if (!websiteUrl) return { score: 0, menuIndexation: 0, findings: [{ module: 'website', type: 'critical', title: 'Ingen website fundet', description: 'Virksomheden har ingen website registreret. Dette er kritisk for online synlighed.', confidence: 'confirmed' }] };
+
+    const data = await firecrawlScrape(websiteUrl);
+    if (!data) {
+      // Fallback to v1 estimat
+      return SEAnalysisService.analyzeWebsite(websiteUrl);
+    }
+
+    const md = data.markdown || '';
+    const meta = data.metadata || {};
+    const links = data.links || [];
+    const findings = [];
+    let seoScore = 0;
+
+    // Title tag
+    if (meta.title && meta.title.length > 10) { seoScore += 15; findings.push({ module: 'website', type: 'positive', title: 'Title tag fundet', description: '"' + meta.title.substring(0, 60) + '"', confidence: 'confirmed' }); }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende eller kort title tag', description: 'Title tag skal være 30-60 tegn med relevante søgeord.', confidence: 'confirmed' }); }
+
+    // Meta description
+    if (meta.description && meta.description.length > 50) { seoScore += 15; findings.push({ module: 'website', type: 'positive', title: 'Meta description fundet', description: '"' + meta.description.substring(0, 100) + '..."', confidence: 'confirmed' }); }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende meta description', description: 'Tilføj en beskrivende meta description på 120-160 tegn.', confidence: 'confirmed' }); }
+
+    // OG tags
+    if (meta.ogTitle || meta.ogDescription) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende Open Graph tags', description: 'OG tags forbedrer visning på sociale medier.', confidence: 'confirmed' }); }
+
+    // SSL check
+    if (websiteUrl.startsWith('https')) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'critical', title: 'Ingen SSL (HTTPS)', description: 'Website bruger HTTP. SSL er nødvendig for SEO og sikkerhed.', confidence: 'confirmed' }); }
+
+    // Internal links
+    const internalLinks = links.filter(l => l && l.includes && l.includes(new URL(websiteUrl).hostname));
+    if (internalLinks.length >= 5) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Få interne links (' + internalLinks.length + ')', description: 'God intern linking forbedrer crawlability og SEO.', confidence: 'confirmed' }); }
+
+    // Responsive / viewport
+    if (meta.viewport || (data.html && data.html.includes('viewport'))) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'critical', title: 'Ikke mobilvenlig', description: 'Manglende viewport meta tag. Mobilvenlig design er kritisk for SEO.', confidence: 'confirmed' }); }
+
+    // Schema markup detection
+    const schemaResult = this.detectSchema(data.html || '', md);
+    seoScore += schemaResult.score;
+    findings.push(...schemaResult.findings);
+
+    // Menu Indexation Score
+    const menuScore = this.calculateMenuIndexation(md, links, websiteUrl);
+    findings.push(...menuScore.findings);
+
+    return {
+      score: Math.min(100, seoScore),
+      menuIndexation: menuScore.score,
+      title: meta.title || '',
+      description: meta.description || '',
+      internalLinks: internalLinks.length,
+      totalLinks: links.length,
+      hasSchema: schemaResult.score > 0,
+      findings: findings,
+      confidence: 'confirmed'
+    };
+  },
+
+  // Schema markup detection from HTML
+  detectSchema(html, markdown) {
+    const findings = [];
+    let score = 0;
+    const lowerHtml = (html || '').toLowerCase();
+
+    if (lowerHtml.includes('localbusiness') || lowerHtml.includes('restaurant')) {
+      score += 15;
+      findings.push({ module: 'website', type: 'positive', title: 'Schema markup fundet', description: 'LocalBusiness/Restaurant structured data er implementeret.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'Manglende Schema markup', description: 'Tilføj LocalBusiness eller Restaurant schema for bedre Google-visning.', confidence: 'confirmed' });
+    }
+
+    if (lowerHtml.includes('"menu"') || lowerHtml.includes('menuitem')) {
+      score += 5;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu schema fundet', description: 'Structured data for menuen er implementeret.', confidence: 'confirmed' });
+    }
+
+    return { score, findings };
+  },
+
+  // Menu Indexation Score (0-100)
+  calculateMenuIndexation(markdown, links, baseUrl) {
+    const findings = [];
+    let score = 0;
+    const mdLower = (markdown || '').toLowerCase();
+
+    // Check if menu content exists as text
+    const menuKeywords = ['menu', 'menukort', 'pizza', 'burger', 'salat', 'ret', 'pris', 'kr', 'dkk'];
+    const menuHits = menuKeywords.filter(kw => mdLower.includes(kw)).length;
+
+    if (menuHits >= 4) {
+      score += 40;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu som crawlbar tekst', description: menuHits + ' menu-relaterede termer fundet i HTML-tekst. Google kan læse menuen.', confidence: 'confirmed' });
+    } else if (menuHits >= 2) {
+      score += 20;
+      findings.push({ module: 'website', type: 'warning', title: 'Delvis menu som tekst', description: 'Noget menu-indhold fundet, men menuen bør være mere komplet som HTML-tekst.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'critical', title: 'Menu ikke crawlbar', description: 'Menuen er sandsynligvis et billede eller PDF. Konverter til HTML-tekst så Google kan indeksere den.', confidence: 'confirmed' });
+    }
+
+    // Check for prices
+    const priceRegex = /\d+[\.,]?\d*\s*(kr|dkk|,-)/gi;
+    const priceMatches = (markdown || '').match(priceRegex);
+    if (priceMatches && priceMatches.length >= 3) {
+      score += 30;
+      findings.push({ module: 'website', type: 'positive', title: 'Priser synlige (' + priceMatches.length + ' fundet)', description: 'Priserne er synlige som tekst, hvilket hjælper Google Rich Results.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'Få eller ingen synlige priser', description: 'Tilføj priser som tekst ved hver ret for bedre SEO.', confidence: 'confirmed' });
+    }
+
+    // Check for menu link from frontpage
+    const menuLinks = (links || []).filter(l => l && (l.includes('/menu') || l.includes('/menukort') || l.includes('/bestil')));
+    if (menuLinks.length > 0) {
+      score += 30;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu-link fra forsiden', description: 'Direkte link til menusiden fundet. God intern linking.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'Intet tydeligt menu-link', description: 'Tilføj et tydeligt "Menu" eller "Bestil" link på forsiden.', confidence: 'confirmed' });
+    }
+
+    return { score: Math.min(100, score), findings };
+  },
+
+  // Review Momentum Score
+  calculateReviewMomentum(reviews) {
+    if (!reviews || reviews.length === 0) return { score: 50, trend: 'neutral', findings: [] };
+
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const sixtyDays = 60 * 24 * 60 * 60 * 1000;
+
+    const recent = reviews.filter(r => r.date && (now - new Date(r.date).getTime()) < thirtyDays);
+    const older = reviews.filter(r => r.date && (now - new Date(r.date).getTime()) >= thirtyDays && (now - new Date(r.date).getTime()) < sixtyDays);
+
+    const recentAvg = recent.length > 0 ? recent.reduce((s, r) => s + (r.rating || 0), 0) / recent.length : 0;
+    const olderAvg = older.length > 0 ? older.reduce((s, r) => s + (r.rating || 0), 0) / older.length : 0;
+
+    // Velocity component (recent count vs older)
+    const velocityRatio = older.length > 0 ? recent.length / older.length : (recent.length > 0 ? 2 : 1);
+
+    // Rating trend component
+    const ratingDelta = recentAvg - olderAvg;
+
+    // Combined score (0-100)
+    let score = 50; // baseline
+    score += ratingDelta * 15; // rating improvement
+    score += (velocityRatio - 1) * 20; // velocity improvement
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    const trend = score > 60 ? 'stigende' : score < 40 ? 'faldende' : 'stabil';
+    const findings = [];
+
+    if (trend === 'stigende') {
+      findings.push({ module: 'reviews', type: 'positive', title: 'Positiv Review Momentum', description: 'Rating-trend er stigende med ' + recent.length + ' nye anmeldelser de seneste 30 dage.', confidence: 'confirmed' });
+    } else if (trend === 'faldende') {
+      findings.push({ module: 'reviews', type: 'warning', title: 'Faldende Review Momentum', description: 'Færre og/eller lavere-ratede anmeldelser de seneste 30 dage.', confidence: 'confirmed' });
+    }
+
+    return { score, trend, recentCount: recent.length, recentAvg: Math.round(recentAvg * 10) / 10, findings };
+  },
+
+  // Competitor gap analysis (v2)
+  async analyzeCompetitors(businessName, city, category) {
     try {
-      const result = await step.fn(seSelectedBusiness);
-      seAnalysisResults[step.id] = result;
-      seUpdateStepUI(step.id, 'completed');
-      const newFindings = seExtractFindings(step.id, step.name, result);
-      newFindings.forEach(f => { seFindings.push(f); seAddFindingToFeed(f); });
+      const query = (category || 'restaurant') + ' ' + (city || 'Danmark');
+      const mapData = await seFetchSerperAPI('maps', query, { num: 6 });
+      const places = mapData.places || [];
+      if (places.length === 0) return SEAnalysisService.getCompetitorAnalysis(businessName);
+
+      let yourRank = 0;
+      const competitors = [];
+      const nameLower = (businessName || '').toLowerCase();
+
+      places.forEach(function(p, i) {
+        if (p.title && p.title.toLowerCase().includes(nameLower)) {
+          yourRank = i + 1;
+        } else if (competitors.length < 5) {
+          competitors.push({
+            name: p.title || 'Ukendt',
+            rating: p.rating || 0,
+            reviews: p.reviewsCount || p.reviews || 0,
+            address: p.address || '',
+            position: i + 1
+          });
+        }
+      });
+
+      if (yourRank === 0) yourRank = places.length + 1;
+
+      // Gap analysis
+      const gaps = [];
+      if (competitors.length > 0) {
+        const topRating = Math.max(...competitors.map(c => c.rating));
+        const topReviews = Math.max(...competitors.map(c => c.reviews));
+        gaps.push({ metric: 'Rating', topValue: topRating, description: 'Top konkurrent har ' + topRating + ' stjerner' });
+        gaps.push({ metric: 'Anmeldelser', topValue: topReviews, description: 'Top konkurrent har ' + topReviews + ' anmeldelser' });
+      }
+
+      const findings = [
+        { module: 'competitors', type: yourRank <= 3 ? 'positive' : 'warning', title: 'Placering #' + yourRank + ' i Google Maps', description: 'Du er nummer ' + yourRank + ' for "' + query + '". ' + (yourRank <= 3 ? 'God position i top 3!' : 'Målet er top 3 for bedst synlighed.'), confidence: 'confirmed' }
+      ];
+
+      return { competitors, yourRank, gaps, findings, confidence: 'confirmed' };
     } catch (e) {
-      console.error('Step failed:', step.id, e);
-      seUpdateStepUI(step.id, 'error');
+      console.warn('Competitor analysis v2 failed:', e);
+      return SEAnalysisService.getCompetitorAnalysis(businessName);
     }
-    completed++;
-    document.getElementById('se-scanner-progress-bar').style.width = (completed/10*100) + '%';
-    document.getElementById('se-scanner-progress-text').textContent = completed + '/10';
+  },
+
+  // NAP consistency check
+  checkNAPConsistency(gbpData, websiteData) {
+    const findings = [];
+    let score = 0;
+
+    if (gbpData && gbpData.name) {
+      score += 25; // Name found in GBP
+      if (websiteData && websiteData.title && websiteData.title.toLowerCase().includes(gbpData.name.toLowerCase().split(' ')[0])) {
+        score += 25;
+        findings.push({ module: 'gbp', type: 'positive', title: 'Navn konsistent', description: 'Virksomhedsnavnet matcher mellem Google og website.', confidence: 'confirmed' });
+      } else {
+        findings.push({ module: 'gbp', type: 'warning', title: 'Navn måske inkonsistent', description: 'Virksomhedsnavnet fra Google matcher muligvis ikke website-titlen.', confidence: 'indicator' });
+      }
+    }
+
+    if (gbpData && gbpData.phone) {
+      score += 25;
+      findings.push({ module: 'gbp', type: 'positive', title: 'Telefonnummer registreret', description: gbpData.phone, confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'gbp', type: 'warning', title: 'Manglende telefonnummer i GBP', description: 'Tilføj telefonnummer til Google Business profilen.', confidence: 'confirmed' });
+    }
+
+    if (gbpData && gbpData.address && gbpData.address.full) { score += 25; }
+
+    return { score: Math.min(100, score), findings };
+  },
+
+  // Weighted overall score
+  calculateWeightedScore(gbpScore, reviewScore, websiteScore, competitorScore, socialScore) {
+    const overall = Math.round(
+      (gbpScore * 30 + reviewScore * 25 + websiteScore * 25 + competitorScore * 15 + socialScore * 5) / 100
+    );
+    return {
+      overall: Math.min(100, Math.max(0, overall)),
+      breakdown: { gbp: gbpScore, reviews: reviewScore, website: websiteScore, competitors: competitorScore, social: socialScore },
+      label: overall >= 85 ? 'Stærk' : overall >= 70 ? 'God' : overall >= 50 ? 'Middel' : 'Kritisk',
+      color: overall >= 85 ? '#059669' : overall >= 70 ? '#2563eb' : overall >= 50 ? '#d97706' : '#dc2626'
+    };
+  },
+
+  // Generate 7-30-90 day action plan
+  generateActionPlan(allFindings, scoreBreakdown) {
+    const week1 = [];
+    const days30 = [];
+    const days90 = [];
+
+    // Collect all warnings and criticals
+    const issues = allFindings.filter(f => f.type === 'critical' || f.type === 'warning');
+
+    issues.forEach(function(f) {
+      const action = { task: f.title, detail: f.description, module: f.module, priority: f.type === 'critical' ? 'høj' : 'mellem' };
+
+      if (f.type === 'critical') {
+        week1.push(Object.assign({}, action, { indsats: 'Lav', kpi: 'Ret inden 7 dage' }));
+      } else if (f.module === 'gbp' || f.module === 'reviews') {
+        days30.push(Object.assign({}, action, { indsats: 'Mellem', kpi: 'Forbedring inden 30 dage' }));
+      } else {
+        days90.push(Object.assign({}, action, { indsats: 'Høj', kpi: 'Implementer inden 90 dage' }));
+      }
+    });
+
+    // Add strategic recommendations based on low scores
+    if (scoreBreakdown.reviews < 60) {
+      days30.push({ task: 'Start anmeldelsesstrategi', detail: 'Bed tilfredse kunder om at skrive en anmeldelse på Google. Mål: 5+ nye/måned.', module: 'reviews', priority: 'høj', indsats: 'Lav', kpi: 'Review velocity +50%' });
+    }
+    if (scoreBreakdown.website < 60) {
+      days90.push({ task: 'Website SEO optimering', detail: 'Optimer title tags, meta descriptions og tilføj Schema markup.', module: 'website', priority: 'mellem', indsats: 'Høj', kpi: 'Website score > 70' });
+    }
+    if (scoreBreakdown.competitors < 60) {
+      days90.push({ task: 'Konkurrenceanalyse og differentiering', detail: 'Identificer og kommuniker dine unikke styrker vs. top 3 konkurrenter.', module: 'competitors', priority: 'mellem', indsats: 'Mellem', kpi: 'Top 3 i local pack' });
+    }
+
+    return { week1, days30, days90 };
+  },
+
+  // Main orchestrator — run full v2 analysis
+  async runFullAnalysis(businessName, placeId, version, onProgress) {
+    const allFindings = [];
+    const cb = onProgress || function() {};
+    const isV2 = version === '2.0';
+    let gbpData = null, reviewData = null, websiteData = null, competitorData = null, socialData = null;
+    let gbpScore = 0, reviewScore = 0, websiteScore = 0, competitorScore = 0, socialScore = 0;
+
+    // 1. Google Business Profile
+    cb('gbp', 'running');
+    try {
+      gbpData = await SEAnalysisService.getGoogleBusinessProfile(placeId, businessName);
+      gbpScore = gbpData.profileCompleteness ? gbpData.profileCompleteness.score : 50;
+      allFindings.push({ module: 'gbp', type: gbpScore >= 70 ? 'positive' : 'warning', title: 'Google Business Score: ' + gbpScore + '/100', description: gbpData.name + ' — ' + (gbpData.address ? gbpData.address.full : 'Adresse ikke fundet'), confidence: gbpData.placeId ? 'confirmed' : 'indicator' });
+      if (gbpData.profileCompleteness && gbpData.profileCompleteness.missing) {
+        gbpData.profileCompleteness.missing.forEach(function(m) {
+          allFindings.push({ module: 'gbp', type: 'warning', title: 'GBP mangler: ' + m, description: 'Tilføj "' + m + '" til din Google Business profil for højere score.', confidence: 'confirmed' });
+        });
+      }
+      cb('gbp', 'completed', allFindings.filter(f => f.module === 'gbp').length);
+    } catch (e) {
+      cb('gbp', 'error');
+      allFindings.push({ module: 'gbp', type: 'warning', title: 'GBP data ufuldstændig', description: 'Kunne ikke hente fuld Google Business data.', confidence: 'indicator' });
+    }
+
+    // 2. Reviews
+    cb('reviews', 'running');
+    try {
+      reviewData = await SEAnalysisService.getReviewAnalysis(placeId, businessName);
+      const momentum = this.calculateReviewMomentum(reviewData.reviews || []);
+      reviewScore = Math.round(((reviewData.averageRating || 3) / 5) * 80 + (momentum.score / 100) * 20);
+      allFindings.push({ module: 'reviews', type: reviewData.averageRating >= 4 ? 'positive' : 'warning', title: 'Rating: ' + (reviewData.averageRating || '?') + '/5 (' + (reviewData.totalReviews || 0) + ' anmeldelser)', description: 'Review Momentum: ' + momentum.trend + ' (score ' + momentum.score + '/100)', confidence: reviewData.confidence || 'indicator' });
+      allFindings.push(...momentum.findings);
+      if (reviewData.sentiment) {
+        if (reviewData.sentiment.positive && reviewData.sentiment.positive.length > 0) {
+          allFindings.push({ module: 'reviews', type: 'positive', title: 'Positive temaer', description: reviewData.sentiment.positive.slice(0, 3).join(', '), confidence: 'indicator' });
+        }
+        if (reviewData.sentiment.negative && reviewData.sentiment.negative.length > 0) {
+          allFindings.push({ module: 'reviews', type: 'warning', title: 'Negative temaer', description: reviewData.sentiment.negative.slice(0, 3).join(', '), confidence: 'indicator' });
+        }
+      }
+      cb('reviews', 'completed', allFindings.filter(f => f.module === 'reviews').length);
+    } catch (e) {
+      cb('reviews', 'error');
+      reviewScore = 40;
+    }
+
+    // 3. Competitors
+    cb('competitors', 'running');
+    try {
+      const city = gbpData && gbpData.address ? gbpData.address.city : '';
+      const category = gbpData && gbpData.types ? gbpData.types[0] : 'restaurant';
+      competitorData = await this.analyzeCompetitors(businessName, city, category);
+      competitorScore = competitorData.yourRank ? Math.round((6 - Math.min(5, competitorData.yourRank)) * 20) : 40;
+      allFindings.push(...(competitorData.findings || []));
+      cb('competitors', 'completed', allFindings.filter(f => f.module === 'competitors').length);
+    } catch (e) {
+      cb('competitors', 'error');
+      competitorScore = 40;
+    }
+
+    // 4. Website (v2 uses Firecrawl, v1 uses estimate)
+    cb('website', 'running');
+    try {
+      const websiteUrl = gbpData ? gbpData.website : null;
+      if (isV2 && websiteUrl) {
+        websiteData = await this.analyzeWebsite(websiteUrl);
+      } else if (websiteUrl) {
+        websiteData = await SEAnalysisService.analyzeWebsite(websiteUrl);
+      } else {
+        websiteData = { score: 0, menuIndexation: 0, findings: [{ module: 'website', type: 'critical', title: 'Ingen website', description: 'Ingen website fundet. Opret en hjemmeside for online synlighed.', confidence: 'confirmed' }] };
+      }
+      websiteScore = isV2 ? Math.round((websiteData.score || 0) * 0.6 + (websiteData.menuIndexation || 0) * 0.4) : (websiteData.scores ? websiteData.scores.overall || 50 : 50);
+      allFindings.push(...(websiteData.findings || []));
+      cb('website', 'completed', allFindings.filter(f => f.module === 'website').length);
+    } catch (e) {
+      cb('website', 'error');
+      websiteScore = 30;
+    }
+
+    // 5. Social & NAP
+    cb('social', 'running');
+    try {
+      socialData = await SEAnalysisService.analyzeSocialPresence(businessName);
+      socialScore = socialData.overallScore || 40;
+      const napResult = this.checkNAPConsistency(gbpData, websiteData);
+      allFindings.push(...napResult.findings);
+      if (socialData.platforms) {
+        const found = socialData.platforms.filter(p => p.found);
+        allFindings.push({ module: 'social', type: found.length >= 3 ? 'positive' : 'warning', title: found.length + ' sociale platforme fundet', description: found.map(p => p.name).join(', ') || 'Ingen', confidence: 'indicator' });
+      }
+      cb('social', 'completed', allFindings.filter(f => f.module === 'social').length);
+    } catch (e) {
+      cb('social', 'error');
+      socialScore = 30;
+    }
+
+    // Calculate weighted score
+    const scoreResult = this.calculateWeightedScore(gbpScore, reviewScore, websiteScore, competitorScore, socialScore);
+
+    // Generate action plan
+    const actionPlan = this.generateActionPlan(allFindings, scoreResult.breakdown);
+
+    const result = {
+      version: version,
+      timestamp: Date.now(),
+      business: { name: businessName, placeId: placeId, city: gbpData ? (gbpData.address ? gbpData.address.city : '') : '' },
+      score: scoreResult,
+      findings: allFindings,
+      actionPlan: actionPlan,
+      rawData: { gbp: gbpData, reviews: reviewData, website: websiteData, competitors: competitorData, social: socialData }
+    };
+
+    // Save to localStorage
+    try { localStorage.setItem('flow_seo_analysis_latest', JSON.stringify(result)); } catch (e) { /* quota */ }
+
+    return result;
+  }
+};
+
+// =====================================================
+// SEO SCANNER UI FUNCTIONS
+// =====================================================
+
+function getSEOVersionColor(version) {
+  if (version === '3.0') return '#7c3aed';
+  if (version === '2.0') return '#2563eb';
+  return '#059669';
+}
+
+function startSEOScan(version) {
+  seoScannerState.version = version || '3.0';
+  showPage('page-seo-scanner');
+  // Set version toggle
+  document.querySelectorAll('.seo-version-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.version === seoScannerState.version);
+  });
+  // Update version badge
+  var badge = document.getElementById('seo-scanner-version-badge');
+  if (badge) {
+    badge.textContent = 'v' + seoScannerState.version + '.0';
+    badge.style.background = getSEOVersionColor(seoScannerState.version);
+  }
+  // Focus input
+  var input = document.getElementById('seo-scanner-input');
+  if (input) { input.value = ''; input.focus(); }
+  // Reset UI
+  var progress = document.getElementById('seo-scanner-progress');
+  var results = document.getElementById('seo-scanner-results');
+  if (progress) progress.style.display = 'none';
+  if (results) results.style.display = 'none';
+}
+
+function selectSEOVersion(version) {
+  seoScannerState.version = version;
+  document.querySelectorAll('.seo-version-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.version === version);
+  });
+  var badge = document.getElementById('seo-scanner-version-badge');
+  if (badge) {
+    badge.textContent = 'v' + version + '.0';
+    badge.style.background = getSEOVersionColor(version);
+  }
+}
+
+// Check for pending scan from landing page (how-it-works.html redirect)
+function checkPendingSEOScan() {
+  try {
+    var pending = localStorage.getItem('flow_seo_scan_pending');
+    if (!pending) return;
+    var data = JSON.parse(pending);
+    // Only use if less than 5 minutes old
+    if (Date.now() - data.timestamp > 300000) {
+      localStorage.removeItem('flow_seo_scan_pending');
+      return;
+    }
+    localStorage.removeItem('flow_seo_scan_pending');
+    // Set version
+    seoScannerState.version = data.version || '3.0';
+    selectSEOVersion(seoScannerState.version);
+    // Fill input with business name
+    var input = document.getElementById('seo-scanner-input');
+    if (input && data.business && data.business.name) {
+      input.value = data.business.name;
+    }
+    // Store business data for scan
+    seoScannerState.pendingBusiness = data.business;
+    // Auto-start scan after short delay
+    setTimeout(function() { runSEOScan(); }, 500);
+  } catch(e) { console.warn('Pending scan check failed:', e); }
+}
+
+// Handle ?page= URL parameter for direct page navigation
+function handleURLPageParam() {
+  var params = new URLSearchParams(window.location.search);
+  var page = params.get('page');
+  if (page) {
+    // Clean URL without reloading
+    window.history.replaceState({}, '', window.location.pathname);
+    // Navigate to the requested page
+    if (typeof showPage === 'function') {
+      showPage(page);
+      // If it's the scanner page, check for pending scans
+      if (page === 'page-seo-scanner') {
+        setTimeout(checkPendingSEOScan, 300);
+      }
+    }
+  }
+}
+
+async function runSEOScan() {
+  var input = document.getElementById('seo-scanner-input');
+  var query = input ? input.value.trim() : '';
+  if (!query) { toast('Indtast et virksomhedsnavn', 'error'); return; }
+  if (seoScannerState.scanning) return;
+
+  seoScannerState.scanning = true;
+  seoScannerState.findings = [];
+  var version = seoScannerState.version;
+
+  // Show progress, hide results
+  var progress = document.getElementById('seo-scanner-progress');
+  var results = document.getElementById('seo-scanner-results');
+  var startBtn = document.getElementById('seo-scanner-start');
+  if (progress) progress.style.display = 'block';
+  if (results) results.style.display = 'none';
+  if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Scanner...'; }
+
+  // Reset module indicators
+  ['gbp', 'reviews', 'competitors', 'website', 'social'].forEach(function(m) {
+    updateSEOModuleStatus(m, 'idle', 0);
+  });
+
+  // Clear findings feed
+  var feed = document.getElementById('seo-findings-feed');
+  if (feed) feed.innerHTML = '';
+
+  // Search for business (use existing service or direct query)
+  var placeId = null;
+  try {
+    var searchResults = await SEAnalysisService.searchBusiness(query);
+    if (searchResults && searchResults.length > 0) {
+      placeId = searchResults[0].place_id;
+    }
+  } catch (e) {
+    // Use query as fallback
   }
 
-  // Show completion
-  seIsScanning = false;
-  document.getElementById('se-scanner-module-status').innerHTML = '<span style="color:#059669;font-weight:600">✓ Analyse fuldført</span>';
-  const pos = seFindings.filter(f=>f.category==='positive').length;
-  const warn = seFindings.filter(f=>f.category==='warning'||f.category==='critical').length;
-  const opp = seFindings.filter(f=>f.category==='opportunity').length;
-  document.getElementById('se-completion-summary').textContent = pos+' positive fund · '+warn+' advarsler · '+opp+' muligheder';
-  document.getElementById('se-completion-card').style.display = 'block';
-}
+  // Run full analysis with progress callback
+  try {
+    var result = await SEAnalysisV2.runFullAnalysis(query, placeId, version, function(module, status, count) {
+      updateSEOModuleStatus(module, status, count || 0);
+    });
 
-// --- Report Renderers ---
-function seShowReport() {
-  document.getElementById('se-scanner-container').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'block';
-  document.getElementById('se-report-business-label').textContent = seSelectedBusiness.name + ' · ' + new Date().toLocaleDateString('da-DK');
+    // Stream findings to feed (with delay for visual effect)
+    for (var i = 0; i < result.findings.length; i++) {
+      addSEOFinding(result.findings[i]);
+      if (i < 15) await seDelay(120); // animate first 15
+    }
 
-  seRenderOverallScore();
-  seRenderGBPSection();
-  seRenderReviewSection();
-  seRenderCompetitorSection();
-  seRenderNAPSection();
-  seRenderWebsiteSection();
-  seRenderSocialSection();
-  seRenderActionPlan();
-  sePopulateStatusCards();
-}
+    // Show final score
+    displaySEOFinalScore(result.score);
 
-function seRenderOverallScore() {
-  const score = SEAnalysisService.calculateOverallScore(seAnalysisResults);
-  const color = score >= 75 ? '#059669' : score >= 50 ? '#d97706' : '#dc2626';
-  const label = score >= 75 ? 'God digital tilstedeværelse' : score >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
-  const r = 54; const c = 2 * Math.PI * r; const offset = c - (score/100)*c;
-  const el = document.getElementById('se-report-overall');
-  el.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:var(--space-4)">' +
-    '<svg width="140" height="140" viewBox="0 0 120 120"><circle cx="60" cy="60" r="'+r+'" fill="none" stroke="var(--bg2)" stroke-width="8"/>' +
-    '<circle cx="60" cy="60" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+offset+'" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease"/>' +
-    '<text x="60" y="55" text-anchor="middle" fill="'+color+'" font-size="28" font-weight="700">'+score+'</text>' +
-    '<text x="60" y="72" text-anchor="middle" fill="var(--muted)" font-size="10">af 100</text></svg>' +
-    '<div style="text-align:center"><h3 style="font-weight:var(--font-weight-semibold);color:'+color+'">'+label+'</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-top:4px">Baseret på '+seFindings.length+' analysefund</p></div>' +
-    '<div style="display:flex;gap:var(--space-6)">' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.googleProfile?.rating||'-')+'</div><div style="font-size:12px;color:var(--muted)">Rating</div></div>' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.googleProfile?.totalReviews||'-')+'</div><div style="font-size:12px;color:var(--muted)">Anmeldelser</div></div>' +
-    '<div style="text-align:center"><div style="font-size:var(--font-size-lg);font-weight:700">'+(seAnalysisResults.serpVisibility?.directSearch?.rank||'-')+'</div><div style="font-size:12px;color:var(--muted)">SERP Rank</div></div>' +
-    '</div></div>';
-}
+    // Show results section
+    if (results) results.style.display = 'block';
 
-function seRenderGBPSection() {
-  const data = seAnalysisResults.googleProfile;
-  if (!data) return;
-  const el = document.getElementById('se-report-gbp');
-  const score = data.profileCompleteness?.score || 0;
-  const scoreColor = score >= 80 ? '#059669' : score >= 60 ? '#d97706' : '#dc2626';
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Google Business Profile</h3>' +
-    '<div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4)"><div style="font-size:24px;font-weight:700;color:'+scoreColor+'">'+score+'%</div><div style="font-size:var(--font-size-sm);color:var(--muted)">Profil fuldstændighed</div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+data.rating+'</div><div style="font-size:11px;color:var(--muted)">Rating</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+data.totalReviews+'</div><div style="font-size:11px;color:var(--muted)">Anmeldelser</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+(data.photos?.total||0)+'</div><div style="font-size:11px;color:var(--muted)">Fotos</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:18px;font-weight:700">'+(data.postsActivity?.postsLast90Days||0)+'</div><div style="font-size:11px;color:var(--muted)">Posts (90d)</div></div></div>' +
-    (data.profileCompleteness?.missing?.length > 0 ? '<div style="margin-top:var(--space-3)"><span style="font-size:12px;color:var(--muted)">Mangler: </span>' +
-      data.profileCompleteness.missing.map(m => '<span style="font-size:11px;padding:2px 8px;background:rgba(217,119,6,0.1);color:#d97706;border-radius:4px;margin-right:4px">'+m+'</span>').join('') + '</div>' : '');
-}
+    // Render action plan
+    renderSEOActionPlan(result.actionPlan);
 
-function seRenderReviewSection() {
-  const data = seAnalysisResults.reviews;
-  if (!data) return;
-  const el = document.getElementById('se-report-reviews');
-  const distBars = data.distribution.map(d =>
-    '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;width:14px;text-align:right">'+d.stars+'★</span>' +
-    '<div style="flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+d.percentage+'%;background:'+(d.stars>=4?'#059669':d.stars===3?'#d97706':'#dc2626')+';border-radius:4px"></div></div>' +
-    '<span style="font-size:11px;color:var(--muted);width:32px">'+d.percentage+'%</span></div>'
-  ).join('');
-  const kwHtml = data.topKeywords.map(kw => '<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:'+(kw.sentiment==='positive'?'rgba(5,150,105,0.1)':'rgba(220,38,38,0.1)')+';color:'+(kw.sentiment==='positive'?'#059669':'#dc2626')+'">'+kw.term+' ('+kw.count+')</span>').join(' ');
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Anmeldelsesanalyse</h3>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-5)">' +
-    '<div><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Vurderingsfordeling ('+data.totalReviews+' anmeldelser)</div><div style="display:flex;flex-direction:column;gap:6px">'+distBars+'</div></div>' +
-    '<div><div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.velocity.last30Days+'</div><div style="font-size:11px;color:var(--muted)">Nye (30 dage)</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.responseMetrics.responseRate+'%</div><div style="font-size:11px;color:var(--muted)">Svarrate</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.responseMetrics.avgResponseTimeHours+'t</div><div style="font-size:11px;color:var(--muted)">Gns. svartid</div></div>' +
-    '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:18px;font-weight:700">'+data.averageRating+'</div><div style="font-size:11px;color:var(--muted)">Gns. rating</div></div>' +
-    '</div></div></div>' +
-    (data.topKeywords.length > 0 ? '<div style="margin-top:var(--space-4)"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Top nøgleord</div><div style="display:flex;flex-wrap:wrap;gap:6px">'+kwHtml+'</div></div>' : '');
-}
-
-function seRenderCompetitorSection() {
-  const data = seAnalysisResults.competitors;
-  if (!data) return;
-  const el = document.getElementById('se-report-competitors');
-  const rows = data.competitors.map(c => {
-    const bg = c.isTarget ? 'background:rgba(16,185,129,0.06);' : '';
-    const nameStyle = c.isTarget ? 'font-weight:700;' : '';
-    return '<tr style="'+bg+'"><td style="padding:8px 12px;border-bottom:1px solid var(--border);'+nameStyle+'">'+c.name+(c.isTarget?' <span style="font-size:10px;color:#059669">(Du)</span>':'')+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.rating+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.reviews+'</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.responseRate+'%</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+c.recentActivity+'</td></tr>';
-  }).join('');
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Konkurrentanalyse</h3>' +
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr style="background:var(--bg2)"><th style="padding:8px 12px;text-align:left;font-weight:600;font-size:12px">Virksomhed</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Rating</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Anmeldelser</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Svarrate</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Aktivitet</th></tr></thead>' +
-    '<tbody>'+rows+'</tbody></table></div>' +
-    '<div style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:8px">' +
-    data.insights.map(i => {
-      const c = i.type==='warning'?'#d97706':i.type==='opportunity'?'#2563eb':'#059669';
-      return '<div style="padding:var(--space-3);border-left:3px solid '+c+';background:'+(i.type==='warning'?'rgba(217,119,6,0.06)':i.type==='opportunity'?'rgba(37,99,235,0.06)':'rgba(5,150,105,0.06)')+';border-radius:0 var(--radius-sm) var(--radius-sm) 0"><div style="font-weight:600;font-size:13px;margin-bottom:2px">'+i.title+'</div><div style="font-size:12px;color:var(--muted)">'+i.description+'</div></div>';
-    }).join('') + '</div>';
-}
-
-function seRenderNAPSection() {
-  const data = seAnalysisResults.napConsistency;
-  if (!data) return;
-  const el = document.getElementById('se-report-nap');
-  const check = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-  const cross = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-  const dash = '<span style="color:var(--muted)">—</span>';
-  const rows = data.sources.map(s =>
-    '<tr><td style="padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px">'+s.name+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?check:dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.nameMatch?check:cross):dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.addressMatch?check:cross):dash)+'</td>' +
-    '<td style="padding:8px 12px;border-bottom:1px solid var(--border);text-align:center">'+(s.found?(s.phoneMatch?check:cross):dash)+'</td></tr>'
-  ).join('');
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)"><h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">NAP Konsistens</h3><div style="font-size:24px;font-weight:700;color:'+(data.consistencyScore>=70?'#059669':'#d97706')+'">'+data.consistencyScore+'%</div></div>' +
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr style="background:var(--bg2)"><th style="padding:8px 12px;text-align:left;font-weight:600;font-size:12px">Platform</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Fundet</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Navn</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Adresse</th><th style="padding:8px 12px;text-align:center;font-weight:600;font-size:12px">Telefon</th></tr></thead>' +
-    '<tbody>'+rows+'</tbody></table></div>';
-}
-
-function seRenderWebsiteSection() {
-  const data = seAnalysisResults.website;
-  if (!data || !data.hasWebsite) return;
-  const el = document.getElementById('se-report-website');
-  const scoreBox = (label, val) => {
-    const c = val>=80?'#059669':val>=60?'#d97706':'#dc2626';
-    return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm);text-align:center"><div style="font-size:20px;font-weight:700;color:'+c+'">'+val+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px">'+label+'</div></div>';
-  };
-  const vitalBox = (name, vital) => {
-    const c = vital.rating==='good'?'#059669':'#d97706';
-    return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;font-weight:600">'+name+'</span><span style="font-size:12px;font-weight:700;color:'+c+'">'+vital.value+'</span></div><div style="font-size:10px;color:var(--muted);margin-top:2px">Mål: '+vital.target+'</div></div>';
-  };
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Website & Mobil</h3>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
-    scoreBox('Mobil',data.scores.mobile) + scoreBox('Desktop',data.scores.desktop) + scoreBox('SEO',data.scores.seo) + scoreBox('Performance',data.scores.performance) + '</div>' +
-    '<div style="margin-bottom:var(--space-4)"><div style="font-size:12px;color:var(--muted);margin-bottom:8px">Core Web Vitals</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)">' +
-    vitalBox('LCP',data.coreWebVitals.LCP) + vitalBox('FID',data.coreWebVitals.FID) + vitalBox('CLS',data.coreWebVitals.CLS) + '</div></div>' +
-    '<div style="display:flex;flex-direction:column;gap:6px">' +
-    data.issues.map(i => '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);background:'+(i.severity==='high'?'rgba(220,38,38,0.06)':'rgba(217,119,6,0.06)')+'"><span style="color:'+(i.severity==='high'?'#dc2626':'#d97706')+';font-size:12px;font-weight:600">'+(i.severity==='high'?'●':'○')+'</span><span style="font-size:12px">'+i.issue+'</span></div>').join('') + '</div>';
-}
-
-function seRenderSocialSection() {
-  const data = seAnalysisResults.social;
-  if (!data) return;
-  const el = document.getElementById('se-report-social');
-  const statusColors = { very_active:'#059669', active:'#10b981', low:'#d97706', not_found:'var(--muted)' };
-  const statusLabels = { very_active:'Meget aktiv', active:'Aktiv', low:'Lav', not_found:'Ikke fundet' };
-  const cards = data.platforms.map(p => {
-    const color = statusColors[p.status] || 'var(--muted)';
-    return '<div style="padding:var(--space-4);background:var(--bg2);border-radius:var(--radius-md)">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:600;font-size:14px">'+p.name+'</span><span style="font-size:11px;padding:2px 8px;border-radius:4px;background:'+color+'20;color:'+color+';font-weight:500">'+(statusLabels[p.status]||p.status)+'</span></div>' +
-      (p.found ? '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">' +
-        '<div><span style="color:var(--muted)">Følgere:</span> <strong>'+(p.followers||'-')+'</strong></div>' +
-        '<div><span style="color:var(--muted)">Posts/30d:</span> <strong>'+(p.posts30Days||'-')+'</strong></div>' +
-        '<div><span style="color:var(--muted)">Engagement:</span> <strong>'+(p.engagement||'-')+'%</strong></div>' +
-        '</div>' : '<div style="font-size:12px;color:var(--muted)">Ingen profil fundet</div>') + '</div>';
-  }).join('');
-  el.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)"><h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">Social Media</h3><div style="font-size:20px;font-weight:700;color:'+(data.overallScore>=60?'#059669':'#d97706')+'">'+data.overallScore+'%</div></div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-3)">'+cards+'</div>' +
-    '<div style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:6px">' +
-    data.insights.map(i => {
-      const c = i.type==='positive'?'#059669':i.type==='warning'?'#d97706':'#2563eb';
-      return '<div style="padding:8px 12px;border-left:3px solid '+c+';background:'+(i.type==='positive'?'rgba(5,150,105,0.06)':i.type==='warning'?'rgba(217,119,6,0.06)':'rgba(37,99,235,0.06)')+';border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:12px">'+i.text+'</div>';
-    }).join('') + '</div>';
-}
-
-function seRenderActionPlan() {
-  const el = document.getElementById('se-report-actions');
-  const criticals = seFindings.filter(f=>f.category==='critical');
-  const warnings = seFindings.filter(f=>f.category==='warning');
-  const opportunities = seFindings.filter(f=>f.category==='opportunity');
-  const actions = [
-    ...criticals.map(f=>({priority:'Kritisk',color:'#dc2626',title:f.title,description:f.description,module:f.moduleName})),
-    ...warnings.map(f=>({priority:'Vigtig',color:'#d97706',title:f.title,description:f.description,module:f.moduleName})),
-    ...opportunities.slice(0,3).map(f=>({priority:'Mulighed',color:'#2563eb',title:f.title,description:f.description,module:f.moduleName}))
-  ];
-  el.innerHTML = '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Prioriteret Handlingsplan</h3>' +
-    '<div style="display:flex;flex-direction:column;gap:var(--space-3)">' +
-    actions.map((a,i) =>
-      '<div style="display:flex;gap:var(--space-3);padding:var(--space-4);background:var(--bg2);border-radius:var(--radius-md);border-left:3px solid '+a.color+'">' +
-      '<div style="width:28px;height:28px;border-radius:50%;background:'+a.color+'15;color:'+a.color+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">'+(i+1)+'</div>' +
-      '<div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="font-weight:600;font-size:13px">'+a.title+'</span><span style="font-size:10px;padding:2px 6px;border-radius:4px;background:'+a.color+'15;color:'+a.color+';font-weight:500">'+a.priority+'</span></div>' +
-      '<div style="font-size:12px;color:var(--muted);margin-top:2px">'+a.description+'</div>' +
-      '<div style="font-size:10px;color:var(--muted);margin-top:4px">Modul: '+a.module+'</div></div></div>'
-    ).join('') + '</div>';
-}
-
-function sePopulateStatusCards() {
-  const gbp = seAnalysisResults.googleProfile;
-  const serp = seAnalysisResults.serpVisibility;
-  const web = seAnalysisResults.website;
-  if (gbp) {
-    document.getElementById('se-indexed-pages').textContent = web?.localSEO ? Object.values(web.localSEO).filter(v=>v).length + '/6' : '-';
-    document.getElementById('se-avg-position').textContent = seAnalysisResults.competitors?.ranking?.overall || '-';
-    document.getElementById('se-clicks').textContent = serp?.estimatedMonthlySearches?.brandTerms || '0';
-    document.getElementById('se-impressions').textContent = serp?.estimatedMonthlySearches?.categoryTerms || '0';
+    seoScannerState.results = result;
+  } catch (e) {
+    console.error('SEO scan error:', e);
+    toast('Scanning fejlede: ' + e.message, 'error');
   }
-  if (web?.hasWebsite) {
-    document.getElementById('se-page-speed').textContent = web.scores.performance;
-    document.getElementById('se-page-speed').style.color = web.scores.performance>=60?'var(--success)':'var(--warning)';
+
+  seoScannerState.scanning = false;
+  if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start Analyse'; }
+}
+
+function updateSEOModuleStatus(moduleName, status, count) {
+  var el = document.querySelector('.seo-module-indicator[data-module="' + moduleName + '"]');
+  if (!el) return;
+  el.className = 'seo-module-indicator seo-module--' + status;
+  var countEl = el.querySelector('.seo-module-count');
+  if (countEl) countEl.textContent = count || 0;
+}
+
+function addSEOFinding(finding) {
+  var feed = document.getElementById('seo-findings-feed');
+  if (!feed) return;
+
+  var typeColors = { positive: '#059669', warning: '#d97706', critical: '#dc2626', opportunity: '#2563eb' };
+  var typeLabels = { positive: 'OK', warning: 'Advarsel', critical: 'Kritisk', opportunity: 'Mulighed' };
+  var color = typeColors[finding.type] || '#6b7280';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'padding:14px 16px;border-radius:var(--radius-md);background:var(--card);border:1px solid var(--border);animation:slideInRight 0.3s ease;margin-bottom:8px';
+  card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+    '<span style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:500">' + (finding.module || '') + '</span>' +
+    '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + color + '20;color:' + color + ';font-weight:500">' + (typeLabels[finding.type] || '') + '</span>' +
+    (finding.confidence === 'confirmed' ? '<span style="font-size:10px;color:#059669">Verificeret</span>' : '') +
+    '</div>' +
+    '<div style="font-weight:500;font-size:13px;margin-bottom:4px">' + (finding.title || '') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + (finding.description || '') + '</div>';
+
+  feed.prepend(card);
+  seoScannerState.findings.push(finding);
+}
+
+function displaySEOFinalScore(scoreResult) {
+  var scoreEl = document.getElementById('seo-score-value');
+  var labelEl = document.getElementById('seo-score-label');
+  var circleEl = document.getElementById('seo-score-circle');
+  var breakdownEl = document.getElementById('seo-score-breakdown');
+
+  if (scoreEl) {
+    // Animate score count-up
+    var target = scoreResult.overall;
+    var current = 0;
+    var interval = setInterval(function() {
+      current += 2;
+      if (current >= target) { current = target; clearInterval(interval); }
+      scoreEl.textContent = current;
+    }, 30);
+  }
+  if (labelEl) { labelEl.textContent = scoreResult.label; labelEl.style.color = scoreResult.color; }
+  if (circleEl) {
+    var pct = scoreResult.overall / 100 * 283; // circumference ~283 for r=45
+    circleEl.style.strokeDasharray = pct + ' 283';
+    circleEl.style.stroke = scoreResult.color;
+  }
+
+  // Breakdown cards
+  if (breakdownEl) {
+    var modules = [
+      { key: 'gbp', label: 'Google Business', weight: '30%' },
+      { key: 'reviews', label: 'Anmeldelser', weight: '25%' },
+      { key: 'website', label: 'Website', weight: '25%' },
+      { key: 'competitors', label: 'Konkurrenter', weight: '15%' },
+      { key: 'social', label: 'Social', weight: '5%' }
+    ];
+    breakdownEl.innerHTML = modules.map(function(m) {
+      var val = scoreResult.breakdown[m.key] || 0;
+      var c = val >= 70 ? '#059669' : val >= 50 ? '#d97706' : '#dc2626';
+      return '<div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;text-align:center">' +
+        '<div style="font-size:22px;font-weight:700;color:' + c + '">' + val + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + m.label + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + m.weight + '</div></div>';
+    }).join('');
   }
 }
 
-// --- PDF Generator ---
-function seDownloadPDF() {
-  if (typeof jspdf === 'undefined' && typeof window.jspdf === 'undefined') {
-    const script = document.createElement('script');
+function renderSEOActionPlan(plan) {
+  var container = document.getElementById('seo-action-plan');
+  if (!container || !plan) return;
+
+  function renderSection(title, items, color) {
+    if (!items || items.length === 0) return '';
+    return '<div style="margin-bottom:20px"><h4 style="font-size:13px;font-weight:600;margin:0 0 10px;color:' + color + '">' + title + '</h4>' +
+      items.map(function(a, i) {
+        return '<div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:6px">' +
+          '<span style="font-size:12px;font-weight:600;color:' + color + ';min-width:20px">' + (i + 1) + '.</span>' +
+          '<div><div style="font-size:13px;font-weight:500">' + a.task + '</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + a.detail + '</div>' +
+          '<div style="display:flex;gap:8px;margin-top:4px"><span style="font-size:10px;padding:2px 6px;background:var(--bg);border-radius:4px;color:var(--muted)">Indsats: ' + a.indsats + '</span><span style="font-size:10px;padding:2px 6px;background:var(--bg);border-radius:4px;color:var(--muted)">KPI: ' + a.kpi + '</span></div></div></div>';
+      }).join('') + '</div>';
+  }
+
+  container.innerHTML =
+    renderSection('Inden 7 dage', plan.week1, '#dc2626') +
+    renderSection('Inden 30 dage', plan.days30, '#d97706') +
+    renderSection('Inden 90 dage', plan.days90, '#2563eb');
+}
+
+function saveSEOAnalysis() {
+  if (!seoScannerState.results) { toast('Ingen analyse at gemme', 'error'); return; }
+  try {
+    localStorage.setItem('flow_seo_analysis_latest', JSON.stringify(seoScannerState.results));
+    // Add to history
+    var history = JSON.parse(localStorage.getItem('flow_seo_analysis_history') || '[]');
+    history.unshift({ id: Date.now(), businessName: seoScannerState.results.business.name, date: new Date().toISOString(), score: seoScannerState.results.score.overall, version: seoScannerState.results.version });
+    if (history.length > 10) history = history.slice(0, 10);
+    localStorage.setItem('flow_seo_analysis_history', JSON.stringify(history));
+    toast('Analyse gemt!', 'success');
+  } catch (e) {
+    toast('Kunne ikke gemme: ' + e.message, 'error');
+  }
+}
+
+function loadLastSEOAnalysis() {
+  try {
+    var saved = localStorage.getItem('flow_seo_analysis_latest');
+    if (!saved) { toast('Ingen gemt analyse fundet', 'error'); return; }
+    var data = JSON.parse(saved);
+    seoScannerState.results = data;
+    seoScannerState.version = data.version || '1.0';
+    showPage('page-seo-scanner');
+    // Set version
+    selectSEOVersion(data.version || '1.0');
+    // Set input
+    var input = document.getElementById('seo-scanner-input');
+    if (input) input.value = data.business ? data.business.name : '';
+    // Show results directly
+    var progress = document.getElementById('seo-scanner-progress');
+    var results = document.getElementById('seo-scanner-results');
+    if (progress) progress.style.display = 'block';
+    if (results) results.style.display = 'block';
+    // Set modules to completed
+    ['gbp', 'reviews', 'competitors', 'website', 'social'].forEach(function(m) {
+      var count = data.findings ? data.findings.filter(function(f) { return f.module === m; }).length : 0;
+      updateSEOModuleStatus(m, 'completed', count);
+    });
+    // Render findings
+    var feed = document.getElementById('seo-findings-feed');
+    if (feed) feed.innerHTML = '';
+    (data.findings || []).forEach(addSEOFinding);
+    // Show score
+    if (data.score) displaySEOFinalScore(data.score);
+    if (data.actionPlan) renderSEOActionPlan(data.actionPlan);
+  } catch (e) {
+    toast('Kunne ikke indlæse gemt analyse', 'error');
+  }
+}
+
+// PDF Report Generation
+function generateSEOReportPDF() {
+  var data = seoScannerState.results;
+  if (!data) { toast('Ingen analyse at eksportere', 'error'); return; }
+
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    toast('PDF-bibliotek indlæses...', 'info');
+    var script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    script.onload = () => seGeneratePDF();
+    script.onload = function() { generateSEOReportPDF(); };
     document.head.appendChild(script);
     return;
   }
-  seGeneratePDF();
-}
 
-function seGeneratePDF() {
-  const { jsPDF } = window.jspdf || window;
-  const doc = new jsPDF('p', 'mm', 'a4');
-  const score = SEAnalysisService.calculateOverallScore(seAnalysisResults);
-  const w = 210; const m = 20;
+  var jsPDF = (window.jspdf || jspdf).jsPDF;
+  var doc = new jsPDF('p', 'mm', 'a4');
+  var pageW = 210;
+  var margin = 20;
+  var y = 25;
+
+  // Helper
+  function addText(text, size, weight, color) {
+    doc.setFontSize(size);
+    doc.setFont('helvetica', weight || 'normal');
+    if (color) doc.setTextColor(color[0], color[1], color[2]);
+    else doc.setTextColor(30, 30, 30);
+    var lines = doc.splitTextToSize(text, pageW - margin * 2);
+    doc.text(lines, margin, y);
+    y += lines.length * (size * 0.45) + 3;
+    if (y > 270) { doc.addPage(); y = 25; }
+  }
 
   // Cover
-  doc.setFillColor(5,150,105); doc.rect(0,0,w,80,'F');
-  doc.setTextColor(255,255,255); doc.setFontSize(28); doc.setFont('helvetica','bold');
-  doc.text('Synlighedsrapport', m, 40);
-  doc.setFontSize(14); doc.setFont('helvetica','normal');
-  doc.text(seSelectedBusiness.name, m, 52);
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageW, 60, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(28);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SEO Analyse Rapport', margin, 30);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.text((data.business ? data.business.name : 'Virksomhed') + ' — v' + (data.version || '2.0') + '.0', margin, 45);
   doc.setFontSize(11);
-  doc.text(new Date().toLocaleDateString('da-DK'), m, 62);
+  doc.text(new Date(data.timestamp).toLocaleDateString('da-DK'), margin, 53);
+  y = 75;
 
-  doc.setTextColor(0,0,0); doc.setFontSize(48); doc.setFont('helvetica','bold');
-  const scoreColor = score>=75?[5,150,105]:score>=50?[217,119,6]:[220,38,38];
-  doc.setTextColor(...scoreColor);
-  doc.text(score.toString(), w/2, 115, {align:'center'});
-  doc.setFontSize(14); doc.setTextColor(100,100,100);
-  doc.text('af 100 point', w/2, 125, {align:'center'});
+  // Score
+  addText('Samlet SEO Score: ' + data.score.overall + '/100 (' + data.score.label + ')', 20, 'bold');
+  y += 5;
 
-  let y = 145;
-  doc.setTextColor(0,0,0); doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('Oversigt', m, y); y += 10;
-  doc.setFontSize(11); doc.setFont('helvetica','normal');
-  const stats = [
-    'Rating: ' + (seAnalysisResults.googleProfile?.rating||'-'),
-    'Anmeldelser: ' + (seAnalysisResults.googleProfile?.totalReviews||'-'),
-    'NAP Score: ' + (seAnalysisResults.napConsistency?.consistencyScore||'-') + '%',
-    'Social Score: ' + (seAnalysisResults.social?.overallScore||'-') + '%'
-  ];
-  stats.forEach(s => { doc.text('• ' + s, m+4, y); y += 7; });
+  // Breakdown
+  var bd = data.score.breakdown;
+  addText('Google Business: ' + bd.gbp + '/100 (vægt 30%)', 11, 'normal');
+  addText('Anmeldelser: ' + bd.reviews + '/100 (vægt 25%)', 11, 'normal');
+  addText('Website: ' + bd.website + '/100 (vægt 25%)', 11, 'normal');
+  addText('Konkurrenter: ' + bd.competitors + '/100 (vægt 15%)', 11, 'normal');
+  addText('Social: ' + bd.social + '/100 (vægt 5%)', 11, 'normal');
+  y += 8;
 
-  y += 10;
-  doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('Prioriterede handlinger', m, y); y += 10;
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  const criticals = seFindings.filter(f=>f.category==='critical'||f.category==='warning').slice(0,6);
-  criticals.forEach((f,i) => {
-    if (y > 270) { doc.addPage(); y = 20; }
-    doc.text((i+1)+'. '+f.title, m+4, y);
-    y += 5;
-    doc.setTextColor(120,120,120);
-    const lines = doc.splitTextToSize(f.description, w-2*m-8);
-    lines.forEach(l => { doc.text(l, m+8, y); y += 4.5; });
-    doc.setTextColor(0,0,0); y += 3;
+  // Findings
+  addText('Fund & Anbefalinger', 16, 'bold');
+  y += 3;
+  (data.findings || []).slice(0, 25).forEach(function(f) {
+    var prefix = f.type === 'positive' ? '[OK] ' : f.type === 'critical' ? '[KRITISK] ' : '[ADVARSEL] ';
+    var clr = f.type === 'positive' ? [5, 150, 105] : f.type === 'critical' ? [220, 38, 38] : [217, 119, 6];
+    addText(prefix + f.title, 11, 'bold', clr);
+    if (f.description) addText(f.description, 10, 'normal', [107, 114, 128]);
+    y += 2;
   });
 
+  // Action Plan
+  if (data.actionPlan) {
+    doc.addPage();
+    y = 25;
+    addText('Handlingsplan', 16, 'bold');
+    y += 3;
+
+    if (data.actionPlan.week1 && data.actionPlan.week1.length > 0) {
+      addText('Inden 7 dage:', 13, 'bold', [220, 38, 38]);
+      data.actionPlan.week1.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+      y += 5;
+    }
+    if (data.actionPlan.days30 && data.actionPlan.days30.length > 0) {
+      addText('Inden 30 dage:', 13, 'bold', [217, 119, 6]);
+      data.actionPlan.days30.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+      y += 5;
+    }
+    if (data.actionPlan.days90 && data.actionPlan.days90.length > 0) {
+      addText('Inden 90 dage:', 13, 'bold', [37, 99, 235]);
+      data.actionPlan.days90.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+    }
+  }
+
   // Footer
-  doc.setFontSize(9); doc.setTextColor(150,150,150);
-  doc.text('Genereret af FLOW SEO Analyse v1.0.0 • ' + new Date().toLocaleDateString('da-DK'), w/2, 288, {align:'center'});
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Genereret af FLOW SEO Engine v' + (data.version || '2.0') + '.0 — ' + new Date().toLocaleDateString('da-DK'), margin, 285);
 
-  doc.save('synlighedsrapport_' + seSelectedBusiness.name.replace(/\s+/g,'_') + '.pdf');
+  var filename = 'SEO-Rapport-' + (data.business ? data.business.name.replace(/[^a-zA-Z0-9]/g, '-') : 'analyse') + '.pdf';
+  doc.save(filename);
+  toast('PDF rapport downloadet', 'success');
 }
 
-// --- Reset ---
-function seResetAnalysis() {
-  seAnalysisResults = {}; seFindings = []; seSelectedBusiness = null; seIsScanning = false;
-  document.getElementById('se-scanner-container').style.display = 'none';
-  document.getElementById('se-report-container').style.display = 'none';
-  document.getElementById('se-search-section').style.display = 'block';
-  document.getElementById('se-static-sections').style.display = 'block';
-  document.getElementById('se-search-input').value = '';
-  document.getElementById('se-selected-business').style.display = 'none';
-  const btn = document.getElementById('se-start-analysis-btn');
-  btn.disabled = true; btn.style.opacity = '0.5';
-  // Reset status cards
-  document.getElementById('se-indexed-pages').textContent = '0';
-  document.getElementById('se-avg-position').textContent = '-';
-  document.getElementById('se-clicks').textContent = '0';
-  document.getElementById('se-impressions').textContent = '0';
-  document.getElementById('se-page-speed').textContent = '-';
-  document.getElementById('se-page-speed').style.color = '';
+// Check for last scan on search-engine page load
+function renderLastScanSummary() {
+  var container = document.getElementById('seo-last-scan');
+  if (!container) return;
+  try {
+    var saved = localStorage.getItem('flow_seo_analysis_latest');
+    if (!saved) { container.style.display = 'none'; return; }
+    var data = JSON.parse(saved);
+    container.style.display = 'block';
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+      '<div><span style="font-weight:600">' + (data.business ? data.business.name : '?') + '</span>' +
+      '<span style="color:var(--muted);font-size:12px;margin-left:8px">' + new Date(data.timestamp).toLocaleDateString('da-DK') + '</span>' +
+      '<span style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:var(--radius-sm);background:' + (data.version === '2.0' ? '#2563eb' : '#059669') + ';color:white">v' + (data.version || '1.0') + '.0</span></div>' +
+      '<div style="display:flex;align-items:center;gap:12px">' +
+      '<span style="font-size:24px;font-weight:700;color:' + (data.score ? data.score.color : 'var(--text)') + '">' + (data.score ? data.score.overall : '?') + '<span style="font-size:12px;color:var(--muted)">/100</span></span>' +
+      '<button class="btn btn-sm btn-primary" onclick="loadLastSEOAnalysis()">Se Resultater</button></div></div>';
+  } catch (e) {
+    container.style.display = 'none';
+  }
 }
 
-// --- Window Exports ---
-window.seHandleSearchInput = seHandleSearchInput;
-window.seSelectBusiness = seSelectBusiness;
-window.seClearSelection = seClearSelection;
-window.seStartAnalysis = seStartAnalysis;
-window.seShowReport = seShowReport;
-window.seDownloadPDF = seDownloadPDF;
-window.seResetAnalysis = seResetAnalysis;
+// Window exports
+window.startSEOScan = startSEOScan;
+window.selectSEOVersion = selectSEOVersion;
+window.runSEOScan = runSEOScan;
+window.saveSEOAnalysis = saveSEOAnalysis;
+window.loadLastSEOAnalysis = loadLastSEOAnalysis;
+window.generateSEOReportPDF = generateSEOReportPDF;
+window.renderLastScanSummary = renderLastScanSummary;
+window.handleURLPageParam = handleURLPageParam;
+window.checkPendingSEOScan = checkPendingSEOScan;
+
+// ============================================
+// V\u00c6RKT\u00d8JER PAGE FUNCTIONS
+// ============================================
+
+function openAgentPage(pageId) {
+  if (typeof showPage === 'function') {
+    showPage(pageId);
+  }
+}
+
+function switchVaerktoejTab(tab) {
+  const agenterContent = document.getElementById('vaerktoejer-content-agenter');
+  const enhederContent = document.getElementById('vaerktoejer-content-enheder');
+  const agenterTab = document.getElementById('vaerktoejer-tab-agenter');
+  const enhederTab = document.getElementById('vaerktoejer-tab-enheder');
+  if (!agenterContent || !enhederContent) return;
+
+  if (tab === 'agenter') {
+    agenterContent.style.display = '';
+    enhederContent.style.display = 'none';
+    if (agenterTab) { agenterTab.style.color = 'var(--color-text)'; agenterTab.style.borderBottomColor = 'var(--color-text)'; agenterTab.style.fontWeight = 'var(--font-weight-semibold)'; }
+    if (enhederTab) { enhederTab.style.color = 'var(--muted)'; enhederTab.style.borderBottomColor = 'transparent'; enhederTab.style.fontWeight = '500'; }
+  } else {
+    agenterContent.style.display = 'none';
+    enhederContent.style.display = '';
+    if (enhederTab) { enhederTab.style.color = 'var(--color-text)'; enhederTab.style.borderBottomColor = 'var(--color-text)'; enhederTab.style.fontWeight = 'var(--font-weight-semibold)'; }
+    if (agenterTab) { agenterTab.style.color = 'var(--muted)'; agenterTab.style.borderBottomColor = 'transparent'; agenterTab.style.fontWeight = '500'; }
+  }
+}
+
+function checkAgentUpdate(agentName) {
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = 'S\u00f8ger...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = 'Opdateret';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  }, 1500);
+}
+
+function renderVaerktoejApiStatus() {
+  const tbody = document.querySelector('#vaerktoejer-api-status tbody');
+  if (!tbody) return;
+
+  const apis = [
+    { name: 'Serper', id: 'serper', keys: ['serper_reviews_key','serper_images_key','serper_maps_key'], agents: 'Agent SEO' },
+    { name: 'Firecrawl', id: 'firecrawl', keys: ['firecrawl_api_key'], agents: 'Agent SEO' },
+    { name: 'Google API', id: 'googleapi', keys: ['googleapi_api_key'], agents: 'Agent SEO' },
+    { name: 'Google Reviews', id: 'google', keys: ['google_api_key'], agents: 'Agent SEO' },
+    { name: 'OpenAI', id: 'openai', keys: ['openai_key'], agents: 'Alle agenter' },
+    { name: 'InMobile SMS', id: 'inmobile', keys: ['inmobile_api_key'], agents: 'Agent Restaurant, Agent H\u00e5ndv\u00e6rker' },
+    { name: 'Trustpilot', id: 'trustpilot', keys: ['trustpilot_api_key'], agents: 'Agent SEO' },
+    { name: 'Webhook', id: 'webhook', keys: [], agents: 'System' }
+  ];
+
+  let html = '';
+  apis.forEach(api => {
+    const enabled = localStorage.getItem('api_' + api.id + '_enabled') !== 'false';
+    const hasKey = api.keys.length === 0 || api.keys.some(k => {
+      const v = localStorage.getItem(k);
+      return v && v.length > 3;
+    });
+    const isActive = enabled && hasKey;
+    const color = isActive ? 'var(--success)' : 'var(--muted)';
+    const label = isActive ? 'Aktiv' : (enabled ? 'Mangler n\u00f8gle' : 'Deaktiveret');
+
+    html += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 12px;font-weight:500">' + api.name + '</td>' +
+      '<td style="padding:10px 12px"><span style="font-size:12px;color:' + color + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + color + ';display:inline-block"></span>' + label + '</span></td>' +
+      '<td style="padding:10px 12px;color:var(--muted)">' + api.agents + '</td>' +
+      '<td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="font-size:11px;padding:4px 10px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:var(--radius-sm);cursor:pointer" onclick="showSettingsPage(\'api\')">Konfigurer</button></td>' +
+      '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+window.openAgentPage = openAgentPage;
+window.switchVaerktoejTab = switchVaerktoejTab;
+window.checkAgentUpdate = checkAgentUpdate;
+window.renderVaerktoejApiStatus = renderVaerktoejApiStatus;
+
+// Handle ?page= URL parameter on load (for landing page redirects)
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(handleURLPageParam, 200);
+});

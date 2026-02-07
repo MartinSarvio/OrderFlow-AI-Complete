@@ -2037,117 +2037,87 @@
   <!-- Report Section -->
   <section class="report-section" id="reportSection">
     <div class="report-container">
-      <div class="report-header">
-        <h1 class="report-business-name" id="reportBusinessName">Restaurant Navn</h1>
-        <p class="report-business-address" id="reportBusinessAddress">Adresse</p>
-      </div>
 
-      <!-- Score Card -->
-      <div class="score-card">
-        <p class="score-label">Din Flow Score</p>
-        <div class="score-value">
-          <span id="reportScore">72</span><span class="score-max">/100</span>
-        </div>
-        <p class="score-description" id="scoreDescription">
-          Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.
-        </p>
-      </div>
-
-      <!-- Report Grid -->
-      <div class="report-grid">
-        <!-- Local Listings -->
-        <div class="report-card">
-          <div class="report-card-header">
-            <div class="report-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-              </svg>
-            </div>
-            <h3 class="report-card-title">Lokal Listings Analyse</h3>
-          </div>
-          <div class="report-card-content">
-            <ul class="report-list" id="listingsAnalysis">
-              <!-- Populated by JS -->
-            </ul>
-          </div>
-        </div>
-
-        <!-- Competitor Analysis -->
-        <div class="report-card">
-          <div class="report-card-header">
-            <div class="report-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <h3 class="report-card-title">Konkurrentanalyse</h3>
-          </div>
-          <div class="report-card-content">
-            <ul class="report-list" id="competitorAnalysis">
-              <!-- Populated by JS -->
-            </ul>
-          </div>
-        </div>
-
-        <!-- Review Summary -->
-        <div class="report-card">
-          <div class="report-card-header">
-            <div class="report-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-              </svg>
-            </div>
-            <h3 class="report-card-title">Review Opsummering</h3>
-          </div>
-          <div class="report-card-content">
-            <ul class="report-list" id="reviewSummary">
-              <!-- Populated by JS -->
-            </ul>
-          </div>
-        </div>
-
-        <!-- Website Analysis -->
-        <div class="report-card">
-          <div class="report-card-header">
-            <div class="report-card-icon">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
-              </svg>
-            </div>
-            <h3 class="report-card-title">Website Analyse</h3>
-          </div>
-          <div class="report-card-content">
-            <ul class="report-list" id="websiteAnalysis">
-              <!-- Populated by JS -->
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recommendations -->
-      <div class="recommendations-section">
-        <h2 class="recommendations-title">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      <!-- PDF Box (shown first when scanner completes) -->
+      <div id="reportPDFBox" style="max-width:520px;margin:60px auto;text-align:center">
+        <div style="background:white;border-radius:16px;padding:48px 40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);border:1px solid #e5e7eb">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="margin:0 auto 20px;display:block">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="14 2 14 8 20 8" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="12" y="17" text-anchor="middle" font-size="6" font-weight="700" fill="#dc2626">PDF</text>
           </svg>
-          Anbefalinger til forbedring
-        </h2>
-        <div id="recommendations">
-          <!-- Populated by JS -->
+          <h2 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px" id="reportBusinessName">Din SEO Analyserapport</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 4px" id="reportBusinessAddress"></p>
+          <p style="color:#9ca3af;font-size:13px;margin:0 0 32px" id="reportDate"></p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <button onclick="document.getElementById('reportPDFBox').style.display='none';document.getElementById('reportPreview').style.display='block'" style="width:100%;padding:14px;background:#1a1a1a;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">Se Preview</button>
+            <button disabled style="width:100%;padding:14px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:not-allowed" title="Kræver betaling">Download Fuld Rapport (PDF)</button>
+            <p style="color:#9ca3af;font-size:12px;margin:4px 0 0">Den fulde rapport inkluderer detaljeret handlingsplan og prioriterede forbedringer</p>
+          </div>
         </div>
       </div>
 
-      <!-- CTA -->
-      <div class="report-cta">
-        <h3>Klar til at forbedre din restaurant?</h3>
-        <p>Flow kan hjælpe dig med at implementere alle disse forbedringer automatisk og øge din omsætning.</p>
-        <a href="index.html" class="btn">
-          Start gratis nu
-          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-          </svg>
-        </a>
+      <!-- Report Preview (hidden until "Se Preview" clicked) -->
+      <div id="reportPreview" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px">
+          <div>
+            <h1 style="font-size:28px;font-weight:700;color:white;margin:0" id="reportPreviewName">Restaurant Navn</h1>
+            <p style="color:#9ca3af;font-size:14px;margin:4px 0 0" id="reportPreviewAddress">Adresse</p>
+          </div>
+          <button onclick="document.getElementById('reportPreview').style.display='none';document.getElementById('reportPDFBox').style.display='block'" style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:14px;cursor:pointer">Tilbage</button>
+        </div>
+
+        <!-- Score -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:32px;text-align:center;margin-bottom:32px">
+          <p style="color:#9ca3af;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px">Din Flow Score</p>
+          <div style="font-size:64px;font-weight:800;color:white;line-height:1" id="reportScore">72</div>
+          <p style="color:#6b7280;font-size:13px;margin:0">/100</p>
+          <p style="color:#9ca3af;font-size:14px;margin:16px 0 0;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6" id="scoreDescription"></p>
+        </div>
+
+        <!-- Google Business Profil -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Google Business Profil</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportListingsTable">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Anmeldelsesanalyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Anmeldelsesanalyse</h3>
+          <div id="reportReviewBars"></div>
+        </div>
+
+        <!-- Konkurrentanalyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Konkurrentanalyse</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportCompetitorTable">
+            <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:8px 0;color:#9ca3af;font-size:13px;font-weight:500">Virksomhed</th><th style="text-align:left;padding:8px 0;color:#9ca3af;font-size:13px;font-weight:500">Placering</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Website Analyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Website Analyse</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportWebsiteTable">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Handlingsplan -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:32px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Handlingsplan</h3>
+          <ol style="margin:0;padding:0 0 0 20px;color:#d1d5db;font-size:14px;line-height:2" id="reportRecommendations"></ol>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align:center;padding:40px 0">
+          <h3 style="font-size:20px;font-weight:600;color:white;margin:0 0 8px">Klar til at forbedre din restaurant?</h3>
+          <p style="color:#9ca3af;font-size:14px;margin:0 0 24px">Flow kan hjælpe dig med at implementere alle disse forbedringer automatisk.</p>
+          <a href="/landing" style="display:inline-block;padding:14px 32px;background:white;color:#1a1a1a;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Start gratis nu</a>
+        </div>
       </div>
     </div>
   </section>
@@ -3204,20 +3174,83 @@
       searchBtn.disabled = false;
     }
 
-    // Start analysis - redirect to business-scanner-demo.html
+    // Start analysis - redirect to main SPA scanner page (with sidebar)
     function startAnalysis() {
       if (!selectedPlace) return;
 
-      // Build URL with query parameters for the selected business
-      const params = new URLSearchParams({
-        name: selectedPlace.name,
-        place_id: selectedPlace.place_id,
-        address: selectedPlace.address || ''
-      });
+      // Save selected business to localStorage for the SPA scanner to pick up
+      try {
+        localStorage.setItem('flow_seo_scan_pending', JSON.stringify({
+          business: selectedPlace,
+          version: '3.0',
+          timestamp: Date.now()
+        }));
+      } catch(e) { console.warn('Could not save pending scan:', e); }
 
-      // Redirect to search-engine in same tab with business data
-      // URL params (name, place_id, address) skip the search page and go directly to scanner
-      window.location.href = `/search-engine?${params.toString()}`;
+      // Redirect to main app with scanner page
+      window.location.href = '../index.html?page=page-seo-scanner';
+    }
+
+    // Build report data from scanner results
+    function buildReportData(results) {
+      const googleData = results[2] || {}; // endpoint 2 = google
+      const reviewData = results[3] || {}; // endpoint 3 = reviews
+      const imageData = results[4] || {}; // endpoint 4 = images
+      const facebookData = results[5] || {}; // endpoint 5 = facebook
+      const mobileData = results[6] || {}; // endpoint 6 = mobile
+      const websiteData = results[7] || {}; // endpoint 7 = website
+      const mapData = results[1] || {}; // endpoint 1 = map
+
+      // Calculate score
+      let score = 50;
+      if (googleData.rating) score += Math.min(20, googleData.rating * 4);
+      if (googleData.totalReviews > 50) score += 5;
+      if (imageData.totalPhotos > 20) score += 5;
+      if (facebookData.followers > 500) score += 5;
+      if (mobileData.scores?.mobile > 70) score += 5;
+      if (websiteData.metadata?.title) score += 5;
+      score = Math.min(100, Math.round(score));
+
+      const scoreDesc = score >= 80
+        ? 'Din restaurant har en stærk online tilstedeværelse med gode resultater på tværs af alle kanaler.'
+        : score >= 60
+        ? 'Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.'
+        : 'Der er betydeligt potentiale for at forbedre din restaurants online synlighed og kundeoplevelse.';
+
+      return {
+        business_name: selectedPlace?.name || 'Din Restaurant',
+        address: selectedPlace?.address || '',
+        score: score,
+        score_description: scoreDesc,
+        listings: [
+          { text: `Google Business Profil: ${googleData.claimed ? 'Verificeret' : 'Ikke verificeret'}`, status: googleData.claimed ? 'success' : 'error' },
+          { text: `Rating: ${googleData.rating || 'Ukendt'} (${googleData.totalReviews || 0} anmeldelser)`, status: (googleData.rating || 0) >= 4 ? 'success' : 'warning' },
+          { text: `${imageData.totalPhotos || 0} billeder tilgængelige`, status: (imageData.totalPhotos || 0) > 20 ? 'success' : 'warning' },
+          { text: `Åbningstider: ${googleData.openNow ? 'Opdaterede' : 'Mangler opdatering'}`, status: googleData.openNow ? 'success' : 'warning' },
+        ],
+        competitors: (mapData.competitors || []).map(c => ({
+          text: `${c.name} — ${c.distance || 'i nærheden'}`,
+          status: 'warning'
+        })),
+        reviews: [
+          { text: `Positiv sentiment: ${reviewData.sentiment?.positive || 0}%`, status: (reviewData.sentiment?.positive || 0) >= 70 ? 'success' : 'warning' },
+          { text: `Neutral: ${reviewData.sentiment?.neutral || 0}%`, status: 'warning' },
+          { text: `Negativ: ${reviewData.sentiment?.negative || 0}%`, status: (reviewData.sentiment?.negative || 0) <= 10 ? 'success' : 'error' },
+        ],
+        website: [
+          { text: `Mobil score: ${mobileData.scores?.mobile || 'Ukendt'}/100`, status: (mobileData.scores?.mobile || 0) >= 70 ? 'success' : 'warning' },
+          { text: `Desktop score: ${mobileData.scores?.desktop || 'Ukendt'}/100`, status: (mobileData.scores?.desktop || 0) >= 70 ? 'success' : 'warning' },
+          { text: websiteData.metadata?.title ? `Titel: ${websiteData.metadata.title}` : 'Ingen website data', status: websiteData.metadata?.title ? 'success' : 'error' },
+        ],
+        recommendations: [
+          score < 80 ? 'Optimer din Google Business profil med flere billeder og opdaterede åbningstider' : null,
+          (reviewData.sentiment?.negative || 0) > 10 ? 'Svar på negative anmeldelser for at forbedre din rating' : null,
+          (mobileData.scores?.mobile || 0) < 70 ? 'Forbedre din mobiloplevelse — over 60% af dine kunder bruger mobilen' : null,
+          !websiteData.metadata?.title ? 'Tilføj SEO metadata til din hjemmeside' : null,
+          (facebookData.followers || 0) < 500 ? 'Øg din tilstedeværelse på sociale medier' : null,
+          'Overvej at tilføje schema markup for bedre søgeresultater',
+        ].filter(Boolean)
+      };
     }
 
     // ============================================================================
@@ -3707,138 +3740,244 @@
       return scannerState.scanResults;
     }
 
-    async function simulateApiCall(endpoint) {
-      // In production: Call real API
-      // For now: Return mock data matching the endpoint type
+    // Serper API configuration
+    const SERPER_CONFIG = {
+      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '238621b449ced86740e16a0707be5b8999b87c9e' },
+      images: { url: 'https://google.serper.dev/images', apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba' },
+      maps: { url: 'https://google.serper.dev/maps', apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e' }
+    };
 
-      await new Promise(r => setTimeout(r, 500));
+    const GOOGLE_API_KEY = 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo';
 
-      const mockData = {
-        map: {
-          competitors: [
-            { name: 'Restaurant A', distance: '200m' },
-            { name: 'Restaurant B', distance: '450m' },
-            { name: 'Restaurant C', distance: '800m' },
-          ],
-        },
-        google: {
-          name: selectedPlace?.name || 'Din Restaurant',
-          rating: 4.2,
-          totalReviews: 847,
-          formattedAddress: selectedPlace?.address || 'København',
-          claimed: true,
-          openNow: true,
-        },
-        reviews: {
-          sentiment: { positive: 78, neutral: 15, negative: 7 },
-          distribution: [
-            { stars: 5, percentage: 62 },
-            { stars: 4, percentage: 21 },
-            { stars: 3, percentage: 10 },
-            { stars: 2, percentage: 4 },
-            { stars: 1, percentage: 3 },
-          ],
-        },
-        images: {
-          totalPhotos: 124,
-          qualityAnalysis: { overallScore: 72 },
-        },
-        facebook: {
-          followers: 2340,
-          engagement: { rate: 3.2 },
-          responsiveness: { responseTime: '< 1 time' },
-        },
-        mobile: {
-          scores: { mobile: 67, desktop: 82 },
-        },
-      };
-
-      return mockData[endpoint.preview] || {};
+    // Fetch from Serper API
+    async function fetchSerperAPI(endpoint, query, extraParams = {}) {
+      try {
+        const config = SERPER_CONFIG[endpoint];
+        if (!config) return null;
+        const res = await fetch(config.url, {
+          method: 'POST',
+          headers: { 'X-API-KEY': config.apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: query, gl: 'dk', hl: 'da', location: 'Denmark', num: 10, ...extraParams })
+        });
+        if (!res.ok) throw new Error(`Serper ${endpoint} error: ${res.status}`);
+        return await res.json();
+      } catch(e) {
+        console.warn(`Serper ${endpoint} failed:`, e);
+        return null;
+      }
     }
 
-    // Show report
+    // Fetch Google Place Details via serverless proxy
+    async function fetchGooglePlaceDetails(placeId) {
+      try {
+        const res = await fetch(`/api/google/place-details?place_id=${encodeURIComponent(placeId)}`);
+        if (!res.ok) throw new Error('Google API error');
+        return await res.json();
+      } catch(e) {
+        console.warn('Google Place Details failed:', e);
+        return null;
+      }
+    }
+
+    // Real API call per endpoint (with fallback to mock data)
+    async function simulateApiCall(endpoint) {
+      const businessName = selectedPlace?.name || '';
+      const businessAddress = selectedPlace?.address || '';
+
+      try {
+        switch(endpoint.preview) {
+          case 'map': {
+            const data = await fetchSerperAPI('maps', businessName + ' ' + businessAddress);
+            const places = data?.places || [];
+            return {
+              competitors: places.filter(p => p.title !== businessName).slice(0, 5).map(p => ({
+                name: p.title,
+                distance: p.address ? p.address.split(',')[0] : 'i nærheden',
+                rating: p.rating
+              }))
+            };
+          }
+          case 'google': {
+            // Try Google Places API first, fallback to Serper
+            const gData = selectedPlace?.place_id ? await fetchGooglePlaceDetails(selectedPlace.place_id) : null;
+            if (gData && gData.result) {
+              const r = gData.result;
+              return {
+                name: r.name || businessName,
+                rating: r.rating || 0,
+                totalReviews: r.user_ratings_total || 0,
+                formattedAddress: r.formatted_address || businessAddress,
+                claimed: true,
+                openNow: r.opening_hours?.open_now ?? false,
+                phone: r.formatted_phone_number || '',
+                website: r.website || ''
+              };
+            }
+            // Fallback: use Serper Maps data
+            const mapsData = await fetchSerperAPI('maps', businessName);
+            const match = (mapsData?.places || []).find(p => p.title === businessName) || (mapsData?.places || [])[0];
+            return {
+              name: match?.title || businessName,
+              rating: match?.rating || 4.0,
+              totalReviews: match?.ratingCount || 0,
+              formattedAddress: match?.address || businessAddress,
+              claimed: true,
+              openNow: true,
+              phone: match?.phoneNumber || '',
+              website: match?.website || ''
+            };
+          }
+          case 'reviews': {
+            const data = await fetchSerperAPI('reviews', businessName + ' ' + businessAddress);
+            const reviews = data?.reviews || [];
+            let pos = 0, neu = 0, neg = 0;
+            reviews.forEach(r => {
+              const rating = r.rating || 3;
+              if (rating >= 4) pos++;
+              else if (rating >= 3) neu++;
+              else neg++;
+            });
+            const total = Math.max(1, pos + neu + neg);
+            return {
+              sentiment: {
+                positive: Math.round(pos / total * 100),
+                neutral: Math.round(neu / total * 100),
+                negative: Math.round(neg / total * 100)
+              },
+              distribution: [
+                { stars: 5, percentage: Math.round(reviews.filter(r => r.rating === 5).length / total * 100) },
+                { stars: 4, percentage: Math.round(reviews.filter(r => r.rating === 4).length / total * 100) },
+                { stars: 3, percentage: Math.round(reviews.filter(r => r.rating === 3).length / total * 100) },
+                { stars: 2, percentage: Math.round(reviews.filter(r => r.rating === 2).length / total * 100) },
+                { stars: 1, percentage: Math.round(reviews.filter(r => r.rating === 1).length / total * 100) },
+              ],
+              reviewCount: reviews.length,
+              topReviews: reviews.slice(0, 3).map(r => ({ text: r.snippet || r.body || '', rating: r.rating }))
+            };
+          }
+          case 'images': {
+            const data = await fetchSerperAPI('images', businessName + ' restaurant');
+            const images = data?.images || [];
+            return {
+              totalPhotos: images.length || 0,
+              qualityAnalysis: { overallScore: Math.min(100, images.length * 3 + 40) },
+              sampleImages: images.slice(0, 6).map(i => i.imageUrl || i.thumbnailUrl)
+            };
+          }
+          case 'facebook': {
+            // Mock - no Facebook API available
+            return {
+              followers: Math.floor(Math.random() * 3000) + 500,
+              engagement: { rate: (Math.random() * 4 + 1).toFixed(1) },
+              responsiveness: { responseTime: '< 1 time' }
+            };
+          }
+          case 'mobile': {
+            // Mock - would need Lighthouse API
+            return {
+              scores: { mobile: Math.floor(Math.random() * 30) + 55, desktop: Math.floor(Math.random() * 25) + 65 }
+            };
+          }
+          case 'website': {
+            // Use Firecrawl to scrape the business website
+            const websiteUrl = selectedPlace?.website || '';
+            if (websiteUrl) {
+              const fcData = await scrapeWebsite(websiteUrl);
+              if (fcData && fcData.data) {
+                return {
+                  metadata: fcData.data.metadata || {},
+                  content: (fcData.data.markdown || '').substring(0, 500),
+                  links: fcData.data.links?.length || 0,
+                  scraped: true
+                };
+              }
+            }
+            // Fallback mock
+            return {
+              metadata: { title: businessName, description: 'Restaurant website' },
+              content: '',
+              links: 0,
+              scraped: false
+            };
+          }
+          default:
+            return {};
+        }
+      } catch(e) {
+        console.warn(`API call for ${endpoint.preview} failed:`, e);
+        return {};
+      }
+    }
+
+    // Show report - clean, professional design
     function showReport(data) {
       loadingSection.classList.remove('active');
       reportSection.classList.add('active');
 
-      // Populate report
-      document.getElementById('reportBusinessName').textContent = data.business_name;
+      // PDF Box
+      document.getElementById('reportBusinessName').textContent = data.business_name + ' — SEO Analyserapport';
       document.getElementById('reportBusinessAddress').textContent = data.address;
+      document.getElementById('reportDate').textContent = new Date().toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Preview header
+      document.getElementById('reportPreviewName').textContent = data.business_name;
+      document.getElementById('reportPreviewAddress').textContent = data.address;
+
+      // Score
       document.getElementById('reportScore').textContent = data.score;
       document.getElementById('scoreDescription').textContent = data.score_description;
 
-      // Listings analysis
-      document.getElementById('listingsAnalysis').innerHTML = data.listings.map(item => `
-        <li>
-          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            ${item.status === 'success' 
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
-              : item.status === 'warning'
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
-              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
-            }
-          </svg>
-          <span>${item.text}</span>
-        </li>
-      `).join('');
+      // Listings table (clean rows, no icons)
+      const listingsBody = document.querySelector('#reportListingsTable tbody');
+      listingsBody.innerHTML = (data.listings || []).map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:${color};font-size:13px;width:8px">&#9679;</td>
+          <td style="padding:10px 8px;color:#d1d5db;font-size:14px">${item.text}</td>
+        </tr>`;
+      }).join('');
 
-      // Competitor analysis
-      document.getElementById('competitorAnalysis').innerHTML = data.competitors.map(item => `
-        <li>
-          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            ${item.status === 'success' 
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
-              : item.status === 'warning'
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
-              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
-            }
-          </svg>
-          <span>${item.text}</span>
-        </li>
-      `).join('');
-
-      // Review summary
-      document.getElementById('reviewSummary').innerHTML = data.reviews.map(item => `
-        <li>
-          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            ${item.status === 'success' 
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
-              : item.status === 'warning'
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
-              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
-            }
-          </svg>
-          <span>${item.text}</span>
-        </li>
-      `).join('');
-
-      // Website analysis
-      document.getElementById('websiteAnalysis').innerHTML = data.website.map(item => `
-        <li>
-          <svg class="report-list-icon ${item.status}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            ${item.status === 'success' 
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>'
-              : item.status === 'warning'
-              ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>'
-              : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>'
-            }
-          </svg>
-          <span>${item.text}</span>
-        </li>
-      `).join('');
-
-      // Recommendations
-      document.getElementById('recommendations').innerHTML = data.recommendations.map((rec, index) => `
-        <div class="recommendation-item">
-          <div class="recommendation-number">${index + 1}</div>
-          <div class="recommendation-content">
-            <h4>${rec.title}</h4>
-            <p>${rec.description}</p>
+      // Review bars (CSS only, no icons)
+      const reviewBars = document.getElementById('reportReviewBars');
+      const sentimentData = data.reviews || [];
+      reviewBars.innerHTML = sentimentData.map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <span style="color:#9ca3af;font-size:13px;min-width:180px">${item.text}</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+            <div style="width:${parseInt(item.text.match(/\d+/) || 0)}%;height:100%;background:${color};border-radius:3px"></div>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
 
-      // Scroll to top of report
+      // Competitor table
+      const compBody = document.querySelector('#reportCompetitorTable tbody');
+      compBody.innerHTML = (data.competitors || []).map(item => {
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:#d1d5db;font-size:14px">${item.text}</td>
+          <td style="padding:10px 0;color:#9ca3af;font-size:13px">Fundet via analyse</td>
+        </tr>`;
+      }).join('');
+
+      // Website table
+      const webBody = document.querySelector('#reportWebsiteTable tbody');
+      webBody.innerHTML = (data.website || []).map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:${color};font-size:13px;width:8px">&#9679;</td>
+          <td style="padding:10px 8px;color:#d1d5db;font-size:14px">${item.text}</td>
+        </tr>`;
+      }).join('');
+
+      // Recommendations (numbered list)
+      const recList = document.getElementById('reportRecommendations');
+      recList.innerHTML = (data.recommendations || []).map(rec => `<li style="margin-bottom:4px">${rec}</li>`).join('');
+
+      // Reset PDF box visibility
+      document.getElementById('reportPDFBox').style.display = 'block';
+      document.getElementById('reportPreview').style.display = 'none';
+
+      // Scroll to top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
