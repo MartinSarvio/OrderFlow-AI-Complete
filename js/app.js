@@ -3855,6 +3855,11 @@ function showPage(page) {
     loadActivitiesPage();
   }
 
+  // Load Agenter page
+  if (page === 'agenter') {
+    if (typeof loadAgenterPage === 'function') loadAgenterPage();
+  }
+
   // Load Instagram Workflow page
   if (page === 'instagram-workflow') {
     loadWorkflowAgentPage('instagram');
@@ -41835,6 +41840,547 @@ function renderAgentStatistics() {
 function renderAgentStatusDashboard() {
   // Status table is static HTML, no dynamic render needed currently
 }
+
+// ============================================================
+// AGENTER PAGE — FLOW Agent System
+// ============================================================
+
+const AGENT_ENDPOINTS = [
+  { name: 'Supabase REST', url: CONFIG.SUPABASE_URL + '/rest/v1/', method: 'GET', critical: true },
+  { name: 'SMS Send', url: CONFIG.SUPABASE_URL + '/functions/v1/send-sms', method: 'GET', critical: true },
+  { name: 'SMS Receive', url: CONFIG.SUPABASE_URL + '/functions/v1/receive-sms', method: 'GET', critical: true },
+  { name: 'Payment Intent', url: CONFIG.SUPABASE_URL + '/functions/v1/create-payment-intent', method: 'GET', critical: true },
+  { name: 'OTP Email', url: CONFIG.SUPABASE_URL + '/functions/v1/send-otp-email', method: 'GET', critical: false }
+];
+
+const AGENT_SMS_PATTERNS = {
+  confirm: { patterns: [/^(ja|yes|ok|jep|yep|jo|oki)$/i, /\b(bekr\u00e6ft|accept|godkend|det er fint|sounds good|confirm)\b/i], confidence: 0.95 },
+  cancel: { patterns: [/^(nej|no|nope|n\u00e5h)$/i, /\b(annuller|cancel|afbestil|stop|fortryd)\b/i], confidence: 0.95 },
+  reschedule: { patterns: [/\b(\u00e6ndre tid|skubbe|senere|flytte|different time|reschedule|udskyde|kl\.?\s*\d)\b/i], confidence: 0.85 },
+  question: { patterns: [/\?$/, /\b(hvad|what|hvorn\u00e5r|when|hvordan|how|kan|can|hvor|where)\b/i], confidence: 0.80 },
+  allergy: { patterns: [/\b(allergi|allergy|n\u00f8dder|nuts|gluten|laktose|lactose|intoleran)\b/i], confidence: 0.99 }
+};
+
+const AGENTER_PAGE_AGENTS = [
+  {
+    id: 'workflow',
+    name: 'Workflow Agent',
+    subtitle: 'Workflow monitorering',
+    description: 'Overvager workflow-signaler, driftsstatus og seneste agentaktivitet.',
+    color: '#6366f1',
+    version: 'v1.0.0'
+  },
+  {
+    id: 'debugging',
+    name: 'Debugging Agent',
+    subtitle: 'Diagnostik',
+    description: 'Teknisk fejlfinding, endpoint check og SMS parser test.',
+    color: '#f59e0b',
+    version: 'v1.0.0'
+  },
+  {
+    id: 'instagram',
+    name: 'Instagram Agent',
+    subtitle: 'Workflow integration',
+    description: 'Status og hurtig adgang til Instagram workflow.',
+    color: '#ec4899',
+    version: 'v1.2.0'
+  },
+  {
+    id: 'facebook',
+    name: 'Facebook Agent',
+    subtitle: 'Workflow integration',
+    description: 'Status og hurtig adgang til Facebook workflow.',
+    color: '#3b82f6',
+    version: 'v1.2.0'
+  },
+  {
+    id: 'restaurant',
+    name: 'Restaurant Agent',
+    subtitle: 'SMS workflows',
+    description: 'Overvagning af SMS-workflows og operationelle signaler.',
+    color: '#f97316',
+    version: 'v1.2.0'
+  }
+];
+
+const agenterPageState = {
+  view: 'overview',
+  selectedAgentId: null
+};
+
+function safeParseJson(raw, fallback) {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function toRelativeTimeLabel(timestamp) {
+  if (!timestamp) return 'Ikke registreret';
+  const value = new Date(timestamp).getTime();
+  if (!value || Number.isNaN(value)) return 'Ukendt';
+  const diffMs = Date.now() - value;
+  if (diffMs < 0) return 'Lige nu';
+  const diffMin = Math.round(diffMs / 60000);
+  if (diffMin < 1) return 'Lige nu';
+  if (diffMin < 60) return diffMin + ' min siden';
+  const diffHours = Math.round(diffMin / 60);
+  if (diffHours < 24) return diffHours + ' timer siden';
+  const diffDays = Math.round(diffHours / 24);
+  return diffDays + ' dage siden';
+}
+
+function getLatestWorkflowSettingsUpdate() {
+  let list = (typeof restaurants !== 'undefined' && Array.isArray(restaurants)) ? restaurants : null;
+  if (!list || !list.length) {
+    list = safeParseJson(localStorage.getItem('orderflow_restaurants'), []);
+  }
+  if (!Array.isArray(list) || list.length === 0) return 'Ingen registreret';
+
+  let latest = 0;
+  list.forEach((item) => {
+    if (!item || !item.workflowSettingsUpdatedAt) return;
+    const parsed = new Date(item.workflowSettingsUpdatedAt).getTime();
+    if (parsed && !Number.isNaN(parsed) && parsed > latest) {
+      latest = parsed;
+    }
+  });
+  if (!latest) return 'Ingen registreret';
+  return new Date(latest).toLocaleString('da-DK');
+}
+
+function getAgentOverviewState(agentId) {
+  const debugState = safeParseJson(localStorage.getItem('flow_agent_debug_state'), null);
+  const workflowState = safeParseJson(localStorage.getItem('flow_agent_workflow_state'), null);
+  const instagramStatus = safeParseJson(localStorage.getItem('orderflow_instagram_agent_status'), null);
+  const facebookStatus = safeParseJson(localStorage.getItem('orderflow_facebook_agent_status'), null);
+
+  if (agentId === 'workflow') {
+    const activeCount = [instagramStatus, facebookStatus].filter((entry) => entry && entry.active).length;
+    const connectedCount = [instagramStatus, facebookStatus].filter((entry) => entry && entry.connected).length;
+    const isActive = activeCount > 0 || !!workflowState;
+    return {
+      label: isActive ? 'Aktiv' : 'Inaktiv',
+      color: isActive ? 'var(--success)' : 'var(--muted)',
+      metaPrimary: activeCount + '/2 aktive integrationer',
+      metaSecondary: connectedCount + '/2 forbundne integrationer'
+    };
+  }
+
+  if (agentId === 'debugging') {
+    const activeRecently = !!(debugState && debugState.lastRun && (Date.now() - new Date(debugState.lastRun).getTime()) < 10 * 60000);
+    return {
+      label: activeRecently ? 'Aktiv' : 'Inaktiv',
+      color: activeRecently ? 'var(--success)' : 'var(--warning)',
+      metaPrimary: 'Sidste run: ' + (debugState && debugState.lastRun ? toRelativeTimeLabel(debugState.lastRun) : 'Aldrig'),
+      metaSecondary: 'Endpoint monitor'
+    };
+  }
+
+  if (agentId === 'instagram') {
+    const isActive = !!(instagramStatus && instagramStatus.active);
+    return {
+      label: isActive ? 'Aktiv' : 'Inaktiv',
+      color: isActive ? '#ec4899' : 'var(--muted)',
+      metaPrimary: instagramStatus && instagramStatus.connected ? 'Forbundet' : 'Ikke forbundet',
+      metaSecondary: 'Instagram workflow'
+    };
+  }
+
+  if (agentId === 'facebook') {
+    const isActive = !!(facebookStatus && facebookStatus.active);
+    return {
+      label: isActive ? 'Aktiv' : 'Inaktiv',
+      color: isActive ? '#3b82f6' : 'var(--muted)',
+      metaPrimary: facebookStatus && facebookStatus.connected ? 'Forbundet' : 'Ikke forbundet',
+      metaSecondary: 'Facebook workflow'
+    };
+  }
+
+  return {
+    label: 'Klar',
+    color: 'var(--primary)',
+    metaPrimary: 'Read-only monitor',
+    metaSecondary: 'SMS workflows'
+  };
+}
+
+function renderAgenterOverview() {
+  const overviewEl = document.getElementById('agenter-overview-view');
+  const detailEl = document.getElementById('agenter-detail-view');
+  const gridEl = document.getElementById('agenter-cards-grid');
+  if (!gridEl || !overviewEl || !detailEl) return;
+
+  overviewEl.style.display = '';
+  detailEl.style.display = 'none';
+
+  gridEl.innerHTML = AGENTER_PAGE_AGENTS.map((agent) => {
+    const state = getAgentOverviewState(agent.id);
+    return (
+      '<button type="button" onclick="openAgentDetail(\'' + agent.id + '\')" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);cursor:pointer;transition:border-color .2s,transform .2s" onmouseenter="this.style.borderColor=\'' + agent.color + '\';this.style.transform=\'translateY(-2px)\'" onmouseleave="this.style.borderColor=\'var(--border)\';this.style.transform=\'translateY(0)\'">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:var(--space-3)">' +
+          '<div>' +
+            '<h3 style="margin:0 0 4px 0;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + agent.name + '</h3>' +
+            '<div style="color:var(--muted);font-size:var(--font-size-sm)">' + agent.subtitle + '</div>' +
+          '</div>' +
+          '<span style="font-size:11px;padding:3px 8px;border-radius:var(--radius-sm);background:' + agent.color + ';color:white">' + agent.version + '</span>' +
+        '</div>' +
+        '<p style="margin:0 0 var(--space-3) 0;color:var(--muted);font-size:var(--font-size-sm);line-height:1.5">' + agent.description + '</p>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:var(--space-3);border-top:1px solid var(--border)">' +
+          '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:' + state.color + ';font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:' + state.color + ';display:inline-block"></span>' + state.label + '</span>' +
+          '<span style="font-size:12px;color:var(--muted)">' + state.metaPrimary + '</span>' +
+        '</div>' +
+      '</button>'
+    );
+  }).join('');
+}
+
+function loadAgenterPage() {
+  agenterPageState.view = 'overview';
+  agenterPageState.selectedAgentId = null;
+  renderAgenterOverview();
+}
+
+function openAgentDetail(agentId) {
+  const agent = AGENTER_PAGE_AGENTS.find((entry) => entry.id === agentId);
+  if (!agent) return;
+
+  const overviewEl = document.getElementById('agenter-overview-view');
+  const detailEl = document.getElementById('agenter-detail-view');
+  const titleEl = document.getElementById('agenter-detail-title');
+  const subtitleEl = document.getElementById('agenter-detail-subtitle');
+  if (!overviewEl || !detailEl || !titleEl || !subtitleEl) return;
+
+  agenterPageState.view = 'detail';
+  agenterPageState.selectedAgentId = agentId;
+
+  overviewEl.style.display = 'none';
+  detailEl.style.display = '';
+  titleEl.textContent = agent.name;
+  subtitleEl.textContent = agent.subtitle;
+
+  renderAgentDetail(agentId);
+}
+
+function closeAgentDetail() {
+  agenterPageState.view = 'overview';
+  agenterPageState.selectedAgentId = null;
+  renderAgenterOverview();
+}
+
+function renderWorkflowSignals() {
+  const container = document.getElementById('agent-workflow-signals');
+  if (!container) return;
+
+  const workflowModule = localStorage.getItem('workflow_module') || 'restaurant';
+  const workflowState = safeParseJson(localStorage.getItem('flow_agent_workflow_state'), null);
+  const instagramStatus = safeParseJson(localStorage.getItem('orderflow_instagram_agent_status'), null);
+  const facebookStatus = safeParseJson(localStorage.getItem('orderflow_facebook_agent_status'), null);
+
+  const signals = [
+    { label: 'Workflow modul', value: workflowModule, tone: 'var(--primary)' },
+    { label: 'Sidste workflow-run', value: workflowState && workflowState.lastRun ? toRelativeTimeLabel(workflowState.lastRun) : 'Ingen registreret', tone: 'var(--text)' },
+    { label: 'Workflow settings opdateret', value: getLatestWorkflowSettingsUpdate(), tone: 'var(--text)' },
+    { label: 'Instagram agent', value: instagramStatus && instagramStatus.active ? 'Aktiv' : 'Inaktiv', tone: instagramStatus && instagramStatus.active ? 'var(--success)' : 'var(--muted)' },
+    { label: 'Facebook agent', value: facebookStatus && facebookStatus.active ? 'Aktiv' : 'Inaktiv', tone: facebookStatus && facebookStatus.active ? 'var(--success)' : 'var(--muted)' },
+    { label: 'Forbundne integrationer', value: ((instagramStatus && instagramStatus.connected ? 1 : 0) + (facebookStatus && facebookStatus.connected ? 1 : 0)) + '/2', tone: 'var(--text)' }
+  ];
+
+  container.innerHTML = signals.map((signal) => (
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + signal.label + '</div>' +
+      '<div style="font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + signal.tone + '">' + signal.value + '</div>' +
+    '</div>'
+  )).join('');
+}
+
+function renderActivityList(targetId, emptyMessage) {
+  const listEl = document.getElementById(targetId);
+  if (!listEl) return;
+  const log = safeParseJson(localStorage.getItem('flow_agent_activity'), []);
+
+  if (!Array.isArray(log) || log.length === 0) {
+    listEl.innerHTML = '<div style="padding:10px 0;color:var(--muted)">' + emptyMessage + '</div>';
+    return;
+  }
+
+  listEl.innerHTML = log.slice(-10).reverse().map((entry) => {
+    const time = entry && entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString('da-DK') : '--:--';
+    const severity = entry && entry.severity ? entry.severity : 'info';
+    const color = severity === 'error' ? 'var(--danger)' : severity === 'warning' ? 'var(--warning)' : 'var(--muted)';
+    const text = (entry && (entry.message || entry.event)) ? (entry.message || entry.event) : 'Ukendt aktivitet';
+    return (
+      '<div style="padding:8px 0;border-bottom:1px solid var(--border)">' +
+        '<span style="font-size:11px;color:' + color + '">[' + time + ']</span> ' +
+        '<span style="font-size:var(--font-size-sm)">' + text + '</span>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+function renderWorkflowDetail() {
+  const contentEl = document.getElementById('agenter-detail-content');
+  if (!contentEl) return;
+
+  const workflowState = safeParseJson(localStorage.getItem('flow_agent_workflow_state'), null);
+  const instagramStatus = safeParseJson(localStorage.getItem('orderflow_instagram_agent_status'), null);
+  const facebookStatus = safeParseJson(localStorage.getItem('orderflow_facebook_agent_status'), null);
+
+  contentEl.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="color:var(--muted);font-size:12px">Workflow Agent status</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-top:4px">' + (workflowState ? 'Aktiv monitorering' : 'Klar') + '</div></div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="color:var(--muted);font-size:12px">Instagram/Facebook aktive</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-top:4px">' + ((instagramStatus && instagramStatus.active ? 1 : 0) + (facebookStatus && facebookStatus.active ? 1 : 0)) + '/2</div></div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="color:var(--muted);font-size:12px">Sidste heartbeat</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-top:4px">' + (workflowState && workflowState.lastRun ? toRelativeTimeLabel(workflowState.lastRun) : 'Ikke registreret') + '</div></div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="color:var(--muted);font-size:12px">Seneste workflow save</div><div style="font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);margin-top:4px">' + getLatestWorkflowSettingsUpdate() + '</div></div>' +
+    '</div>' +
+
+    '<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-5)">' +
+      '<button class="btn btn-primary" onclick="showPage(\'workflow\')">Aabn Workflow</button>' +
+      '<button class="btn btn-secondary" onclick="showPage(\'sms-workflows\')">Aabn SMS Workflows</button>' +
+      '<button class="btn btn-secondary" onclick="showPage(\'instagram-workflow\')">Aabn Instagram Workflow</button>' +
+      '<button class="btn btn-secondary" onclick="showPage(\'facebook-workflow\')">Aabn Facebook Workflow</button>' +
+    '</div>' +
+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Workflow-signaler</h3>' +
+      '<div id="agent-workflow-signals" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-3)"></div>' +
+    '</div>' +
+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:var(--space-3)">' +
+        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0">Endpoint overvaagning</h3>' +
+        '<button class="btn btn-secondary" onclick="runAgentEndpointCheck()" style="font-size:var(--font-size-sm);padding:6px 12px">Tjek nu</button>' +
+      '</div>' +
+      '<div style="overflow-x:auto">' +
+        '<table style="width:100%;border-collapse:collapse">' +
+          '<thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:10px 12px;font-size:var(--font-size-sm);color:var(--muted)">Endpoint</th><th style="text-align:center;padding:10px 12px;font-size:var(--font-size-sm);color:var(--muted)">Status</th><th style="text-align:right;padding:10px 12px;font-size:var(--font-size-sm);color:var(--muted)">Responstid</th><th style="text-align:right;padding:10px 12px;font-size:var(--font-size-sm);color:var(--muted)">Sidst tjekket</th></tr></thead>' +
+          '<tbody id="agent-endpoint-table"><tr><td colspan="4" style="padding:16px;text-align:center;color:var(--muted)">Tryk "Tjek nu" for endpoint-check</td></tr></tbody>' +
+        '</table>' +
+      '</div>' +
+    '</div>' +
+
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Seneste workflow-aktivitet</h3>' +
+      '<div id="agent-workflow-activity-log" style="max-height:240px;overflow-y:auto;font-size:var(--font-size-sm)"></div>' +
+    '</div>';
+
+  renderWorkflowSignals();
+  renderActivityList('agent-workflow-activity-log', 'Ingen workflow-aktivitet registreret endnu.');
+}
+
+function renderDebuggingDetail() {
+  const contentEl = document.getElementById('agenter-detail-content');
+  if (!contentEl) return;
+
+  const debugState = safeParseJson(localStorage.getItem('flow_agent_debug_state'), null);
+  const statusColor = debugState && debugState.lastRun ? 'var(--success)' : 'var(--muted)';
+
+  contentEl.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="font-size:12px;color:var(--muted)">Debug status</div><div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + statusColor + '"><span style="width:8px;height:8px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + (debugState ? 'Aktiv' : 'Ikke startet') + '</div></div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)"><div style="font-size:12px;color:var(--muted)">Sidste run</div><div style="margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold)">' + (debugState && debugState.lastRun ? toRelativeTimeLabel(debugState.lastRun) : 'Aldrig') + '</div></div>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-2) 0">Test SMS parser</h3>' +
+        '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Debugging agentens parser-test for intents.</p>' +
+        '<textarea id="agent-sms-input" rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text);font-size:var(--font-size-sm);resize:vertical;font-family:inherit" placeholder="Skriv en SMS-besked, fx \'ja tak\' eller \'allergi nodder\'"></textarea>' +
+        '<button class="btn btn-primary" onclick="testAgentSmsParser()" style="margin-top:var(--space-2);font-size:var(--font-size-sm);padding:6px 16px">Analyser</button>' +
+        '<div id="agent-sms-result" style="margin-top:var(--space-3);display:none"></div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-2) 0">Debug aktivitet</h3>' +
+        '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Seneste tekniske events fra agent-aktivitetsloggen.</p>' +
+        '<div id="agent-debug-activity-log" style="max-height:240px;overflow-y:auto;font-size:var(--font-size-sm)"></div>' +
+      '</div>' +
+    '</div>';
+
+  renderActivityList('agent-debug-activity-log', 'Ingen debug-aktivitet registreret endnu.');
+}
+
+function renderPlaceholderDetail(agentId) {
+  const contentEl = document.getElementById('agenter-detail-content');
+  const agent = AGENTER_PAGE_AGENTS.find((entry) => entry.id === agentId);
+  if (!contentEl || !agent) return;
+
+  const navigationMap = {
+    instagram: 'instagram-workflow',
+    facebook: 'facebook-workflow',
+    restaurant: 'sms-workflows'
+  };
+  const targetPage = navigationMap[agentId];
+
+  contentEl.innerHTML =
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-6);max-width:860px">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-2) 0">Read-only detalje</h3>' +
+      '<p style="color:var(--muted);font-size:var(--font-size-sm);line-height:1.6;margin-bottom:var(--space-4)">' + agent.description + '</p>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
+        '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--muted)">Agent</div><div style="font-weight:var(--font-weight-semibold)">' + agent.name + '</div></div>' +
+        '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--muted)">Version</div><div style="font-weight:var(--font-weight-semibold)">' + agent.version + '</div></div>' +
+      '</div>' +
+      (targetPage ? '<button class="btn btn-primary" onclick="showPage(\'' + targetPage + '\')">Aabn relateret workflow</button>' : '') +
+    '</div>';
+}
+
+function renderAgentDetail(agentId) {
+  if (agentId === 'workflow') {
+    renderWorkflowDetail();
+    return;
+  }
+  if (agentId === 'debugging') {
+    renderDebuggingDetail();
+    return;
+  }
+  renderPlaceholderDetail(agentId);
+}
+
+async function runAgentEndpointCheck() {
+  const tableEl = document.getElementById('agent-endpoint-table');
+  if (!tableEl) {
+    if (typeof toast === 'function') toast('Aabn Workflow Agent detaljen for at koere endpoint check', 'warning');
+    return;
+  }
+
+  tableEl.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Checker endpoints...</td></tr>';
+
+  const results = [];
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+
+  for (const ep of AGENT_ENDPOINTS) {
+    const start = performance.now();
+    let status = 'down';
+    let statusCode = null;
+    let responseTime = 0;
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(ep.url, { method: ep.method, headers, signal: controller.signal });
+      clearTimeout(timeout);
+      responseTime = Math.round(performance.now() - start);
+      statusCode = res.status;
+      if (res.ok || res.status === 401) status = 'healthy';
+      else if (res.status < 500) status = 'degraded';
+      else status = 'down';
+    } catch (err) {
+      responseTime = Math.round(performance.now() - start);
+      status = 'down';
+    }
+
+    if (responseTime > 2000 && status === 'healthy') status = 'degraded';
+
+    results.push({ name: ep.name, status, statusCode, responseTime, critical: ep.critical });
+  }
+
+  const now = new Date().toLocaleTimeString('da-DK');
+  const statusDots = { healthy: 'var(--success)', degraded: 'var(--warning)', down: 'var(--danger)' };
+  const statusLabels = { healthy: 'OK', degraded: 'Langsom', down: 'Nede' };
+
+  tableEl.innerHTML = results.map(r => {
+    const dot = '<div style="width:8px;height:8px;border-radius:50%;background:' + statusDots[r.status] + ';display:inline-block;margin-right:6px"></div>';
+    const critical = r.critical ? '' : ' <span style="color:var(--muted);font-size:11px">(valgfri)</span>';
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 12px;font-size:var(--font-size-sm)">' + r.name + critical + '</td>' +
+      '<td style="padding:10px 12px;text-align:center;font-size:var(--font-size-sm)">' + dot + statusLabels[r.status] + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-size:var(--font-size-sm)">' + r.responseTime + 'ms</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-size:var(--font-size-sm);color:var(--muted)">' + now + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // Save to localStorage for activity log
+  const healthy = results.filter(r => r.status === 'healthy').length;
+  let activity = safeParseJson(localStorage.getItem('flow_agent_activity'), []);
+  if (!Array.isArray(activity)) activity = [];
+  activity.push({
+    timestamp: new Date().toISOString(),
+    event: 'endpoint_check',
+    message: 'Endpoint check: ' + healthy + '/' + results.length + ' healthy',
+    severity: healthy === results.length ? 'info' : 'warning'
+  });
+  localStorage.setItem('flow_agent_activity', JSON.stringify(activity.slice(-50)));
+
+  // Update debug agent + workflow monitor heartbeat
+  localStorage.setItem('flow_agent_debug_state', JSON.stringify({ lastRun: new Date().toISOString(), overallStatus: healthy === results.length ? 'healthy' : 'degraded' }));
+  const workflowState = safeParseJson(localStorage.getItem('flow_agent_workflow_state'), {}) || {};
+  workflowState.lastRun = new Date().toISOString();
+  workflowState.healthSummary = healthy + '/' + results.length;
+  localStorage.setItem('flow_agent_workflow_state', JSON.stringify(workflowState));
+
+  if (agenterPageState.view === 'detail' && agenterPageState.selectedAgentId === 'workflow') {
+    renderWorkflowSignals();
+    renderActivityList('agent-workflow-activity-log', 'Ingen workflow-aktivitet registreret endnu.');
+  } else {
+    renderAgenterOverview();
+  }
+
+  if (typeof toast === 'function') toast('Endpoint check f\u00e6rdig: ' + healthy + '/' + results.length + ' OK', healthy === results.length ? 'success' : 'warning');
+}
+
+function testAgentSmsParser() {
+  const input = document.getElementById('agent-sms-input');
+  const resultEl = document.getElementById('agent-sms-result');
+  if (!input || !resultEl) return;
+
+  const message = input.value.trim();
+  if (!message) { if (typeof toast === 'function') toast('Skriv en SMS-besked f\u00f8rst', 'warning'); return; }
+
+  const normalized = message.toLowerCase();
+
+  // Detect language
+  const daDa = /\b(ja|nej|tak|hej|bestilling|allergi|n\u00f8dder|gluten|hvad|hvordan|hvorn\u00e5r|hvor|\u00e6ndre|annuller|bekr\u00e6ft)\b/i;
+  const enEn = /\b(yes|no|please|hello|order|allergy|nuts|what|how|when|where|cancel|confirm)\b/i;
+  const daCount = (message.match(daDa) || []).length;
+  const enCount = (message.match(enEn) || []).length;
+  const language = daCount > enCount ? 'da' : enCount > daCount ? 'en' : (/[\u00e6\u00f8\u00e5]/.test(message) ? 'da' : 'unknown');
+
+  // Check patterns
+  let intent = 'unknown';
+  let confidence = 0;
+  const flags = [];
+
+  for (const [intentName, config] of Object.entries(AGENT_SMS_PATTERNS)) {
+    for (const pattern of config.patterns) {
+      if (pattern.test(normalized)) {
+        intent = intentName;
+        confidence = config.confidence;
+        break;
+      }
+    }
+    if (intent !== 'unknown') break;
+  }
+
+  if (intent === 'allergy') flags.push('CRITICAL');
+
+  // Extract time
+  const timeMatch = message.match(/kl\.?\s*(\d{1,2})[.:]?(\d{2})?/i) || message.match(/(\d{1,2})[.:](\d{2})\s*(pm|am)?/i);
+  const extractedTime = timeMatch ? timeMatch[0] : null;
+
+  // Display result
+  resultEl.style.display = 'block';
+  const intentColors = { confirm: 'var(--success)', cancel: 'var(--danger)', reschedule: 'var(--primary)', question: 'var(--warning)', allergy: '#8B0000', unknown: 'var(--muted)' };
+  const intentLabels = { confirm: 'Bekr\u00e6ft', cancel: 'Annuller', reschedule: '\u00c6ndre tid', question: 'Sp\u00f8rgsm\u00e5l', allergy: 'Allergi', unknown: 'Ukendt' };
+
+  resultEl.innerHTML =
+    '<div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;font-size:var(--font-size-sm)">' +
+    (intent === 'allergy' ? '<div style="background:#8B0000;color:white;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-weight:600">KRITISK ALLERGI-ALARM</div>' : '') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--muted)">Intent:</span> <strong style="color:' + (intentColors[intent] || 'var(--muted)') + '">' + (intentLabels[intent] || intent) + '</strong></div>' +
+    '<div><span style="color:var(--muted)">Confidence:</span> <strong>' + Math.round(confidence * 100) + '%</strong></div>' +
+    '<div><span style="color:var(--muted)">Sprog:</span> <strong>' + (language === 'da' ? 'Dansk' : language === 'en' ? 'Engelsk' : 'Ukendt') + '</strong></div>' +
+    (extractedTime ? '<div><span style="color:var(--muted)">Tid:</span> <strong>' + extractedTime + '</strong></div>' : '') +
+    (flags.length > 0 ? '<div><span style="color:var(--muted)">Flags:</span> <strong style="color:#8B0000">' + flags.join(', ') + '</strong></div>' : '') +
+    '</div></div>';
+}
+
+window.loadAgenterPage = loadAgenterPage;
+window.runAgentEndpointCheck = runAgentEndpointCheck;
+window.testAgentSmsParser = testAgentSmsParser;
+window.openAgentDetail = openAgentDetail;
+window.closeAgentDetail = closeAgentDetail;
 
 window.openAgentPage = openAgentPage;
 window.openAgentConfigPanel = openAgentConfigPanel;
