@@ -2472,12 +2472,141 @@ supabase = null;
 // =====================================================
 // AUTH
 // =====================================================
+// Auth view navigation — replaces old showAuthTab
+function showAuthView(viewName) {
+  var views = document.querySelectorAll('.auth-view');
+  views.forEach(function(v) { v.classList.remove('active'); });
+  var target = document.getElementById('auth-view-' + viewName);
+  if (target) target.classList.add('active');
+  // Also hide 2FA form when switching views
+  var twoFa = document.getElementById('2fa-challenge-form');
+  if (twoFa && viewName !== '2fa') twoFa.style.display = 'none';
+  // Clear error
+  var err = document.getElementById('auth-error');
+  if (err) err.style.display = 'none';
+}
+
+// Backwards compatibility
 function showAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`.auth-tab:${tab === 'login' ? 'first-child' : 'last-child'}`).classList.add('active');
-  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('signup-form').style.display = tab === 'signup' ? 'block' : 'none';
-  document.getElementById('auth-error').style.display = 'none';
+  showAuthView(tab === 'signup' ? 'signup' : 'login');
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(inputId) {
+  var input = document.getElementById(inputId);
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// Forgot password — send reset email via Supabase
+var forgotPasswordEmail = '';
+async function handleForgotPassword(e) {
+  e.preventDefault();
+  var email = document.getElementById('forgot-email').value;
+  if (!email) return;
+  forgotPasswordEmail = email;
+
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var redirectUrl = window.location.origin + window.location.pathname;
+      var result = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
+      if (result.error) {
+        showAuthError(result.error.message);
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('Password reset error:', err);
+  }
+
+  // Show email sent view regardless (don't reveal if email exists)
+  var display = document.getElementById('forgot-email-display');
+  if (display) display.textContent = email;
+  showAuthView('email-sent');
+  startResendTimer();
+}
+
+// Resend timer
+var resendTimerInterval = null;
+function startResendTimer() {
+  var seconds = 30;
+  var timerEl = document.getElementById('resend-timer');
+  var btnEl = document.getElementById('resend-btn');
+  var textEl = document.getElementById('resend-timer-text');
+  if (btnEl) btnEl.disabled = true;
+  if (textEl) textEl.style.display = 'inline';
+  if (btnEl) btnEl.style.display = 'none';
+
+  if (resendTimerInterval) clearInterval(resendTimerInterval);
+  resendTimerInterval = setInterval(function() {
+    seconds--;
+    if (timerEl) {
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      timerEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+    }
+    if (seconds <= 0) {
+      clearInterval(resendTimerInterval);
+      if (textEl) textEl.style.display = 'none';
+      if (btnEl) { btnEl.style.display = 'inline'; btnEl.disabled = false; }
+    }
+  }, 1000);
+}
+
+// Resend reset email
+async function resendResetEmail() {
+  if (!forgotPasswordEmail) return;
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var redirectUrl = window.location.origin + window.location.pathname;
+      await supabaseClient.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: redirectUrl
+      });
+    }
+  } catch (err) {
+    console.warn('Resend error:', err);
+  }
+  startResendTimer();
+}
+
+// Reset password — called after PASSWORD_RECOVERY event
+async function handleResetPassword(e) {
+  e.preventDefault();
+  var pw = document.getElementById('reset-password').value;
+  var pwConfirm = document.getElementById('reset-password-confirm').value;
+
+  if (pw !== pwConfirm) {
+    showAuthError('Adgangskoderne matcher ikke.');
+    return;
+  }
+  if (pw.length < 6) {
+    showAuthError('Adgangskoden skal v\u00e6re mindst 6 tegn.');
+    return;
+  }
+
+  try {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      var result = await supabaseClient.auth.updateUser({ password: pw });
+      if (result.error) {
+        showAuthError(result.error.message);
+        return;
+      }
+      if (typeof toast === 'function') toast('Adgangskode nulstillet!', 'success');
+      showAuthView('login');
+    }
+  } catch (err) {
+    showAuthError('Kunne ikke nulstille adgangskode. Pr\u00f8v igen.');
+  }
+}
+
+// Social login placeholders
+function socialLoginGoogle() {
+  if (typeof toast === 'function') toast('Google login kommer snart', 'info');
+}
+function socialLoginFacebook() {
+  if (typeof toast === 'function') toast('Facebook login kommer snart', 'info');
 }
 
 async function handleLogin(e) {
@@ -2982,27 +3111,11 @@ function resetSignupForm() {
 async function handleSignup(e) {
   e.preventDefault();
 
-  // Step 1 data
+  // New simplified signup form data
+  const firstName = document.getElementById('signup-firstname')?.value || '';
+  const lastName = document.getElementById('signup-lastname')?.value || '';
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-password').value;
-
-  // Step 2 data
-  const company = document.getElementById('signup-company').value;
-  const cvr = document.getElementById('signup-cvr')?.value || '';
-  const owner = document.getElementById('signup-owner')?.value || '';
-  const contactName = document.getElementById('signup-contact-name')?.value || '';
-  const contactEmail = document.getElementById('signup-contact-email')?.value || '';
-  const phone = document.getElementById('signup-phone')?.value || '';
-  const address = document.getElementById('signup-address')?.value || '';
-  const website = document.getElementById('signup-website')?.value || '';
-  const industry = document.getElementById('signup-industry')?.value || 'restaurant';
-  const role = document.getElementById('signup-role')?.value || 'owner';
-
-  // Step 3 data
-  const notifications = document.getElementById('setting-notifications')?.checked ?? true;
-  const aiEnabled = document.getElementById('setting-ai')?.checked ?? true;
-  const smsEnabled = document.getElementById('setting-sms')?.checked ?? true;
-  const integrations = getSelectedIntegrations();
 
   if (CONFIG.DEMO_MODE || !supabase) {
     loginDemo();
@@ -3010,69 +3123,24 @@ async function handleSignup(e) {
   }
 
   try {
-    // 1. Opret bruger i Supabase Auth
+    // Opret bruger i Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          company, cvr, owner, contact_name: contactName,
-          contact_email: contactEmail, phone, address, website,
-          industry, user_role: role,
-          settings: { notifications, ai_enabled: aiEnabled, sms_enabled: smsEnabled }
+          first_name: firstName,
+          last_name: lastName,
+          full_name: (firstName + ' ' + lastName).trim()
         }
       }
     });
 
     if (error) throw error;
 
-    // 2. Opret automatisk første restaurant
-    let restaurantId = null;
-    if (data.user && company && typeof SupabaseDB !== 'undefined') {
-      try {
-        const restaurant = await SupabaseDB.createRestaurant(data.user.id, {
-          name: company,
-          cvr: cvr,
-          contact_name: contactName || owner,
-          contact_email: contactEmail || email,
-          contact_phone: phone,
-          address: address,
-          status: 'pending',
-          ai_enabled: aiEnabled,
-          integration_status: integrations.length > 0 ? 'pending' : 'none',
-          metadata: {
-            owner: owner,
-            website: website,
-            industry: industry,
-            integrations: integrations,
-            features: {
-              ai: aiEnabled,
-              sms: smsEnabled,
-              notifications: notifications
-            }
-          }
-        });
-        restaurantId = restaurant?.id;
-        console.log('✅ Restaurant oprettet:', restaurantId);
-      } catch (restErr) {
-        console.warn('⚠️ Kunne ikke oprette restaurant:', restErr.message);
-      }
-    }
-
-    // 3. Send team invitationer (fra Trin 3)
-    if (data.user && restaurantId) {
-      await sendTeamInvitations(data.user.id, restaurantId);
-    }
-
-    // 4. Process pending CSV imports (fra Trin 3)
-    if (data.user && restaurantId) {
-      await processPendingImports(data.user.id, restaurantId);
-    }
-
-    // 5. Success
-    toast('Konto oprettet! Tjek din email for bekræftelse.', 'success');
-    resetSignupForm();
-    showAuthTab('login');
+    // Success
+    toast('Konto oprettet! Tjek din email for bekr\u00e6ftelse.', 'success');
+    showAuthView('login');
   } catch (err) {
     showAuthError(err.message);
   }
@@ -3352,17 +3420,12 @@ function resetAuthUI() {
   window._pending2FALogin = null;
   document.getElementById('app').classList.remove('active');
   document.getElementById('auth-screen').style.display = 'flex';
-  const loginForm = document.getElementById('login-form');
+  showAuthView('login');
   const challengeForm = document.getElementById('2fa-challenge-form');
   const setupRequired = document.getElementById('2fa-setup-required');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
 
-  if (loginForm) loginForm.style.display = 'block';
   if (challengeForm) challengeForm.style.display = 'none';
   if (setupRequired) setupRequired.style.display = 'none';
-  if (authTabs) authTabs.style.display = 'flex';
-  if (demoButtons) demoButtons.style.display = 'block';
 
   const codeInput = document.getElementById('2fa-code-input');
   const emailCodeInput = document.getElementById('2fa-email-code-input');
@@ -3389,6 +3452,12 @@ async function initAuthStateListener() {
     supabaseClient.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
         resetAuthUI();
+      }
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked the reset link from email — show reset password form
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('app').classList.remove('active');
+        showAuthView('reset');
       }
     });
   }
@@ -22481,16 +22550,10 @@ function show2FAChallenge(user, settings) {
   pending2FAUser = user;
   pending2FASettings = settings;
 
-  // Hide login form, show 2FA challenge
-  const loginForm = document.getElementById('login-form');
+  // Hide all auth views, show 2FA challenge
+  document.querySelectorAll('.auth-view').forEach(function(v) { v.classList.remove('active'); });
   const challengeForm = document.getElementById('2fa-challenge-form');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
-
-  if (loginForm) loginForm.style.display = 'none';
   if (challengeForm) challengeForm.style.display = 'block';
-  if (authTabs) authTabs.style.display = 'none';
-  if (demoButtons) demoButtons.style.display = 'none';
 
   const cancelBtn = document.getElementById('2fa-cancel-btn');
   if (cancelBtn) {
@@ -22560,18 +22623,13 @@ function attach2FAEnterHandlers() {
 function show2FASetupRequired(user) {
   pending2FAUser = user;
 
-  // Hide all forms, show setup required
-  const loginForm = document.getElementById('login-form');
+  // Hide all auth views, show setup required
+  document.querySelectorAll('.auth-view').forEach(function(v) { v.classList.remove('active'); });
   const challengeForm = document.getElementById('2fa-challenge-form');
   const setupRequired = document.getElementById('2fa-setup-required');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
 
-  if (loginForm) loginForm.style.display = 'none';
   if (challengeForm) challengeForm.style.display = 'none';
   if (setupRequired) setupRequired.style.display = 'block';
-  if (authTabs) authTabs.style.display = 'none';
-  if (demoButtons) demoButtons.style.display = 'none';
 }
 
 /**
@@ -22835,16 +22893,10 @@ function cancel2FAChallenge() {
     });
   }
 
-  // Show login form, hide challenge
-  const loginForm = document.getElementById('login-form');
+  // Show login view, hide challenge
   const challengeForm = document.getElementById('2fa-challenge-form');
-  const authTabs = document.querySelector('.auth-tabs');
-  const demoButtons = document.getElementById('auth-demo-buttons');
-
-  if (loginForm) loginForm.style.display = 'block';
   if (challengeForm) challengeForm.style.display = 'none';
-  if (authTabs) authTabs.style.display = 'flex';
-  if (demoButtons) demoButtons.style.display = 'block';
+  showAuthView('login');
 
   // Clear inputs
   const codeInput = document.getElementById('2fa-code-input');
