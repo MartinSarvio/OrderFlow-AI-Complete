@@ -93,8 +93,7 @@ initTheme();
     'api_twilio_enabled',
     'gatewayapi_token',
     'gatewayapi_sender',
-    'api_gatewayapi_enabled',
-    'api_inmobile_enabled' // Not needed anymore since InMobile is the only provider
+    'api_gatewayapi_enabled'
   ];
 
   oldKeys.forEach(key => localStorage.removeItem(key));
@@ -4636,9 +4635,6 @@ function filterDocsNav(query) {
 function showSettingsPage(tab) {
   showPage('settings');
   setTimeout(() => switchSettingsTab(tab), 50);
-  
-  // Open indstillinger dropdown
-  document.getElementById('nav-indstillinger')?.classList.add('open');
 }
 
 // =====================================================
@@ -20227,6 +20223,9 @@ function updateApiStatus() {
   const openaiOk = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   const googleOk = localStorage.getItem('google_api_key');
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
+  const firecrawlOk = localStorage.getItem('firecrawl_api_key');
+  const googleapiOk = localStorage.getItem('googleapi_api_key');
+  const webhookOk = localStorage.getItem('api_webhook_enabled') !== 'false';
 
   // Status elements
   const smsStatusEl = document.getElementById('status-sms');
@@ -20241,7 +20240,10 @@ function updateApiStatus() {
     'sms-indicator': smsOk,
     'inmobile-indicator': smsOk,
     'google-indicator': googleOk,
-    'trustpilot-indicator': trustpilotOk
+    'trustpilot-indicator': trustpilotOk,
+    'firecrawl-indicator': firecrawlOk,
+    'googleapi-indicator': googleapiOk,
+    'webhook-indicator': webhookOk
   };
 
   Object.entries(indicators).forEach(([id, isConnected]) => {
@@ -20257,7 +20259,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'];
+  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -20290,7 +20292,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'].forEach(api => {
+      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -20391,6 +20393,11 @@ async function saveAllApiSettings() {
   }
 
   updateApiStatus();
+
+  // Refresh "Aktive API Nøgler" table if rendered
+  if (typeof loadApiKeysList === 'function') {
+    loadApiKeysList();
+  }
 }
 
 // Load all API settings from Supabase or localStorage
@@ -20856,6 +20863,11 @@ function switchSettingsTab(tab) {
   // Load templates when templates tab is opened
   if (tab === 'templates') {
     renderInstalledTemplates();
+  }
+
+  // Refresh API status and toggles when API tab is opened
+  if (tab === 'api') {
+    loadAllApiSettings();
   }
 }
 
@@ -34231,10 +34243,37 @@ function loadApiKeysList() {
     '</tr>';
   });
 
-  var allRows = systemRows.concat(userRows);
+  // Konfigurerede API-forbindelser (fra Indstillinger > API Adgang)
+  var configuredApis = [
+    { name: 'OpenAI', keyField: 'openai_key', toggleName: 'openai', service: 'AI Assistent' },
+    { name: 'InMobile SMS', keyField: 'inmobile_api_key', toggleName: 'inmobile', service: 'SMS Service' },
+    { name: 'Google Reviews', keyField: 'google_api_key', toggleName: 'google', service: 'Anmeldelser' },
+    { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser' },
+    { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling' },
+    { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services' }
+  ];
+
+  var configuredApiRows = configuredApis.map(function(cfg) {
+    var keyValue = localStorage.getItem(cfg.keyField);
+    if (!keyValue) return '';
+    var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
+    var statusColor = isEnabled ? 'var(--success)' : 'var(--danger)';
+    var statusText = isEnabled ? 'Aktiv' : 'Deaktiveret';
+    var masked = maskApiKey(keyValue);
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:12px 8px;font-size:14px">' + cfg.name + '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + cfg.service + ')</span></td>' +
+      '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + masked + '</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">Konfigureret</td>' +
+      '<td style="padding:12px 8px;font-size:13px;color:' + statusColor + '">' + statusText + '</td>' +
+      '<td style="padding:12px 8px;text-align:right">' +
+        '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="padding:4px 8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>' +
+      '</td></tr>';
+  }).filter(function(row) { return row !== ''; });
+
+  var allRows = systemRows.concat(configuredApiRows).concat(userRows);
 
   if (allRows.length === 0) {
-    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API nøgler</td></tr>';
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">Ingen API n\u00f8gler</td></tr>';
     return;
   }
 
