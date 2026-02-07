@@ -24265,217 +24265,222 @@ async function renderLoyaltyPage() {
     return;
   }
 
-  // Get settings or create defaults
-  let settings = await getLoyaltySettings(restaurantId);
-  if (!settings) {
-    settings = await createLoyaltySettings(restaurantId);
-  }
-
-  // Get rewards and members
-  const rewards = await getLoyaltyRewards(restaurantId);
-  const membersResponse = await fetch(
-    `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?restaurant_id=eq.${restaurantId}&order=lifetime_points.desc&limit=100`,
-    {
-      headers: {
-        'apikey': CONFIG.SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-      }
+  try {
+    // Get settings or create defaults
+    let settings = await getLoyaltySettings(restaurantId);
+    if (!settings) {
+      settings = await createLoyaltySettings(restaurantId);
     }
-  );
-  const members = await membersResponse.json();
 
-  // Calculate stats
-  const totalMembers = members.length;
-  const totalPoints = members.reduce((sum, m) => sum + m.points, 0);
-  const tierCounts = { bronze: 0, silver: 0, gold: 0, platinum: 0 };
-  members.forEach(m => tierCounts[m.tier]++);
+    // Get rewards and members
+    const rewards = await getLoyaltyRewards(restaurantId);
+    const membersResponse = await fetch(
+      `${CONFIG.SUPABASE_URL}/rest/v1/loyalty_points?restaurant_id=eq.${restaurantId}&order=lifetime_points.desc&limit=100`,
+      {
+        headers: {
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        }
+      }
+    );
+    const members = membersResponse.ok ? await membersResponse.json() : [];
 
-  const html = `
-    <div class="page-header">
-      <h1>Loyalty Program</h1>
-      <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
-    </div>
+    // Calculate stats
+    const totalMembers = members.length;
+    const totalPoints = members.reduce((sum, m) => sum + (m.points || 0), 0);
+    const tierCounts = { bronze: 0, silver: 0, gold: 0, platinum: 0 };
+    members.forEach(m => { if (tierCounts[m.tier] !== undefined) tierCounts[m.tier]++; });
 
-    <!-- Stats -->
-    <div class="stats-grid" style="margin-bottom:24px">
-      <div class="stat-card">
-        <div class="stat-value">${totalMembers}</div>
-        <div class="stat-label">Medlemmer</div>
+    const html = `
+      <div class="page-header">
+        <h1>Loyalty Program</h1>
+        <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
       </div>
-      <div class="stat-card">
-        <div class="stat-value">${totalPoints.toLocaleString('da-DK')}</div>
-        <div class="stat-label">Aktive points</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${tierCounts.gold + tierCounts.platinum}</div>
-        <div class="stat-label">VIP medlemmer</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value">${rewards.length}</div>
-        <div class="stat-label">Aktive belønninger</div>
-      </div>
-    </div>
 
-    <!-- Settings -->
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header">
-        <h3>Indstillinger</h3>
-        <label class="switch">
-          <input type="checkbox" id="loyalty-enabled" ${settings?.enabled ? 'checked' : ''} onchange="toggleLoyaltyEnabled()">
-          <span class="slider"></span>
-        </label>
-      </div>
-      <div class="card-body">
-        <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
-          <div class="form-group">
-            <label class="form-label">Points pr. krone</label>
-            <input type="number" class="input" id="loyalty-points-per-kr" value="${settings?.points_per_kr || 1}" step="0.1" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Min. ordre for points</label>
-            <input type="number" class="input" id="loyalty-min-order" value="${settings?.min_order_for_points || 50}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Velkomstbonus</label>
-            <input type="number" class="input" id="loyalty-welcome-bonus" value="${settings?.welcome_bonus || 50}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fødselsdagsbonus</label>
-            <input type="number" class="input" id="loyalty-birthday-bonus" value="${settings?.birthday_bonus || 100}" min="0">
-          </div>
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom:24px">
+        <div class="stat-card">
+          <div class="stat-value">${totalMembers}</div>
+          <div class="stat-label">Medlemmer</div>
         </div>
-
-        <h4 style="margin:24px 0 16px">Tier-grænser</h4>
-        <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
-          <div class="form-group">
-            <label class="form-label">Sølv fra</label>
-            <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Guld fra</label>
-            <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Platin fra</label>
-            <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
-          </div>
+        <div class="stat-card">
+          <div class="stat-value">${totalPoints.toLocaleString('da-DK')}</div>
+          <div class="stat-label">Aktive points</div>
         </div>
-
-        <h4 style="margin:24px 0 16px">Tier-bonusser</h4>
-        <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
-          <div class="form-group">
-            <label class="form-label">Sølv multiplier</label>
-            <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Guld multiplier</label>
-            <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Platin multiplier</label>
-            <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
-          </div>
+        <div class="stat-card">
+          <div class="stat-value">${tierCounts.gold + tierCounts.platinum}</div>
+          <div class="stat-label">VIP medlemmer</div>
         </div>
-
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
-          <span id="settings-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
-          <button class="btn btn-primary" onclick="saveLoyaltySettings()">Gem indstillinger</button>
+        <div class="stat-card">
+          <div class="stat-value">${rewards.length}</div>
+          <div class="stat-label">Aktive belønninger</div>
         </div>
       </div>
-    </div>
 
-    <!-- Loyalty Tiers for Website & App -->
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header">
-        <div>
-          <h3>Loyalty Tiers</h3>
-          <p class="text-secondary" style="margin:4px 0 0;font-size:13px">Konfigurer tiers for website og app</p>
+      <!-- Settings -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <h3>Indstillinger</h3>
+          <label class="switch">
+            <input type="checkbox" id="loyalty-enabled" ${settings?.enabled ? 'checked' : ''} onchange="toggleLoyaltyEnabled()">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="card-body">
+          <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+            <div class="form-group">
+              <label class="form-label">Points pr. krone</label>
+              <input type="number" class="input" id="loyalty-points-per-kr" value="${settings?.points_per_kr || 1}" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Min. ordre for points</label>
+              <input type="number" class="input" id="loyalty-min-order" value="${settings?.min_order_for_points || 50}" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Velkomstbonus</label>
+              <input type="number" class="input" id="loyalty-welcome-bonus" value="${settings?.welcome_bonus || 50}" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fødselsdagsbonus</label>
+              <input type="number" class="input" id="loyalty-birthday-bonus" value="${settings?.birthday_bonus || 100}" min="0">
+            </div>
+          </div>
+
+          <h4 style="margin:24px 0 16px">Tier-grænser</h4>
+          <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+            <div class="form-group">
+              <label class="form-label">Sølv fra</label>
+              <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guld fra</label>
+              <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Platin fra</label>
+              <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
+            </div>
+          </div>
+
+          <h4 style="margin:24px 0 16px">Tier-bonusser</h4>
+          <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
+            <div class="form-group">
+              <label class="form-label">Sølv multiplier</label>
+              <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Guld multiplier</label>
+              <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Platin multiplier</label>
+              <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
+            <span id="settings-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
+            <button class="btn btn-primary" onclick="saveLoyaltySettings()">Gem indstillinger</button>
+          </div>
         </div>
       </div>
-      <div class="card-body" id="loyalty-tiers-container">
-        ${renderLoyaltyTiersHTML(settings)}
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-top:1px solid var(--border)">
-        <span id="tiers-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
-        <button class="btn btn-primary" onclick="saveLoyaltyTiers()">Gem tiers</button>
-      </div>
-    </div>
 
-    <!-- Rewards -->
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header">
-        <h3>Belønninger</h3>
-        <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
+      <!-- Loyalty Tiers for Website & App -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <div>
+            <h3>Loyalty Tiers</h3>
+            <p class="text-secondary" style="margin:4px 0 0;font-size:13px">Konfigurer tiers for website og app</p>
+          </div>
+        </div>
+        <div class="card-body" id="loyalty-tiers-container">
+          ${renderLoyaltyTiersHTML(settings)}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-top:1px solid var(--border)">
+          <span id="tiers-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
+          <button class="btn btn-primary" onclick="saveLoyaltyTiers()">Gem tiers</button>
+        </div>
       </div>
-      <div class="card-body">
-        ${rewards.length === 0 ? '<p class="text-secondary">Ingen belønninger oprettet endnu</p>' : `
-          <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
-            ${rewards.map(r => `
-              <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-                  <h4 style="margin:0">${r.name}</h4>
-                  <span class="badge" style="background:var(--accent);color:white">${r.points_required} pts</span>
-                </div>
-                <p class="text-secondary" style="font-size:13px;margin-bottom:12px">${r.description || ''}</p>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <span class="text-secondary" style="font-size:12px">${r.current_redemptions || 0} indløst</span>
-                  <div>
-                    <button class="btn btn-sm" onclick="editReward('${r.id}')">Rediger</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteReward('${r.id}')">Slet</button>
+
+      <!-- Rewards -->
+      <div class="card" style="margin-bottom:24px">
+        <div class="card-header">
+          <h3>Belønninger</h3>
+          <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
+        </div>
+        <div class="card-body">
+          ${rewards.length === 0 ? '<p class="text-secondary">Ingen belønninger oprettet endnu</p>' : `
+            <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+              ${rewards.map(r => `
+                <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
+                  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+                    <h4 style="margin:0">${r.name}</h4>
+                    <span class="badge" style="background:var(--accent);color:white">${r.points_required} pts</span>
+                  </div>
+                  <p class="text-secondary" style="font-size:13px;margin-bottom:12px">${r.description || ''}</p>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span class="text-secondary" style="font-size:12px">${r.current_redemptions || 0} indløst</span>
+                    <div>
+                      <button class="btn btn-sm" onclick="editReward('${r.id}')">Rediger</button>
+                      <button class="btn btn-sm btn-danger" onclick="deleteReward('${r.id}')">Slet</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            `).join('')}
-          </div>
-        `}
-      </div>
-    </div>
-
-    <!-- Members -->
-    <div class="card">
-      <div class="card-header">
-        <h3>Medlemmer</h3>
-        <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterLoyaltyMembers(this.value)">
-      </div>
-      <div class="card-body">
-        <div class="table-container">
-          <table class="data-table" id="loyalty-members-table">
-            <thead>
-              <tr>
-                <th>Kunde</th>
-                <th>Telefon</th>
-                <th>Tier</th>
-                <th>Points</th>
-                <th>Lifetime</th>
-                <th>Handlinger</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${members.map(m => `
-                <tr data-phone="${m.customer_phone}" data-name="${m.customer_name || ''}">
-                  <td>${m.customer_name || '<span class="text-secondary">Ukendt</span>'}</td>
-                  <td>${m.customer_phone}</td>
-                  <td>
-                    <span class="tier-badge tier-${m.tier}">
-                      ${LOYALTY_TIERS[m.tier]?.icon || ''} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
-                    </span>
-                  </td>
-                  <td><strong>${m.points.toLocaleString('da-DK')}</strong></td>
-                  <td>${m.lifetime_points.toLocaleString('da-DK')}</td>
-                  <td>
-                    <button class="btn btn-sm" onclick="showMemberDetails('${m.id}')">Detaljer</button>
-                    <button class="btn btn-sm" onclick="adjustMemberPoints('${m.id}')">+/- Points</button>
-                  </td>
-                </tr>
               `).join('')}
-            </tbody>
-          </table>
+            </div>
+          `}
         </div>
       </div>
-    </div>
-  `;
 
-  document.getElementById('main-content').innerHTML = html;
+      <!-- Members -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Medlemmer</h3>
+          <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterLoyaltyMembers(this.value)">
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="data-table" id="loyalty-members-table">
+              <thead>
+                <tr>
+                  <th>Kunde</th>
+                  <th>Telefon</th>
+                  <th>Tier</th>
+                  <th>Points</th>
+                  <th>Lifetime</th>
+                  <th>Handlinger</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${members.map(m => `
+                  <tr data-phone="${m.customer_phone}" data-name="${m.customer_name || ''}">
+                    <td>${m.customer_name || '<span class="text-secondary">Ukendt</span>'}</td>
+                    <td>${m.customer_phone}</td>
+                    <td>
+                      <span class="tier-badge tier-${m.tier}">
+                        ${LOYALTY_TIERS[m.tier]?.icon || ''} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
+                      </span>
+                    </td>
+                    <td><strong>${(m.points || 0).toLocaleString('da-DK')}</strong></td>
+                    <td>${(m.lifetime_points || 0).toLocaleString('da-DK')}</td>
+                    <td>
+                      <button class="btn btn-sm" onclick="showMemberDetails('${m.id}')">Detaljer</button>
+                      <button class="btn btn-sm" onclick="adjustMemberPoints('${m.id}')">+/- Points</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('main-content').innerHTML = html;
+  } catch (err) {
+    console.error('renderLoyaltyPage error:', err);
+    renderLoyaltyDemoPage();
+  }
 }
 
 // Render members page (separate from loyalty)
@@ -41303,23 +41308,20 @@ function openAgentPage(pageId) {
 }
 
 function switchVaerktoejTab(tab) {
-  const agenterContent = document.getElementById('vaerktoejer-content-agenter');
-  const enhederContent = document.getElementById('vaerktoejer-content-enheder');
-  const agenterTab = document.getElementById('vaerktoejer-tab-agenter');
-  const enhederTab = document.getElementById('vaerktoejer-tab-enheder');
-  if (!agenterContent || !enhederContent) return;
-
-  if (tab === 'agenter') {
-    agenterContent.style.display = '';
-    enhederContent.style.display = 'none';
-    if (agenterTab) { agenterTab.style.color = 'var(--color-text)'; agenterTab.style.borderBottomColor = 'var(--color-text)'; agenterTab.style.fontWeight = 'var(--font-weight-semibold)'; }
-    if (enhederTab) { enhederTab.style.color = 'var(--muted)'; enhederTab.style.borderBottomColor = 'transparent'; enhederTab.style.fontWeight = '500'; }
-  } else {
-    agenterContent.style.display = 'none';
-    enhederContent.style.display = '';
-    if (enhederTab) { enhederTab.style.color = 'var(--color-text)'; enhederTab.style.borderBottomColor = 'var(--color-text)'; enhederTab.style.fontWeight = 'var(--font-weight-semibold)'; }
-    if (agenterTab) { agenterTab.style.color = 'var(--muted)'; agenterTab.style.borderBottomColor = 'transparent'; agenterTab.style.fontWeight = '500'; }
-  }
+  var tabs = ['agenter','enheder','agentstatus','apikeys','statistik'];
+  tabs.forEach(function(t) {
+    var content = document.getElementById('vaerktoejer-content-' + t);
+    var tabBtn = document.getElementById('vaerktoejer-tab-' + t);
+    if (content) content.style.display = (t === tab) ? '' : 'none';
+    if (tabBtn) {
+      tabBtn.style.color = (t === tab) ? 'var(--color-text)' : 'var(--muted)';
+      tabBtn.style.borderBottomColor = (t === tab) ? 'var(--color-text)' : 'transparent';
+      tabBtn.style.fontWeight = (t === tab) ? 'var(--font-weight-semibold)' : '500';
+    }
+  });
+  if (tab === 'apikeys') renderCustomerApiKeys();
+  if (tab === 'statistik') renderAgentStatistics();
+  if (tab === 'agentstatus') renderAgentStatusDashboard();
 }
 
 function checkAgentUpdate(agentName) {
@@ -41371,7 +41373,370 @@ function renderVaerktoejApiStatus() {
   tbody.innerHTML = html;
 }
 
+// ============================================
+// AGENT CONFIGURATION PANEL
+// ============================================
+
+var agentConfigDefinitions = {
+  instagram: {
+    title: 'Agent Instagram', color: '#ec4899', workflowPage: 'instagram-workflow',
+    sections: [
+      { type: 'status', key: 'instagram' },
+      { type: 'oauth', provider: 'instagram', label: 'Forbind Instagram Business' },
+      { type: 'field', key: 'instagram_page_id', label: 'Page ID', readonly: true, placeholder: 'Udfyldes automatisk ved tilslutning' },
+      { type: 'field', key: 'instagram_access_token', label: 'Access Token', sensitive: true, readonly: true, placeholder: 'Udfyldes ved tilslutning' },
+      { type: 'webhook', label: 'Webhook URL', url: window.location.origin + '/api/webhooks/meta' },
+      { type: 'toggle', key: 'instagram_auto_reply', label: 'Auto-reply DM', desc: 'Automatisk besvar DM-beskeder med AI' },
+      { type: 'toggle', key: 'instagram_order_enabled', label: 'Ordremodtagelse via DM', desc: 'Modtag og behandl bestillinger fra Instagram' },
+      { type: 'select', key: 'instagram_language', label: 'Svarsprog', options: ['Dansk','Engelsk'] },
+      { type: 'payment', key: 'instagram' }
+    ]
+  },
+  facebook: {
+    title: 'Agent Facebook', color: '#3b82f6', workflowPage: 'facebook-workflow',
+    sections: [
+      { type: 'status', key: 'facebook' },
+      { type: 'oauth', provider: 'facebook', label: 'Forbind Facebook Page' },
+      { type: 'field', key: 'facebook_page_id', label: 'Page ID', readonly: true, placeholder: 'Udfyldes automatisk ved tilslutning' },
+      { type: 'field', key: 'facebook_access_token', label: 'Access Token', sensitive: true, readonly: true, placeholder: 'Udfyldes ved tilslutning' },
+      { type: 'webhook', label: 'Webhook URL', url: window.location.origin + '/api/webhooks/meta' },
+      { type: 'toggle', key: 'facebook_auto_reply', label: 'Messenger Auto-reply', desc: 'Automatisk besvar Messenger-beskeder' },
+      { type: 'toggle', key: 'facebook_order_enabled', label: 'Ordremodtagelse via Messenger', desc: 'Modtag bestillinger fra Facebook Messenger' },
+      { type: 'toggle', key: 'facebook_page_posts', label: 'Automatiske Page Posts', desc: 'AI-genererede opslag p\u00e5 din Facebook Page' },
+      { type: 'payment', key: 'facebook' }
+    ]
+  },
+  restaurant: {
+    title: 'Agent Restaurant', color: '#f97316', workflowPage: 'sms-workflows',
+    sections: [
+      { type: 'status', key: 'restaurant' },
+      { type: 'field', key: 'inmobile_api_key', label: 'InMobile API N\u00f8gle', sensitive: true, placeholder: 'Din InMobile API n\u00f8gle...' },
+      { type: 'field', key: 'restaurant_phone', label: 'Afsendernummer', placeholder: '+45...' },
+      { type: 'toggle', key: 'sms_order_confirm', label: 'Ordrebekr\u00e6ftelse SMS', desc: 'Send automatisk SMS n\u00e5r ordre modtages' },
+      { type: 'toggle', key: 'sms_delivery_update', label: 'Leveringsstatus SMS', desc: 'Opdater kunde om leveringsstatus' },
+      { type: 'toggle', key: 'sms_feedback_request', label: 'Feedback-anmodning', desc: 'Anmod om feedback efter levering' }
+    ]
+  },
+  haandvaerker: {
+    title: 'Agent H\u00e5ndv\u00e6rker', color: '#14b8a6', workflowPage: 'sms-workflows',
+    sections: [
+      { type: 'status', key: 'haandvaerker' },
+      { type: 'field', key: 'inmobile_api_key_hv', label: 'InMobile API N\u00f8gle', sensitive: true, placeholder: 'Din InMobile API n\u00f8gle...' },
+      { type: 'field', key: 'haandvaerker_phone', label: 'Afsendernummer', placeholder: '+45...' },
+      { type: 'toggle', key: 'sms_booking_confirm', label: 'Booking-bekr\u00e6ftelse', desc: 'SMS ved ny booking' },
+      { type: 'toggle', key: 'sms_reminder', label: 'P\u00e5mindelser', desc: 'P\u00e5mindelse f\u00f8r aftale' },
+      { type: 'toggle', key: 'sms_followup', label: 'Opf\u00f8lgning', desc: 'Opf\u00f8lgning efter udf\u00f8rt arbejde' }
+    ]
+  },
+  seo: {
+    title: 'Agent SEO', color: '#7c3aed', workflowPage: 'search-engine',
+    sections: [
+      { type: 'status', key: 'seo' },
+      { type: 'field', key: 'firecrawl_api_key', label: 'Firecrawl API N\u00f8gle', sensitive: true, placeholder: 'fc-...' },
+      { type: 'field', key: 'serper_reviews_key', label: 'Serper API N\u00f8gle', sensitive: true, placeholder: 'Din Serper n\u00f8gle...' },
+      { type: 'field', key: 'google_api_key', label: 'Google API N\u00f8gle', sensitive: true, placeholder: 'AIza...' },
+      { type: 'field', key: 'site_url', label: 'Hjemmeside URL', placeholder: 'https://din-restaurant.dk' },
+      { type: 'toggle', key: 'seo_auto_scan', label: 'Automatisk scanning', desc: 'K\u00f8r SEO-analyse automatisk' }
+    ]
+  }
+};
+
+var currentConfigAgent = null;
+
+function openAgentConfigPanel(agentId) {
+  var config = agentConfigDefinitions[agentId];
+  if (!config) return;
+  currentConfigAgent = agentId;
+  var panel = document.getElementById('agent-config-panel');
+  var title = document.getElementById('agent-config-title');
+  var body = document.getElementById('agent-config-body');
+  var footer = document.getElementById('agent-config-footer');
+  title.textContent = config.title + ' \u2014 Konfiguration';
+  title.style.color = config.color;
+  body.innerHTML = renderAgentConfigSections(agentId, config);
+  footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
+    '<button class="btn btn-secondary" onclick="showPage(\'' + config.workflowPage + '\');closeAgentConfigPanel()" style="font-size:var(--font-size-sm)">G\u00e5 til Workflow</button>' +
+    '<button class="btn btn-primary" onclick="saveAgentConfig(\'' + agentId + '\')" style="font-size:var(--font-size-sm)">Gem \u00e6ndringer</button>' +
+    '</div>';
+  panel.style.display = 'flex';
+  requestAnimationFrame(function() {
+    document.getElementById('agent-config-drawer').style.transform = 'translateX(0)';
+  });
+}
+
+function closeAgentConfigPanel() {
+  var drawer = document.getElementById('agent-config-drawer');
+  var panel = document.getElementById('agent-config-panel');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(function() { panel.style.display = 'none'; currentConfigAgent = null; }, 300);
+}
+
+function renderAgentConfigSections(agentId, config) {
+  var html = '';
+  config.sections.forEach(function(s) {
+    html += '<div style="margin-bottom:var(--space-4)">';
+    if (s.type === 'status') {
+      var isActive = false;
+      if (workflowAgentStatus[s.key]) isActive = workflowAgentStatus[s.key].active;
+      else { var stored = localStorage.getItem('agent_' + s.key + '_active'); isActive = stored === 'true'; }
+      var dotColor = isActive ? config.color : 'var(--muted)';
+      var statusText = isActive ? 'Aktiv' : 'Inaktiv';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+        '<div style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:' + dotColor + ';display:inline-block"></span><span style="font-weight:500">Forbindelsesstatus</span></div>' +
+        '<span style="font-size:var(--font-size-sm);color:' + dotColor + ';font-weight:500">' + statusText + '</span></div>';
+    } else if (s.type === 'oauth') {
+      var connected = workflowAgentStatus[s.provider] && workflowAgentStatus[s.provider].connected;
+      if (connected) {
+        var pageName = localStorage.getItem(s.provider + '_page_name') || 'Forbundet';
+        html += '<div style="padding:var(--space-3);background:rgba(' + hexToRgb(config.color) + ',0.05);border:1px solid ' + config.color + ';border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between">' +
+          '<div><span style="font-size:var(--font-size-sm);font-weight:500;color:' + config.color + '">' + pageName + '</span><br><span style="font-size:11px;color:var(--muted)">Forbundet</span></div>' +
+          '<button class="btn btn-sm" style="font-size:11px;color:var(--danger)" onclick="disconnectAgent(\'' + s.provider + '\')">Afbryd</button></div>';
+      } else {
+        html += '<button class="btn" style="width:100%;background:' + config.color + ';color:white;border:none;padding:12px;border-radius:var(--radius-sm);font-weight:500;cursor:pointer" onclick="initMetaOAuth(\'' + s.provider + '\')">' + s.label + '</button>';
+      }
+    } else if (s.type === 'field') {
+      var val = localStorage.getItem(s.key) || '';
+      var displayVal = (s.sensitive && val) ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + val.slice(-4) : val;
+      html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
+        '<input class="input" id="config-' + s.key + '" type="' + (s.sensitive ? 'password' : 'text') + '" value="' + (s.sensitive ? '' : escapeHtml(val)) + '" placeholder="' + (s.placeholder || '') + '"' + (s.readonly ? ' readonly style="opacity:0.7;cursor:not-allowed"' : '') + ' style="width:100%;font-size:var(--font-size-sm)">';
+    } else if (s.type === 'webhook') {
+      html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
+        '<div style="display:flex;gap:8px"><input class="input" type="text" value="' + s.url + '" readonly style="flex:1;font-size:12px;opacity:0.7;cursor:not-allowed;font-family:monospace">' +
+        '<button class="btn btn-sm" onclick="navigator.clipboard.writeText(\'' + s.url + '\');showToast(\'Webhook URL kopieret\',\'success\')" style="flex-shrink:0;font-size:11px">Kopier</button></div>';
+    } else if (s.type === 'toggle') {
+      var checked = localStorage.getItem(s.key) === 'true';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+        '<div><span style="font-weight:500;font-size:var(--font-size-sm)">' + s.label + '</span>' + (s.desc ? '<br><span style="font-size:11px;color:var(--muted)">' + s.desc + '</span>' : '') + '</div>' +
+        '<label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer"><input type="checkbox" id="config-' + s.key + '"' + (checked ? ' checked' : '') + ' style="opacity:0;width:0;height:0" onchange="this.nextElementSibling.style.background=this.checked?\'' + config.color + '\':\'var(--muted)\';this.nextElementSibling.querySelector(\'span\').style.transform=this.checked?\'translateX(18px)\':\'translateX(0)\'">' +
+        '<div style="position:absolute;inset:0;background:' + (checked ? config.color : 'var(--muted)') + ';border-radius:11px;transition:0.2s"><span style="position:absolute;left:2px;top:2px;width:18px;height:18px;background:white;border-radius:50%;transition:0.2s;transform:' + (checked ? 'translateX(18px)' : 'translateX(0)') + '"></span></div></label></div>';
+    } else if (s.type === 'select') {
+      var current = localStorage.getItem(s.key) || s.options[0];
+      html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
+        '<select class="input" id="config-' + s.key + '" style="width:100%;font-size:var(--font-size-sm)">';
+      s.options.forEach(function(opt) { html += '<option value="' + opt + '"' + (opt === current ? ' selected' : '') + '>' + opt + '</option>'; });
+      html += '</select>';
+    } else if (s.type === 'payment') {
+      var payConfigured = workflowAgentStatus[s.key] && workflowAgentStatus[s.key].paymentsConfigured;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+        '<div style="display:flex;align-items:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg><span style="font-weight:500;font-size:var(--font-size-sm)">Stripe Betalinger</span></div>' +
+        '<span style="font-size:12px;color:' + (payConfigured ? 'var(--success)' : 'var(--muted)') + ';font-weight:500">' + (payConfigured ? 'Konfigureret' : 'Ikke konfigureret') + '</span></div>';
+    }
+    html += '</div>';
+  });
+  return html;
+}
+
+function hexToRgb(hex) {
+  var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return r + ',' + g + ',' + b;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function saveAgentConfig(agentId) {
+  var config = agentConfigDefinitions[agentId];
+  if (!config) return;
+  config.sections.forEach(function(s) {
+    if (s.type === 'field' && !s.readonly) {
+      var el = document.getElementById('config-' + s.key);
+      if (el && el.value) localStorage.setItem(s.key, el.value);
+    } else if (s.type === 'toggle') {
+      var el = document.getElementById('config-' + s.key);
+      if (el) localStorage.setItem(s.key, el.checked ? 'true' : 'false');
+    } else if (s.type === 'select') {
+      var el = document.getElementById('config-' + s.key);
+      if (el) localStorage.setItem(s.key, el.value);
+    }
+  });
+  showToast(config.title + ' konfiguration gemt', 'success');
+}
+
+function disconnectAgent(provider) {
+  if (workflowAgentStatus[provider]) {
+    workflowAgentStatus[provider].connected = false;
+    localStorage.setItem('orderflow_' + provider + '_agent_status', JSON.stringify(workflowAgentStatus[provider]));
+    localStorage.removeItem(provider + '_page_name');
+    localStorage.removeItem(provider + '_page_id');
+    localStorage.removeItem(provider + '_access_token');
+    if (typeof updateWorkflowAgentUI === 'function') updateWorkflowAgentUI(provider);
+  }
+  if (currentConfigAgent) openAgentConfigPanel(currentConfigAgent);
+  showToast(provider.charAt(0).toUpperCase() + provider.slice(1) + ' afbrudt', 'info');
+}
+
+// ============================================
+// META OAUTH INTEGRATION
+// ============================================
+
+function initMetaOAuth(channel) {
+  var META_APP_ID = localStorage.getItem('meta_app_id') || '';
+  if (!META_APP_ID) {
+    showToast('Meta App ID mangler. Tilf\u00f8j den under API N\u00f8gler f\u00f8rst.', 'warning');
+    return;
+  }
+  var redirectUri = encodeURIComponent(window.location.origin + '/api/auth/meta/redirect.html');
+  var scope = channel === 'instagram'
+    ? 'instagram_basic,instagram_manage_messages,pages_show_list'
+    : 'pages_manage_metadata,pages_messaging,pages_show_list';
+  var state = btoa(JSON.stringify({ channel: channel, ts: Date.now() }));
+  var authUrl = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=' + META_APP_ID + '&redirect_uri=' + redirectUri + '&scope=' + scope + '&response_type=code&state=' + state;
+  var popup = window.open(authUrl, 'meta_oauth', 'width=600,height=700,scrollbars=yes');
+  window.addEventListener('message', function handler(event) {
+    if (event.data && event.data.type === 'meta_oauth_callback') {
+      window.removeEventListener('message', handler);
+      handleMetaOAuthCallback(event.data, channel);
+    }
+  });
+}
+
+function handleMetaOAuthCallback(data, channel) {
+  if (data.error) {
+    showToast('Forbindelse fejlede: ' + data.error, 'error');
+    return;
+  }
+  showToast('Forbinder ' + channel + '...', 'info');
+  fetch('/api/auth/meta/callback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: data.code, state: data.state, channel: channel })
+  }).then(function(r) { return r.json(); }).then(function(result) {
+    if (result.success) {
+      if (workflowAgentStatus[channel]) {
+        workflowAgentStatus[channel].connected = true;
+        localStorage.setItem('orderflow_' + channel + '_agent_status', JSON.stringify(workflowAgentStatus[channel]));
+      }
+      if (result.pageName) localStorage.setItem(channel + '_page_name', result.pageName);
+      if (result.pageId) localStorage.setItem(channel + '_page_id', result.pageId);
+      if (typeof updateWorkflowAgentUI === 'function') updateWorkflowAgentUI(channel);
+      if (currentConfigAgent) openAgentConfigPanel(currentConfigAgent);
+      showToast(channel.charAt(0).toUpperCase() + channel.slice(1) + ' forbundet!', 'success');
+    } else {
+      showToast('Forbindelse fejlede: ' + (result.error || 'Ukendt fejl'), 'error');
+    }
+  }).catch(function(err) {
+    showToast('Netv\u00e6rksfejl: ' + err.message, 'error');
+  });
+}
+
+// Replace placeholder functions
+function showInstagramIntegrationModal() { initMetaOAuth('instagram'); }
+function showFacebookIntegrationModal() { initMetaOAuth('facebook'); }
+function showInstagramConfig() { openAgentConfigPanel('instagram'); }
+function showFacebookConfig() { openAgentConfigPanel('facebook'); }
+
+// ============================================
+// CUSTOMER API KEYS TAB
+// ============================================
+
+function renderCustomerApiKeys() {
+  var container = document.getElementById('vaerktoejer-content-apikeys');
+  if (!container) return;
+  var platforms = [
+    { name: 'Meta (Instagram/Facebook)', key: 'meta_app_id', desc: 'Meta App ID fra developers.facebook.com' },
+    { name: 'Meta App Secret', key: 'meta_app_secret', desc: 'Bruges til webhook-signaturverifikation', sensitive: true },
+    { name: 'InMobile SMS', key: 'inmobile_api_key', desc: 'API n\u00f8gle til SMS-udsendelse', sensitive: true },
+    { name: 'Stripe', key: 'stripe_publishable_key', desc: 'Publishable key til betalinger' },
+    { name: 'Firecrawl', key: 'firecrawl_api_key', desc: 'API n\u00f8gle til SEO web-crawling', sensitive: true },
+    { name: 'Serper', key: 'serper_reviews_key', desc: 'API n\u00f8gle til s\u00f8geresultater', sensitive: true },
+    { name: 'Google API', key: 'google_api_key', desc: 'Google Places/Reviews API', sensitive: true },
+    { name: 'OpenAI', key: 'openai_key', desc: 'GPT API n\u00f8gle til AI-agenter', sensitive: true }
+  ];
+  var html = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+    '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine API N\u00f8gler</h3>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-4)">Administrer API-n\u00f8gler fra dine eksterne platforme. Disse n\u00f8gler bruges af dine agenter.</p>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:var(--font-size-sm)"><thead><tr style="border-bottom:1px solid var(--border)">' +
+    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">Platform</th>' +
+    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">N\u00f8gle</th>' +
+    '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-weight:500">Status</th>' +
+    '<th style="text-align:right;padding:10px 12px;color:var(--muted);font-weight:500"></th></tr></thead><tbody>';
+  platforms.forEach(function(p) {
+    var val = localStorage.getItem(p.key) || '';
+    var hasKey = val && val.length > 2;
+    var masked = hasKey ? (p.sensitive ? '\u2022\u2022\u2022\u2022' + val.slice(-4) : val) : '\u2014';
+    var statusColor = hasKey ? 'var(--success)' : 'var(--muted)';
+    var statusText = hasKey ? 'Konfigureret' : 'Mangler';
+    html += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 12px"><div style="font-weight:500">' + p.name + '</div><div style="font-size:11px;color:var(--muted)">' + p.desc + '</div></td>' +
+      '<td style="padding:10px 12px;font-family:monospace;font-size:12px;color:var(--muted)">' + masked + '</td>' +
+      '<td style="padding:10px 12px"><span style="font-size:12px;color:' + statusColor + ';font-weight:500;display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + statusText + '</span></td>' +
+      '<td style="padding:10px 12px;text-align:right"><button class="btn btn-sm" style="font-size:11px;padding:4px 10px" onclick="editCustomerApiKey(\'' + p.key + '\',\'' + p.name + '\')">' + (hasKey ? 'Rediger' : 'Tilf\u00f8j') + '</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function editCustomerApiKey(key, name) {
+  var current = localStorage.getItem(key) || '';
+  var newVal = prompt(name + ' API N\u00f8gle:', current);
+  if (newVal !== null) {
+    if (newVal.trim()) {
+      localStorage.setItem(key, newVal.trim());
+      showToast(name + ' API n\u00f8gle gemt', 'success');
+    } else {
+      localStorage.removeItem(key);
+      showToast(name + ' API n\u00f8gle fjernet', 'info');
+    }
+    renderCustomerApiKeys();
+  }
+}
+
+// ============================================
+// AGENT STATISTICS TAB
+// ============================================
+
+function renderAgentStatistics() {
+  var container = document.getElementById('vaerktoejer-content-statistik');
+  if (!container) return;
+  var agents = [
+    { id: 'instagram', name: 'Agent Instagram', color: '#ec4899', prefix: 'instagram' },
+    { id: 'facebook', name: 'Agent Facebook', color: '#3b82f6', prefix: 'facebook' },
+    { id: 'restaurant', name: 'Agent Restaurant', color: '#f97316', prefix: 'restaurant' },
+    { id: 'haandvaerker', name: 'Agent H\u00e5ndv\u00e6rker', color: '#14b8a6', prefix: 'haandvaerker' },
+    { id: 'seo', name: 'Agent SEO', color: '#7c3aed', prefix: 'seo' }
+  ];
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
+  agents.forEach(function(a) {
+    var stats = JSON.parse(localStorage.getItem('agent_stats_' + a.id) || '{}');
+    var conversations = stats.conversations || 0;
+    var orders = stats.orders || 0;
+    var rate = stats.rate || '0%';
+    var responseTime = stats.responseTime || '- sek';
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:var(--space-4)">' +
+      '<span style="width:8px;height:8px;border-radius:50%;background:' + a.color + ';display:inline-block"></span>' +
+      '<h4 style="font-weight:var(--font-weight-semibold);margin:0;font-size:var(--font-size-sm)">' + a.name + '</h4></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)">' +
+      '<div><div style="color:var(--muted);font-size:11px;margin-bottom:2px">Samtaler</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-bold);color:' + a.color + '">' + conversations + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px;margin-bottom:2px">Ordrer</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-bold);color:var(--success)">' + orders + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px;margin-bottom:2px">Completion</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-bold)">' + rate + '</div></div>' +
+      '<div><div style="color:var(--muted);font-size:11px;margin-bottom:2px">Responstid</div><div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-bold)">' + responseTime + '</div></div>' +
+      '</div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function renderAgentStatusDashboard() {
+  // Status table is static HTML, no dynamic render needed currently
+}
+
 window.openAgentPage = openAgentPage;
+window.openAgentConfigPanel = openAgentConfigPanel;
+window.closeAgentConfigPanel = closeAgentConfigPanel;
+window.saveAgentConfig = saveAgentConfig;
+window.disconnectAgent = disconnectAgent;
+window.initMetaOAuth = initMetaOAuth;
+window.handleMetaOAuthCallback = handleMetaOAuthCallback;
+window.showInstagramIntegrationModal = showInstagramIntegrationModal;
+window.showFacebookIntegrationModal = showFacebookIntegrationModal;
+window.showInstagramConfig = showInstagramConfig;
+window.showFacebookConfig = showFacebookConfig;
+window.editCustomerApiKey = editCustomerApiKey;
+window.renderCustomerApiKeys = renderCustomerApiKeys;
+window.renderAgentStatistics = renderAgentStatistics;
+window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
 window.renderVaerktoejApiStatus = renderVaerktoejApiStatus;

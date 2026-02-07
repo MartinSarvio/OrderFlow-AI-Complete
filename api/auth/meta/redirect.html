@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forbinder... | OrderFlow</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #0a0a0a; color: #fff; }
+    .container { text-align: center; padding: 40px; }
+    .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h2 { font-size: 18px; font-weight: 600; margin: 0 0 8px; }
+    p { font-size: 14px; color: #888; margin: 0; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="spinner" id="spinner"></div>
+    <h2 id="status-title">Forbinder...</h2>
+    <p id="status-desc">Vent venligst mens vi forbinder din konto.</p>
+  </div>
+  <script>
+    (function() {
+      var params = new URLSearchParams(window.location.search);
+      var code = params.get('code');
+      var state = params.get('state');
+      var error = params.get('error');
+      var errorDesc = params.get('error_description');
+
+      if (error) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status-title').textContent = 'Forbindelse afvist';
+        document.getElementById('status-title').classList.add('error');
+        document.getElementById('status-desc').textContent = errorDesc || error;
+
+        if (window.opener) {
+          window.opener.postMessage({ type: 'meta_oauth_callback', error: errorDesc || error }, '*');
+        }
+        setTimeout(function() { window.close(); }, 3000);
+        return;
+      }
+
+      if (code && window.opener) {
+        window.opener.postMessage({
+          type: 'meta_oauth_callback',
+          code: code,
+          state: state
+        }, '*');
+
+        document.getElementById('status-title').textContent = 'Forbundet!';
+        document.getElementById('status-desc').textContent = 'Dette vindue lukker automatisk...';
+        document.getElementById('spinner').style.display = 'none';
+
+        setTimeout(function() { window.close(); }, 1500);
+      } else if (!window.opener) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('status-title').textContent = 'Fejl';
+        document.getElementById('status-title').classList.add('error');
+        document.getElementById('status-desc').textContent = 'Kunne ikke finde det oprindelige vindue. Luk dette vindue og prøv igen.';
+      }
+    })();
+  </script>
+</body>
+</html>
