@@ -36,6 +36,7 @@
 | `page-facebook-workflow` | Facebook AI Agent (OrderingAgent for Messenger) |
 | `page-sms-workflows` | SMS Workflows (Restaurant/Håndværker varianter) |
 | `page-search-engine` | Search Engine (SEO-værktøjer og søgemaskine-optimering) |
+| `page-seo-scanner` | SEO Analyse Scanner (v1.0/v2.0 med moduler, scoring, PDF-rapport) |
 | `page-workflow-kontrol` | Workflow kontrol |
 
 ### Leads & CRM
@@ -274,6 +275,16 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 ---
 
 ## Changelog
+
+### v3.44.0 (2026-02-07)
+- SEO Analyse Pro v2.0.0 integreret i SPA med sidebar
+- Ny `page-seo-scanner` side med versionsvælger (v1.0/v2.0), 5 moduler, score-cirkel, findings feed
+- SEAnalysisV2 service: Firecrawl v2, Google Places, Menu Indexation Score, Review Momentum Score
+- Konkurrentanalyse, NAP-konsistens, weighted scoring (GBP 30%, Reviews 25%, Website 25%, Competitors 15%, Social 5%)
+- 7-30-90 dages handlingsplan med prioritet/indsats/KPI
+- PDF-rapport generering med jsPDF (7 sektioner)
+- Ny fil: `docs/SEO_ANALYSE_V2_REGEL.md` (SEO system prompt)
+- Opdateret `page-search-engine` med v2.0 som primær, "Start Analyse" knapper
 
 ### v3.41.0 (2026-02-07)
 - Komplet k\u00f8bsflow i alle 3 webskabeloner med Stripe integration

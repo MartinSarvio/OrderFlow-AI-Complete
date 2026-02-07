@@ -39696,3 +39696,851 @@ window.toggleSystemKeyVisibility = toggleSystemKeyVisibility;
 window.toggleSystemKeyActive = toggleSystemKeyActive;
 window.loadSEOAnalysisData = loadSEOAnalysisData;
 window.SYSTEM_API_KEYS = SYSTEM_API_KEYS;
+
+// =====================================================
+// SEO ANALYSE PRO v2.0.0 — Integreret Scanner
+// =====================================================
+
+let seoScannerState = {
+  version: '2.0',
+  scanning: false,
+  findings: [],
+  results: null,
+  modules: { gbp: 'idle', reviews: 'idle', competitors: 'idle', website: 'idle', social: 'idle' }
+};
+
+// --- Firecrawl v2 Integration ---
+async function firecrawlScrape(url) {
+  const apiKey = 'fc-c12a209b1d6d44939e0b8faa393515e3';
+  try {
+    const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, formats: ['markdown', 'html', 'links', 'metadata'] })
+    });
+    if (!response.ok) throw new Error('Firecrawl error: ' + response.status);
+    const data = await response.json();
+    return data.success ? data.data : null;
+  } catch (e) {
+    console.warn('Firecrawl scrape failed:', e);
+    return null;
+  }
+}
+
+// --- Google Places Details (real API) ---
+async function googlePlacesDetails(placeId) {
+  const apiKey = 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo';
+  try {
+    const response = await fetch('https://maps.googleapis.com/maps/api/place/details/json?place_id=' + encodeURIComponent(placeId) + '&key=' + apiKey + '&fields=name,rating,user_ratings_total,formatted_address,formatted_phone_number,website,opening_hours,photos,types,price_level,reviews,business_status&language=da');
+    if (!response.ok) throw new Error('Google Places error: ' + response.status);
+    return await response.json();
+  } catch (e) {
+    console.warn('Google Places Details failed:', e);
+    return null;
+  }
+}
+
+// --- v2 Analysis Methods ---
+const SEAnalysisV2 = {
+
+  // Firecrawl website analysis
+  async analyzeWebsite(websiteUrl) {
+    if (!websiteUrl) return { score: 0, menuIndexation: 0, findings: [{ module: 'website', type: 'critical', title: 'Ingen website fundet', description: 'Virksomheden har ingen website registreret. Dette er kritisk for online synlighed.', confidence: 'confirmed' }] };
+
+    const data = await firecrawlScrape(websiteUrl);
+    if (!data) {
+      // Fallback to v1 estimat
+      return SEAnalysisService.analyzeWebsite(websiteUrl);
+    }
+
+    const md = data.markdown || '';
+    const meta = data.metadata || {};
+    const links = data.links || [];
+    const findings = [];
+    let seoScore = 0;
+
+    // Title tag
+    if (meta.title && meta.title.length > 10) { seoScore += 15; findings.push({ module: 'website', type: 'positive', title: 'Title tag fundet', description: '"' + meta.title.substring(0, 60) + '"', confidence: 'confirmed' }); }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende eller kort title tag', description: 'Title tag skal v\u00e6re 30-60 tegn med relevante s\u00f8geord.', confidence: 'confirmed' }); }
+
+    // Meta description
+    if (meta.description && meta.description.length > 50) { seoScore += 15; findings.push({ module: 'website', type: 'positive', title: 'Meta description fundet', description: '"' + meta.description.substring(0, 100) + '..."', confidence: 'confirmed' }); }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende meta description', description: 'Tilf\u00f8j en beskrivende meta description p\u00e5 120-160 tegn.', confidence: 'confirmed' }); }
+
+    // OG tags
+    if (meta.ogTitle || meta.ogDescription) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'warning', title: 'Manglende Open Graph tags', description: 'OG tags forbedrer visning p\u00e5 sociale medier.', confidence: 'confirmed' }); }
+
+    // SSL check
+    if (websiteUrl.startsWith('https')) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'critical', title: 'Ingen SSL (HTTPS)', description: 'Website bruger HTTP. SSL er n\u00f8dvendig for SEO og sikkerhed.', confidence: 'confirmed' }); }
+
+    // Internal links
+    const internalLinks = links.filter(l => l && l.includes && l.includes(new URL(websiteUrl).hostname));
+    if (internalLinks.length >= 5) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'warning', title: 'F\u00e5 interne links (' + internalLinks.length + ')', description: 'God intern linking forbedrer crawlability og SEO.', confidence: 'confirmed' }); }
+
+    // Responsive / viewport
+    if (meta.viewport || (data.html && data.html.includes('viewport'))) { seoScore += 10; }
+    else { findings.push({ module: 'website', type: 'critical', title: 'Ikke mobilvenlig', description: 'Manglende viewport meta tag. Mobilvenlig design er kritisk for SEO.', confidence: 'confirmed' }); }
+
+    // Schema markup detection
+    const schemaResult = this.detectSchema(data.html || '', md);
+    seoScore += schemaResult.score;
+    findings.push(...schemaResult.findings);
+
+    // Menu Indexation Score
+    const menuScore = this.calculateMenuIndexation(md, links, websiteUrl);
+    findings.push(...menuScore.findings);
+
+    return {
+      score: Math.min(100, seoScore),
+      menuIndexation: menuScore.score,
+      title: meta.title || '',
+      description: meta.description || '',
+      internalLinks: internalLinks.length,
+      totalLinks: links.length,
+      hasSchema: schemaResult.score > 0,
+      findings: findings,
+      confidence: 'confirmed'
+    };
+  },
+
+  // Schema markup detection from HTML
+  detectSchema(html, markdown) {
+    const findings = [];
+    let score = 0;
+    const lowerHtml = (html || '').toLowerCase();
+
+    if (lowerHtml.includes('localbusiness') || lowerHtml.includes('restaurant')) {
+      score += 15;
+      findings.push({ module: 'website', type: 'positive', title: 'Schema markup fundet', description: 'LocalBusiness/Restaurant structured data er implementeret.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'Manglende Schema markup', description: 'Tilf\u00f8j LocalBusiness eller Restaurant schema for bedre Google-visning.', confidence: 'confirmed' });
+    }
+
+    if (lowerHtml.includes('"menu"') || lowerHtml.includes('menuitem')) {
+      score += 5;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu schema fundet', description: 'Structured data for menuen er implementeret.', confidence: 'confirmed' });
+    }
+
+    return { score, findings };
+  },
+
+  // Menu Indexation Score (0-100)
+  calculateMenuIndexation(markdown, links, baseUrl) {
+    const findings = [];
+    let score = 0;
+    const mdLower = (markdown || '').toLowerCase();
+
+    // Check if menu content exists as text
+    const menuKeywords = ['menu', 'menukort', 'pizza', 'burger', 'salat', 'ret', 'pris', 'kr', 'dkk'];
+    const menuHits = menuKeywords.filter(kw => mdLower.includes(kw)).length;
+
+    if (menuHits >= 4) {
+      score += 40;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu som crawlbar tekst', description: menuHits + ' menu-relaterede termer fundet i HTML-tekst. Google kan l\u00e6se menuen.', confidence: 'confirmed' });
+    } else if (menuHits >= 2) {
+      score += 20;
+      findings.push({ module: 'website', type: 'warning', title: 'Delvis menu som tekst', description: 'Noget menu-indhold fundet, men menuen b\u00f8r v\u00e6re mere komplet som HTML-tekst.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'critical', title: 'Menu ikke crawlbar', description: 'Menuen er sandsynligvis et billede eller PDF. Konverter til HTML-tekst s\u00e5 Google kan indeksere den.', confidence: 'confirmed' });
+    }
+
+    // Check for prices
+    const priceRegex = /\d+[\.,]?\d*\s*(kr|dkk|,-)/gi;
+    const priceMatches = (markdown || '').match(priceRegex);
+    if (priceMatches && priceMatches.length >= 3) {
+      score += 30;
+      findings.push({ module: 'website', type: 'positive', title: 'Priser synlige (' + priceMatches.length + ' fundet)', description: 'Priserne er synlige som tekst, hvilket hj\u00e6lper Google Rich Results.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'F\u00e5 eller ingen synlige priser', description: 'Tilf\u00f8j priser som tekst ved hver ret for bedre SEO.', confidence: 'confirmed' });
+    }
+
+    // Check for menu link from frontpage
+    const menuLinks = (links || []).filter(l => l && (l.includes('/menu') || l.includes('/menukort') || l.includes('/bestil')));
+    if (menuLinks.length > 0) {
+      score += 30;
+      findings.push({ module: 'website', type: 'positive', title: 'Menu-link fra forsiden', description: 'Direkte link til menusiden fundet. God intern linking.', confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'website', type: 'warning', title: 'Intet tydeligt menu-link', description: 'Tilf\u00f8j et tydeligt "Menu" eller "Bestil" link p\u00e5 forsiden.', confidence: 'confirmed' });
+    }
+
+    return { score: Math.min(100, score), findings };
+  },
+
+  // Review Momentum Score
+  calculateReviewMomentum(reviews) {
+    if (!reviews || reviews.length === 0) return { score: 50, trend: 'neutral', findings: [] };
+
+    const now = Date.now();
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    const sixtyDays = 60 * 24 * 60 * 60 * 1000;
+
+    const recent = reviews.filter(r => r.date && (now - new Date(r.date).getTime()) < thirtyDays);
+    const older = reviews.filter(r => r.date && (now - new Date(r.date).getTime()) >= thirtyDays && (now - new Date(r.date).getTime()) < sixtyDays);
+
+    const recentAvg = recent.length > 0 ? recent.reduce((s, r) => s + (r.rating || 0), 0) / recent.length : 0;
+    const olderAvg = older.length > 0 ? older.reduce((s, r) => s + (r.rating || 0), 0) / older.length : 0;
+
+    // Velocity component (recent count vs older)
+    const velocityRatio = older.length > 0 ? recent.length / older.length : (recent.length > 0 ? 2 : 1);
+
+    // Rating trend component
+    const ratingDelta = recentAvg - olderAvg;
+
+    // Combined score (0-100)
+    let score = 50; // baseline
+    score += ratingDelta * 15; // rating improvement
+    score += (velocityRatio - 1) * 20; // velocity improvement
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    const trend = score > 60 ? 'stigende' : score < 40 ? 'faldende' : 'stabil';
+    const findings = [];
+
+    if (trend === 'stigende') {
+      findings.push({ module: 'reviews', type: 'positive', title: 'Positiv Review Momentum', description: 'Rating-trend er stigende med ' + recent.length + ' nye anmeldelser de seneste 30 dage.', confidence: 'confirmed' });
+    } else if (trend === 'faldende') {
+      findings.push({ module: 'reviews', type: 'warning', title: 'Faldende Review Momentum', description: 'F\u00e6rre og/eller lavere-ratede anmeldelser de seneste 30 dage.', confidence: 'confirmed' });
+    }
+
+    return { score, trend, recentCount: recent.length, recentAvg: Math.round(recentAvg * 10) / 10, findings };
+  },
+
+  // Competitor gap analysis (v2)
+  async analyzeCompetitors(businessName, city, category) {
+    try {
+      const query = (category || 'restaurant') + ' ' + (city || 'Danmark');
+      const mapData = await seFetchSerperAPI('maps', query, { num: 6 });
+      const places = mapData.places || [];
+      if (places.length === 0) return SEAnalysisService.getCompetitorAnalysis(businessName);
+
+      let yourRank = 0;
+      const competitors = [];
+      const nameLower = (businessName || '').toLowerCase();
+
+      places.forEach(function(p, i) {
+        if (p.title && p.title.toLowerCase().includes(nameLower)) {
+          yourRank = i + 1;
+        } else if (competitors.length < 5) {
+          competitors.push({
+            name: p.title || 'Ukendt',
+            rating: p.rating || 0,
+            reviews: p.reviewsCount || p.reviews || 0,
+            address: p.address || '',
+            position: i + 1
+          });
+        }
+      });
+
+      if (yourRank === 0) yourRank = places.length + 1;
+
+      // Gap analysis
+      const gaps = [];
+      if (competitors.length > 0) {
+        const topRating = Math.max(...competitors.map(c => c.rating));
+        const topReviews = Math.max(...competitors.map(c => c.reviews));
+        gaps.push({ metric: 'Rating', topValue: topRating, description: 'Top konkurrent har ' + topRating + ' stjerner' });
+        gaps.push({ metric: 'Anmeldelser', topValue: topReviews, description: 'Top konkurrent har ' + topReviews + ' anmeldelser' });
+      }
+
+      const findings = [
+        { module: 'competitors', type: yourRank <= 3 ? 'positive' : 'warning', title: 'Placering #' + yourRank + ' i Google Maps', description: 'Du er nummer ' + yourRank + ' for "' + query + '". ' + (yourRank <= 3 ? 'God position i top 3!' : 'M\u00e5let er top 3 for bedst synlighed.'), confidence: 'confirmed' }
+      ];
+
+      return { competitors, yourRank, gaps, findings, confidence: 'confirmed' };
+    } catch (e) {
+      console.warn('Competitor analysis v2 failed:', e);
+      return SEAnalysisService.getCompetitorAnalysis(businessName);
+    }
+  },
+
+  // NAP consistency check
+  checkNAPConsistency(gbpData, websiteData) {
+    const findings = [];
+    let score = 0;
+
+    if (gbpData && gbpData.name) {
+      score += 25; // Name found in GBP
+      if (websiteData && websiteData.title && websiteData.title.toLowerCase().includes(gbpData.name.toLowerCase().split(' ')[0])) {
+        score += 25;
+        findings.push({ module: 'gbp', type: 'positive', title: 'Navn konsistent', description: 'Virksomhedsnavnet matcher mellem Google og website.', confidence: 'confirmed' });
+      } else {
+        findings.push({ module: 'gbp', type: 'warning', title: 'Navn m\u00e5ske inkonsistent', description: 'Virksomhedsnavnet fra Google matcher muligvis ikke website-titlen.', confidence: 'indicator' });
+      }
+    }
+
+    if (gbpData && gbpData.phone) {
+      score += 25;
+      findings.push({ module: 'gbp', type: 'positive', title: 'Telefonnummer registreret', description: gbpData.phone, confidence: 'confirmed' });
+    } else {
+      findings.push({ module: 'gbp', type: 'warning', title: 'Manglende telefonnummer i GBP', description: 'Tilf\u00f8j telefonnummer til Google Business profilen.', confidence: 'confirmed' });
+    }
+
+    if (gbpData && gbpData.address && gbpData.address.full) { score += 25; }
+
+    return { score: Math.min(100, score), findings };
+  },
+
+  // Weighted overall score
+  calculateWeightedScore(gbpScore, reviewScore, websiteScore, competitorScore, socialScore) {
+    const overall = Math.round(
+      (gbpScore * 30 + reviewScore * 25 + websiteScore * 25 + competitorScore * 15 + socialScore * 5) / 100
+    );
+    return {
+      overall: Math.min(100, Math.max(0, overall)),
+      breakdown: { gbp: gbpScore, reviews: reviewScore, website: websiteScore, competitors: competitorScore, social: socialScore },
+      label: overall >= 85 ? 'St\u00e6rk' : overall >= 70 ? 'God' : overall >= 50 ? 'Middel' : 'Kritisk',
+      color: overall >= 85 ? '#059669' : overall >= 70 ? '#2563eb' : overall >= 50 ? '#d97706' : '#dc2626'
+    };
+  },
+
+  // Generate 7-30-90 day action plan
+  generateActionPlan(allFindings, scoreBreakdown) {
+    const week1 = [];
+    const days30 = [];
+    const days90 = [];
+
+    // Collect all warnings and criticals
+    const issues = allFindings.filter(f => f.type === 'critical' || f.type === 'warning');
+
+    issues.forEach(function(f) {
+      const action = { task: f.title, detail: f.description, module: f.module, priority: f.type === 'critical' ? 'h\u00f8j' : 'mellem' };
+
+      if (f.type === 'critical') {
+        week1.push(Object.assign({}, action, { indsats: 'Lav', kpi: 'Ret inden 7 dage' }));
+      } else if (f.module === 'gbp' || f.module === 'reviews') {
+        days30.push(Object.assign({}, action, { indsats: 'Mellem', kpi: 'Forbedring inden 30 dage' }));
+      } else {
+        days90.push(Object.assign({}, action, { indsats: 'H\u00f8j', kpi: 'Implementer inden 90 dage' }));
+      }
+    });
+
+    // Add strategic recommendations based on low scores
+    if (scoreBreakdown.reviews < 60) {
+      days30.push({ task: 'Start anmeldelsesstrategi', detail: 'Bed tilfredse kunder om at skrive en anmeldelse p\u00e5 Google. M\u00e5l: 5+ nye/m\u00e5ned.', module: 'reviews', priority: 'h\u00f8j', indsats: 'Lav', kpi: 'Review velocity +50%' });
+    }
+    if (scoreBreakdown.website < 60) {
+      days90.push({ task: 'Website SEO optimering', detail: 'Optimer title tags, meta descriptions og tilf\u00f8j Schema markup.', module: 'website', priority: 'mellem', indsats: 'H\u00f8j', kpi: 'Website score > 70' });
+    }
+    if (scoreBreakdown.competitors < 60) {
+      days90.push({ task: 'Konkurrenceanalyse og differentiering', detail: 'Identificer og kommuniker dine unikke styrker vs. top 3 konkurrenter.', module: 'competitors', priority: 'mellem', indsats: 'Mellem', kpi: 'Top 3 i local pack' });
+    }
+
+    return { week1, days30, days90 };
+  },
+
+  // Main orchestrator — run full v2 analysis
+  async runFullAnalysis(businessName, placeId, version, onProgress) {
+    const allFindings = [];
+    const cb = onProgress || function() {};
+    const isV2 = version === '2.0';
+    let gbpData = null, reviewData = null, websiteData = null, competitorData = null, socialData = null;
+    let gbpScore = 0, reviewScore = 0, websiteScore = 0, competitorScore = 0, socialScore = 0;
+
+    // 1. Google Business Profile
+    cb('gbp', 'running');
+    try {
+      gbpData = await SEAnalysisService.getGoogleBusinessProfile(placeId, businessName);
+      gbpScore = gbpData.profileCompleteness ? gbpData.profileCompleteness.score : 50;
+      allFindings.push({ module: 'gbp', type: gbpScore >= 70 ? 'positive' : 'warning', title: 'Google Business Score: ' + gbpScore + '/100', description: gbpData.name + ' \u2014 ' + (gbpData.address ? gbpData.address.full : 'Adresse ikke fundet'), confidence: gbpData.placeId ? 'confirmed' : 'indicator' });
+      if (gbpData.profileCompleteness && gbpData.profileCompleteness.missing) {
+        gbpData.profileCompleteness.missing.forEach(function(m) {
+          allFindings.push({ module: 'gbp', type: 'warning', title: 'GBP mangler: ' + m, description: 'Tilf\u00f8j "' + m + '" til din Google Business profil for h\u00f8jere score.', confidence: 'confirmed' });
+        });
+      }
+      cb('gbp', 'completed', allFindings.filter(f => f.module === 'gbp').length);
+    } catch (e) {
+      cb('gbp', 'error');
+      allFindings.push({ module: 'gbp', type: 'warning', title: 'GBP data ufuldst\u00e6ndig', description: 'Kunne ikke hente fuld Google Business data.', confidence: 'indicator' });
+    }
+
+    // 2. Reviews
+    cb('reviews', 'running');
+    try {
+      reviewData = await SEAnalysisService.getReviewAnalysis(placeId, businessName);
+      const momentum = this.calculateReviewMomentum(reviewData.reviews || []);
+      reviewScore = Math.round(((reviewData.averageRating || 3) / 5) * 80 + (momentum.score / 100) * 20);
+      allFindings.push({ module: 'reviews', type: reviewData.averageRating >= 4 ? 'positive' : 'warning', title: 'Rating: ' + (reviewData.averageRating || '?') + '/5 (' + (reviewData.totalReviews || 0) + ' anmeldelser)', description: 'Review Momentum: ' + momentum.trend + ' (score ' + momentum.score + '/100)', confidence: reviewData.confidence || 'indicator' });
+      allFindings.push(...momentum.findings);
+      if (reviewData.sentiment) {
+        if (reviewData.sentiment.positive && reviewData.sentiment.positive.length > 0) {
+          allFindings.push({ module: 'reviews', type: 'positive', title: 'Positive temaer', description: reviewData.sentiment.positive.slice(0, 3).join(', '), confidence: 'indicator' });
+        }
+        if (reviewData.sentiment.negative && reviewData.sentiment.negative.length > 0) {
+          allFindings.push({ module: 'reviews', type: 'warning', title: 'Negative temaer', description: reviewData.sentiment.negative.slice(0, 3).join(', '), confidence: 'indicator' });
+        }
+      }
+      cb('reviews', 'completed', allFindings.filter(f => f.module === 'reviews').length);
+    } catch (e) {
+      cb('reviews', 'error');
+      reviewScore = 40;
+    }
+
+    // 3. Competitors
+    cb('competitors', 'running');
+    try {
+      const city = gbpData && gbpData.address ? gbpData.address.city : '';
+      const category = gbpData && gbpData.types ? gbpData.types[0] : 'restaurant';
+      competitorData = await this.analyzeCompetitors(businessName, city, category);
+      competitorScore = competitorData.yourRank ? Math.round((6 - Math.min(5, competitorData.yourRank)) * 20) : 40;
+      allFindings.push(...(competitorData.findings || []));
+      cb('competitors', 'completed', allFindings.filter(f => f.module === 'competitors').length);
+    } catch (e) {
+      cb('competitors', 'error');
+      competitorScore = 40;
+    }
+
+    // 4. Website (v2 uses Firecrawl, v1 uses estimate)
+    cb('website', 'running');
+    try {
+      const websiteUrl = gbpData ? gbpData.website : null;
+      if (isV2 && websiteUrl) {
+        websiteData = await this.analyzeWebsite(websiteUrl);
+      } else if (websiteUrl) {
+        websiteData = await SEAnalysisService.analyzeWebsite(websiteUrl);
+      } else {
+        websiteData = { score: 0, menuIndexation: 0, findings: [{ module: 'website', type: 'critical', title: 'Ingen website', description: 'Ingen website fundet. Opret en hjemmeside for online synlighed.', confidence: 'confirmed' }] };
+      }
+      websiteScore = isV2 ? Math.round((websiteData.score || 0) * 0.6 + (websiteData.menuIndexation || 0) * 0.4) : (websiteData.scores ? websiteData.scores.overall || 50 : 50);
+      allFindings.push(...(websiteData.findings || []));
+      cb('website', 'completed', allFindings.filter(f => f.module === 'website').length);
+    } catch (e) {
+      cb('website', 'error');
+      websiteScore = 30;
+    }
+
+    // 5. Social & NAP
+    cb('social', 'running');
+    try {
+      socialData = await SEAnalysisService.analyzeSocialPresence(businessName);
+      socialScore = socialData.overallScore || 40;
+      const napResult = this.checkNAPConsistency(gbpData, websiteData);
+      allFindings.push(...napResult.findings);
+      if (socialData.platforms) {
+        const found = socialData.platforms.filter(p => p.found);
+        allFindings.push({ module: 'social', type: found.length >= 3 ? 'positive' : 'warning', title: found.length + ' sociale platforme fundet', description: found.map(p => p.name).join(', ') || 'Ingen', confidence: 'indicator' });
+      }
+      cb('social', 'completed', allFindings.filter(f => f.module === 'social').length);
+    } catch (e) {
+      cb('social', 'error');
+      socialScore = 30;
+    }
+
+    // Calculate weighted score
+    const scoreResult = this.calculateWeightedScore(gbpScore, reviewScore, websiteScore, competitorScore, socialScore);
+
+    // Generate action plan
+    const actionPlan = this.generateActionPlan(allFindings, scoreResult.breakdown);
+
+    const result = {
+      version: version,
+      timestamp: Date.now(),
+      business: { name: businessName, placeId: placeId, city: gbpData ? (gbpData.address ? gbpData.address.city : '') : '' },
+      score: scoreResult,
+      findings: allFindings,
+      actionPlan: actionPlan,
+      rawData: { gbp: gbpData, reviews: reviewData, website: websiteData, competitors: competitorData, social: socialData }
+    };
+
+    // Save to localStorage
+    try { localStorage.setItem('flow_seo_analysis_latest', JSON.stringify(result)); } catch (e) { /* quota */ }
+
+    return result;
+  }
+};
+
+// =====================================================
+// SEO SCANNER UI FUNCTIONS
+// =====================================================
+
+function startSEOScan(version) {
+  seoScannerState.version = version || '2.0';
+  showPage('page-seo-scanner');
+  // Set version toggle
+  document.querySelectorAll('.seo-version-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.version === seoScannerState.version);
+  });
+  // Update version badge
+  var badge = document.getElementById('seo-scanner-version-badge');
+  if (badge) {
+    badge.textContent = 'v' + seoScannerState.version + '.0';
+    badge.style.background = seoScannerState.version === '2.0' ? '#2563eb' : '#059669';
+  }
+  // Focus input
+  var input = document.getElementById('seo-scanner-input');
+  if (input) { input.value = ''; input.focus(); }
+  // Reset UI
+  var progress = document.getElementById('seo-scanner-progress');
+  var results = document.getElementById('seo-scanner-results');
+  if (progress) progress.style.display = 'none';
+  if (results) results.style.display = 'none';
+}
+
+function selectSEOVersion(version) {
+  seoScannerState.version = version;
+  document.querySelectorAll('.seo-version-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.version === version);
+  });
+  var badge = document.getElementById('seo-scanner-version-badge');
+  if (badge) {
+    badge.textContent = 'v' + version + '.0';
+    badge.style.background = version === '2.0' ? '#2563eb' : '#059669';
+  }
+}
+
+async function runSEOScan() {
+  var input = document.getElementById('seo-scanner-input');
+  var query = input ? input.value.trim() : '';
+  if (!query) { toast('Indtast et virksomhedsnavn', 'error'); return; }
+  if (seoScannerState.scanning) return;
+
+  seoScannerState.scanning = true;
+  seoScannerState.findings = [];
+  var version = seoScannerState.version;
+
+  // Show progress, hide results
+  var progress = document.getElementById('seo-scanner-progress');
+  var results = document.getElementById('seo-scanner-results');
+  var startBtn = document.getElementById('seo-scanner-start');
+  if (progress) progress.style.display = 'block';
+  if (results) results.style.display = 'none';
+  if (startBtn) { startBtn.disabled = true; startBtn.textContent = 'Scanner...'; }
+
+  // Reset module indicators
+  ['gbp', 'reviews', 'competitors', 'website', 'social'].forEach(function(m) {
+    updateSEOModuleStatus(m, 'idle', 0);
+  });
+
+  // Clear findings feed
+  var feed = document.getElementById('seo-findings-feed');
+  if (feed) feed.innerHTML = '';
+
+  // Search for business (use existing service or direct query)
+  var placeId = null;
+  try {
+    var searchResults = await SEAnalysisService.searchBusiness(query);
+    if (searchResults && searchResults.length > 0) {
+      placeId = searchResults[0].place_id;
+    }
+  } catch (e) {
+    // Use query as fallback
+  }
+
+  // Run full analysis with progress callback
+  try {
+    var result = await SEAnalysisV2.runFullAnalysis(query, placeId, version, function(module, status, count) {
+      updateSEOModuleStatus(module, status, count || 0);
+    });
+
+    // Stream findings to feed (with delay for visual effect)
+    for (var i = 0; i < result.findings.length; i++) {
+      addSEOFinding(result.findings[i]);
+      if (i < 15) await seDelay(120); // animate first 15
+    }
+
+    // Show final score
+    displaySEOFinalScore(result.score);
+
+    // Show results section
+    if (results) results.style.display = 'block';
+
+    // Render action plan
+    renderSEOActionPlan(result.actionPlan);
+
+    seoScannerState.results = result;
+  } catch (e) {
+    console.error('SEO scan error:', e);
+    toast('Scanning fejlede: ' + e.message, 'error');
+  }
+
+  seoScannerState.scanning = false;
+  if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start Analyse'; }
+}
+
+function updateSEOModuleStatus(moduleName, status, count) {
+  var el = document.querySelector('.seo-module-indicator[data-module="' + moduleName + '"]');
+  if (!el) return;
+  el.className = 'seo-module-indicator seo-module--' + status;
+  var countEl = el.querySelector('.seo-module-count');
+  if (countEl) countEl.textContent = count || 0;
+}
+
+function addSEOFinding(finding) {
+  var feed = document.getElementById('seo-findings-feed');
+  if (!feed) return;
+
+  var typeColors = { positive: '#059669', warning: '#d97706', critical: '#dc2626', opportunity: '#2563eb' };
+  var typeLabels = { positive: 'OK', warning: 'Advarsel', critical: 'Kritisk', opportunity: 'Mulighed' };
+  var color = typeColors[finding.type] || '#6b7280';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'padding:14px 16px;border-radius:var(--radius-md);background:var(--card);border:1px solid var(--border);animation:slideInRight 0.3s ease;margin-bottom:8px';
+  card.innerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+    '<span style="font-size:10px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:500">' + (finding.module || '') + '</span>' +
+    '<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:' + color + '20;color:' + color + ';font-weight:500">' + (typeLabels[finding.type] || '') + '</span>' +
+    (finding.confidence === 'confirmed' ? '<span style="font-size:10px;color:#059669">Verificeret</span>' : '') +
+    '</div>' +
+    '<div style="font-weight:500;font-size:13px;margin-bottom:4px">' + (finding.title || '') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + (finding.description || '') + '</div>';
+
+  feed.prepend(card);
+  seoScannerState.findings.push(finding);
+}
+
+function displaySEOFinalScore(scoreResult) {
+  var scoreEl = document.getElementById('seo-score-value');
+  var labelEl = document.getElementById('seo-score-label');
+  var circleEl = document.getElementById('seo-score-circle');
+  var breakdownEl = document.getElementById('seo-score-breakdown');
+
+  if (scoreEl) {
+    // Animate score count-up
+    var target = scoreResult.overall;
+    var current = 0;
+    var interval = setInterval(function() {
+      current += 2;
+      if (current >= target) { current = target; clearInterval(interval); }
+      scoreEl.textContent = current;
+    }, 30);
+  }
+  if (labelEl) { labelEl.textContent = scoreResult.label; labelEl.style.color = scoreResult.color; }
+  if (circleEl) {
+    var pct = scoreResult.overall / 100 * 283; // circumference ~283 for r=45
+    circleEl.style.strokeDasharray = pct + ' 283';
+    circleEl.style.stroke = scoreResult.color;
+  }
+
+  // Breakdown cards
+  if (breakdownEl) {
+    var modules = [
+      { key: 'gbp', label: 'Google Business', weight: '30%' },
+      { key: 'reviews', label: 'Anmeldelser', weight: '25%' },
+      { key: 'website', label: 'Website', weight: '25%' },
+      { key: 'competitors', label: 'Konkurrenter', weight: '15%' },
+      { key: 'social', label: 'Social', weight: '5%' }
+    ];
+    breakdownEl.innerHTML = modules.map(function(m) {
+      var val = scoreResult.breakdown[m.key] || 0;
+      var c = val >= 70 ? '#059669' : val >= 50 ? '#d97706' : '#dc2626';
+      return '<div style="background:var(--bg2);border-radius:var(--radius-sm);padding:12px;text-align:center">' +
+        '<div style="font-size:22px;font-weight:700;color:' + c + '">' + val + '</div>' +
+        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + m.label + '</div>' +
+        '<div style="font-size:10px;color:var(--muted)">' + m.weight + '</div></div>';
+    }).join('');
+  }
+}
+
+function renderSEOActionPlan(plan) {
+  var container = document.getElementById('seo-action-plan');
+  if (!container || !plan) return;
+
+  function renderSection(title, items, color) {
+    if (!items || items.length === 0) return '';
+    return '<div style="margin-bottom:20px"><h4 style="font-size:13px;font-weight:600;margin:0 0 10px;color:' + color + '">' + title + '</h4>' +
+      items.map(function(a, i) {
+        return '<div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg2);border-radius:var(--radius-sm);margin-bottom:6px">' +
+          '<span style="font-size:12px;font-weight:600;color:' + color + ';min-width:20px">' + (i + 1) + '.</span>' +
+          '<div><div style="font-size:13px;font-weight:500">' + a.task + '</div>' +
+          '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + a.detail + '</div>' +
+          '<div style="display:flex;gap:8px;margin-top:4px"><span style="font-size:10px;padding:2px 6px;background:var(--bg);border-radius:4px;color:var(--muted)">Indsats: ' + a.indsats + '</span><span style="font-size:10px;padding:2px 6px;background:var(--bg);border-radius:4px;color:var(--muted)">KPI: ' + a.kpi + '</span></div></div></div>';
+      }).join('') + '</div>';
+  }
+
+  container.innerHTML =
+    renderSection('Inden 7 dage', plan.week1, '#dc2626') +
+    renderSection('Inden 30 dage', plan.days30, '#d97706') +
+    renderSection('Inden 90 dage', plan.days90, '#2563eb');
+}
+
+function saveSEOAnalysis() {
+  if (!seoScannerState.results) { toast('Ingen analyse at gemme', 'error'); return; }
+  try {
+    localStorage.setItem('flow_seo_analysis_latest', JSON.stringify(seoScannerState.results));
+    // Add to history
+    var history = JSON.parse(localStorage.getItem('flow_seo_analysis_history') || '[]');
+    history.unshift({ id: Date.now(), businessName: seoScannerState.results.business.name, date: new Date().toISOString(), score: seoScannerState.results.score.overall, version: seoScannerState.results.version });
+    if (history.length > 10) history = history.slice(0, 10);
+    localStorage.setItem('flow_seo_analysis_history', JSON.stringify(history));
+    toast('Analyse gemt!', 'success');
+  } catch (e) {
+    toast('Kunne ikke gemme: ' + e.message, 'error');
+  }
+}
+
+function loadLastSEOAnalysis() {
+  try {
+    var saved = localStorage.getItem('flow_seo_analysis_latest');
+    if (!saved) { toast('Ingen gemt analyse fundet', 'error'); return; }
+    var data = JSON.parse(saved);
+    seoScannerState.results = data;
+    seoScannerState.version = data.version || '1.0';
+    showPage('page-seo-scanner');
+    // Set version
+    selectSEOVersion(data.version || '1.0');
+    // Set input
+    var input = document.getElementById('seo-scanner-input');
+    if (input) input.value = data.business ? data.business.name : '';
+    // Show results directly
+    var progress = document.getElementById('seo-scanner-progress');
+    var results = document.getElementById('seo-scanner-results');
+    if (progress) progress.style.display = 'block';
+    if (results) results.style.display = 'block';
+    // Set modules to completed
+    ['gbp', 'reviews', 'competitors', 'website', 'social'].forEach(function(m) {
+      var count = data.findings ? data.findings.filter(function(f) { return f.module === m; }).length : 0;
+      updateSEOModuleStatus(m, 'completed', count);
+    });
+    // Render findings
+    var feed = document.getElementById('seo-findings-feed');
+    if (feed) feed.innerHTML = '';
+    (data.findings || []).forEach(addSEOFinding);
+    // Show score
+    if (data.score) displaySEOFinalScore(data.score);
+    if (data.actionPlan) renderSEOActionPlan(data.actionPlan);
+  } catch (e) {
+    toast('Kunne ikke indl\u00e6se gemt analyse', 'error');
+  }
+}
+
+// PDF Report Generation
+function generateSEOReportPDF() {
+  var data = seoScannerState.results;
+  if (!data) { toast('Ingen analyse at eksportere', 'error'); return; }
+
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    toast('PDF-bibliotek indl\u00e6ses...', 'info');
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    script.onload = function() { generateSEOReportPDF(); };
+    document.head.appendChild(script);
+    return;
+  }
+
+  var jsPDF = (window.jspdf || jspdf).jsPDF;
+  var doc = new jsPDF('p', 'mm', 'a4');
+  var pageW = 210;
+  var margin = 20;
+  var y = 25;
+
+  // Helper
+  function addText(text, size, weight, color) {
+    doc.setFontSize(size);
+    doc.setFont('helvetica', weight || 'normal');
+    if (color) doc.setTextColor(color[0], color[1], color[2]);
+    else doc.setTextColor(30, 30, 30);
+    var lines = doc.splitTextToSize(text, pageW - margin * 2);
+    doc.text(lines, margin, y);
+    y += lines.length * (size * 0.45) + 3;
+    if (y > 270) { doc.addPage(); y = 25; }
+  }
+
+  // Cover
+  doc.setFillColor(37, 99, 235);
+  doc.rect(0, 0, pageW, 60, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(28);
+  doc.setFont('helvetica', 'bold');
+  doc.text('SEO Analyse Rapport', margin, 30);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'normal');
+  doc.text((data.business ? data.business.name : 'Virksomhed') + ' \u2014 v' + (data.version || '2.0') + '.0', margin, 45);
+  doc.setFontSize(11);
+  doc.text(new Date(data.timestamp).toLocaleDateString('da-DK'), margin, 53);
+  y = 75;
+
+  // Score
+  addText('Samlet SEO Score: ' + data.score.overall + '/100 (' + data.score.label + ')', 20, 'bold');
+  y += 5;
+
+  // Breakdown
+  var bd = data.score.breakdown;
+  addText('Google Business: ' + bd.gbp + '/100 (v\u00e6gt 30%)', 11, 'normal');
+  addText('Anmeldelser: ' + bd.reviews + '/100 (v\u00e6gt 25%)', 11, 'normal');
+  addText('Website: ' + bd.website + '/100 (v\u00e6gt 25%)', 11, 'normal');
+  addText('Konkurrenter: ' + bd.competitors + '/100 (v\u00e6gt 15%)', 11, 'normal');
+  addText('Social: ' + bd.social + '/100 (v\u00e6gt 5%)', 11, 'normal');
+  y += 8;
+
+  // Findings
+  addText('Fund & Anbefalinger', 16, 'bold');
+  y += 3;
+  (data.findings || []).slice(0, 25).forEach(function(f) {
+    var prefix = f.type === 'positive' ? '[OK] ' : f.type === 'critical' ? '[KRITISK] ' : '[ADVARSEL] ';
+    var clr = f.type === 'positive' ? [5, 150, 105] : f.type === 'critical' ? [220, 38, 38] : [217, 119, 6];
+    addText(prefix + f.title, 11, 'bold', clr);
+    if (f.description) addText(f.description, 10, 'normal', [107, 114, 128]);
+    y += 2;
+  });
+
+  // Action Plan
+  if (data.actionPlan) {
+    doc.addPage();
+    y = 25;
+    addText('Handlingsplan', 16, 'bold');
+    y += 3;
+
+    if (data.actionPlan.week1 && data.actionPlan.week1.length > 0) {
+      addText('Inden 7 dage:', 13, 'bold', [220, 38, 38]);
+      data.actionPlan.week1.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+      y += 5;
+    }
+    if (data.actionPlan.days30 && data.actionPlan.days30.length > 0) {
+      addText('Inden 30 dage:', 13, 'bold', [217, 119, 6]);
+      data.actionPlan.days30.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+      y += 5;
+    }
+    if (data.actionPlan.days90 && data.actionPlan.days90.length > 0) {
+      addText('Inden 90 dage:', 13, 'bold', [37, 99, 235]);
+      data.actionPlan.days90.forEach(function(a, i) {
+        addText((i + 1) + '. ' + a.task + ' (' + a.indsats + ')', 11, 'normal');
+        if (a.detail) addText('   ' + a.detail, 10, 'normal', [107, 114, 128]);
+      });
+    }
+  }
+
+  // Footer
+  doc.setFontSize(9);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Genereret af FLOW SEO Engine v' + (data.version || '2.0') + '.0 \u2014 ' + new Date().toLocaleDateString('da-DK'), margin, 285);
+
+  var filename = 'SEO-Rapport-' + (data.business ? data.business.name.replace(/[^a-zA-Z0-9]/g, '-') : 'analyse') + '.pdf';
+  doc.save(filename);
+  toast('PDF rapport downloadet', 'success');
+}
+
+// Check for last scan on search-engine page load
+function renderLastScanSummary() {
+  var container = document.getElementById('seo-last-scan');
+  if (!container) return;
+  try {
+    var saved = localStorage.getItem('flow_seo_analysis_latest');
+    if (!saved) { container.style.display = 'none'; return; }
+    var data = JSON.parse(saved);
+    container.style.display = 'block';
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+      '<div><span style="font-weight:600">' + (data.business ? data.business.name : '?') + '</span>' +
+      '<span style="color:var(--muted);font-size:12px;margin-left:8px">' + new Date(data.timestamp).toLocaleDateString('da-DK') + '</span>' +
+      '<span style="margin-left:8px;font-size:11px;padding:2px 8px;border-radius:var(--radius-sm);background:' + (data.version === '2.0' ? '#2563eb' : '#059669') + ';color:white">v' + (data.version || '1.0') + '.0</span></div>' +
+      '<div style="display:flex;align-items:center;gap:12px">' +
+      '<span style="font-size:24px;font-weight:700;color:' + (data.score ? data.score.color : 'var(--text)') + '">' + (data.score ? data.score.overall : '?') + '<span style="font-size:12px;color:var(--muted)">/100</span></span>' +
+      '<button class="btn btn-sm btn-primary" onclick="loadLastSEOAnalysis()">Se Resultater</button></div></div>';
+  } catch (e) {
+    container.style.display = 'none';
+  }
+}
+
+// Window exports
+window.startSEOScan = startSEOScan;
+window.selectSEOVersion = selectSEOVersion;
+window.runSEOScan = runSEOScan;
+window.saveSEOAnalysis = saveSEOAnalysis;
+window.loadLastSEOAnalysis = loadLastSEOAnalysis;
+window.generateSEOReportPDF = generateSEOReportPDF;
+window.renderLastScanSummary = renderLastScanSummary;
