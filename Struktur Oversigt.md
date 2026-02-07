@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
 **Sidst opdateret:** 2026-02-07
-**Version:** 3.41.0
-**Total antal sider:** 90+
+**Version:** 3.48.0
+**Total antal sider:** 91+
 
 ---
 
@@ -130,6 +130,7 @@
 | `page-leveringsadresser` | Leveringsadresser (legacy) |
 | `page-bogholderi` | Bogholderi |
 | `page-betaling` | Betaling |
+| `page-vaerktoejer` | V&aelig;rkt&oslash;jer (Agenter & Enheder) |
 
 ### Marketing
 | Side ID | Beskrivelse |
@@ -275,6 +276,13 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 ---
 
 ## Changelog
+
+### v3.48.0 (2026-02-07)
+- Ny `page-vaerktoejer` side under Integrationer med 5 agent-kort (Instagram, Facebook, Restaurant, H\u00e5ndv\u00e6rker, SEO)
+- PROGRAMMER flyout konsolideret: 4 items \u2192 1 "V\u00e6rkt\u00f8jer"
+- Agent Status Dashboard med version-tracking og opdateringss\u00f8gning
+- Hardware-tab (Enheder) med POS Terminal, Bon-printer, KDS Sk\u00e6rm placeholders
+- F\u00e6lles v\u00e6rkt\u00f8jer: API-n\u00f8gler, Webhooks, Statistik-oversigt
 
 ### v3.44.0 (2026-02-07)
 - SEO Analyse Pro v2.0.0 integreret i SPA med sidebar

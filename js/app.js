@@ -20454,6 +20454,9 @@ async function loadAllApiSettings() {
   await loadApiEnabledStates();
 
   updateApiStatus();
+
+  // Also populate the API keys summary table on API Adgang page
+  loadApiKeysList();
 }
 
 // =====================================================
@@ -34309,6 +34312,28 @@ function loadApiKeysList() {
 
   // Render pagination
   renderApiKeysPagination(totalPages);
+
+  // Also render to API Adgang settings page (read-only summary)
+  var adgangTbody = document.getElementById('api-adgang-keys-list');
+  if (adgangTbody) {
+    if (allKeys.length === 0) {
+      adgangTbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Ingen API n\u00f8gler</td></tr>';
+    } else {
+      adgangTbody.innerHTML = allKeys.map(renderApiAdgangRow).join('');
+    }
+  }
+}
+
+// Render a read-only row for the API Adgang keys summary table
+function renderApiAdgangRow(k) {
+  var nameCell = k.name;
+  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
+  return '<tr style="border-bottom:1px solid var(--border)">' +
+    '<td style="padding:10px 8px;font-size:13px">' + nameCell + '</td>' +
+    '<td style="padding:10px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + (k.maskedKey || '\u2014') + '</td>' +
+    '<td style="padding:10px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2)">' + k.type + '</span></td>' +
+    '<td style="padding:10px 8px"><span style="font-size:12px;font-weight:500;color:' + k.statusColor + '">' + k.status + '</span></td>' +
+    '</tr>';
 }
 
 // Render a single API key table row with consistent actions
@@ -40794,6 +40819,53 @@ window.generateSEOReportPDF = generateSEOReportPDF;
 window.renderLastScanSummary = renderLastScanSummary;
 window.handleURLPageParam = handleURLPageParam;
 window.checkPendingSEOScan = checkPendingSEOScan;
+
+// ============================================
+// V\u00c6RKT\u00d8JER PAGE FUNCTIONS
+// ============================================
+
+function openAgentPage(pageId) {
+  if (typeof showPage === 'function') {
+    showPage(pageId);
+  }
+}
+
+function switchVaerktoejTab(tab) {
+  const agenterContent = document.getElementById('vaerktoejer-content-agenter');
+  const enhederContent = document.getElementById('vaerktoejer-content-enheder');
+  const agenterTab = document.getElementById('vaerktoejer-tab-agenter');
+  const enhederTab = document.getElementById('vaerktoejer-tab-enheder');
+  if (!agenterContent || !enhederContent) return;
+
+  if (tab === 'agenter') {
+    agenterContent.style.display = '';
+    enhederContent.style.display = 'none';
+    if (agenterTab) { agenterTab.style.color = 'var(--color-text)'; agenterTab.style.borderBottomColor = 'var(--color-text)'; agenterTab.style.fontWeight = 'var(--font-weight-semibold)'; }
+    if (enhederTab) { enhederTab.style.color = 'var(--muted)'; enhederTab.style.borderBottomColor = 'transparent'; enhederTab.style.fontWeight = '500'; }
+  } else {
+    agenterContent.style.display = 'none';
+    enhederContent.style.display = '';
+    if (enhederTab) { enhederTab.style.color = 'var(--color-text)'; enhederTab.style.borderBottomColor = 'var(--color-text)'; enhederTab.style.fontWeight = 'var(--font-weight-semibold)'; }
+    if (agenterTab) { agenterTab.style.color = 'var(--muted)'; agenterTab.style.borderBottomColor = 'transparent'; agenterTab.style.fontWeight = '500'; }
+  }
+}
+
+function checkAgentUpdate(agentName) {
+  const btn = event.target;
+  const origText = btn.textContent;
+  btn.textContent = 'S\u00f8ger...';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.textContent = 'Opdateret';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => { btn.textContent = origText; btn.disabled = false; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  }, 1500);
+}
+
+window.openAgentPage = openAgentPage;
+window.switchVaerktoejTab = switchVaerktoejTab;
+window.checkAgentUpdate = checkAgentUpdate;
 
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {
