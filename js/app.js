@@ -3828,6 +3828,11 @@ function showPage(page) {
     if (typeof renderVaerktoejApiStatus === 'function') renderVaerktoejApiStatus();
   }
 
+  // Load agenter-siden
+  if (page === 'agenter') {
+    if (typeof loadAgenterPage === 'function') loadAgenterPage();
+  }
+
   // Load ordrer når orders-siden vises
   if (page === 'orders') {
     loadOrdersPage();
@@ -41143,6 +41148,200 @@ window.openAgentPage = openAgentPage;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
 window.renderVaerktoejApiStatus = renderVaerktoejApiStatus;
+
+// ============================================================
+// AGENTER PAGE — FLOW Agent System
+// ============================================================
+
+const AGENT_ENDPOINTS = [
+  { name: 'Supabase REST', url: CONFIG.SUPABASE_URL + '/rest/v1/', method: 'GET', critical: true },
+  { name: 'SMS Send', url: CONFIG.SUPABASE_URL + '/functions/v1/send-sms', method: 'GET', critical: true },
+  { name: 'SMS Receive', url: CONFIG.SUPABASE_URL + '/functions/v1/receive-sms', method: 'GET', critical: true },
+  { name: 'Payment Intent', url: CONFIG.SUPABASE_URL + '/functions/v1/create-payment-intent', method: 'GET', critical: true },
+  { name: 'OTP Email', url: CONFIG.SUPABASE_URL + '/functions/v1/send-otp-email', method: 'GET', critical: false }
+];
+
+const AGENT_SMS_PATTERNS = {
+  confirm: { patterns: [/^(ja|yes|ok|jep|yep|jo|oki)$/i, /\b(bekr\u00e6ft|accept|godkend|det er fint|sounds good|confirm)\b/i], confidence: 0.95 },
+  cancel: { patterns: [/^(nej|no|nope|n\u00e5h)$/i, /\b(annuller|cancel|afbestil|stop|fortryd)\b/i], confidence: 0.95 },
+  reschedule: { patterns: [/\b(\u00e6ndre tid|skubbe|senere|flytte|different time|reschedule|udskyde|kl\.?\s*\d)\b/i], confidence: 0.85 },
+  question: { patterns: [/\?$/, /\b(hvad|what|hvorn\u00e5r|when|hvordan|how|kan|can|hvor|where)\b/i], confidence: 0.80 },
+  allergy: { patterns: [/\b(allergi|allergy|n\u00f8dder|nuts|gluten|laktose|lactose|intoleran)\b/i], confidence: 0.99 }
+};
+
+function loadAgenterPage() {
+  // Check agent status from localStorage
+  const debugState = JSON.parse(localStorage.getItem('flow_agent_debug_state') || 'null');
+  const workflowState = JSON.parse(localStorage.getItem('flow_agent_workflow_state') || 'null');
+
+  // Debugging Agent status
+  const debugDot = document.getElementById('agent-debug-dot');
+  const debugStatus = document.getElementById('agent-debug-status');
+  const debugLast = document.getElementById('agent-debug-last');
+  if (debugState && debugState.lastRun) {
+    const ago = Math.round((Date.now() - new Date(debugState.lastRun).getTime()) / 60000);
+    if (debugDot) debugDot.style.background = ago < 10 ? 'var(--success)' : 'var(--warning)';
+    if (debugStatus) { debugStatus.textContent = ago < 10 ? 'Aktiv' : 'Inaktiv'; debugStatus.style.color = ago < 10 ? 'var(--success)' : 'var(--warning)'; }
+    if (debugLast) debugLast.textContent = ago < 60 ? ago + ' min siden' : Math.round(ago / 60) + ' timer siden';
+  } else {
+    if (debugDot) debugDot.style.background = 'var(--muted)';
+    if (debugStatus) { debugStatus.textContent = 'Ikke startet'; debugStatus.style.color = 'var(--muted)'; }
+    if (debugLast) debugLast.textContent = '-';
+  }
+
+  // Workflow Agent status
+  const wfDot = document.getElementById('agent-workflow-dot');
+  const wfStatus = document.getElementById('agent-workflow-status');
+  const wfSms = document.getElementById('agent-workflow-sms');
+  if (workflowState && workflowState.processedCount !== undefined) {
+    if (wfDot) wfDot.style.background = 'var(--success)';
+    if (wfStatus) { wfStatus.textContent = 'Aktiv'; wfStatus.style.color = 'var(--success)'; }
+    if (wfSms) wfSms.textContent = workflowState.processedCount;
+  } else {
+    if (wfDot) wfDot.style.background = 'var(--muted)';
+    if (wfStatus) { wfStatus.textContent = 'Ikke startet'; wfStatus.style.color = 'var(--muted)'; }
+    if (wfSms) wfSms.textContent = '0';
+  }
+
+  // Load activity log
+  const actLog = JSON.parse(localStorage.getItem('flow_agent_activity') || '[]');
+  const logEl = document.getElementById('agent-activity-log');
+  if (logEl && actLog.length > 0) {
+    logEl.innerHTML = actLog.slice(-10).reverse().map(entry => {
+      const time = new Date(entry.timestamp).toLocaleTimeString('da-DK');
+      const color = entry.severity === 'error' ? 'var(--danger)' : entry.severity === 'warning' ? 'var(--warning)' : 'var(--muted)';
+      return '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:' + color + ';font-size:11px">[' + time + ']</span> ' + (entry.message || entry.event || '') + '</div>';
+    }).join('');
+  }
+}
+
+async function runAgentEndpointCheck() {
+  const tableEl = document.getElementById('agent-endpoint-table');
+  if (!tableEl) return;
+
+  tableEl.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Checker endpoints...</td></tr>';
+
+  const results = [];
+  const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+
+  for (const ep of AGENT_ENDPOINTS) {
+    const start = performance.now();
+    let status = 'down';
+    let statusCode = null;
+    let responseTime = 0;
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch(ep.url, { method: ep.method, headers, signal: controller.signal });
+      clearTimeout(timeout);
+      responseTime = Math.round(performance.now() - start);
+      statusCode = res.status;
+      if (res.ok || res.status === 401) status = 'healthy';
+      else if (res.status < 500) status = 'degraded';
+      else status = 'down';
+    } catch (err) {
+      responseTime = Math.round(performance.now() - start);
+      status = 'down';
+    }
+
+    if (responseTime > 2000 && status === 'healthy') status = 'degraded';
+
+    results.push({ name: ep.name, status, statusCode, responseTime, critical: ep.critical });
+  }
+
+  const now = new Date().toLocaleTimeString('da-DK');
+  const statusDots = { healthy: 'var(--success)', degraded: 'var(--warning)', down: 'var(--danger)' };
+  const statusLabels = { healthy: 'OK', degraded: 'Langsom', down: 'Nede' };
+
+  tableEl.innerHTML = results.map(r => {
+    const dot = '<div style="width:8px;height:8px;border-radius:50%;background:' + statusDots[r.status] + ';display:inline-block;margin-right:6px"></div>';
+    const critical = r.critical ? '' : ' <span style="color:var(--muted);font-size:11px">(valgfri)</span>';
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:10px 12px;font-size:var(--font-size-sm)">' + r.name + critical + '</td>' +
+      '<td style="padding:10px 12px;text-align:center;font-size:var(--font-size-sm)">' + dot + statusLabels[r.status] + '</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-size:var(--font-size-sm)">' + r.responseTime + 'ms</td>' +
+      '<td style="padding:10px 12px;text-align:right;font-size:var(--font-size-sm);color:var(--muted)">' + now + '</td>' +
+    '</tr>';
+  }).join('');
+
+  // Save to localStorage for activity log
+  const healthy = results.filter(r => r.status === 'healthy').length;
+  const activity = JSON.parse(localStorage.getItem('flow_agent_activity') || '[]');
+  activity.push({
+    timestamp: new Date().toISOString(),
+    event: 'endpoint_check',
+    message: 'Endpoint check: ' + healthy + '/' + results.length + ' healthy',
+    severity: healthy === results.length ? 'info' : 'warning'
+  });
+  localStorage.setItem('flow_agent_activity', JSON.stringify(activity.slice(-50)));
+
+  // Update debug agent last run
+  localStorage.setItem('flow_agent_debug_state', JSON.stringify({ lastRun: new Date().toISOString(), overallStatus: healthy === results.length ? 'healthy' : 'degraded' }));
+  loadAgenterPage();
+
+  if (typeof toast === 'function') toast('Endpoint check f\u00e6rdig: ' + healthy + '/' + results.length + ' OK', healthy === results.length ? 'success' : 'warning');
+}
+
+function testAgentSmsParser() {
+  const input = document.getElementById('agent-sms-input');
+  const resultEl = document.getElementById('agent-sms-result');
+  if (!input || !resultEl) return;
+
+  const message = input.value.trim();
+  if (!message) { if (typeof toast === 'function') toast('Skriv en SMS-besked f\u00f8rst', 'warning'); return; }
+
+  const normalized = message.toLowerCase();
+
+  // Detect language
+  const daDa = /\b(ja|nej|tak|hej|bestilling|allergi|n\u00f8dder|gluten|hvad|hvordan|hvorn\u00e5r|hvor|\u00e6ndre|annuller|bekr\u00e6ft)\b/i;
+  const enEn = /\b(yes|no|please|hello|order|allergy|nuts|what|how|when|where|cancel|confirm)\b/i;
+  const daCount = (message.match(daDa) || []).length;
+  const enCount = (message.match(enEn) || []).length;
+  const language = daCount > enCount ? 'da' : enCount > daCount ? 'en' : (/[\u00e6\u00f8\u00e5]/.test(message) ? 'da' : 'unknown');
+
+  // Check patterns
+  let intent = 'unknown';
+  let confidence = 0;
+  const flags = [];
+
+  for (const [intentName, config] of Object.entries(AGENT_SMS_PATTERNS)) {
+    for (const pattern of config.patterns) {
+      if (pattern.test(normalized)) {
+        intent = intentName;
+        confidence = config.confidence;
+        break;
+      }
+    }
+    if (intent !== 'unknown') break;
+  }
+
+  if (intent === 'allergy') flags.push('CRITICAL');
+
+  // Extract time
+  const timeMatch = message.match(/kl\.?\s*(\d{1,2})[.:]?(\d{2})?/i) || message.match(/(\d{1,2})[.:](\d{2})\s*(pm|am)?/i);
+  const extractedTime = timeMatch ? timeMatch[0] : null;
+
+  // Display result
+  resultEl.style.display = 'block';
+  const intentColors = { confirm: 'var(--success)', cancel: 'var(--danger)', reschedule: 'var(--primary)', question: 'var(--warning)', allergy: '#8B0000', unknown: 'var(--muted)' };
+  const intentLabels = { confirm: 'Bekr\u00e6ft', cancel: 'Annuller', reschedule: '\u00c6ndre tid', question: 'Sp\u00f8rgsm\u00e5l', allergy: 'Allergi', unknown: 'Ukendt' };
+
+  resultEl.innerHTML =
+    '<div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;font-size:var(--font-size-sm)">' +
+    (intent === 'allergy' ? '<div style="background:#8B0000;color:white;padding:6px 10px;border-radius:4px;margin-bottom:8px;font-weight:600">KRITISK ALLERGI-ALARM</div>' : '') +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    '<div><span style="color:var(--muted)">Intent:</span> <strong style="color:' + (intentColors[intent] || 'var(--muted)') + '">' + (intentLabels[intent] || intent) + '</strong></div>' +
+    '<div><span style="color:var(--muted)">Confidence:</span> <strong>' + Math.round(confidence * 100) + '%</strong></div>' +
+    '<div><span style="color:var(--muted)">Sprog:</span> <strong>' + (language === 'da' ? 'Dansk' : language === 'en' ? 'Engelsk' : 'Ukendt') + '</strong></div>' +
+    (extractedTime ? '<div><span style="color:var(--muted)">Tid:</span> <strong>' + extractedTime + '</strong></div>' : '') +
+    (flags.length > 0 ? '<div><span style="color:var(--muted)">Flags:</span> <strong style="color:#8B0000">' + flags.join(', ') + '</strong></div>' : '') +
+    '</div></div>';
+}
+
+window.loadAgenterPage = loadAgenterPage;
+window.runAgentEndpointCheck = runAgentEndpointCheck;
+window.testAgentSmsParser = testAgentSmsParser;
 
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {

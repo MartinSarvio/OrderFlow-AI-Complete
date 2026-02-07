@@ -131,6 +131,7 @@
 | `page-bogholderi` | Bogholderi |
 | `page-betaling` | Betaling |
 | `page-vaerktoejer` | V&aelig;rkt&oslash;jer (Agenter & Enheder) |
+| `page-agenter` | FLOW Agent System (Debugging + Workflow overvågning) |
 
 ### Marketing
 | Side ID | Beskrivelse |
@@ -276,6 +277,14 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 ---
 
 ## Changelog
+
+### v3.53.0 (2026-02-07)
+- Ny `page-agenter` side under PROGRAMMER flyout med FLOW Agent System overvågning
+- 2 agent-kort (Debugging Agent + Workflow Agent) med status, beskrivelse og stats
+- Endpoint overvågnings-tabel med live health checks (5 endpoints)
+- Aktivitetslog + SMS Test Parser med intent-detection (confirm/cancel/reschedule/question/allergy)
+- Analytics-sider forbundet til Supabase REST API (med demo-data fallback)
+- 9 nye database-tabeller + 4 Edge Functions deployet
 
 ### v3.48.0 (2026-02-07)
 - Ny `page-vaerktoejer` side under Integrationer med 5 agent-kort (Instagram, Facebook, Restaurant, H\u00e5ndv\u00e6rker, SEO)
