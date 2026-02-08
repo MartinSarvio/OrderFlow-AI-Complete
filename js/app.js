@@ -2951,6 +2951,9 @@ async function finishLogin(user, isAdmin) {
       // Also merge any locally persisted restaurants (created while offline)
       loadPersistedRestaurants();
       console.log('📦 Total restaurants after merge:', restaurants.length);
+
+      // Sync any locally-created restaurants (local-* IDs) to Supabase
+      await syncLocalRestaurantsToSupabase();
     } catch (err) {
       console.warn('⚠️ Could not load restaurants from Supabase:', err);
       restaurants = [];
@@ -3415,8 +3418,57 @@ async function loginAdmin() {
 async function loginAdminLocal() {
   console.log('🔑 Local admin login (fallback)...');
 
+  // Resolve a valid UUID for admin user (required for Supabase operations)
+  var adminId = null;
+  var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  // 1. Check localStorage for a previously stored real UUID
+  var storedId = localStorage.getItem('orderflow_user_id');
+  if (storedId && UUID_REGEX.test(storedId)) {
+    adminId = storedId;
+    console.log('🔑 Using stored UUID:', adminId);
+  }
+
+  // 2. Check orderflow-auth-token for cached session UUID
+  if (!adminId) {
+    try {
+      var raw = localStorage.getItem('orderflow-auth-token');
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        var sessionId = parsed?.currentSession?.user?.id || parsed?.user?.id || parsed?.session?.user?.id;
+        if (sessionId && UUID_REGEX.test(sessionId)) {
+          adminId = sessionId;
+          console.log('🔑 Using cached session UUID:', adminId);
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 3. Try Supabase auth.getUser() if client is available
+  if (!adminId) {
+    try {
+      var authClient = window.supabaseClient;
+      if (authClient?.auth?.getUser) {
+        var resp = await authClient.auth.getUser();
+        if (resp?.data?.user?.id && UUID_REGEX.test(resp.data.user.id)) {
+          adminId = resp.data.user.id;
+          console.log('🔑 Using Supabase auth UUID:', adminId);
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 4. Final fallback: deterministic admin UUID
+  if (!adminId) {
+    adminId = '00000000-0000-4000-a000-000000000001';
+    console.log('🔑 Using fallback admin UUID:', adminId);
+  }
+
+  // Persist for future sessions
+  localStorage.setItem('orderflow_user_id', adminId);
+
   const tempUser = {
-    id: 'admin-martin',
+    id: adminId,
     email: 'martinsarvio@hotmail.com',
     user_metadata: {
       full_name: 'Martin Sarvio'
@@ -3449,9 +3501,25 @@ async function loginAdminLocal() {
   currentUser = tempUser;
   restaurants = [];
 
-  // Load locally persisted restaurants from localStorage
+  // Try to load from Supabase first (admin may have valid UUID now)
+  if (typeof SupabaseDB !== 'undefined') {
+    try {
+      var dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
+      if (dbRestaurants && dbRestaurants.length > 0) {
+        restaurants = dbRestaurants;
+        console.log('✅ Loaded restaurants from Supabase (admin):', restaurants.length);
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load from Supabase (admin):', err.message);
+    }
+  }
+
+  // Merge locally persisted restaurants
   loadPersistedRestaurants();
-  console.log('📦 Loaded persisted restaurants:', restaurants.length);
+  console.log('📦 Total restaurants after merge:', restaurants.length);
+
+  // Sync local-only restaurants to Supabase
+  await syncLocalRestaurantsToSupabase();
 
   // Play login transition animation
   await playLoginTransition();
@@ -7455,7 +7523,7 @@ async function addRestaurantFromPage() {
     console.error('❌ Error creating restaurant:', err);
     const message = String(err?.message || '');
     const shouldUseLocalFallback =
-      /supabase not available|not initialized|network|fetch|timeout/i.test(message);
+      /supabase not available|not initialized|network|fetch|timeout|uuid|user_id|not found/i.test(message);
 
     // Data integrity/auth errors should be shown to user (not silently saved locally)
     if (!shouldUseLocalFallback) {
@@ -16742,6 +16810,14 @@ function persistRestaurants() {
       address: r.address,
       website: r.website,
       createdAt: r.createdAt,
+      // Supabase-compatible fields (for sync)
+      contact_email: r.contact_email || r.email,
+      contact_phone: r.contact_phone || r.phone,
+      contact_name: r.contact_name || r.contactPerson,
+      country: r.country,
+      metadata: r.metadata,
+      settings: r.settings,
+      industry: r.industry,
       // Status
       status: r.status,
       // Workflow settings
@@ -16804,6 +16880,58 @@ function loadPersistedRestaurants() {
     console.error('Failed to load persisted restaurants:', e);
     return false;
   }
+}
+
+// Sync locally-created restaurants to Supabase
+async function syncLocalRestaurantsToSupabase() {
+  if (typeof SupabaseDB === 'undefined' || !currentUser?.id) return;
+
+  var localOnly = restaurants.filter(function(r) {
+    var id = String(r.id || '');
+    return id.startsWith('local-') || (id && !SupabaseDB._isUuid(id));
+  });
+
+  if (localOnly.length === 0) return;
+
+  console.log('🔄 Syncing', localOnly.length, 'local restaurants to Supabase...');
+
+  for (var i = 0; i < localOnly.length; i++) {
+    var local = localOnly[i];
+    try {
+      var dbData = {
+        name: local.name || 'Unavngivet',
+        contact_phone: local.contact_phone || local.phone || '',
+        contact_email: local.contact_email || local.email || '',
+        contact_name: local.contact_name || local.contactPerson || local.owner || '',
+        address: local.address || '',
+        country: local.country || 'DK',
+        cvr: local.cvr || '',
+        status: local.status || 'pending',
+        orders: 0,
+        orders_this_month: 0,
+        orders_total: 0,
+        revenue_today: 0,
+        revenue_this_month: 0,
+        revenue_total: 0,
+        ai_enabled: true,
+        integration_status: 'none',
+        settings: local.settings || {},
+        metadata: local.metadata || {}
+      };
+
+      var created = await SupabaseDB.createRestaurant(currentUser.id, dbData);
+      if (created) {
+        var idx = restaurants.indexOf(local);
+        if (idx !== -1) restaurants[idx] = created;
+        console.log('✅ Synced to Supabase:', local.name, '→', created.id);
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not sync restaurant:', local.name, err.message);
+    }
+  }
+
+  persistRestaurants();
+  console.log('🔄 Local sync complete');
 }
 
 // Clear all persisted data
@@ -29991,10 +30119,17 @@ const flowPagesList = [
   { slug: 'disclaimer', title: 'Ansvarsfraskrivelse', description: 'Ansvarsfraskrivelse' },
   { slug: 'platform-terms', title: 'Platform vilkår', description: 'Platform brugsvilkår' },
   { slug: 'restaurant-agreement', title: 'Restaurant aftale', description: 'Aftale for restauranter' },
+  { slug: 'legal', title: 'Juridisk', description: 'Juridisk oversigt og hub' },
 
   // Blog
   { slug: 'blog', title: 'Blog', description: 'Blog oversigt med alle artikler' },
-  { slug: 'blog-post', title: 'Blog Indlæg', description: 'Enkelt blog indlæg skabelon' }
+  { slug: 'blog-post', title: 'Blog Indlæg', description: 'Enkelt blog indlæg skabelon' },
+
+  // Værktøjer
+  { slug: 'search-engine', title: 'SEO Analyse', description: 'Digital synlighedsanalyse værktøj' },
+
+  // Dokumentation
+  { slug: 'docs', title: 'Dokumentation', description: 'Komplet dokumentation og guides' }
 ];
 
 // Default content for Flow pages (template content that shows before customer edits)
@@ -30233,6 +30368,36 @@ const defaultFlowPageContent = {
       subtitle: 'Læs artikel fra Flow Blog.',
       ctaText: '',
       ctaUrl: ''
+    },
+    features: { items: [] },
+    cta: { title: '', buttonText: '' }
+  },
+  'legal': {
+    hero: {
+      title: 'Juridisk',
+      subtitle: 'Oversigt over alle juridiske dokumenter og vilkår.',
+      ctaText: 'Se vilkår',
+      ctaUrl: '#terms'
+    },
+    features: { items: [] },
+    cta: { title: '', buttonText: '' }
+  },
+  'search-engine': {
+    hero: {
+      title: 'SEO Analyse',
+      subtitle: 'Analysér din restaurants digitale synlighed.',
+      ctaText: 'Start analyse',
+      ctaUrl: '#analyze'
+    },
+    features: { items: [] },
+    cta: { title: '', buttonText: '' }
+  },
+  'docs': {
+    hero: {
+      title: 'Dokumentation',
+      subtitle: 'Guides, API reference og tutorials til Flow platformen.',
+      ctaText: 'Kom i gang',
+      ctaUrl: '#guides'
     },
     features: { items: [] },
     cta: { title: '', buttonText: '' }
@@ -31252,6 +31417,15 @@ function updateCMSUnsavedBadge() {
 function renderCMSPagesList() {
   const container = document.getElementById('cms-pages-list');
   if (!container) return;
+
+  // Opdater sideantal i header
+  const countEl = document.getElementById('cms-pages-count');
+  if (countEl) {
+    const total = cmsPages.length;
+    const published = cmsPages.filter(p => p.status === 'published').length;
+    const draft = total - published;
+    countEl.textContent = `${total} sider · ${published} publiceret · ${draft} kladder`;
+  }
 
   const searchQuery = (document.getElementById('cms-pages-search')?.value || '').toLowerCase();
   const filteredPages = cmsPages.filter(page =>
