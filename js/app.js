@@ -4190,6 +4190,11 @@ function showPage(page) {
     return;
   }
 
+  // Load AI Medier page
+  if (page === 'ai-medier') {
+    loadAiMediaHistory();
+  }
+
   // Load Instagram/Facebook workflow agent views
   if (page === 'instagram-workflow') {
     loadAgentWorkflowPage('instagram');
@@ -21305,7 +21310,9 @@ async function saveAllApiSettings() {
     serper_reviews_key: document.getElementById('serper-reviews-key')?.value.trim() || '',
     serper_images_key: document.getElementById('serper-images-key')?.value.trim() || '',
     serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || '',
-    serper_places_key: document.getElementById('serper-places-key')?.value.trim() || ''
+    serper_places_key: document.getElementById('serper-places-key')?.value.trim() || '',
+    openrouter_key: document.getElementById('openrouter-api-key-input')?.value.trim() || '',
+    minimax_key: document.getElementById('minimax-api-key-input')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -21370,7 +21377,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key', 'openrouter_key', 'minimax_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -21390,7 +21397,9 @@ async function loadAllApiSettings() {
     'serper-reviews-key': 'serper_reviews_key',
     'serper-images-key': 'serper_images_key',
     'serper-maps-key': 'serper_maps_key',
-    'serper-places-key': 'serper_places_key'
+    'serper-places-key': 'serper_places_key',
+    'openrouter-api-key-input': 'openrouter_key',
+    'minimax-api-key-input': 'minimax_key'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
@@ -35706,7 +35715,9 @@ var CONFIGURED_APIS = [
   { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser', inputId: 'trustpilot-api-key', relatedFields: ['trustpilot_business_id'] },
   { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling', inputId: 'firecrawl-api-key' },
   { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services', inputId: 'googleapi-api-key' },
-  { name: 'Serper', keyField: 'serper_reviews_key', toggleName: 'serper', service: 'SEO Analyse', inputId: 'serper-reviews-key', relatedFields: ['serper_images_key', 'serper_maps_key', 'serper_places_key'] }
+  { name: 'Serper', keyField: 'serper_reviews_key', toggleName: 'serper', service: 'SEO Analyse', inputId: 'serper-reviews-key', relatedFields: ['serper_images_key', 'serper_maps_key', 'serper_places_key'] },
+  { name: 'OpenRouter', keyField: 'openrouter_key', toggleName: 'openrouter', service: 'AI Billedgenerering', inputId: 'openrouter-api-key-input' },
+  { name: 'MiniMax', keyField: 'minimax_key', toggleName: 'minimax', service: 'AI Videogenerering', inputId: 'minimax-api-key-input' }
 ];
 
 // Load API keys list with search and pagination
@@ -43711,6 +43722,358 @@ window.renderAgentStatistics = renderAgentStatistics;
 window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
+
+// ============================================
+// AI MEDIER - Image & Video Generation
+// ============================================
+
+function switchAiMediaTab(tab) {
+  document.getElementById('aimedia-tab-images')?.classList.toggle('active', tab === 'images');
+  document.getElementById('aimedia-tab-video')?.classList.toggle('active', tab === 'video');
+  var imgTab = document.getElementById('aimedia-content-images');
+  var vidTab = document.getElementById('aimedia-content-video');
+  if (imgTab) imgTab.style.display = tab === 'images' ? 'block' : 'none';
+  if (vidTab) vidTab.style.display = tab === 'video' ? 'block' : 'none';
+  // Update active tab styling
+  var tabs = document.querySelectorAll('#page-ai-medier .tab-btn');
+  tabs.forEach(function(btn) {
+    btn.style.borderBottomColor = btn.classList.contains('active') ? 'var(--accent)' : 'transparent';
+    btn.style.color = btn.classList.contains('active') ? 'var(--text)' : 'var(--muted)';
+  });
+}
+
+var AI_IMAGE_PRESETS = {
+  hero: 'A stunning hero image for a restaurant technology platform. Modern, professional, warm lighting. Clean, high-end aesthetic.',
+  food: 'Beautiful food photography. Gourmet dish on a white plate, professional studio lighting, shallow depth of field.',
+  restaurant: 'Interior of a modern Scandinavian restaurant. Natural materials, warm atmosphere. Evening lighting with candles.',
+  abstract: 'Abstract geometric background with soft gradients. Blue and purple tones. Modern, tech-inspired.'
+};
+
+function setAiImagePreset(key) {
+  var textarea = document.getElementById('ai-image-prompt');
+  if (textarea && AI_IMAGE_PRESETS[key]) {
+    textarea.value = AI_IMAGE_PRESETS[key];
+  }
+}
+
+async function generateAiImage() {
+  var prompt = document.getElementById('ai-image-prompt')?.value.trim();
+  if (!prompt) { toast('Indtast en beskrivelse af billedet', 'warning'); return; }
+
+  var apiKey = localStorage.getItem('openrouter_key');
+  if (!apiKey) { toast('Konfigurer OpenRouter API n\u00f8gle under Indstillinger > API', 'warning'); return; }
+
+  var style = document.getElementById('ai-image-style')?.value || 'photorealistic';
+  var btn = document.getElementById('ai-image-generate-btn');
+  var resultDiv = document.getElementById('ai-image-result');
+  var resultContent = document.getElementById('ai-image-result-content');
+
+  btn.disabled = true;
+  btn.textContent = 'Genererer...';
+  resultDiv.style.display = 'block';
+  resultContent.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--muted)"><div class="loading-spinner" style="width:20px;height:20px"><div class="spinner"></div></div> Genererer billede med AI...</div>';
+
+  var fullPrompt = 'Generate an image: ' + prompt + '. Style: ' + style + '. Output only the image, no text response.';
+
+  try {
+    var response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'FLOW App'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-3-pro-image-preview',
+        messages: [{ role: 'user', content: fullPrompt }]
+      })
+    });
+
+    if (!response.ok) {
+      var errData = await response.json().catch(function() { return {}; });
+      throw new Error(errData.error?.message || 'HTTP ' + response.status);
+    }
+
+    var data = await response.json();
+    if (data.error) throw new Error(data.error.message || 'API fejl');
+
+    var content = data.choices?.[0]?.message?.content;
+    var imageFound = false;
+
+    // Check for multimodal response parts (array of content parts)
+    if (Array.isArray(content)) {
+      for (var i = 0; i < content.length; i++) {
+        if (content[i].type === 'image_url' && content[i].image_url?.url) {
+          showAiImageResult(content[i].image_url.url, prompt);
+          imageFound = true;
+          break;
+        }
+        // Also check for inline_data format
+        if (content[i].type === 'image' && content[i].source?.data) {
+          var mimeType = content[i].source?.media_type || 'image/png';
+          showAiImageResult('data:' + mimeType + ';base64,' + content[i].source.data, prompt);
+          imageFound = true;
+          break;
+        }
+      }
+    }
+
+    // Fallback: check if content is a string with base64 data
+    if (!imageFound && typeof content === 'string') {
+      var base64Match = content.match(/data:image\/[^;]+;base64,[A-Za-z0-9+\/=]+/);
+      if (base64Match) {
+        showAiImageResult(base64Match[0], prompt);
+        imageFound = true;
+      }
+    }
+
+    if (!imageFound) {
+      resultContent.innerHTML = '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Kunne ikke generere billede. API svar: ' + (typeof content === 'string' ? content.substring(0, 200) : 'Ukendt format') + '</div>';
+    }
+  } catch (err) {
+    resultContent.innerHTML = '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Fejl: ' + err.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generer Billede';
+  }
+}
+
+function showAiImageResult(imgSrc, prompt) {
+  var resultContent = document.getElementById('ai-image-result-content');
+  var safePrompt = prompt.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  resultContent.innerHTML = '<img src="' + imgSrc + '" alt="Genereret billede" style="max-width:100%;border-radius:var(--radius-md);margin-bottom:var(--space-3)">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+    '<span style="color:var(--muted);font-size:var(--font-size-sm)">' + safePrompt.substring(0, 80) + '</span>' +
+    '<button class="btn btn-secondary" style="font-size:12px;padding:6px 12px" onclick="downloadAiImage()">Download</button>' +
+    '</div>';
+
+  addToAiImageGallery(imgSrc, prompt);
+  saveAiMediaHistory('image', { src: imgSrc, prompt: prompt, date: new Date().toISOString() });
+}
+
+function downloadAiImage() {
+  var img = document.querySelector('#ai-image-result-content img');
+  if (!img) return;
+  var link = document.createElement('a');
+  link.href = img.src;
+  link.download = 'flow-ai-image-' + Date.now() + '.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function addToAiImageGallery(src, prompt) {
+  var gallery = document.getElementById('ai-image-gallery');
+  var emptyMsg = document.getElementById('ai-image-gallery-empty');
+  if (!gallery) return;
+  if (emptyMsg) emptyMsg.style.display = 'none';
+
+  var safePrompt = prompt.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  var item = document.createElement('div');
+  item.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden';
+  item.innerHTML = '<img src="' + src + '" style="width:100%;display:block" alt="AI billede">' +
+    '<div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center">' +
+    '<span style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%">' + safePrompt.substring(0, 40) + '</span>' +
+    '</div>';
+  gallery.insertBefore(item, gallery.firstChild);
+}
+
+// --- Video Generation (MiniMax Video-01) ---
+
+async function generateAiVideo() {
+  var prompt = document.getElementById('ai-video-prompt')?.value.trim();
+  if (!prompt) { toast('Indtast en beskrivelse af videoen', 'warning'); return; }
+
+  var apiKey = localStorage.getItem('minimax_key');
+  if (!apiKey) { toast('Konfigurer MiniMax API n\u00f8gle under Indstillinger > API', 'warning'); return; }
+
+  var btn = document.getElementById('ai-video-generate-btn');
+  var progressDiv = document.getElementById('ai-video-progress');
+  var progressText = document.getElementById('ai-video-progress-text');
+  var progressBar = document.getElementById('ai-video-progress-bar');
+  var resultDiv = document.getElementById('ai-video-result');
+
+  btn.disabled = true;
+  btn.textContent = 'Sender...';
+  progressDiv.style.display = 'block';
+  resultDiv.style.display = 'none';
+  progressBar.style.width = '10%';
+  progressText.textContent = 'Sender anmodning til MiniMax...';
+
+  var requestBody = { model: 'video-01', prompt: prompt };
+
+  // Check for reference image (image-to-video)
+  var fileInput = document.getElementById('ai-video-ref-image');
+  if (fileInput?.files?.length > 0) {
+    try {
+      var base64 = await fileToBase64(fileInput.files[0]);
+      requestBody.first_frame_image = base64;
+    } catch (e) {
+      console.warn('Could not read reference image:', e);
+    }
+  }
+
+  try {
+    // Step 1: Submit generation task
+    var submitResponse = await fetch('https://api.minimax.chat/v1/video_generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + apiKey
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    var submitData = await submitResponse.json();
+    if (submitData.base_resp?.status_code !== 0) {
+      throw new Error(submitData.base_resp?.status_msg || 'Fejl ved afsendelse');
+    }
+
+    var taskId = submitData.task_id;
+    progressBar.style.width = '25%';
+    progressText.textContent = 'Video genereres...';
+
+    // Step 2: Poll for completion
+    var fileId = await pollMiniMaxTask(apiKey, taskId, progressText, progressBar);
+
+    // Step 3: Get download URL
+    progressBar.style.width = '90%';
+    progressText.textContent = 'Henter video...';
+
+    var downloadResponse = await fetch('https://api.minimax.chat/v1/files/retrieve?file_id=' + fileId, {
+      headers: { 'Authorization': 'Bearer ' + apiKey }
+    });
+    var downloadData = await downloadResponse.json();
+    var videoUrl = downloadData.file?.download_url;
+
+    if (!videoUrl) throw new Error('Kunne ikke hente video URL');
+
+    progressBar.style.width = '100%';
+    progressDiv.style.display = 'none';
+    resultDiv.style.display = 'block';
+
+    var safePrompt = prompt.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    var resultContent = document.getElementById('ai-video-result-content');
+    resultContent.innerHTML = '<video controls style="width:100%;border-radius:var(--radius-md);max-height:480px"><source src="' + videoUrl + '" type="video/mp4"></video>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-3)">' +
+      '<span style="color:var(--muted);font-size:var(--font-size-sm)">' + safePrompt.substring(0, 80) + '</span>' +
+      '<a href="' + videoUrl + '" download="flow-ai-video-' + Date.now() + '.mp4" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;text-decoration:none">Download</a>' +
+      '</div>';
+
+    addToAiVideoGallery(videoUrl, prompt);
+    saveAiMediaHistory('video', { url: videoUrl, prompt: prompt, date: new Date().toISOString() });
+    toast('Video genereret!', 'success');
+
+  } catch (err) {
+    progressDiv.style.display = 'none';
+    resultDiv.style.display = 'block';
+    document.getElementById('ai-video-result-content').innerHTML =
+      '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Fejl: ' + err.message + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generer Video';
+  }
+}
+
+async function pollMiniMaxTask(apiKey, taskId, progressText, progressBar) {
+  var maxAttempts = 60;
+  for (var attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise(function(resolve) { setTimeout(resolve, 5000); });
+
+    var resp = await fetch('https://api.minimax.chat/v1/query/video_generation?task_id=' + taskId, {
+      headers: { 'Authorization': 'Bearer ' + apiKey }
+    });
+    var data = await resp.json();
+    var status = data.status;
+
+    var progress = Math.min(25 + (attempt / maxAttempts) * 60, 85);
+    progressBar.style.width = progress + '%';
+    progressText.textContent = 'Video genereres... (' + (status || 'venter') + ')';
+
+    if (status === 'Success') {
+      return data.file_id;
+    } else if (status === 'Fail') {
+      throw new Error('Video generering fejlede: ' + (data.base_resp?.status_msg || 'Ukendt fejl'));
+    }
+  }
+  throw new Error('Timeout: Video generering tog for lang tid');
+}
+
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function() { resolve(reader.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function addToAiVideoGallery(url, prompt) {
+  var gallery = document.getElementById('ai-video-gallery');
+  var emptyMsg = document.getElementById('ai-video-gallery-empty');
+  if (!gallery) return;
+  if (emptyMsg) emptyMsg.style.display = 'none';
+
+  var safePrompt = prompt.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  var item = document.createElement('div');
+  item.style.cssText = 'background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden';
+  item.innerHTML = '<video controls style="width:100%;display:block;max-height:240px"><source src="' + url + '" type="video/mp4"></video>' +
+    '<div style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center">' +
+    '<span style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%">' + safePrompt.substring(0, 40) + '</span>' +
+    '<a href="' + url + '" download class="btn btn-secondary" style="font-size:11px;padding:4px 8px;text-decoration:none">Download</a>' +
+    '</div>';
+  gallery.insertBefore(item, gallery.firstChild);
+}
+
+// --- AI Media History ---
+
+function saveAiMediaHistory(type, entry) {
+  var key = 'flow_ai_media_' + type + '_history';
+  var history = JSON.parse(localStorage.getItem(key) || '[]');
+  history.unshift(entry);
+  if (history.length > 50) history = history.slice(0, 50);
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+function loadAiMediaHistory() {
+  var imageHistory = JSON.parse(localStorage.getItem('flow_ai_media_image_history') || '[]');
+  var imageGallery = document.getElementById('ai-image-gallery');
+  var imageEmpty = document.getElementById('ai-image-gallery-empty');
+  if (imageGallery) imageGallery.innerHTML = '';
+  if (imageHistory.length > 0 && imageGallery) {
+    if (imageEmpty) imageEmpty.style.display = 'none';
+    imageHistory.forEach(function(item) {
+      addToAiImageGallery(item.src, item.prompt);
+    });
+  } else if (imageEmpty) {
+    imageEmpty.style.display = 'block';
+  }
+
+  var videoHistory = JSON.parse(localStorage.getItem('flow_ai_media_video_history') || '[]');
+  var videoGallery = document.getElementById('ai-video-gallery');
+  var videoEmpty = document.getElementById('ai-video-gallery-empty');
+  if (videoGallery) videoGallery.innerHTML = '';
+  if (videoHistory.length > 0 && videoGallery) {
+    if (videoEmpty) videoEmpty.style.display = 'none';
+    videoHistory.forEach(function(item) {
+      addToAiVideoGallery(item.url, item.prompt);
+    });
+  } else if (videoEmpty) {
+    videoEmpty.style.display = 'block';
+  }
+
+  // Set initial active tab styling
+  setTimeout(function() { switchAiMediaTab('images'); }, 50);
+}
+
+// Expose AI Medier functions to global scope
+window.switchAiMediaTab = switchAiMediaTab;
+window.setAiImagePreset = setAiImagePreset;
+window.generateAiImage = generateAiImage;
+window.downloadAiImage = downloadAiImage;
+window.generateAiVideo = generateAiVideo;
+window.loadAiMediaHistory = loadAiMediaHistory;
 
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {

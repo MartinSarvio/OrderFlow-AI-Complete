@@ -1,6 +1,6 @@
 # FLOW App - Struktur Oversigt
 
-**Sidst opdateret:** 2026-02-08
+**Sidst opdateret:** 2026-02-09
 **Version:** 3.62.0
 **Total antal sider:** 94+
 
@@ -140,6 +140,7 @@
 | `page-campaigns` | Kampagner |
 | `page-segments` | Segmenter |
 | `page-udsendelser` | Udsendelser |
+| `page-ai-medier` | AI Medier (billedgenerering + videogenerering) |
 
 ### Andre
 | Side ID | Beskrivelse |
