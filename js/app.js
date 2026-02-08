@@ -35913,6 +35913,86 @@ function scrollToApiKeyGenerator() {
   }
 }
 
+function showQuickApiKeyCreate() {
+  // Remove existing modal if any
+  var existing = document.getElementById('quick-api-key-modal');
+  if (existing) existing.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'quick-api-key-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center';
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5);width:100%;max-width:420px;box-shadow:var(--shadow-lg)">' +
+    '<div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Opret API N\u00f8gle</div>' +
+    '<div class="form-group" style="margin-bottom:var(--space-3)">' +
+    '<label class="form-label">N\u00f8gle navn</label>' +
+    '<input type="text" class="input" id="quick-api-key-name" placeholder="f.eks. Min Integration">' +
+    '</div>' +
+    '<div class="form-group" style="margin-bottom:var(--space-4)">' +
+    '<label class="form-label">Tilladelser</label>' +
+    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="customers" checked> Kunder</label>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="orders" checked> Ordrer</label>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="invoices" checked> Fakturaer</label>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="products"> Produkter</label>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="payments"> Betalinger</label>' +
+    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="analytics"> Analytics</label>' +
+    '</div></div>' +
+    '<div id="quick-api-key-result" style="display:none;margin-bottom:var(--space-3);padding:12px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--success)">' +
+    '<p style="font-size:12px;color:var(--success);margin-bottom:6px;font-weight:600">N\u00f8gle genereret!</p>' +
+    '<input type="text" class="input" id="quick-api-key-value" readonly style="font-family:monospace;font-size:12px;background:var(--bg)">' +
+    '<p style="font-size:11px;color:var(--warning);margin-top:6px">Gem denne n\u00f8gle sikkert - den vises kun \u00e9n gang.</p>' +
+    '</div>' +
+    '<div style="display:flex;justify-content:flex-end;gap:var(--space-2)">' +
+    '<button class="btn btn-secondary" onclick="document.getElementById(\'quick-api-key-modal\').remove()">Luk</button>' +
+    '<button class="btn btn-primary" id="quick-api-key-btn" onclick="executeQuickApiKeyCreate()">Generer</button>' +
+    '</div></div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+  setTimeout(function() { document.getElementById('quick-api-key-name')?.focus(); }, 100);
+}
+
+async function executeQuickApiKeyCreate() {
+  var nameInput = document.getElementById('quick-api-key-name');
+  var name = nameInput?.value?.trim();
+  if (!name) { toast('Indtast et navn til API n\u00f8glen', 'warning'); return; }
+
+  var perms = [];
+  document.querySelectorAll('.quick-perm:checked').forEach(function(cb) { perms.push(cb.value); });
+  if (perms.length === 0) { toast('V\u00e6lg mindst \u00e9n tilladelse', 'warning'); return; }
+
+  var hexChars = '0123456789abcdef';
+  var apiKey = Array.from({length: 40}, function() { return hexChars[Math.floor(Math.random() * hexChars.length)]; }).join('');
+
+  var newKey = {
+    id: Date.now().toString(),
+    name: name,
+    keyPrefix: maskApiKey(apiKey),
+    permissions: perms,
+    createdAt: new Date().toISOString(),
+    lastUsed: null,
+    active: true
+  };
+
+  var keys = await loadUserKeysFromSupabase();
+  keys.push(newKey);
+  await saveUserKeysToSupabase(keys);
+  localStorage.setItem('flow_api_keys', JSON.stringify(keys));
+
+  // Show key in modal
+  var resultDiv = document.getElementById('quick-api-key-result');
+  var keyDisplay = document.getElementById('quick-api-key-value');
+  if (resultDiv && keyDisplay) {
+    keyDisplay.value = apiKey;
+    resultDiv.style.display = 'block';
+  }
+  nameInput.value = '';
+  document.getElementById('quick-api-key-btn').textContent = 'Generer ny';
+
+  loadApiKeysList();
+  toast('API n\u00f8gle genereret', 'success');
+}
+
 // Toggle visibility for configured API keys
 function toggleConfiguredKeyVisibility(keyId, keyField) {
   var el = document.getElementById('key-display-' + keyId);
