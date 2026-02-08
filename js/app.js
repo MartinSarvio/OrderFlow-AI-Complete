@@ -2700,8 +2700,21 @@ function socialLoginFacebook() {
 
 async function handleLogin(e) {
   e.preventDefault();
-  const email = document.getElementById('login-email').value;
-  const password = document.getElementById('login-password').value;
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  const submitBtn = e?.target?.querySelector?.('button[type="submit"]');
+  const email = (emailInput?.value || '').trim();
+  const password = passwordInput?.value || '';
+
+  if (!email || !password) {
+    showAuthError('Indtast email og adgangskode.');
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logger ind...';
+  }
 
   // Wait for Supabase to initialize (max 5 seconds)
   if (typeof window.waitForSupabase === 'function') {
@@ -2819,7 +2832,13 @@ async function handleLogin(e) {
     await finishLogin(tempUser, isAdmin);
 
   } catch (err) {
-    showAuthError(err.message);
+    const message = err?.message || err?.error_description || 'Login mislykkedes. Tjek email og kode.';
+    showAuthError(message);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log ind';
+    }
   }
 }
 
@@ -3424,8 +3443,14 @@ async function loginAdminLocal() {
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
-  el.textContent = msg;
-  el.style.display = 'block';
+  const message = String(msg || 'Der opstod en fejl. Prøv igen.');
+  if (el) {
+    el.textContent = message;
+    el.style.display = 'block';
+  }
+  if (typeof toast === 'function') {
+    toast(message, 'error');
+  }
 }
 
 function logout() {
@@ -22381,7 +22406,7 @@ function togglePasswordVisibility(inputId, button) {
   input.type = isPassword ? 'text' : 'password';
 
   // Update icon - show eye-off when password is visible, eye when hidden
-  const svg = button.querySelector('svg');
+  const svg = button?.querySelector?.('svg');
   if (svg) {
     if (isPassword) {
       // Eye-off icon (password is now visible)
