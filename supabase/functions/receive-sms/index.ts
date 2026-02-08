@@ -503,7 +503,13 @@ serve(async (req) => {
             })
             if (insRes.ok) {
               const inserted = await insRes.json()
-              customerId = inserted[0]?.id || null
+              if (Array.isArray(inserted)) {
+                customerId = inserted[0]?.id || null
+              } else if (inserted?.id) {
+                customerId = inserted.id
+              } else {
+                customerId = null
+              }
             }
           }
         }
