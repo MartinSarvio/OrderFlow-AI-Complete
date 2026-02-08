@@ -2480,6 +2480,22 @@
       const [findings, setFindings] = useState([]);
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
       const [secondsRemaining, setSecondsRemaining] = useState(150);
+      const [isPaid, setIsPaid] = useState(false);
+
+      // Check for paid=true URL param (Stripe redirect)
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('paid') === 'true') {
+          setIsPaid(true);
+        }
+      }, []);
+
+      // Auto-unlock report when scan completes and payment is confirmed
+      useEffect(() => {
+        if (isComplete && isPaid) {
+          setShowReport(true);
+        }
+      }, [isComplete, isPaid]);
 
       // Countdown timer
       useEffect(() => {
@@ -2574,8 +2590,25 @@
       const getScoreColor = (s) => s >= 75 ? '#059669' : s >= 50 ? '#d97706' : '#dc2626';
       const getScoreLabel = (s) => s >= 75 ? 'God digital tilstedeværelse' : s >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
 
-      const handlePurchase = () => {
-        window.location.href = '/priser?report=' + encodeURIComponent(business.name);
+      const handlePurchase = async () => {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const returnUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+          const resp = await fetch('/api/stripe/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessName: business.name, returnUrl }),
+          });
+          const data = await resp.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            alert('Betalingsfejl: ' + (data.error || 'Prøv igen'));
+          }
+        } catch (err) {
+          console.error('Stripe checkout error:', err);
+          alert('Kunne ikke oprette betaling. Prøv igen.');
+        }
       };
       const handleSubscribe = () => {
         window.location.href = '/priser';
@@ -2811,10 +2844,10 @@
                       <div style={{ textAlign: 'center', maxWidth: 420 }}>
                         <Icon name="Lock" size={24} color="#667eea" />
                         <h3 style={{ margin: '12px 0 8px', fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>
-                          Se den fulde analyserapport
+                          Se din analyse
                         </h3>
                         <p style={{ color: '#6b7280', fontSize: 13, margin: '0 0 24px', lineHeight: 1.5 }}>
-                          Alle {findings.length} fund, handlingsplan, konkurrentanalyse og detaljerede anbefalinger
+                          Strategisk rapport med dokumenterede indsigter, handlingsorienteret roadmap, markedsbaseret konkurrentanalyse og målbare forbedringstiltag.
                         </p>
                         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                           <button
@@ -2833,7 +2866,7 @@
                             onMouseOver={(e) => { e.currentTarget.style.background = '#0047cc'; }}
                             onMouseOut={(e) => { e.currentTarget.style.background = '#015bf8'; }}
                           >
-                            Køb rapport — 39 kr.
+                            Køb rapport, 39 kr.
                           </button>
                           <button
                             onClick={handleSubscribe}
@@ -2868,7 +2901,7 @@
     // =============================================================================
     // PDF REPORT GENERATOR
     // =============================================================================
-    // KOMPLET PDF-RAPPORT GENERATOR — Agent SEO v3
+    // KOMPLET PDF-RAPPORT GENERATOR | Agent SEO v3
     // =============================================================================
     class ScannerReportGenerator {
       constructor() {
@@ -2903,7 +2936,7 @@
       pageFooter(doc, pg) {
         doc.setFontSize(8); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
         doc.text(`Side ${pg}`, this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
-        doc.text('Agent SEO v3 — OrderFlow', this.pageWidth - this.margin, this.pageHeight - 10, { align: 'right' });
+        doc.text('Agent SEO v3 | OrderFlow', this.pageWidth - this.margin, this.pageHeight - 10, { align: 'right' });
       }
       sectionHeader(doc, title, y) {
         this.tx(doc, ...this.textColor); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
@@ -3053,7 +3086,7 @@
           });
         }
         doc.setFontSize(9); this.tx(doc, ...this.mutedColor);
-        doc.text('Genereret af Agent SEO v3 — OrderFlow Business Scanner', cx, 280, { align: 'center' });
+        doc.text('Genereret af Agent SEO v3. OrderFlow Business Scanner', cx, 280, { align: 'center' });
       }
 
       // ── Page 2: Table of Contents ───────────────────────────────────────────
@@ -3070,7 +3103,7 @@
           ['Social Media', '9'],
           ['Alle Fund', '10'],
           ['Handlingsplan (7/30/90 dage)', '11'],
-          ['Fremtidsperspektiv & Næste Skridt', '12'],
+          ['Fremtidsperspektiv og næste skridt', '12'],
         ];
         y += 5;
         items.forEach((item, i) => {
@@ -3115,10 +3148,10 @@
         // Interpretation box
         y += 5;
         const interp = d.overallScore >= 75
-          ? 'Din virksomhed har en god digital tilstedeværelse. Fokuser på at vedligeholde og finjustere de områder der scorer lavest.'
+          ? 'Din digitale tilstedeværelse er stærk. Vedligehold det du har og forbedre de lavest scorende områder.'
           : d.overallScore >= 50
-          ? 'Der er klart forbedringspotentiale. De røde og orange områder ovenfor bør prioriteres i din handlingsplan.'
-          : 'Der er kritiske mangler i din digitale synlighed. Start med de højprioriterede handlinger i handlingsplanen.';
+          ? 'Du har forbedringspotentiale. Prioriter de røde og orange områder i din handlingsplan.'
+          : 'Der er kritiske mangler. Start med Uge 1-handlingerne i din handlingsplan i dag.';
         this.infoBox(doc, this.margin, y, this.contentWidth, interp);
       }
 
@@ -3155,13 +3188,13 @@
         // Claimed & categories
         this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
         if (gp.claimed !== undefined) {
-          const claimedTxt = gp.claimed ? 'Profilen er bekræftet (claimed)' : 'Profilen er IKKE bekræftet — dette bør gøres hurtigst muligt';
+          const claimedTxt = gp.claimed ? 'Profilen er bekræftet (claimed)' : 'Profilen er IKKE bekræftet. Gør dette hurtigst muligt.';
           const cc = gp.claimed ? this.successColor : this.dangerColor;
           doc.setTextColor(cc[0], cc[1], cc[2]); doc.text(claimedTxt, this.margin, y); y += 8;
         }
         if (gp.types?.length) { this.tx(doc, ...this.mutedColor); doc.text(`Kategorier: ${gp.types.join(', ')}`, this.margin, y); y += 12; }
         // Tip box
-        y = this.infoBox(doc, this.margin, y, this.contentWidth, 'En komplet Google Business Profile har op til 70% større chance for at tiltrække lokale besøg. Tilføj billeder, åbningstider, menu og svar på anmeldelser regelmæssigt.');
+        y = this.infoBox(doc, this.margin, y, this.contentWidth, 'En komplet Google Business Profile øger lokale besøg med op til 70%. Tilføj billeder, åbningstider og menu. Svar på anmeldelser inden 24 timer.');
       }
 
       // ── Page 5: Reviews Analysis ────────────────────────────────────────────
@@ -3220,7 +3253,7 @@
         }
         // Tip
         y = this.pageBreak(doc, y, 35);
-        this.infoBox(doc, this.margin, y, this.contentWidth, 'Svar på alle anmeldelser inden for 24 timer. Positiv interaktion øger synlighed i Google og opbygger tillid hos potentielle kunder.');
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'Svar på alle anmeldelser inden 24 timer. Det øger din Google-synlighed og opbygger tillid hos nye kunder.');
       }
 
       // ── Page 6: Competitor Analysis ─────────────────────────────────────────
@@ -3366,7 +3399,7 @@
           y += 5;
         }
         y = this.pageBreak(doc, y, 35);
-        this.infoBox(doc, this.margin, y, this.contentWidth, 'NAP konsistens (Navn, Adresse, Telefon) er en af de vigtigste lokale ranking-faktorer. Inkonsistente oplysninger forvirrer Google og kan koste dig placeringer i Maps.');
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'NAP (Navn, Adresse, Telefon) er en topfaktor for lokal ranking. Inkonsistente oplysninger koster dig placeringer i Google Maps.');
       }
 
       // ── Page 10: Social Media ───────────────────────────────────────────────
@@ -3406,7 +3439,7 @@
           y += 5;
         }
         y = this.pageBreak(doc, y, 35);
-        this.infoBox(doc, this.margin, y, this.contentWidth, 'Sociale platforme som TikTok, Instagram og Facebook driver lokal synlighed. Regelmæssige opslag med lokale hashtags og UGC (User Generated Content) styrker både brand og SEO.');
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'TikTok, Instagram og Facebook driver lokal synlighed. Post regelmæssigt med lokalt indhold. UGC fra kunder styrker dit brand og din SEO.');
       }
 
       // ── Page 11+: All Findings ──────────────────────────────────────────────
@@ -3456,13 +3489,13 @@
         doc.addPage(); this.pageHeader(doc);
         let y = this.sectionHeader(doc, 'Prioriteret Handlingsplan', this.margin + 5);
         this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-        doc.text('Konkrete tiltag baseret på din analyse — med KPI for hver handling', this.margin, y); y += 12;
+        doc.text('Konkrete tiltag baseret på din analyse. Hver handling har en KPI.', this.margin, y); y += 12;
 
         const ap = d.results._v3actionPlan || {};
         const phases = [
-          { key: 'week1', label: 'UGE 1 — Hurtige Gevinster', color: this.dangerColor, bg: [254, 242, 242] },
-          { key: 'days30', label: '30 DAGE — Forbedringer', color: this.warningColor, bg: [255, 251, 235] },
-          { key: 'days90', label: '90 DAGE — Langsigtede Tiltag', color: this.successColor, bg: [240, 253, 244] },
+          { key: 'week1', label: 'UGE 1: Hurtige Gevinster', color: this.dangerColor, bg: [254, 242, 242] },
+          { key: 'days30', label: '30 DAGE: Forbedringer', color: this.warningColor, bg: [255, 251, 235] },
+          { key: 'days90', label: '90 DAGE: Langsigtede Tiltag', color: this.successColor, bg: [240, 253, 244] },
         ];
         let globalIdx = 0;
         phases.forEach(phase => {
@@ -3524,7 +3557,7 @@
       // ── Page 14: Future Vision ──────────────────────────────────────────────
       addFutureVision(doc, d) {
         doc.addPage(); this.pageHeader(doc);
-        let y = this.sectionHeader(doc, 'Fremtidsperspektiv & Næste Skridt', this.margin + 5);
+        let y = this.sectionHeader(doc, 'Fremtidsperspektiv og næste skridt', this.margin + 5);
         const potential = Math.min(95, d.overallScore + 28);
         const improvement = potential - d.overallScore;
         // Before → After
