@@ -8130,6 +8130,7 @@ function editRestaurant(id) {
   document.getElementById('edit-restaurant-name').value = restaurant.name || '';
   document.getElementById('edit-restaurant-logo').value = restaurant.logo || 'pizza';
   document.getElementById('edit-restaurant-phone').value = restaurant.phone || '';
+  document.getElementById('edit-restaurant-sms-number').value = restaurant.smsNumber || restaurant.settings?.sms_number || '';
   document.getElementById('edit-restaurant-website').value = restaurant.website || '';
   document.getElementById('edit-restaurant-menu').value = restaurant.menuUrl || '';
   document.getElementById('edit-restaurant-google').value = restaurant.googleReviewUrl || '';
@@ -14302,6 +14303,7 @@ async function saveRestaurantSettings() {
   restaurant.name = document.getElementById('edit-restaurant-name').value;
   restaurant.logo = document.getElementById('edit-restaurant-logo').value || 'pizza';
   restaurant.phone = document.getElementById('edit-restaurant-phone').value;
+  restaurant.smsNumber = document.getElementById('edit-restaurant-sms-number').value.trim();
   restaurant.website = document.getElementById('edit-restaurant-website').value;
   restaurant.menuUrl = document.getElementById('edit-restaurant-menu').value;
   restaurant.googleReviewUrl = document.getElementById('edit-restaurant-google').value;
@@ -14381,6 +14383,23 @@ async function saveRestaurantSettings() {
   // NEVER reset an active/terminated/etc customer to pending
   if ((!restaurant.status || restaurant.status === 'pending') && restaurant.phone) {
     restaurant.status = 'active';
+  }
+
+  // Persist to Supabase
+  if (typeof SupabaseDB !== 'undefined') {
+    try {
+      const settings = restaurant.settings || {};
+      settings.sms_number = restaurant.smsNumber || '';
+      await SupabaseDB.updateRestaurant(restaurant.id, {
+        name: restaurant.name,
+        phone: restaurant.phone,
+        website: restaurant.website,
+        settings: settings,
+        status: restaurant.status
+      });
+    } catch (err) {
+      console.error('⚠️ Supabase save failed:', err);
+    }
   }
 
   // Show save status
@@ -15667,6 +15686,17 @@ let canvasTransform = { x: 0, y: 0, scale: 1 };
 let canvasPanningInitialized = false;
 let isSpaceHeld = false;
 
+function updateCanvasDots() {
+  const canvas = document.getElementById('workflow-canvas');
+  if (!canvas) return;
+  const scale = canvasTransform.scale;
+  const dotSpacing = 20 * scale;
+  const dotRadius = Math.max(0.5, 1 * scale);
+  canvas.style.backgroundSize = `${dotSpacing}px ${dotSpacing}px`;
+  canvas.style.backgroundPosition = `${canvasTransform.x}px ${canvasTransform.y}px`;
+  canvas.style.backgroundImage = `radial-gradient(circle, rgba(100, 116, 139, 0.3) ${dotRadius}px, transparent ${dotRadius}px)`;
+}
+
 // Centrer workflow i viewport - starter med triggers synlige og centreret horisontalt
 function centerWorkflow() {
   const canvas = document.getElementById('workflow-canvas');
@@ -15724,11 +15754,12 @@ function centerWorkflow() {
   
   // Apply transform
   viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
-  
+  updateCanvasDots();
+
   // Update zoom display
   const zoomDisplay = document.getElementById('zoom-display');
   if (zoomDisplay) zoomDisplay.textContent = Math.round(canvasTransform.scale * 100) + '%';
-  
+
   console.log(`[Workflow] Centreret - Viewport: ${viewportWidth}x${viewportHeight}, Nodes: ${Math.round(nodesWidth)}x${Math.round(nodesHeight)}, Scale: ${Math.round(canvasTransform.scale*100)}%`);
 }
 
@@ -15777,10 +15808,11 @@ function fitWorkflowToView() {
   canvasTransform.y = 40 - (minY * canvasTransform.scale);
   
   viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
-  
+  updateCanvasDots();
+
   const zoomDisplay = document.getElementById('zoom-display');
   if (zoomDisplay) zoomDisplay.textContent = Math.round(canvasTransform.scale * 100) + '%';
-  
+
   console.log(`[Workflow] fitView - Scale: ${Math.round(canvasTransform.scale*100)}%, X: ${Math.round(canvasTransform.x)}, Y: ${Math.round(canvasTransform.y)}`);
 }
 
@@ -15818,6 +15850,7 @@ function initCanvasPanning() {
   
   function updateTransform() {
     viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
+    updateCanvasDots();
   }
   
   // Space key handling for pan mode
@@ -16688,46 +16721,23 @@ function applyZoom() {
   if (viewport) {
     viewport.style.transform = `translate(${canvasTransform.x}px, ${canvasTransform.y}px) scale(${canvasTransform.scale})`;
   } else {
-    // Fallback for old structure
+    // Fallback for old structure (no viewport wrapper)
     const nodesContainer = document.getElementById('workflow-nodes');
     const connectionsContainer = document.getElementById('wf-connections');
-    const grid = document.querySelector('.canvas-grid');
-    
+
     if (nodesContainer) {
       nodesContainer.style.transform = `scale(${currentZoom})`;
       nodesContainer.style.transformOrigin = '0 0';
     }
-    
+
     if (connectionsContainer) {
       connectionsContainer.style.transform = `scale(${currentZoom})`;
       connectionsContainer.style.transformOrigin = '0 0';
     }
-    
-    if (grid) {
-      grid.style.transform = `scale(${currentZoom})`;
-      grid.style.transformOrigin = '0 0';
-
-      // Dynamically adjust dot size and opacity for visibility at all zoom levels
-      const baseDotSize = 1;
-      const baseOpacity = 0.3;
-
-      // Compensate dot size inversely to zoom level
-      // This ensures dots appear ~1px on screen regardless of zoom
-      const compensatedDotSize = Math.max(1, Math.round(baseDotSize / currentZoom));
-
-      // Boost opacity at low zoom levels for better visibility
-      let compensatedOpacity = baseOpacity;
-      if (currentZoom < 0.5) {
-        // At 0.25x zoom: opacity becomes ~0.4
-        // At 0.4x zoom: opacity becomes ~0.34
-        compensatedOpacity = Math.min(0.5, baseOpacity + (0.5 - currentZoom) * 0.4);
-      }
-
-      // Apply dynamic background with compensated values
-      grid.style.backgroundImage = `radial-gradient(circle, rgba(100, 116, 139, ${compensatedOpacity}) ${compensatedDotSize}px, transparent ${compensatedDotSize}px)`;
-    }
   }
-  
+
+  updateCanvasDots();
+
   // Re-render connections for at sikre de er synkroniseret med nodes
   // Dette sikrer at lines følger noderne præcist
   setTimeout(() => {
@@ -20284,6 +20294,7 @@ async function waitForReply() {
     // KRITISK: Sæt global resolver så RealtimeSync kan resolve
     window.resolveWorkflowReply = (content) => {
       if (!isResolved) {
+        addMessage(content, 'in');
         addLog(`📨 Indgående SMS (realtime): "${content}"`, 'success');
         safeResolve(content);
       }
@@ -20376,6 +20387,7 @@ async function waitForReply() {
             if (matched) {
               // Marker som set
               seenMessageIds.add(matched.id);
+              addMessage(matched.content, 'in');
               addLog(`📨 Indgående SMS: "${matched.content}"`, 'success');
               console.log('✅ Message accepted, resolving workflow. ID:', matched.id);
               safeResolve(matched.content);
@@ -24132,26 +24144,125 @@ window.disable2FA = disable2FA;
 
 
 
-// ===== Flatpickr Calendar Initialization =====
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize Flatpickr on all date inputs
-  if (typeof flatpickr !== 'undefined') {
-    flatpickr.localize(flatpickr.l10ns.da);
-
-    document.querySelectorAll('input[type="date"]').forEach(function(input) {
-      // Convert to text input for Flatpickr
-      input.type = 'text';
-      input.classList.add('flatpickr-input');
-
-      flatpickr(input, {
-        dateFormat: 'd.m.Y',
-        locale: 'da',
-        disableMobile: true,
-        allowInput: true,
-        defaultDate: input.value || null
-      });
-    });
+// ===== Flatpickr Calendar Initialization (shadcn/ui style) =====
+function initDatePickers(root) {
+  if (typeof flatpickr === 'undefined') {
+    console.warn('Flatpickr not loaded – date pickers use native browser UI');
+    return;
   }
+
+  flatpickr.localize(flatpickr.l10ns.da);
+
+  var container = root || document;
+  var calendarSVG = '<svg class="datepicker-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  var clearSVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+  container.querySelectorAll('input[type="date"]').forEach(function(input) {
+    if (input.hasAttribute('data-datepicker-init')) return;
+    input.setAttribute('data-datepicker-init', 'true');
+
+    var origOnchange = input.getAttribute('onchange');
+    var origValue = input.value || '';
+    var origWidth = input.style.width || '';
+    var origMinWidth = input.style.minWidth || '';
+    var placeholderText = 'Vælg dato';
+
+    // Convert input
+    input.type = 'text';
+    input.setAttribute('data-input', '');
+    input.setAttribute('readonly', 'readonly');
+    input.className = 'datepicker-hidden-input';
+
+    // Create wrapper
+    var wrapper = document.createElement('div');
+    wrapper.className = 'datepicker-wrapper';
+    if (origWidth) wrapper.style.width = origWidth;
+    if (origMinWidth) wrapper.style.minWidth = origMinWidth;
+
+    // Create trigger button
+    var trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'datepicker-trigger';
+    trigger.setAttribute('data-toggle', '');
+    trigger.innerHTML = calendarSVG + '<span class="datepicker-text is-placeholder">' + placeholderText + '</span>';
+
+    // Create clear button
+    var clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.className = 'datepicker-clear';
+    clearBtn.setAttribute('title', 'Ryd dato');
+    clearBtn.style.display = 'none';
+    clearBtn.innerHTML = clearSVG;
+
+    // Build DOM: wrapper > trigger + input + clearBtn
+    input.parentNode.insertBefore(wrapper, input);
+    wrapper.appendChild(trigger);
+    wrapper.appendChild(input);
+    wrapper.appendChild(clearBtn);
+
+    // Clear button click
+    clearBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (input._flatpickr) input._flatpickr.clear();
+    });
+
+    // Format date for display (DD.MM.YYYY)
+    function formatDisplay(d) {
+      return String(d.getDate()).padStart(2, '0') + '.' +
+             String(d.getMonth() + 1).padStart(2, '0') + '.' +
+             d.getFullYear();
+    }
+
+    // Initialize Flatpickr on wrapper with wrap mode
+    flatpickr(wrapper, {
+      dateFormat: 'Y-m-d',
+      locale: 'da',
+      disableMobile: true,
+      allowInput: false,
+      wrap: true,
+      defaultDate: origValue || null,
+      onChange: function(selectedDates, dateStr) {
+        var textEl = wrapper.querySelector('.datepicker-text');
+        if (selectedDates.length && dateStr) {
+          textEl.textContent = formatDisplay(selectedDates[0]);
+          textEl.classList.remove('is-placeholder');
+          clearBtn.style.display = '';
+          wrapper.classList.add('has-value');
+        } else {
+          textEl.textContent = placeholderText;
+          textEl.classList.add('is-placeholder');
+          clearBtn.style.display = 'none';
+          wrapper.classList.remove('has-value');
+        }
+        // Fire original onchange handler
+        if (origOnchange) {
+          try { new Function(origOnchange).call(input); }
+          catch(err) { console.warn('Datepicker onchange error:', err); }
+        }
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    // Set initial display if value was preset
+    if (origValue) {
+      var textEl = wrapper.querySelector('.datepicker-text');
+      var parts = origValue.split('-');
+      if (parts.length === 3) {
+        textEl.textContent = parts[2] + '.' + parts[1] + '.' + parts[0];
+      } else {
+        textEl.textContent = origValue;
+      }
+      textEl.classList.remove('is-placeholder');
+      clearBtn.style.display = '';
+      wrapper.classList.add('has-value');
+    }
+  });
+}
+
+window.initDatePickers = initDatePickers;
+
+document.addEventListener('DOMContentLoaded', function() {
+  initDatePickers();
 });
 
 
@@ -31049,31 +31160,54 @@ function getDefaultCMSPages(scrapedContent = null) {
   });
 }
 
-// Load CMS Pages from localStorage (async to support scraping)
+// Load CMS Pages - Supabase first, localStorage fallback (async to support scraping)
 async function loadCMSPages() {
-  const saved = localStorage.getItem('orderflow_cms_pages');
-  if (saved) {
+  let loaded = false;
+
+  // 1. Prøv Supabase først
+  if (window.SupabaseDB) {
     try {
-      cmsPages = JSON.parse(saved);
-      // MIGRATION: Auto-populate missing video URLs for existing users
-      await migrateVideoUrls();
-      // MIGRATION: Add missing sections (logocloud, testimonials, footer, bento, beliefs)
-      migrateMissingSections();
-      // MIGRATION: Add missing pages from flowPagesList
-      migrateMissingPages();
-    } catch (e) {
-      console.error('Error loading CMS pages:', e);
-      cmsPages = getDefaultCMSPages();
+      const result = await window.SupabaseDB.loadBuilderConfig('cms');
+      if (result.success && result.data?.pages?.length) {
+        cmsPages = result.data.pages;
+        // Sync til localStorage som cache
+        localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
+        console.log('✅ CMS pages loaded from Supabase (' + cmsPages.length + ' sider)');
+        loaded = true;
+      }
+    } catch (err) {
+      console.warn('⚠️ Supabase CMS load failed, falling back to localStorage:', err);
     }
-  } else {
-    // First time: scrape actual content from landing page
+  }
+
+  // 2. Fallback til localStorage
+  if (!loaded) {
+    const saved = localStorage.getItem('orderflow_cms_pages');
+    if (saved) {
+      try {
+        cmsPages = JSON.parse(saved);
+        console.log('📦 CMS pages loaded from localStorage (' + cmsPages.length + ' sider)');
+        loaded = true;
+      } catch (e) {
+        console.error('Error loading CMS pages from localStorage:', e);
+      }
+    }
+  }
+
+  // 3. Fallback til defaults (first time)
+  if (!loaded) {
     console.log('Flow CMS: No saved pages found, scraping landing page content...');
     const scrapedContent = await scrapeLandingPageContent();
     cmsPages = getDefaultCMSPages(scrapedContent);
-    // Auto-save the scraped content
     localStorage.setItem('orderflow_cms_pages', JSON.stringify(cmsPages));
     console.log('Flow CMS: Landing page content scraped and saved');
   }
+
+  // Kør migrationer
+  await migrateVideoUrls();
+  migrateMissingSections();
+  migrateMissingPages();
+
   originalCMSPages = JSON.stringify(cmsPages);
   cmsHasChanges = false;
   renderCMSPagesList();
@@ -42385,15 +42519,15 @@ const AGENT_SMS_PATTERNS = {
 const AGENTER_PAGE_AGENTS = [
   {
     id: 'workflow',
-    name: 'Workflow Agent',
+    name: 'Agent Workflow',
     subtitle: 'Workflow monitorering',
-    description: 'Overvager workflow-signaler, driftsstatus og seneste agentaktivitet.',
+    description: 'Overvåger workflow-signaler, driftsstatus og seneste agentaktivitet.',
     color: '#6366f1',
     version: 'v1.0.0'
   },
   {
     id: 'debugging',
-    name: 'Debugging Agent',
+    name: 'Agent Debugging',
     subtitle: 'Diagnostik',
     description: 'Teknisk fejlfinding, endpoint check og SMS parser test.',
     color: '#f59e0b',
@@ -42401,7 +42535,7 @@ const AGENTER_PAGE_AGENTS = [
   },
   {
     id: 'instagram',
-    name: 'Instagram Agent',
+    name: 'Agent Instagram',
     subtitle: 'Workflow integration',
     description: 'Status og hurtig adgang til Instagram workflow.',
     color: '#ec4899',
@@ -42409,7 +42543,7 @@ const AGENTER_PAGE_AGENTS = [
   },
   {
     id: 'facebook',
-    name: 'Facebook Agent',
+    name: 'Agent Facebook',
     subtitle: 'Workflow integration',
     description: 'Status og hurtig adgang til Facebook workflow.',
     color: '#3b82f6',
@@ -42417,11 +42551,27 @@ const AGENTER_PAGE_AGENTS = [
   },
   {
     id: 'restaurant',
-    name: 'Restaurant Agent',
+    name: 'Agent Restaurant',
     subtitle: 'SMS workflows',
-    description: 'Overvagning af SMS-workflows og operationelle signaler.',
+    description: 'Overvågning af SMS-workflows og operationelle signaler.',
     color: '#f97316',
     version: 'v1.2.0'
+  },
+  {
+    id: 'haandvaerker',
+    name: 'Agent Håndværker',
+    subtitle: 'SMS workflows',
+    description: 'SMS-workflows og automatisering for håndværkerbranchen.',
+    color: '#8b5cf6',
+    version: 'v1.1.0'
+  },
+  {
+    id: 'seo',
+    name: 'Agent SEO',
+    subtitle: 'Søgemaskineoptimering',
+    description: 'Digital synlighedsanalyse og SEO-automatisering.',
+    color: '#10b981',
+    version: 'v3.0.0'
   }
 ];
 
@@ -42731,7 +42881,9 @@ function renderPlaceholderDetail(agentId) {
   const navigationMap = {
     instagram: 'instagram-workflow',
     facebook: 'facebook-workflow',
-    restaurant: 'sms-workflows'
+    restaurant: 'sms-workflows',
+    haandvaerker: 'sms-workflows',
+    seo: 'search-engine'
   };
   const targetPage = navigationMap[agentId];
 

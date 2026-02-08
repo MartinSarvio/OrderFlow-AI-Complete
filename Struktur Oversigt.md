@@ -1,8 +1,8 @@
 # FLOW App - Struktur Oversigt
 
-**Sidst opdateret:** 2026-02-07
-**Version:** 3.48.0
-**Total antal sider:** 91+
+**Sidst opdateret:** 2026-02-08
+**Version:** 3.62.0
+**Total antal sider:** 94+
 
 ---
 
@@ -151,7 +151,7 @@
 
 ---
 
-## Landing Pages (34 sider)
+## Landing Pages (36 sider)
 
 Udvikling i `landing-pages/` → Produktion i `public/landing/`
 
@@ -276,6 +276,15 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 ---
 
 ## Changelog
+
+### v3.62.0 (2026-02-08)
+- Side Editor viser nu sideantal (publiceret/kladder)
+- 3 nye CMS-sider: `legal`, `search-engine`, `docs` tilføjet til flowPagesList
+- CMS loader nu fra Supabase først (fallback til localStorage → defaults)
+- Agenter omdøbt til "Agent [Navn]" format + Agent Håndværker og Agent SEO tilføjet
+- Workflow simulator viser nu indgående SMS i chat-UI
+- SMS Virtuelt Nummer felt tilføjet i restaurant-indstillinger
+- Restaurant-save persisterer nu til Supabase (inkl. settings.sms_number for tenant resolution)
 
 ### v3.48.0 (2026-02-07)
 - Ny `page-vaerktoejer` side under Integrationer med 5 agent-kort (Instagram, Facebook, Restaurant, H\u00e5ndv\u00e6rker, SEO)
