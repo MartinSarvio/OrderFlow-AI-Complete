@@ -464,7 +464,12 @@ let countdownInterval = null;
 // Hent session duration baseret på brugerindstilling eller rolle
 function getSessionDuration() {
   // Check for user-saved timeout setting
-  const savedTimeout = localStorage.getItem('orderflow_session_timeout');
+  let savedTimeout = null;
+  try {
+    savedTimeout = localStorage.getItem('orderflow_session_timeout');
+  } catch (err) {
+    savedTimeout = null;
+  }
   if (savedTimeout) {
     const timeout = parseInt(savedTimeout, 10);
     if (timeout > 0) return timeout;
@@ -505,7 +510,12 @@ function persistSession(user) {
     user: user,
     expiresAt: Date.now() + duration
   };
-  localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+  } catch (err) {
+    // Safari private mode can throw on setItem. Don't block login on persistence.
+    console.warn('⚠️ Could not persist session to localStorage:', err?.message || err);
+  }
   console.log('💾 Session saved, expires:', new Date(sessionData.expiresAt).toLocaleString());
   startSessionTimeout();
 }
@@ -2467,13 +2477,19 @@ const DEMO_RESTAURANTS = [
 ];
 
 // Supabase client reference used by legacy code paths in this file.
+// Some parts of this app still reference `supabaseClient` directly, so we keep a global alias.
+var supabaseClient = window.supabaseClient || null;
+
 // Keep it synced with window.supabaseClient, but never overwrite window.supabase library object.
-let supabase = window.supabaseClient || null;
+let supabase = supabaseClient;
 
 if (typeof window.waitForSupabase === 'function') {
   window.waitForSupabase()
     .then((client) => {
-      if (client) supabase = client;
+      if (client) {
+        supabaseClient = client;
+        supabase = client;
+      }
     })
     .catch((err) => {
       console.warn('⚠️ Supabase client not ready in app.js bootstrap:', err?.message || err);
@@ -2727,15 +2743,16 @@ async function handleLogin(e) {
     } catch (err) {
       console.warn('⚠️ Supabase initialization timeout for user login');
       showAuthError('Kunne ikke forbinde til server. Prøv igen om et øjeblik.');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log ind';
+      }
       return;
     }
   }
 
   // Check if Supabase is available
-  const authClient =
-    window.supabaseClient ||
-    supabase ||
-    (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+  const authClient = window.supabaseClient || supabaseClient || supabase || null;
 
   if (!authClient?.auth?.signInWithPassword) {
     console.error('❌ Supabase not available after waiting');
@@ -2749,6 +2766,10 @@ async function handleLogin(e) {
     }
 
     showAuthError('Kunne ikke forbinde til server. Prøv igen.');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log ind';
+    }
     return;
   }
 
@@ -3511,10 +3532,7 @@ async function initAuthStateListener() {
     }
   }
 
-  const authClient =
-    window.supabaseClient ||
-    supabase ||
-    (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+  const authClient = window.supabaseClient || supabaseClient || supabase || null;
 
   if (!authClient?.auth?.onAuthStateChange) return;
 
@@ -3612,10 +3630,14 @@ async function attemptAutoLoginFromSupabaseSession(session, sourceEvent) {
     if (sourceEvent === 'SIGNED_IN' && _loginSubmitInProgress) return;
 
     // If we already have our local app-session, do not override it.
-    const hasLocalSession = !!localStorage.getItem(SESSION_KEY);
+    let hasLocalSession = false;
+    try {
+      hasLocalSession = !!localStorage.getItem(SESSION_KEY);
+    } catch (err) {
+      hasLocalSession = false;
+    }
     if (hasLocalSession) return;
 
-    _supabaseAutoLoginHandled = true;
     _supabaseAutoLoginInProgress = true;
 
     const email = String(session.user.email || '').toLowerCase();
@@ -3653,6 +3675,7 @@ async function attemptAutoLoginFromSupabaseSession(session, sourceEvent) {
         const twoFACheck = await check2FARequired(tempUser);
         if (twoFACheck?.required) {
           if (twoFACheck.settings || twoFACheck.methods) {
+            _supabaseAutoLoginHandled = true;
             window._pending2FALogin = {
               user: tempUser,
               settings: twoFACheck.settings,
@@ -3662,6 +3685,7 @@ async function attemptAutoLoginFromSupabaseSession(session, sourceEvent) {
             return;
           }
           if (userRole === 'employee') {
+            _supabaseAutoLoginHandled = true;
             window._pending2FALogin = {
               user: tempUser,
               settings: null,
@@ -3678,6 +3702,7 @@ async function attemptAutoLoginFromSupabaseSession(session, sourceEvent) {
     }
 
     await finishLogin(tempUser, isAdmin);
+    _supabaseAutoLoginHandled = true;
   } catch (err) {
     console.warn('Auto-login from Supabase session failed:', err);
   } finally {
