@@ -41085,20 +41085,35 @@ function checkPendingSEOScan() {
   } catch(e) { console.warn('Pending scan check failed:', e); }
 }
 
+function canUseURLPageParamNavigation() {
+  var appEl = document.getElementById('app');
+  var authScreenEl = document.getElementById('auth-screen');
+  var appIsActive = !!(appEl && appEl.classList.contains('active'));
+  var authScreenVisible = !!(authScreenEl && authScreenEl.style.display !== 'none');
+  return !!currentUser && appIsActive && !authScreenVisible;
+}
+
 // Handle ?page= URL parameter for direct page navigation
 function handleURLPageParam() {
   var params = new URLSearchParams(window.location.search);
   var page = params.get('page');
-  if (page) {
-    // Clean URL without reloading
-    window.history.replaceState({}, '', window.location.pathname);
-    // Navigate to the requested page
-    if (typeof showPage === 'function') {
-      showPage(page);
-      // If it's the scanner page, check for pending scans
-      if (page === 'seo-scanner') {
-        setTimeout(checkPendingSEOScan, 300);
-      }
+  if (!page) return;
+
+  // Clean URL without reloading
+  window.history.replaceState({}, '', window.location.pathname);
+
+  // Ignore public/unauthenticated attempts to open internal app pages
+  if (!canUseURLPageParamNavigation()) {
+    console.warn('Ignoring URL page param without authenticated app session:', page);
+    return;
+  }
+
+  // Navigate to the requested page
+  if (typeof showPage === 'function') {
+    showPage(page);
+    // Pending scan is only relevant for authenticated internal scanner usage
+    if (page === 'seo-scanner') {
+      setTimeout(checkPendingSEOScan, 300);
     }
   }
 }

@@ -1876,7 +1876,6 @@
   </style>
 
   <!-- Google Maps Places API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&libraries=places" async defer></script>
 <link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
@@ -3060,7 +3059,7 @@
         }
       });
 
-      // Search button handler - redirect to business-scanner-demo.html
+      // Search button handler - navigate to dedicated scanner page
       searchBtn.addEventListener('click', startAnalysis);
     });
 
@@ -3251,34 +3250,21 @@
       searchBtn.disabled = false;
     }
 
-    // Start analysis directly on this page
-    async function startAnalysis() {
+    // Start analysis on dedicated public scanner page
+    function startAnalysis() {
       if (!selectedPlace) {
         searchBtn.disabled = true;
         showSearchSelectionRequired();
         return;
       }
 
-      const originalButtonText = searchBtn.textContent;
-      searchBtn.disabled = true;
-      searchBtn.textContent = 'Analyserer...';
+      const params = new URLSearchParams();
+      params.set('name', selectedPlace.name || '');
+      if (selectedPlace.place_id) params.set('place_id', selectedPlace.place_id);
+      if (selectedPlace.address) params.set('address', selectedPlace.address);
+      if (selectedPlace.website) params.set('website', selectedPlace.website);
 
-      heroSection.style.display = 'none';
-      reportSection.classList.remove('active');
-      loadingSection.classList.add('active');
-
-      try {
-        const scanResults = await runEndpointScanner();
-        const reportData = buildReportData(scanResults);
-        showReport(reportData);
-      } catch (error) {
-        console.error('Fejl under SEO analyse, bruger fallback rapport:', error);
-        const fallbackData = generateDemoReport(selectedPlace.name, selectedPlace.address);
-        showReport(fallbackData);
-      } finally {
-        searchBtn.textContent = originalButtonText;
-        searchBtn.disabled = false;
-      }
+      window.location.href = '/search-engine?' + params.toString();
     }
 
     // Build report data from scanner results
@@ -3832,18 +3818,16 @@
 
     // Serper API configuration
     const SERPER_CONFIG = {
-      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '238621b449ced86740e16a0707be5b8999b87c9e' },
-      images: { url: 'https://google.serper.dev/images', apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba' },
-      maps: { url: 'https://google.serper.dev/maps', apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e' }
+      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '' },
+      images: { url: 'https://google.serper.dev/images', apiKey: '' },
+      maps: { url: 'https://google.serper.dev/maps', apiKey: '' }
     };
-
-    const GOOGLE_API_KEY = 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo';
 
     // Fetch from Serper API
     async function fetchSerperAPI(endpoint, query, extraParams = {}) {
       try {
         const config = SERPER_CONFIG[endpoint];
-        if (!config) return null;
+        if (!config || !config.apiKey) return null;
         const res = await fetch(config.url, {
           method: 'POST',
           headers: { 'X-API-KEY': config.apiKey, 'Content-Type': 'application/json' },
