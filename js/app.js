@@ -4084,7 +4084,10 @@ function showPage(page) {
   if (pageEl) {
     pageEl.classList.add('active');
   }
-  
+
+  // Midlertidig dev page-ID badge
+  showPageIdBadge(page);
+
   // Reset CRM til search view når man går til kunder-siden
   if (page === 'kunder') {
     refreshRestaurantsFromDB().then(() => loadRestaurants());
@@ -4314,6 +4317,18 @@ function showPage(page) {
     // Brug synkront kald for at sikre sidebar er korrekt INDEN siden vises
     applyRoleBasedSidebar();
   }
+}
+
+// Midlertidig dev page-ID badge (fjernes når app er færdig)
+function showPageIdBadge(page) {
+  var existing = document.getElementById('dev-page-id-badge');
+  if (existing) existing.remove();
+  var pageId = 'page-' + page;
+  var badge = document.createElement('div');
+  badge.id = 'dev-page-id-badge';
+  badge.textContent = pageId;
+  badge.style.cssText = 'position:fixed;bottom:12px;right:12px;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:11px;padding:4px 10px;border-radius:4px;z-index:99999;pointer-events:none;opacity:0.7';
+  document.body.appendChild(badge);
 }
 
 // Browser back/forward navigation handler
@@ -8723,6 +8738,9 @@ function showCustomerSubpage(subpage) {
       subpage = 'dashboard';
     }
   }
+
+  // Dev page-ID badge for subpages
+  showPageIdBadge('kunder > subpage-' + subpage);
 
   // Update sidebar menu items (ensure only one active highlight)
   document.querySelectorAll('.nav-dropdown-item').forEach(item => {
@@ -21739,7 +21757,10 @@ function switchSettingsTab(tab) {
   
   // SYNC: Highlight corresponding sidebar item
   syncSidebarSettingsItem(tab);
-  
+
+  // Dev page-ID badge for settings tabs
+  showPageIdBadge('settings > settings-content-' + tab);
+
   // Load AI learning stats when that tab is opened
   if (tab === 'ailearning') {
     refreshAILearningStats();
@@ -24244,7 +24265,51 @@ function generateQRFromForm() {
   const downloadSection = document.getElementById('qr-download-section');
   if (downloadSection) downloadSection.style.display = 'block';
 
+  const qrType = document.getElementById('qr-type')?.value || 'custom';
+  saveQRToHistory(qrType, data);
   toast('QR kode genereret', 'success');
+}
+
+function saveQRToHistory(type, data) {
+  try {
+    var history = JSON.parse(localStorage.getItem('flow_qr_history') || '[]');
+    history.unshift({ type: type, data: data, date: new Date().toISOString() });
+    if (history.length > 50) history = history.slice(0, 50);
+    localStorage.setItem('flow_qr_history', JSON.stringify(history));
+    loadQRHistory();
+  } catch (e) { /* ignore */ }
+}
+
+function loadQRHistory() {
+  var tbody = document.getElementById('qr-history-tbody');
+  if (!tbody) return;
+  var history = [];
+  try { history = JSON.parse(localStorage.getItem('flow_qr_history') || '[]'); } catch (e) { /* ignore */ }
+  if (!history.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:var(--space-6);color:var(--muted);font-size:var(--font-size-sm)">Ingen QR koder genereret endnu</td></tr>';
+    return;
+  }
+  var typeLabels = { bestilling: 'Bestillingslink', menu: 'Menu link', bord: 'Bordnummer', wifi: 'WiFi', betaling: 'Betalingslink', custom: 'Brugerdefineret', preview: 'App Preview', '2fa': '2FA' };
+  tbody.innerHTML = history.map(function(item, i) {
+    var typeLabel = typeLabels[item.type] || item.type;
+    var shortData = item.data.length > 60 ? item.data.substring(0, 57) + '...' : item.data;
+    var dateStr = new Date(item.date).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-sm)">' + typeLabel + '</td>' +
+      '<td style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-sm);color:var(--muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + item.data.replace(/"/g, '&quot;') + '">' + shortData + '</td>' +
+      '<td style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-sm);color:var(--muted)">' + dateStr + '</td>' +
+      '<td style="padding:var(--space-2) var(--space-3);text-align:right"><button class="btn btn-sm btn-ghost" onclick="removeQRHistoryItem(' + i + ')">Fjern</button></td>' +
+    '</tr>';
+  }).join('');
+}
+
+function removeQRHistoryItem(index) {
+  try {
+    var history = JSON.parse(localStorage.getItem('flow_qr_history') || '[]');
+    history.splice(index, 1);
+    localStorage.setItem('flow_qr_history', JSON.stringify(history));
+    loadQRHistory();
+  } catch (e) { /* ignore */ }
 }
 
 function downloadQRCode() {
@@ -24288,6 +24353,7 @@ function render2FAQrCode(otpauthUrl) {
   container.style.borderRadius = '12px';
   container.style.padding = '16px';
   generateBrandedQR(otpauthUrl, container, { width: 200, height: 200 });
+  saveQRToHistory('2fa', otpauthUrl);
 }
 
 /**
@@ -28133,37 +28199,12 @@ function showAppPreviewQR() {
 
   const previewUrl = getAppPreviewUrl();
   container.innerHTML = '';
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '16px';
 
-  const fallbackToApi = () => {
-    const encodedUrl = encodeURIComponent(previewUrl);
-    container.innerHTML = `
-      <img
-        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&format=png"
-        alt="QR kode til app preview"
-        width="200"
-        height="200"
-        style="display:block;border-radius:8px"
-        onerror="this.parentElement.innerHTML='<p style=\\'color:var(--muted);text-align:center\\'>Kunne ikke generere QR-kode<br><small>${previewUrl}</small></p>'"
-      >
-    `;
-  };
-
-  ensureQRCodeLibrary().then((loaded) => {
-    if (loaded && typeof QRCode !== 'undefined') {
-      try {
-        new QRCode(container, {
-          text: previewUrl,
-          width: 200,
-          height: 200,
-          correctLevel: QRCode.CorrectLevel.M
-        });
-        return;
-      } catch (err) {
-        console.warn('Local QR generation failed:', err);
-      }
-    }
-    fallbackToApi();
-  });
+  generateBrandedQR(previewUrl, container, { width: 200, height: 200 });
+  saveQRToHistory('preview', previewUrl);
 
   showModal('app-preview-qr');
 }
@@ -42535,7 +42576,7 @@ function openAgentPage(pageId) {
 }
 
 function switchVaerktoejTab(tab) {
-  var tabs = ['agenter','enheder','agentstatus','apikeys','statistik'];
+  var tabs = ['agenter','enheder','agentstatus','apikeys','statistik','qrkode'];
   tabs.forEach(function(t) {
     var content = document.getElementById('vaerktoejer-content-' + t);
     var tabBtn = document.getElementById('vaerktoejer-tab-' + t);
@@ -42549,6 +42590,7 @@ function switchVaerktoejTab(tab) {
   if (tab === 'apikeys') renderCustomerIntegrations();
   if (tab === 'statistik') renderAgentStatistics();
   if (tab === 'agentstatus') renderAgentStatusDashboard();
+  if (tab === 'qrkode') loadQRHistory();
 }
 
 function checkAgentUpdate(agentName) {
