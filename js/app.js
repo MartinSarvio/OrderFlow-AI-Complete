@@ -4656,7 +4656,7 @@ const DOCS_DATA = {
   },
   'missed-calls': {
     section: 'Kom godt i gang',
-    title: 'Missed Calls Auto-SMS',
+    title: 'Mistede Opkald Auto-SMS',
     desc: 'Konverter mistede opkald til ordrer med automatisk SMS-opfølgning.',
     time: '6 min',
     prev: 'sms-configuration',
@@ -4679,7 +4679,7 @@ const DOCS_DATA = {
       <h2>Opsætning</h2>
       <ol>
         <li>Gå til <strong>Workflow</strong></li>
-        <li>Find <strong>"Missed Call Handler"</strong></li>
+        <li>Find <strong>"Mistet Opkald Handler"</strong></li>
         <li>Aktiver workflowet</li>
         <li>Tilpas SMS-skabelonen</li>
       </ol>
@@ -15636,16 +15636,16 @@ let workflowNodes = [
   { id: 'trigger-sms', type: 'trigger', label: 'Trigger', sublabel: 'SMS', x: 540, y: 50, icon: '💬', next: 'open-check' },
   
   // SEKTION 2: OPEN CHECKER (Row 1: y=200)
-  { id: 'open-check', type: 'condition', label: 'Open Checker', sublabel: '{{restaurant.openingHours}}', x: 430, y: 200, icon: '🕐', branches: [
+  { id: 'open-check', type: 'condition', label: 'Åbningstids-check', sublabel: '{{restaurant.openingHours}}', x: 430, y: 200, icon: '🕐', branches: [
     { id: 'dynamic-open', label: 'Dynamisk: Åben', class: 'yes', next: 'open-node' },
     { id: 'dynamic-closed', label: 'Dynamisk: Lukket', class: 'no', next: 'send-closed' }
   ]},
   
   // SEKTION 3: OPEN BRANCHES (Row 2: y=350)
-  { id: 'open-node', type: 'condition', label: 'Open', x: 210, y: 350, icon: '✓', branches: [
-    { id: 'missed-call-branch', label: 'Missed Call', class: 'order', next: 'send-missed' },
+  { id: 'open-node', type: 'condition', label: 'Åben', x: 210, y: 350, icon: '✓', branches: [
+    { id: 'missed-call-branch', label: 'Mistet opkald', class: 'order', next: 'send-missed' },
     { id: 'sms-branch', label: 'SMS', class: 'order', next: 'ai-classify-1' },
-    { id: 'none-branch', label: 'None', class: 'none', next: 'end-open-none' }
+    { id: 'none-branch', label: 'Ingen', class: 'none', next: 'end-open-none' }
   ]},
   { id: 'go-to-open', type: 'action', label: 'Go To', x: 430, y: 350, icon: '↗️', next: 'open-node' },
   { id: 'send-closed', type: 'sms', label: 'Lukket besked', sublabel: 'Dynamisk med næste åbning', x: 650, y: 350, icon: '💬', message: '{{generateClosedMessage}}', next: 'end-closed' },
@@ -16378,10 +16378,10 @@ function openNodeEditor(id) {
       <div class="node-editor-section">
         <div class="node-editor-section-title">Trigger Indstillinger</div>
         <div class="form-group">
-          <label class="form-label">Trigger Type</label>
+          <label class="form-label">Trigger-type</label>
           <select class="input" onchange="updateNodeProperty('${id}', 'triggerType', this.value)">
-            <option value="missed_call" ${node.triggerType === 'missed_call' ? 'selected' : ''}>Missed Call</option>
-            <option value="sms" ${node.triggerType === 'sms' ? 'selected' : ''}>Incoming SMS</option>
+            <option value="missed_call" ${node.triggerType === 'missed_call' ? 'selected' : ''}>Mistet opkald</option>
+            <option value="sms" ${node.triggerType === 'sms' ? 'selected' : ''}>Indgående SMS</option>
             <option value="both" ${node.triggerType === 'both' ? 'selected' : ''}>Begge</option>
           </select>
         </div>
@@ -16403,7 +16403,7 @@ function openNodeEditor(id) {
       <div class="node-editor-section">
         <div class="node-editor-section-title">SMS Indstillinger</div>
         <div class="form-group">
-          <label class="form-label">Node Label</label>
+          <label class="form-label">Node-label</label>
           <input class="input" value="${node.label}" onchange="updateNodeProperty('${id}', 'label', this.value)">
         </div>
         <div class="form-group">
@@ -16417,7 +16417,7 @@ function openNodeEditor(id) {
       <div class="node-editor-section">
         <div class="node-editor-section-title">SMS Skabeloner</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px">
-          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'missed_call')">Missed Call</button>
+          <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'missed_call')">Mistet opkald</button>
           <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'delivery_type')">Levering/Afhentning</button>
           <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'address')">Spørg Adresse</button>
           <button class="btn btn-secondary" style="font-size:11px;padding:6px 10px" onclick="setSmsTemplate('${id}', 'order')">Spørg Ordre</button>
@@ -17419,7 +17419,7 @@ async function startTest(type) {
     detailedLog.innerHTML = '';
   }
   
-  addLog(`Test startet: ${type === 'call' ? 'Missed Call' : 'SMS'}`, 'success');
+  addLog(`Test startet: ${type === 'call' ? 'Mistet opkald' : 'SMS'}`, 'success');
   addLog(`Nummer: ${document.getElementById('test-phone').value}`, 'info');
 
   // Simulate workflow med error handling
@@ -17509,7 +17509,7 @@ async function runWorkflow(restaurant, type) {
   
   // Node 1: Trigger
   activateNode(type === 'call' ? 'trigger-call' : 'trigger-sms');
-  addLog('⚡ Trigger: ' + (type === 'call' ? 'Missed Call' : 'SMS modtaget'), 'info');
+  addLog('⚡ Trigger: ' + (type === 'call' ? 'Mistet opkald' : 'SMS modtaget'), 'info');
   await sleep(500);
   
   // Node 2: DYNAMISK Check if open (bruger restaurant.openingHours)

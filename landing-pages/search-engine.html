@@ -523,7 +523,7 @@
       async searchBusiness(query) {
         try {
           const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
-          if (!response.ok) throw new Error('Search failed');
+          if (!response.ok) throw new Error('Søgning mislykkedes');
           const data = await response.json();
           return data.results || [];
         } catch (error) {
@@ -2075,8 +2075,8 @@
                 {review?.author?.charAt(0) || 'U'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{review?.author || 'Loading...'}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 months ago'}</div>
+                <div style={{ fontWeight: 500 }}>{review?.author || 'Indlæser...'}</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 måneder siden'}</div>
               </div>
               <div style={{ display: 'flex', gap: 2 }}>
                 {[1,2,3,4,5].map(i => (
@@ -2545,7 +2545,7 @@
         { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle', apiSource: 'Firecrawl Branding' },
         { id: 'website', name: 'Website & Mobil', icon: 'Globe', apiSource: 'Firecrawl Branding' },
         { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code', apiSource: 'Firecrawl Branding' },
-        { id: 'social', name: 'Social Media', icon: 'Share', apiSource: 'Serper Review' },
+        { id: 'social', name: 'Sociale Medier', icon: 'Share', apiSource: 'Serper Review' },
       ], []);
 
       useEffect(() => {
@@ -3136,7 +3136,7 @@
           ['Konkurrentanalyse', '6'],
           ['Website & Teknisk SEO', '7'],
           ['NAP Konsistens', '8'],
-          ['Social Media', '9'],
+          ['Sociale Medier', '9'],
           ['Alle Fund', '10'],
           ['Handlingsplan (7/30/90 dage)', '11'],
           ['Fremtidsperspektiv og næste skridt', '12'],
