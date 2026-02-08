@@ -58,6 +58,33 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
+function pickFirstText(values: unknown[]): string {
+  for (const value of values) {
+    const text = String(value || "").trim()
+    if (text) return text
+  }
+  return ""
+}
+
+function extractTenantOverride(req: Request, payload: Record<string, unknown>): string {
+  const url = new URL(req.url)
+  const body = asRecord(payload)
+  return pickFirstText([
+    url.searchParams.get("tenant_id"),
+    url.searchParams.get("tenantId"),
+    url.searchParams.get("restaurant_id"),
+    url.searchParams.get("restaurantId"),
+    req.headers.get("x-tenant-id"),
+    req.headers.get("x-restaurant-id"),
+    body.tenant_id,
+    body.tenantId,
+    body.restaurant_id,
+    body.restaurantId,
+    body.workflow_tenant_id,
+    body.workflowTenantId,
+  ])
+}
+
 function collectRestaurantNumbers(row: Record<string, unknown>): string[] {
   const values: unknown[] = [
     row.sms_number,
@@ -110,7 +137,18 @@ async function resolveTenantForCall(
   authHeaders: Record<string, string>,
   receiver: string,
   defaultTenantId?: string,
+  preferredTenantId?: string,
 ): Promise<{ id: string; name: string } | null> {
+  const preferred = String(preferredTenantId || "").trim()
+  if (preferred) {
+    return { id: preferred, name: "restauranten" }
+  }
+
+  const forcedDefault = String(defaultTenantId || "").trim()
+  if (forcedDefault) {
+    return { id: forcedDefault, name: "restauranten" }
+  }
+
   const candidates = buildPhoneCandidates(receiver)
   const candidateSet = new Set(candidates)
 
@@ -144,26 +182,6 @@ async function resolveTenantForCall(
     const numbers = collectRestaurantNumbers(row)
     if (numbers.some((num) => candidateSet.has(num))) {
       return { id: String(row.id || ""), name: String(row.name || "restauranten") }
-    }
-  }
-
-  if (defaultTenantId) {
-    if (allRows.length > 0) {
-      const match = allRows.find((row) => String(row.id || "") === defaultTenantId)
-      if (match?.id) {
-        return { id: String(match.id), name: String(match.name || "restauranten") }
-      }
-    } else {
-      const defaultRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id,name&limit=1`,
-        { headers: authHeaders },
-      )
-      if (defaultRes.ok) {
-        const rows = await defaultRes.json()
-        if (rows.length > 0) {
-          return { id: rows[0].id, name: rows[0].name || "restauranten" }
-        }
-      }
     }
   }
 
@@ -308,6 +326,7 @@ serve(async (req) => {
 
   try {
     const payload = await req.json()
+    const tenantOverride = extractTenantOverride(req, payload)
     const event = extractMissedCallEvent(payload)
 
     if (!event) {
@@ -363,6 +382,7 @@ serve(async (req) => {
       serviceAuthHeaders,
       event.receiver,
       defaultTenantId,
+      tenantOverride,
     )
     const tenantId = tenant?.id || null
     const tenantName = tenant?.name || "restauranten"

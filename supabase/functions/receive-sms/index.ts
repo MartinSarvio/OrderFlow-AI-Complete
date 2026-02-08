@@ -49,6 +49,33 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
+function pickFirstText(values: unknown[]): string {
+  for (const value of values) {
+    const text = String(value || "").trim()
+    if (text) return text
+  }
+  return ""
+}
+
+function extractTenantOverride(req: Request, payload: Record<string, unknown>): string {
+  const url = new URL(req.url)
+  const body = asRecord(payload)
+  return pickFirstText([
+    url.searchParams.get("tenant_id"),
+    url.searchParams.get("tenantId"),
+    url.searchParams.get("restaurant_id"),
+    url.searchParams.get("restaurantId"),
+    req.headers.get("x-tenant-id"),
+    req.headers.get("x-restaurant-id"),
+    body.tenant_id,
+    body.tenantId,
+    body.restaurant_id,
+    body.restaurantId,
+    body.workflow_tenant_id,
+    body.workflowTenantId,
+  ])
+}
+
 function collectRestaurantNumbers(row: Record<string, unknown>): string[] {
   const values: unknown[] = [
     row.sms_number,
@@ -98,7 +125,14 @@ async function resolveTenantByReceiver(
   authHeaders: Record<string, string>,
   receiver: string,
   defaultTenantId?: string,
+  preferredTenantId?: string,
 ): Promise<string | null> {
+  const preferred = String(preferredTenantId || "").trim()
+  if (preferred) return preferred
+
+  const forcedDefault = String(defaultTenantId || "").trim()
+  if (forcedDefault) return forcedDefault
+
   const candidates = buildPhoneCandidates(receiver)
   const candidateSet = new Set(candidates)
 
@@ -132,22 +166,6 @@ async function resolveTenantByReceiver(
     const numbers = collectRestaurantNumbers(row)
     if (numbers.some((num) => candidateSet.has(num))) {
       return String(row.id || "")
-    }
-  }
-
-  if (defaultTenantId) {
-    if (allRows.length > 0) {
-      const match = allRows.find((row) => String(row.id || "") === defaultTenantId)
-      if (match?.id) return String(match.id)
-    } else {
-      const defaultRes = await fetch(
-        `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id&limit=1`,
-        { headers: authHeaders },
-      )
-      if (defaultRes.ok) {
-        const rows = await defaultRes.json()
-        if (rows.length > 0) return rows[0].id
-      }
     }
   }
 
@@ -253,6 +271,7 @@ serve(async (req) => {
 
   try {
     const payload = await req.json()
+    const tenantOverride = extractTenantOverride(req, payload)
 
     log.debug({
       event: 'channel.sms.webhook_received',
@@ -269,9 +288,15 @@ serve(async (req) => {
           throw new Error("SUPABASE_URL is missing")
         }
 
-        const routeRes = await fetch(`${supabaseUrl}/functions/v1/receive-missed-call`, {
+        const routeUrl = tenantOverride
+          ? `${supabaseUrl}/functions/v1/receive-missed-call?tenant_id=${encodeURIComponent(tenantOverride)}`
+          : `${supabaseUrl}/functions/v1/receive-missed-call`
+        const routeHeaders: Record<string, string> = { "Content-Type": "application/json" }
+        if (tenantOverride) routeHeaders["x-tenant-id"] = tenantOverride
+
+        const routeRes = await fetch(routeUrl, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: routeHeaders,
           body: JSON.stringify(payload),
         })
 
@@ -344,6 +369,17 @@ serve(async (req) => {
     const defaultTenantId = Deno.env.get("DEFAULT_TENANT_ID") || ""
     const messagesInsertKey = serviceRoleKey || anonKey
     const warnings: string[] = []
+
+    if (tenantOverride) {
+      warnings.push("tenant_override_applied")
+      log.info({
+        event: "channel.sms.tenant_override",
+        tenant_id: tenantOverride,
+      })
+    }
+    if (defaultTenantId) {
+      warnings.push("default_tenant_fallback_enabled")
+    }
 
     if (!supabaseUrl || !messagesInsertKey) {
       log.error({
@@ -425,6 +461,7 @@ serve(async (req) => {
       serviceAuthHeaders,
       normalizedReceiver || receiver,
       defaultTenantId,
+      tenantOverride,
     )
 
     if (!tenantId) {
