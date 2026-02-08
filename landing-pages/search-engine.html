@@ -24,6 +24,7 @@
     @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); } 50% { box-shadow: 0 0 15px 3px rgba(102, 126, 234, 0.3); } }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Findings Feed Styles */
     .findings-feed { display: flex; flex-direction: column; gap: 16px; }
@@ -2477,7 +2478,7 @@
       const [showReport, setShowReport] = useState(false);
       const [findings, setFindings] = useState([]);
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
-      const [secondsRemaining, setSecondsRemaining] = useState(45);
+      const [secondsRemaining, setSecondsRemaining] = useState(150);
 
       // Countdown timer
       useEffect(() => {
@@ -2496,16 +2497,16 @@
       }, []);
 
       const analysisSteps = useMemo(() => [
-        { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin' },
-        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star' },
-        { id: 'images', name: 'Billeder & Medier', icon: 'Image' },
-        { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search' },
-        { id: 'citations', name: 'Citationer', icon: 'Link' },
-        { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target' },
-        { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle' },
-        { id: 'website', name: 'Website & Mobil', icon: 'Globe' },
-        { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code' },
-        { id: 'social', name: 'Social Media', icon: 'Share' },
+        { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin', apiSource: 'Google Search' },
+        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star', apiSource: 'Serper Review' },
+        { id: 'images', name: 'Billeder & Medier', icon: 'Image', apiSource: 'Serper Image' },
+        { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search', apiSource: 'Google Search' },
+        { id: 'citations', name: 'Citationer', icon: 'Link', apiSource: 'Firecrawl Branding' },
+        { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target', apiSource: 'Serper Maps' },
+        { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle', apiSource: 'Firecrawl Branding' },
+        { id: 'website', name: 'Website & Mobil', icon: 'Globe', apiSource: 'Firecrawl Branding' },
+        { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code', apiSource: 'Firecrawl Branding' },
+        { id: 'social', name: 'Social Media', icon: 'Share', apiSource: 'Serper Review' },
       ], []);
 
       useEffect(() => {
@@ -2517,7 +2518,7 @@
             // Simulate step progression while API processes
             for (let i = 0; i < analysisSteps.length; i++) {
               setCurrentStep(i);
-              await delay(800 + Math.random() * 400);
+              await delay(10000 + Math.random() * 8000);
               setCompletedSteps(prev => [...prev, analysisSteps[i].id]);
             }
 
@@ -2566,6 +2567,18 @@
       }, [business, analysisSteps, addFindings]);
 
       const progress = (completedSteps.length / analysisSteps.length) * 100;
+
+      const overallScore = analysisResults._v3score
+        ? Math.round(analysisResults._v3score.overall || 0) : 0;
+      const getScoreColor = (s) => s >= 75 ? '#059669' : s >= 50 ? '#d97706' : '#dc2626';
+      const getScoreLabel = (s) => s >= 75 ? 'God digital tilstedeværelse' : s >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
+
+      const handlePurchase = () => {
+        window.location.href = '/priser?report=' + encodeURIComponent(business.name);
+      };
+      const handleSubscribe = () => {
+        window.location.href = '/priser';
+      };
 
       if (showReport) {
         return (
@@ -2622,15 +2635,22 @@
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flexShrink: 0,
                       }}>
                         {isCompleted ? (
                           <Icon name="Check" size={16} color="#059669" />
+                        ) : isCurrent ? (
+                          <svg width={20} height={20} style={{ animation: 'spin 1.5s linear infinite' }}>
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#e5e5e5" strokeWidth={2} />
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#667eea" strokeWidth={2}
+                              strokeDasharray={50.26} strokeDashoffset={37.7} strokeLinecap="round" />
+                          </svg>
                         ) : (
                           <div style={{
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            background: isCurrent ? '#015bf8' : '#d1d5db',
+                            background: '#d1d5db',
                           }} />
                         )}
                       </div>
@@ -2642,9 +2662,9 @@
                         }}>
                           {step.name}
                         </span>
-                        {isCurrent && (
-                          <div style={{ marginTop: 4 }}>
-                            <Spinner />
+                        {(isCurrent || isCompleted) && (
+                          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                            {step.apiSource}
                           </div>
                         )}
                       </div>
@@ -2654,27 +2674,14 @@
               </div>
 
               <div style={{ paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
-                <div style={{ height: 6, background: '#e5e5e5', borderRadius: 3, marginBottom: 16, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: '#e5e5e5', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
                     width: `${progress}%`,
                     background: isComplete ? '#059669' : 'linear-gradient(90deg, #667eea, #764ba2)',
                     borderRadius: 3,
-                    transition: 'width 0.3s ease'
+                    transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
                   }} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {!isComplete && <Spinner />}
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>
-                      {isComplete ? 'Analyse færdig!' : 'Running...'}
-                    </div>
-                    {!isComplete && (
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>
-                        {secondsRemaining} seconds remaining
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -2719,78 +2726,134 @@
                   </BrowserWindow>
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
-                  {/* Completion Card */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', zIndex: 10, padding: 40 }}>
+                  {/* PDF-like Document Preview */}
                   <div style={{
                     background: 'white',
-                    borderRadius: 20,
-                    padding: 32,
-                    textAlign: 'center',
-                    boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
-                    width: 320,
-                    flexShrink: 0,
-                    animation: 'slideIn 0.4s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    borderRadius: 12,
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)',
+                    width: '100%',
+                    maxWidth: 700,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    animation: 'slideIn 0.5s ease',
                   }}>
-                    <div style={{ margin: '0 auto 16px' }}>
-                      <Icon name="Check" size={32} color="#059669" />
-                    </div>
-                    <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 600 }}>Analyse færdig!</h2>
-                    <p style={{ margin: '0 0 8px', color: '#6b7280', fontSize: 14 }}>
-                      {analysisSteps.length} områder analyseret
-                    </p>
+                    {/* Document top accent */}
+                    <div style={{ height: 4, background: 'linear-gradient(90deg, #667eea, #764ba2)' }} />
 
-                    {/* Summary Stats - Inline */}
-                    <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
-                      <span style={{ color: '#059669', fontWeight: 500 }}>{findings.filter(f => f.category === 'positive').length} positive</span>
-                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
-                      <span style={{ color: '#d97706', fontWeight: 500 }}>{findings.filter(f => f.category === 'warning').length} advarsler</span>
-                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
-                      <span style={{ color: '#dc2626', fontWeight: 500 }}>{findings.filter(f => f.category === 'critical').length} kritiske</span>
-                    </p>
+                    {/* Document content (8% preview) */}
+                    <div style={{ padding: '32px 40px 80px' }}>
+                      <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 8px' }}>
+                        Digital Analyse
+                      </p>
+                      <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, color: '#1a1a1a' }}>
+                        {business.name}
+                      </h2>
+                      <p style={{ margin: '0 0 28px', color: '#6b7280', fontSize: 13 }}>
+                        {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
 
-                    <button
-                      onClick={() => setShowReport(true)}
-                      style={{
-                        padding: '14px 32px',
-                        background: '#015bf8',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        fontSize: 15,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        width: '100%',
-                      }}
-                      onMouseOver={(e) => { e.target.style.background = '#0047cc'; }}
-                      onMouseOut={(e) => { e.target.style.background = '#015bf8'; }}
-                    >
-                      Se fuld rapport
-                    </button>
-                  </div>
-
-                  {/* Final Findings Overview */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 15px 50px rgba(0,0,0,0.08)', height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <Icon name="FileText" size={20} color="#667eea" />
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Alle fund</h3>
-                        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>{findings.length} fund</span>
+                      {/* Score preview */}
+                      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <ProgressRing progress={overallScore} size={100} strokeWidth={6} color={getScoreColor(overallScore)} />
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <span style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a' }}>{overallScore}</span>
+                            <span style={{ fontSize: 11, color: '#9ca3af' }}>af 100</span>
+                          </div>
+                        </div>
+                        <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>
+                          {getScoreLabel(overallScore)}
+                        </p>
                       </div>
-                      <LiveFindingsFeed
-                        findings={findings}
-                        highlightedId={null}
-                        moduleStatuses={analysisSteps.map(step => ({
-                          id: step.id,
-                          name: step.name,
-                          status: 'completed',
-                          findingsCount: findings.filter(f => f.module === step.id).length,
-                        }))}
-                      />
+
+                      {/* First few findings (preview) */}
+                      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
+                        <p style={{ fontSize: 12, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 12px', fontWeight: 600 }}>
+                          Fund ({findings.length})
+                        </p>
+                        {findings.slice(0, 3).map((f, i) => (
+                          <div key={f.id || i} style={{
+                            padding: '10px 0',
+                            borderBottom: '1px solid #f3f4f6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                          }}>
+                            <div style={{
+                              width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                              background: f.category === 'positive' ? '#059669' : f.category === 'critical' ? '#dc2626' : '#d97706',
+                            }} />
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{f.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Gradient fade overlay + Paywall */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '65%',
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 35%, white 50%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      padding: '0 32px 40px',
+                    }}>
+                      <div style={{ textAlign: 'center', maxWidth: 420 }}>
+                        <Icon name="Lock" size={24} color="#667eea" />
+                        <h3 style={{ margin: '12px 0 8px', fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>
+                          Se den fulde analyserapport
+                        </h3>
+                        <p style={{ color: '#6b7280', fontSize: 13, margin: '0 0 24px', lineHeight: 1.5 }}>
+                          Alle {findings.length} fund, handlingsplan, konkurrentanalyse og detaljerede anbefalinger
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                          <button
+                            onClick={handlePurchase}
+                            style={{
+                              padding: '12px 28px',
+                              background: '#015bf8',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#0047cc'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#015bf8'; }}
+                          >
+                            Køb rapport — 39 kr.
+                          </button>
+                          <button
+                            onClick={handleSubscribe}
+                            style={{
+                              padding: '12px 28px',
+                              background: 'transparent',
+                              color: '#015bf8',
+                              border: '1px solid #015bf8',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#f0f4ff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            Abonner
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -4320,27 +4383,25 @@
             zIndex: 50,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontWeight: 700, fontSize: 15 }}>Agent SEO Scanner</span>
-              <span style={{
-                fontSize: 11,
-                padding: '3px 8px',
-                borderRadius: 999,
-                background: 'linear-gradient(135deg, #667eea20, #764ba220)',
-                border: '1px solid #667eea40',
-                color: '#667eea',
-                fontWeight: 600,
-              }}>v3</span>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Agent SEO v3</span>
             </div>
             <a href="/how-it-works" style={{
               color: '#667eea',
               textDecoration: 'none',
-              fontSize: 14,
+              fontSize: 18,
               fontWeight: 500,
+              width: 36,
+              height: 36,
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
-            }}>
-              ← Tilbage til Sådan virker det
+              justifyContent: 'center',
+              borderRadius: '50%',
+              transition: 'background 0.2s',
+            }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              ←
             </a>
           </div>
 
