@@ -1,3 +1,54 @@
+[auth]
+site_url = "https://flow-lime-rho.vercel.app"
+additional_redirect_urls = [
+  "https://flow-lime-rho.vercel.app/**",
+  "http://localhost:8080/**",
+  "https://06034cf6-1453-4ab4-ad25-29946f475c1c.lovableproject.com/**",
+  "https://06034cf6-1453-4ab4-ad25-29946f475c1c.sandbox.lovable.dev/**",
+  "https://297406cb-7e35-44c1-8f49-c87f67679b39.lovableproject.com/**",
+  "https://297406cb-7e35-44c1-8f49-c87f67679b39.sandbox.lovable.dev/**",
+  "https://7250ae64-15d5-44eb-827f-cee804f525ae.lovableproject.com/**",
+  "https://gemini-contract-parse.lovable.app/**",
+  "https://id-preview--06034cf6-1453-4ab4-ad25-29946f475c1c.lovable.app/**",
+  "https://id-preview--06034cf6-1453-4ab4-ad25-29946f475c1c.preview.lovable.dev/**",
+  "https://id-preview--297406cb-7e35-44c1-8f49-c87f67679b39.lovable.app/**",
+  "https://id-preview--297406cb-7e35-44c1-8f49-c87f67679b39.preview.lovable.dev/**",
+  "https://id-preview--7250ae64-15d5-44eb-827f-cee804f525ae.lovable.app/**",
+  "https://logo-landing-visuals-studio.lovable.app/**",
+  "https://moni-scope.lovable.app/**",
+  "https://preview--gemini-contract-parse.lovable.app/**",
+  "https://preview--gemini-contract-parse.preview.lovable.dev/**",
+  "https://preview--logo-landing-visuals-studio.lovable.app/**",
+  "https://preview--moni-scope.lovable.app/**",
+  "https://preview--moni-scope.preview.lovable.dev/**"
+]
+
+# Preserve existing MFA settings (remote has TOTP enabled)
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+
+[auth.mfa.web_authn]
+enroll_enabled = false
+verify_enabled = false
+
+# Preserve existing email settings
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+secure_password_change = true
+max_frequency = "1m0s"
+otp_length = 6
+otp_expiry = 86400
+
 [functions.receive-sms]
 verify_jwt = false
 
