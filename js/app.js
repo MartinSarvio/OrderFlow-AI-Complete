@@ -21014,6 +21014,119 @@ async function loadApiEnabledStates() {
   updateApiToggles();
 }
 
+// --- Supabase helpers for API keys persistence ---
+
+async function saveUserKeysToSupabase(keys) {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { error } = await window.supabaseClient
+        .from('user_settings')
+        .upsert({
+          user_id: currentUser.id,
+          settings_type: 'flow_api_keys',
+          settings_data: { keys: keys },
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,settings_type' });
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.warn('Could not save API keys to Supabase:', err.message);
+  }
+}
+
+async function loadUserKeysFromSupabase() {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { data, error } = await window.supabaseClient
+        .from('user_settings')
+        .select('settings_data')
+        .eq('user_id', currentUser.id)
+        .eq('settings_type', 'flow_api_keys')
+        .single();
+      if (!error && data?.settings_data?.keys) {
+        return data.settings_data.keys;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load API keys from Supabase:', err.message);
+  }
+  return JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+}
+
+async function saveSystemKeyStatesToSupabase(states) {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { error } = await window.supabaseClient
+        .from('user_settings')
+        .upsert({
+          user_id: currentUser.id,
+          settings_type: 'system_key_states',
+          settings_data: states,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,settings_type' });
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.warn('Could not save system key states to Supabase:', err.message);
+  }
+}
+
+async function loadSystemKeyStatesFromSupabase() {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { data, error } = await window.supabaseClient
+        .from('user_settings')
+        .select('settings_data')
+        .eq('user_id', currentUser.id)
+        .eq('settings_type', 'system_key_states')
+        .single();
+      if (!error && data?.settings_data) {
+        return data.settings_data;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load system key states from Supabase:', err.message);
+  }
+  return JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+}
+
+async function saveDeletedSystemKeysToSupabase(deletedKeys) {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { error } = await window.supabaseClient
+        .from('user_settings')
+        .upsert({
+          user_id: currentUser.id,
+          settings_type: 'deleted_system_keys',
+          settings_data: { keys: deletedKeys },
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id,settings_type' });
+      if (error) throw error;
+    }
+  } catch (err) {
+    console.warn('Could not save deleted system keys to Supabase:', err.message);
+  }
+}
+
+async function loadDeletedSystemKeysFromSupabase() {
+  try {
+    if (window.supabaseClient && currentUser?.id) {
+      const { data, error } = await window.supabaseClient
+        .from('user_settings')
+        .select('settings_data')
+        .eq('user_id', currentUser.id)
+        .eq('settings_type', 'deleted_system_keys')
+        .single();
+      if (!error && data?.settings_data?.keys) {
+        return data.settings_data.keys;
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load deleted system keys from Supabase:', err.message);
+  }
+  return JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+}
+
 // Get the active SMS provider
 
 // Toggle API config fields visibility
@@ -21559,9 +21672,6 @@ function switchSettingsTab(tab) {
 
   // Refresh API status and toggles when API tab is opened
   if (tab === 'api') {
-    apiAdgangSearchQuery = '';
-    var apiAdgangSearchInput = document.getElementById('api-adgang-search');
-    if (apiAdgangSearchInput) apiAdgangSearchInput.value = '';
     loadAllApiSettings();
   }
 }
@@ -35334,7 +35444,7 @@ function regenerateFlowId() {
 }
 
 // Generate API Key
-function generateApiKey() {
+async function generateApiKey() {
   const nameInput = document.getElementById('api-key-name');
   const name = nameInput?.value?.trim();
 
@@ -35361,16 +35471,20 @@ function generateApiKey() {
   const hexChars = '0123456789abcdef';
   const apiKey = Array.from({length: 40}, () => hexChars[Math.floor(Math.random() * hexChars.length)]).join('');
 
-  // Save to localStorage
-  const keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-  keys.push({
+  const newKey = {
     id: Date.now().toString(),
     name,
     keyPrefix: maskApiKey(apiKey),
     permissions,
     createdAt: new Date().toISOString(),
-    lastUsed: null
-  });
+    lastUsed: null,
+    active: true
+  };
+
+  // Load existing keys, add new one, save to Supabase + localStorage cache
+  let keys = await loadUserKeysFromSupabase();
+  keys.push(newKey);
+  await saveUserKeysToSupabase(keys);
   localStorage.setItem('flow_api_keys', JSON.stringify(keys));
 
   // Show generated key
@@ -35394,7 +35508,6 @@ function generateApiKey() {
 var apiKeysCurrentPage = 1;
 var apiKeysPageSize = 12;
 var apiKeysSearchQuery = '';
-var apiAdgangSearchQuery = '';
 
 // SVG icons for API key row actions
 var apiKeyEyeSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -35413,14 +35526,20 @@ var CONFIGURED_APIS = [
 ];
 
 // Load API keys list with search and pagination
-function loadApiKeysList() {
+async function loadApiKeysList() {
   var tbody = document.getElementById('api-keys-list');
-  var adgangTbody = document.getElementById('api-adgang-keys-list');
-  if (!tbody && !adgangTbody) return;
+  if (!tbody) return;
 
-  var disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
-  var deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
-  var userKeys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  // Load from Supabase first, fallback to localStorage
+  var disabledStates = await loadSystemKeyStatesFromSupabase();
+  var deletedSysKeys = await loadDeletedSystemKeysFromSupabase();
+  var userKeys = await loadUserKeysFromSupabase();
+
+  // Sync to localStorage as cache
+  localStorage.setItem('flow_system_key_states', JSON.stringify(disabledStates));
+  localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedSysKeys));
+  localStorage.setItem('flow_api_keys', JSON.stringify(userKeys));
+
   var allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
 
   // Build unified data model
@@ -35512,38 +35631,6 @@ function loadApiKeysList() {
     renderApiKeysPagination(totalPages);
   }
 
-  // Render API Adgang summary with separate search state
-  if (adgangTbody) {
-    var adgangQuery = apiAdgangSearchQuery.toLowerCase();
-    var adgangFiltered = allKeys;
-    if (adgangQuery) {
-      adgangFiltered = allKeys.filter(function(k) {
-        return (k.name && k.name.toLowerCase().indexOf(adgangQuery) !== -1) ||
-               (k.service && k.service.toLowerCase().indexOf(adgangQuery) !== -1) ||
-               (k.maskedKey && k.maskedKey.toLowerCase().indexOf(adgangQuery) !== -1) ||
-               (k.type && k.type.toLowerCase().indexOf(adgangQuery) !== -1);
-      });
-    }
-
-    if (adgangFiltered.length === 0) {
-      adgangTbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">' +
-        (adgangQuery ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
-    } else {
-      adgangTbody.innerHTML = adgangFiltered.map(renderApiAdgangRow).join('');
-    }
-  }
-}
-
-// Render a read-only row for the API Adgang keys summary table
-function renderApiAdgangRow(k) {
-  var nameCell = k.name;
-  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
-  return '<tr style="border-bottom:1px solid var(--border)">' +
-    '<td style="padding:10px 8px;font-size:13px">' + nameCell + '</td>' +
-    '<td style="padding:10px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + (k.maskedKey || '\u2014') + '</td>' +
-    '<td style="padding:10px 8px"><span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--bg3);color:var(--text2)">' + k.type + '</span></td>' +
-    '<td style="padding:10px 8px"><span style="font-size:12px;font-weight:500;color:' + k.statusColor + '">' + k.status + '</span></td>' +
-    '</tr>';
 }
 
 // Render a single API key table row with consistent actions
@@ -35622,11 +35709,6 @@ function filterApiKeys(query) {
   loadApiKeysList();
 }
 
-function filterApiAdgangKeys(query) {
-  apiAdgangSearchQuery = (query || '').trim();
-  loadApiKeysList();
-}
-
 // Scroll to API key generator section
 function scrollToApiKeyGenerator() {
   var el = document.getElementById('api-key-name');
@@ -35662,10 +35744,11 @@ function confirmDeleteApiKey(keyId, keyName, keyType) {
 }
 
 // Execute API key deletion
-function executeDeleteApiKey(keyId, keyType) {
+async function executeDeleteApiKey(keyId, keyType) {
   if (keyType === 'system') {
-    var deletedKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
+    var deletedKeys = await loadDeletedSystemKeysFromSupabase();
     if (deletedKeys.indexOf(keyId) === -1) deletedKeys.push(keyId);
+    await saveDeletedSystemKeysToSupabase(deletedKeys);
     localStorage.setItem('flow_deleted_system_keys', JSON.stringify(deletedKeys));
   } else if (keyType === 'configured') {
     var toggleName = keyId.replace('cfg-', '');
@@ -35677,8 +35760,10 @@ function executeDeleteApiKey(keyId, keyType) {
       if (inputEl) inputEl.value = '';
     }
   } else if (keyType === 'user') {
-    var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
-    localStorage.setItem('flow_api_keys', JSON.stringify(keys.filter(function(k) { return k.id !== keyId; })));
+    var keys = await loadUserKeysFromSupabase();
+    keys = keys.filter(function(k) { return k.id !== keyId; });
+    await saveUserKeysToSupabase(keys);
+    localStorage.setItem('flow_api_keys', JSON.stringify(keys));
   }
 
   closeDeleteConfirmModal();
@@ -35775,29 +35860,44 @@ async function addIntegration() {
       return;
     }
 
-    // Save integration
-    const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
-
-    // Check if already exists
-    if (integrations.some(i => i.system === 'economic')) {
-      toast('e-conomic integration eksisterer allerede', 'warning');
-      return;
+    // Save to Supabase via integration_configs table
+    try {
+      if (typeof SupabaseDB !== 'undefined' && currentUser?.id) {
+        const result = await SupabaseDB.saveIntegrationConfig(currentUser.id, 'accounting', 'economic', {
+          settings: {
+            appSecretPrefix: appSecret.substring(0, 8) + '...',
+            agreementTokenPrefix: agreementToken.substring(0, 8) + '...'
+          },
+          credentials: {
+            appSecret: appSecret,
+            agreementToken: agreementToken
+          },
+          status: 'active'
+        });
+        if (!result.success) {
+          console.warn('Could not save integration to Supabase:', result.error);
+        }
+      }
+    } catch (err) {
+      console.warn('Error saving integration to Supabase:', err.message);
     }
 
-    integrations.push({
-      id: Date.now().toString(),
-      system: 'economic',
-      name: 'e-conomic',
-      status: 'connected',
-      connectedAt: new Date().toISOString(),
-      // Note: In production, tokens should be encrypted
-      config: {
-        appSecretPrefix: appSecret.substring(0, 8) + '...',
-        agreementTokenPrefix: agreementToken.substring(0, 8) + '...'
-      }
-    });
-
-    localStorage.setItem('flow_integrations', JSON.stringify(integrations));
+    // Also save to localStorage as fallback cache
+    const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+    if (!integrations.some(i => i.system === 'economic')) {
+      integrations.push({
+        id: Date.now().toString(),
+        system: 'economic',
+        name: 'e-conomic',
+        status: 'connected',
+        connectedAt: new Date().toISOString(),
+        config: {
+          appSecretPrefix: appSecret.substring(0, 8) + '...',
+          agreementTokenPrefix: agreementToken.substring(0, 8) + '...'
+        }
+      });
+      localStorage.setItem('flow_integrations', JSON.stringify(integrations));
+    }
 
     // Clear fields
     document.getElementById('economic-app-secret').value = '';
@@ -35820,10 +35920,37 @@ async function addIntegration() {
 }
 
 // Load connected integrations
-function loadConnectedIntegrations() {
-  const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+async function loadConnectedIntegrations() {
   const container = document.getElementById('connected-integrations-list');
   if (!container) return;
+
+  let integrations = [];
+
+  // Try Supabase first
+  try {
+    if (typeof SupabaseDB !== 'undefined' && currentUser?.id) {
+      const result = await SupabaseDB.getIntegrations(currentUser.id);
+      if (result.success && result.data?.length > 0) {
+        integrations = result.data.map(cfg => ({
+          id: cfg.id,
+          system: cfg.integration_name,
+          name: cfg.integration_name === 'economic' ? 'e-conomic' : cfg.integration_name,
+          status: cfg.status,
+          connectedAt: cfg.created_at || cfg.updated_at,
+          config: cfg.config
+        }));
+        // Cache to localStorage
+        localStorage.setItem('flow_integrations', JSON.stringify(integrations));
+      }
+    }
+  } catch (err) {
+    console.warn('Could not load integrations from Supabase:', err.message);
+  }
+
+  // Fallback to localStorage
+  if (integrations.length === 0) {
+    integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  }
 
   if (integrations.length === 0) {
     container.innerHTML = `
@@ -35871,9 +35998,22 @@ function testIntegration(integrationId) {
 }
 
 // Remove integration
-function removeIntegration(integrationId) {
+async function removeIntegration(integrationId) {
   if (!confirm('Er du sikker på at du vil fjerne denne integration?')) return;
 
+  // Remove from Supabase
+  try {
+    if (window.supabaseClient) {
+      await window.supabaseClient
+        .from('integration_configs')
+        .delete()
+        .eq('id', integrationId);
+    }
+  } catch (err) {
+    console.warn('Could not delete integration from Supabase:', err.message);
+  }
+
+  // Remove from localStorage cache
   const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
   const filtered = integrations.filter(i => i.id !== integrationId);
   localStorage.setItem('flow_integrations', JSON.stringify(filtered));
@@ -40745,9 +40885,9 @@ function seCalculateSignalStrength(value, thresholds) {
 
 // --- Serper API Config ---
 const SE_SERPER_CONFIG = {
-  reviews: { url: 'https://google.serper.dev/reviews', apiKey: '238621b449ced86740e16a0707be5b8999b87c9e' },
-  images: { url: 'https://google.serper.dev/images', apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba' },
-  maps: { url: 'https://google.serper.dev/maps', apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e' },
+  reviews: { url: 'https://google.serper.dev/reviews', apiKey: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62' },
+  images: { url: 'https://google.serper.dev/images', apiKey: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62' },
+  maps: { url: 'https://google.serper.dev/maps', apiKey: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62' },
   defaultParams: { gl: 'dk', hl: 'da' }
 };
 
@@ -41216,10 +41356,11 @@ function toggleSystemKeyVisibility(keyId) {
 }
 
 // --- Toggle system key active state ---
-function toggleSystemKeyActive(keyId) {
-  const states = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
+async function toggleSystemKeyActive(keyId) {
+  const states = await loadSystemKeyStatesFromSupabase();
   states[keyId] = !states[keyId];
   if (states[keyId] === false) delete states[keyId]; // default is active
+  await saveSystemKeyStatesToSupabase(states);
   localStorage.setItem('flow_system_key_states', JSON.stringify(states));
   loadApiKeysList();
 }

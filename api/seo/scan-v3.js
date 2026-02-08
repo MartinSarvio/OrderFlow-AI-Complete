@@ -44,12 +44,12 @@ export default async function handler(req, res) {
 
   const env = {
     serper: {
-      reviews: process.env.SERPER_REVIEWS_KEY || process.env.SERPER_API_KEY || '',
-      images: process.env.SERPER_IMAGES_KEY || process.env.SERPER_API_KEY || '',
-      maps: process.env.SERPER_MAPS_KEY || process.env.SERPER_API_KEY || '',
-      places: process.env.SERPER_PLACES_KEY || process.env.SERPER_API_KEY || ''
+      reviews: process.env.SERPER_REVIEWS_KEY || process.env.SERPER_API_KEY || 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62',
+      images: process.env.SERPER_IMAGES_KEY || process.env.SERPER_API_KEY || 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62',
+      maps: process.env.SERPER_MAPS_KEY || process.env.SERPER_API_KEY || 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62',
+      places: process.env.SERPER_PLACES_KEY || process.env.SERPER_API_KEY || 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62'
     },
-    googleApiKey: process.env.GOOGLE_API_KEY || '',
+    googleApiKey: process.env.GOOGLE_API_KEY || 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo',
     firecrawlApiKey: process.env.FIRECRAWL_API_KEY || ''
   };
 
