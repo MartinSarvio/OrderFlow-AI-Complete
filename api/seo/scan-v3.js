@@ -203,7 +203,25 @@ async function analyzeGoogleBusiness(business, context) {
   }
 
   if (placeId && context.env.googleApiKey) {
-    googleResult = await fetchGooglePlaceDetails(placeId, context.env.googleApiKey, context.language);
+    try {
+      googleResult = await fetchGooglePlaceDetails(placeId, context.env.googleApiKey, context.language);
+    } catch (e) {
+      // CID from Serper is not a valid Google Place ID - try text search instead
+      try {
+        const textSearchUrl =
+          'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=' +
+          encodeURIComponent(business.name + ' ' + (business.address || '')) +
+          '&inputtype=textquery&fields=place_id' +
+          '&key=' + encodeURIComponent(context.env.googleApiKey) +
+          '&language=' + encodeURIComponent(context.language || 'da');
+        const tsResp = await fetch(textSearchUrl);
+        const tsData = await tsResp.json();
+        if (tsData.status === 'OK' && tsData.candidates && tsData.candidates.length > 0) {
+          placeId = tsData.candidates[0].place_id;
+          googleResult = await fetchGooglePlaceDetails(placeId, context.env.googleApiKey, context.language);
+        }
+      } catch (e2) { /* fallback to Serper data */ }
+    }
   }
 
   if (!googleResult && candidate) {

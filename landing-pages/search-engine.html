@@ -2481,13 +2481,35 @@
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
       const [secondsRemaining, setSecondsRemaining] = useState(150);
       const [isPaid, setIsPaid] = useState(false);
+      const cacheRestored = useRef(false);
 
-      // Check for paid=true URL param (Stripe redirect)
+      // Check for paid=true URL param (Stripe redirect) and restore cached results
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('paid') === 'true') {
-          setIsPaid(true);
-        }
+        if (params.get('paid') !== 'true') return;
+        setIsPaid(true);
+
+        // Restore cached scan results to skip re-scanning
+        try {
+          const cached = sessionStorage.getItem('seo_scan_cache');
+          if (cached) {
+            const data = JSON.parse(cached);
+            // Only use cache if less than 30 minutes old
+            if (data.timestamp && Date.now() - data.timestamp < 30 * 60 * 1000) {
+              setAnalysisResults(data.results || {});
+              setFindings(data.findings || []);
+              setIsComplete(true);
+              setShowReport(true);
+              // Mark all steps as completed visually
+              analysisSteps.forEach(step => {
+                setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
+              });
+              sessionStorage.removeItem('seo_scan_cache');
+              cacheRestored.current = true;
+              return;
+            }
+          }
+        } catch (e) { /* ignore parse errors */ }
       }, []);
 
       // Auto-unlock report when scan completes and payment is confirmed
@@ -2527,6 +2549,9 @@
       ], []);
 
       useEffect(() => {
+        // Skip scan if results were restored from cache (post-payment)
+        if (cacheRestored.current) return;
+
         const runAnalysis = async () => {
           try {
             // Start the v3 backend scan (single API call)
@@ -2592,6 +2617,16 @@
 
       const handlePurchase = async () => {
         try {
+          // Cache scan results before redirecting to Stripe
+          try {
+            sessionStorage.setItem('seo_scan_cache', JSON.stringify({
+              results: analysisResults,
+              findings,
+              business,
+              timestamp: Date.now(),
+            }));
+          } catch (e) { /* sessionStorage might be full */ }
+
           const params = new URLSearchParams(window.location.search);
           const returnUrl = window.location.origin + window.location.pathname + '?' + params.toString();
           const resp = await fetch('/api/stripe/create-checkout', {
