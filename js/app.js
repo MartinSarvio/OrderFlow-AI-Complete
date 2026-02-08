@@ -489,7 +489,7 @@ function saveSessionTimeoutSetting() {
     const value = select.value;
     localStorage.setItem('orderflow_session_timeout', value);
     resetSessionTimeout();
-    showToast('Session timeout gemt', 'success');
+    toast('Session timeout gemt', 'success');
   }
 }
 
@@ -576,7 +576,7 @@ function startSessionTimeout() {
   sessionTimeoutId = setTimeout(() => {
     hideInactivityWarning();
     console.log('⏰ Session timeout - logging out due to inactivity');
-    showToast('Session udløbet - log venligst ind igen', 'warning');
+    toast('Session udløbet - log venligst ind igen', 'warning');
     logout();
   }, duration);
 }
@@ -5045,11 +5045,12 @@ function generateDagsrapport(demoDato, silent) {
     }
   };
   
-  // Generate report files
-  generateReportFiles('dagsrapport', dato);
-
   // Render data table
   renderDagsrapportTable();
+  // Generate report files and render file table
+  generateReportFiles('dagsrapport', dato).then(() => {
+    renderReportFileTable('dagsrapport', dato);
+  });
   if (!silent) toast('Rapport genereret', 'success');
 }
 
@@ -5474,9 +5475,17 @@ function generateProduktrapport(demoFra, demoTil, silent) {
     summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
   };
   const reportDate = til;
-  generateReportFiles('produktrapport', reportDate);
   renderProduktrapportTable();
+  generateReportFiles('produktrapport', reportDate).then(() => {
+    renderReportFileTable('produktrapport', reportDate);
+  });
   if (!silent) toast('Rapport genereret', 'success');
+}
+
+function autoGenerateProduktrapport() {
+  const fra = document.getElementById('produktrapport-fra').value;
+  const til = document.getElementById('produktrapport-til').value;
+  if (fra && til) generateProduktrapport();
 }
 
 function renderProduktrapportTable() {
@@ -5545,8 +5554,10 @@ function generateZrapport(demoDato, silent) {
     rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
     summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
   };
-  generateReportFiles('zrapport', dato);
   renderZrapportTable();
+  generateReportFiles('zrapport', dato).then(() => {
+    renderReportFileTable('zrapport', dato);
+  });
   if (!silent) toast('Rapport genereret', 'success');
 }
 
@@ -5608,8 +5619,10 @@ function generateKonverteringsrapport(demoPeriode, silent) {
     summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
   };
   const konvReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('konverteringsrapport', konvReportDate);
   renderKonverteringsrapportTable();
+  generateReportFiles('konverteringsrapport', konvReportDate).then(() => {
+    renderReportFileTable('konverteringsrapport', konvReportDate);
+  });
   if (!silent) toast('Rapport genereret', 'success');
 }
 
@@ -5677,8 +5690,10 @@ function generateGenbestillingsrapport(demoPeriode, silent) {
     summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
   };
   const genbestReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('genbestillingsrapport', genbestReportDate);
   renderGenbestillingsrapportTable();
+  generateReportFiles('genbestillingsrapport', genbestReportDate).then(() => {
+    renderReportFileTable('genbestillingsrapport', genbestReportDate);
+  });
   if (!silent) toast('Rapport genereret', 'success');
 }
 
@@ -5750,8 +5765,10 @@ function generateAnmeldelsesrapport(demoPeriode, silent) {
     summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
   };
   const anmReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('anmeldelsesrapport', anmReportDate);
   renderAnmeldelsesrapportTable();
+  generateReportFiles('anmeldelsesrapport', anmReportDate).then(() => {
+    renderReportFileTable('anmeldelsesrapport', anmReportDate);
+  });
   if (!silent) toast('Rapport genereret', 'success');
 }
 
@@ -5837,6 +5854,9 @@ function generateHeatmaprapport(demoDato, silent) {
     summary: { 'Travleste dag': busiestDay.day + ' (' + busiestDay.total + ' ordrer)', 'Travleste time': busiestSlot.slot + ' (' + busiestSlot.total + ' ordrer)', 'Total ordrer (ugen)': totalOrders.toLocaleString('da-DK'), 'Gns. ordrer pr. time': avgPerHour }
   };
   renderHeatmaprapport();
+  generateReportFiles('heatmaprapport', dato).then(() => {
+    renderReportFileTable('heatmaprapport', dato);
+  });
   if (!silent) toast('Heatmap genereret', 'success');
 }
 
@@ -6294,11 +6314,19 @@ const ExportService = {
       const summaryHeight = Object.keys(data.summary).length * 7 + 12;
 
       doc.setFillColor(...c.headerBg);
-      doc.roundedRect(m.left, y, contentWidth, summaryHeight, 3, 3, 'F');
+      if (typeof doc.roundedRect === 'function') {
+        doc.roundedRect(m.left, y, contentWidth, summaryHeight, 3, 3, 'F');
+      } else {
+        doc.rect(m.left, y, contentWidth, summaryHeight, 'F');
+      }
 
       doc.setDrawColor(...c.accent);
       doc.setLineWidth(0.5);
-      doc.roundedRect(m.left, y, contentWidth, summaryHeight, 3, 3, 'S');
+      if (typeof doc.roundedRect === 'function') {
+        doc.roundedRect(m.left, y, contentWidth, summaryHeight, 3, 3, 'S');
+      } else {
+        doc.rect(m.left, y, contentWidth, summaryHeight, 'S');
+      }
 
       y += 8;
 
@@ -6629,21 +6657,14 @@ function downloadReportFile(reportType, dato, format) {
 }
 
 function renderReportFileTable(reportType, dato) {
-  const containerId = `${reportType}-content`;
+  const containerId = `${reportType}-files`;
   const container = document.getElementById(containerId);
   if (!container) return;
 
   const files = loadReportFiles(reportType, dato);
 
   if (!files || files.length === 0) {
-    container.innerHTML = `
-      <div class="card" style="padding:24px">
-        <div class="empty">
-          <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-          <div>Ingen rapportfiler for denne dato</div>
-          <div style="font-size:var(--font-size-sm);color:var(--muted);margin-top:8px">Klik "Generer rapport" for at oprette filer</div>
-        </div>
-      </div>`;
+    container.innerHTML = '';
     return;
   }
 
@@ -13958,7 +13979,11 @@ function exportCustomerPdf() {
     
     // Box background
     doc.setFillColor(245, 245, 245);
-    doc.roundedRect(x, boxY, boxWidth, boxHeight, 2, 2, 'F');
+    if (typeof doc.roundedRect === 'function') {
+      doc.roundedRect(x, boxY, boxWidth, boxHeight, 2, 2, 'F');
+    } else {
+      doc.rect(x, boxY, boxWidth, boxHeight, 'F');
+    }
     
     // Value
     doc.setFontSize(16);
@@ -40214,7 +40239,7 @@ function toggleInstagramAgent() {
   workflowAgentStatus.instagram.active = !workflowAgentStatus.instagram.active;
   localStorage.setItem('orderflow_instagram_agent_status', JSON.stringify(workflowAgentStatus.instagram));
   updateWorkflowAgentUI('instagram');
-  showToast(workflowAgentStatus.instagram.active ? 'Instagram agent aktiveret' : 'Instagram agent deaktiveret', 'success');
+  toast(workflowAgentStatus.instagram.active ? 'Instagram agent aktiveret' : 'Instagram agent deaktiveret', 'success');
 }
 
 // Toggle Facebook agent
@@ -40222,17 +40247,17 @@ function toggleFacebookAgent() {
   workflowAgentStatus.facebook.active = !workflowAgentStatus.facebook.active;
   localStorage.setItem('orderflow_facebook_agent_status', JSON.stringify(workflowAgentStatus.facebook));
   updateWorkflowAgentUI('facebook');
-  showToast(workflowAgentStatus.facebook.active ? 'Facebook agent aktiveret' : 'Facebook agent deaktiveret', 'success');
+  toast(workflowAgentStatus.facebook.active ? 'Facebook agent aktiveret' : 'Facebook agent deaktiveret', 'success');
 }
 
 // Show Instagram config (placeholder)
 function showInstagramConfig() {
-  showToast('Instagram konfiguration kommer snart', 'info');
+  toast('Instagram konfiguration kommer snart', 'info');
 }
 
 // Show Facebook config (placeholder)
 function showFacebookConfig() {
-  showToast('Facebook konfiguration kommer snart', 'info');
+  toast('Facebook konfiguration kommer snart', 'info');
 }
 
 // Export workflow functions
@@ -42664,7 +42689,7 @@ function renderAgentConfigSections(agentId, config) {
     } else if (s.type === 'webhook') {
       html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
         '<div style="display:flex;gap:8px"><input class="input" type="text" value="' + s.url + '" readonly style="flex:1;font-size:12px;opacity:0.7;cursor:not-allowed;font-family:monospace">' +
-        '<button class="btn btn-sm" onclick="navigator.clipboard.writeText(\'' + s.url + '\');showToast(\'Webhook URL kopieret\',\'success\')" style="flex-shrink:0;font-size:11px">Kopier</button></div>';
+        '<button class="btn btn-sm" onclick="navigator.clipboard.writeText(\'' + s.url + '\');toast(\'Webhook URL kopieret\',\'success\')" style="flex-shrink:0;font-size:11px">Kopier</button></div>';
     } else if (s.type === 'toggle') {
       var checked = localStorage.getItem(s.key) === 'true';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
@@ -42712,7 +42737,7 @@ function saveAgentConfig(agentId) {
       if (el) localStorage.setItem(s.key, el.value);
     }
   });
-  showToast(config.title + ' konfiguration gemt', 'success');
+  toast(config.title + ' konfiguration gemt', 'success');
 }
 
 function disconnectAgent(provider) {
@@ -42725,7 +42750,7 @@ function disconnectAgent(provider) {
     if (typeof updateWorkflowAgentUI === 'function') updateWorkflowAgentUI(provider);
   }
   if (currentConfigAgent) openAgentConfigPanel(currentConfigAgent);
-  showToast(provider.charAt(0).toUpperCase() + provider.slice(1) + ' afbrudt', 'info');
+  toast(provider.charAt(0).toUpperCase() + provider.slice(1) + ' afbrudt', 'info');
 }
 
 // ============================================
@@ -42735,7 +42760,7 @@ function disconnectAgent(provider) {
 function initMetaOAuth(channel) {
   var META_APP_ID = localStorage.getItem('meta_app_id') || '';
   if (!META_APP_ID) {
-    showToast('Meta App ID mangler. Tilf\u00f8j den under API N\u00f8gler f\u00f8rst.', 'warning');
+    toast('Meta App ID mangler. Tilf\u00f8j den under API N\u00f8gler f\u00f8rst.', 'warning');
     return;
   }
   var redirectUri = encodeURIComponent(window.location.origin + '/api/auth/meta/redirect.html');
@@ -42755,10 +42780,10 @@ function initMetaOAuth(channel) {
 
 function handleMetaOAuthCallback(data, channel) {
   if (data.error) {
-    showToast('Forbindelse fejlede: ' + data.error, 'error');
+    toast('Forbindelse fejlede: ' + data.error, 'error');
     return;
   }
-  showToast('Forbinder ' + channel + '...', 'info');
+  toast('Forbinder ' + channel + '...', 'info');
   fetch('/api/auth/meta/callback', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -42773,12 +42798,12 @@ function handleMetaOAuthCallback(data, channel) {
       if (result.pageId) localStorage.setItem(channel + '_page_id', result.pageId);
       if (typeof updateWorkflowAgentUI === 'function') updateWorkflowAgentUI(channel);
       if (currentConfigAgent) openAgentConfigPanel(currentConfigAgent);
-      showToast(channel.charAt(0).toUpperCase() + channel.slice(1) + ' forbundet!', 'success');
+      toast(channel.charAt(0).toUpperCase() + channel.slice(1) + ' forbundet!', 'success');
     } else {
-      showToast('Forbindelse fejlede: ' + (result.error || 'Ukendt fejl'), 'error');
+      toast('Forbindelse fejlede: ' + (result.error || 'Ukendt fejl'), 'error');
     }
   }).catch(function(err) {
-    showToast('Netv\u00e6rksfejl: ' + err.message, 'error');
+    toast('Netv\u00e6rksfejl: ' + err.message, 'error');
   });
 }
 
@@ -42990,14 +43015,14 @@ function saveIntegrationConfig(integrationId) {
     }
   });
   localStorage.setItem('integration_' + integrationId, 'connected');
-  showToast('Integration forbundet', 'success');
+  toast('Integration forbundet', 'success');
   closeAgentConfigPanel();
   renderCustomerIntegrations();
 }
 
 function disconnectIntegration(integrationId) {
   localStorage.removeItem('integration_' + integrationId);
-  showToast('Integration afbrudt', 'info');
+  toast('Integration afbrudt', 'info');
   closeAgentConfigPanel();
   renderCustomerIntegrations();
 }
@@ -43250,9 +43275,32 @@ function renderAgenterOverview() {
           '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:' + state.color + ';font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:' + state.color + ';display:inline-block"></span>' + state.label + '</span>' +
           '<span style="font-size:12px;color:var(--muted)">' + state.metaPrimary + '</span>' +
         '</div>' +
+        '<div style="margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--border);display:flex;justify-content:flex-end">' +
+          '<span class="btn btn-sm btn-secondary" onclick="event.stopPropagation();updateAgent(\'' + agent.id + '\')" id="agent-update-btn-' + agent.id + '">Opdater</span>' +
+        '</div>' +
       '</button>'
     );
   }).join('');
+}
+
+function updateAgent(agentId) {
+  const agent = AGENTER_PAGE_AGENTS.find(a => a.id === agentId);
+  if (!agent) return;
+  const btn = document.getElementById('agent-update-btn-' + agentId);
+  if (btn) {
+    btn.textContent = 'Opdaterer...';
+    btn.style.pointerEvents = 'none';
+    btn.style.opacity = '0.6';
+  }
+  setTimeout(() => {
+    if (btn) {
+      btn.textContent = 'Opdater';
+      btn.style.pointerEvents = '';
+      btn.style.opacity = '';
+    }
+    toast(agent.name + ' opdateret til seneste version', 'success');
+    renderAgenterOverview();
+  }, 1500);
 }
 
 function loadAgenterPage() {
