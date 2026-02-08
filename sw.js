@@ -1,6 +1,6 @@
 // OrderFlow Service Worker
 // Bump cache name to ensure clients don't keep the old app-shell cached under "/".
-const CACHE_NAME = 'orderflow-v3570-landing-first';
+const CACHE_NAME = 'orderflow-v3600-landing-first';
 
 const PRECACHE_URLS = [
   // Landing entry (served at "/" and "/index.html")
@@ -16,8 +16,8 @@ const PRECACHE_URLS = [
   '/css/utilities.css',
   '/css/components.css',
   '/css/appbuilder.css',
-  '/config/version.js?v=3570',
-  '/js/app.js?v=3570',
+  '/config/version.js?v=3600',
+  '/js/app.js?v=3600',
   '/images/FLOW-logo-hvid-4K.png'
 ];
 

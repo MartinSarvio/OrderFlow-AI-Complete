@@ -8,6 +8,7 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autoTable.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -2867,10 +2868,12 @@
     // =============================================================================
     // PDF REPORT GENERATOR
     // =============================================================================
+    // KOMPLET PDF-RAPPORT GENERATOR — Agent SEO v3
+    // =============================================================================
     class ScannerReportGenerator {
       constructor() {
-        this.primaryColor = [1, 91, 248];  // #015bf8 - primary blue
-        this.secondaryColor = [1, 91, 248]; // Same blue for consistency
+        this.primaryColor = [1, 91, 248];
+        this.secondaryColor = [1, 91, 248];
         this.darkColor = [26, 26, 46];
         this.successColor = [5, 150, 105];
         this.warningColor = [217, 119, 6];
@@ -2882,306 +2885,700 @@
         this.pageHeight = 297;
         this.margin = 20;
         this.contentWidth = this.pageWidth - 2 * this.margin;
+        this.bottomLimit = this.pageHeight - 25;
       }
 
-      formatDate(date) {
-        return new Date(date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+      // ── Helpers ──────────────────────────────────────────────────────────────
+      fmt(date) { return new Date(date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' }); }
+      sc(s) { return s >= 75 ? this.successColor : s >= 50 ? this.warningColor : this.dangerColor; }
+      tx(doc, ...c) { doc.setTextColor(c[0], c[1], c[2]); }
+      fl(doc, ...c) { doc.setFillColor(c[0], c[1], c[2]); }
+      wrap(doc, txt, w) { return doc.splitTextToSize(String(txt || ''), w); }
+
+      pageBreak(doc, y, need) {
+        if (y + need > this.bottomLimit) { doc.addPage(); this.pageHeader(doc); return this.margin + 10; }
+        return y;
+      }
+      pageHeader(doc) { this.fl(doc, ...this.primaryColor); doc.rect(0, 0, this.pageWidth, 3, 'F'); }
+      pageFooter(doc, pg) {
+        doc.setFontSize(8); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text(`Side ${pg}`, this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
+        doc.text('Agent SEO v3 — OrderFlow', this.pageWidth - this.margin, this.pageHeight - 10, { align: 'right' });
+      }
+      sectionHeader(doc, title, y) {
+        this.tx(doc, ...this.textColor); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+        doc.text(title, this.margin, y + 5); this.fl(doc, ...this.primaryColor);
+        doc.rect(this.margin, y + 8, 40, 2, 'F'); return y + 22;
+      }
+      metricBox(doc, x, y, w, label, value, sub) {
+        this.fl(doc, ...this.lightGray); doc.roundedRect(x, y, w, 32, 3, 3, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text(String(value), x + w/2, y + 15, { align: 'center' });
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text(label, x + w/2, y + 23, { align: 'center' });
+        if (sub) { doc.setFontSize(7); doc.text(sub, x + w/2, y + 29, { align: 'center' }); }
+      }
+      scoreBar(doc, x, y, w, score, label, weight) {
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(label, x, y + 4);
+        if (weight) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.text(`(${weight})`, x + doc.getTextWidth(label) + 3, y + 4); }
+        const sc = this.sc(score); const numStr = String(Math.round(score || 0));
+        this.tx(doc, sc[0], sc[1], sc[2]); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text(numStr, x + w, y + 4, { align: 'right' });
+        this.fl(doc, 224, 224, 224); doc.roundedRect(x, y + 8, w, 5, 2, 2, 'F');
+        this.fl(doc, sc[0], sc[1], sc[2]); doc.roundedRect(x, y + 8, w * Math.min(1, (score || 0) / 100), 5, 2, 2, 'F');
+      }
+      checkItem(doc, x, y, ok, label) {
+        const c = ok ? this.successColor : this.dangerColor;
+        this.fl(doc, c[0], c[1], c[2]); doc.roundedRect(x, y - 3, 14, 14, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        doc.text(ok ? 'OK' : 'X', x + 7, y + 5, { align: 'center' });
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(label, x + 18, y + 5);
+      }
+      infoBox(doc, x, y, w, text) {
+        this.fl(doc, 239, 246, 255); doc.roundedRect(x, y, w, 28, 3, 3, 'F');
+        this.fl(doc, ...this.primaryColor); doc.rect(x, y, 3, 28, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        const lines = this.wrap(doc, text, w - 14);
+        lines.slice(0, 3).forEach((l, i) => doc.text(l, x + 10, y + 10 + i * 5));
+        return y + 32;
       }
 
-      getScoreColor(score) {
-        if (score >= 75) return this.successColor;
-        if (score >= 50) return this.warningColor;
-        return this.dangerColor;
+      // ── AutoTable helper ────────────────────────────────────────────────────
+      autoTbl(doc, y, head, body, opts) {
+        const hasPlugin = typeof doc.autoTable === 'function';
+        if (!hasPlugin) { return this.manualTable(doc, y, head, body); }
+        doc.autoTable({
+          startY: y, head: [head], body,
+          theme: 'grid',
+          headStyles: { fillColor: this.primaryColor, textColor: [255,255,255], fontSize: 9, fontStyle: 'bold', cellPadding: 3 },
+          bodyStyles: { fontSize: 9, textColor: this.textColor, cellPadding: 3 },
+          alternateRowStyles: { fillColor: [249, 250, 251] },
+          margin: { left: this.margin, right: this.margin },
+          tableWidth: this.contentWidth,
+          ...opts
+        });
+        return doc.lastAutoTable.finalY + 10;
+      }
+      manualTable(doc, y, head, body) {
+        const colW = this.contentWidth / head.length;
+        this.fl(doc, ...this.primaryColor); doc.roundedRect(this.margin, y, this.contentWidth, 10, 2, 2, 'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        head.forEach((h, i) => doc.text(h, this.margin + i * colW + 3, y + 7));
+        y += 12;
+        body.forEach((row, ri) => {
+          if (ri % 2 === 0) { this.fl(doc, ...this.lightGray); doc.rect(this.margin, y - 3, this.contentWidth, 10, 'F'); }
+          this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+          row.forEach((cell, ci) => doc.text(String(cell || '-').substring(0, 28), this.margin + ci * colW + 3, y + 4));
+          y += 10;
+          y = this.pageBreak(doc, y, 12);
+        });
+        return y + 8;
       }
 
-      generate(reportData) {
+      // ── Main generate ───────────────────────────────────────────────────────
+      generate(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-
-        this.addCoverPage(doc, reportData);
-        this.addExecutiveSummary(doc, reportData);
-        this.addScorecards(doc, reportData);
-        this.addActionPlan(doc, reportData);
-
+        this.addCoverPage(doc, data);
+        this.addTableOfContents(doc);
+        this.addScoreOverview(doc, data);
+        this.addGoogleBusiness(doc, data);
+        this.addReviewsAnalysis(doc, data);
+        this.addCompetitorAnalysis(doc, data);
+        this.addWebsiteAnalysis(doc, data);
+        this.addNAPConsistency(doc, data);
+        this.addSocialMedia(doc, data);
+        this.addAllFindings(doc, data);
+        this.addDynamicActionPlan(doc, data);
+        this.addFutureVision(doc, data);
+        // Page numbers (skip cover)
+        const total = doc.internal.getNumberOfPages();
+        for (let i = 2; i <= total; i++) { doc.setPage(i); this.pageFooter(doc, i); }
         return doc;
       }
 
-      addCoverPage(doc, data) {
-        // Clean header bar
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(0, 0, this.pageWidth, 8, 'F');
-
-        // Title
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(32);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Digital Synlighedsrapport', this.pageWidth / 2, 45, { align: 'center' });
-
-        // Subtitle
-        doc.setFontSize(12);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Komplet analyse af din digitale tilstedeværelse', this.pageWidth / 2, 58, { align: 'center' });
-
-        // Business name
-        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
-        doc.text(data.business.name, this.pageWidth / 2, 85, { align: 'center' });
-
-        // Date and location
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(data.business.address || '', this.pageWidth / 2, 98, { align: 'center' });
-        doc.text(`Genereret: ${this.formatDate(data.scanDate)}`, this.pageWidth / 2, 108, { align: 'center' });
-
-        // Overall Score - Clean horizontal bar style
-        const centerX = this.pageWidth / 2;
-        const centerY = 150;
-
-        // Score circle with ring
-        const radius = 32;
-        const scoreColor = this.getScoreColor(data.overallScore);
-
-        // Outer ring
-        doc.setDrawColor(240, 240, 240);
-        doc.setLineWidth(4);
-        doc.circle(centerX, centerY, radius, 'S');
-
-        // Colored arc (approximated with circle for simplicity)
-        doc.setDrawColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.setLineWidth(4);
-        doc.circle(centerX, centerY, radius, 'S');
-
-        // Score number
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(32);
-        doc.setFont('helvetica', 'bold');
-        doc.text(String(data.overallScore), centerX, centerY + 4, { align: 'center' });
-        doc.setFontSize(10);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFont('helvetica', 'normal');
-        doc.text('af 100', centerX, centerY + 14, { align: 'center' });
-
-        // Score Label
-        doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        const label = data.overallScore >= 75 ? 'God digital tilstedeværelse' :
-                     data.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
-        doc.text(label, centerX, centerY + 48, { align: 'center' });
-
-        // Key Stats
-        let yPos = 220;
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-
+      // ── Page 1: Cover ───────────────────────────────────────────────────────
+      addCoverPage(doc, d) {
+        const cx = this.pageWidth / 2;
+        this.fl(doc, ...this.primaryColor); doc.rect(0, 0, this.pageWidth, 8, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(30); doc.setFont('helvetica', 'bold');
+        doc.text('Digital Synlighedsrapport', cx, 42, { align: 'center' });
+        doc.setFontSize(12); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('Komplet SEO-analyse og arbejdsplan', cx, 55, { align: 'center' });
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(20); doc.setFont('helvetica', 'bold');
+        doc.text(d.business.name, cx, 82, { align: 'center' });
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+        if (d.business.address) doc.text(d.business.address, cx, 95, { align: 'center' });
+        doc.text(`Genereret: ${this.fmt(d.scanDate)}`, cx, 105, { align: 'center' });
+        // Score circle
+        const cy = 148; const r = 30; const sc = this.sc(d.overallScore);
+        doc.setDrawColor(230,230,230); doc.setLineWidth(4); doc.circle(cx, cy, r, 'S');
+        doc.setDrawColor(sc[0],sc[1],sc[2]); doc.setLineWidth(4); doc.circle(cx, cy, r, 'S');
+        this.tx(doc, ...this.textColor); doc.setFontSize(30); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), cx, cy + 4, { align: 'center' });
+        doc.setFontSize(9); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('af 100', cx, cy + 13, { align: 'center' });
+        // Score label
+        const v3l = d.results._v3score?.label;
+        const lbl = v3l || (d.overallScore >= 75 ? 'God digital tilstedeværelse' : d.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler');
+        doc.setTextColor(sc[0],sc[1],sc[2]); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+        doc.text(lbl, cx, cy + 42, { align: 'center' });
+        // Key stats
         const stats = [
-          { label: 'Rating', value: data.results.googleProfile?.rating || 'N/A' },
-          { label: 'Anmeldelser', value: data.results.reviews?.totalReviews || 0 },
-          { label: 'Fund', value: data.findingsCount || 0 },
+          { label: 'Rating', value: d.results.googleProfile?.rating || 'N/A' },
+          { label: 'Anmeldelser', value: d.results.reviews?.totalReviews || 0 },
+          { label: 'Fund', value: d.findingsCount || 0 },
+          { label: 'Moduler', value: (d.results._v3moduleStatuses || []).length || 5 },
         ];
-
-        const statWidth = this.contentWidth / 3;
-        stats.forEach((stat, i) => {
-          const x = this.margin + statWidth * i + statWidth / 2;
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.text(stat.label, x, yPos, { align: 'center' });
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(stat.value), x, yPos + 8, { align: 'center' });
-          doc.setFont('helvetica', 'normal');
+        let sy = 218; const sw = this.contentWidth / stats.length;
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        stats.forEach((s, i) => {
+          const sx = this.margin + sw * i + sw / 2;
+          this.tx(doc, ...this.mutedColor); doc.text(s.label, sx, sy, { align: 'center' });
+          this.tx(doc, ...this.textColor); doc.setFont('helvetica', 'bold');
+          doc.text(String(s.value), sx, sy + 8, { align: 'center' }); doc.setFont('helvetica', 'normal');
         });
-
-        // Footer
-        doc.setFontSize(9);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.text('Powered by OrderFlow Business Scanner', centerX, 280, { align: 'center' });
+        // Module statuses
+        const mods = d.results._v3moduleStatuses || [];
+        if (mods.length) {
+          let my = 242; doc.setFontSize(9); this.tx(doc, ...this.mutedColor);
+          doc.text('Analysemoduler:', this.margin, my);
+          mods.forEach((m, i) => {
+            const col = m.status === 'completed' ? this.successColor : m.status === 'warning' ? this.warningColor : this.dangerColor;
+            this.fl(doc, col[0], col[1], col[2]); doc.circle(this.margin + 4 + i * 35, my + 8, 2, 'F');
+            this.tx(doc, ...this.textColor); doc.setFontSize(7);
+            doc.text(m.name || m.id, this.margin + 8 + i * 35, my + 9);
+          });
+        }
+        doc.setFontSize(9); this.tx(doc, ...this.mutedColor);
+        doc.text('Genereret af Agent SEO v3 — OrderFlow Business Scanner', cx, 280, { align: 'center' });
       }
 
-      addExecutiveSummary(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
+      // ── Page 2: Table of Contents ───────────────────────────────────────────
+      addTableOfContents(doc) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Indhold', this.margin + 5);
+        const items = [
+          ['Samlet Score & Scorekort', '3'],
+          ['Google Business Profile', '4'],
+          ['Anmeldelsesanalyse', '5'],
+          ['Konkurrentanalyse', '6'],
+          ['Website & Teknisk SEO', '7'],
+          ['NAP Konsistens', '8'],
+          ['Social Media', '9'],
+          ['Alle Fund', '10'],
+          ['Handlingsplan (7/30/90 dage)', '11'],
+          ['Fremtidsperspektiv & Næste Skridt', '12'],
+        ];
+        y += 5;
+        items.forEach((item, i) => {
+          this.tx(doc, ...this.textColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+          const num = `${i + 1}.`;
+          doc.text(num, this.margin, y);
+          doc.text(item[0], this.margin + 10, y);
+          // Dotted leader
+          const dots = '.'.repeat(80);
+          this.tx(doc, 200, 200, 200); doc.setFontSize(8);
+          doc.text(dots, this.margin + 10 + doc.getTextWidth(item[0]) + 2, y, { maxWidth: this.contentWidth - doc.getTextWidth(item[0]) - 30 });
+          this.tx(doc, ...this.mutedColor); doc.setFontSize(11);
+          doc.text(item[1], this.margin + this.contentWidth, y, { align: 'right' });
+          y += 14;
+        });
+      }
 
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Top 5 Vigtigste Fund', this.margin, yPos + 5);
-        yPos += 10;
+      // ── Page 3: Score Overview ──────────────────────────────────────────────
+      addScoreOverview(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Samlet Score & Scorekort', this.margin + 5);
+        // Overall score
+        const sc = this.sc(d.overallScore);
+        this.tx(doc, ...this.textColor); doc.setFontSize(48); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), this.margin + 25, y + 20);
+        doc.setFontSize(14); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('/ 100 point', this.margin + 58, y + 20);
+        doc.setTextColor(sc[0],sc[1],sc[2]); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        const v3l = d.results._v3score?.label || '';
+        doc.text(v3l, this.margin + 58, y + 8);
+        y += 35;
+        // Breakdown bars
+        const bd = d.results._v3score?.breakdown || {};
+        const cats = [
+          { label: 'Google Business Profile', score: bd.gbp || 0, weight: '30%' },
+          { label: 'Anmeldelser', score: bd.reviews || 0, weight: '25%' },
+          { label: 'Website & SEO', score: bd.website || 0, weight: '25%' },
+          { label: 'Konkurrenter', score: bd.competitors || 0, weight: '15%' },
+          { label: 'Social & NAP', score: bd.socialNap || 0, weight: '5%' },
+        ];
+        cats.forEach(c => { this.scoreBar(doc, this.margin, y, this.contentWidth, c.score, c.label, c.weight); y += 22; });
+        // Interpretation box
+        y += 5;
+        const interp = d.overallScore >= 75
+          ? 'Din virksomhed har en god digital tilstedeværelse. Fokuser på at vedligeholde og finjustere de områder der scorer lavest.'
+          : d.overallScore >= 50
+          ? 'Der er klart forbedringspotentiale. De røde og orange områder ovenfor bør prioriteres i din handlingsplan.'
+          : 'Der er kritiske mangler i din digitale synlighed. Start med de højprioriterede handlinger i handlingsplanen.';
+        this.infoBox(doc, this.margin, y, this.contentWidth, interp);
+      }
 
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 15;
+      // ── Page 4: Google Business Profile ─────────────────────────────────────
+      addGoogleBusiness(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Google Business Profile', this.margin + 5);
+        const gp = d.results.googleProfile;
+        if (!gp) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Google Business Profile data ikke tilgængelig for denne virksomhed.', this.margin, y + 10); return; }
+        // Metrics
+        const mw = (this.contentWidth - 15) / 4;
+        this.metricBox(doc, this.margin, y, mw, 'Rating', gp.rating || 'N/A', gp.rating ? `${gp.rating}/5.0` : '');
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Anmeldelser', gp.totalReviews || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'Billeder', gp.photos?.total || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 3, y, mw, 'Profil %', `${gp.profileCompleteness?.score || 0}%`);
+        y += 40;
+        // Completeness bar
+        const pcs = gp.profileCompleteness?.score || 0;
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Profil-komplethed', this.margin, y + 4);
+        this.fl(doc, 224, 224, 224); doc.roundedRect(this.margin, y + 8, this.contentWidth, 6, 3, 3, 'F');
+        const pcc = this.sc(pcs); this.fl(doc, pcc[0], pcc[1], pcc[2]);
+        doc.roundedRect(this.margin, y + 8, this.contentWidth * pcs / 100, 6, 3, 3, 'F');
+        y += 22;
+        // Missing fields
+        const missing = gp.profileCompleteness?.missing || [];
+        if (missing.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Manglende elementer:', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.dangerColor);
+          missing.forEach(m => { doc.text(`• ${m}`, this.margin + 5, y); y += 6; });
+          y += 5;
+        }
+        // Claimed & categories
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        if (gp.claimed !== undefined) {
+          const claimedTxt = gp.claimed ? 'Profilen er bekræftet (claimed)' : 'Profilen er IKKE bekræftet — dette bør gøres hurtigst muligt';
+          const cc = gp.claimed ? this.successColor : this.dangerColor;
+          doc.setTextColor(cc[0], cc[1], cc[2]); doc.text(claimedTxt, this.margin, y); y += 8;
+        }
+        if (gp.types?.length) { this.tx(doc, ...this.mutedColor); doc.text(`Kategorier: ${gp.types.join(', ')}`, this.margin, y); y += 12; }
+        // Tip box
+        y = this.infoBox(doc, this.margin, y, this.contentWidth, 'En komplet Google Business Profile har op til 70% større chance for at tiltrække lokale besøg. Tilføj billeder, åbningstider, menu og svar på anmeldelser regelmæssigt.');
+      }
 
-        // Top findings
-        const topFindings = (data.findings || [])
-          .filter(f => f.category === 'critical' || f.category === 'warning')
-          .slice(0, 5);
+      // ── Page 5: Reviews Analysis ────────────────────────────────────────────
+      addReviewsAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Anmeldelsesanalyse', this.margin + 5);
+        const rv = d.results.reviews;
+        if (!rv) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Anmeldelsesdata ikke tilgængelig.', this.margin, y + 10); return; }
+        // Key metrics
+        const mw = (this.contentWidth - 10) / 3;
+        this.metricBox(doc, this.margin, y, mw, 'Gns. Rating', rv.averageRating?.toFixed(1) || 'N/A');
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Svarrate', `${rv.responseMetrics?.responseRate || 0}%`);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'Gns. Svartid', rv.responseMetrics?.avgResponseTimeHours ? `${Math.round(rv.responseMetrics.avgResponseTimeHours)}t` : 'N/A');
+        y += 40;
+        // Sentiment bar
+        const sent = rv.sentiment || {};
+        if (sent.positive || sent.neutral || sent.negative) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Sentiment-fordeling', this.margin, y); y += 8;
+          const bw = this.contentWidth;
+          const posW = bw * (sent.positive || 0) / 100;
+          const neuW = bw * (sent.neutral || 0) / 100;
+          const negW = bw * (sent.negative || 0) / 100;
+          this.fl(doc, ...this.successColor); doc.roundedRect(this.margin, y, posW || 1, 10, 0, 0, 'F');
+          this.fl(doc, ...this.warningColor); doc.rect(this.margin + posW, y, neuW || 1, 10, 'F');
+          this.fl(doc, ...this.dangerColor); doc.rect(this.margin + posW + neuW, y, negW || 1, 10, 'F');
+          y += 14;
+          doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...this.successColor); doc.text(`Positiv: ${sent.positive || 0}%`, this.margin, y);
+          doc.setTextColor(...this.warningColor); doc.text(`Neutral: ${sent.neutral || 0}%`, this.margin + 55, y);
+          doc.setTextColor(...this.dangerColor); doc.text(`Negativ: ${sent.negative || 0}%`, this.margin + 110, y);
+          y += 12;
+        }
+        // Velocity
+        const vel = rv.velocity || {};
+        if (vel.monthlyAverage !== undefined) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Anmeldelseshastighed', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.textColor);
+          doc.text(`Månedligt gennemsnit: ${vel.monthlyAverage} anmeldelser`, this.margin, y); y += 6;
+          if (vel.trend) { doc.text(`Trend: ${vel.trend}`, this.margin, y); y += 6; }
+          y += 8;
+        }
+        // Top keywords
+        const kws = rv.topKeywords || [];
+        if (kws.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Hyppigste ord i anmeldelser', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          kws.slice(0, 8).forEach(kw => {
+            const c = kw.sentiment === 'positive' ? this.successColor : kw.sentiment === 'negative' ? this.dangerColor : this.mutedColor;
+            doc.setTextColor(c[0], c[1], c[2]);
+            doc.text(`• ${kw.term || kw} (${kw.count || ''})`, this.margin + 3, y); y += 6;
+          });
+          y += 5;
+        }
+        // Tip
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'Svar på alle anmeldelser inden for 24 timer. Positiv interaktion øger synlighed i Google og opbygger tillid hos potentielle kunder.');
+      }
 
-        if (topFindings.length === 0) {
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Ingen kritiske fund.', this.margin, yPos + 10);
-          yPos += 30;
-        } else {
-          topFindings.forEach((finding, i) => {
-            const color = finding.category === 'critical' ? this.dangerColor : this.warningColor;
-
-            // Number badge
-            doc.setFillColor(color[0], color[1], color[2]);
-            doc.circle(this.margin + 8, yPos + 5, 8, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text(String(i + 1), this.margin + 8, yPos + 8, { align: 'center' });
-
-            // Finding text
-            doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-            doc.setFontSize(11);
-            doc.text(finding.title, this.margin + 22, yPos + 6);
-
-            doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            const desc = finding.description?.substring(0, 100) + (finding.description?.length > 100 ? '...' : '');
-            doc.text(desc, this.margin + 22, yPos + 14);
-
-            yPos += 28;
+      // ── Page 6: Competitor Analysis ─────────────────────────────────────────
+      addCompetitorAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Konkurrentanalyse', this.margin + 5);
+        const comp = d.results.competitors;
+        if (!comp) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Konkurrentdata ikke tilgængelig.', this.margin, y + 10); return; }
+        // Ranking
+        const rank = comp.ranking?.overall || '-';
+        this.tx(doc, ...this.textColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text(`Din placering: #${rank} i området`, this.margin, y + 5); y += 15;
+        // Competitor table
+        const comps = comp.competitors || [];
+        if (comps.length) {
+          const head = ['#', 'Virksomhed', 'Rating', 'Anmeldelser', 'Afstand'];
+          const body = comps.map((c, i) => [String(i + 1), (c.name || '').substring(0, 30), String(c.rating || '-'), String(c.reviews || '-'), c.distance || '-']);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Insights
+        const insights = comp.insights || [];
+        if (insights.length) {
+          y = this.pageBreak(doc, y, 20);
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Konkurrentindsigter', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          insights.forEach((ins, i) => {
+            y = this.pageBreak(doc, y, 15);
+            const ic = ins.type === 'warning' ? this.dangerColor : ins.type === 'opportunity' ? this.primaryColor : this.successColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`${i + 1}. ${ins.title || ins.text || ''}`, this.margin, y);
+            if (ins.description) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); const dl = this.wrap(doc, ins.description, this.contentWidth - 10); dl.slice(0, 2).forEach(l => { y += 5; doc.text(l, this.margin + 5, y); }); doc.setFontSize(9); }
+            y += 8;
           });
         }
       }
 
-      addScorecards(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
-
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Scorekort', this.margin, yPos + 5);
-        yPos += 10;
-
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 20;
-
-        const bd = data.results._v3score?.breakdown || {};
-        const scores = [
-          { name: 'Google Business Profile', score: bd.gbp || data.results.googleProfile?.profileCompleteness?.score || 0 },
-          { name: 'Anmeldelser', score: bd.reviews || Math.round((data.results.reviews?.averageRating / 5) * 100) || 0 },
-          { name: 'NAP Konsistens', score: bd.socialNap || data.results.napConsistency?.consistencyScore || 0 },
-          { name: 'Website', score: bd.website || data.results.website?.scores?.mobile || 0 },
-          { name: 'Konkurrenter', score: bd.competitors || 0 },
+      // ── Page 7-8: Website & Technical SEO ───────────────────────────────────
+      addWebsiteAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Website & Teknisk SEO', this.margin + 5);
+        const web = d.results.website;
+        if (!web || !web.hasWebsite) {
+          this.fl(doc, 254, 243, 199); doc.roundedRect(this.margin, y, this.contentWidth, 25, 3, 3, 'F');
+          this.tx(doc, ...this.warningColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+          doc.text('Ingen hjemmeside registreret', this.margin + 8, y + 10);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.textColor);
+          doc.text('En hjemmeside er essentiel for digital synlighed. Overvej at oprette en optimeret side.', this.margin + 8, y + 19);
+          return;
+        }
+        // URL
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text(`URL: ${web.url || ''}`, this.margin, y); y += 10;
+        // Performance scores
+        const scores = web.scores || {};
+        const mw = (this.contentWidth - 15) / 4;
+        this.metricBox(doc, this.margin, y, mw, 'Mobil', scores.mobile || 0);
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Desktop', scores.desktop || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'SEO', scores.seo || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 3, y, mw, 'Performance', scores.performance || 0);
+        y += 42;
+        // Core Web Vitals
+        const cwv = web.coreWebVitals;
+        if (cwv) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Core Web Vitals', this.margin, y); y += 8;
+          const head = ['Metrik', 'Værdi', 'Vurdering', 'Mål'];
+          const body = [];
+          if (cwv.LCP) body.push(['LCP (Largest Contentful Paint)', cwv.LCP.value || '-', cwv.LCP.rating || '-', cwv.LCP.target || '< 2.5s']);
+          if (cwv.FID) body.push(['FID (First Input Delay)', cwv.FID.value || '-', cwv.FID.rating || '-', cwv.FID.target || '< 100ms']);
+          if (cwv.CLS) body.push(['CLS (Cumulative Layout Shift)', cwv.CLS.value || '-', cwv.CLS.rating || '-', cwv.CLS.target || '< 0.1']);
+          if (body.length) y = this.autoTbl(doc, y, head, body);
+        }
+        // Local SEO checklist
+        const lseo = web.localSEO || {};
+        y = this.pageBreak(doc, y, 90);
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Lokal SEO Tjekliste', this.margin, y); y += 10;
+        const checks = [
+          [lseo.hasSchemaMarkup, 'Schema Markup'],
+          [lseo.hasLocalBusinessSchema, 'LocalBusiness Schema'],
+          [lseo.hasOpenGraph, 'Open Graph Tags'],
+          [lseo.hasContactPage, 'Kontaktside'],
+          [lseo.hasEmbeddedMap, 'Indlejret Google Maps'],
+          [lseo.mobileResponsive, 'Mobil Responsiv'],
         ];
+        const halfLen = Math.ceil(checks.length / 2);
+        checks.forEach((ck, i) => {
+          const col = i < halfLen ? 0 : 1;
+          const row = i < halfLen ? i : i - halfLen;
+          this.checkItem(doc, this.margin + col * (this.contentWidth / 2), y + row * 16, ck[0], ck[1]);
+        });
+        y += halfLen * 16 + 8;
+        // Issues
+        const issues = web.issues || [];
+        if (issues.length) {
+          y = this.pageBreak(doc, y, 20);
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Identificerede problemer', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          issues.slice(0, 6).forEach(iss => {
+            y = this.pageBreak(doc, y, 12);
+            const ic = iss.severity === 'high' ? this.dangerColor : iss.severity === 'medium' ? this.warningColor : this.mutedColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`• ${iss.issue || iss}`, this.margin + 3, y);
+            if (iss.impact) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.text(`  Effekt: ${iss.impact}`, this.margin + 8, y + 5); doc.setFontSize(9); y += 5; }
+            y += 7;
+          });
+        }
+      }
 
-        const cardWidth = (this.contentWidth - 10) / 2;
-        const cardHeight = 35;
+      // ── Page 9: NAP Consistency ─────────────────────────────────────────────
+      addNAPConsistency(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'NAP Konsistens', this.margin + 5);
+        const nap = d.results.napConsistency;
+        if (!nap) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('NAP-data ikke tilgængelig.', this.margin, y + 10); return; }
+        // Score
+        this.metricBox(doc, this.margin, y, 60, 'Konsistens', `${nap.consistencyScore || 0}%`);
+        y += 40;
+        // Sources table
+        const sources = nap.sources || [];
+        if (sources.length) {
+          const head = ['Platform', 'Fundet', 'Navn', 'Adresse', 'Telefon'];
+          const body = sources.map(s => [
+            s.name || '-', s.found ? 'Ja' : 'Nej',
+            s.nameMatch ? 'OK' : 'Fejl', s.addressMatch ? 'OK' : 'Fejl', s.phoneMatch ? 'OK' : 'Fejl'
+          ]);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Issues
+        const issues = nap.issues || [];
+        if (issues.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Identificerede problemer', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          issues.forEach(iss => {
+            y = this.pageBreak(doc, y, 10);
+            const ic = iss.severity === 'critical' ? this.dangerColor : this.warningColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`• ${iss.platform || ''}: ${iss.issue || iss}`, this.margin + 3, y); y += 7;
+          });
+          y += 5;
+        }
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'NAP konsistens (Navn, Adresse, Telefon) er en af de vigtigste lokale ranking-faktorer. Inkonsistente oplysninger forvirrer Google og kan koste dig placeringer i Maps.');
+      }
 
-        scores.forEach((card, i) => {
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          const x = this.margin + col * (cardWidth + 10);
-          const y = yPos + row * (cardHeight + 10);
+      // ── Page 10: Social Media ───────────────────────────────────────────────
+      addSocialMedia(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Social Media Tilstedeværelse', this.margin + 5);
+        const soc = d.results.social;
+        if (!soc) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Social media data ikke tilgængelig.', this.margin, y + 10); return; }
+        // Overall score
+        this.metricBox(doc, this.margin, y, 60, 'Social Score', `${soc.overallScore || 0}%`);
+        y += 40;
+        // Platforms table
+        const platforms = soc.platforms || [];
+        if (platforms.length) {
+          const head = ['Platform', 'Status', 'Følgere', 'Opslag (30d)', 'Engagement'];
+          const body = platforms.map(p => [
+            p.name || '-',
+            p.found ? (p.status || 'Aktiv') : 'Ikke fundet',
+            p.found ? String(p.followers || 0) : '-',
+            p.found ? String(p.posts30Days || 0) : '-',
+            p.found ? `${p.engagement || 0}%` : '-'
+          ]);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Insights
+        const insights = soc.insights || [];
+        if (insights.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Indsigter', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          insights.forEach((ins, i) => {
+            y = this.pageBreak(doc, y, 10);
+            const ic = ins.type === 'positive' ? this.successColor : ins.type === 'warning' ? this.warningColor : this.mutedColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`${i + 1}. ${ins.text || ins}`, this.margin, y); y += 7;
+          });
+          y += 5;
+        }
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'Sociale platforme som TikTok, Instagram og Facebook driver lokal synlighed. Regelmæssige opslag med lokale hashtags og UGC (User Generated Content) styrker både brand og SEO.');
+      }
 
-          // Card background
-          doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
-          doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'F');
-
-          // Score
-          const scoreColor = this.getScoreColor(card.score);
-          doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-          doc.setFontSize(22);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(card.score), x + 12, y + 22);
-
-          // Label
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.text(card.name, x + 35, y + 15);
-
-          // Score bar
-          const barWidth = cardWidth - 50;
-          const barX = x + 35;
-          const barY = y + 22;
-
-          doc.setFillColor(224, 224, 224);
-          doc.roundedRect(barX, barY, barWidth, 5, 2, 2, 'F');
-
-          doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-          doc.roundedRect(barX, barY, barWidth * (card.score / 100), 5, 2, 2, 'F');
+      // ── Page 11+: All Findings ──────────────────────────────────────────────
+      addAllFindings(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Alle Fund fra Analysen', this.margin + 5);
+        const findings = d.findings || [];
+        const modules = new Set(findings.map(f => f.module || f.moduleName || 'Generelt'));
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(`${findings.length} fund identificeret på tværs af ${modules.size} moduler`, this.margin, y); y += 12;
+        const groups = [
+          { key: 'critical', label: 'Kritiske Fund', color: this.dangerColor },
+          { key: 'warning', label: 'Advarsler', color: this.warningColor },
+          { key: 'positive', label: 'Positive Fund', color: this.successColor },
+        ];
+        groups.forEach(g => {
+          const items = findings.filter(f => f.category === g.key);
+          if (!items.length) return;
+          y = this.pageBreak(doc, y, 25);
+          // Group header
+          this.fl(doc, g.color[0], g.color[1], g.color[2]); doc.rect(this.margin, y, 3, 12, 'F');
+          this.tx(doc, ...this.textColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+          doc.text(`${g.label} (${items.length})`, this.margin + 8, y + 8); y += 16;
+          // Items
+          items.forEach(f => {
+            y = this.pageBreak(doc, y, 22);
+            this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text(`• ${(f.title || '').substring(0, 70)}`, this.margin + 3, y);
+            y += 5;
+            if (f.description) {
+              this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+              const dl = this.wrap(doc, f.description, this.contentWidth - 10);
+              dl.slice(0, 2).forEach(l => { doc.text(l, this.margin + 8, y); y += 4; });
+            }
+            if (f.moduleName || f.module) {
+              doc.setFontSize(7); this.tx(doc, ...this.mutedColor);
+              doc.text(`Modul: ${f.moduleName || f.module}${f.dataSource ? ' | Kilde: ' + f.dataSource : ''}`, this.margin + 8, y); y += 4;
+            }
+            y += 4;
+          });
+          y += 6;
         });
       }
 
-      addActionPlan(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
+      // ── Page 12-13: Dynamic Action Plan ─────────────────────────────────────
+      addDynamicActionPlan(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Prioriteret Handlingsplan', this.margin + 5);
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text('Konkrete tiltag baseret på din analyse — med KPI for hver handling', this.margin, y); y += 12;
 
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Prioriteret Handlingsplan', this.margin, yPos + 5);
-        yPos += 10;
-
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 15;
-
-        const actions = [
-          { title: 'Svar på flere anmeldelser', priority: 'high', impact: 'Høj', effort: 'Lav' },
-          { title: 'Opdater Google Business profil', priority: 'high', impact: 'Høj', effort: 'Lav' },
-          { title: 'Tilføj LocalBusiness schema markup', priority: 'high', impact: 'Høj', effort: 'Medium' },
-          { title: 'Opret manglende citationer', priority: 'medium', impact: 'Medium', effort: 'Medium' },
-          { title: 'Optimer mobil hastighed', priority: 'medium', impact: 'Medium', effort: 'Høj' },
-          { title: 'Øg social media aktivitet', priority: 'low', impact: 'Lav', effort: 'Medium' },
+        const ap = d.results._v3actionPlan || {};
+        const phases = [
+          { key: 'week1', label: 'UGE 1 — Hurtige Gevinster', color: this.dangerColor, bg: [254, 242, 242] },
+          { key: 'days30', label: '30 DAGE — Forbedringer', color: this.warningColor, bg: [255, 251, 235] },
+          { key: 'days90', label: '90 DAGE — Langsigtede Tiltag', color: this.successColor, bg: [240, 253, 244] },
         ];
-
-        actions.forEach((action, i) => {
-          const color = action.priority === 'high' ? this.dangerColor :
-                       action.priority === 'medium' ? this.warningColor : this.successColor;
-
-          // Priority badge
-          doc.setFillColor(color[0], color[1], color[2]);
-          doc.roundedRect(this.margin, yPos, 18, 18, 3, 3, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(i + 1), this.margin + 9, yPos + 12, { align: 'center' });
-
-          // Action text
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFontSize(11);
-          doc.text(action.title, this.margin + 25, yPos + 8);
-
-          // Impact/Effort
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Effekt: ${action.impact} | Indsats: ${action.effort}`, this.margin + 25, yPos + 16);
-
-          yPos += 25;
+        let globalIdx = 0;
+        phases.forEach(phase => {
+          const items = ap[phase.key] || [];
+          if (!items.length) return;
+          y = this.pageBreak(doc, y, 30);
+          // Phase header
+          this.fl(doc, phase.bg[0], phase.bg[1], phase.bg[2]);
+          doc.roundedRect(this.margin, y, this.contentWidth, 12, 3, 3, 'F');
+          this.fl(doc, phase.color[0], phase.color[1], phase.color[2]);
+          doc.rect(this.margin, y, 4, 12, 'F');
+          doc.setTextColor(phase.color[0], phase.color[1], phase.color[2]);
+          doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text(phase.label, this.margin + 10, y + 8); y += 18;
+          // Items
+          items.forEach(item => {
+            globalIdx++;
+            y = this.pageBreak(doc, y, 30);
+            // Number badge
+            this.fl(doc, phase.color[0], phase.color[1], phase.color[2]);
+            doc.roundedRect(this.margin, y, 16, 16, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text(String(globalIdx), this.margin + 8, y + 11, { align: 'center' });
+            // Task title
+            this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+            doc.text((item.task || '').substring(0, 65), this.margin + 22, y + 6);
+            // Detail
+            if (item.detail) {
+              this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+              const dl = this.wrap(doc, item.detail, this.contentWidth - 25);
+              dl.slice(0, 2).forEach((l, li) => doc.text(l, this.margin + 22, y + 12 + li * 4));
+              y += dl.slice(0, 2).length * 4;
+            }
+            // KPI
+            if (item.kpi) {
+              doc.setTextColor(phase.color[0], phase.color[1], phase.color[2]);
+              doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+              doc.text(`KPI: ${item.kpi}`, this.margin + 22, y + 12);
+            }
+            y += 20;
+          });
+          y += 5;
         });
+        // Fallback if no actions
+        if (globalIdx === 0) {
+          this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+          doc.text('Ingen specifikke handlingspunkter genereret. Gennemgå fund-listen for inspiration.', this.margin, y); y += 15;
+        }
+        // CTA box
+        y = this.pageBreak(doc, y, 40);
+        doc.setDrawColor(...this.primaryColor); doc.setLineWidth(0.5);
+        doc.roundedRect(this.margin, y, this.contentWidth, 30, 3, 3, 'S');
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+        doc.text('Næste skridt', this.margin + 8, y + 12);
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text('Start med Uge 1-handlingerne. De giver størst effekt med mindst indsats.', this.margin + 8, y + 22);
+      }
 
-        // Call-to-action box
-        yPos += 25;
-        doc.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(this.margin, yPos, this.contentWidth, 35, 3, 3, 'S');
-        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Næste skridt', this.margin + 10, yPos + 14);
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+      // ── Page 14: Future Vision ──────────────────────────────────────────────
+      addFutureVision(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Fremtidsperspektiv & Næste Skridt', this.margin + 5);
+        const potential = Math.min(95, d.overallScore + 28);
+        const improvement = potential - d.overallScore;
+        // Before → After
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Score-potentiale', this.margin, y); y += 12;
+        // Current box
+        this.fl(doc, 255, 251, 235); doc.roundedRect(this.margin, y, 65, 40, 5, 5, 'F');
+        this.tx(doc, ...this.warningColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text('I DAG', this.margin + 32.5, y + 10, { align: 'center' });
+        doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), this.margin + 32.5, y + 28, { align: 'center' });
+        // Arrow
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(20);
+        doc.text('→', this.margin + 80, y + 25, { align: 'center' });
+        // Potential box
+        this.fl(doc, 240, 253, 244); doc.roundedRect(this.margin + 95, y, 65, 40, 5, 5, 'F');
+        this.tx(doc, ...this.successColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text('POTENTIALE', this.margin + 127.5, y + 10, { align: 'center' });
+        doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+        doc.text(String(potential), this.margin + 127.5, y + 28, { align: 'center' });
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Start med de 3 højprioriterede handlinger for at opnå størst effekt hurtigt.', this.margin + 10, yPos + 26);
+        doc.text(`+${improvement} point`, this.margin + 127.5, y + 37, { align: 'center' });
+        y += 52;
+        // Projected improvements
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Forventede forbedringer', this.margin, y); y += 10;
+        const projections = [
+          { label: 'Google Ranking', current: `#${d.results.competitors?.ranking?.overall || '?'}`, future: '#1-3' },
+          { label: 'Anmeldelser/måned', current: String(d.results.reviews?.velocity?.monthlyAverage || '?'), future: '8-12' },
+          { label: 'Svarrate', current: `${d.results.reviews?.responseMetrics?.responseRate || '?'}%`, future: '95%+' },
+          { label: 'Mobil Score', current: String(d.results.website?.scores?.mobile || '?'), future: '90+' },
+          { label: 'NAP Konsistens', current: `${d.results.napConsistency?.consistencyScore || '?'}%`, future: '100%' },
+        ];
+        const head = ['Metrik', 'Nu', 'Mål'];
+        const body = projections.map(p => [p.label, p.current, p.future]);
+        y = this.autoTbl(doc, y, head, body, { columnStyles: { 0: { fontStyle: 'bold' } } });
+        // Summary box
+        y = this.pageBreak(doc, y, 50);
+        this.fl(doc, 239, 246, 255); doc.roundedRect(this.margin, y, this.contentWidth, 45, 5, 5, 'F');
+        this.fl(doc, ...this.primaryColor); doc.rect(this.margin, y, 4, 45, 'F');
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text('Sådan kommer du videre', this.margin + 12, y + 14);
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        const steps = [
+          '1. Gennemfør Uge 1-handlingerne fra handlingsplanen',
+          '2. Sæt KPI-mål og mål fremgang efter 30 dage',
+          '3. Kør en ny scanning om 30 dage for at måle forbedringer',
+        ];
+        steps.forEach((s, i) => doc.text(s, this.margin + 12, y + 24 + i * 6));
+        y += 55;
+        // Disclaimer
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        doc.text(`Denne rapport er genereret ${this.fmt(d.scanDate)} og baseret på data tilgængelig på analysetidspunktet.`, this.margin, y);
+        doc.text('Resultater kan variere over tid. Kør regelmæssige scanninger for opdateret indsigt.', this.margin, y + 4);
       }
     }
 
