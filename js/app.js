@@ -5052,98 +5052,56 @@ function generateDagsrapport(demoDato, silent) {
     }
   };
   
-  // Generate report files and show file table
-  generateReportFiles('dagsrapport', dato).then(() => {
-    renderReportFileTable('dagsrapport', dato);
-  });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+  // Generate report files
+  generateReportFiles('dagsrapport', dato);
+
+  // Render data table
+  renderDagsrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderDagsrapportTable() {
+  if (!dagsrapportData) return;
+  const d = dagsrapportData;
+  const fmt = (n) => n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DKK';
+
+  const columns = [
+    { key: 'section', label: 'Sektion', width: '120px', bold: true },
+    { key: 'felt', label: 'Felt', width: '2fr', bold: true },
+    { key: 'vaerdi', label: 'Værdi', width: '1.5fr', align: 'right' }
+  ];
+
+  const rows = [
+    { section: 'Detaljer', felt: 'Åbnet', vaerdi: d.aabnet },
+    { section: '', felt: 'Lukket', vaerdi: d.lukket },
+    { section: '', felt: 'Åbnet af', vaerdi: d.medarbejder },
+    { section: '', felt: 'Dokumentnummer', vaerdi: d.dokumentNummer },
+    { section: 'Salgsoversigt', felt: 'Bruttoomsætning', vaerdi: fmt(d.bruttoomsaetning) },
+    { section: '', felt: 'Rabatter', vaerdi: fmt(d.rabatter) },
+    { section: '', felt: 'Totalomsætning', vaerdi: fmt(d.totalomsaetning), _highlight: true },
+    { section: '', felt: 'Moms opkrævet', vaerdi: fmt(d.momsOpkraevet) },
+    { section: '', felt: 'Salg ekskl. moms', vaerdi: fmt(d.salgEksMoms) },
+    { section: 'Kontant', felt: 'Salg', vaerdi: fmt(d.kontant.salg) },
+    { section: '', felt: 'Omsætning', vaerdi: fmt(d.kontant.omsaetning) },
+    { section: '', felt: 'Total', vaerdi: fmt(d.kontant.total), _highlight: true },
+    { section: 'Kort', felt: 'Salg', vaerdi: fmt(d.kort.salg) },
+    { section: '', felt: 'Omsætning', vaerdi: fmt(d.kort.omsaetning) },
+    { section: '', felt: 'Surcharge', vaerdi: fmt(d.kort.surcharge) },
+    { section: '', felt: 'Drikkepenge', vaerdi: fmt(d.kort.drikkepenge) },
+    { section: '', felt: 'Total', vaerdi: fmt(d.kort.total), _highlight: true },
+    { section: 'Moms (' + d.moms.rate + '%)', felt: 'Netto', vaerdi: fmt(d.moms.netto) },
+    { section: '', felt: 'Moms', vaerdi: fmt(d.moms.moms) },
+    { section: '', felt: 'Brutto', vaerdi: fmt(d.moms.brutto) },
+    { section: 'Total', felt: 'Nettobeløb', vaerdi: fmt(d.moms.netto) },
+    { section: '', felt: 'Momsbeløb', vaerdi: fmt(d.moms.moms) },
+    { section: '', felt: 'Bruttobeløb', vaerdi: fmt(d.moms.brutto), _highlight: true }
+  ];
+
+  showReportTable('dagsrapport-content', columns, rows, { reportType: 'dagsrapport', pageSize: 50 });
 }
 
 function renderDagsrapport() {
-  if (!dagsrapportData) return;
-  
-  const d = dagsrapportData;
-  const fmt = (n) => n.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DKK';
-  
-  document.getElementById('dagsrapport-content').innerHTML = `
-    <div class="report-section">
-      <div class="report-header">
-        <h2>Detaljer</h2>
-        <span class="report-subheader">Oversigt</span>
-      </div>
-      <div class="report-grid">
-        <div class="report-row"><span class="report-label">Åbnet</span><span class="report-value">${d.aabnet}</span></div>
-        <div class="report-row"><span class="report-label">Lukket</span><span class="report-value">${d.lukket}</span></div>
-        <div class="report-row"><span class="report-label">Åbnet af</span><span class="report-value">${d.medarbejder}</span></div>
-        <div class="report-row"><span class="report-label">Dokumentnummer</span><span class="report-value" style="font-family:monospace">${d.dokumentNummer}</span></div>
-      </div>
-    </div>
-    
-    <div class="report-section">
-      <div class="report-header">
-        <h2>Salgsoversigt</h2>
-        <span class="report-subheader">Oversigt</span>
-      </div>
-      <div class="report-grid">
-        <div class="report-row"><span class="report-label">Bruttoomsætning</span><span class="report-value">${fmt(d.bruttoomsaetning)}</span></div>
-        <div class="report-row"><span class="report-label">Rabatter</span><span class="report-value">${fmt(d.rabatter)}</span></div>
-        <div class="report-row highlight"><span class="report-label">Totalomsætning</span><span class="report-value">${fmt(d.totalomsaetning)}</span></div>
-        <div class="report-row"><span class="report-label">Moms opkrævet</span><span class="report-value">${fmt(d.momsOpkraevet)}</span></div>
-        <div class="report-row"><span class="report-label">Salg ekskl. moms</span><span class="report-value">${fmt(d.salgEksMoms)}</span></div>
-      </div>
-    </div>
-    
-    <div class="report-section">
-      <div class="report-header">
-        <h2>Betalingsfordeling</h2>
-      </div>
-      
-      <div class="report-subsection">
-        <h3>Kontant</h3>
-        <div class="report-grid">
-          <div class="report-row"><span class="report-label">Salg</span><span class="report-value">${fmt(d.kontant.salg)}</span></div>
-          <div class="report-row"><span class="report-label">Omsætning</span><span class="report-value">${fmt(d.kontant.omsaetning)}</span></div>
-          <div class="report-row highlight"><span class="report-label">Total</span><span class="report-value">${fmt(d.kontant.total)}</span></div>
-        </div>
-        <p class="report-note">Alle salg som er afhentning og ikke betales via kort i forbindelse med levering anses som kontant salg.</p>
-      </div>
-      
-      <div class="report-subsection">
-        <h3>Kort</h3>
-        <div class="report-grid">
-          <div class="report-row"><span class="report-label">Salg</span><span class="report-value">${fmt(d.kort.salg)}</span></div>
-          <div class="report-row"><span class="report-label">Omsætning</span><span class="report-value">${fmt(d.kort.omsaetning)}</span></div>
-          <div class="report-row"><span class="report-label">Surcharge</span><span class="report-value">${fmt(d.kort.surcharge)}</span></div>
-          <div class="report-row"><span class="report-label">Drikkepenge</span><span class="report-value">${fmt(d.kort.drikkepenge)}</span></div>
-          <div class="report-row highlight"><span class="report-label">Total</span><span class="report-value">${fmt(d.kort.total)}</span></div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="report-section">
-      <div class="report-header">
-        <h2>Momsspecifikation</h2>
-      </div>
-      
-      <div class="report-subsection">
-        <h3>Rate: ${d.moms.rate}%</h3>
-        <div class="report-grid">
-          <div class="report-row"><span class="report-label">Net</span><span class="report-value">${fmt(d.moms.netto)}</span></div>
-          <div class="report-row"><span class="report-label">Moms</span><span class="report-value">${fmt(d.moms.moms)}</span></div>
-          <div class="report-row"><span class="report-label">Brutto</span><span class="report-value">${fmt(d.moms.brutto)}</span></div>
-        </div>
-      </div>
-      
-      <div class="report-subsection">
-        <h3>Total</h3>
-        <div class="report-grid total-grid">
-          <div class="report-row"><span class="report-label">Nettobeløb</span><span class="report-value">${fmt(d.moms.netto)}</span></div>
-          <div class="report-row"><span class="report-label">Momsbeløb</span><span class="report-value">${fmt(d.moms.moms)}</span></div>
-          <div class="report-row highlight"><span class="report-label">Bruttobeløb</span><span class="report-value">${fmt(d.moms.brutto)}</span></div>
-        </div>
-      </div>
-    </div>
-  `;
+  renderDagsrapportTable();
 }
 
 function exportDagsrapportPDF() {
@@ -5523,25 +5481,43 @@ function generateProduktrapport(demoFra, demoTil, silent) {
     summary: { 'Total produkter': products.length + '', 'Total solgt': totalSold.toLocaleString('da-DK') + ' stk', 'Total omsætning': _fmtDKK(totalRevenue), 'Gns. avance': _fmtPct(avgMargin) }
   };
   const reportDate = til;
-  generateReportFiles('produktrapport', reportDate).then(() => {
-    renderReportFileTable('produktrapport', reportDate);
-  });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+  generateReportFiles('produktrapport', reportDate);
+  renderProduktrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderProduktrapportTable() {
+  if (!produktrapportData) return;
+
+  const columns = [
+    { key: 'produkt', label: 'Produkt', width: '2fr', bold: true },
+    { key: 'kategori', label: 'Kategori', width: '1fr', muted: true },
+    { key: 'solgt', label: 'Antal solgt', width: '80px', align: 'right' },
+    { key: 'omsaetning', label: 'Omsætning', width: '1fr', align: 'right' },
+    { key: 'gnsPris', label: 'Gns. pris', width: '1fr', align: 'right' },
+    { key: 'avance', label: 'Avance', width: '80px', align: 'right' }
+  ];
+
+  const rows = produktrapportData._raw.map(x => ({
+    produkt: x.name,
+    kategori: x.cat,
+    solgt: x.sold.toLocaleString('da-DK'),
+    omsaetning: _fmtDKK(x.revenue),
+    gnsPris: _fmtDKK(x.avgPrice),
+    avance: x.margin + '%'
+  }));
+
+  // Add summary row
+  const summary = produktrapportData.summary;
+  rows.push({ produkt: 'Total', kategori: '', solgt: summary['Total solgt'], omsaetning: summary['Total omsætning'], gnsPris: '', avance: summary['Gns. avance'], _highlight: true });
+
+  showReportTable('produktrapport-content', columns, rows, { reportType: 'produktrapport' });
 }
 
 function renderProduktrapport() {
-  if (!produktrapportData) return;
-  const d = produktrapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Produktoversigt — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Produkt</th><th class="hide-mobile">Kategori</th><th style="text-align:right">Solgt</th><th style="text-align:right">Omsætning</th><th style="text-align:right" class="hide-mobile">Gns. pris</th><th style="text-align:right;padding-right:16px">Avance</th></tr></thead><tbody>';
-  d.rows.forEach(r => {
-    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td class="hide-mobile">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
-  });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
-  html += '</div></div>';
-  document.getElementById('produktrapport-content').innerHTML = html;
+  renderProduktrapportTable();
 }
+
 
 // --- Z-RAPPORT ---
 function generateZrapport(demoDato, silent) {
@@ -5576,28 +5552,37 @@ function generateZrapport(demoDato, silent) {
     rows: lines.map(l => [l.desc, l.count.toLocaleString('da-DK'), _fmtDKK(l.amount)]),
     summary: { 'Brutto omsætning': _fmtDKK(brutto), 'Netto omsætning': _fmtDKK(netto), 'Moms (25%)': _fmtDKK(moms), 'Kassedifference': _fmtDKK(diff), 'Z-nummer': zNr }
   };
-  generateReportFiles('zrapport', dato).then(() => {
-    renderReportFileTable('zrapport', dato);
+  generateReportFiles('zrapport', dato);
+  renderZrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderZrapportTable() {
+  if (!zrapportData) return;
+  const d = zrapportData;
+
+  const columns = [
+    { key: 'beskrivelse', label: 'Beskrivelse', width: '2fr', bold: true },
+    { key: 'antal', label: 'Antal', width: '80px', align: 'right' },
+    { key: 'beloeb', label: 'Beløb (DKK)', width: '1.5fr', align: 'right' }
+  ];
+
+  const rows = d.rows.map(r => ({
+    beskrivelse: r[0],
+    antal: r[1],
+    beloeb: r[2]
+  }));
+
+  // Add summary rows
+  Object.entries(d.summary).forEach(([k, v]) => {
+    rows.push({ beskrivelse: k, antal: '', beloeb: v, _highlight: k === 'Netto omsætning' });
   });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+
+  showReportTable('zrapport-content', columns, rows, { reportType: 'zrapport', pageSize: 50 });
 }
 
 function renderZrapport() {
-  if (!zrapportData) return;
-  const d = zrapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Z-rapport — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Beskrivelse</th><th style="text-align:right">Antal</th><th style="text-align:right;padding-right:16px">Beløb (DKK)</th></tr></thead><tbody>';
-  d.rows.forEach(r => {
-    const isNeg = r[2].indexOf('-') !== -1;
-    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right;padding-right:16px' + (isNeg ? ';color:var(--danger)' : '') + '">' + r[2] + '</td></tr>';
-  });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => {
-    const hl = k === 'Netto omsætning' ? ' highlight' : '';
-    html += '<div class="report-row' + hl + '"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>';
-  });
-  html += '</div></div>';
-  document.getElementById('zrapport-content').innerHTML = html;
+  renderZrapportTable();
 }
 
 // --- KONVERTERINGSRAPPORT ---
@@ -5630,24 +5615,35 @@ function generateKonverteringsrapport(demoPeriode, silent) {
     summary: { 'Total besøgende': totalVisitors.toLocaleString('da-DK'), 'Total ordrer': totalOrders.toLocaleString('da-DK'), 'Gns. konvertering': _fmtPct(avgConv), 'Total omsætning': _fmtDKK(totalRevenue) }
   };
   const konvReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('konverteringsrapport', konvReportDate).then(() => {
-    renderReportFileTable('konverteringsrapport', konvReportDate);
-  });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+  generateReportFiles('konverteringsrapport', konvReportDate);
+  renderKonverteringsrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderKonverteringsrapportTable() {
+  if (!konverteringsrapportData) return;
+
+  const columns = [
+    { key: 'kilde', label: 'Kilde / Kanal', width: '2fr', bold: true },
+    { key: 'besoeg', label: 'Besøgende', width: '1fr', align: 'right' },
+    { key: 'ordrer', label: 'Ordrer', width: '80px', align: 'right' },
+    { key: 'konv', label: 'Konvertering', width: '1fr', align: 'right' },
+    { key: 'gnsOrdre', label: 'Gns. ordre', width: '1fr', align: 'right' },
+    { key: 'omsaetning', label: 'Omsætning', width: '1.5fr', align: 'right' }
+  ];
+
+  const rows = konverteringsrapportData.rows.map(r => ({
+    kilde: r[0], besoeg: r[1], ordrer: r[2], konv: r[3], gnsOrdre: r[4], omsaetning: r[5]
+  }));
+
+  const s = konverteringsrapportData.summary;
+  rows.push({ kilde: 'Total', besoeg: s['Total besøgende'], ordrer: s['Total ordrer'], konv: s['Gns. konvertering'], gnsOrdre: '', omsaetning: s['Total omsætning'], _highlight: true });
+
+  showReportTable('konverteringsrapport-content', columns, rows, { reportType: 'konverteringsrapport' });
 }
 
 function renderKonverteringsrapport() {
-  if (!konverteringsrapportData) return;
-  const d = konverteringsrapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Konvertering — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kilde / Kanal</th><th style="text-align:right">Besøgende</th><th style="text-align:right">Ordrer</th><th style="text-align:right">Konvertering</th><th style="text-align:right" class="hide-mobile">Gns. ordre</th><th style="text-align:right;padding-right:16px">Omsætning</th></tr></thead><tbody>';
-  d.rows.forEach(r => {
-    html += '<tr><td style="padding-left:16px;font-weight:500">' + r[0] + '</td><td style="text-align:right">' + r[1] + '</td><td style="text-align:right">' + r[2] + '</td><td style="text-align:right">' + r[3] + '</td><td style="text-align:right" class="hide-mobile">' + r[4] + '</td><td style="text-align:right;padding-right:16px">' + r[5] + '</td></tr>';
-  });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
-  html += '</div></div>';
-  document.getElementById('konverteringsrapport-content').innerHTML = html;
+  renderKonverteringsrapportTable();
 }
 
 // --- GENBESTILLINGSRAPPORT ---
@@ -5688,24 +5684,40 @@ function generateGenbestillingsrapport(demoPeriode, silent) {
     summary: { 'Tilbagevendende kunder': totalCustomers + '', 'Gns. ordrer pr. kunde': avgOrders.toFixed(1), 'Gns. interval': avgInterval.toFixed(0) + ' dage', 'Retention rate': _fmtPct(retention) }
   };
   const genbestReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('genbestillingsrapport', genbestReportDate).then(() => {
-    renderReportFileTable('genbestillingsrapport', genbestReportDate);
-  });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+  generateReportFiles('genbestillingsrapport', genbestReportDate);
+  renderGenbestillingsrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderGenbestillingsrapportTable() {
+  if (!genbestillingsrapportData) return;
+
+  const columns = [
+    { key: 'kunde', label: 'Kunde', width: '2fr', bold: true },
+    { key: 'ordrer', label: 'Ordrer', width: '80px', align: 'right' },
+    { key: 'sidsteOrdre', label: 'Sidste ordre', width: '1fr' },
+    { key: 'totalForbrugt', label: 'Total forbrugt', width: '1.2fr', align: 'right' },
+    { key: 'gnsInterval', label: 'Gns. interval', width: '1fr', align: 'right' },
+    { key: 'status', label: 'Status', width: '80px' }
+  ];
+
+  const rows = genbestillingsrapportData._raw.map(x => ({
+    kunde: x.name,
+    ordrer: x.orders.toLocaleString('da-DK'),
+    sidsteOrdre: x.lastDate,
+    totalForbrugt: _fmtDKK(x.totalSpent),
+    gnsInterval: x.avgInterval + ' dage',
+    status: x.status
+  }));
+
+  const s = genbestillingsrapportData.summary;
+  rows.push({ kunde: 'Opsummering', ordrer: s['Gns. ordrer pr. kunde'], sidsteOrdre: '', totalForbrugt: '', gnsInterval: s['Gns. interval'], status: s['Retention rate'], _highlight: true });
+
+  showReportTable('genbestillingsrapport-content', columns, rows, { reportType: 'genbestillingsrapport' });
 }
 
 function renderGenbestillingsrapport() {
-  if (!genbestillingsrapportData) return;
-  const d = genbestillingsrapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Genbestilling — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Kunde</th><th style="text-align:right">Ordrer</th><th class="hide-mobile">Sidste ordre</th><th style="text-align:right">Total forbrugt</th><th style="text-align:right" class="hide-mobile">Gns. interval</th><th style="text-align:center;padding-right:16px">Status</th></tr></thead><tbody>';
-  d._raw.forEach(x => {
-    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.name + '</td><td style="text-align:right">' + x.orders.toLocaleString('da-DK') + '</td><td class="hide-mobile">' + x.lastDate + '</td><td style="text-align:right">' + _fmtDKK(x.totalSpent) + '</td><td style="text-align:right" class="hide-mobile">' + x.avgInterval + ' dage</td><td style="text-align:center;padding-right:16px"><span class="badge ' + x.badgeClass + '">' + x.status + '</span></td></tr>';
-  });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
-  html += '</div></div>';
-  document.getElementById('genbestillingsrapport-content').innerHTML = html;
+  renderGenbestillingsrapportTable();
 }
 
 // --- ANMELDELSESRAPPORT ---
@@ -5745,25 +5757,40 @@ function generateAnmeldelsesrapport(demoPeriode, silent) {
     summary: { 'Total anmeldelser': totalReviews.toLocaleString('da-DK'), 'Gns. rating': avgRating.toFixed(1) + ' / 5.0', 'Positive': _fmtPct(totalPositive / totalReviews * 100), 'Anmeldelseskonvertering': _fmtPct(avgConv) }
   };
   const anmReportDate = new Date().toISOString().split('T')[0];
-  generateReportFiles('anmeldelsesrapport', anmReportDate).then(() => {
-    renderReportFileTable('anmeldelsesrapport', anmReportDate);
-  });
-  if (!silent) toast('Rapportfiler genereret', 'success');
+  generateReportFiles('anmeldelsesrapport', anmReportDate);
+  renderAnmeldelsesrapportTable();
+  if (!silent) toast('Rapport genereret', 'success');
+}
+
+function renderAnmeldelsesrapportTable() {
+  if (!anmeldelsesrapportData) return;
+
+  const columns = [
+    { key: 'platform', label: 'Platform', width: '2fr', bold: true },
+    { key: 'anmeldelser', label: 'Anmeldelser', width: '1fr', align: 'right' },
+    { key: 'rating', label: 'Gns. rating', width: '1fr', align: 'right' },
+    { key: 'positive', label: 'Positive', width: '80px', align: 'right' },
+    { key: 'negative', label: 'Negative', width: '80px', align: 'right' },
+    { key: 'konv', label: 'Konvertering', width: '1fr', align: 'right' }
+  ];
+
+  const rows = anmeldelsesrapportData._raw.map(x => ({
+    platform: x.platform,
+    anmeldelser: x.reviews.toLocaleString('da-DK'),
+    rating: x.rating.toFixed(1) + ' / 5.0',
+    positive: x.positive.toLocaleString('da-DK'),
+    negative: x.negative.toLocaleString('da-DK'),
+    konv: _fmtPct(x.conv)
+  }));
+
+  const s = anmeldelsesrapportData.summary;
+  rows.push({ platform: 'Total', anmeldelser: s['Total anmeldelser'], rating: s['Gns. rating'], positive: s['Positive'], negative: '', konv: s['Anmeldelseskonvertering'], _highlight: true });
+
+  showReportTable('anmeldelsesrapport-content', columns, rows, { reportType: 'anmeldelsesrapport' });
 }
 
 function renderAnmeldelsesrapport() {
-  if (!anmeldelsesrapportData) return;
-  const d = anmeldelsesrapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Anmeldelser — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Platform</th><th style="text-align:right">Anmeldelser</th><th style="text-align:center">Gns. rating</th><th style="text-align:right" class="hide-mobile">Positive</th><th style="text-align:right" class="hide-mobile">Negative</th><th style="text-align:right;padding-right:16px">Konvertering</th></tr></thead><tbody>';
-  d._raw.forEach(x => {
-    const stars = '&#9733;'.repeat(Math.round(x.rating)) + '&#9734;'.repeat(5 - Math.round(x.rating));
-    html += '<tr><td style="padding-left:16px;font-weight:500">' + x.platform + '</td><td style="text-align:right">' + x.reviews.toLocaleString('da-DK') + '</td><td style="text-align:center"><span style="color:#f59e0b">' + stars + '</span> ' + x.rating.toFixed(1) + '</td><td style="text-align:right" class="hide-mobile"><span style="color:var(--success)">' + x.positive + '</span></td><td style="text-align:right" class="hide-mobile"><span style="color:var(--danger)">' + x.negative + '</span></td><td style="text-align:right;padding-right:16px">' + _fmtPct(x.conv) + '</td></tr>';
-  });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
-  html += '</div></div>';
-  document.getElementById('anmeldelsesrapport-content').innerHTML = html;
+  renderAnmeldelsesrapportTable();
 }
 
 // --- HEATMAPRAPPORT ---
@@ -5832,21 +5859,41 @@ function _heatColor(value, max) {
 function renderHeatmaprapport() {
   if (!heatmaprapportData) return;
   const d = heatmaprapportData;
-  let html = '<div class="card"><div class="card-header"><h3 class="card-title">Heatmap — ' + d.period + '</h3></div><div class="card-body" style="padding:0"><div class="table-container"><table class="data-table" style="margin:0"><thead><tr><th style="padding-left:16px">Tidspunkt</th>';
-  d._days.forEach(day => { html += '<th style="text-align:center">' + day + '</th>'; });
-  html += '</tr></thead><tbody>';
+
+  // Heatmap grid (visual)
+  const gridCols = '100px ' + d._days.map(() => '1fr').join(' ');
+  let html = '<div class="card" style="padding:0;overflow:hidden">';
+  html += '<div style="display:grid;grid-template-columns:' + gridCols + ';gap:0;padding:14px 16px;background:var(--bg2);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-radius:var(--radius-md) var(--radius-md) 0 0">';
+  html += '<span>Tidspunkt</span>';
+  d._days.forEach(day => { html += '<span style="text-align:center">' + day + '</span>'; });
+  html += '</div>';
   d._timeSlots.forEach((slot, si) => {
-    html += '<tr><td style="padding-left:16px;font-weight:500;white-space:nowrap">' + slot + '</td>';
+    html += '<div style="display:grid;grid-template-columns:' + gridCols + ';gap:0;padding:8px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:var(--font-size-sm)">';
+    html += '<span style="font-weight:500;white-space:nowrap">' + slot + '</span>';
     d._grid[si].forEach(val => {
       const style = _heatColor(val, d._maxVal);
-      html += '<td style="text-align:center;' + style + '">' + val + '</td>';
+      html += '<span style="text-align:center;padding:4px;border-radius:4px;' + style + '">' + val + '</span>';
     });
-    html += '</tr>';
+    html += '</div>';
   });
-  html += '</tbody></table></div></div></div>';
-  html += '<div class="report-section" style="margin-top:20px"><div class="report-header"><h2>Opsummering</h2></div><div class="report-grid">';
-  Object.entries(d.summary).forEach(([k, v]) => { html += '<div class="report-row"><span class="report-label">' + k + '</span><span class="report-value">' + v + '</span></div>'; });
+  html += '</div>';
+
+  // Summary table below
+  html += '<div style="margin-top:var(--space-4)">';
+  const summaryColumns = [
+    { key: 'felt', label: 'Felt', width: '2fr', bold: true },
+    { key: 'vaerdi', label: 'Værdi', width: '1.5fr', align: 'right' }
+  ];
+  const summaryRows = Object.entries(d.summary).map(([k, v]) => ({ felt: k, vaerdi: v }));
+
+  // Render summary inline
+  html += '<div class="card" style="padding:0;overflow:hidden">';
+  html += '<div style="display:grid;grid-template-columns:2fr 1.5fr;gap:var(--space-3);padding:14px 16px;background:var(--bg2);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px"><span>Felt</span><span style="text-align:right">Værdi</span></div>';
+  summaryRows.forEach(r => {
+    html += '<div style="display:grid;grid-template-columns:2fr 1.5fr;gap:var(--space-3);padding:12px 16px;border-bottom:1px solid var(--border);font-size:var(--font-size-sm)"><span style="font-weight:500">' + r.felt + '</span><span style="text-align:right">' + r.vaerdi + '</span></div>';
+  });
   html += '</div></div>';
+
   document.getElementById('heatmaprapport-content').innerHTML = html;
 }
 
@@ -6634,6 +6681,103 @@ function renderReportFileTable(reportType, dato) {
         </div>
       `).join('')}
     </div>`;
+}
+
+// =====================================================
+// REUSABLE REPORT DATA TABLE (produktbibliotek-stil)
+// =====================================================
+const reportTableState = {};
+
+function renderReportDataTable(containerId, columns, rows, options = {}) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const reportType = options.reportType || containerId.replace('-content', '');
+  const pageSize = options.pageSize || 25;
+
+  if (!reportTableState[reportType]) {
+    reportTableState[reportType] = { currentPage: 1 };
+  }
+  const state = reportTableState[reportType];
+  if (options.resetPage) state.currentPage = 1;
+
+  const totalItems = rows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  const startIdx = (state.currentPage - 1) * pageSize;
+  const paginatedRows = rows.slice(startIdx, startIdx + pageSize);
+
+  const gridCols = columns.map(c => c.width || '1fr').join(' ');
+
+  let html = `<div class="card" style="padding:0;overflow:hidden">`;
+
+  // Header row
+  html += `<div style="display:grid;grid-template-columns:${gridCols};gap:var(--space-3);padding:14px 16px;background:var(--bg2);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-radius:var(--radius-md) var(--radius-md) 0 0">`;
+  columns.forEach(col => {
+    const align = col.align === 'right' ? 'text-align:right' : '';
+    html += `<span style="${align}">${col.label}</span>`;
+  });
+  html += `</div>`;
+
+  // Data rows
+  if (paginatedRows.length === 0) {
+    html += `<div style="padding:24px;text-align:center;color:var(--muted);font-size:var(--font-size-sm)">Ingen data</div>`;
+  } else {
+    paginatedRows.forEach((row, idx) => {
+      const isHighlight = row._highlight;
+      const bgStyle = isHighlight ? 'background:var(--bg2);font-weight:600;' : '';
+      html += `<div style="display:grid;grid-template-columns:${gridCols};gap:var(--space-3);padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:var(--font-size-sm);${bgStyle}">`;
+      columns.forEach(col => {
+        const val = row[col.key] !== undefined ? row[col.key] : '';
+        const align = col.align === 'right' ? 'text-align:right;' : '';
+        const fw = col.bold || isHighlight ? 'font-weight:500;' : '';
+        const color = col.muted ? 'color:var(--muted);' : '';
+        html += `<span style="${align}${fw}${color}">${val}</span>`;
+      });
+      html += `</div>`;
+    });
+  }
+
+  html += `</div>`;
+
+  // Pagination
+  if (totalItems > pageSize) {
+    html += `<div class="crm-pagination" id="${reportType}-pagination">
+      <button class="crm-page-btn" onclick="reportTableGoTo('${containerId}','${reportType}','first')" ${state.currentPage === 1 ? 'disabled' : ''}>« Første</button>
+      <button class="crm-page-btn" onclick="reportTableGoTo('${containerId}','${reportType}','prev')" ${state.currentPage === 1 ? 'disabled' : ''}>‹ Forrige</button>
+      <span class="crm-page-info">Side ${state.currentPage} af ${totalPages}</span>
+      <button class="crm-page-btn" onclick="reportTableGoTo('${containerId}','${reportType}','next')" ${state.currentPage >= totalPages ? 'disabled' : ''}>Næste ›</button>
+      <button class="crm-page-btn" onclick="reportTableGoTo('${containerId}','${reportType}','last')" ${state.currentPage >= totalPages ? 'disabled' : ''}>Sidste »</button>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+// Store columns/rows per report for pagination
+const reportTableData = {};
+
+function reportTableGoTo(containerId, reportType, direction) {
+  const data = reportTableData[reportType];
+  if (!data) return;
+  const state = reportTableState[reportType];
+  if (!state) return;
+  const totalPages = Math.max(1, Math.ceil(data.rows.length / (data.options.pageSize || 25)));
+
+  switch (direction) {
+    case 'first': state.currentPage = 1; break;
+    case 'prev': if (state.currentPage > 1) state.currentPage--; break;
+    case 'next': if (state.currentPage < totalPages) state.currentPage++; break;
+    case 'last': state.currentPage = totalPages; break;
+  }
+  renderReportDataTable(containerId, data.columns, data.rows, data.options);
+}
+
+function showReportTable(containerId, columns, rows, options = {}) {
+  const reportType = options.reportType || containerId.replace('-content', '');
+  reportTableData[reportType] = { columns, rows, options };
+  options.resetPage = true;
+  renderReportDataTable(containerId, columns, rows, options);
 }
 
 // === EXPORT DROPDOWN FUNCTIONS ===
@@ -23738,6 +23882,149 @@ function generateBrandedQR(data, container, options = {}) {
 
   container.innerHTML = `<p style="color:var(--muted);font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
   return null;
+}
+
+// =====================================================
+// QR KODE GENERATOR PAGE
+// =====================================================
+let currentQRInstance = null;
+
+function renderQRGeneratorFields() {
+  const type = document.getElementById('qr-type')?.value || 'bestilling';
+  const fieldsContainer = document.getElementById('qr-fields');
+  if (!fieldsContainer) return;
+
+  const fieldTemplates = {
+    bestilling: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Bestillings-URL</label>
+        <input type="text" class="form-input" id="qr-url" placeholder="https://din-restaurant.dk/bestil">
+      </div>`,
+    menu: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Menu-URL</label>
+        <input type="text" class="form-input" id="qr-url" placeholder="https://din-restaurant.dk/menu">
+      </div>`,
+    bord: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Base URL</label>
+        <input type="text" class="form-input" id="qr-url" placeholder="https://din-restaurant.dk/bord/">
+      </div>
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Bordnummer</label>
+        <input type="number" class="form-input" id="qr-bord-nummer" placeholder="1" min="1" max="999" value="1">
+      </div>`,
+    wifi: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Netværksnavn (SSID)</label>
+        <input type="text" class="form-input" id="qr-wifi-ssid" placeholder="Restaurant WiFi">
+      </div>
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Adgangskode</label>
+        <input type="text" class="form-input" id="qr-wifi-password" placeholder="password123">
+      </div>
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Kryptering</label>
+        <select class="form-input" id="qr-wifi-encryption">
+          <option value="WPA">WPA/WPA2</option>
+          <option value="WEP">WEP</option>
+          <option value="nopass">Ingen (åbent netværk)</option>
+        </select>
+      </div>`,
+    betaling: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">Betalingslink</label>
+        <input type="text" class="form-input" id="qr-url" placeholder="https://pay.mobilepay.dk/...">
+      </div>`,
+    custom: `
+      <div style="margin-bottom:var(--space-4)">
+        <label style="font-size:var(--font-size-sm);color:var(--muted);display:block;margin-bottom:var(--space-1)">URL eller tekst</label>
+        <input type="text" class="form-input" id="qr-url" placeholder="https://eksempel.dk">
+      </div>`
+  };
+
+  fieldsContainer.innerHTML = fieldTemplates[type] || fieldTemplates.custom;
+}
+
+function getQRData() {
+  const type = document.getElementById('qr-type')?.value || 'custom';
+
+  if (type === 'wifi') {
+    const ssid = document.getElementById('qr-wifi-ssid')?.value || '';
+    const password = document.getElementById('qr-wifi-password')?.value || '';
+    const encryption = document.getElementById('qr-wifi-encryption')?.value || 'WPA';
+    if (!ssid) { toast('Indtast netværksnavn (SSID)', 'error'); return null; }
+    return `WIFI:T:${encryption};S:${ssid};P:${password};;`;
+  }
+
+  if (type === 'bord') {
+    const baseUrl = document.getElementById('qr-url')?.value || '';
+    const bordNr = document.getElementById('qr-bord-nummer')?.value || '1';
+    if (!baseUrl) { toast('Indtast base URL', 'error'); return null; }
+    return baseUrl.replace(/\/$/, '') + '/' + bordNr;
+  }
+
+  const url = document.getElementById('qr-url')?.value || '';
+  if (!url) { toast('Indtast en URL eller tekst', 'error'); return null; }
+  return url;
+}
+
+function generateQRFromForm() {
+  const data = getQRData();
+  if (!data) return;
+
+  const size = parseInt(document.getElementById('qr-size')?.value || '300');
+  const showLogo = document.getElementById('qr-show-logo')?.checked !== false;
+  const container = document.getElementById('qr-preview-container');
+  if (!container) return;
+
+  container.style.background = '#000';
+  container.style.borderRadius = '12px';
+  container.style.padding = '20px';
+
+  currentQRInstance = generateBrandedQR(data, container, {
+    width: size,
+    height: size,
+    showLogo: showLogo
+  });
+
+  const downloadSection = document.getElementById('qr-download-section');
+  if (downloadSection) downloadSection.style.display = 'block';
+
+  toast('QR kode genereret', 'success');
+}
+
+function downloadQRCode() {
+  const container = document.getElementById('qr-preview-container');
+  if (!container) return;
+
+  const canvas = container.querySelector('canvas');
+  if (canvas) {
+    canvas.toBlob(function(blob) {
+      if (!blob) { toast('Kunne ikke downloade QR kode', 'error'); return; }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const type = document.getElementById('qr-type')?.value || 'qr';
+      link.download = `flow-qr-${type}-${Date.now()}.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast('QR kode downloadet', 'success');
+    }, 'image/png');
+    return;
+  }
+
+  const img = container.querySelector('img');
+  if (img) {
+    const link = document.createElement('a');
+    link.download = `flow-qr-${Date.now()}.png`;
+    link.href = img.src;
+    link.click();
+    toast('QR kode downloadet', 'success');
+    return;
+  }
+
+  toast('Generer først en QR kode', 'error');
 }
 
 function render2FAQrCode(otpauthUrl) {
