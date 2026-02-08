@@ -14,5 +14,8 @@
     "supabase": "^2.72.9",
     "vite": "^5.0.0",
     "vite-plugin-handlebars": "^2.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3"
   }
 }

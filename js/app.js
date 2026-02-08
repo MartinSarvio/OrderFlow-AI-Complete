@@ -335,7 +335,7 @@ window.jspdf={jsPDF:function(){var s={setFontSize:function(){return s},setTextCo
 const CONFIG = {
   // Supabase
   SUPABASE_URL: 'https://qymtjhzgtcittohutmay.supabase.co',
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTcyMzM2NiwiZXhwIjoyMDY3Mjk5MzY2fQ.th8EBi8r6JtR4nP0Q1FZoLiLT5-COohX4HvJ15Xd7G8',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjMzNjYsImV4cCI6MjA2NzI5OTM2Nn0.n6FYURqirRHO0pLPVDflAjH34aiiSxx7a_ZckDPW4DE',
   
   // OpenAI (indtastes i Indstillinger → API Adgang)
   OPENAI_API_KEY: '',
@@ -3341,92 +3341,23 @@ function getDemoRestaurants() {
 
 /**
  * Admin Login Function
- * Logs in with hardcoded admin credentials via Supabase Auth
+ * Prefills admin email and asks for password in the normal login form.
  */
 async function loginAdmin() {
   const adminEmail = 'martinsarvio@hotmail.com';
-  const adminPassword = 'Ma_93rtin';
-
   try {
-    console.log('🔑 Attempting admin login...');
-
-    // Wait for Supabase to initialize (max 5 seconds)
-    if (typeof window.waitForSupabase === 'function') {
-      try {
-        await Promise.race([
-          window.waitForSupabase(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-        ]);
-        console.log('✅ Supabase client ready for admin login');
-      } catch (err) {
-        console.warn('⚠️ Supabase initialization timeout, using local admin login');
-        loginAdminLocal();
-        return;
-      }
+    const emailEl = document.getElementById('login-email');
+    const passwordEl = document.getElementById('login-password');
+    if (emailEl) emailEl.value = adminEmail;
+    if (passwordEl) {
+      passwordEl.value = '';
+      passwordEl.focus();
     }
-
-    // Check if Supabase is available
-    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
-      console.warn('⚠️ Supabase not available, using local admin login');
-      loginAdminLocal();
-      return;
+    if (typeof toast === 'function') {
+      toast('Indtast admin-adgangskode for at logge ind', 'info');
     }
-
-    // Login via Supabase Auth
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email: adminEmail,
-      password: adminPassword
-    });
-
-    if (error) {
-      console.error('❌ Admin login error:', error);
-      throw error;
-    }
-
-    console.log('✅ Admin login successful:', data.user.email);
-
-    // Set current user
-    currentUser = {
-      ...data.user,
-      role: 'admin' // Add admin role
-    };
-
-    // Load restaurants from Supabase
-    if (typeof SupabaseDB !== 'undefined') {
-      try {
-        const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
-        restaurants = dbRestaurants || [];
-        console.log('✅ Loaded restaurants:', restaurants.length);
-      } catch (err) {
-        console.warn('⚠️ Could not load restaurants:', err);
-        restaurants = [];
-      }
-
-      // Initialize real-time sync
-      if (typeof RealtimeSync !== 'undefined') {
-        await RealtimeSync.init(currentUser.id);
-      }
-    }
-
-    // Play login transition animation
-    await playLoginTransition();
-
-    // Show app
-    showApp();
-    applyRoleBasedSidebar();
-
-    // Log admin login activity
-    logActivity('login', 'Administrator login', {
-      category: 'system',
-      user: currentUser.email,
-      role: currentUser.role
-    });
-
-    console.log('✅ Admin logged in successfully!');
-
   } catch (err) {
-    console.error('❌ Admin login failed:', err);
-    showAuthError('Admin login fejlede: ' + err.message);
+    console.warn('Could not prefill admin login form:', err);
   }
 }
 
@@ -7142,10 +7073,6 @@ async function addRestaurant() {
   document.getElementById('new-restaurant-phone').value = '';
 }
 
-function isDuplicateUserError(message = '') {
-  return /already registered|already exists|duplicate|exists/i.test(String(message));
-}
-
 async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
   const email = String(options.email || '').trim().toLowerCase();
   if (!email) return { status: 'skipped' };
@@ -7156,48 +7083,47 @@ async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
   }
 
   const contactName = String(options.contactName || options.owner || restaurant?.name || '').trim();
-  let invitedUserId = null;
   const redirectTo = buildPasswordSetupRedirectUrl();
-
-  // Preferred: Supabase native invite email (works without custom mail provider keys)
-  if (client.auth.admin?.inviteUserByEmail) {
-    const inviteResult = await client.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
-        full_name: contactName,
-        restaurant_name: restaurant?.name || '',
-        restaurant_id: restaurant?.id || ''
-      }
-    });
-
-    if (inviteResult.error) {
-      // Existing user: send reset link instead
-      if (!isDuplicateUserError(inviteResult.error.message)) {
-        throw inviteResult.error;
-      }
-
-      const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
-      if (resetResult.error) throw resetResult.error;
-      return { status: 'reset_link_sent_existing_user' };
-    }
-
-    invitedUserId = inviteResult.data?.user?.id || null;
-  } else {
-    // Fallback if admin API is unavailable in current SDK/runtime.
-    const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
-    if (resetResult.error) throw resetResult.error;
-    return { status: 'reset_link_sent' };
+  const { data: sessionData, error: sessionError } = await client.auth.getSession();
+  if (sessionError) {
+    throw new Error(sessionError.message || 'Kunne ikke hente aktiv session');
+  }
+  const accessToken = sessionData?.session?.access_token;
+  if (!accessToken) {
+    throw new Error('Ingen aktiv session. Log ind igen og prøv på ny.');
   }
 
-  if (invitedUserId && typeof SupabaseDB !== 'undefined' && SupabaseDB.setUserRole) {
-    try {
-      await SupabaseDB.setUserRole(invitedUserId, 'customer', false);
-    } catch (roleErr) {
-      console.warn('⚠️ Could not assign customer role:', roleErr?.message || roleErr);
-    }
+  const response = await fetch('/api/auth/provision-customer', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({
+      email,
+      contactName,
+      restaurantName: restaurant?.name || '',
+      restaurantId: restaurant?.id || '',
+      redirectTo
+    })
+  });
+
+  let result = null;
+  try {
+    result = await response.json();
+  } catch (parseErr) {
+    result = null;
   }
 
-  return { status: 'invite_sent', invitedUserId };
+  if (!response.ok) {
+    const message = result?.error || `Kundeadgang kunne ikke oprettes (${response.status})`;
+    throw new Error(message);
+  }
+
+  return {
+    status: result?.status || 'invite_sent',
+    invitedUserId: result?.invitedUserId || null
+  };
 }
 
 async function addRestaurantFromPage() {

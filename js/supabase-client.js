@@ -13,9 +13,7 @@ console.log('🔄 supabase-client.js loading...');
 // Supabase Configuration
 const SUPABASE_CONFIG = {
   url: 'https://qymtjhzgtcittohutmay.supabase.co',
-  // NOTE: In production, use anon key for client-side, service_role only for server-side
-  // For now, using service_role for full access during development
-  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTcyMzM2NiwiZXhwIjoyMDY3Mjk5MzY2fQ.th8EBi8r6JtR4nP0Q1FZoLiLT5-COohX4HvJ15Xd7G8'
+  key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5bXRqaHpndGNpdHRvaHV0bWF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3MjMzNjYsImV4cCI6MjA2NzI5OTM2Nn0.n6FYURqirRHO0pLPVDflAjH34aiiSxx7a_ZckDPW4DE'
 };
 
 // Export config to window for use in other modules
