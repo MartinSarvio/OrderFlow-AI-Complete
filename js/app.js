@@ -2509,6 +2509,84 @@ function togglePasswordVisibility(inputId) {
   input.type = input.type === 'password' ? 'text' : 'password';
 }
 
+// Password setup link expiry (used for invite/reset links)
+const PASSWORD_LINK_EXPIRY_STORAGE_KEY = 'orderflow_password_link_expiry_minutes';
+const PASSWORD_LINK_EXPIRY_DEFAULT_MINUTES = 10;
+const PASSWORD_LINK_EXPIRY_MIN_MINUTES = 1;
+const PASSWORD_LINK_EXPIRY_MAX_MINUTES = 120;
+
+function sanitizePasswordLinkExpiryMinutes(rawValue) {
+  var parsed = parseInt(rawValue, 10);
+  if (!Number.isFinite(parsed)) return PASSWORD_LINK_EXPIRY_DEFAULT_MINUTES;
+  if (parsed < PASSWORD_LINK_EXPIRY_MIN_MINUTES) return PASSWORD_LINK_EXPIRY_MIN_MINUTES;
+  if (parsed > PASSWORD_LINK_EXPIRY_MAX_MINUTES) return PASSWORD_LINK_EXPIRY_MAX_MINUTES;
+  return parsed;
+}
+
+function getConfiguredPasswordLinkExpiryMinutes() {
+  try {
+    var stored = localStorage.getItem(PASSWORD_LINK_EXPIRY_STORAGE_KEY);
+    return sanitizePasswordLinkExpiryMinutes(stored);
+  } catch (err) {
+    return PASSWORD_LINK_EXPIRY_DEFAULT_MINUTES;
+  }
+}
+
+function setConfiguredPasswordLinkExpiryMinutes(rawValue, options = {}) {
+  var minutes = sanitizePasswordLinkExpiryMinutes(rawValue);
+  try {
+    localStorage.setItem(PASSWORD_LINK_EXPIRY_STORAGE_KEY, String(minutes));
+  } catch (err) {
+    console.warn('Could not persist password link expiry setting:', err);
+  }
+
+  if (!options.silent && typeof toast === 'function') {
+    toast('Link udløbstid gemt: ' + minutes + ' min.', 'success');
+  }
+
+  var statusEl = document.getElementById('cms-password-link-expiry-status');
+  if (statusEl) {
+    statusEl.textContent = 'Gemt (' + minutes + ' min)';
+    statusEl.style.display = 'inline';
+    setTimeout(function() {
+      if (statusEl) statusEl.style.display = 'none';
+    }, 2200);
+  }
+
+  return minutes;
+}
+
+function buildPasswordSetupRedirectUrl() {
+  var minutes = getConfiguredPasswordLinkExpiryMinutes();
+  var expiresAt = Date.now() + (minutes * 60 * 1000);
+  var url = new URL(window.location.origin + '/setup-password.html');
+  url.searchParams.set('flow_pw_exp', String(expiresAt));
+  url.searchParams.set('flow_pw_ttl', String(minutes));
+  return url.toString();
+}
+
+function renderCMSPasswordLinkSettings() {
+  var inputEl = document.getElementById('cms-password-link-expiry-minutes');
+  if (!inputEl) return;
+  inputEl.value = String(getConfiguredPasswordLinkExpiryMinutes());
+}
+
+function handleCMSPasswordLinkExpiryInput(inputOrValue) {
+  var value = (inputOrValue && typeof inputOrValue === 'object' && 'value' in inputOrValue)
+    ? inputOrValue.value
+    : inputOrValue;
+  var sanitized = sanitizePasswordLinkExpiryMinutes(value);
+
+  var inputEl = document.getElementById('cms-password-link-expiry-minutes');
+  if (inputEl) inputEl.value = String(sanitized);
+}
+
+function saveCMSPasswordLinkExpirySetting() {
+  var inputEl = document.getElementById('cms-password-link-expiry-minutes');
+  if (!inputEl) return;
+  setConfiguredPasswordLinkExpiryMinutes(inputEl.value);
+}
+
 // Forgot password — send reset email via Supabase
 var forgotPasswordEmail = '';
 async function handleForgotPassword(e) {
@@ -2519,7 +2597,7 @@ async function handleForgotPassword(e) {
 
   try {
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-      var redirectUrl = window.location.origin + '/setup-password.html';
+      var redirectUrl = buildPasswordSetupRedirectUrl();
       var result = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
@@ -2571,7 +2649,7 @@ async function resendResetEmail() {
   if (!forgotPasswordEmail) return;
   try {
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-      var redirectUrl = window.location.origin + '/setup-password.html';
+      var redirectUrl = buildPasswordSetupRedirectUrl();
       await supabaseClient.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: redirectUrl
       });
@@ -7079,7 +7157,7 @@ async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
 
   const contactName = String(options.contactName || options.owner || restaurant?.name || '').trim();
   let invitedUserId = null;
-  const redirectTo = `${window.location.origin}/setup-password.html`;
+  const redirectTo = buildPasswordSetupRedirectUrl();
 
   // Preferred: Supabase native invite email (works without custom mail provider keys)
   if (client.auth.admin?.inviteUserByEmail) {
@@ -30730,6 +30808,7 @@ async function loadCMSPages() {
   originalCMSPages = JSON.stringify(cmsPages);
   cmsHasChanges = false;
   renderCMSPagesList();
+  renderCMSPasswordLinkSettings();
 }
 
 // Migrate existing CMS data to include video URLs from landing page
