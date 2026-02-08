@@ -2732,7 +2732,12 @@ async function handleLogin(e) {
   }
 
   // Check if Supabase is available
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+  const authClient =
+    window.supabaseClient ||
+    supabase ||
+    (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+
+  if (!authClient?.auth?.signInWithPassword) {
     console.error('❌ Supabase not available after waiting');
 
     // Fallback for admin users
@@ -2748,8 +2753,9 @@ async function handleLogin(e) {
   }
 
   try {
+    _loginSubmitInProgress = true;
     console.log('🔑 Attempting login with email:', email);
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    const { data, error } = await authClient.auth.signInWithPassword({ email, password });
     if (error) {
       console.error('❌ Login error:', error);
       throw error;
@@ -2835,6 +2841,7 @@ async function handleLogin(e) {
     const message = err?.message || err?.error_description || 'Login mislykkedes. Tjek email og kode.';
     showAuthError(message);
   } finally {
+    _loginSubmitInProgress = false;
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Log ind';
@@ -3504,18 +3511,43 @@ async function initAuthStateListener() {
     }
   }
 
-  if (typeof supabaseClient !== 'undefined' && supabaseClient?.auth?.onAuthStateChange) {
-    supabaseClient.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
-        resetAuthUI();
-      }
-      if (event === 'PASSWORD_RECOVERY') {
-        // User clicked the reset link from email — show reset password form
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('app').classList.remove('active');
-        showAuthView('reset');
-      }
-    });
+  const authClient =
+    window.supabaseClient ||
+    supabase ||
+    (typeof supabaseClient !== 'undefined' ? supabaseClient : null);
+
+  if (!authClient?.auth?.onAuthStateChange) return;
+
+  authClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESH_FAILED') {
+      resetAuthUI();
+      return;
+    }
+
+    if (event === 'PASSWORD_RECOVERY') {
+      // User clicked the reset link from email — show reset password form
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app').classList.remove('active');
+      showAuthView('reset');
+      return;
+    }
+
+    // If the user is already signed in to Supabase (e.g. session persisted in browser),
+    // we still need to "finishLogin()" so the app transitions out of the auth screen.
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      attemptAutoLoginFromSupabaseSession(session, event);
+      return;
+    }
+  });
+
+  // Safety net: in some cases INITIAL_SESSION doesn't fire (timing/script load),
+  // so we also proactively check the current session.
+  if (authClient?.auth?.getSession) {
+    authClient.auth.getSession()
+      .then(({ data }) => {
+        if (data?.session) attemptAutoLoginFromSupabaseSession(data.session, 'getSession');
+      })
+      .catch((err) => console.warn('Could not get Supabase session:', err));
   }
 }
 
@@ -3565,6 +3597,93 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuthStateListener();
   }
 });
+
+// ============================================================================
+// Supabase Session -> App Login Bridge
+// ============================================================================
+let _supabaseAutoLoginHandled = false;
+let _supabaseAutoLoginInProgress = false;
+let _loginSubmitInProgress = false;
+
+async function attemptAutoLoginFromSupabaseSession(session, sourceEvent) {
+  try {
+    if (_supabaseAutoLoginHandled || _supabaseAutoLoginInProgress) return;
+    if (!session?.user?.id) return;
+    if (sourceEvent === 'SIGNED_IN' && _loginSubmitInProgress) return;
+
+    // If we already have our local app-session, do not override it.
+    const hasLocalSession = !!localStorage.getItem(SESSION_KEY);
+    if (hasLocalSession) return;
+
+    _supabaseAutoLoginHandled = true;
+    _supabaseAutoLoginInProgress = true;
+
+    const email = String(session.user.email || '').toLowerCase();
+    const ADMIN_EMAILS = ['martinsarvio@hotmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(email);
+
+    let userRole = isAdmin ? 'admin' : 'user';
+
+    // Try to resolve role from DB (non-blocking; will fall back to "user").
+    if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getUserRole) {
+      try {
+        const dbRole = await SupabaseDB.getUserRole(session.user.id);
+        if (dbRole && ['admin', 'employee', 'customer'].includes(dbRole)) {
+          userRole = dbRole;
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not get user role from database (auto-login):', err);
+      }
+    }
+
+    const tempUser = {
+      ...session.user,
+      role: userRole
+    };
+
+    console.log(`🔁 Auto-login from Supabase session (${sourceEvent || 'unknown'}):`, {
+      userId: tempUser.id,
+      email: tempUser.email,
+      role: tempUser.role
+    });
+
+    // Respect existing 2FA gating if configured for admin/employee.
+    if (typeof check2FARequired === 'function' && (userRole === 'admin' || userRole === 'employee')) {
+      try {
+        const twoFACheck = await check2FARequired(tempUser);
+        if (twoFACheck?.required) {
+          if (twoFACheck.settings || twoFACheck.methods) {
+            window._pending2FALogin = {
+              user: tempUser,
+              settings: twoFACheck.settings,
+              isAdmin: isAdmin
+            };
+            show2FAChallenge(tempUser, twoFACheck.settings);
+            return;
+          }
+          if (userRole === 'employee') {
+            window._pending2FALogin = {
+              user: tempUser,
+              settings: null,
+              isAdmin: isAdmin
+            };
+            show2FASetupRequired(tempUser);
+            return;
+          }
+          // Admin without 2FA can proceed.
+        }
+      } catch (err) {
+        console.warn('2FA check failed (auto-login):', err);
+      }
+    }
+
+    await finishLogin(tempUser, isAdmin);
+  } catch (err) {
+    console.warn('Auto-login from Supabase session failed:', err);
+  } finally {
+    _supabaseAutoLoginInProgress = false;
+  }
+}
 
 // =====================================================
 // HEADER DROPDOWN FUNKTIONER
