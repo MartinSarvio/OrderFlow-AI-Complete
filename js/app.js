@@ -2480,8 +2480,8 @@ const DEMO_RESTAURANTS = [
 // Some parts of this app still reference `supabaseClient` directly, so we keep a global alias.
 var supabaseClient = window.supabaseClient || null;
 
-// Keep it synced with window.supabaseClient, but never overwrite window.supabase library object.
-let supabase = supabaseClient;
+// Sync local alias with supabase-client.js (which already declares `let supabase`)
+supabase = supabaseClient || supabase;
 
 if (typeof window.waitForSupabase === 'function') {
   window.waitForSupabase()
