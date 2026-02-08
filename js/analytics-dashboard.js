@@ -71,15 +71,112 @@ const AnalyticsDashboard = {
     },
 
     /**
+     * Generate demo metrics data for charts/stats
+     */
+    generateDemoMetrics(days) {
+        const data = [];
+        const now = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - i);
+            const dayOfWeek = date.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const baseOrders = isWeekend ? 35 : 22;
+            const orders = baseOrders + Math.floor(Math.random() * 15);
+            const avgPrice = 280 + Math.floor(Math.random() * 60);
+            data.push({
+                date: date.toISOString().split('T')[0],
+                total_revenue_dkk: orders * avgPrice,
+                total_orders: orders,
+                unique_visitors: Math.floor(orders * 3.5 + Math.random() * 20),
+                total_sessions: Math.floor(orders * 4.2 + Math.random() * 30),
+                orders_web: Math.floor(orders * 0.3),
+                orders_app: Math.floor(orders * 0.4),
+                orders_instagram: Math.floor(orders * 0.1),
+                orders_facebook: Math.floor(orders * 0.05),
+                orders_sms: Math.floor(orders * 0.1),
+                orders_phone: Math.floor(orders * 0.05),
+                orders_delivery: Math.floor(orders * 0.55),
+                orders_pickup: Math.floor(orders * 0.4),
+                orders_dine_in: Math.floor(orders * 0.05)
+            });
+        }
+        return data;
+    },
+
+    /**
+     * Generate demo AI metrics
+     */
+    generateDemoAIMetrics() {
+        return {
+            total_conversations: 89,
+            orders_created: 34,
+            completion_rate: 94,
+            escalations: 5,
+            abandoned: 12,
+            avg_messages: 6,
+            escalation_rate: 6
+        };
+    },
+
+    /**
+     * Generate demo conversations
+     */
+    generateDemoConversations() {
+        const channels = ['web_chat', 'instagram_dm', 'facebook_messenger', 'sms'];
+        const outcomes = ['order_completed', 'abandoned', 'escalated', 'info_provided'];
+        const convs = [];
+        for (let i = 0; i < 15; i++) {
+            const started = new Date();
+            started.setHours(started.getHours() - i * 3 - Math.floor(Math.random() * 5));
+            convs.push({
+                conversation_id: 'demo-conv-' + i,
+                started_at: started.toISOString(),
+                channel: channels[Math.floor(Math.random() * channels.length)],
+                message_count: Math.floor(Math.random() * 12) + 3,
+                outcome: i < 6 ? 'order_completed' : outcomes[Math.floor(Math.random() * outcomes.length)]
+            });
+        }
+        return convs;
+    },
+
+    /**
+     * Generate demo product analytics
+     */
+    generateDemoProductData() {
+        const products = [
+            { product_id: 'p1', product_name: 'Margherita Pizza', product_category: 'Pizza', units_sold: 47, revenue_dkk: 4230, menu_views: 234 },
+            { product_id: 'p2', product_name: 'Pepperoni Pizza', product_category: 'Pizza', units_sold: 38, revenue_dkk: 3800, menu_views: 198 },
+            { product_id: 'p3', product_name: 'Quattro Formaggi', product_category: 'Pizza', units_sold: 29, revenue_dkk: 3190, menu_views: 156 },
+            { product_id: 'p4', product_name: 'Burger Classic', product_category: 'Burgere', units_sold: 34, revenue_dkk: 4080, menu_views: 178 },
+            { product_id: 'p5', product_name: 'Tiramisu', product_category: 'Dessert', units_sold: 24, revenue_dkk: 1440, menu_views: 112 },
+            { product_id: 'p6', product_name: 'Cola', product_category: 'Drikkevarer', units_sold: 56, revenue_dkk: 1680, menu_views: 89 },
+            { product_id: 'p7', product_name: 'Caesar Salat', product_category: 'Salat', units_sold: 18, revenue_dkk: 1620, menu_views: 94 },
+            { product_id: 'p8', product_name: 'Pommes Frites', product_category: 'Tilbeh\u00f8r', units_sold: 42, revenue_dkk: 1890, menu_views: 67 }
+        ];
+        return products;
+    },
+
+    /**
      * Load analytics overview data
      */
     async loadOverviewData() {
         if (!this.currentRestaurantId) {
             console.warn('No restaurant ID set for analytics');
+            // Still show demo data if enabled
+            if (typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+                const demoData = this.generateDemoMetrics(7);
+                this.updateOverviewStats(demoData);
+                this.updateRevenueChart(demoData);
+                this.updateChannelChart(demoData);
+                const aiData = this.generateDemoAIMetrics();
+                this.updateAISummary(aiData);
+            }
             return;
         }
 
         const { start, end } = this.getDateRange();
+        let hasData = false;
 
         try {
             // Load daily metrics
@@ -89,10 +186,11 @@ const AnalyticsDashboard = {
                 end
             );
 
-            if (metricsResult?.success && metricsResult.data) {
+            if (metricsResult?.success && metricsResult.data && metricsResult.data.length > 0) {
                 this.updateOverviewStats(metricsResult.data);
                 this.updateRevenueChart(metricsResult.data);
                 this.updateChannelChart(metricsResult.data);
+                hasData = true;
             }
 
             // Load AI performance
@@ -103,6 +201,7 @@ const AnalyticsDashboard = {
 
             if (aiResult?.success && aiResult.data) {
                 this.updateAISummary(aiResult.data);
+                hasData = true;
             }
 
             // Update timestamp
@@ -115,32 +214,54 @@ const AnalyticsDashboard = {
         } catch (err) {
             console.error('Error loading analytics overview:', err);
         }
+
+        // Fallback to demo data if no real data and demo mode is on
+        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+            const days = this.dateRange === 'today' ? 1 : this.dateRange === '30days' ? 30 : this.dateRange === '90days' ? 90 : 7;
+            const demoData = this.generateDemoMetrics(days);
+            this.updateOverviewStats(demoData);
+            this.updateRevenueChart(demoData);
+            this.updateChannelChart(demoData);
+            const aiData = this.generateDemoAIMetrics();
+            this.updateAISummary(aiData);
+        }
     },
 
     /**
      * Load sales data
      */
     async loadSalesData() {
-        if (!this.currentRestaurantId) return;
-
         const range = document.getElementById('sales-date-range')?.value || '7days';
         const { start, end } = this.getDateRange(range);
+        let hasData = false;
 
-        try {
-            const result = await window.SupabaseDB?.getDailyMetrics(
-                this.currentRestaurantId,
-                start,
-                end
-            );
+        if (this.currentRestaurantId) {
+            try {
+                const result = await window.SupabaseDB?.getDailyMetrics(
+                    this.currentRestaurantId,
+                    start,
+                    end
+                );
 
-            if (result?.success && result.data) {
-                this.updateSalesStats(result.data);
-                this.updateSalesChart(result.data);
-                this.updateHourlyChart();
-                this.updateWeekdayChart(result.data);
+                if (result?.success && result.data && result.data.length > 0) {
+                    this.updateSalesStats(result.data);
+                    this.updateSalesChart(result.data);
+                    this.updateHourlyChart();
+                    this.updateWeekdayChart(result.data);
+                    hasData = true;
+                }
+            } catch (err) {
+                console.error('Error loading sales data:', err);
             }
-        } catch (err) {
-            console.error('Error loading sales data:', err);
+        }
+
+        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+            const days = range === 'today' ? 1 : range === '30days' ? 30 : range === '90days' ? 90 : 7;
+            const demoData = this.generateDemoMetrics(days);
+            this.updateSalesStats(demoData);
+            this.updateSalesChart(demoData);
+            this.updateHourlyChart();
+            this.updateWeekdayChart(demoData);
         }
     },
 
@@ -148,31 +269,40 @@ const AnalyticsDashboard = {
      * Load AI dashboard data
      */
     async loadAIData() {
-        if (!this.currentRestaurantId) return;
+        let hasData = false;
 
-        try {
-            // Load AI metrics
-            const metricsResult = await window.SupabaseDB?.getAIPerformanceMetrics(
-                this.currentRestaurantId,
-                30
-            );
+        if (this.currentRestaurantId) {
+            try {
+                const metricsResult = await window.SupabaseDB?.getAIPerformanceMetrics(
+                    this.currentRestaurantId,
+                    30
+                );
 
-            if (metricsResult?.success && metricsResult.data) {
-                this.updateAIStats(metricsResult.data);
-                this.updateOutcomeChart(metricsResult.data);
+                if (metricsResult?.success && metricsResult.data) {
+                    this.updateAIStats(metricsResult.data);
+                    this.updateOutcomeChart(metricsResult.data);
+                    hasData = true;
+                }
+
+                const convsResult = await window.SupabaseDB?.getAIConversations(
+                    this.currentRestaurantId,
+                    20
+                );
+
+                if (convsResult?.success && convsResult.data) {
+                    this.updateConversationsTable(convsResult.data);
+                    hasData = true;
+                }
+            } catch (err) {
+                console.error('Error loading AI data:', err);
             }
+        }
 
-            // Load recent conversations
-            const convsResult = await window.SupabaseDB?.getAIConversations(
-                this.currentRestaurantId,
-                20
-            );
-
-            if (convsResult?.success && convsResult.data) {
-                this.updateConversationsTable(convsResult.data);
-            }
-        } catch (err) {
-            console.error('Error loading AI data:', err);
+        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+            const aiData = this.generateDemoAIMetrics();
+            this.updateAIStats(aiData);
+            this.updateOutcomeChart(aiData);
+            this.updateConversationsTable(this.generateDemoConversations());
         }
     },
 
@@ -180,23 +310,31 @@ const AnalyticsDashboard = {
      * Load product analytics
      */
     async loadProductsData() {
-        if (!this.currentRestaurantId) return;
-
         const { start, end } = this.getDateRange('30days');
+        let hasData = false;
 
-        try {
-            const result = await window.SupabaseDB?.getProductAnalytics(
-                this.currentRestaurantId,
-                start,
-                end
-            );
+        if (this.currentRestaurantId) {
+            try {
+                const result = await window.SupabaseDB?.getProductAnalytics(
+                    this.currentRestaurantId,
+                    start,
+                    end
+                );
 
-            if (result?.success && result.data) {
-                this.updateProductsTable(result.data);
-                this.updateProductsStats(result.data);
+                if (result?.success && result.data && result.data.length > 0) {
+                    this.updateProductsTable(result.data);
+                    this.updateProductsStats(result.data);
+                    hasData = true;
+                }
+            } catch (err) {
+                console.error('Error loading products data:', err);
             }
-        } catch (err) {
-            console.error('Error loading products data:', err);
+        }
+
+        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+            const demoProducts = this.generateDemoProductData();
+            this.updateProductsTable(demoProducts);
+            this.updateProductsStats(demoProducts);
         }
     },
 

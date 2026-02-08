@@ -4237,51 +4237,44 @@ function showPage(page) {
   // Load Analytics Dashboard pages
   if (page === 'analytics-overview') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
-      if (restaurantId) {
-        AnalyticsDashboard.setRestaurant(restaurantId);
-        AnalyticsDashboard.loadOverviewData();
-      }
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      AnalyticsDashboard.setRestaurant(restaurantId);
+      AnalyticsDashboard.loadOverviewData();
     }
+    // Also run inline analytics fallback
+    if (typeof loadAnalyticsOverview === 'function') loadAnalyticsOverview();
   }
 
   if (page === 'analytics-sales') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
-      if (restaurantId) {
-        AnalyticsDashboard.setRestaurant(restaurantId);
-        AnalyticsDashboard.loadSalesData();
-      }
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      AnalyticsDashboard.setRestaurant(restaurantId);
+      AnalyticsDashboard.loadSalesData();
     }
+    if (typeof loadAnalyticsSales === 'function') loadAnalyticsSales();
   }
 
   if (page === 'analytics-products') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
-      if (restaurantId) {
-        AnalyticsDashboard.setRestaurant(restaurantId);
-        AnalyticsDashboard.loadProductsData();
-      }
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      AnalyticsDashboard.setRestaurant(restaurantId);
+      AnalyticsDashboard.loadProductsData();
     }
+    if (typeof loadAnalyticsProducts === 'function') loadAnalyticsProducts();
   }
 
   if (page === 'analytics-ai') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
-      if (restaurantId) {
-        AnalyticsDashboard.setRestaurant(restaurantId);
-        AnalyticsDashboard.loadAIData();
-      }
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      AnalyticsDashboard.setRestaurant(restaurantId);
+      AnalyticsDashboard.loadAIData();
     }
   }
 
   if (page === 'analytics-channels') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id;
-      if (restaurantId) {
-        AnalyticsDashboard.setRestaurant(restaurantId);
-        // Load channel data (can be added later)
-      }
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      AnalyticsDashboard.setRestaurant(restaurantId);
     }
   }
 
@@ -6862,21 +6855,42 @@ function loadDashboard() {
   const churned = allRestaurants.filter(r => r.status === 'churned' || r.status === 'cancelled').length;
   const terminated = allRestaurants.filter(r => r.status === 'terminated').length;
 
-  // Order counts (REAL DATA ONLY - no random generation)
-  const ordersToday = allRestaurants.reduce((s, r) => s + (r.orders || 0), 0);
-
-  // PRODUKTIONSKLAR: Brug reelle data fra restaurants (ingen mock data)
+  // Order counts - include demo data stats when enabled
+  let ordersToday = allRestaurants.reduce((s, r) => s + (r.orders || 0), 0);
   dashboardStats.ordersThisMonth = allRestaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
-  dashboardStats.ordersTotal = allRestaurants.reduce((s, r) => s + (r.ordersTotal || 0), 0);
+  dashboardStats.ordersTotal = allRestaurants.reduce((s, r) => s + (r.ordersTotal || r.orders_total || 0), 0);
 
-  const conversations = Math.floor(ordersToday * 0.3);
+  // Demo data: calculate demo stats from demo orders
+  if (isDemoDataEnabled()) {
+    const demoOrders = getDemoDataOrders();
+    const today = new Date().toISOString().split('T')[0];
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const demoOrdersToday = demoOrders.filter(o => o.created_at?.startsWith(today)).length;
+    const demoOrdersMonth = demoOrders.filter(o => o.created_at?.startsWith(thisMonth)).length;
+    ordersToday += demoOrdersToday || Math.floor(Math.random() * 15) + 8;
+    dashboardStats.ordersThisMonth += demoOrdersMonth || Math.floor(demoOrders.length * 0.3);
+    if (dashboardStats.ordersTotal === 0) dashboardStats.ordersTotal = demoOrders.length;
+  }
 
-  // Revenue calculations (REAL DATA ONLY)
-  const revenueToday = allRestaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
+  const conversations = Math.floor(ordersToday * 0.3) + (isDemoDataEnabled() ? Math.floor(Math.random() * 5) + 3 : 0);
+
+  // Revenue calculations
+  let revenueToday = allRestaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
   dashboardStats.revenueThisMonth = allRestaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
-  dashboardStats.revenueTotal = allRestaurants.reduce((s, r) => s + (r.revenueTotal || 0), 0);
+  dashboardStats.revenueTotal = allRestaurants.reduce((s, r) => s + (r.revenueTotal || r.revenue_total || 0), 0);
 
-  // Generate revenue history for chart (empty if no data)
+  // Demo data: calculate demo revenue
+  if (isDemoDataEnabled()) {
+    const demoOrders = getDemoDataOrders();
+    const today = new Date().toISOString().split('T')[0];
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const demoRevenueToday = demoOrders.filter(o => o.created_at?.startsWith(today)).reduce((s, o) => s + (o.total || 0), 0);
+    const demoRevenueMonth = demoOrders.filter(o => o.created_at?.startsWith(thisMonth)).reduce((s, o) => s + (o.total || 0), 0);
+    revenueToday += demoRevenueToday || Math.floor(Math.random() * 8000) + 3000;
+    dashboardStats.revenueThisMonth += demoRevenueMonth || Math.floor(demoOrders.reduce((s, o) => s + (o.total || 0), 0) * 0.3);
+  }
+
+  // Generate revenue history for chart
   generateRevenueHistory();
   
   // Update Restaurant Status
@@ -6925,70 +6939,57 @@ function generateRevenueHistory() {
   const now = new Date();
   const history = { week: [], month: [], year: [], weekPrev: [], monthPrev: [], yearPrev: [] };
 
-  // PRODUKTIONSKLAR: Hvis ingen restauranter, returner tom data
-  if (!restaurants || restaurants.length === 0) {
-    // Generer labels med 0 values
-    // 7 dage
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dayLabel = date.toLocaleDateString('da-DK', { weekday: 'short' });
-      history.week.push({ label: dayLabel, value: 0 });
-      history.weekPrev.push({ label: dayLabel, value: 0 });
-    }
-
-    // 30 dage
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dayLabel = date.getDate() + '/' + (date.getMonth() + 1);
-      history.month.push({ label: dayLabel, value: 0 });
-      history.monthPrev.push({ label: dayLabel, value: 0 });
-    }
-
-    // 12 måneder
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
-      const monthLabel = monthNames[date.getMonth()];
-      history.year.push({ label: monthLabel, value: 0 });
-      history.yearPrev.push({ label: monthLabel, value: 0 });
-    }
-
-    dashboardStats.revenueHistory = history;
-    return;
+  // Use demo orders for chart data when demo mode is enabled
+  const useDemoChart = isDemoDataEnabled();
+  let demoOrders = [];
+  if (useDemoChart) {
+    demoOrders = getDemoDataOrders();
   }
 
-  // REAL DATA: Beregn revenue history fra restaurants' faktiske data
-  // (For nu: tom data da vi ikke har historik endnu)
-  // Denne kode kan udvides når backend tilføjer revenue history
+  // Helper: sum demo revenue for a date
+  const getDemoRevenueForDate = (dateStr) => {
+    return demoOrders.filter(o => o.created_at?.startsWith(dateStr)).reduce((s, o) => s + (o.total || 0), 0);
+  };
 
-  // 7 dage - tom data indtil historik implementeres
+  // 7 dage
   for (let i = 6; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     const dayLabel = date.toLocaleDateString('da-DK', { weekday: 'short' });
-    history.week.push({ label: dayLabel, value: 0 });
-    history.weekPrev.push({ label: dayLabel, value: 0 });
+    const dateStr = date.toISOString().split('T')[0];
+    const val = useDemoChart ? getDemoRevenueForDate(dateStr) : 0;
+    history.week.push({ label: dayLabel, value: val });
+    // Previous week
+    const prevDate = new Date(date);
+    prevDate.setDate(prevDate.getDate() - 7);
+    const prevStr = prevDate.toISOString().split('T')[0];
+    history.weekPrev.push({ label: dayLabel, value: useDemoChart ? getDemoRevenueForDate(prevStr) : 0 });
   }
 
-  // 30 dage - tom data
+  // 30 dage
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
     const dayLabel = date.getDate() + '/' + (date.getMonth() + 1);
-    history.month.push({ label: dayLabel, value: 0 });
-    history.monthPrev.push({ label: dayLabel, value: 0 });
+    const dateStr = date.toISOString().split('T')[0];
+    const val = useDemoChart ? getDemoRevenueForDate(dateStr) : 0;
+    history.month.push({ label: dayLabel, value: val });
+    const prevDate = new Date(date);
+    prevDate.setDate(prevDate.getDate() - 30);
+    history.monthPrev.push({ label: dayLabel, value: useDemoChart ? getDemoRevenueForDate(prevDate.toISOString().split('T')[0]) : 0 });
   }
 
-  // 12 måneder - tom data
+  // 12 måneder
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
   for (let i = 11; i >= 0; i--) {
     const date = new Date(now);
     date.setMonth(date.getMonth() - i);
     const monthLabel = monthNames[date.getMonth()];
-    history.year.push({ label: monthLabel, value: 0 });
+    const monthStr = date.toISOString().slice(0, 7);
+    const val = useDemoChart ? demoOrders.filter(o => o.created_at?.startsWith(monthStr)).reduce((s, o) => s + (o.total || 0), 0) : 0;
+    history.year.push({ label: monthLabel, value: val });
+    const prevDate = new Date(date);
+    prevDate.setFullYear(prevDate.getFullYear() - 1);
     history.yearPrev.push({ label: monthLabel, value: 0 });
   }
 
@@ -8856,7 +8857,7 @@ let customerProductsChart = null;
  * Load customer dashboard data and render charts
  */
 async function loadCustomerDashboard(restaurantId) {
-  const restaurant = restaurants.find(r => r.id === restaurantId);
+  const restaurant = findRestaurantOrDemo(restaurantId);
   if (!restaurant) return;
 
   // Update KPI stats
@@ -8871,7 +8872,7 @@ async function loadCustomerDashboard(restaurantId) {
     const avg = restaurant.orders_total > 0 ? (restaurant.revenue_total / restaurant.orders_total) : 0;
     statsAvgOrder.textContent = formatCurrency(avg);
   }
-  if (statsContacts) statsContacts.textContent = restaurant.contacts_count || 0;
+  if (statsContacts) statsContacts.textContent = restaurant.contacts_count || (restaurant.isDemo ? Math.floor(Math.random() * 50) + 10 : 0);
 
   // Try to load orders for charts (revenue & payment methods)
   let orders = [];
@@ -8884,9 +8885,10 @@ async function loadCustomerDashboard(restaurantId) {
     console.log('Could not load orders from database:', err.message);
   }
 
-  // No demo data fallback - show empty/0 values if no real orders
-  if (orders.length === 0) {
-    console.log('📊 No orders found - charts will show empty values');
+  // Fallback to demo orders for demo customers
+  if (orders.length === 0 && restaurant.isDemo && isDemoDataEnabled()) {
+    orders = generateDemoOrdersForCustomer(restaurantId);
+    console.log(`📊 Loaded ${orders.length} demo orders for ${restaurant.name}`);
   }
 
   // Load menu items for products chart (from produktbibliotek)
@@ -9223,11 +9225,38 @@ function toggleDemoData() {
 
   updateDemoDataStatus();
 
-  // Refresh current view
+  // Refresh current view and any visible page
   setTimeout(() => {
     loadRestaurants();
     loadOrdersPage();
+    loadDashboard();
+    refreshDemoVisiblePage();
   }, 100);
+}
+
+// Refresh demo data on the currently visible page
+function refreshDemoVisiblePage() {
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const pageId = activePage.id?.replace('page-', '');
+  if (!pageId) return;
+
+  // Refresh page-specific data
+  if (pageId === 'leads') loadLeadsPage();
+  if (pageId === 'leads-pipeline') loadPipelinePage();
+  if (pageId === 'activities') loadActivitiesPage();
+  if (pageId === 'analytics-overview' && window.AnalyticsDashboard) AnalyticsDashboard.loadOverviewData();
+  if (pageId === 'analytics-sales' && window.AnalyticsDashboard) AnalyticsDashboard.loadSalesData();
+  if (pageId === 'analytics-products' && window.AnalyticsDashboard) AnalyticsDashboard.loadProductsData();
+  if (pageId === 'analytics-ai' && window.AnalyticsDashboard) AnalyticsDashboard.loadAIData();
+  if (pageId === 'campaigns') initMarketingPage();
+  if (pageId === 'alle-kunder') loadAlleKunderGrid();
+
+  // Report pages
+  var reportPages = ['dagsrapport','produktrapport','zrapport','konverteringsrapport','genbestillingsrapport','anmeldelsesrapport','heatmaprapport'];
+  if (reportPages.indexOf(pageId) !== -1) {
+    populateReportFiltersAndRender(pageId);
+  }
 }
 
 // Regenerate demo data with new random values
@@ -9244,6 +9273,8 @@ function regenerateDemoData() {
   // Refresh views
   loadRestaurants();
   loadOrdersPage();
+  loadDashboard();
+  refreshDemoVisiblePage();
 }
 
 // Load all demo data to localStorage
@@ -9918,6 +9949,76 @@ function getDemoDataInvoices() {
   return JSON.parse(localStorage.getItem('orderflow_demo_invoices') || '[]');
 }
 
+// Helper: Find restaurant from real OR demo customers
+function findRestaurantOrDemo(id) {
+  let r = restaurants.find(r => r.id === id);
+  if (!r && isDemoDataEnabled()) {
+    r = getDemoDataCustomers().find(c => c.id === id);
+  }
+  return r || null;
+}
+
+// Helper: Generate demo orders for a specific demo customer (for charts)
+function generateDemoOrdersForCustomer(customerId) {
+  if (!isDemoDataEnabled()) return [];
+  const allOrders = getDemoDataOrders();
+  return allOrders.filter(o => o.restaurant_id === customerId);
+}
+
+// Helper: Generate demo heatmap data for customer KPI
+function generateDemoHeatmapData() {
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const heatmap = {};
+  days.forEach(day => {
+    const hours = new Array(24).fill(0);
+    for (let h = 10; h <= 22; h++) {
+      hours[h] = Math.floor(Math.random() * 15) + (h >= 11 && h <= 13 ? 8 : 0) + (h >= 17 && h <= 20 ? 10 : 0);
+    }
+    heatmap[day] = hours;
+  });
+  return heatmap;
+}
+
+// Helper: Generate demo kundelogs for a demo customer
+function generateDemoKundelogs(customerId) {
+  const restaurant = findRestaurantOrDemo(customerId);
+  const name = restaurant?.name || 'Demo Kunde';
+  const types = ['opkald', 'email', 'system', 'profil', 'ordre', 'note'];
+  const logs = [];
+  const descriptions = [
+    { type: 'opkald', desc: `Udgående opkald til ${name} - aftale om onboarding`, prioritet: 'normal' },
+    { type: 'email', desc: `Velkomstmail sendt til ${name}`, prioritet: 'normal' },
+    { type: 'system', desc: 'Kundeprofil oprettet automatisk', prioritet: 'lav' },
+    { type: 'ordre', desc: `Første testordre modtaget fra ${name}`, prioritet: 'normal' },
+    { type: 'profil', desc: 'Virksomhedsoplysninger opdateret', prioritet: 'normal' },
+    { type: 'email', desc: `Fakturaoplysninger sendt til ${name}`, prioritet: 'normal' },
+    { type: 'note', desc: 'Kunde ønsker integration med e-conomic', prioritet: 'høj' },
+    { type: 'opkald', desc: `Opfølgningsopkald med ${name} - tilfreds med systemet`, prioritet: 'normal' },
+    { type: 'system', desc: 'API-nøgle genereret til tredjepart', prioritet: 'lav' },
+    { type: 'ordre', desc: `Ny ordre #${Math.floor(Math.random() * 9000) + 1000} registreret`, prioritet: 'normal' },
+    { type: 'email', desc: 'Månedlig rapport sendt automatisk', prioritet: 'lav' },
+    { type: 'note', desc: 'Kunde overvejer opgradering til Pro-pakke', prioritet: 'høj' },
+  ];
+  for (let i = 0; i < descriptions.length; i++) {
+    const d = descriptions[i];
+    const ts = new Date();
+    ts.setDate(ts.getDate() - i * 3 - Math.floor(Math.random() * 3));
+    ts.setHours(Math.floor(Math.random() * 10) + 8, Math.floor(Math.random() * 60));
+    logs.push({
+      id: `demo-kundelog-${customerId}-${i}`,
+      customerId: customerId,
+      timestamp: ts.toISOString(),
+      type: d.type,
+      beskrivelse: d.desc,
+      prioritet: d.prioritet,
+      reference: `REF-${String(1000 + i).padStart(4, '0')}`,
+      tags: [d.type],
+      isDemo: true
+    });
+  }
+  return logs;
+}
+
 // =====================================================
 // END DEMO DATA SYSTEM
 // =====================================================
@@ -10237,7 +10338,7 @@ function localPlanToDB(plan) {
 }
 
 function loadFakturaPage() {
-  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const restaurant = findRestaurantOrDemo(currentProfileRestaurantId);
   if (!restaurant) return;
   
   // Version check - regenerate if old version (SMS-pakke update)
@@ -12779,11 +12880,15 @@ function updateMomssatsDropdown() {
 
 // Load KPI data for customer
 function loadCustomerKPIData() {
-  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const restaurant = findRestaurantOrDemo(currentProfileRestaurantId);
   if (!restaurant) return;
-  
-  // Render heatmap
-  renderCustomerHeatmap(restaurant.kpi?.orderHeatmap);
+
+  // Render heatmap - use demo data if demo customer has no real data
+  let heatmapData = restaurant.kpi?.orderHeatmap;
+  if (!heatmapData && restaurant.isDemo && isDemoDataEnabled()) {
+    heatmapData = generateDemoHeatmapData();
+  }
+  renderCustomerHeatmap(heatmapData);
 }
 
 // Render customer heatmap
@@ -21915,6 +22020,15 @@ function saveCustomerKundelogsForCustomer(customerId, logs) {
 // Load and render customer kundelogs
 function loadCustomerKundelogs() {
   if (!currentProfileRestaurantId) return;
+
+  // Generate demo kundelogs for demo customers if none exist
+  if (isDemoDataEnabled() && currentProfileRestaurantId.startsWith('demo-customer-')) {
+    const existingLogs = getCustomerKundelogs(currentProfileRestaurantId);
+    if (existingLogs.length === 0) {
+      const demoLogs = generateDemoKundelogs(currentProfileRestaurantId);
+      saveCustomerKundelogsForCustomer(currentProfileRestaurantId, demoLogs);
+    }
+  }
   renderCustomerKundelogs();
 }
 
@@ -22287,14 +22401,18 @@ function loadCustomerAktivitetslogs() {
   // Generate demo data if none exists
   const logs = getCustomerAktivitetslogs(currentProfileRestaurantId);
   if (logs.length === 0) {
-    const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+    const restaurant = findRestaurantOrDemo(currentProfileRestaurantId);
     const name = restaurant?.name || 'Kunde';
-    
+
     // Add demo aktivitetslogs
     const demoLogs = [
       { type: 'email', besked: `E-mail sendt til ${name}: Velkommen til OrderFlow` },
       { type: 'system', besked: 'Kundeprofil oprettet' },
-      { type: 'profil', besked: 'Virksomhedsnavn opdateret' }
+      { type: 'profil', besked: 'Virksomhedsnavn opdateret' },
+      { type: 'ordre', besked: `Ny ordre modtaget fra ${name}` },
+      { type: 'system', besked: 'API-nøgle oprettet for integration' },
+      { type: 'email', besked: `Månedlig rapport sendt til ${name}` },
+      { type: 'opkald', besked: `Opfølgning med ${name} - positiv feedback` }
     ];
     
     demoLogs.forEach((log, i) => {
