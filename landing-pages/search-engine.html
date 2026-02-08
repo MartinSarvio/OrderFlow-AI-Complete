@@ -2621,6 +2621,7 @@
             business={business}
             onNewScan={onBack}
             findings={findings}
+            isPaid={isPaid}
           />
         );
       }
@@ -3621,11 +3622,34 @@
     // =============================================================================
     // ANALYSIS REPORT COMPONENT
     // =============================================================================
-    const AnalysisReport = ({ results, business, onNewScan, findings = [] }) => {
+    const AnalysisReport = ({ results, business, onNewScan, findings = [], isPaid = false }) => {
       // Use v3 backend score if available, otherwise calculate locally
       const overallScore = results._v3score
         ? Math.round(results._v3score.overall || 0)
         : AnalysisService.calculateOverallScore(results);
+
+      // Auto-generate and download PDF after Stripe payment
+      const pdfDownloaded = useRef(false);
+      useEffect(() => {
+        if (isPaid && !pdfDownloaded.current && results && business) {
+          pdfDownloaded.current = true;
+          setTimeout(() => {
+            try {
+              const doc = pdfGenerator.generate({
+                business: business,
+                scanDate: new Date(),
+                overallScore: overallScore,
+                results: results,
+                findings: findings || [],
+                findingsCount: findings?.length || 0,
+              });
+              doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+            } catch (e) {
+              console.error('Auto PDF download failed:', e);
+            }
+          }, 500);
+        }
+      }, [isPaid, results, business, overallScore, findings]);
 
       const getScoreColor = (score) => {
         if (score >= 75) return '#059669';
