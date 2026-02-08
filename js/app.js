@@ -2519,7 +2519,7 @@ async function handleForgotPassword(e) {
 
   try {
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-      var redirectUrl = window.location.origin + window.location.pathname;
+      var redirectUrl = window.location.origin + '/setup-password.html';
       var result = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
@@ -2571,7 +2571,7 @@ async function resendResetEmail() {
   if (!forgotPasswordEmail) return;
   try {
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-      var redirectUrl = window.location.origin + window.location.pathname;
+      var redirectUrl = window.location.origin + '/setup-password.html';
       await supabaseClient.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: redirectUrl
       });
@@ -7064,25 +7064,6 @@ async function addRestaurant() {
   document.getElementById('new-restaurant-phone').value = '';
 }
 
-function generateTemporaryPassword(length = 14) {
-  const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-  const values = new Uint32Array(length);
-
-  if (window.crypto?.getRandomValues) {
-    window.crypto.getRandomValues(values);
-  } else {
-    for (let i = 0; i < length; i++) {
-      values[i] = Math.floor(Math.random() * charset.length);
-    }
-  }
-
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += charset[values[i] % charset.length];
-  }
-  return password;
-}
-
 function isDuplicateUserError(message = '') {
   return /already registered|already exists|duplicate|exists/i.test(String(message));
 }
@@ -7097,92 +7078,48 @@ async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
   }
 
   const contactName = String(options.contactName || options.owner || restaurant?.name || '').trim();
-  const temporaryPassword = generateTemporaryPassword();
-  let createdUserId = null;
-  let createdNewUser = false;
+  let invitedUserId = null;
+  const redirectTo = `${window.location.origin}/setup-password.html`;
 
-  // Create login user if the email does not already exist.
-  if (client.auth.admin?.createUser) {
-    const createResult = await client.auth.admin.createUser({
-      email,
-      password: temporaryPassword,
-      email_confirm: true,
-      user_metadata: {
+  // Preferred: Supabase native invite email (works without custom mail provider keys)
+  if (client.auth.admin?.inviteUserByEmail) {
+    const inviteResult = await client.auth.admin.inviteUserByEmail(email, {
+      redirectTo,
+      data: {
         full_name: contactName,
         restaurant_name: restaurant?.name || '',
         restaurant_id: restaurant?.id || ''
       }
     });
 
-    if (createResult.error) {
-      if (!isDuplicateUserError(createResult.error.message)) {
-        throw createResult.error;
+    if (inviteResult.error) {
+      // Existing user: send reset link instead
+      if (!isDuplicateUserError(inviteResult.error.message)) {
+        throw inviteResult.error;
       }
-    } else {
-      createdUserId = createResult.data?.user?.id || null;
-      createdNewUser = !!createdUserId;
+
+      const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
+      if (resetResult.error) throw resetResult.error;
+      return { status: 'reset_link_sent_existing_user' };
     }
+
+    invitedUserId = inviteResult.data?.user?.id || null;
+  } else {
+    // Fallback if admin API is unavailable in current SDK/runtime.
+    const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
+    if (resetResult.error) throw resetResult.error;
+    return { status: 'reset_link_sent' };
   }
 
-  if (createdUserId && typeof SupabaseDB !== 'undefined' && SupabaseDB.setUserRole) {
+  if (invitedUserId && typeof SupabaseDB !== 'undefined' && SupabaseDB.setUserRole) {
     try {
-      await SupabaseDB.setUserRole(createdUserId, 'customer', false);
+      await SupabaseDB.setUserRole(invitedUserId, 'customer', false);
     } catch (roleErr) {
       console.warn('⚠️ Could not assign customer role:', roleErr?.message || roleErr);
     }
   }
 
-  const redirectTo = `${window.location.origin}${window.location.pathname}`;
-  let setupLink = '';
-  let setupCode = '';
-
-  if (client.auth.admin?.generateLink) {
-    const linkResult = await client.auth.admin.generateLink({
-      type: 'recovery',
-      email,
-      options: { redirectTo }
-    });
-
-    if (!linkResult.error) {
-      setupLink = linkResult.data?.properties?.action_link || '';
-      setupCode = linkResult.data?.properties?.email_otp || '';
-    } else {
-      console.warn('⚠️ Could not generate recovery link:', linkResult.error.message);
-    }
-  }
-
-  if (!setupLink) {
-    const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
-    if (resetResult.error) throw resetResult.error;
-    return { status: 'reset_link_sent', createdNewUser, createdUserId };
-  }
-
-  const supabaseUrl = window.SUPABASE_CONFIG?.url || 'https://qymtjhzgtcittohutmay.supabase.co';
-  const supabaseKey = window.SUPABASE_CONFIG?.key || '';
-  const welcomeResponse = await fetch(`${supabaseUrl}/functions/v1/send-otp-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseKey}`
-    },
-    body: JSON.stringify({
-      mode: 'welcome_invite',
-      to: email,
-      appName: 'FLOW',
-      subject: 'FLOW: Velkommen - opret din adgangskode',
-      setupLink,
-      temporaryCode: setupCode || temporaryPassword.slice(0, 8),
-      restaurantName: restaurant?.name || '',
-      contactName
-    })
-  });
-
-  if (!welcomeResponse.ok) {
-    const details = await welcomeResponse.text().catch(() => '');
-    throw new Error(`Velkomstmail kunne ikke sendes (${welcomeResponse.status}) ${details}`.trim());
-  }
-
-  return { status: 'welcome_sent', createdNewUser, createdUserId };
+  return { status: 'invite_sent', invitedUserId };
 }
 
 async function addRestaurantFromPage() {
@@ -7306,7 +7243,6 @@ async function addRestaurantFromPage() {
           'system',
           `Kunde oprettet, men login/velkomstmail fejlede: ${inviteErr?.message || 'ukendt fejl'}`
         );
-        toast('Kunde oprettet, men velkomstmail kunne ikke sendes', 'error');
       }
     }
 
