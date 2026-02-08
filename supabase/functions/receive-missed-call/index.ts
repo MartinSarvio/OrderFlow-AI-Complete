@@ -53,6 +53,58 @@ function buildPhoneCandidates(raw: string): string[] {
   return candidates.filter(Boolean)
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {}
+  return value as Record<string, unknown>
+}
+
+function collectRestaurantNumbers(row: Record<string, unknown>): string[] {
+  const values: unknown[] = [
+    row.sms_number,
+    row.contact_phone,
+    asRecord(row.settings).sms_number,
+    asRecord(row.settings).smsNumber,
+    asRecord(row.settings).shortcode,
+    asRecord(row.metadata).sms_number,
+    asRecord(row.metadata).smsNumber,
+    asRecord(row.metadata).shortcode,
+  ]
+
+  const out: string[] = []
+  for (const value of values) {
+    const text = String(value || "").trim()
+    if (!text) continue
+    for (const candidate of buildPhoneCandidates(text)) {
+      if (!out.includes(candidate)) out.push(candidate)
+    }
+  }
+  return out
+}
+
+async function tryResolveByColumn(
+  supabaseUrl: string,
+  authHeaders: Record<string, string>,
+  column: string,
+  candidate: string,
+): Promise<{ row: { id: string; name: string } | null; columnMissing: boolean }> {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?${column}=eq.${encodeURIComponent(candidate)}&select=id,name&limit=1`,
+    { headers: authHeaders },
+  )
+
+  if (!response.ok) {
+    const body = await response.text()
+    const columnMissing = response.status === 400 && body.includes(`restaurants.${column}`) && body.includes("does not exist")
+    return { row: null, columnMissing }
+  }
+
+  const rows = await response.json()
+  if (rows?.length > 0) {
+    return { row: { id: rows[0].id, name: rows[0].name || "restauranten" }, columnMissing: false }
+  }
+  return { row: null, columnMissing: false }
+}
+
 async function resolveTenantForCall(
   supabaseUrl: string,
   authHeaders: Record<string, string>,
@@ -60,36 +112,66 @@ async function resolveTenantForCall(
   defaultTenantId?: string,
 ): Promise<{ id: string; name: string } | null> {
   const candidates = buildPhoneCandidates(receiver)
+  const candidateSet = new Set(candidates)
 
+  // Preferred: dedicated sms_number column.
+  let smsNumberColumnAvailable = true
   for (const candidate of candidates) {
-    const tenantRes = await fetch(
-      `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(candidate)}&select=id,name&limit=1`,
-      { headers: authHeaders },
-    )
-    if (!tenantRes.ok) continue
-    const rows = await tenantRes.json()
-    if (rows.length > 0) {
-      return { id: rows[0].id, name: rows[0].name || "restauranten" }
+    if (!smsNumberColumnAvailable) break
+    const result = await tryResolveByColumn(supabaseUrl, authHeaders, "sms_number", candidate)
+    if (result.columnMissing) {
+      smsNumberColumnAvailable = false
+      break
+    }
+    if (result.row) return result.row
+  }
+
+  // Fallback: contact_phone column used by some schemas.
+  for (const candidate of candidates) {
+    const result = await tryResolveByColumn(supabaseUrl, authHeaders, "contact_phone", candidate)
+    if (result.columnMissing) break
+    if (result.row) return result.row
+  }
+
+  // Final fallback: fetch all restaurants and match known number fields in JSON/settings.
+  const allRes = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?select=id,name,contact_phone,settings,metadata&limit=500`,
+    { headers: authHeaders },
+  )
+  const allRows: Record<string, unknown>[] = allRes.ok ? await allRes.json() : []
+
+  for (const row of allRows) {
+    const numbers = collectRestaurantNumbers(row)
+    if (numbers.some((num) => candidateSet.has(num))) {
+      return { id: String(row.id || ""), name: String(row.name || "restauranten") }
     }
   }
 
   if (defaultTenantId) {
-    const defaultRes = await fetch(
-      `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id,name&limit=1`,
-      { headers: authHeaders },
-    )
-    if (defaultRes.ok) {
-      const rows = await defaultRes.json()
-      if (rows.length > 0) {
-        return { id: rows[0].id, name: rows[0].name || "restauranten" }
+    if (allRows.length > 0) {
+      const match = allRows.find((row) => String(row.id || "") === defaultTenantId)
+      if (match?.id) {
+        return { id: String(match.id), name: String(match.name || "restauranten") }
+      }
+    } else {
+      const defaultRes = await fetch(
+        `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id,name&limit=1`,
+        { headers: authHeaders },
+      )
+      if (defaultRes.ok) {
+        const rows = await defaultRes.json()
+        if (rows.length > 0) {
+          return { id: rows[0].id, name: rows[0].name || "restauranten" }
+        }
       }
     }
   }
 
-  const fallbackRes = await fetch(
-    `${supabaseUrl}/rest/v1/restaurants?select=id,name&limit=1`,
-    { headers: authHeaders },
-  )
+  if (allRows.length > 0) {
+    return { id: String(allRows[0].id || ""), name: String(allRows[0].name || "restauranten") }
+  }
+
+  const fallbackRes = await fetch(`${supabaseUrl}/rest/v1/restaurants?select=id,name&limit=1`, { headers: authHeaders })
   if (!fallbackRes.ok) return null
   const rows = await fallbackRes.json()
   if (rows.length === 0) return null

@@ -64,6 +64,55 @@ function buildPhoneCandidates(raw: string): string[] {
   return candidates.filter(Boolean)
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {}
+  return value as Record<string, unknown>
+}
+
+function collectRestaurantNumbers(row: Record<string, unknown>): string[] {
+  const values: unknown[] = [
+    row.sms_number,
+    row.contact_phone,
+    asRecord(row.settings).sms_number,
+    asRecord(row.settings).smsNumber,
+    asRecord(row.settings).shortcode,
+    asRecord(row.metadata).sms_number,
+    asRecord(row.metadata).smsNumber,
+    asRecord(row.metadata).shortcode,
+  ]
+
+  const out: string[] = []
+  for (const value of values) {
+    const text = String(value || "").trim()
+    if (!text) continue
+    for (const candidate of buildPhoneCandidates(text)) {
+      if (!out.includes(candidate)) out.push(candidate)
+    }
+  }
+  return out
+}
+
+async function tryResolveByColumn(
+  supabaseUrl: string,
+  authHeaders: Record<string, string>,
+  column: string,
+  candidate: string,
+): Promise<{ tenantId: string | null; columnMissing: boolean }> {
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?${column}=eq.${encodeURIComponent(candidate)}&select=id&limit=1`,
+    { headers: authHeaders },
+  )
+
+  if (!response.ok) {
+    const body = await response.text()
+    const columnMissing = response.status === 400 && body.includes(`restaurants.${column}`) && body.includes("does not exist")
+    return { tenantId: null, columnMissing }
+  }
+
+  const rows = await response.json()
+  return { tenantId: rows?.[0]?.id || null, columnMissing: false }
+}
+
 async function resolveTenantByReceiver(
   supabaseUrl: string,
   authHeaders: Record<string, string>,
@@ -71,32 +120,62 @@ async function resolveTenantByReceiver(
   defaultTenantId?: string,
 ): Promise<string | null> {
   const candidates = buildPhoneCandidates(receiver)
+  const candidateSet = new Set(candidates)
 
+  // Preferred: dedicated sms_number column.
+  let smsNumberColumnAvailable = true
   for (const candidate of candidates) {
-    const tenantRes = await fetch(
-      `${supabaseUrl}/rest/v1/restaurants?sms_number=eq.${encodeURIComponent(candidate)}&select=id&limit=1`,
-      { headers: authHeaders },
-    )
-    if (!tenantRes.ok) continue
-    const tenants = await tenantRes.json()
-    if (tenants.length > 0) return tenants[0].id
+    if (!smsNumberColumnAvailable) break
+    const result = await tryResolveByColumn(supabaseUrl, authHeaders, "sms_number", candidate)
+    if (result.columnMissing) {
+      smsNumberColumnAvailable = false
+      break
+    }
+    if (result.tenantId) return result.tenantId
   }
 
-  if (defaultTenantId) {
-    const defaultRes = await fetch(
-      `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id&limit=1`,
-      { headers: authHeaders },
-    )
-    if (defaultRes.ok) {
-      const rows = await defaultRes.json()
-      if (rows.length > 0) return rows[0].id
+  // Fallback: contact_phone column used by some schemas.
+  for (const candidate of candidates) {
+    const result = await tryResolveByColumn(supabaseUrl, authHeaders, "contact_phone", candidate)
+    if (result.columnMissing) break
+    if (result.tenantId) return result.tenantId
+  }
+
+  // Final fallback: fetch all restaurants and match known number fields in JSON/settings.
+  const allRes = await fetch(
+    `${supabaseUrl}/rest/v1/restaurants?select=id,name,contact_phone,settings,metadata&limit=500`,
+    { headers: authHeaders },
+  )
+  const allRows: Record<string, unknown>[] = allRes.ok ? await allRes.json() : []
+
+  for (const row of allRows) {
+    const numbers = collectRestaurantNumbers(row)
+    if (numbers.some((num) => candidateSet.has(num))) {
+      return String(row.id || "")
     }
   }
 
-  const fallbackRes = await fetch(
-    `${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`,
-    { headers: authHeaders },
-  )
+  if (defaultTenantId) {
+    if (allRows.length > 0) {
+      const match = allRows.find((row) => String(row.id || "") === defaultTenantId)
+      if (match?.id) return String(match.id)
+    } else {
+      const defaultRes = await fetch(
+        `${supabaseUrl}/rest/v1/restaurants?id=eq.${encodeURIComponent(defaultTenantId)}&select=id&limit=1`,
+        { headers: authHeaders },
+      )
+      if (defaultRes.ok) {
+        const rows = await defaultRes.json()
+        if (rows.length > 0) return rows[0].id
+      }
+    }
+  }
+
+  if (allRows.length > 0) {
+    return String(allRows[0].id || "")
+  }
+
+  const fallbackRes = await fetch(`${supabaseUrl}/rest/v1/restaurants?select=id&limit=1`, { headers: authHeaders })
   if (!fallbackRes.ok) return null
   const fallback = await fallbackRes.json()
   return fallback.length > 0 ? fallback[0].id : null
@@ -180,11 +259,13 @@ function parseSingleMessage(msg: Record<string, unknown>, fallbackTime: string):
   messageId = String(msg.id || msg.messageId || msg.message_id || msg.externalId || msg.smsId || `inmobile-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`)
   receivedAt = String(msg.receivedAt || msg.received_at || msg.createdAt || msg.timestamp || fallbackTime)
 
-  if (!text || !sender) return null
+  const normalizedSender = normalizePhone(sender)
+  const normalizedReceiver = normalizePhone(receiver)
+  if (!text || !normalizedSender) return null
 
   return {
-    sender: normalizePhone(sender),
-    receiver: normalizePhone(receiver),
+    sender: normalizedSender,
+    receiver: normalizedReceiver,
     text,
     messageId,
     receivedAt,
