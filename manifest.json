@@ -2,7 +2,7 @@
   "name": "OrderFlow",
   "short_name": "OrderFlow",
   "description": "Restaurant management og workflow automation",
-  "start_url": "/",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",

@@ -1,9 +1,13 @@
 {
   "buildCommand": "",
   "outputDirectory": ".",
+  "redirects": [
+    { "source": "/landing", "destination": "/", "permanent": true },
+    { "source": "/index.html", "destination": "/app", "permanent": true },
+    { "source": "/app/", "destination": "/app", "permanent": true },
+    { "source": "/app/index.html", "destination": "/app", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/landing-pages/landing.html" },
-    { "source": "/landing", "destination": "/landing-pages/landing.html" },
     { "source": "/priser", "destination": "/landing-pages/priser.html" },
     { "source": "/how-it-works", "destination": "/landing-pages/how-it-works.html" },
     { "source": "/search-engine", "destination": "/landing-pages/search-engine.html" },
