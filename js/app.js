@@ -2466,8 +2466,19 @@ const DEMO_RESTAURANTS = [
   }
 ];
 
-// Supabase is optional - demo mode works without it
-supabase = null;
+// Supabase client reference used by legacy code paths in this file.
+// Keep it synced with window.supabaseClient, but never overwrite window.supabase library object.
+let supabase = window.supabaseClient || null;
+
+if (typeof window.waitForSupabase === 'function') {
+  window.waitForSupabase()
+    .then((client) => {
+      if (client) supabase = client;
+    })
+    .catch((err) => {
+      console.warn('⚠️ Supabase client not ready in app.js bootstrap:', err?.message || err);
+    });
+}
 
 // =====================================================
 // AUTH
@@ -3117,14 +3128,24 @@ async function handleSignup(e) {
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-password').value;
 
-  if (CONFIG.DEMO_MODE || !supabase) {
+  let authClient = supabase || window.supabaseClient || null;
+  if (!authClient && typeof window.waitForSupabase === 'function') {
+    try {
+      authClient = await window.waitForSupabase();
+      if (authClient) supabase = authClient;
+    } catch (err) {
+      console.warn('⚠️ Supabase not ready for signup:', err?.message || err);
+    }
+  }
+
+  if (CONFIG.DEMO_MODE || !authClient) {
     loginDemo();
     return;
   }
 
   try {
     // Opret bruger i Supabase Auth
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await authClient.auth.signUp({
       email,
       password,
       options: {
@@ -3399,7 +3420,8 @@ function showAuthError(msg) {
 }
 
 function logout() {
-  if (supabase) supabase.auth.signOut();
+  const authClient = supabase || window.supabaseClient;
+  if (authClient?.auth) authClient.auth.signOut();
   clearSession(); // Clear persisted session
   resetAuthUI();
 }
@@ -7042,6 +7064,127 @@ async function addRestaurant() {
   document.getElementById('new-restaurant-phone').value = '';
 }
 
+function generateTemporaryPassword(length = 14) {
+  const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const values = new Uint32Array(length);
+
+  if (window.crypto?.getRandomValues) {
+    window.crypto.getRandomValues(values);
+  } else {
+    for (let i = 0; i < length; i++) {
+      values[i] = Math.floor(Math.random() * charset.length);
+    }
+  }
+
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += charset[values[i] % charset.length];
+  }
+  return password;
+}
+
+function isDuplicateUserError(message = '') {
+  return /already registered|already exists|duplicate|exists/i.test(String(message));
+}
+
+async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
+  const email = String(options.email || '').trim().toLowerCase();
+  if (!email) return { status: 'skipped' };
+
+  const client = window.supabaseClient || supabase;
+  if (!client?.auth) {
+    throw new Error('Supabase auth er ikke tilgængelig');
+  }
+
+  const contactName = String(options.contactName || options.owner || restaurant?.name || '').trim();
+  const temporaryPassword = generateTemporaryPassword();
+  let createdUserId = null;
+  let createdNewUser = false;
+
+  // Create login user if the email does not already exist.
+  if (client.auth.admin?.createUser) {
+    const createResult = await client.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: {
+        full_name: contactName,
+        restaurant_name: restaurant?.name || '',
+        restaurant_id: restaurant?.id || ''
+      }
+    });
+
+    if (createResult.error) {
+      if (!isDuplicateUserError(createResult.error.message)) {
+        throw createResult.error;
+      }
+    } else {
+      createdUserId = createResult.data?.user?.id || null;
+      createdNewUser = !!createdUserId;
+    }
+  }
+
+  if (createdUserId && typeof SupabaseDB !== 'undefined' && SupabaseDB.setUserRole) {
+    try {
+      await SupabaseDB.setUserRole(createdUserId, 'customer', false);
+    } catch (roleErr) {
+      console.warn('⚠️ Could not assign customer role:', roleErr?.message || roleErr);
+    }
+  }
+
+  const redirectTo = `${window.location.origin}${window.location.pathname}`;
+  let setupLink = '';
+  let setupCode = '';
+
+  if (client.auth.admin?.generateLink) {
+    const linkResult = await client.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: { redirectTo }
+    });
+
+    if (!linkResult.error) {
+      setupLink = linkResult.data?.properties?.action_link || '';
+      setupCode = linkResult.data?.properties?.email_otp || '';
+    } else {
+      console.warn('⚠️ Could not generate recovery link:', linkResult.error.message);
+    }
+  }
+
+  if (!setupLink) {
+    const resetResult = await client.auth.resetPasswordForEmail(email, { redirectTo });
+    if (resetResult.error) throw resetResult.error;
+    return { status: 'reset_link_sent', createdNewUser, createdUserId };
+  }
+
+  const supabaseUrl = window.SUPABASE_CONFIG?.url || 'https://qymtjhzgtcittohutmay.supabase.co';
+  const supabaseKey = window.SUPABASE_CONFIG?.key || '';
+  const welcomeResponse = await fetch(`${supabaseUrl}/functions/v1/send-otp-email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseKey}`
+    },
+    body: JSON.stringify({
+      mode: 'welcome_invite',
+      to: email,
+      appName: 'FLOW',
+      subject: 'FLOW: Velkommen - opret din adgangskode',
+      setupLink,
+      temporaryCode: setupCode || temporaryPassword.slice(0, 8),
+      restaurantName: restaurant?.name || '',
+      contactName
+    })
+  });
+
+  if (!welcomeResponse.ok) {
+    const details = await welcomeResponse.text().catch(() => '');
+    throw new Error(`Velkomstmail kunne ikke sendes (${welcomeResponse.status}) ${details}`.trim());
+  }
+
+  return { status: 'welcome_sent', createdNewUser, createdUserId };
+}
+
 async function addRestaurantFromPage() {
   const name = document.getElementById('new-restaurant-name').value;
   const owner = document.getElementById('new-restaurant-owner')?.value || '';
@@ -7054,6 +7197,7 @@ async function addRestaurantFromPage() {
   const website = document.getElementById('new-restaurant-website')?.value || '';
   const industry = document.getElementById('new-restaurant-industry')?.value || 'restaurant';
   const role = document.getElementById('new-restaurant-role')?.value || 'owner';
+  const sendWelcome = document.getElementById('new-restaurant-send-welcome')?.checked !== false;
 
   if (!name) {
     toast('Indtast et restaurantnavn', 'error');
@@ -7146,6 +7290,26 @@ async function addRestaurantFromPage() {
     // Log to customer-specific aktivitetslogs
     addCustomerAktivitetslog(createdRestaurant.id, 'system', 'Kundeprofil oprettet');
 
+    let welcomeInviteResult = null;
+    if (email && sendWelcome) {
+      try {
+        welcomeInviteResult = await provisionCustomerAccessForRestaurant(createdRestaurant, {
+          email,
+          contactName: contact || owner,
+          owner
+        });
+        addCustomerAktivitetslog(createdRestaurant.id, 'system', `Velkomstmail sendt til ${email}`);
+      } catch (inviteErr) {
+        console.warn('⚠️ Customer invite failed:', inviteErr);
+        addCustomerAktivitetslog(
+          createdRestaurant.id,
+          'system',
+          `Kunde oprettet, men login/velkomstmail fejlede: ${inviteErr?.message || 'ukendt fejl'}`
+        );
+        toast('Kunde oprettet, men velkomstmail kunne ikke sendes', 'error');
+      }
+    }
+
     // Auto-import menu fra hjemmeside (i baggrunden)
     if (website) {
       console.log('🌐 Auto-importing menu from website:', website);
@@ -7165,7 +7329,13 @@ async function addRestaurantFromPage() {
     // Clear form
     clearAddRestaurantForm();
 
-    toast(`Restaurant "${name}" oprettet`, 'success');
+    if (email && sendWelcome && welcomeInviteResult) {
+      toast(`Restaurant "${name}" oprettet + velkomstmail sendt`, 'success');
+    } else if (email && sendWelcome) {
+      toast(`Restaurant "${name}" oprettet (send velkomstmail manuelt)`, 'info');
+    } else {
+      toast(`Restaurant "${name}" oprettet`, 'success');
+    }
 
     // Navigate to customer profile with real UUID
     setTimeout(() => {
@@ -7237,6 +7407,8 @@ function clearAddRestaurantForm() {
   if (industry) industry.value = 'restaurant';
   const role = document.getElementById('new-restaurant-role');
   if (role) role.value = 'owner';
+  const sendWelcome = document.getElementById('new-restaurant-send-welcome');
+  if (sendWelcome) sendWelcome.checked = true;
 }
 
 // =====================================================
@@ -20327,6 +20499,10 @@ function updateApiStatus() {
   const trustpilotOk = localStorage.getItem('trustpilot_api_key');
   const firecrawlOk = localStorage.getItem('firecrawl_api_key');
   const googleapiOk = localStorage.getItem('googleapi_api_key');
+  const serperOk = localStorage.getItem('serper_reviews_key') ||
+                   localStorage.getItem('serper_images_key') ||
+                   localStorage.getItem('serper_maps_key') ||
+                   localStorage.getItem('serper_places_key');
   const webhookOk = localStorage.getItem('api_webhook_enabled') !== 'false';
 
   // Status elements
@@ -20345,6 +20521,7 @@ function updateApiStatus() {
     'trustpilot-indicator': trustpilotOk,
     'firecrawl-indicator': firecrawlOk,
     'googleapi-indicator': googleapiOk,
+    'serper-indicator': serperOk,
     'webhook-indicator': webhookOk
   };
 
@@ -20464,7 +20641,8 @@ async function saveAllApiSettings() {
     googleapi_api_key: document.getElementById('googleapi-api-key')?.value.trim() || '',
     serper_reviews_key: document.getElementById('serper-reviews-key')?.value.trim() || '',
     serper_images_key: document.getElementById('serper-images-key')?.value.trim() || '',
-    serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || ''
+    serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || '',
+    serper_places_key: document.getElementById('serper-places-key')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -20529,7 +20707,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -20548,7 +20726,8 @@ async function loadAllApiSettings() {
     'googleapi-api-key': 'googleapi_api_key',
     'serper-reviews-key': 'serper_reviews_key',
     'serper-images-key': 'serper_images_key',
-    'serper-maps-key': 'serper_maps_key'
+    'serper-maps-key': 'serper_maps_key',
+    'serper-places-key': 'serper_places_key'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
@@ -20978,6 +21157,9 @@ function switchSettingsTab(tab) {
 
   // Refresh API status and toggles when API tab is opened
   if (tab === 'api') {
+    apiAdgangSearchQuery = '';
+    var apiAdgangSearchInput = document.getElementById('api-adgang-search');
+    if (apiAdgangSearchInput) apiAdgangSearchInput.value = '';
     loadAllApiSettings();
   }
 }
@@ -34498,6 +34680,7 @@ function generateApiKey() {
 var apiKeysCurrentPage = 1;
 var apiKeysPageSize = 12;
 var apiKeysSearchQuery = '';
+var apiAdgangSearchQuery = '';
 
 // SVG icons for API key row actions
 var apiKeyEyeSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -34511,13 +34694,15 @@ var CONFIGURED_APIS = [
   { name: 'Google Reviews', keyField: 'google_api_key', toggleName: 'google', service: 'Anmeldelser', inputId: 'google-api-key', relatedFields: ['google_place_id'] },
   { name: 'Trustpilot', keyField: 'trustpilot_api_key', toggleName: 'trustpilot', service: 'Anmeldelser', inputId: 'trustpilot-api-key', relatedFields: ['trustpilot_business_id'] },
   { name: 'Firecrawl', keyField: 'firecrawl_api_key', toggleName: 'firecrawl', service: 'Web Crawling', inputId: 'firecrawl-api-key' },
-  { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services', inputId: 'googleapi-api-key' }
+  { name: 'Google API', keyField: 'googleapi_api_key', toggleName: 'googleapi', service: 'Google Services', inputId: 'googleapi-api-key' },
+  { name: 'Serper', keyField: 'serper_reviews_key', toggleName: 'serper', service: 'SEO Analyse', inputId: 'serper-reviews-key', relatedFields: ['serper_images_key', 'serper_maps_key', 'serper_places_key'] }
 ];
 
 // Load API keys list with search and pagination
 function loadApiKeysList() {
   var tbody = document.getElementById('api-keys-list');
-  if (!tbody) return;
+  var adgangTbody = document.getElementById('api-adgang-keys-list');
+  if (!tbody && !adgangTbody) return;
 
   var disabledStates = JSON.parse(localStorage.getItem('flow_system_key_states') || '{}');
   var deletedSysKeys = JSON.parse(localStorage.getItem('flow_deleted_system_keys') || '[]');
@@ -34545,11 +34730,21 @@ function loadApiKeysList() {
   // B. Configured API connections
   CONFIGURED_APIS.forEach(function(cfg) {
     var keyValue = localStorage.getItem(cfg.keyField);
+    var relatedKeyValue = '';
+    (cfg.relatedFields || []).some(function(field) {
+      var value = localStorage.getItem(field);
+      if (value) {
+        relatedKeyValue = value;
+        return true;
+      }
+      return false;
+    });
+    var effectiveKeyValue = keyValue || relatedKeyValue;
     var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
-    var hasKey = !!keyValue;
+    var hasKey = !!effectiveKeyValue;
     allKeys.push({
       id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
-      keyValue: keyValue || '', maskedKey: hasKey ? maskApiKey(keyValue) : '\u2014',
+      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '\u2014',
       type: 'Konfigureret', keyType: 'configured',
       status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
       statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
@@ -34570,44 +34765,57 @@ function loadApiKeysList() {
     });
   });
 
-  // Apply search filter
-  var query = apiKeysSearchQuery.toLowerCase();
-  var filtered = allKeys;
-  if (query) {
-    filtered = allKeys.filter(function(k) {
-      return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
-             (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
-             (k.maskedKey && k.maskedKey.toLowerCase().indexOf(query) !== -1) ||
-             (k.type && k.type.toLowerCase().indexOf(query) !== -1);
-    });
-  }
+  // Render Integrations list with its own search + pagination state
+  if (tbody) {
+    var query = apiKeysSearchQuery.toLowerCase();
+    var filtered = allKeys;
+    if (query) {
+      filtered = allKeys.filter(function(k) {
+        return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
+               (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
+               (k.maskedKey && k.maskedKey.toLowerCase().indexOf(query) !== -1) ||
+               (k.type && k.type.toLowerCase().indexOf(query) !== -1);
+      });
+    }
 
-  // Pagination
-  var totalPages = Math.max(1, Math.ceil(filtered.length / apiKeysPageSize));
-  if (apiKeysCurrentPage > totalPages) apiKeysCurrentPage = totalPages;
-  var startIdx = (apiKeysCurrentPage - 1) * apiKeysPageSize;
-  var pageItems = filtered.slice(startIdx, startIdx + apiKeysPageSize);
+    // Pagination
+    var totalPages = Math.max(1, Math.ceil(filtered.length / apiKeysPageSize));
+    if (apiKeysCurrentPage > totalPages) apiKeysCurrentPage = totalPages;
+    var startIdx = (apiKeysCurrentPage - 1) * apiKeysPageSize;
+    var pageItems = filtered.slice(startIdx, startIdx + apiKeysPageSize);
 
-  // Render rows
-  if (pageItems.length === 0) {
-    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">' +
-      (query ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
-  } else {
-    tbody.innerHTML = pageItems.map(function(k) {
-      return renderApiKeyRow(k, disabledStates);
-    }).join('');
-  }
-
-  // Render pagination
-  renderApiKeysPagination(totalPages);
-
-  // Also render to API Adgang settings page (read-only summary)
-  var adgangTbody = document.getElementById('api-adgang-keys-list');
-  if (adgangTbody) {
-    if (allKeys.length === 0) {
-      adgangTbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Ingen API n\u00f8gler</td></tr>';
+    // Render rows
+    if (pageItems.length === 0) {
+      tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">' +
+        (query ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
     } else {
-      adgangTbody.innerHTML = allKeys.map(renderApiAdgangRow).join('');
+      tbody.innerHTML = pageItems.map(function(k) {
+        return renderApiKeyRow(k, disabledStates);
+      }).join('');
+    }
+
+    // Render pagination
+    renderApiKeysPagination(totalPages);
+  }
+
+  // Render API Adgang summary with separate search state
+  if (adgangTbody) {
+    var adgangQuery = apiAdgangSearchQuery.toLowerCase();
+    var adgangFiltered = allKeys;
+    if (adgangQuery) {
+      adgangFiltered = allKeys.filter(function(k) {
+        return (k.name && k.name.toLowerCase().indexOf(adgangQuery) !== -1) ||
+               (k.service && k.service.toLowerCase().indexOf(adgangQuery) !== -1) ||
+               (k.maskedKey && k.maskedKey.toLowerCase().indexOf(adgangQuery) !== -1) ||
+               (k.type && k.type.toLowerCase().indexOf(adgangQuery) !== -1);
+      });
+    }
+
+    if (adgangFiltered.length === 0) {
+      adgangTbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">' +
+        (adgangQuery ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
+    } else {
+      adgangTbody.innerHTML = adgangFiltered.map(renderApiAdgangRow).join('');
     }
   }
 }
@@ -34697,6 +34905,11 @@ function goToApiKeysPage(page) {
 function filterApiKeys(query) {
   apiKeysSearchQuery = (query || '').trim();
   apiKeysCurrentPage = 1;
+  loadApiKeysList();
+}
+
+function filterApiAdgangKeys(query) {
+  apiAdgangSearchQuery = (query || '').trim();
   loadApiKeysList();
 }
 

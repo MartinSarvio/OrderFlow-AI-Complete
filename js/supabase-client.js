@@ -26,7 +26,15 @@ let supabase = null;
 let initializationPromise = null;
 const MAX_INIT_RETRIES = 50; // 5 seconds max (50 * 100ms)
 
+function hasSupabaseLibrary() {
+  return !!(window.supabase && typeof window.supabase.createClient === 'function');
+}
+
 function initializeSupabase() {
+  if (supabase) {
+    return Promise.resolve(supabase);
+  }
+
   if (initializationPromise) {
     return initializationPromise;
   }
@@ -37,11 +45,12 @@ function initializeSupabase() {
     function attemptInit() {
       retryCount++;
 
-      if (typeof window.supabase === 'undefined') {
+      if (!hasSupabaseLibrary()) {
         if (retryCount >= MAX_INIT_RETRIES) {
           console.error('❌ Supabase library failed to load after 5 seconds');
           // Create a mock client that will show proper errors
           window.supabaseClient = null;
+          initializationPromise = null;
           reject(new Error('Supabase library not loaded'));
           return;
         }
@@ -66,8 +75,15 @@ function initializeSupabase() {
         window.supabaseClient = supabase;
         resolve(supabase);
       } catch (err) {
-        console.error('❌ Failed to initialize Supabase client:', err);
-        reject(err);
+        if (retryCount >= MAX_INIT_RETRIES) {
+          console.error('❌ Failed to initialize Supabase client:', err);
+          window.supabaseClient = null;
+          initializationPromise = null;
+          reject(err);
+          return;
+        }
+        console.warn(`⚠️ Supabase init failed, retrying... (${retryCount}/${MAX_INIT_RETRIES})`);
+        setTimeout(attemptInit, 100);
       }
     }
 
@@ -77,11 +93,34 @@ function initializeSupabase() {
   return initializationPromise;
 }
 
+async function ensureSupabaseClient() {
+  if (supabase) return supabase;
+
+  if (window.supabaseClient) {
+    supabase = window.supabaseClient;
+    return supabase;
+  }
+
+  try {
+    await initializeSupabase();
+  } catch (err) {
+    // If init failed once due race/network hiccup, attempt one hard retry.
+    initializationPromise = null;
+    await initializeSupabase();
+  }
+
+  if (!supabase && window.supabaseClient) {
+    supabase = window.supabaseClient;
+  }
+
+  return supabase;
+}
+
 // Start initialization immediately
 initializeSupabase();
 
 // Export promise for other modules to await
-window.waitForSupabase = () => initializationPromise;
+window.waitForSupabase = () => ensureSupabaseClient();
 
 /**
  * SUPABASE DATABASE HELPER
@@ -105,9 +144,7 @@ const SupabaseDB = {
   async getRestaurants(userId) {
     try {
       // Wait for Supabase to be initialized
-      if (!supabase) {
-        await window.waitForSupabase();
-      }
+      if (!supabase) await ensureSupabaseClient();
       if (!supabase) {
         console.error('❌ Supabase not initialized in getRestaurants');
         return [];
@@ -135,9 +172,7 @@ const SupabaseDB = {
   async getRestaurant(restaurantId) {
     try {
       // Wait for Supabase to be initialized
-      if (!supabase) {
-        await window.waitForSupabase();
-      }
+      if (!supabase) await ensureSupabaseClient();
       if (!supabase) {
         console.error('❌ Supabase not initialized in getRestaurant');
         return null;
@@ -163,6 +198,9 @@ const SupabaseDB = {
    */
   async createRestaurant(userId, restaurantData) {
     try {
+      if (!supabase) await ensureSupabaseClient();
+      if (!supabase) throw new Error('Supabase not initialized in createRestaurant');
+
       // Transform revenue fields to bigint (øre/cents)
       const dbData = this._prepareRestaurantForDB(restaurantData);
       dbData.user_id = userId;
@@ -188,6 +226,9 @@ const SupabaseDB = {
    */
   async updateRestaurant(restaurantId, updates) {
     try {
+      if (!supabase) await ensureSupabaseClient();
+      if (!supabase) throw new Error('Supabase not initialized in updateRestaurant');
+
       const dbData = this._prepareRestaurantForDB(updates);
       dbData.updated_at = new Date().toISOString();
 
@@ -213,6 +254,9 @@ const SupabaseDB = {
    */
   async deleteRestaurant(restaurantId) {
     try {
+      if (!supabase) await ensureSupabaseClient();
+      if (!supabase) throw new Error('Supabase not initialized in deleteRestaurant');
+
       const { error } = await supabase
         .from('restaurants')
         .delete()
