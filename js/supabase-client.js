@@ -129,6 +129,61 @@ window.waitForSupabase = () => ensureSupabaseClient();
  * Handles error logging and data transformation.
  */
 const SupabaseDB = {
+  // UUID validation helper
+  _isUuid(value) {
+    const normalized = String(value || '').trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized);
+  },
+
+  // Try to resolve a valid UUID for auth.users.id
+  async _resolveAuthUserId(preferredUserId) {
+    const preferred = String(preferredUserId || '').trim();
+    if (this._isUuid(preferred)) {
+      return preferred;
+    }
+
+    if (!supabase) await ensureSupabaseClient();
+
+    // Preferred source: active Supabase auth user
+    if (supabase?.auth?.getUser) {
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        const authUserId = data?.user?.id;
+        if (!error && this._isUuid(authUserId)) {
+          return authUserId;
+        }
+      } catch (err) {
+        console.warn('⚠️ Could not resolve auth user from Supabase session:', err?.message || err);
+      }
+    }
+
+    // Secondary source: local user id key (if set)
+    const storedUserId = localStorage.getItem('orderflow_user_id');
+    if (this._isUuid(storedUserId)) {
+      return storedUserId;
+    }
+
+    // Last fallback: Supabase auth storage blob
+    try {
+      const raw = localStorage.getItem('orderflow-auth-token');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const sessionUserId =
+          parsed?.currentSession?.user?.id ||
+          parsed?.user?.id ||
+          parsed?.session?.user?.id ||
+          parsed?.[0]?.user?.id;
+        if (this._isUuid(sessionUserId)) {
+          return sessionUserId;
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not parse orderflow-auth-token for user id:', err?.message || err);
+    }
+
+    return null;
+  },
+
   // Get Supabase config for external use
   getConfig() {
     return SUPABASE_CONFIG;
@@ -150,10 +205,16 @@ const SupabaseDB = {
         return [];
       }
 
+      const resolvedUserId = await this._resolveAuthUserId(userId);
+      if (!resolvedUserId) {
+        console.warn('⚠️ getRestaurants skipped: no valid UUID user_id', { providedUserId: userId });
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id', resolvedUserId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -203,7 +264,19 @@ const SupabaseDB = {
 
       // Transform revenue fields to bigint (øre/cents)
       const dbData = this._prepareRestaurantForDB(restaurantData);
-      dbData.user_id = userId;
+      delete dbData.id; // Let database default uuid_generate_v4() handle id
+
+      const normalizedName = String(dbData.name || '').trim();
+      if (!normalizedName) {
+        throw new Error('Restaurant name is required (name må ikke være NULL)');
+      }
+      dbData.name = normalizedName;
+
+      const resolvedUserId = await this._resolveAuthUserId(userId);
+      if (!resolvedUserId) {
+        throw new Error('Missing valid auth user UUID (user_id må ikke være NULL)');
+      }
+      dbData.user_id = resolvedUserId;
 
       const { data, error } = await supabase
         .from('restaurants')
@@ -2184,18 +2257,28 @@ const SupabaseDB = {
       return 'demo-user';
     }
 
-    // Check Supabase session
-    if (supabase) {
-      const session = supabase.auth.session?.();
-      if (session?.user?.id) {
-        return session.user.id;
-      }
-    }
-
     // Fallback to localStorage user ID
     const storedUserId = localStorage.getItem('orderflow_user_id');
-    if (storedUserId) {
+    if (this._isUuid(storedUserId)) {
       return storedUserId;
+    }
+
+    // Supabase auth session blob (persisted with storageKey: orderflow-auth-token)
+    try {
+      const raw = localStorage.getItem('orderflow-auth-token');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const sessionUserId =
+          parsed?.currentSession?.user?.id ||
+          parsed?.user?.id ||
+          parsed?.session?.user?.id ||
+          parsed?.[0]?.user?.id;
+        if (this._isUuid(sessionUserId)) {
+          return sessionUserId;
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not parse auth token storage for user id:', err?.message || err);
     }
 
     return null;

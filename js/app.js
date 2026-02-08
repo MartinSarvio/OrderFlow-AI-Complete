@@ -7048,7 +7048,7 @@ function loadRestaurants() {
 // RESTAURANTS
 // =====================================================
 async function addRestaurant() {
-  const name = document.getElementById('new-restaurant-name').value;
+  const name = (document.getElementById('new-restaurant-name').value || '').trim();
   const logo = document.getElementById('new-restaurant-logo').value || 'pizza';
   const phone = document.getElementById('new-restaurant-phone').value;
 
@@ -7201,7 +7201,7 @@ async function provisionCustomerAccessForRestaurant(restaurant, options = {}) {
 }
 
 async function addRestaurantFromPage() {
-  const name = document.getElementById('new-restaurant-name').value;
+  const name = (document.getElementById('new-restaurant-name').value || '').trim();
   const owner = document.getElementById('new-restaurant-owner')?.value || '';
   const phone = document.getElementById('new-restaurant-phone').value;
   const cvr = document.getElementById('new-restaurant-cvr')?.value || '';
@@ -7358,6 +7358,15 @@ async function addRestaurantFromPage() {
 
   } catch (err) {
     console.error('❌ Error creating restaurant:', err);
+    const message = String(err?.message || '');
+    const shouldUseLocalFallback =
+      /supabase not available|not initialized|network|fetch|timeout/i.test(message);
+
+    // Data integrity/auth errors should be shown to user (not silently saved locally)
+    if (!shouldUseLocalFallback) {
+      toast(`Kunde blev ikke oprettet: ${message || 'ukendt fejl'}`, 'error');
+      return;
+    }
 
     // Fallback to localStorage when Supabase is not available
     console.log('💾 Using localStorage fallback for restaurant creation...');
