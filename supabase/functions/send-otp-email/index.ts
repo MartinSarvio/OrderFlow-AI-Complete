@@ -219,12 +219,29 @@ serve(async (req) => {
       restaurantName,
       contactName
     } = payload || {}
-    const safeAppName = appName || 'OrderFlow'
+    const safeAppName = (appName || 'OrderFlow').replace(/[<>"'\r\n]/g, '')
     const isWelcomeInvite = mode === 'welcome_invite'
 
     if (!to || (!otp && !isWelcomeInvite)) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields: to and otp (or welcome mode)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(to)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid email address format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validate setupLink if welcome invite (must be HTTPS)
+    if (isWelcomeInvite && setupLink && !setupLink.startsWith('https://')) {
+      return new Response(
+        JSON.stringify({ error: 'setupLink must use HTTPS' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
