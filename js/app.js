@@ -34854,6 +34854,137 @@ function switchMainDataTab(tab) {
   }
 }
 
+// ==================== DATA GRID UTILITY ====================
+// Provides sorting + pagination for raw-data tables
+const _dgState = new Map();
+
+function initDataGrid(tableId, options) {
+  options = Object.assign({ pageSize: 25, pageSizes: [10, 25, 50, 100] }, options || {});
+  var table = document.getElementById(tableId);
+  if (!table) return;
+
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  var pagId = 'dg-pag-' + tableId.replace('dg-', '');
+  var pagEl = document.getElementById(pagId);
+
+  // Store all rows
+  var allRows = Array.from(tbody.querySelectorAll('tr'));
+  // Filter out empty-state rows
+  allRows = allRows.filter(function(r) { return !r.querySelector('.dg-empty') && r.cells.length > 1; });
+
+  var state = { rows: allRows, page: 0, pageSize: options.pageSize, sortCol: -1, sortDir: '' };
+  _dgState.set(tableId, state);
+
+  // Setup sort handlers on th elements
+  var headers = table.querySelectorAll('thead th');
+  headers.forEach(function(th, colIdx) {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', function() {
+      var s = _dgState.get(tableId);
+      // Toggle sort direction
+      if (s.sortCol === colIdx) {
+        s.sortDir = s.sortDir === 'asc' ? 'desc' : (s.sortDir === 'desc' ? '' : 'asc');
+      } else {
+        s.sortCol = colIdx;
+        s.sortDir = 'asc';
+      }
+      // Update header attributes
+      headers.forEach(function(h) { h.removeAttribute('data-sort-dir'); });
+      if (s.sortDir) th.setAttribute('data-sort-dir', s.sortDir);
+
+      // Sort rows
+      if (s.sortDir) {
+        s.rows.sort(function(a, b) {
+          var aVal = (a.cells[colIdx] ? a.cells[colIdx].textContent : '').trim();
+          var bVal = (b.cells[colIdx] ? b.cells[colIdx].textContent : '').trim();
+          // Try numeric comparison
+          var aNum = parseFloat(aVal.replace(/[^0-9.\-]/g, ''));
+          var bNum = parseFloat(bVal.replace(/[^0-9.\-]/g, ''));
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return s.sortDir === 'asc' ? aNum - bNum : bNum - aNum;
+          }
+          // Fallback to string comparison
+          return s.sortDir === 'asc' ? aVal.localeCompare(bVal, 'da') : bVal.localeCompare(aVal, 'da');
+        });
+      }
+      s.page = 0;
+      _dgRender(tableId);
+    });
+  });
+
+  // Render pagination and visible rows
+  _dgRender(tableId);
+}
+
+function _dgRender(tableId) {
+  var state = _dgState.get(tableId);
+  if (!state) return;
+
+  var table = document.getElementById(tableId);
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  var total = state.rows.length;
+  var pageSize = state.pageSize;
+  var totalPages = Math.max(1, Math.ceil(total / pageSize));
+  if (state.page >= totalPages) state.page = totalPages - 1;
+  if (state.page < 0) state.page = 0;
+
+  var start = state.page * pageSize;
+  var end = Math.min(start + pageSize, total);
+
+  // Replace tbody contents with sorted/paginated rows
+  tbody.innerHTML = '';
+  if (total === 0) {
+    tbody.innerHTML = '<tr><td colspan="20" class="dg-empty">Ingen data</td></tr>';
+  } else {
+    for (var i = start; i < end; i++) {
+      tbody.appendChild(state.rows[i]);
+    }
+  }
+
+  // Render pagination
+  var pagId = 'dg-pag-' + tableId.replace('dg-', '');
+  var pagEl = document.getElementById(pagId);
+  if (pagEl) {
+    var pagSizes = [10, 25, 50, 100];
+    var optionsHtml = pagSizes.map(function(s) {
+      return '<option value="' + s + '"' + (s === pageSize ? ' selected' : '') + '>' + s + '</option>';
+    }).join('');
+
+    pagEl.innerHTML =
+      '<div class="dg-pagination-left">' +
+        '<span>Vis</span>' +
+        '<select onchange="_dgPageSize(\'' + tableId + '\', this.value)">' + optionsHtml + '</select>' +
+        '<span>pr. side</span>' +
+      '</div>' +
+      '<div class="dg-pagination-right">' +
+        '<span>' + (total > 0 ? (start + 1) + '-' + end + ' af ' + total : '0 af 0') + '</span>' +
+        '<button onclick="_dgPage(\'' + tableId + '\', -1)"' + (state.page <= 0 ? ' disabled' : '') + '>&lsaquo;</button>' +
+        '<span class="dg-page-info">' + (state.page + 1) + ' / ' + totalPages + '</span>' +
+        '<button onclick="_dgPage(\'' + tableId + '\', 1)"' + (state.page >= totalPages - 1 ? ' disabled' : '') + '>&rsaquo;</button>' +
+      '</div>';
+  }
+}
+
+function _dgPage(tableId, dir) {
+  var state = _dgState.get(tableId);
+  if (!state) return;
+  state.page += dir;
+  _dgRender(tableId);
+}
+
+function _dgPageSize(tableId, size) {
+  var state = _dgState.get(tableId);
+  if (!state) return;
+  state.pageSize = parseInt(size);
+  state.page = 0;
+  _dgRender(tableId);
+}
+
 // Load raw data tab content
 function loadRawDataTab() {
   switchDataCategory('users');
@@ -34928,7 +35059,7 @@ function loadUsersData() {
     { id: 'C005', name: 'Thomas Pedersen', email: 'thomas@example.dk', phone: '+45 56789012', created: '2026-02-03', orders: 1, total: '285 kr' },
   ];
   document.getElementById('data-customers-table').innerHTML = customers.map(c =>
-    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.name}</td><td>${c.email}</td><td>${c.phone}</td><td>${c.created}</td><td>${c.orders}</td><td style="padding-right:12px">${c.total}</td></tr>`
+    `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.email}</td><td>${c.phone}</td><td>${c.created}</td><td>${c.orders}</td><td>${c.total}</td></tr>`
   ).join('');
 
   // Activity table
@@ -34941,7 +35072,7 @@ function loadUsersData() {
   ];
   const actionColors = { login: 'var(--success)', logout: 'var(--muted)', signup: 'var(--accent)' };
   document.getElementById('data-activity-table').innerHTML = activities.map(a =>
-    `<tr><td style="padding:10px 12px">${a.time}</td><td>${a.email}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.ip}</td><td>${a.device}</td><td style="padding-right:12px;color:var(--success)">${a.status}</td></tr>`
+    `<tr><td>${a.time}</td><td>${a.email}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.ip}</td><td>${a.device}</td><td style="padding-right:12px;color:var(--success)">${a.status}</td></tr>`
   ).join('');
 
   // Sessions table
@@ -34951,8 +35082,12 @@ function loadUsersData() {
     { id: 'S8932', user: 'louise@example.dk', start: '12:20', pages: 7, device: 'Safari/Mac', country: 'DK' },
   ];
   document.getElementById('data-sessions-table').innerHTML = sessions.map(s =>
-    `<tr><td style="padding:10px 12px">${s.id}</td><td>${s.user}</td><td>${s.start}</td><td>${s.pages}</td><td>${s.device}</td><td style="padding-right:12px">${s.country}</td></tr>`
+    `<tr><td>${s.id}</td><td>${s.user}</td><td>${s.start}</td><td>${s.pages}</td><td>${s.device}</td><td>${s.country}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-customers');
+  initDataGrid('dg-activity');
+  initDataGrid('dg-sessions');
 }
 
 // Load orders data
@@ -34972,7 +35107,7 @@ function loadOrdersData() {
   ];
   const statusColors = { pending: 'var(--warning)', confirmed: 'var(--accent)', preparing: 'var(--primary)', delivered: 'var(--success)', cancelled: 'var(--error)' };
   document.getElementById('data-orders-table').innerHTML = orders.map(o =>
-    `<tr><td style="padding:10px 12px">${o.id}</td><td>${o.customer}</td><td>${o.date}</td><td style="color:${statusColors[o.status]}">${o.status}</td><td>${o.channel}</td><td>${o.items}</td><td>${o.total}</td><td style="padding-right:12px">${o.payment}</td></tr>`
+    `<tr><td>${o.id}</td><td>${o.customer}</td><td>${o.date}</td><td style="color:${statusColors[o.status]}">${o.status}</td><td>${o.channel}</td><td>${o.items}</td><td>${o.total}</td><td>${o.payment}</td></tr>`
   ).join('');
 
   const payments = [
@@ -34981,7 +35116,7 @@ function loadOrdersData() {
     { id: 'P3719', order: '#4521', amount: '590 kr', method: 'Kort', status: 'completed', provider: 'Stripe', time: '11:31' },
   ];
   document.getElementById('data-payments-table').innerHTML = payments.map(p =>
-    `<tr><td style="padding:10px 12px">${p.id}</td><td>${p.order}</td><td>${p.amount}</td><td>${p.method}</td><td style="color:var(--success)">${p.status}</td><td>${p.provider}</td><td style="padding-right:12px">${p.time}</td></tr>`
+    `<tr><td>${p.id}</td><td>${p.order}</td><td>${p.amount}</td><td>${p.method}</td><td style="color:var(--success)">${p.status}</td><td>${p.provider}</td><td>${p.time}</td></tr>`
   ).join('');
 
   const items = [
@@ -34990,13 +35125,18 @@ function loadOrdersData() {
     { id: 'I003', order: '#4522', product: 'Pizza Margherita', qty: 1, price: '189 kr', subtotal: '189 kr' },
   ];
   document.getElementById('data-order-items-table').innerHTML = items.map(i =>
-    `<tr><td style="padding:10px 12px">${i.id}</td><td>${i.order}</td><td>${i.product}</td><td>${i.qty}</td><td>${i.price}</td><td style="padding-right:12px">${i.subtotal}</td></tr>`
+    `<tr><td>${i.id}</td><td>${i.order}</td><td>${i.product}</td><td>${i.qty}</td><td>${i.price}</td><td>${i.subtotal}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-orders');
+  initDataGrid('dg-payments');
+  initDataGrid('dg-order-items');
 }
 
 // Load Supabase data
 function loadSupabaseData() {
   // Tables already hardcoded in HTML
+  initDataGrid('dg-supabase-tables');
 }
 
 // Load integrations data
@@ -35061,7 +35201,7 @@ function loadIntegrationsData() {
       connectionsEl.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen aktive integrationer</td></tr>';
     } else {
       connectionsEl.innerHTML = connections.map(c =>
-        `<tr><td style="padding:10px 12px">${c.name}</td><td>${c.type}</td><td style="color:${c.statusColor}">${c.status}</td><td>${c.sync}</td><td>${c.activity}</td><td>${c.errors}</td></tr>`
+        `<tr><td>${c.name}</td><td>${c.type}</td><td style="color:${c.statusColor}">${c.status}</td><td>${c.sync}</td><td>${c.activity}</td><td>${c.errors}</td></tr>`
       ).join('');
     }
   }
@@ -35077,7 +35217,7 @@ function loadIntegrationsData() {
     { time: '11:45', type: 'OUT', endpoint: '/webhook/economic', status: '200', latency: '230ms', payload: '{...}' },
   ];
   document.getElementById('data-webhooks-table').innerHTML = webhooks.map(w =>
-    `<tr><td style="padding:10px 12px">${w.time}</td><td>${w.type}</td><td>${w.endpoint}</td><td style="color:var(--success)">${w.status}</td><td>${w.latency}</td><td style="padding-right:12px"><button class="btn btn-secondary btn-sm">Vis</button></td></tr>`
+    `<tr><td>${w.time}</td><td>${w.type}</td><td>${w.endpoint}</td><td style="color:var(--success)">${w.status}</td><td>${w.latency}</td><td><button class="btn btn-secondary btn-sm">Vis</button></td></tr>`
   ).join('');
 
   // API Logs
@@ -35087,8 +35227,12 @@ function loadIntegrationsData() {
     { time: '11:59', method: 'POST', endpoint: '/api/payments', status: '200', ip: '192.168.1.45', latency: '156ms' },
   ];
   document.getElementById('data-api-logs-table').innerHTML = apiLogs.map(a =>
-    `<tr><td style="padding:10px 12px">${a.time}</td><td>${a.method}</td><td>${a.endpoint}</td><td style="color:var(--success)">${a.status}</td><td>${a.ip}</td><td style="padding-right:12px">${a.latency}</td></tr>`
+    `<tr><td>${a.time}</td><td>${a.method}</td><td>${a.endpoint}</td><td style="color:var(--success)">${a.status}</td><td>${a.ip}</td><td>${a.latency}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-webhooks');
+  initDataGrid('dg-api-logs');
+  initDataGrid('dg-connections');
 }
 
 // Load Flow CMS data
@@ -35108,7 +35252,7 @@ function loadFlowCMSData() {
   ];
   const statusColors = { published: 'var(--success)', draft: 'var(--warning)' };
   document.getElementById('data-flow-pages-table').innerHTML = pages.map(p =>
-    `<tr><td style="padding:10px 12px">${p.id}</td><td>${p.title}</td><td>${p.slug}</td><td style="color:${statusColors[p.status]}">${p.status}</td><td>${p.sections}</td><td style="padding-right:12px">${p.updated}</td></tr>`
+    `<tr><td>${p.id}</td><td>${p.title}</td><td>${p.slug}</td><td style="color:${statusColors[p.status]}">${p.status}</td><td>${p.sections}</td><td>${p.updated}</td></tr>`
   ).join('');
 
   const media = [
@@ -35117,7 +35261,7 @@ function loadFlowCMSData() {
     { file: 'menu-1.jpg', type: 'image/jpeg', size: '1.8MB', uploaded: '2026-02-03', used: 'Menu' },
   ];
   document.getElementById('data-flow-media-table').innerHTML = media.map(m =>
-    `<tr><td style="padding:10px 12px">${m.file}</td><td>${m.type}</td><td>${m.size}</td><td>${m.uploaded}</td><td style="padding-right:12px">${m.used}</td></tr>`
+    `<tr><td>${m.file}</td><td>${m.type}</td><td>${m.size}</td><td>${m.uploaded}</td><td>${m.used}</td></tr>`
   ).join('');
 
   const conversations = [
@@ -35127,8 +35271,12 @@ function loadFlowCMSData() {
   ];
   const outcomeColors = { order_completed: 'var(--success)', abandoned: 'var(--warning)', escalated: 'var(--error)' };
   document.getElementById('data-ai-conversations-table').innerHTML = conversations.map(c =>
-    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.session}</td><td>${c.start}</td><td>${c.messages}</td><td style="color:${outcomeColors[c.outcome]}">${c.outcome}</td><td style="padding-right:12px">${c.duration}</td></tr>`
+    `<tr><td>${c.id}</td><td>${c.session}</td><td>${c.start}</td><td>${c.messages}</td><td style="color:${outcomeColors[c.outcome]}">${c.outcome}</td><td>${c.duration}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-flow-pages');
+  initDataGrid('dg-flow-media');
+  initDataGrid('dg-ai-conversations');
 }
 
 // Load changes/audit data
@@ -35147,7 +35295,7 @@ function loadChangesData() {
   ];
   const actionColors = { INSERT: 'var(--success)', UPDATE: 'var(--accent)', DELETE: 'var(--error)' };
   document.getElementById('data-audit-log-table').innerHTML = audit.map(a =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${a.time}</td><td>${a.user}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.table}</td><td>${a.record}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.old}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.new}</td><td style="padding-right:12px">${a.ip}</td></tr>`
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${a.time}</td><td>${a.user}</td><td style="color:${actionColors[a.action]}">${a.action}</td><td>${a.table}</td><td>${a.record}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.old}</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis">${a.new}</td><td>${a.ip}</td></tr>`
   ).join('');
 
   const sysLogs = [
@@ -35157,15 +35305,19 @@ function loadChangesData() {
   ];
   const levelColors = { info: 'var(--accent)', warning: 'var(--warning)', error: 'var(--error)' };
   document.getElementById('data-system-logs-table').innerHTML = sysLogs.map(l =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${l.time}</td><td style="color:${levelColors[l.level]}">${l.level}</td><td>${l.service}</td><td>${l.message}</td><td style="padding-right:12px">${l.trace}</td></tr>`
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${l.time}</td><td style="color:${levelColors[l.level]}">${l.level}</td><td>${l.service}</td><td>${l.message}</td><td>${l.trace}</td></tr>`
   ).join('');
 
   const errors = [
     { time: '10:15', type: 'TimeoutError', message: 'Economic API timeout', stack: '...', user: 'system', status: 'resolved' },
   ];
   document.getElementById('data-error-logs-table').innerHTML = errors.length ? errors.map(e =>
-    `<tr><td style="padding:10px 12px">${e.time}</td><td style="color:var(--error)">${e.type}</td><td>${e.message}</td><td><button class="btn btn-secondary btn-sm">Vis</button></td><td>${e.user}</td><td style="padding-right:12px;color:var(--success)">${e.status}</td></tr>`
+    `<tr><td>${e.time}</td><td style="color:var(--error)">${e.type}</td><td>${e.message}</td><td><button class="btn btn-secondary btn-sm">Vis</button></td><td>${e.user}</td><td style="color:var(--success)">${e.status}</td></tr>`
   ).join('') : '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Ingen fejl</td></tr>';
+
+  initDataGrid('dg-audit-log');
+  initDataGrid('dg-system-logs');
+  initDataGrid('dg-error-logs');
 }
 
 // Load products data
@@ -35188,7 +35340,7 @@ function loadProductsData() {
   ];
   const stockColors = { 'In stock': 'var(--success)', 'Lav': 'var(--warning)', 'Udsolgt': 'var(--error)' };
   document.getElementById('data-products-table').innerHTML = products.map(p =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.id}</td><td>${p.name}</td><td>${p.category}</td><td>${p.price}</td><td>${p.variants}</td><td style="color:${stockColors[p.stock] || 'inherit'}">${p.stock}</td><td>${p.sold}</td><td style="padding-right:12px">${p.status}</td></tr>`
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.id}</td><td>${p.name}</td><td>${p.category}</td><td>${p.price}</td><td>${p.variants}</td><td style="color:${stockColors[p.stock] || 'inherit'}">${p.stock}</td><td>${p.sold}</td><td>${p.status}</td></tr>`
   ).join('');
 
   // Categories table
@@ -35200,7 +35352,7 @@ function loadProductsData() {
     { id: 5, name: 'Drikkevarer', products: 15, sort: 5, visible: true, updated: '2026-01-28' },
   ];
   document.getElementById('data-categories-table').innerHTML = categories.map(c =>
-    `<tr><td style="padding:10px 12px">${c.id}</td><td>${c.name}</td><td>${c.products}</td><td>${c.sort}</td><td style="color:${c.visible ? 'var(--success)' : 'var(--muted)'}">${c.visible ? 'Ja' : 'Nej'}</td><td style="padding-right:12px">${c.updated}</td></tr>`
+    `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.products}</td><td>${c.sort}</td><td style="color:${c.visible ? 'var(--success)' : 'var(--muted)'}">${c.visible ? 'Ja' : 'Nej'}</td><td>${c.updated}</td></tr>`
   ).join('');
 
   // Variants table
@@ -35211,8 +35363,12 @@ function loadProductsData() {
     { id: 'VAR04', product: 'Caesar Salat', variant: 'Med kylling', type: 'Tilføjelse', price: '+35 kr', stock: 45 },
   ];
   document.getElementById('data-variants-table').innerHTML = variants.map(v =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${v.id}</td><td>${v.product}</td><td>${v.variant}</td><td>${v.type}</td><td>${v.price}</td><td style="padding-right:12px">${v.stock}</td></tr>`
+    `<tr><td style="font-family:monospace;font-size:11px">${v.id}</td><td>${v.product}</td><td>${v.variant}</td><td>${v.type}</td><td>${v.price}</td><td>${v.stock}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-products');
+  initDataGrid('dg-categories');
+  initDataGrid('dg-variants');
 }
 
 // Load marketing data
@@ -35233,7 +35389,7 @@ function loadMarketingData() {
     { source: 'email', medium: 'newsletter', campaign: 'feb_promo', visits: 432, orders: 67, revenue: '15,800 kr', convRate: '15.5%' },
   ];
   document.getElementById('data-utm-table').innerHTML = utmData.map(u =>
-    `<tr><td style="padding:10px 12px">${u.source}</td><td>${u.medium}</td><td>${u.campaign}</td><td>${u.visits}</td><td>${u.orders}</td><td>${u.revenue}</td><td style="padding-right:12px">${u.convRate}</td></tr>`
+    `<tr><td>${u.source}</td><td>${u.medium}</td><td>${u.campaign}</td><td>${u.visits}</td><td>${u.orders}</td><td>${u.revenue}</td><td>${u.convRate}</td></tr>`
   ).join('');
 
   // Email campaigns table (Kampagne, Sendt, Leveret, Åbnet, Klikket, Konv., Dato)
@@ -35244,7 +35400,7 @@ function loadMarketingData() {
     { name: 'Påske Kampagne', sent: 0, delivered: 0, opened: 0, clicked: 0, conversions: 0, date: '-' },
   ];
   document.getElementById('data-email-campaigns-table').innerHTML = emailCampaigns.map(e =>
-    `<tr><td style="padding:10px 12px">${e.name}</td><td>${e.sent}</td><td>${e.delivered}</td><td>${e.opened}</td><td>${e.clicked}</td><td>${e.conversions}</td><td style="padding-right:12px">${e.date}</td></tr>`
+    `<tr><td>${e.name}</td><td>${e.sent}</td><td>${e.delivered}</td><td>${e.opened}</td><td>${e.clicked}</td><td>${e.conversions}</td><td>${e.date}</td></tr>`
   ).join('');
 
   // SMS logs table (Tid, Modtager, Type, Besked, Status, Pris)
@@ -35255,8 +35411,12 @@ function loadMarketingData() {
   ];
   const smsStatusColors = { 'Leveret': 'var(--success)', 'Afventer': 'var(--warning)', 'Fejl': 'var(--error)' };
   document.getElementById('data-sms-logs-table').innerHTML = smsLogs.map(s =>
-    `<tr><td style="padding:10px 12px">${s.time}</td><td>${s.recipient}</td><td>${s.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.message}</td><td style="color:${smsStatusColors[s.status]}">${s.status}</td><td style="padding-right:12px">${s.cost}</td></tr>`
+    `<tr><td>${s.time}</td><td>${s.recipient}</td><td>${s.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.message}</td><td style="color:${smsStatusColors[s.status]}">${s.status}</td><td>${s.cost}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-utm');
+  initDataGrid('dg-email-campaigns');
+  initDataGrid('dg-sms-logs');
 }
 
 // Load consent/GDPR data
@@ -35277,7 +35437,7 @@ function loadConsentData() {
     { user: 'louise@example.dk', marketing: true, analytics: false, personalization: false, given: '2026-01-20', updated: '2026-02-03' },
   ];
   document.getElementById('data-consents-table').innerHTML = consents.map(c =>
-    `<tr><td style="padding:10px 12px">${c.user}</td><td style="color:${c.marketing ? 'var(--success)' : 'var(--error)'}">${c.marketing ? 'Ja' : 'Nej'}</td><td style="color:${c.analytics ? 'var(--success)' : 'var(--error)'}">${c.analytics ? 'Ja' : 'Nej'}</td><td style="color:${c.personalization ? 'var(--success)' : 'var(--error)'}">${c.personalization ? 'Ja' : 'Nej'}</td><td>${c.given}</td><td style="padding-right:12px">${c.updated}</td></tr>`
+    `<tr><td>${c.user}</td><td style="color:${c.marketing ? 'var(--success)' : 'var(--error)'}">${c.marketing ? 'Ja' : 'Nej'}</td><td style="color:${c.analytics ? 'var(--success)' : 'var(--error)'}">${c.analytics ? 'Ja' : 'Nej'}</td><td style="color:${c.personalization ? 'var(--success)' : 'var(--error)'}">${c.personalization ? 'Ja' : 'Nej'}</td><td>${c.given}</td><td>${c.updated}</td></tr>`
   ).join('');
 
   // GDPR data requests table (ID, Bruger, Type, Status, Anmodet, Fuldført)
@@ -35288,7 +35448,7 @@ function loadConsentData() {
   ];
   const gdprStatusColors = { 'Fuldført': 'var(--success)', 'Afventer': 'var(--warning)', 'Afvist': 'var(--error)' };
   document.getElementById('data-gdpr-requests-table').innerHTML = dataRequests.map(r =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${r.id}</td><td>${r.user}</td><td>${r.type}</td><td style="color:${gdprStatusColors[r.status]}">${r.status}</td><td>${r.requested}</td><td style="padding-right:12px">${r.completed}</td></tr>`
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${r.id}</td><td>${r.user}</td><td>${r.type}</td><td style="color:${gdprStatusColors[r.status]}">${r.status}</td><td>${r.requested}</td><td>${r.completed}</td></tr>`
   ).join('');
 
   // Data deletions table (ID, Bruger, Data type, Records, Slettet, Af)
@@ -35297,8 +35457,12 @@ function loadConsentData() {
     { id: 'DEL002', user: 'former@example.dk', dataType: 'Profil, Ordrer', records: 45, deleted: '2026-01-05', by: 'system' },
   ];
   document.getElementById('data-deletions-table').innerHTML = deletions.map(d =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${d.id}</td><td>${d.user}</td><td>${d.dataType}</td><td>${d.records}</td><td>${d.deleted}</td><td style="padding-right:12px">${d.by}</td></tr>`
+    `<tr><td style="font-family:monospace;font-size:11px">${d.id}</td><td>${d.user}</td><td>${d.dataType}</td><td>${d.records}</td><td>${d.deleted}</td><td>${d.by}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-consents');
+  initDataGrid('dg-gdpr-requests');
+  initDataGrid('dg-deletions');
 }
 
 // Load performance data
@@ -35331,7 +35495,7 @@ function loadPerformanceData() {
     { page: '/', views: 5678, avg: '0.6s', fcp: '0.3s', lcp: '1.0s', cls: '0.02' },
   ];
   document.getElementById('data-page-perf-table').innerHTML = pageLoads.map(p =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.page}</td><td>${p.views}</td><td>${p.avg}</td><td>${p.fcp}</td><td>${p.lcp}</td><td style="padding-right:12px">${p.cls}</td></tr>`
+    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px">${p.page}</td><td>${p.views}</td><td>${p.avg}</td><td>${p.fcp}</td><td>${p.lcp}</td><td>${p.cls}</td></tr>`
   ).join('');
 
   // Database performance table (Query, Calls, Avg (ms), Max, Rows, Cache)
@@ -35342,8 +35506,12 @@ function loadPerformanceData() {
     { query: 'UPDATE sessions...', calls: 890, avg: 4, max: 35, rows: '1', cache: '-' },
   ];
   document.getElementById('data-db-perf-table').innerHTML = dbPerformance.map(d =>
-    `<tr><td style="padding:10px 12px;font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${d.query}</td><td>${d.calls}</td><td>${d.avg}</td><td>${d.max}</td><td>${d.rows}</td><td style="padding-right:12px">${d.cache}</td></tr>`
+    `<tr><td style="font-family:monospace;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${d.query}</td><td>${d.calls}</td><td>${d.avg}</td><td>${d.max}</td><td>${d.rows}</td><td>${d.cache}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-api-perf');
+  initDataGrid('dg-page-perf');
+  initDataGrid('dg-db-perf');
 }
 
 // Load geographic and device data
@@ -35365,7 +35533,7 @@ function loadGeoData() {
     { country: 'Tyskland', city: 'Hamburg', visits: 123, orders: 12, revenue: '3,400 kr', convRate: '9.8%' },
   ];
   document.getElementById('data-geo-table').innerHTML = geoData.map(g =>
-    `<tr><td style="padding:10px 12px">${g.country}</td><td>${g.city}</td><td>${g.visits}</td><td>${g.orders}</td><td>${g.revenue}</td><td style="padding-right:12px">${g.convRate}</td></tr>`
+    `<tr><td>${g.country}</td><td>${g.city}</td><td>${g.visits}</td><td>${g.orders}</td><td>${g.revenue}</td><td>${g.convRate}</td></tr>`
   ).join('');
 
   // Device types table (Device Type, Model, Sessions, Bounce %, Avg Duration, Konv. %)
@@ -35377,7 +35545,7 @@ function loadGeoData() {
     { type: 'Tablet', model: 'iPad', sessions: 234, bounce: '32%', avgDuration: '5:10', convRate: '9.8%' },
   ];
   document.getElementById('data-devices-table').innerHTML = devices.map(d =>
-    `<tr><td style="padding:10px 12px">${d.type}</td><td>${d.model}</td><td>${d.sessions}</td><td>${d.bounce}</td><td>${d.avgDuration}</td><td style="padding-right:12px">${d.convRate}</td></tr>`
+    `<tr><td>${d.type}</td><td>${d.model}</td><td>${d.sessions}</td><td>${d.bounce}</td><td>${d.avgDuration}</td><td>${d.convRate}</td></tr>`
   ).join('');
 
   // Browsers table (Browser, Version, OS, Sessions, Share %, Issues)
@@ -35389,8 +35557,12 @@ function loadGeoData() {
     { browser: 'Edge', version: '121', os: 'Windows', sessions: 234, share: '5%', issues: 0 },
   ];
   document.getElementById('data-browsers-table').innerHTML = browsers.map(b =>
-    `<tr><td style="padding:10px 12px">${b.browser}</td><td>${b.version}</td><td>${b.os}</td><td>${b.sessions}</td><td>${b.share}</td><td style="padding-right:12px;color:${b.issues > 0 ? 'var(--warning)' : 'var(--success)'}">${b.issues}</td></tr>`
+    `<tr><td>${b.browser}</td><td>${b.version}</td><td>${b.os}</td><td>${b.sessions}</td><td>${b.share}</td><td style="color:${b.issues > 0 ? 'var(--warning)' : 'var(--success)'}">${b.issues}</td></tr>`
   ).join('');
+
+  initDataGrid('dg-geo');
+  initDataGrid('dg-devices');
+  initDataGrid('dg-browsers');
 }
 
 // View table data in Supabase viewer
@@ -42145,6 +42317,7 @@ function loadSEOAnalysisData() {
         }).join('');
       }
     }
+    initDataGrid('dg-seo-analyses');
   } catch(e) {
     console.warn('Could not load SEO analysis data:', e);
   }
