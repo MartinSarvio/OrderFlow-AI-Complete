@@ -2174,49 +2174,86 @@
       );
     };
 
-    // Citations preview — animated link discovery
-    const CitationsPreview = ({ business }) => {
+    // Citations preview — animated link discovery (real data)
+    const CitationsPreview = ({ business, napData }) => {
       const [found, setFound] = useState(0);
-      useEffect(() => { const t = setInterval(() => setFound(v => v < 6 ? v + 1 : v), 700); return () => clearInterval(t); }, []);
-      const sites = ['yelp.dk', 'tripadvisor.dk', 'krak.dk', 'degulesider.dk', 'google.dk/maps', 'trustpilot.dk'];
+      const sources = napData?.sources?.length > 0 ? napData.sources : null;
+      const totalSources = sources ? sources.length : 6;
+      useEffect(() => { const t = setInterval(() => setFound(v => v < totalSources ? v + 1 : v), 700); return () => clearInterval(t); }, [totalSources]);
+
+      if (!sources) {
+        return (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>S\u00f8ger efter citationer...</div>
+            {[0,1,2,3,4,5].map(i => (
+              <div key={i} style={{ height: 36, marginBottom: 6, borderRadius: 8, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
+            ))}
+          </div>
+        );
+      }
+
       return (
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Citationer fundet: {found}/6</div>
-          {sites.map((site, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6,
-              background: i < found ? '#f0fdf4' : '#f9fafb', borderRadius: 8,
-              opacity: i < found ? 1 : 0.4,
-              transform: i < found ? 'translateX(0)' : 'translateX(10px)',
-              transition: 'all 0.5s ease',
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: i < found ? '#059669' : '#d1d5db', transition: 'background 0.3s' }} />
-              <span style={{ fontSize: 13, color: i < found ? '#374151' : '#9ca3af', flex: 1 }}>{site}</span>
-              {i < found && <span style={{ fontSize: 11, color: '#059669', animation: 'fadeIn 0.3s ease' }}>\u2713 NAP match</span>}
-            </div>
-          ))}
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Citationer fundet: {Math.min(found, sources.length)}/{sources.length}</div>
+          {sources.map((source, i) => {
+            const allMatch = source.nameMatch && source.addressMatch && source.phoneMatch;
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6,
+                background: i < found ? (source.found ? '#f0fdf4' : '#fef2f2') : '#f9fafb', borderRadius: 8,
+                opacity: i < found ? 1 : 0.4,
+                transform: i < found ? 'translateX(0)' : 'translateX(10px)',
+                transition: 'all 0.5s ease',
+              }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: i < found ? (source.found ? '#059669' : '#dc2626') : '#d1d5db', transition: 'background 0.3s' }} />
+                <span style={{ fontSize: 13, color: i < found ? '#374151' : '#9ca3af', flex: 1 }}>{source.name}</span>
+                {i < found && (
+                  <span style={{ fontSize: 11, color: source.found && allMatch ? '#059669' : source.found ? '#d97706' : '#dc2626', animation: 'fadeIn 0.3s ease' }}>
+                    {source.found ? (allMatch ? '✓ NAP match' : '⚠ Delvist match') : '✗ Ikke fundet'}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       );
     };
 
-    // Competitors preview — animated ranking bars
-    const CompetitorsPreview = ({ business }) => {
+    // Competitors preview — animated ranking bars (real data)
+    const CompetitorsPreview = ({ business, competitorData }) => {
       const [animate, setAnimate] = useState(false);
       useEffect(() => { setTimeout(() => setAnimate(true), 300); }, []);
-      const competitors = [
-        { name: business?.name || 'Din restaurant', score: 72, you: true },
-        { name: 'Konkurrent A', score: 68 },
-        { name: 'Konkurrent B', score: 61 },
-        { name: 'Konkurrent C', score: 55 },
-      ];
+
+      if (!competitorData?.competitors?.length) {
+        return (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>S\u00f8ger efter konkurrenter...</div>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{ marginBottom: 14 }}>
+                <div style={{ height: 14, width: '60%', marginBottom: 8, borderRadius: 4, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
+                <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3 }} />
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      const yourScore = competitorData.ranking?.overall || Math.round((business?.rating || 3.5) * 20);
+      const items = [
+        { name: business?.name || 'Din virksomhed', score: yourScore, you: true, rating: business?.rating || 0 },
+        ...competitorData.competitors.slice(0, 4).map(c => ({
+          name: c.name, score: Math.round((c.rating || 0) * 20), rating: c.rating, reviews: c.reviews,
+        })),
+      ].sort((a, b) => b.score - a.score);
+
       return (
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Konkurrenter i nærheden</div>
-          {competitors.map((c, i) => (
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Konkurrenter i n\u00e6rheden</div>
+          {items.map((c, i) => (
             <div key={i} style={{ marginBottom: 14, animation: `fadeSlideUp 0.4s ease ${i * 0.15}s both` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                 <span style={{ color: c.you ? '#667eea' : '#374151', fontWeight: c.you ? 600 : 400 }}>{c.name}{c.you ? ' (dig)' : ''}</span>
-                <span style={{ color: '#6b7280', fontSize: 12 }}>{c.score}/100</span>
+                <span style={{ color: '#6b7280', fontSize: 12 }}>{c.rating ? `★ ${c.rating}` : `${c.score}/100`}{c.reviews ? ` (${c.reviews})` : ''}</span>
               </div>
               <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{
@@ -2232,16 +2269,38 @@
       );
     };
 
-    // NAP Consistency preview — animated checklist
-    const NapPreview = ({ business }) => {
+    // NAP Consistency preview — animated checklist (real data)
+    const NapPreview = ({ business, napData }) => {
       const [checks, setChecks] = useState(0);
-      useEffect(() => { const t = setInterval(() => setChecks(v => v < 4 ? v + 1 : v), 800); return () => clearInterval(t); }, []);
-      const items = [
-        { label: 'Navn', value: business?.name || 'Restaurant', match: true },
-        { label: 'Adresse', value: business?.address?.split(',')[0] || 'Adresse', match: true },
-        { label: 'Telefon', value: '+45 ** ** ** **', match: false },
-        { label: 'Åbningstider', value: 'Man-Søn', match: true },
-      ];
+
+      const items = useMemo(() => {
+        if (!napData?.sources?.length) return null;
+        const total = napData.sources.filter(s => s.found).length || 1;
+        const nameMatches = napData.sources.filter(s => s.found && s.nameMatch).length;
+        const addrMatches = napData.sources.filter(s => s.found && s.addressMatch).length;
+        const phoneMatches = napData.sources.filter(s => s.found && s.phoneMatch).length;
+        return [
+          { label: 'Navn', value: business?.name || 'Virksomhed', match: nameMatches >= total * 0.5, detail: `${nameMatches}/${total} kilder` },
+          { label: 'Adresse', value: business?.address?.split(',')[0] || 'Adresse', match: addrMatches >= total * 0.5, detail: `${addrMatches}/${total} kilder` },
+          { label: 'Telefon', value: phoneMatches > 0 ? 'Fundet' : 'Mangler', match: phoneMatches >= total * 0.5, detail: `${phoneMatches}/${total} kilder` },
+          { label: 'Samlet score', value: `${napData.consistencyScore || 0}%`, match: (napData.consistencyScore || 0) >= 70, detail: 'NAP konsistens' },
+        ];
+      }, [napData, business]);
+
+      const itemCount = items ? items.length : 4;
+      useEffect(() => { const t = setInterval(() => setChecks(v => v < itemCount ? v + 1 : v), 800); return () => clearInterval(t); }, [itemCount]);
+
+      if (!items) {
+        return (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Tjekker NAP-konsistens...</div>
+            {[0,1,2,3].map(i => (
+              <div key={i} style={{ height: 44, marginBottom: 6, borderRadius: 8, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
+            ))}
+          </div>
+        );
+      }
+
       return (
         <div style={{ padding: 20 }}>
           <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>NAP Konsistens-tjek</div>
@@ -2254,7 +2313,7 @@
             }}>
               {i < checks ? (
                 <div style={{ width: 20, height: 20, borderRadius: '50%', background: item.match ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 11, fontWeight: 700, animation: 'scoreCount 0.3s ease' }}>
-                  {item.match ? '\u2713' : '!'}
+                  {item.match ? '✓' : '!'}
                 </div>
               ) : (
                 <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #d1d5db' }} />
@@ -2263,21 +2322,49 @@
                 <div style={{ fontSize: 12, color: '#6b7280' }}>{item.label}</div>
                 <div style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{item.value}</div>
               </div>
+              {i < checks && item.detail && (
+                <span style={{ fontSize: 11, color: '#9ca3af' }}>{item.detail}</span>
+              )}
             </div>
           ))}
         </div>
       );
     };
 
-    // Website & Mobile preview — animated score gauges
-    const WebsitePreview = ({ business }) => {
+    // Website & Mobile preview — animated score gauges (real data)
+    const WebsitePreview = ({ business, websiteData }) => {
       const [animate, setAnimate] = useState(false);
       useEffect(() => { setTimeout(() => setAnimate(true), 400); }, []);
-      const scores = [
-        { label: 'Mobil', score: 62, color: '#d97706' },
-        { label: 'Desktop', score: 78, color: '#059669' },
-        { label: 'SEO', score: 55, color: '#dc2626' },
-      ];
+      const getColor = (score) => score >= 70 ? '#059669' : score >= 50 ? '#d97706' : '#dc2626';
+
+      const scores = websiteData?.scores
+        ? [
+            { label: 'Mobil', score: websiteData.scores.mobile || 0, color: getColor(websiteData.scores.mobile || 0) },
+            { label: 'Desktop', score: websiteData.scores.desktop || 0, color: getColor(websiteData.scores.desktop || 0) },
+            { label: 'SEO', score: websiteData.scores.seo || 0, color: getColor(websiteData.scores.seo || 0) },
+          ]
+        : null;
+
+      if (!scores) {
+        return (
+          <div style={{ padding: 24 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>PageSpeed Analyse</div>
+            <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ textAlign: 'center' }}>
+                  <div style={{ width: 70, height: 70, borderRadius: '50%', margin: '0 auto 8px', background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.2}s` }} />
+                  <div style={{ height: 10, width: 40, margin: '0 auto', borderRadius: 4, background: '#f3f4f6' }} />
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#667eea', animation: 'pulse 1s ease-in-out infinite' }} />
+              <span style={{ fontSize: 11, color: '#6b7280' }}>Venter p\u00e5 PageSpeed data...</span>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div style={{ padding: 24 }}>
           <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>PageSpeed Analyse</div>
@@ -2300,35 +2387,59 @@
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#667eea', animation: 'pulse 1s ease-in-out infinite' }} />
-            <span style={{ fontSize: 11, color: '#6b7280' }}>Analyserer load-tider og responsivitet...</span>
-          </div>
+          {websiteData.url && (
+            <div style={{ marginTop: 16, fontSize: 11, color: '#9ca3af', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {websiteData.url}
+            </div>
+          )}
         </div>
       );
     };
 
-    // Schema Markup preview — animated code block
-    const SchemaPreview = ({ business }) => {
+    // Schema Markup preview — animated code block (real data)
+    const SchemaPreview = ({ business, websiteData }) => {
       const [lines, setLines] = useState(0);
-      useEffect(() => { const t = setInterval(() => setLines(v => v < 8 ? v + 1 : v), 400); return () => clearInterval(t); }, []);
-      const code = [
-        '{ "@context": "schema.org",',
-        '  "@type": "Restaurant",',
-        `  "name": "${business?.name || '...'}",`,
-        `  "address": "${business?.address?.split(',')[0] || '...'}",`,
-        '  "servesCuisine": "...",',
-        '  "priceRange": "$$",',
-        '  "openingHours": "Mo-Su",',
-        '  "aggregateRating": { ... } }',
-      ];
+      const localSEO = websiteData?.localSEO;
+
+      const code = useMemo(() => {
+        if (!localSEO) return null;
+        const result = [
+          '{ "@context": "schema.org",',
+          '  "@type": "LocalBusiness",',
+          `  "name": "${business?.name || '...'}",`,
+          `  "address": "${business?.address?.split(',')[0] || '...'}",`,
+        ];
+        result.push(`  "schema": "${localSEO.hasSchemaMarkup ? '✓ Fundet' : '✗ Mangler'}",`);
+        if (localSEO.hasOpenGraph) result.push('  "openGraph": "✓ Fundet",');
+        result.push(`  "contactPage": "${localSEO.hasContactPage ? '✓' : '✗'}",`);
+        result.push(`  "embeddedMap": "${localSEO.hasEmbeddedMap ? '✓' : '✗'}" }`);
+        return result;
+      }, [localSEO, business]);
+
+      const lineCount = code ? code.length : 8;
+      useEffect(() => { const t = setInterval(() => setLines(v => v < lineCount ? v + 1 : v), 400); return () => clearInterval(t); }, [lineCount]);
+
+      if (!code) {
+        return (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Schema Markup Detektion</div>
+            <div style={{ background: '#1e1e2e', borderRadius: 8, padding: 16 }}>
+              {[0,1,2,3,4,5,6,7].map(i => (
+                <div key={i} style={{ height: 14, marginBottom: 8, borderRadius: 4, width: `${50 + Math.random() * 40}%`, background: 'linear-gradient(90deg, #2a2a3e 25%, #3a3a4e 50%, #2a2a3e 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.1}s` }} />
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      const hasIssues = !localSEO.hasSchemaMarkup || !localSEO.hasLocalBusinessSchema;
       return (
         <div style={{ padding: 20 }}>
           <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Schema Markup Detektion</div>
           <div style={{ background: '#1e1e2e', borderRadius: 8, padding: 16, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.8 }}>
             {code.map((line, i) => (
               <div key={i} style={{
-                color: i < lines ? (line.includes('"@') ? '#c4a7e7' : line.includes(':') ? '#9ccfd8' : '#e0def4') : 'transparent',
+                color: i < lines ? (line.includes('"@') ? '#c4a7e7' : line.includes('✓') ? '#9ccfd8' : line.includes('✗') ? '#eb6f92' : '#e0def4') : 'transparent',
                 opacity: i < lines ? 1 : 0,
                 transform: i < lines ? 'translateX(0)' : 'translateX(-8px)',
                 transition: 'all 0.3s ease',
@@ -2337,46 +2448,67 @@
               </div>
             ))}
           </div>
-          {lines >= 8 && (
-            <div style={{ marginTop: 10, fontSize: 11, color: '#d97706', display: 'flex', alignItems: 'center', gap: 6, animation: 'fadeIn 0.3s ease' }}>
-              \u26a0 Manglende schema-felter detekteret
+          {lines >= lineCount && (
+            <div style={{ marginTop: 10, fontSize: 11, color: hasIssues ? '#d97706' : '#059669', display: 'flex', alignItems: 'center', gap: 6, animation: 'fadeIn 0.3s ease' }}>
+              {hasIssues ? '⚠ Manglende schema-felter detekteret' : '✓ Schema markup fundet og valideret'}
             </div>
           )}
         </div>
       );
     };
 
-    // Social Media preview — animated platform cards
-    const SocialPreview = ({ business }) => {
+    // Social Media preview — animated platform cards (real data)
+    const SocialPreview = ({ business, socialData }) => {
       const [visible, setVisible] = useState(0);
-      useEffect(() => { const t = setInterval(() => setVisible(v => v < 3 ? v + 1 : v), 600); return () => clearInterval(t); }, []);
-      const platforms = [
-        { name: 'Facebook', color: '#1877f2', followers: '1.2K', status: 'Aktiv' },
-        { name: 'Instagram', color: '#e4405f', followers: '—', status: 'Ikke fundet' },
-        { name: 'TripAdvisor', color: '#00aa6c', followers: '48', status: 'Anmeldelser' },
-      ];
+      const platforms = socialData?.platforms?.length > 0 ? socialData.platforms : null;
+      const count = platforms ? platforms.length : 3;
+      useEffect(() => { const t = setInterval(() => setVisible(v => v < count ? v + 1 : v), 600); return () => clearInterval(t); }, [count]);
+
+      const platformColors = { facebook: '#1877f2', instagram: '#e4405f', tripadvisor: '#00aa6c', linkedin: '#0a66c2', twitter: '#1da1f2', youtube: '#ff0000', tiktok: '#000000', pinterest: '#e60023' };
+      const getColor = (name) => platformColors[name?.toLowerCase()] || '#6b7280';
+      const getStatusText = (p) => !p.found ? 'Ikke fundet' : p.status === 'active' ? 'Aktiv' : p.posts30Days > 0 ? `${p.posts30Days} opslag/30d` : 'Fundet';
+      const getFollowerText = (p) => {
+        if (!p.found || !p.followers) return '\u2014';
+        if (p.followers >= 1000) return `${(p.followers / 1000).toFixed(1)}K`;
+        return String(p.followers);
+      };
+
+      if (!platforms) {
+        return (
+          <div style={{ padding: 20 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>S\u00f8ger efter sociale profiler...</div>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ height: 56, marginBottom: 8, borderRadius: 10, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
+            ))}
+          </div>
+        );
+      }
+
       return (
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Social Media Tilstedeværelse</div>
-          {platforms.map((p, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', marginBottom: 8,
-              background: 'white', borderRadius: 10, border: '1px solid #f3f4f6',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              opacity: i < visible ? 1 : 0,
-              transform: i < visible ? 'translateY(0)' : 'translateY(12px)',
-              transition: `all 0.5s ease ${i * 0.1}s`,
-            }}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: p.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 700 }}>
-                {p.name.charAt(0)}
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Social Media Tilstedev\u00e6relse</div>
+          {platforms.map((p, i) => {
+            const followerText = getFollowerText(p);
+            return (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', marginBottom: 8,
+                background: 'white', borderRadius: 10, border: '1px solid #f3f4f6',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                opacity: i < visible ? 1 : 0,
+                transform: i < visible ? 'translateY(0)' : 'translateY(12px)',
+                transition: `all 0.5s ease ${i * 0.1}s`,
+              }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: getColor(p.name), display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 700 }}>
+                  {p.name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: p.found ? '#059669' : '#9ca3af' }}>{getStatusText(p)}</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: followerText === '\u2014' ? '#d1d5db' : '#374151' }}>{followerText}</div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{p.name}</div>
-                <div style={{ fontSize: 11, color: '#9ca3af' }}>{p.status}</div>
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: p.followers === '\u2014' ? '#d1d5db' : '#374151' }}>{p.followers}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     };
@@ -2870,6 +3002,13 @@
             // Start the v3 backend scan (single API call)
             const v3Promise = scanWithV3Backend(business);
 
+            // Store v3 data in state AS SOON AS it arrives (while steps still animate)
+            const v3DataReady = v3Promise.then(v3Response => {
+              const displayData = transformV3ToDisplayFormat(v3Response);
+              setAnalysisResults(displayData);
+              return v3Response;
+            });
+
             // Simulate step progression while API processes
             for (let i = 0; i < analysisSteps.length; i++) {
               setCurrentStep(i);
@@ -2877,12 +3016,8 @@
               setCompletedSteps(prev => [...prev, analysisSteps[i].id]);
             }
 
-            // Wait for v3 API to complete
-            const v3Response = await v3Promise;
-
-            // Transform v3 response to display format
-            const displayData = transformV3ToDisplayFormat(v3Response);
-            setAnalysisResults(displayData);
+            // Wait for v3 API to complete (may already be resolved)
+            const v3Response = await v3DataReady;
 
             // Convert v3 findings to the findings feed format
             const v3Findings = (v3Response.findings || []).map((f, i) => ({
@@ -3154,14 +3289,14 @@
                   }>
                     {currentStep === 0 && <MapPreview business={business} />}
                     {currentStep === 1 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
-                    {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.topReviews} />}
+                    {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.recentReviews} />}
                     {currentStep === 3 && <PhotoPreview photos={analysisResults.photos} />}
-                    {currentStep === 4 && <CitationsPreview business={business} />}
-                    {currentStep === 5 && <CompetitorsPreview business={business} />}
-                    {currentStep === 6 && <NapPreview business={business} />}
-                    {currentStep === 7 && <WebsitePreview business={business} />}
-                    {currentStep === 8 && <SchemaPreview business={business} />}
-                    {currentStep >= 9 && <SocialPreview business={business} />}
+                    {currentStep === 4 && <CitationsPreview business={business} napData={analysisResults.napConsistency} />}
+                    {currentStep === 5 && <CompetitorsPreview business={business} competitorData={analysisResults.competitors} />}
+                    {currentStep === 6 && <NapPreview business={business} napData={analysisResults.napConsistency} />}
+                    {currentStep === 7 && <WebsitePreview business={business} websiteData={analysisResults.website} />}
+                    {currentStep === 8 && <SchemaPreview business={business} websiteData={analysisResults.website} />}
+                    {currentStep >= 9 && <SocialPreview business={business} socialData={analysisResults.social} />}
                   </BrowserWindow>
                 </div>
               ) : (
