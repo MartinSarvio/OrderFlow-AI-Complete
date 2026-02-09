@@ -11,29 +11,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, handleCorsPreflightResponse } from '../_shared/cors.ts'
+import { checkRateLimit } from '../_shared/rate-limit.ts'
 
-const RATE_LIMIT_MAX = 50 // requests per minute per restaurant
-const RATE_LIMIT_WINDOW_MS = 60_000
-
-// In-memory rate limit store (resets on cold start, sufficient for Edge Functions)
-const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
-
-function checkRateLimit(restaurantId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitStore.get(restaurantId)
-
-  if (!entry || now > entry.resetAt) {
-    rateLimitStore.set(restaurantId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
-    return true
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return false
-  }
-
-  entry.count++
-  return true
-}
+const AI_RATE_LIMIT = 50 // requests per minute per restaurant
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -68,10 +48,15 @@ serve(async (req) => {
     }
 
     // Rate limit check
-    if (!checkRateLimit(restaurantId)) {
+    const { allowed, retryAfterMs } = checkRateLimit(`ai:${restaurantId}`, AI_RATE_LIMIT)
+    if (!allowed) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded. Try again in a minute.' }), {
         status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
       })
     }
 

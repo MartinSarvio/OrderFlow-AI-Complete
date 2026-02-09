@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createRequestLogger, EdgeLogger } from "../_shared/logger.ts"
 import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
+import { checkRateLimit, getClientIP } from "../_shared/rate-limit.ts"
+
+const SMS_RATE_LIMIT = 5 // max SMS sends per IP per minute
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
@@ -8,6 +11,28 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightResponse(req)
+  }
+
+  // Rate limit by IP
+  const clientIP = getClientIP(req)
+  const { allowed, retryAfterMs } = checkRateLimit(`sms:${clientIP}`, SMS_RATE_LIMIT)
+  if (!allowed) {
+    log.warn({
+      event: 'channel.sms.rate_limited',
+      client_ip: clientIP,
+      retry_after_ms: retryAfterMs,
+    })
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Try again later.' }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
+      }
+    )
   }
 
   const startTime = Date.now()

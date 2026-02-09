@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
+import { checkRateLimit, getClientIP } from "../_shared/rate-limit.ts"
+
+const EMAIL_RATE_LIMIT = 5 // max emails per IP per minute
 
 // Email template for OTP
 function generateEmailHTML(otp: string, appName: string = 'OrderFlow'): string {
@@ -183,6 +186,24 @@ serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightResponse(req)
+  }
+
+  // Rate limit by IP
+  const clientIP = getClientIP(req)
+  const { allowed, retryAfterMs } = checkRateLimit(`email:${clientIP}`, EMAIL_RATE_LIMIT)
+  if (!allowed) {
+    console.warn(`Rate limited email request from ${clientIP}`)
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Try again later.' }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
+        },
+      }
+    )
   }
 
   try {

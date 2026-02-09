@@ -1,5 +1,5 @@
 /**
- * Tests for Edge Function CORS configuration
+ * Tests for Edge Function CORS and Rate Limiting configuration
  */
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'fs'
@@ -56,5 +56,65 @@ describe('CORS Module Exports', () => {
 
   it('sets Vary header for allowed origins', () => {
     expect(corsSource).toContain("'Vary': 'Origin'")
+  })
+})
+
+// Rate Limiting tests
+const rateLimitSource = readFileSync(resolve(__dirname, '../supabase/functions/_shared/rate-limit.ts'), 'utf-8')
+const smsSource = readFileSync(resolve(__dirname, '../supabase/functions/send-sms/index.ts'), 'utf-8')
+const emailSource = readFileSync(resolve(__dirname, '../supabase/functions/send-otp-email/index.ts'), 'utf-8')
+const aiChatSource = readFileSync(resolve(__dirname, '../supabase/functions/ai-chat/index.ts'), 'utf-8')
+
+describe('Rate Limit Module', () => {
+  it('exports checkRateLimit function', () => {
+    expect(rateLimitSource).toContain('export function checkRateLimit')
+  })
+
+  it('exports getClientIP function', () => {
+    expect(rateLimitSource).toContain('export function getClientIP')
+  })
+
+  it('checks x-forwarded-for header', () => {
+    expect(rateLimitSource).toContain('x-forwarded-for')
+  })
+
+  it('returns allowed, remaining, retryAfterMs', () => {
+    expect(rateLimitSource).toContain('allowed')
+    expect(rateLimitSource).toContain('remaining')
+    expect(rateLimitSource).toContain('retryAfterMs')
+  })
+})
+
+describe('Rate Limiting in Edge Functions', () => {
+  it('send-sms imports rate limiter', () => {
+    expect(smsSource).toContain("from \"../_shared/rate-limit.ts\"")
+  })
+
+  it('send-sms has rate limit of 5/min', () => {
+    expect(smsSource).toContain('SMS_RATE_LIMIT = 5')
+  })
+
+  it('send-sms returns 429 on limit', () => {
+    expect(smsSource).toContain('status: 429')
+  })
+
+  it('send-otp-email imports rate limiter', () => {
+    expect(emailSource).toContain("from \"../_shared/rate-limit.ts\"")
+  })
+
+  it('send-otp-email has rate limit of 5/min', () => {
+    expect(emailSource).toContain('EMAIL_RATE_LIMIT = 5')
+  })
+
+  it('send-otp-email returns 429 on limit', () => {
+    expect(emailSource).toContain('status: 429')
+  })
+
+  it('ai-chat uses shared rate limiter', () => {
+    expect(aiChatSource).toContain("from '../_shared/rate-limit.ts'")
+  })
+
+  it('ai-chat has rate limit of 50/min', () => {
+    expect(aiChatSource).toContain('AI_RATE_LIMIT = 50')
   })
 })
