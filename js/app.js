@@ -743,7 +743,6 @@ const ADMIN_ONLY_MENUS = {
   'nav-flow-cms': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'admin-separator': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'workflow-test': [ROLES.ADMIN, ROLES.EMPLOYEE],
-  'settings-api': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-ailearning': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-billing': [ROLES.ADMIN, ROLES.EMPLOYEE],
   'settings-users': [ROLES.ADMIN, ROLES.EMPLOYEE],
@@ -811,7 +810,7 @@ function applyRoleBasedSidebar() {
   });
 
   // === INDSTILLINGER BEGRÆNSNINGER ===
-  const adminOnlySettings = ['settings-api', 'settings-ailearning', 'settings-billing'];
+  const adminOnlySettings = ['settings-ailearning', 'settings-billing'];
   adminOnlySettings.forEach(menuId => {
     const el = document.querySelector(`[data-role-menu="${menuId}"]`);
     setDisplay(el, !isCustomerView);
@@ -2687,7 +2686,7 @@ async function handleResetPassword(e) {
     return;
   }
   if (pw.length < 6) {
-    showAuthError('Adgangskoden skal v\u00e6re mindst 6 tegn.');
+    showAuthError('Adgangskoden skal være mindst 6 tegn.');
     return;
   }
 
@@ -2702,7 +2701,7 @@ async function handleResetPassword(e) {
       showAuthView('login');
     }
   } catch (err) {
-    showAuthError('Kunne ikke nulstille adgangskode. Pr\u00f8v igen.');
+    showAuthError('Kunne ikke nulstille adgangskode. Prøv igen.');
   }
 }
 
@@ -3288,7 +3287,7 @@ async function handleSignup(e) {
     if (error) throw error;
 
     // Success
-    toast('Konto oprettet! Tjek din email for bekr\u00e6ftelse.', 'success');
+    toast('Konto oprettet! Tjek din email for bekræftelse.', 'success');
     showAuthView('login');
   } catch (err) {
     showAuthError(err.message);
@@ -4018,10 +4017,141 @@ document.addEventListener('DOMContentLoaded', function() {
 // Browser history navigation flag
 let isNavigatingFromHistory = false;
 
+// =====================================================
+// UNSAVED CHANGES NAVIGATION GUARD
+// =====================================================
+let pendingNavigationTarget = null;
+let pendingNavigationType = null; // 'page' or 'popstate'
+let isNavigationGuardActive = false;
+
+function getUnsavedChangesBuilders() {
+  const builders = [];
+  if (webBuilderHasChanges) builders.push({ name: 'Web Builder', save: () => { autoSaveWebBuilder(); webBuilderHasChanges = false; } });
+  if (appBuilderHasChanges) builders.push({ name: 'App Builder', save: () => { autoSaveAppBuilder(); appBuilderHasChanges = false; } });
+  if (typeof cmsHasChanges !== 'undefined' && cmsHasChanges) builders.push({ name: 'Flow CMS', save: saveCMSPages });
+  return builders;
+}
+
+function getBuilderContext(pageId) {
+  if (!pageId) return null;
+  if (pageId.startsWith('wb-') || pageId === 'webbuilder') return 'webbuilder';
+  if (pageId.startsWith('appbuilder')) return 'appbuilder';
+  if (pageId === 'flow-cms') return 'cms';
+  return null;
+}
+
+function getCurrentActivePage() {
+  const activePage = document.querySelector('.page.active, .workflow-page.active');
+  if (!activePage) return null;
+  return activePage.id.replace('page-', '');
+}
+
+function isNavigatingWithinSameBuilder(targetPage) {
+  const currentPage = getCurrentActivePage();
+  const currentContext = getBuilderContext(currentPage);
+  const targetContext = getBuilderContext(targetPage);
+  if (currentContext && currentContext === targetContext) return true;
+  return false;
+}
+
+function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
+  if (isNavigationGuardActive) return false;
+  if (isNavigatingWithinSameBuilder(targetPage)) return false;
+
+  const unsavedBuilders = getUnsavedChangesBuilders();
+  if (unsavedBuilders.length === 0) return false;
+
+  pendingNavigationTarget = targetPage;
+  pendingNavigationType = navigationType;
+
+  const detailsEl = document.getElementById('unsaved-changes-details');
+  if (detailsEl) {
+    const builderNames = unsavedBuilders.map(b => b.name).join(', ');
+    detailsEl.textContent = 'Ændringer i: ' + builderNames;
+  }
+
+  const modal = document.getElementById('unsaved-changes-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
+
+  return true;
+}
+
+function closeUnsavedChangesModal() {
+  const modal = document.getElementById('unsaved-changes-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+
+  if (pendingNavigationType === 'popstate') {
+    const currentPage = getCurrentActivePage();
+    if (currentPage) {
+      history.pushState({ page: currentPage }, '', '#' + currentPage);
+    }
+  }
+
+  pendingNavigationTarget = null;
+  pendingNavigationType = null;
+}
+
+function discardAndNavigate() {
+  webBuilderHasChanges = false;
+  appBuilderHasChanges = false;
+  if (typeof cmsHasChanges !== 'undefined') cmsHasChanges = false;
+
+  const target = pendingNavigationTarget;
+  const navType = pendingNavigationType;
+
+  closeUnsavedChangesModal();
+
+  if (target) {
+    isNavigationGuardActive = true;
+    if (navType === 'popstate') {
+      isNavigatingFromHistory = true;
+    }
+    showPage(target);
+    isNavigationGuardActive = false;
+  }
+}
+
+async function saveAndNavigate() {
+  const unsavedBuilders = getUnsavedChangesBuilders();
+
+  for (const builder of unsavedBuilders) {
+    try {
+      await Promise.resolve(builder.save());
+    } catch (err) {
+      console.warn('Save failed for ' + builder.name + ':', err);
+    }
+  }
+
+  const target = pendingNavigationTarget;
+  const navType = pendingNavigationType;
+
+  closeUnsavedChangesModal();
+
+  if (target) {
+    isNavigationGuardActive = true;
+    if (navType === 'popstate') {
+      isNavigatingFromHistory = true;
+    }
+    showPage(target);
+    isNavigationGuardActive = false;
+  }
+}
+
 function showPage(page) {
   // Skjul dashboard chart tooltip ved sideskift
   var chartTooltip = document.getElementById('chartjs-tooltip');
   if (chartTooltip) { chartTooltip.style.display = 'none'; chartTooltip.style.opacity = 0; }
+
+  // === UNSAVED CHANGES GUARD ===
+  if (!isNavigationGuardActive && checkUnsavedChangesBeforeNavigation(page, isNavigatingFromHistory ? 'popstate' : 'page')) {
+    return;
+  }
 
   // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
@@ -35603,7 +35733,7 @@ async function loadAnalyticsAI() {
   let totalConv = 89, compRate = 94, ordersCreated = 67, escRate = 6;
   let recentConvs = [
     { label: 'Kunde #1247', desc: 'Bestilling: 2x Margherita, 1x Cola', outcome: 'completed' },
-    { label: 'Kunde #1246', desc: 'Sp\u00f8rgsm\u00e5l: \u00c5bningstider', outcome: 'completed' },
+    { label: 'Kunde #1246', desc: 'Spørgsmål: Åbningstider', outcome: 'completed' },
     { label: 'Kunde #1245', desc: 'Bestilling: 3x Pepperoni', outcome: 'escalated' }
   ];
 
@@ -35639,7 +35769,7 @@ async function loadAnalyticsAI() {
   if (escEl) escEl.textContent = escRate + '%';
 
   const outcomeColors = { completed: 'var(--success)', escalated: 'var(--warning)', abandoned: 'var(--danger)', in_progress: 'var(--muted)' };
-  const outcomeLabels = { completed: 'Fuldf\u00f8rt', escalated: 'Eskaleret', abandoned: 'Forladt', in_progress: 'I gang' };
+  const outcomeLabels = { completed: 'Fuldført', escalated: 'Eskaleret', abandoned: 'Forladt', in_progress: 'I gang' };
   const convList = document.getElementById('ai-conversations-list');
   if (convList) {
     convList.innerHTML = recentConvs.map(c => `
@@ -35966,7 +36096,7 @@ async function loadApiKeysList() {
     // Render rows
     if (pageItems.length === 0) {
       tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="5" style="padding:24px;text-align:center;color:var(--muted)">' +
-        (query ? 'Ingen n\u00f8gler matcher s\u00f8gningen' : 'Ingen API n\u00f8gler') + '</td></tr>';
+        (query ? 'Ingen nøgler matcher søgningen' : 'Ingen API nøgler') + '</td></tr>';
     } else {
       tbody.innerHTML = pageItems.map(function(k) {
         return renderApiKeyRow(k, disabledStates);
@@ -35990,9 +36120,9 @@ function renderApiKeyRow(k, disabledStates) {
   // Eye icon (only if full key available)
   if (k.hasFullKey) {
     if (k.keyType === 'system') {
-      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + k.id + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + k.id + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
     } else if (k.keyType === 'configured') {
-      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + k.id + '\',\'' + k.keyField + '\')" title="Vis/skjul n\u00f8gle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + k.id + '\',\'' + k.keyField + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
     }
   }
 
@@ -36073,7 +36203,7 @@ function showQuickApiKeyCreate() {
   modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px';
   modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:480px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);overflow:hidden">' +
     '<div style="padding:24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
-    '<div style="font-size:18px;font-weight:600">Tilf\u00f8j API N\u00f8gle</div>' +
+    '<div style="font-size:18px;font-weight:600">Tilføj API Nøgle</div>' +
     '<button onclick="document.getElementById(\'quick-api-key-modal\').remove()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--muted);cursor:pointer;border-radius:var(--radius-sm);font-size:20px">&times;</button>' +
     '</div>' +
     '<div style="padding:24px;display:flex;flex-direction:column;gap:16px">' +
@@ -36082,9 +36212,9 @@ function showQuickApiKeyCreate() {
     '<input type="text" class="input" id="quick-api-key-name" placeholder="f.eks. OpenRouter Production">' +
     '</div>' +
     '<div class="form-group" style="margin:0">' +
-    '<label class="form-label">API N\u00f8gle <span style="color:var(--danger)">*</span></label>' +
+    '<label class="form-label">API Nøgle <span style="color:var(--danger)">*</span></label>' +
     '<div style="position:relative">' +
-    '<input type="password" class="input" id="quick-api-key-value" placeholder="Inds\u00e6t din API n\u00f8gle her..." style="padding-right:44px">' +
+    '<input type="password" class="input" id="quick-api-key-value" placeholder="Indsæt din API nøgle her..." style="padding-right:44px">' +
     '<button type="button" onclick="toggleQuickKeyVisibility()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px" title="Vis/skjul">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
     '</button></div>' +
@@ -36100,7 +36230,7 @@ function showQuickApiKeyCreate() {
     '</div>' +
     '<div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">' +
     '<button class="btn btn-secondary" onclick="document.getElementById(\'quick-api-key-modal\').remove()">Annuller</button>' +
-    '<button class="btn btn-primary" onclick="executeQuickApiKeyCreate()">Gem n\u00f8gle</button>' +
+    '<button class="btn btn-primary" onclick="executeQuickApiKeyCreate()">Gem nøgle</button>' +
     '</div></div>';
 
   document.body.appendChild(modal);
@@ -36124,8 +36254,8 @@ async function executeQuickApiKeyCreate() {
   var service = serviceInput?.value?.trim() || '';
   var endpoint = endpointInput?.value?.trim() || '';
 
-  if (!name) { toast('Indtast et navn til API n\u00f8glen', 'warning'); nameInput?.focus(); return; }
-  if (!apiKey) { toast('Indtast API n\u00f8glen', 'warning'); keyInput?.focus(); return; }
+  if (!name) { toast('Indtast et navn til API nøglen', 'warning'); nameInput?.focus(); return; }
+  if (!apiKey) { toast('Indtast API nøglen', 'warning'); keyInput?.focus(); return; }
 
   var newKey = {
     id: Date.now().toString(),
@@ -36150,7 +36280,7 @@ async function executeQuickApiKeyCreate() {
 
   loadApiKeysList();
   renderUserApiKeysOnSettings();
-  toast('API n\u00f8gle "' + name + '" tilf\u00f8jet', 'success');
+  toast('API nøgle "' + name + '" tilføjet', 'success');
 }
 
 // Toggle visibility for configured API keys
@@ -36171,7 +36301,7 @@ function toggleConfiguredKeyVisibility(keyId, keyField) {
 // Confirm delete API key using modal
 function confirmDeleteApiKey(keyId, keyName, keyType) {
   document.getElementById('delete-confirm-message').textContent =
-    'Er du sikker p\u00e5 at du vil slette API n\u00f8glen "' + keyName + '"?';
+    'Er du sikker på at du vil slette API nøglen "' + keyName + '"?';
   document.getElementById('delete-confirm-btn').onclick = function() {
     executeDeleteApiKey(keyId, keyType);
   };
@@ -36209,7 +36339,7 @@ async function executeDeleteApiKey(keyId, keyType) {
   loadApiKeysList();
   updateApiStatus();
   renderUserApiKeysOnSettings();
-  toast('API n\u00f8gle slettet', 'success');
+  toast('API nøgle slettet', 'success');
 }
 
 // Toggle API key gear dropdown
@@ -36256,14 +36386,14 @@ function closeApiKeyDropdownOnOutsideClick(e) {
 // Delete system API key (delegates to modal)
 function deleteSystemKey(keyId) {
   var sysKey = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []).find(function(k) { return k.id === keyId; });
-  confirmDeleteApiKey(keyId, sysKey ? sysKey.name : 'System n\u00f8gle', 'system');
+  confirmDeleteApiKey(keyId, sysKey ? sysKey.name : 'System nøgle', 'system');
 }
 
 // Delete user API key (delegates to modal)
 function deleteApiKey(keyId) {
   var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
   var key = keys.find(function(k) { return k.id === keyId; });
-  confirmDeleteApiKey(keyId, key ? key.name : 'API n\u00f8gle', 'user');
+  confirmDeleteApiKey(keyId, key ? key.name : 'API nøgle', 'user');
 }
 
 // Show integration fields based on selected system
@@ -36391,6 +36521,28 @@ async function loadConnectedIntegrations() {
   if (integrations.length === 0) {
     integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
   }
+
+  // Also check individually connected integrations (e.g. Stripe via "Dine Integrationer")
+  const localIntegrationMap = {
+    betalinger: { name: 'Stripe / Betalinger', system: 'stripe' },
+    pos: { name: 'POS Terminal', system: 'pos' },
+    levering: { name: 'Levering', system: 'levering' },
+    regnskab: { name: 'Regnskab', system: 'regnskab' }
+  };
+  Object.keys(localIntegrationMap).forEach(key => {
+    if (localStorage.getItem('integration_' + key) === 'connected') {
+      const alreadyExists = integrations.some(i => i.system === localIntegrationMap[key].system || i.id === key);
+      if (!alreadyExists) {
+        integrations.push({
+          id: key,
+          system: localIntegrationMap[key].system,
+          name: localIntegrationMap[key].name,
+          status: 'active',
+          connectedAt: new Date().toISOString()
+        });
+      }
+    }
+  });
 
   if (integrations.length === 0) {
     container.innerHTML = `
@@ -42831,7 +42983,7 @@ window.handleURLPageParam = handleURLPageParam;
 window.checkPendingSEOScan = checkPendingSEOScan;
 
 // ============================================
-// V\u00c6RKT\u00d8JER PAGE FUNCTIONS
+// VÆRKTØJER PAGE FUNCTIONS
 // ============================================
 
 function openAgentPage(pageId) {
@@ -42861,7 +43013,7 @@ function switchVaerktoejTab(tab) {
 function checkAgentUpdate(agentName) {
   const btn = event.target;
   const origText = btn.textContent;
-  btn.textContent = 'S\u00f8ger...';
+  btn.textContent = 'Søger...';
   btn.disabled = true;
   setTimeout(() => {
     btn.textContent = 'Opdateret';
@@ -42901,7 +43053,7 @@ var agentConfigDefinitions = {
       { type: 'webhook', label: 'Webhook URL', url: window.location.origin + '/api/webhooks/meta' },
       { type: 'toggle', key: 'facebook_auto_reply', label: 'Messenger Auto-reply', desc: 'Automatisk besvar Messenger-beskeder' },
       { type: 'toggle', key: 'facebook_order_enabled', label: 'Ordremodtagelse via Messenger', desc: 'Modtag bestillinger fra Facebook Messenger' },
-      { type: 'toggle', key: 'facebook_page_posts', label: 'Automatiske Page Posts', desc: 'AI-genererede opslag p\u00e5 din Facebook Page' },
+      { type: 'toggle', key: 'facebook_page_posts', label: 'Automatiske Page Posts', desc: 'AI-genererede opslag på din Facebook Page' },
       { type: 'payment', key: 'facebook' }
     ]
   },
@@ -42910,19 +43062,19 @@ var agentConfigDefinitions = {
     sections: [
       { type: 'status', key: 'restaurant' },
       { type: 'field', key: 'restaurant_phone', label: 'Afsendernummer', placeholder: '+45...' },
-      { type: 'toggle', key: 'sms_order_confirm', label: 'Ordrebekr\u00e6ftelse SMS', desc: 'Send automatisk SMS n\u00e5r ordre modtages' },
+      { type: 'toggle', key: 'sms_order_confirm', label: 'Ordrebekræftelse SMS', desc: 'Send automatisk SMS når ordre modtages' },
       { type: 'toggle', key: 'sms_delivery_update', label: 'Leveringsstatus SMS', desc: 'Opdater kunde om leveringsstatus' },
       { type: 'toggle', key: 'sms_feedback_request', label: 'Feedback-anmodning', desc: 'Anmod om feedback efter levering' }
     ]
   },
   haandvaerker: {
-    title: 'Agent H\u00e5ndv\u00e6rker', color: '#14b8a6', workflowPage: 'sms-workflows',
+    title: 'Agent Håndværker', color: '#14b8a6', workflowPage: 'sms-workflows',
     sections: [
       { type: 'status', key: 'haandvaerker' },
       { type: 'field', key: 'haandvaerker_phone', label: 'Afsendernummer', placeholder: '+45...' },
-      { type: 'toggle', key: 'sms_booking_confirm', label: 'Booking-bekr\u00e6ftelse', desc: 'SMS ved ny booking' },
-      { type: 'toggle', key: 'sms_reminder', label: 'P\u00e5mindelser', desc: 'P\u00e5mindelse f\u00f8r aftale' },
-      { type: 'toggle', key: 'sms_followup', label: 'Opf\u00f8lgning', desc: 'Opf\u00f8lgning efter udf\u00f8rt arbejde' }
+      { type: 'toggle', key: 'sms_booking_confirm', label: 'Booking-bekræftelse', desc: 'SMS ved ny booking' },
+      { type: 'toggle', key: 'sms_reminder', label: 'Påmindelser', desc: 'Påmindelse før aftale' },
+      { type: 'toggle', key: 'sms_followup', label: 'Opfølgning', desc: 'Opfølgning efter udført arbejde' }
     ]
   },
   seo: {
@@ -42930,7 +43082,7 @@ var agentConfigDefinitions = {
     sections: [
       { type: 'status', key: 'seo' },
       { type: 'field', key: 'site_url', label: 'Hjemmeside URL', placeholder: 'https://din-restaurant.dk' },
-      { type: 'toggle', key: 'seo_auto_scan', label: 'Automatisk scanning', desc: 'K\u00f8r SEO-analyse automatisk' }
+      { type: 'toggle', key: 'seo_auto_scan', label: 'Automatisk scanning', desc: 'Kør SEO-analyse automatisk' }
     ]
   }
 };
@@ -42949,8 +43101,8 @@ function openAgentConfigPanel(agentId) {
   title.style.color = config.color;
   body.innerHTML = renderAgentConfigSections(agentId, config);
   footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
-    '<button class="btn btn-secondary" onclick="showPage(\'' + config.workflowPage + '\');closeAgentConfigPanel()" style="font-size:var(--font-size-sm)">G\u00e5 til Workflow</button>' +
-    '<button class="btn btn-primary" onclick="saveAgentConfig(\'' + agentId + '\')" style="font-size:var(--font-size-sm)">Gem \u00e6ndringer</button>' +
+    '<button class="btn btn-secondary" onclick="showPage(\'' + config.workflowPage + '\');closeAgentConfigPanel()" style="font-size:var(--font-size-sm)">Gå til Workflow</button>' +
+    '<button class="btn btn-primary" onclick="saveAgentConfig(\'' + agentId + '\')" style="font-size:var(--font-size-sm)">Gem ændringer</button>' +
     '</div>';
   panel.style.display = 'flex';
   requestAnimationFrame(function() {
@@ -43067,7 +43219,7 @@ function disconnectAgent(provider) {
 function initMetaOAuth(channel) {
   var META_APP_ID = localStorage.getItem('meta_app_id') || '';
   if (!META_APP_ID) {
-    toast('Meta App ID mangler. Tilf\u00f8j den under API N\u00f8gler f\u00f8rst.', 'warning');
+    toast('Meta App ID mangler. Tilføj den under API Nøgler først.', 'warning');
     return;
   }
   var redirectUri = encodeURIComponent(window.location.origin + '/api/auth/meta/redirect.html');
@@ -43110,7 +43262,7 @@ function handleMetaOAuthCallback(data, channel) {
       toast('Forbindelse fejlede: ' + (result.error || 'Ukendt fejl'), 'error');
     }
   }).catch(function(err) {
-    toast('Netv\u00e6rksfejl: ' + err.message, 'error');
+    toast('Netværksfejl: ' + err.message, 'error');
   });
 }
 
@@ -43131,7 +43283,7 @@ function renderCustomerIntegrations() {
   var integrations = [
     {
       id: 'betalinger', title: 'Betalinger', color: '#10b981',
-      desc: 'Modtag betalinger via Stripe, MobilePay og andre betalingsl\u00f8sninger',
+      desc: 'Modtag betalinger via Stripe, MobilePay og andre betalingsløsninger',
       providers: 'Stripe, MobilePay',
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
       statusKey: 'integration_betalinger',
@@ -43155,7 +43307,7 @@ function renderCustomerIntegrations() {
     },
     {
       id: 'regnskab', title: 'Regnskab', color: '#8b5cf6',
-      desc: 'Automatisk bogf\u00f8ring af ordrer og fakturaer',
+      desc: 'Automatisk bogføring af ordrer og fakturaer',
       providers: 'e-conomic, Dinero, Billy',
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
       statusKey: 'integration_regnskab',
@@ -43171,7 +43323,7 @@ function renderCustomerIntegrations() {
     },
     {
       id: 'sms', title: 'SMS & Kommunikation', color: '#f97316',
-      desc: 'SMS-udsendelse er inkluderet i din plan og h\u00e5ndteres af FLOW',
+      desc: 'SMS-udsendelse er inkluderet i din plan og håndteres af FLOW',
       providers: 'Inkluderet',
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
       statusKey: 'integration_sms',
@@ -43181,7 +43333,7 @@ function renderCustomerIntegrations() {
 
   var html = '<div style="margin-bottom:var(--space-4)">' +
     '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine Integrationer</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsv\u00e6rkt\u00f8jer med \u00e9t klik. Alle integrationer er fuldt h\u00e5ndteret af FLOW.</p></div>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsværktøjer med \u00e9t klik. Alle integrationer er fuldt håndteret af FLOW.</p></div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
 
   integrations.forEach(function(ig) {
@@ -43225,9 +43377,9 @@ function openIntegrationConfig(integrationId) {
     betalinger: {
       title: 'Betalinger', color: '#10b981',
       sections: [
-        { type: 'info', text: 'Forbind din betalingsl\u00f8sning for at modtage betalinger direkte via OrderFlow.' },
+        { type: 'info', text: 'Forbind din betalingsløsning for at modtage betalinger direkte via OrderFlow.' },
         { type: 'select', key: 'payment_provider', label: 'Betalingsudbyder', options: ['Stripe', 'MobilePay', 'Vipps'] },
-        { type: 'toggle', key: 'payment_auto_capture', label: 'Automatisk capture', desc: 'Tr\u00e6k betaling automatisk n\u00e5r ordren bekr\u00e6ftes' },
+        { type: 'toggle', key: 'payment_auto_capture', label: 'Automatisk capture', desc: 'Træk betaling automatisk når ordren bekræftes' },
         { type: 'toggle', key: 'payment_receipt_email', label: 'Email-kvittering', desc: 'Send kvittering til kunden efter betaling' }
       ]
     },
@@ -43252,9 +43404,9 @@ function openIntegrationConfig(integrationId) {
     regnskab: {
       title: 'Regnskab', color: '#8b5cf6',
       sections: [
-        { type: 'info', text: 'Automatiser bogf\u00f8ring af ordrer, fakturaer og udgifter.' },
+        { type: 'info', text: 'Automatiser bogføring af ordrer, fakturaer og udgifter.' },
         { type: 'select', key: 'accounting_provider', label: 'Regnskabssystem', options: ['e-conomic', 'Dinero', 'Billy', 'Visma'] },
-        { type: 'toggle', key: 'accounting_auto_book', label: 'Automatisk bogf\u00f8ring', desc: 'Bogf\u00f8r ordrer automatisk i dit regnskabssystem' },
+        { type: 'toggle', key: 'accounting_auto_book', label: 'Automatisk bogføring', desc: 'Bogfør ordrer automatisk i dit regnskabssystem' },
         { type: 'toggle', key: 'accounting_invoice', label: 'Automatiske fakturaer', desc: 'Opret fakturaer automatisk ved ordre' }
       ]
     }
@@ -43300,7 +43452,7 @@ function openIntegrationConfig(integrationId) {
   var isConnected = localStorage.getItem('integration_' + integrationId) === 'connected';
   footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
     (isConnected ? '<button class="btn btn-sm" style="font-size:var(--font-size-sm);color:var(--danger);background:none;border:none;cursor:pointer" onclick="disconnectIntegration(\'' + integrationId + '\')">Afbryd forbindelse</button>' : '<span></span>') +
-    '<button class="btn btn-primary" onclick="saveIntegrationConfig(\'' + integrationId + '\')" style="font-size:var(--font-size-sm)">' + (isConnected ? 'Gem \u00e6ndringer' : 'Forbind') + '</button>' +
+    '<button class="btn btn-primary" onclick="saveIntegrationConfig(\'' + integrationId + '\')" style="font-size:var(--font-size-sm)">' + (isConnected ? 'Gem ændringer' : 'Forbind') + '</button>' +
     '</div>';
 
   panel.style.display = 'flex';
@@ -43329,9 +43481,16 @@ function saveIntegrationConfig(integrationId) {
 
 function disconnectIntegration(integrationId) {
   localStorage.removeItem('integration_' + integrationId);
+  // Also remove from flow_integrations cache
+  try {
+    var cached = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+    cached = cached.filter(function(i) { return i.id !== integrationId; });
+    localStorage.setItem('flow_integrations', JSON.stringify(cached));
+  } catch (e) {}
   toast('Integration afbrudt', 'info');
   closeAgentConfigPanel();
   renderCustomerIntegrations();
+  loadConnectedIntegrations();
 }
 
 // ============================================
@@ -43345,7 +43504,7 @@ function renderAgentStatistics() {
     { id: 'instagram', name: 'Agent Instagram', color: '#ec4899', prefix: 'instagram' },
     { id: 'facebook', name: 'Agent Facebook', color: '#3b82f6', prefix: 'facebook' },
     { id: 'restaurant', name: 'Agent Restaurant', color: '#f97316', prefix: 'restaurant' },
-    { id: 'haandvaerker', name: 'Agent H\u00e5ndv\u00e6rker', color: '#14b8a6', prefix: 'haandvaerker' },
+    { id: 'haandvaerker', name: 'Agent Håndværker', color: '#14b8a6', prefix: 'haandvaerker' },
     { id: 'seo', name: 'Agent SEO', color: '#7c3aed', prefix: 'seo' }
   ];
   var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
@@ -43387,11 +43546,11 @@ const AGENT_ENDPOINTS = [
 ];
 
 const AGENT_SMS_PATTERNS = {
-  confirm: { patterns: [/^(ja|yes|ok|jep|yep|jo|oki)$/i, /\b(bekr\u00e6ft|accept|godkend|det er fint|sounds good|confirm)\b/i], confidence: 0.95 },
-  cancel: { patterns: [/^(nej|no|nope|n\u00e5h)$/i, /\b(annuller|cancel|afbestil|stop|fortryd)\b/i], confidence: 0.95 },
-  reschedule: { patterns: [/\b(\u00e6ndre tid|skubbe|senere|flytte|different time|reschedule|udskyde|kl\.?\s*\d)\b/i], confidence: 0.85 },
-  question: { patterns: [/\?$/, /\b(hvad|what|hvorn\u00e5r|when|hvordan|how|kan|can|hvor|where)\b/i], confidence: 0.80 },
-  allergy: { patterns: [/\b(allergi|allergy|n\u00f8dder|nuts|gluten|laktose|lactose|intoleran)\b/i], confidence: 0.99 }
+  confirm: { patterns: [/^(ja|yes|ok|jep|yep|jo|oki)$/i, /\b(bekræft|accept|godkend|det er fint|sounds good|confirm)\b/i], confidence: 0.95 },
+  cancel: { patterns: [/^(nej|no|nope|nåh)$/i, /\b(annuller|cancel|afbestil|stop|fortryd)\b/i], confidence: 0.95 },
+  reschedule: { patterns: [/\b(ændre tid|skubbe|senere|flytte|different time|reschedule|udskyde|kl\.?\s*\d)\b/i], confidence: 0.85 },
+  question: { patterns: [/\?$/, /\b(hvad|what|hvornår|when|hvordan|how|kan|can|hvor|where)\b/i], confidence: 0.80 },
+  allergy: { patterns: [/\b(allergi|allergy|nødder|nuts|gluten|laktose|lactose|intoleran)\b/i], confidence: 0.99 }
 };
 
 const AGENTER_PAGE_AGENTS = [
@@ -43478,12 +43637,12 @@ var AGENT_UPDATE_REGISTRY = {
   ],
   restaurant: [
     { version: 'v1.2.0', date: '2025-12-01', notes: ['Initial release med SMS workflows'] },
-    { version: 'v1.3.0', date: '2026-01-25', notes: ['Ny ordrebekr\u00e6ftelse flow', 'Allergi-detektion forbedret', 'Prioriteret k\u00f8-system'] },
+    { version: 'v1.3.0', date: '2026-01-25', notes: ['Ny ordrebekræftelse flow', 'Allergi-detektion forbedret', 'Prioriteret kø-system'] },
     { version: 'v1.4.0', date: '2026-02-08', notes: ['Multi-sprog SMS', 'Smart retry-logik', 'Leveringstid-estimering'] }
   ],
   haandvaerker: [
     { version: 'v1.1.0', date: '2025-12-15', notes: ['Initial release'] },
-    { version: 'v1.2.0', date: '2026-02-03', notes: ['Tidsbestilling automation', 'Kundefeedback integration', 'Automatisk p\u00e5mindelse-SMS'] }
+    { version: 'v1.2.0', date: '2026-02-03', notes: ['Tidsbestilling automation', 'Kundefeedback integration', 'Automatisk påmindelse-SMS'] }
   ],
   seo: [
     { version: 'v3.0.0', date: '2026-01-01', notes: ['Major version med AI-drevet analyse'] },
@@ -44023,7 +44182,7 @@ async function runAgentEndpointCheck() {
     renderAgenterOverview();
   }
 
-  if (typeof toast === 'function') toast('Endpoint check f\u00e6rdig: ' + healthy + '/' + results.length + ' OK', healthy === results.length ? 'success' : 'warning');
+  if (typeof toast === 'function') toast('Endpoint check færdig: ' + healthy + '/' + results.length + ' OK', healthy === results.length ? 'success' : 'warning');
 }
 
 function testAgentSmsParser() {
@@ -44032,16 +44191,16 @@ function testAgentSmsParser() {
   if (!input || !resultEl) return;
 
   const message = input.value.trim();
-  if (!message) { if (typeof toast === 'function') toast('Skriv en SMS-besked f\u00f8rst', 'warning'); return; }
+  if (!message) { if (typeof toast === 'function') toast('Skriv en SMS-besked først', 'warning'); return; }
 
   const normalized = message.toLowerCase();
 
   // Detect language
-  const daDa = /\b(ja|nej|tak|hej|bestilling|allergi|n\u00f8dder|gluten|hvad|hvordan|hvorn\u00e5r|hvor|\u00e6ndre|annuller|bekr\u00e6ft)\b/i;
+  const daDa = /\b(ja|nej|tak|hej|bestilling|allergi|nødder|gluten|hvad|hvordan|hvornår|hvor|ændre|annuller|bekræft)\b/i;
   const enEn = /\b(yes|no|please|hello|order|allergy|nuts|what|how|when|where|cancel|confirm)\b/i;
   const daCount = (message.match(daDa) || []).length;
   const enCount = (message.match(enEn) || []).length;
-  const language = daCount > enCount ? 'da' : enCount > daCount ? 'en' : (/[\u00e6\u00f8\u00e5]/.test(message) ? 'da' : 'unknown');
+  const language = daCount > enCount ? 'da' : enCount > daCount ? 'en' : (/[æøå]/.test(message) ? 'da' : 'unknown');
 
   // Check patterns
   let intent = 'unknown';
@@ -44068,7 +44227,7 @@ function testAgentSmsParser() {
   // Display result
   resultEl.style.display = 'block';
   const intentColors = { confirm: 'var(--success)', cancel: 'var(--danger)', reschedule: 'var(--primary)', question: 'var(--warning)', allergy: '#8B0000', unknown: 'var(--muted)' };
-  const intentLabels = { confirm: 'Bekr\u00e6ft', cancel: 'Annuller', reschedule: '\u00c6ndre tid', question: 'Sp\u00f8rgsm\u00e5l', allergy: 'Allergi', unknown: 'Ukendt' };
+  const intentLabels = { confirm: 'Bekræft', cancel: 'Annuller', reschedule: 'Ændre tid', question: 'Spørgsmål', allergy: 'Allergi', unknown: 'Ukendt' };
 
   resultEl.innerHTML =
     '<div style="background:var(--bg-secondary);border-radius:var(--radius-md);padding:12px;font-size:var(--font-size-sm)">' +
@@ -44116,6 +44275,11 @@ window.agentHasUpdate = agentHasUpdate;
 window.saveQRToHistory = saveQRToHistory;
 window.loadQRHistory = loadQRHistory;
 window.removeQRHistoryItem = removeQRHistoryItem;
+
+// Unsaved changes navigation guard (modal handlers)
+window.closeUnsavedChangesModal = closeUnsavedChangesModal;
+window.discardAndNavigate = discardAndNavigate;
+window.saveAndNavigate = saveAndNavigate;
 
 // Unsaved changes warning
 window.addEventListener('beforeunload', function(e) {
@@ -44179,7 +44343,7 @@ async function generateAiImage() {
   if (!prompt) { toast('Indtast en beskrivelse af billedet', 'warning'); return; }
 
   var apiKey = getApiKeyFromAnySource('openrouter_key', ['openrouter', 'nano banana', 'billedgenerering', 'image']);
-  if (!apiKey) { toast('Tilf\u00f8j en OpenRouter API n\u00f8gle under Integrationer eller Indstillinger > API', 'warning'); return; }
+  if (!apiKey) { toast('Tilføj en OpenRouter API nøgle under Integrationer eller Indstillinger > API', 'warning'); return; }
 
   var style = document.getElementById('ai-image-style')?.value || 'photorealistic';
   var btn = document.getElementById('ai-image-generate-btn');
@@ -44304,7 +44468,7 @@ async function generateAiVideo() {
   if (!prompt) { toast('Indtast en beskrivelse af videoen', 'warning'); return; }
 
   var apiKey = getApiKeyFromAnySource('minimax_key', ['minimax', 'video', 'videogenerering']);
-  if (!apiKey) { toast('Tilf\u00f8j en MiniMax API n\u00f8gle under Integrationer eller Indstillinger > API', 'warning'); return; }
+  if (!apiKey) { toast('Tilføj en MiniMax API nøgle under Integrationer eller Indstillinger > API', 'warning'); return; }
 
   var btn = document.getElementById('ai-video-generate-btn');
   var progressDiv = document.getElementById('ai-video-progress');
