@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createRequestLogger } from "../_shared/logger.ts"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-trace-id, x-restaurant-id",
-}
+import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
 
 // ============================================================
 // InMobile SMS Webhook — Dedicated endpoint for InMobile
@@ -320,10 +316,11 @@ function looksLikeMissedCall(payload: Record<string, unknown>): boolean {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   const log = createRequestLogger(req, { module: "receive-sms-inmobile", channel: "sms" })
 
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return handleCorsPreflightResponse(req)
   }
 
   // Health check

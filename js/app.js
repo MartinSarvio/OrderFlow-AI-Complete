@@ -1097,8 +1097,8 @@ function getActivityLog() {
     const twoMonthsAgo = Date.now() - (60 * 24 * 60 * 60 * 1000);
     log = log.filter(a => a.timestamp > twoMonthsAgo);
 
-    // Add demo activities if enabled
-    if (isDemoDataEnabled()) {
+    // Add demo activities only for DEMO role users
+    if (currentUser?.role === ROLES.DEMO && typeof getDemoDataActivities === 'function') {
       const demoActivities = getDemoDataActivities();
       log = [...log, ...demoActivities];
       // Sort by timestamp descending
@@ -4386,7 +4386,7 @@ function showPage(page) {
   // Load Analytics Dashboard pages
   if (page === 'analytics-overview') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (currentUser?.role === ROLES.DEMO ? getDemoDataCustomers()[0]?.id : null);
       AnalyticsDashboard.setRestaurant(restaurantId);
       AnalyticsDashboard.loadOverviewData();
     }
@@ -4396,7 +4396,7 @@ function showPage(page) {
 
   if (page === 'analytics-sales') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (currentUser?.role === ROLES.DEMO ? getDemoDataCustomers()[0]?.id : null);
       AnalyticsDashboard.setRestaurant(restaurantId);
       AnalyticsDashboard.loadSalesData();
     }
@@ -4405,7 +4405,7 @@ function showPage(page) {
 
   if (page === 'analytics-products') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (currentUser?.role === ROLES.DEMO ? getDemoDataCustomers()[0]?.id : null);
       AnalyticsDashboard.setRestaurant(restaurantId);
       AnalyticsDashboard.loadProductsData();
     }
@@ -4414,7 +4414,7 @@ function showPage(page) {
 
   if (page === 'analytics-ai') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (currentUser?.role === ROLES.DEMO ? getDemoDataCustomers()[0]?.id : null);
       AnalyticsDashboard.setRestaurant(restaurantId);
       AnalyticsDashboard.loadAIData();
     }
@@ -4422,7 +4422,7 @@ function showPage(page) {
 
   if (page === 'analytics-channels') {
     if (window.AnalyticsDashboard) {
-      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (isDemoDataEnabled() ? getDemoDataCustomers()[0]?.id : null);
+      const restaurantId = currentRestaurantId || restaurants?.[0]?.id || (currentUser?.role === ROLES.DEMO ? getDemoDataCustomers()[0]?.id : null);
       AnalyticsDashboard.setRestaurant(restaurantId);
     }
   }
@@ -30795,6 +30795,7 @@ function loadWebBuilderTemplate(templateId) {
 
   // Merge template with default config
   webBuilderConfig = JSON.parse(JSON.stringify(template));
+  webBuilderConfig._templateId = templateId;
 
   // Populate form fields
   populateWebBuilderForms();
@@ -30948,9 +30949,9 @@ function showWebBuilderPage(section) {
     loadWebBuilderConfig();
   }
 
-  // Ensure preview iframes match selected template
+  // Ensure preview iframes match selected template (only if template actually changed)
   const selector = document.getElementById('wb-template-selector');
-  if (selector && selector.value) {
+  if (selector && selector.value && (!webBuilderConfig || selector.value !== webBuilderConfig._templateId)) {
     loadWebBuilderTemplate(selector.value);
   }
 

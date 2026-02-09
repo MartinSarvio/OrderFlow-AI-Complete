@@ -537,6 +537,133 @@ const OrderingAgent = {
     },
 
     // ============================================================
+    // AI RESPONSE GENERATION
+    // ============================================================
+
+    /**
+     * Generate AI response via Edge Function
+     * Falls back to template-based response on failure
+     */
+    async generateAIResponse(conversation, userMessage, context = {}) {
+        try {
+            const restaurantId = conversation._restaurantId || context.restaurantId;
+            if (!restaurantId) return null;
+
+            // Build system prompt with restaurant context
+            const systemPrompt = this.buildSystemPrompt(conversation, context);
+
+            // Build message history
+            const messages = this.buildMessageHistory(conversation, userMessage);
+
+            // Call Edge Function
+            const supabaseUrl = window.SUPABASE_CONFIG?.url || '';
+            const supabaseKey = window.SUPABASE_CONFIG?.key || '';
+
+            if (!supabaseUrl || !supabaseKey) return null;
+
+            const response = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'apikey': supabaseKey,
+                },
+                body: JSON.stringify({
+                    systemPrompt,
+                    messages,
+                    restaurantId,
+                    maxTokens: 512,
+                }),
+            });
+
+            if (!response.ok) {
+                console.warn('AI chat Edge Function returned', response.status);
+                return null;
+            }
+
+            const data = await response.json();
+            return data.response || null;
+        } catch (err) {
+            console.warn('AI response generation failed, using template fallback:', err.message);
+            return null;
+        }
+    },
+
+    /**
+     * Build system prompt for AI with restaurant and conversation context
+     */
+    buildSystemPrompt(conversation, context) {
+        const lang = conversation.language || this.config.defaultLanguage;
+        const langName = lang === 'da' ? 'Danish' : 'English';
+
+        let prompt = `You are an ordering assistant for a restaurant. Respond in ${langName}.
+You help customers place food orders via social media (Instagram DMs, Facebook Messenger, SMS).
+Keep responses short, friendly, and focused on completing the order.
+
+Current conversation state: ${conversation.state}
+Fulfillment type: ${conversation.fulfillment || 'not chosen yet'}
+Items in order: ${conversation.items?.length || 0}`;
+
+        // Add menu context if available
+        if (this.menuCatalog.items.length > 0) {
+            const menuSummary = this.menuCatalog.items
+                .filter(i => i.available)
+                .slice(0, 20)
+                .map(i => `${i.name}${i.price ? ' (' + i.price + ' kr)' : ''}`)
+                .join(', ');
+            prompt += `\n\nAvailable menu items: ${menuSummary}`;
+        }
+
+        // Add order summary if items exist
+        if (conversation.items?.length > 0) {
+            const orderSummary = conversation.items
+                .map(i => `${i.name} x${i.quantity}`)
+                .join(', ');
+            prompt += `\n\nCurrent order: ${orderSummary}`;
+        }
+
+        // Add customer details if known
+        if (conversation.customerName) prompt += `\nCustomer name: ${conversation.customerName}`;
+        if (conversation.phone) prompt += `\nPhone: ${conversation.phone}`;
+        if (conversation.deliveryAddress) prompt += `\nDelivery address: ${conversation.deliveryAddress}`;
+
+        prompt += `\n\nIMPORTANT RULES:
+- Guide the customer through: item selection → fulfillment choice (pickup/delivery) → customer details → confirmation
+- If the customer wants something not on the menu, suggest similar items
+- For allergies or complaints, escalate to human staff
+- Never make up prices - only use prices from the menu
+- Keep responses under 3 sentences when possible`;
+
+        return prompt;
+    },
+
+    /**
+     * Build message history for AI context
+     */
+    buildMessageHistory(conversation, currentMessage) {
+        const messages = [];
+
+        // Include recent conversation history (last 10 messages)
+        if (conversation._messageHistory) {
+            const recent = conversation._messageHistory.slice(-10);
+            recent.forEach(msg => {
+                messages.push({
+                    role: msg.role,
+                    content: msg.content,
+                });
+            });
+        }
+
+        // Add current user message
+        messages.push({
+            role: 'user',
+            content: currentMessage,
+        });
+
+        return messages;
+    },
+
+    // ============================================================
     // SOCIAL MEDIA INTEGRATION
     // ============================================================
 
@@ -1268,6 +1395,7 @@ const OrderingAgent = {
             );
             conversation._messageCount = 0;
             conversation._startTime = Date.now();
+            conversation._restaurantId = context.restaurantId;
         }
 
         // Detect language if not set
@@ -1297,15 +1425,43 @@ const OrderingAgent = {
 
         conversation._messageCount = (conversation._messageCount || 0) + 1;
 
-        // Process based on current state
-        const response = await this.processState(conversation, text, context);
+        // Try AI-generated response first, then fall back to template-based state machine
+        let response;
+        let responseSource = 'template';
+
+        // Use AI for conversational states (not for submit/payment which need deterministic logic)
+        const aiEligibleStates = [
+            this.states.GREETING,
+            this.states.IDENTIFY_INTENT,
+            this.states.ITEM_SELECTION,
+            this.states.FULFILLMENT_CHOICE,
+            this.states.CUSTOMER_DETAILS,
+            this.states.POST_SUBMIT,
+        ];
+
+        if (aiEligibleStates.includes(conversation.state)) {
+            const aiResponse = await this.generateAIResponse(conversation, text, context);
+            if (aiResponse) {
+                response = aiResponse;
+                responseSource = 'ai';
+
+                // Still update state machine based on intent detection (keep state transitions deterministic)
+                this.updateStateFromIntent(conversation, text, intentResult);
+            }
+        }
+
+        // Fall back to template-based processing
+        if (!response) {
+            response = await this.processState(conversation, text, context);
+        }
 
         const responseTime = Date.now() - startTime;
 
         // Log assistant response
         await this.logMessage(conversation._analyticsId, 'assistant', response, {
             state: conversation.state,
-            responseTimeMs: responseTime
+            responseTimeMs: responseTime,
+            responseSource
         });
 
         // Track for ML training
@@ -1323,9 +1479,85 @@ const OrderingAgent = {
             analytics: {
                 conversationId: conversation._analyticsId,
                 intent: intentResult.intent,
-                messageCount: conversation._messageCount
+                messageCount: conversation._messageCount,
+                responseSource
             }
         };
+    },
+
+    /**
+     * Update conversation state based on intent detection (keeps state transitions deterministic)
+     * Used when AI generates the response text but we still need to track state machine progress
+     */
+    updateStateFromIntent(conversation, text, intentResult) {
+        const lowerText = text.toLowerCase().trim();
+        const lang = conversation.language || this.config.defaultLanguage;
+        const msgs = this.messages[lang];
+
+        switch (conversation.state) {
+            case this.states.GREETING:
+                // Check if message references a menu item
+                const menuResults = this.searchMenu(text);
+                if (menuResults.length > 0 && menuResults[0].score >= 0.8) {
+                    const item = menuResults[0].item;
+                    const quantityMatch = text.match(/(\d+)/);
+                    const quantity = quantityMatch ? parseInt(quantityMatch[1], 10) : 1;
+                    const orderItem = this.createOrderItem(item.id, item.name, quantity);
+                    orderItem.unitPrice = item.price;
+                    orderItem.totalPrice = item.price * quantity;
+                    conversation.items.push(orderItem);
+                    conversation.state = this.states.FULFILLMENT_CHOICE;
+                } else {
+                    conversation.state = this.states.IDENTIFY_INTENT;
+                }
+                break;
+
+            case this.states.IDENTIFY_INTENT:
+                if (intentResult.intent === 'order_food') {
+                    conversation.state = this.states.ITEM_SELECTION;
+                }
+                break;
+
+            case this.states.ITEM_SELECTION:
+                const results = this.searchMenu(text);
+                if (results.length > 0 && results[0].score >= 0.7) {
+                    const item = results[0].item;
+                    const qMatch = text.match(/(\d+)/);
+                    const qty = qMatch ? parseInt(qMatch[1], 10) : 1;
+                    const orderItem = this.createOrderItem(item.id, item.name, qty);
+                    orderItem.unitPrice = item.price;
+                    orderItem.totalPrice = item.price * qty;
+                    conversation.items.push(orderItem);
+                    conversation.state = this.states.FULFILLMENT_CHOICE;
+                }
+                break;
+
+            case this.states.FULFILLMENT_CHOICE:
+                if (msgs.pickup.some(k => lowerText.includes(k)) || lowerText === '1') {
+                    conversation.fulfillment = 'pickup';
+                    conversation.state = this.states.CUSTOMER_DETAILS;
+                } else if (msgs.delivery.some(k => lowerText.includes(k)) || lowerText === '2') {
+                    conversation.fulfillment = 'delivery';
+                    conversation.state = this.states.CUSTOMER_DETAILS;
+                }
+                break;
+
+            case this.states.CUSTOMER_DETAILS:
+                if (conversation.fulfillment === 'delivery' && !conversation.deliveryAddress) {
+                    conversation.deliveryAddress = text;
+                } else if (conversation.fulfillment === 'pickup' && !conversation.pickupTime) {
+                    conversation.pickupTime = text;
+                } else if (!conversation.customerName) {
+                    conversation.customerName = text;
+                } else if (!conversation.phone) {
+                    const phoneDigits = text.replace(/\D/g, '');
+                    if (phoneDigits.length >= 8) {
+                        conversation.phone = phoneDigits;
+                        conversation.state = this.states.CONFIRMATION;
+                    }
+                }
+                break;
+        }
     },
 
     // State machine processor

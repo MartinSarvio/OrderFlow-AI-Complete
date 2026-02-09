@@ -10,6 +10,70 @@ const AnalyticsDashboard = {
     lastUpdated: null,
     cachedData: {},
 
+    /**
+     * Check if demo data should be shown (only for DEMO role users)
+     */
+    shouldShowDemoData() {
+        return typeof currentUser !== 'undefined' && currentUser?.role === 'demo';
+    },
+
+    /**
+     * Show loading skeleton while data is fetching
+     */
+    showLoadingState(section) {
+        const skeletonBar = '<div style="background:var(--bg-tertiary);border-radius:4px;height:16px;margin-bottom:8px;animation:pulse 1.5s ease-in-out infinite"></div>';
+        const skeletonHtml = `<div style="padding:24px">${skeletonBar.repeat(4)}<style>@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}</style></div>`;
+
+        const targets = {
+            overview: ['chart-revenue', 'channel-bars'],
+            sales: ['sales-chart-revenue', 'sales-hourly-chart', 'sales-weekday-chart'],
+            ai: ['ai-conversations-table'],
+            products: ['products-analytics-table'],
+        };
+
+        (targets[section] || []).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = skeletonHtml;
+        });
+    },
+
+    /**
+     * Show empty state UI when no data is available
+     */
+    showEmptyState(section) {
+        const emptyHtml = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;color:var(--muted);text-align:center">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.4;margin-bottom:16px">
+                <path d="M3 3v18h18"/><path d="M7 16l4-8 4 4 4-6"/>
+            </svg>
+            <div style="font-size:15px;font-weight:500;margin-bottom:4px">Ingen data endnu</div>
+            <div style="font-size:13px">Data vises her, når der er aktivitet i den valgte periode</div>
+        </div>`;
+
+        if (section === 'overview') {
+            this.updateOverviewStats([]);
+            const revenueChart = document.getElementById('chart-revenue');
+            if (revenueChart) revenueChart.innerHTML = emptyHtml;
+            const channelBars = document.getElementById('channel-bars');
+            if (channelBars) channelBars.innerHTML = emptyHtml;
+            this.updateAISummary({ total_conversations: 0, completion_rate: 0, orders_created: 0, escalations: 0 });
+        } else if (section === 'sales') {
+            this.updateSalesStats([]);
+            const salesChart = document.getElementById('sales-chart-revenue');
+            if (salesChart) salesChart.innerHTML = emptyHtml;
+            const hourlyChart = document.getElementById('sales-hourly-chart');
+            if (hourlyChart) hourlyChart.innerHTML = emptyHtml;
+            const weekdayChart = document.getElementById('sales-weekday-chart');
+            if (weekdayChart) weekdayChart.innerHTML = emptyHtml;
+        } else if (section === 'ai') {
+            this.updateAIStats({ total_conversations: 0, orders_created: 0, completion_rate: 0, avg_messages: 0, escalation_rate: 0 });
+            this.updateOutcomeChart({ total_conversations: 0, orders_created: 0, escalations: 0, abandoned: 0 });
+            this.updateConversationsTable([]);
+        } else if (section === 'products') {
+            this.updateProductsTable([]);
+            this.updateProductsStats([]);
+        }
+    },
+
     // ============================================================
     // INITIALIZATION
     // ============================================================
@@ -163,20 +227,23 @@ const AnalyticsDashboard = {
     async loadOverviewData() {
         if (!this.currentRestaurantId) {
             console.warn('No restaurant ID set for analytics');
-            // Still show demo data if enabled
-            if (typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+            if (this.shouldShowDemoData()) {
                 const demoData = this.generateDemoMetrics(7);
                 this.updateOverviewStats(demoData);
                 this.updateRevenueChart(demoData);
                 this.updateChannelChart(demoData);
                 const aiData = this.generateDemoAIMetrics();
                 this.updateAISummary(aiData);
+            } else {
+                this.showEmptyState('overview');
             }
             return;
         }
 
         const { start, end } = this.getDateRange();
         let hasData = false;
+
+        this.showLoadingState('overview');
 
         try {
             // Load daily metrics
@@ -215,15 +282,19 @@ const AnalyticsDashboard = {
             console.error('Error loading analytics overview:', err);
         }
 
-        // Fallback to demo data if no real data and demo mode is on
-        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
-            const days = this.dateRange === 'today' ? 1 : this.dateRange === '30days' ? 30 : this.dateRange === '90days' ? 90 : 7;
-            const demoData = this.generateDemoMetrics(days);
-            this.updateOverviewStats(demoData);
-            this.updateRevenueChart(demoData);
-            this.updateChannelChart(demoData);
-            const aiData = this.generateDemoAIMetrics();
-            this.updateAISummary(aiData);
+        // Fallback: demo data for DEMO role, empty state for others
+        if (!hasData) {
+            if (this.shouldShowDemoData()) {
+                const days = this.dateRange === 'today' ? 1 : this.dateRange === '30days' ? 30 : this.dateRange === '90days' ? 90 : 7;
+                const demoData = this.generateDemoMetrics(days);
+                this.updateOverviewStats(demoData);
+                this.updateRevenueChart(demoData);
+                this.updateChannelChart(demoData);
+                const aiData = this.generateDemoAIMetrics();
+                this.updateAISummary(aiData);
+            } else {
+                this.showEmptyState('overview');
+            }
         }
     },
 
@@ -234,6 +305,8 @@ const AnalyticsDashboard = {
         const range = document.getElementById('sales-date-range')?.value || '7days';
         const { start, end } = this.getDateRange(range);
         let hasData = false;
+
+        this.showLoadingState('sales');
 
         if (this.currentRestaurantId) {
             try {
@@ -255,13 +328,17 @@ const AnalyticsDashboard = {
             }
         }
 
-        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
-            const days = range === 'today' ? 1 : range === '30days' ? 30 : range === '90days' ? 90 : 7;
-            const demoData = this.generateDemoMetrics(days);
-            this.updateSalesStats(demoData);
-            this.updateSalesChart(demoData);
-            this.updateHourlyChart();
-            this.updateWeekdayChart(demoData);
+        if (!hasData) {
+            if (this.shouldShowDemoData()) {
+                const days = range === 'today' ? 1 : range === '30days' ? 30 : range === '90days' ? 90 : 7;
+                const demoData = this.generateDemoMetrics(days);
+                this.updateSalesStats(demoData);
+                this.updateSalesChart(demoData);
+                this.updateHourlyChart();
+                this.updateWeekdayChart(demoData);
+            } else {
+                this.showEmptyState('sales');
+            }
         }
     },
 
@@ -270,6 +347,8 @@ const AnalyticsDashboard = {
      */
     async loadAIData() {
         let hasData = false;
+
+        this.showLoadingState('ai');
 
         if (this.currentRestaurantId) {
             try {
@@ -298,11 +377,15 @@ const AnalyticsDashboard = {
             }
         }
 
-        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
-            const aiData = this.generateDemoAIMetrics();
-            this.updateAIStats(aiData);
-            this.updateOutcomeChart(aiData);
-            this.updateConversationsTable(this.generateDemoConversations());
+        if (!hasData) {
+            if (this.shouldShowDemoData()) {
+                const aiData = this.generateDemoAIMetrics();
+                this.updateAIStats(aiData);
+                this.updateOutcomeChart(aiData);
+                this.updateConversationsTable(this.generateDemoConversations());
+            } else {
+                this.showEmptyState('ai');
+            }
         }
     },
 
@@ -312,6 +395,8 @@ const AnalyticsDashboard = {
     async loadProductsData() {
         const { start, end } = this.getDateRange('30days');
         let hasData = false;
+
+        this.showLoadingState('products');
 
         if (this.currentRestaurantId) {
             try {
@@ -331,10 +416,14 @@ const AnalyticsDashboard = {
             }
         }
 
-        if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
-            const demoProducts = this.generateDemoProductData();
-            this.updateProductsTable(demoProducts);
-            this.updateProductsStats(demoProducts);
+        if (!hasData) {
+            if (this.shouldShowDemoData()) {
+                const demoProducts = this.generateDemoProductData();
+                this.updateProductsTable(demoProducts);
+                this.updateProductsStats(demoProducts);
+            } else {
+                this.showEmptyState('products');
+            }
         }
     },
 
@@ -505,12 +594,20 @@ const AnalyticsDashboard = {
     /**
      * Update hourly chart (placeholder with demo data)
      */
-    updateHourlyChart() {
+    updateHourlyChart(hourlyData) {
         const container = document.getElementById('sales-hourly-chart');
         if (!container) return;
 
-        // Demo data - in production would come from events table
-        const hourlyData = [0, 0, 0, 0, 0, 0, 2, 5, 12, 18, 22, 35, 45, 38, 25, 20, 28, 42, 55, 48, 32, 18, 8, 3];
+        // Use provided data, or demo data for DEMO role, or show empty state
+        if (!hourlyData) {
+            if (this.shouldShowDemoData()) {
+                hourlyData = [0, 0, 0, 0, 0, 0, 2, 5, 12, 18, 22, 35, 45, 38, 25, 20, 28, 42, 55, 48, 32, 18, 8, 3];
+            } else {
+                container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:180px;color:var(--muted);font-size:13px">Ingen timedata endnu</div>';
+                return;
+            }
+        }
+
         const maxOrders = Math.max(...hourlyData);
 
         const barsHtml = hourlyData.map((orders, hour) => {

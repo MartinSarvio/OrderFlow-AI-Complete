@@ -8,12 +8,16 @@
     "start": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "serve": "npx live-server --port=8080 --open=index.html"
+    "serve": "npx live-server --port=8080 --open=index.html",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "devDependencies": {
+    "jsdom": "^28.0.0",
     "supabase": "^2.72.9",
     "vite": "^5.0.0",
-    "vite-plugin-handlebars": "^2.0.0"
+    "vite-plugin-handlebars": "^2.0.0",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3"

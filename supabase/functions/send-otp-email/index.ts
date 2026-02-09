@@ -1,9 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
 
 // Email template for OTP
 function generateEmailHTML(otp: string, appName: string = 'OrderFlow'): string {
@@ -182,9 +178,11 @@ support@orderflow.dk`;
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return handleCorsPreflightResponse(req)
   }
 
   try {

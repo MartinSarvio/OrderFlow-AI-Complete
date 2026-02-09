@@ -1,16 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createRequestLogger, EdgeLogger } from "../_shared/logger.ts"
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id, x-restaurant-id',
-}
+import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   const log = createRequestLogger(req, { module: 'send-sms', channel: 'sms' })
 
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return handleCorsPreflightResponse(req)
   }
 
   const startTime = Date.now()

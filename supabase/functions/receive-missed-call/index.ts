@@ -1,10 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createRequestLogger } from "../_shared/logger.ts"
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-trace-id, x-restaurant-id",
-}
+import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
 
 interface MissedCallEvent {
   caller: string
@@ -309,10 +305,11 @@ function buildMissedCallSms(template: string | undefined, restaurantName: string
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req)
   const log = createRequestLogger(req, { module: "receive-missed-call", channel: "call" })
 
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
+    return handleCorsPreflightResponse(req)
   }
 
   if (req.method === "GET") {

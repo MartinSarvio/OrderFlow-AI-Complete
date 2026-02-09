@@ -19,9 +19,9 @@
   }
 
   /**
-   * Load and apply CMS content from orderflow_cms_pages
+   * Load and apply CMS content - tries Supabase first, localStorage as cache
    */
-  function loadCMSContent() {
+  async function loadCMSContent() {
     // Check if this is a scheduled preview
     const urlParams = new URLSearchParams(window.location.search);
     const isScheduledPreview = urlParams.get('preview') === 'scheduled';
@@ -31,14 +31,49 @@
       return;
     }
 
-    const saved = localStorage.getItem('orderflow_cms_pages');
-    if (!saved) {
-      console.log('Flow CMS: No CMS pages found, using defaults');
-      return;
+    let pages = null;
+
+    // 1. Try Supabase first
+    if (window.SUPABASE_CONFIG && window.supabase) {
+      try {
+        const client = window.supabaseClient || window.supabase.createClient(
+          window.SUPABASE_CONFIG.url,
+          window.SUPABASE_CONFIG.key
+        );
+        const { data, error } = await client
+          .from('builder_configs')
+          .select('config_data')
+          .eq('config_type', 'cms')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!error && data?.config_data?.pages) {
+          pages = data.config_data.pages;
+          // Cache in localStorage
+          localStorage.setItem('orderflow_cms_pages', JSON.stringify(pages));
+        }
+      } catch (err) {
+        console.warn('Flow CMS: Supabase load failed, using localStorage cache');
+      }
+    }
+
+    // 2. Fallback to localStorage cache
+    if (!pages) {
+      const saved = localStorage.getItem('orderflow_cms_pages');
+      if (!saved) {
+        console.log('Flow CMS: No CMS pages found, using defaults');
+        return;
+      }
+      try {
+        pages = JSON.parse(saved);
+      } catch (e) {
+        console.error('Flow CMS: Failed to parse localStorage data');
+        return;
+      }
     }
 
     try {
-      const pages = JSON.parse(saved);
 
       // Find the page matching current slug
       const pageData = pages.find(p => {
