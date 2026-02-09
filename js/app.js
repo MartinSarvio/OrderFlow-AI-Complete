@@ -21442,6 +21442,57 @@ async function loadAllApiSettings() {
 
   // Also populate the API keys summary table on API Adgang page
   loadApiKeysList();
+
+  // Render user-created API keys on settings page
+  renderUserApiKeysOnSettings();
+}
+
+// Render user-created API keys on the Settings > API page using same card style
+async function renderUserApiKeysOnSettings() {
+  var section = document.getElementById('user-api-keys-section');
+  var container = document.getElementById('user-api-keys-cards');
+  if (!section || !container) return;
+
+  var userKeys = await loadUserKeysFromSupabase();
+  if (!userKeys || userKeys.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  var html = '';
+  userKeys.forEach(function(key) {
+    var perms = (key.permissions || []).map(function(p) {
+      var labels = { customers: 'Kunder', orders: 'Ordrer', invoices: 'Fakturaer', products: 'Produkter', payments: 'Betalinger', analytics: 'Analytics' };
+      return labels[p] || p;
+    }).join(', ');
+    var statusColor = key.active !== false ? 'var(--success)' : 'var(--danger)';
+    var statusText = key.active !== false ? 'Aktiv' : 'Deaktiveret';
+    html += '<div class="api-config-card">' +
+      '<div class="api-config-header">' +
+        '<div class="api-config-info">' +
+          '<div class="api-status-indicator" style="background:' + statusColor + '"></div>' +
+          '<div class="api-config-details">' +
+            '<div class="api-config-name">' + key.name + '</div>' +
+            '<div class="api-config-desc" style="font-size:12px;color:var(--muted)">' + (perms || 'Ingen tilladelser') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="api-config-actions">' +
+          '<span style="font-size:12px;color:var(--muted);font-family:monospace;margin-right:8px">' + (key.keyPrefix || '\u2014') + '</span>' +
+          '<span style="font-size:12px;color:' + statusColor + ';margin-right:8px">' + statusText + '</span>' +
+          '<button class="btn btn-secondary" style="color:var(--danger);padding:6px 10px" onclick="deleteUserKeyFromSettings(\'' + key.id + '\',\'' + key.name.replace(/'/g, "\\'") + '\')" title="Slet">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  container.innerHTML = html;
+}
+
+// Delete user API key from settings page (reuses existing logic)
+function deleteUserKeyFromSettings(keyId, keyName) {
+  confirmDeleteApiKey(keyId, keyName, 'user');
 }
 
 // =====================================================
@@ -27478,7 +27529,13 @@ async function clearAppCacheAndData() {
 
   try {
     // Preserve these keys
-    const preserveKeys = ['theme', 'orderflow_session'];
+    const preserveKeys = ['theme', 'orderflow_session', 'flow_system_key_states', 'flow_deleted_system_keys', 'flow_api_keys', 'flow_id'];
+    // Also preserve API enabled states (dynamic keys)
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('api_') && key.endsWith('_enabled')) {
+        preserveKeys.push(key);
+      }
+    });
     const preserved = {};
 
     // Save preserved values
@@ -35759,6 +35816,7 @@ async function generateApiKey() {
 
   // Reload list
   loadApiKeysList();
+  renderUserApiKeysOnSettings();
 
   toast('API nøgle genereret', 'success');
 }
@@ -36064,6 +36122,7 @@ async function executeQuickApiKeyCreate() {
   if (modal) modal.remove();
 
   loadApiKeysList();
+  renderUserApiKeysOnSettings();
   toast('API n\u00f8gle "' + name + '" tilf\u00f8jet', 'success');
 }
 
@@ -36122,6 +36181,7 @@ async function executeDeleteApiKey(keyId, keyType) {
   closeDeleteConfirmModal();
   loadApiKeysList();
   updateApiStatus();
+  renderUserApiKeysOnSettings();
   toast('API n\u00f8gle slettet', 'success');
 }
 
