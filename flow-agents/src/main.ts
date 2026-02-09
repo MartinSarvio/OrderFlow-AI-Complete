@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { config } from './config.js';
 import { runDebuggingCycle, getAgentState } from './agents/debugging-agent.js';
 import { processIncomingSms, type IncomingSMS } from './agents/workflow-agent.js';
+import { runProgrammerCycle, getProgrammerState } from './agents/agent-programmer.js';
 import { createClient } from '@supabase/supabase-js';
 
 // ============================================================
@@ -10,8 +11,8 @@ import { createClient } from '@supabase/supabase-js';
 
 console.log(`
 ╔═══════════════════════════════════════════╗
-║     FLOW Agent System v1.1.0              ║
-║     Debugging + Workflow + InMobile Poll   ║
+║     FLOW Agent System v1.2.0              ║
+║     Debug + Workflow + InMobile + Programmer║
 ╚═══════════════════════════════════════════╝
 `);
 
@@ -467,6 +468,56 @@ async function sendSmsReply(to: string, message: string): Promise<void> {
   }
 }
 
+// ── Agent Programmer Scheduler ───────────────────────────────
+
+let programmerInterval: ReturnType<typeof setInterval> | null = null;
+let programmerCycleCount = 0;
+let programmerInFlight = false;
+
+async function startAgentProgrammer(): Promise<void> {
+  if (!config.programmerEnabled) {
+    console.log(`\n🤖 Agent Programmer disabled (PROGRAMMER_ENABLED=false)`);
+    return;
+  }
+
+  console.log(`\n🤖 Agent Programmer starting...`);
+  console.log(`   Interval: ${config.programmerIntervalMs / 1000}s`);
+  console.log(`   Max turns: ${config.programmerMaxTurns}`);
+  console.log(`   Max changes/cycle: ${config.programmerMaxChangesPerCycle}`);
+
+  // First cycle after 10 minutes (let other agents warm up and produce logs)
+  setTimeout(async () => {
+    if (programmerInFlight) return;
+    programmerInFlight = true;
+    try {
+      programmerCycleCount++;
+      console.log(`\n── Programmer Cycle #${programmerCycleCount} ──`);
+      const result = await runProgrammerCycle();
+      console.log(`   Result: ${result.action}, changes: ${result.changes.length}, build: ${result.buildResult}`);
+    } catch (err) {
+      console.error(`   ❌ Programmer cycle #${programmerCycleCount} failed:`, err);
+    } finally {
+      programmerInFlight = false;
+    }
+  }, 10 * 60 * 1000);
+
+  // Schedule recurring cycles
+  programmerInterval = setInterval(async () => {
+    if (programmerInFlight) return;
+    programmerInFlight = true;
+    try {
+      programmerCycleCount++;
+      console.log(`\n── Programmer Cycle #${programmerCycleCount} ──`);
+      const result = await runProgrammerCycle();
+      console.log(`   Result: ${result.action}, changes: ${result.changes.length}, build: ${result.buildResult}`);
+    } catch (err) {
+      console.error(`   ❌ Programmer cycle #${programmerCycleCount} failed:`, err);
+    } finally {
+      programmerInFlight = false;
+    }
+  }, config.programmerIntervalMs);
+}
+
 // ── Graceful shutdown ────────────────────────────────────────
 
 function setupGracefulShutdown(): void {
@@ -491,14 +542,24 @@ function setupGracefulShutdown(): void {
       console.log('   ✓ InMobile poller stopped');
     }
 
+    if (programmerInterval) {
+      clearInterval(programmerInterval);
+      programmerInterval = null;
+      console.log('   ✓ Agent Programmer stopped');
+    }
+
     const state = getAgentState();
+    const programmerState = getProgrammerState();
     console.log(`\n📊 Session Summary:`);
     console.log(`   Debug cycles: ${debugCycleCount}`);
     console.log(`   Messages processed: ${processedMessages}`);
     console.log(`   InMobile polls: ${inmobilePollCount}`);
     console.log(`   InMobile messages received: ${inmobileMessagesReceived}`);
+    console.log(`   Programmer cycles: ${programmerCycleCount}`);
+    console.log(`   Programmer total changes: ${programmerState.totalChanges}`);
     console.log(`   Last debug status: ${state.lastReport?.overallStatus || 'N/A'}`);
     console.log(`   Debug session: ${state.sessionId || 'N/A'}`);
+    console.log(`   Programmer session: ${programmerState.sessionId || 'N/A'}`);
 
     console.log('\n👋 FLOW Agent System stopped.\n');
     process.exit(0);
@@ -527,6 +588,7 @@ async function main(): Promise<void> {
     startDebuggingScheduler(),
     startWorkflowPoller(),
     startInMobilePoller(),
+    startAgentProgrammer(),
   ]);
 
   console.log('\n✅ All agents running. Press Ctrl+C to stop.\n');

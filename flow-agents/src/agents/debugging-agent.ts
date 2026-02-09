@@ -79,7 +79,7 @@ function createPreToolUseHook(auditLogger: AuditLogger): HookCallback {
       if (dangerous.some(d => command.toLowerCase().includes(d))) {
         return {
           hookSpecificOutput: {
-            hookEventName: input.hook_event_name,
+            hookEventName: 'PreToolUse' as const,
             permissionDecision: 'deny' as const,
             permissionDecisionReason: `Blocked dangerous command: ${command.substring(0, 50)}`,
           },
@@ -158,7 +158,7 @@ export async function runDebuggingCycle(): Promise<{
     for await (const message of query({
       prompt,
       options: {
-        systemPrompt: SYSTEM_PROMPT,
+        customSystemPrompt: SYSTEM_PROMPT,
         allowedTools: ['Read', 'Bash', 'Grep', 'Glob'],
         maxTurns: 5,
         model: 'sonnet',

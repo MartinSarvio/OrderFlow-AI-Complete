@@ -1,14 +1,15 @@
 {
   "name": "flow-agents",
-  "version": "1.0.0",
-  "description": "FLOW OrderFlow AI Agents — Debugging & Order Workflow Orchestration",
+  "version": "1.2.0",
+  "description": "FLOW OrderFlow AI Agents — Debugging, Workflow, InMobile & Agent Programmer",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "tsx src/main.ts",
     "debug-agent": "tsx src/agents/debugging-agent.ts",
-    "workflow-agent": "tsx src/agents/workflow-agent.ts"
+    "workflow-agent": "tsx src/agents/workflow-agent.ts",
+    "agent-programmer": "tsx src/agents/agent-programmer.ts"
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.0",

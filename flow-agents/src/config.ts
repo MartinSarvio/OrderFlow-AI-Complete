@@ -35,6 +35,13 @@ export const config = {
   responseTimeWarning: 2000,  // ms — mark as degraded
   responseTimeError: 10000,   // ms — mark as down
   maxAlertRatePerEndpoint: 1, // max alerts per 5 min per endpoint
+
+  // Agent Programmer
+  programmerIntervalMs: parseInt(process.env.PROGRAMMER_INTERVAL_MS || '1800000'),  // 30 min
+  programmerMaxTurns: parseInt(process.env.PROGRAMMER_MAX_TURNS || '15'),
+  programmerMaxChangesPerCycle: parseInt(process.env.PROGRAMMER_MAX_CHANGES || '3'),
+  programmerEnabled: process.env.PROGRAMMER_ENABLED !== 'false',  // Default: enabled
+  programmerAllowedPaths: ['flow-agents/src/'] as readonly string[],
 } as const;
 
 // Critical endpoints to monitor
