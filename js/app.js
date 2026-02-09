@@ -4183,6 +4183,13 @@ function showPage(page) {
     return;
   }
 
+  // Redirect old QR generator page to Vaerktoejer QR tab
+  if (page === 'qr-generator' || page === 'qr-kode') {
+    showPage('vaerktoejer');
+    setTimeout(function() { switchVaerktoejTab('qrkode'); }, 50);
+    return;
+  }
+
   // Load udsendelser page (redirects to marketing broadcasts tab)
   if (page === 'udsendelser') {
     showPage('campaigns');
@@ -4332,7 +4339,26 @@ function showPageIdBadge(page) {
   var badge = document.createElement('div');
   badge.id = 'dev-page-id-badge';
   badge.textContent = pageId;
-  badge.style.cssText = 'position:fixed;bottom:12px;right:12px;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:11px;padding:4px 10px;border-radius:4px;z-index:99999;pointer-events:none;opacity:0.7';
+  badge.style.cssText = 'position:fixed;bottom:12px;right:12px;background:rgba(0,0,0,0.8);color:#0f0;font-family:monospace;font-size:11px;padding:4px 10px;border-radius:4px;z-index:99999;cursor:pointer;opacity:0.7;user-select:none;transition:opacity 0.2s';
+  badge.title = 'Dobbeltklik for at kopiere';
+  badge.addEventListener('dblclick', function() {
+    navigator.clipboard.writeText(pageId).then(function() {
+      badge.textContent = 'Kopieret!';
+      badge.style.color = '#4ade80';
+      badge.style.opacity = '1';
+      setTimeout(function() { badge.textContent = pageId; badge.style.color = '#0f0'; badge.style.opacity = '0.7'; }, 1500);
+    }).catch(function() {
+      var ta = document.createElement('textarea');
+      ta.value = pageId;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      badge.textContent = 'Kopieret!';
+      setTimeout(function() { badge.textContent = pageId; }, 1500);
+    });
+  });
   document.body.appendChild(badge);
 }
 
@@ -24096,7 +24122,7 @@ function generateBrandedQR(data, container, options = {}) {
       width,
       height,
       data,
-      type: 'canvas',
+      type: 'svg',
       dotsOptions: {
         color: '#ffffff',
         type: 'dots'
@@ -24121,8 +24147,8 @@ function generateBrandedQR(data, container, options = {}) {
       qrConfig.image = 'images/FLOW-logo-hvid-4K.png';
       qrConfig.imageOptions = {
         crossOrigin: 'anonymous',
-        margin: 6,
-        imageSize: 0.3,
+        margin: 4,
+        imageSize: 0.4,
         hideBackgroundDots: true
       };
     }
@@ -24322,17 +24348,53 @@ function removeQRHistoryItem(index) {
 }
 
 function downloadQRCode() {
-  const container = document.getElementById('qr-preview-container');
+  var container = document.getElementById('qr-preview-container');
   if (!container) return;
+  var qrType = document.getElementById('qr-type') ? document.getElementById('qr-type').value : 'qr';
 
-  const canvas = container.querySelector('canvas');
-  if (canvas) {
-    canvas.toBlob(function(blob) {
+  // SVG output (primary — from QRCodeStyling with type:'svg')
+  var svg = container.querySelector('svg');
+  if (svg) {
+    var svgData = new XMLSerializer().serializeToString(svg);
+    var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    var canvas = document.createElement('canvas');
+    var scale = 2;
+    var rect = svg.getBoundingClientRect();
+    canvas.width = rect.width * scale;
+    canvas.height = rect.height * scale;
+    var ctx = canvas.getContext('2d');
+    var img = new Image();
+    var url = URL.createObjectURL(svgBlob);
+    img.onload = function() {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(blob) {
+        if (!blob) { toast('Kunne ikke downloade QR kode', 'error'); return; }
+        var dlUrl = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.download = 'flow-qr-' + qrType + '-' + Date.now() + '.png';
+        link.href = dlUrl;
+        link.click();
+        URL.revokeObjectURL(dlUrl);
+        toast('QR kode downloadet', 'success');
+      }, 'image/png');
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      toast('Kunne ikke downloade QR kode', 'error');
+    };
+    img.src = url;
+    return;
+  }
+
+  // Canvas fallback
+  var canvasEl = container.querySelector('canvas');
+  if (canvasEl) {
+    canvasEl.toBlob(function(blob) {
       if (!blob) { toast('Kunne ikke downloade QR kode', 'error'); return; }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      const type = document.getElementById('qr-type')?.value || 'qr';
-      link.download = `flow-qr-${type}-${Date.now()}.png`;
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a');
+      link.download = 'flow-qr-' + qrType + '-' + Date.now() + '.png';
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
@@ -24341,11 +24403,12 @@ function downloadQRCode() {
     return;
   }
 
-  const img = container.querySelector('img');
-  if (img) {
-    const link = document.createElement('a');
-    link.download = `flow-qr-${Date.now()}.png`;
-    link.href = img.src;
+  // Image fallback
+  var imgEl = container.querySelector('img');
+  if (imgEl) {
+    var link = document.createElement('a');
+    link.download = 'flow-qr-' + Date.now() + '.png';
+    link.href = imgEl.src;
     link.click();
     toast('QR kode downloadet', 'success');
     return;
@@ -43303,6 +43366,80 @@ const agenterPageState = {
   selectedAgentId: null
 };
 
+var AGENT_UPDATE_REGISTRY = {
+  workflow: [
+    { version: 'v1.0.0', date: '2025-11-01', notes: ['Initial release', 'Workflow monitorering'] },
+    { version: 'v1.1.0', date: '2026-01-15', notes: ['Forbedret signal-detektion', 'Ny aktivitetslog', 'Auto-restart ved fejl'] },
+    { version: 'v1.2.0', date: '2026-02-05', notes: ['Real-time status updates', 'Performance optimering', 'Webhook retry-logik'] }
+  ],
+  debugging: [
+    { version: 'v1.0.0', date: '2025-11-01', notes: ['Initial release'] },
+    { version: 'v1.1.0', date: '2026-01-20', notes: ['Ny endpoint health check', 'SMS parser test forbedret', 'Detaljeret fejlrapportering'] }
+  ],
+  instagram: [
+    { version: 'v1.2.0', date: '2025-12-01', notes: ['Initial release med workflow integration'] },
+    { version: 'v1.3.0', date: '2026-02-01', notes: ['Auto-post scheduling', 'Forbedret hashtag-analyse', 'Story analytics integration'] }
+  ],
+  facebook: [
+    { version: 'v1.2.0', date: '2025-12-01', notes: ['Initial release med workflow integration'] },
+    { version: 'v1.3.0', date: '2026-02-01', notes: ['Messenger bot integration', 'Audience insights', 'Auto-reply templates'] }
+  ],
+  restaurant: [
+    { version: 'v1.2.0', date: '2025-12-01', notes: ['Initial release med SMS workflows'] },
+    { version: 'v1.3.0', date: '2026-01-25', notes: ['Ny ordrebekr\u00e6ftelse flow', 'Allergi-detektion forbedret', 'Prioriteret k\u00f8-system'] },
+    { version: 'v1.4.0', date: '2026-02-08', notes: ['Multi-sprog SMS', 'Smart retry-logik', 'Leveringstid-estimering'] }
+  ],
+  haandvaerker: [
+    { version: 'v1.1.0', date: '2025-12-15', notes: ['Initial release'] },
+    { version: 'v1.2.0', date: '2026-02-03', notes: ['Tidsbestilling automation', 'Kundefeedback integration', 'Automatisk p\u00e5mindelse-SMS'] }
+  ],
+  seo: [
+    { version: 'v3.0.0', date: '2026-01-01', notes: ['Major version med AI-drevet analyse'] },
+    { version: 'v3.1.0', date: '2026-02-07', notes: ['Google Search Console integration', 'Keyword tracking forbedret', 'Konkurrent-analyse modul'] }
+  ]
+};
+
+function getAgentInstalledVersion(agentId) {
+  var versions = JSON.parse(localStorage.getItem('flow_agent_installed_versions') || '{}');
+  if (versions[agentId]) return versions[agentId];
+  var agent = AGENTER_PAGE_AGENTS.find(function(a) { return a.id === agentId; });
+  return agent ? agent.version : 'v1.0.0';
+}
+
+function getAgentLatestVersion(agentId) {
+  var updates = AGENT_UPDATE_REGISTRY[agentId];
+  if (!updates || !updates.length) return getAgentInstalledVersion(agentId);
+  return updates[updates.length - 1].version;
+}
+
+function agentHasUpdate(agentId) {
+  return getAgentInstalledVersion(agentId) !== getAgentLatestVersion(agentId);
+}
+
+function getAgentChangelog(agentId, fromVersion) {
+  var updates = AGENT_UPDATE_REGISTRY[agentId] || [];
+  var collecting = false;
+  var result = [];
+  for (var i = 0; i < updates.length; i++) {
+    if (updates[i].version === fromVersion) { collecting = true; continue; }
+    if (collecting) result.push(updates[i]);
+  }
+  return result;
+}
+
+function saveAgentVersion(agentId, version) {
+  var versions = JSON.parse(localStorage.getItem('flow_agent_installed_versions') || '{}');
+  versions[agentId] = version;
+  localStorage.setItem('flow_agent_installed_versions', JSON.stringify(versions));
+}
+
+function addAgentUpdateHistory(agentId, fromVersion, toVersion) {
+  var history = JSON.parse(localStorage.getItem('flow_agent_update_history') || '[]');
+  history.unshift({ agentId: agentId, from: fromVersion, to: toVersion, date: new Date().toISOString() });
+  if (history.length > 100) history = history.slice(0, 100);
+  localStorage.setItem('flow_agent_update_history', JSON.stringify(history));
+}
+
 function safeParseJson(raw, fallback) {
   if (!raw) return fallback;
   try {
@@ -43411,16 +43548,22 @@ function renderAgenterOverview() {
   overviewEl.style.display = '';
   detailEl.style.display = 'none';
 
-  gridEl.innerHTML = AGENTER_PAGE_AGENTS.map((agent) => {
-    const state = getAgentOverviewState(agent.id);
+  gridEl.innerHTML = AGENTER_PAGE_AGENTS.map(function(agent) {
+    var state = getAgentOverviewState(agent.id);
+    var installedVer = getAgentInstalledVersion(agent.id);
+    var latestVer = getAgentLatestVersion(agent.id);
+    var hasUpdate = installedVer !== latestVer;
+    var btnClass = hasUpdate ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    var btnText = hasUpdate ? 'Opdater til ' + latestVer : 'Opdateret';
+    var updateBadge = hasUpdate ? '<span style="font-size:10px;padding:2px 6px;border-radius:var(--radius-sm);background:var(--warning);color:#000;font-weight:600;margin-left:6px">Ny version</span>' : '';
     return (
       '<button type="button" onclick="openAgentDetail(\'' + agent.id + '\')" style="text-align:left;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);cursor:pointer;transition:border-color .2s,transform .2s" onmouseenter="this.style.borderColor=\'' + agent.color + '\';this.style.transform=\'translateY(-2px)\'" onmouseleave="this.style.borderColor=\'var(--border)\';this.style.transform=\'translateY(0)\'">' +
         '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:var(--space-3)">' +
           '<div>' +
-            '<h3 style="margin:0 0 4px 0;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + agent.name + '</h3>' +
+            '<h3 style="margin:0 0 4px 0;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + agent.name + updateBadge + '</h3>' +
             '<div style="color:var(--muted);font-size:var(--font-size-sm)">' + agent.subtitle + '</div>' +
           '</div>' +
-          '<span style="font-size:11px;padding:3px 8px;border-radius:var(--radius-sm);background:' + agent.color + ';color:white">' + agent.version + '</span>' +
+          '<span style="font-size:11px;padding:3px 8px;border-radius:var(--radius-sm);background:' + agent.color + ';color:white">' + installedVer + '</span>' +
         '</div>' +
         '<p style="margin:0 0 var(--space-3) 0;color:var(--muted);font-size:var(--font-size-sm);line-height:1.5">' + agent.description + '</p>' +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:var(--space-3);border-top:1px solid var(--border)">' +
@@ -43428,7 +43571,7 @@ function renderAgenterOverview() {
           '<span style="font-size:12px;color:var(--muted)">' + state.metaPrimary + '</span>' +
         '</div>' +
         '<div style="margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--border);display:flex;justify-content:flex-end">' +
-          '<span class="btn btn-sm btn-secondary" onclick="event.stopPropagation();updateAgent(\'' + agent.id + '\')" id="agent-update-btn-' + agent.id + '">Opdater</span>' +
+          '<span class="' + btnClass + '" onclick="event.stopPropagation();updateAgent(\'' + agent.id + '\')" id="agent-update-btn-' + agent.id + '">' + btnText + '</span>' +
         '</div>' +
       '</button>'
     );
@@ -43436,23 +43579,75 @@ function renderAgenterOverview() {
 }
 
 function updateAgent(agentId) {
-  const agent = AGENTER_PAGE_AGENTS.find(a => a.id === agentId);
+  var agent = AGENTER_PAGE_AGENTS.find(function(a) { return a.id === agentId; });
   if (!agent) return;
-  const btn = document.getElementById('agent-update-btn-' + agentId);
-  if (btn) {
-    btn.textContent = 'Opdaterer...';
-    btn.style.pointerEvents = 'none';
-    btn.style.opacity = '0.6';
+
+  var installedVer = getAgentInstalledVersion(agentId);
+  var latestVer = getAgentLatestVersion(agentId);
+
+  if (installedVer === latestVer) {
+    toast(agent.name + ' er allerede opdateret (' + latestVer + ')', 'info');
+    return;
   }
-  setTimeout(() => {
-    if (btn) {
-      btn.textContent = 'Opdater';
-      btn.style.pointerEvents = '';
-      btn.style.opacity = '';
+
+  var btn = document.getElementById('agent-update-btn-' + agentId);
+  if (!btn) return;
+
+  btn.style.pointerEvents = 'none';
+  btn.style.opacity = '0.7';
+  btn.textContent = '0%';
+
+  var steps = [10, 25, 40, 55, 70, 85, 95, 100];
+  var stepIdx = 0;
+
+  var interval = setInterval(function() {
+    if (stepIdx < steps.length) {
+      btn.textContent = steps[stepIdx] + '%';
+      stepIdx++;
+    } else {
+      clearInterval(interval);
+
+      // Save updated version
+      saveAgentVersion(agentId, latestVer);
+      addAgentUpdateHistory(agentId, installedVer, latestVer);
+
+      // Log to activity
+      var activity = JSON.parse(localStorage.getItem('flow_agent_activity') || '[]');
+      activity.unshift({ type: 'update', agentId: agentId, from: installedVer, to: latestVer, date: new Date().toISOString() });
+      if (activity.length > 200) activity = activity.slice(0, 200);
+      localStorage.setItem('flow_agent_activity', JSON.stringify(activity));
+
+      toast(agent.name + ' opdateret til ' + latestVer, 'success');
+      renderAgenterOverview();
+
+      // Show changelog modal
+      var changelog = getAgentChangelog(agentId, installedVer);
+      if (changelog.length > 0) {
+        showAgentChangelogModal(agent.name, installedVer, latestVer, changelog);
+      }
     }
-    toast(agent.name + ' opdateret til seneste version', 'success');
-    renderAgenterOverview();
-  }, 1500);
+  }, 250);
+}
+
+function showAgentChangelogModal(agentName, fromVer, toVer, changelog) {
+  var html = '<div style="margin-bottom:var(--space-3)">' +
+    '<span style="display:inline-block;padding:2px 8px;border-radius:var(--radius-sm);background:var(--bg2);font-size:12px;color:var(--muted)">' + fromVer + '</span>' +
+    ' <span style="color:var(--muted);margin:0 4px">&rarr;</span> ' +
+    '<span style="display:inline-block;padding:2px 8px;border-radius:var(--radius-sm);background:var(--success);color:white;font-size:12px;font-weight:600">' + toVer + '</span>' +
+  '</div>';
+
+  for (var i = 0; i < changelog.length; i++) {
+    var entry = changelog[i];
+    html += '<div style="margin-bottom:var(--space-3);padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+      '<div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm);margin-bottom:4px">' + entry.version + ' <span style="color:var(--muted);font-weight:400;font-size:12px">(' + entry.date + ')</span></div>' +
+      '<ul style="margin:0;padding-left:18px;color:var(--muted);font-size:var(--font-size-sm)">';
+    for (var j = 0; j < entry.notes.length; j++) {
+      html += '<li style="margin-bottom:2px">' + entry.notes[j] + '</li>';
+    }
+    html += '</ul></div>';
+  }
+
+  showCustomModal(agentName + ' — Changelog', html);
 }
 
 function loadAgenterPage() {
@@ -43639,7 +43834,7 @@ function renderPlaceholderDetail(agentId) {
       '<p style="color:var(--muted);font-size:var(--font-size-sm);line-height:1.6;margin-bottom:var(--space-4)">' + agent.description + '</p>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">' +
         '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--muted)">Agent</div><div style="font-weight:var(--font-weight-semibold)">' + agent.name + '</div></div>' +
-        '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--muted)">Version</div><div style="font-weight:var(--font-weight-semibold)">' + agent.version + '</div></div>' +
+        '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)"><div style="font-size:12px;color:var(--muted)">Version</div><div style="font-weight:var(--font-weight-semibold)">' + getAgentInstalledVersion(agent.id) + '</div></div>' +
       '</div>' +
       (targetPage ? '<button class="btn btn-primary" onclick="showPage(\'' + targetPage + '\')">Aabn relateret workflow</button>' : '') +
     '</div>';
@@ -43822,6 +44017,10 @@ window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
 window.updateAgent = updateAgent;
+window.showAgentChangelogModal = showAgentChangelogModal;
+window.getAgentInstalledVersion = getAgentInstalledVersion;
+window.getAgentLatestVersion = getAgentLatestVersion;
+window.agentHasUpdate = agentHasUpdate;
 window.saveQRToHistory = saveQRToHistory;
 window.loadQRHistory = loadQRHistory;
 window.removeQRHistoryItem = removeQRHistoryItem;
