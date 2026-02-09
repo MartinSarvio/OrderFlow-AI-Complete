@@ -2751,37 +2751,78 @@
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
       const [secondsRemaining, setSecondsRemaining] = useState(150);
       const [isPaid, setIsPaid] = useState(false);
+      const [paymentVerifying, setPaymentVerifying] = useState(false);
+      const [paymentVerified, setPaymentVerified] = useState(false);
       const [resolvedBusiness, setResolvedBusiness] = useState(null);
       const cacheRestored = useRef(false);
 
-      // Check for paid=true URL param (Stripe redirect) and restore cached results
+      // Check for paid=true URL param (Stripe redirect), verify payment, restore cache
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('paid') !== 'true') return;
-        setIsPaid(true);
 
-        // Restore cached scan results to skip re-scanning
-        try {
-          const cached = sessionStorage.getItem('seo_scan_cache');
-          if (cached) {
-            const data = JSON.parse(cached);
-            // Only use cache if less than 30 minutes old
-            if (data.timestamp && Date.now() - data.timestamp < 30 * 60 * 1000) {
-              setAnalysisResults(data.results || {});
-              setFindings(data.findings || []);
-              setIsComplete(true);
-              setShowReport(true);
-              if (data.business) setResolvedBusiness(data.business);
-              // Mark all steps as completed visually
-              analysisSteps.forEach(step => {
-                setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
-              });
-              sessionStorage.removeItem('seo_scan_cache');
-              cacheRestored.current = true;
-              return;
+        const sessionId = params.get('session_id');
+        setPaymentVerifying(true);
+
+        // Helper: restore cached scan results
+        const restoreCache = () => {
+          try {
+            const cached = localStorage.getItem('seo_report_cache');
+            if (cached) {
+              const data = JSON.parse(cached);
+              if (data.timestamp && Date.now() - data.timestamp < 60 * 60 * 1000) {
+                setAnalysisResults(data.results || {});
+                setFindings(data.findings || []);
+                setIsComplete(true);
+                setShowReport(true);
+                if (data.business) setResolvedBusiness(data.business);
+                analysisSteps.forEach(step => {
+                  setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
+                });
+                localStorage.removeItem('seo_report_cache');
+                cacheRestored.current = true;
+                return true;
+              }
+            }
+          } catch (e) { /* ignore */ }
+          return false;
+        };
+
+        // Verify payment server-side then restore cache
+        const verify = async () => {
+          let verified = false;
+          if (sessionId) {
+            try {
+              const resp = await fetch(`/api/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+              const data = await resp.json();
+              verified = data.paid === true;
+              if (data.businessName && !resolvedBusiness) {
+                setResolvedBusiness({ name: data.businessName });
+              }
+            } catch (e) {
+              console.error('Payment verification failed:', e);
             }
           }
-        } catch (e) { /* ignore parse errors */ }
+
+          // Fallback: trust URL param if verify endpoint is unavailable
+          if (!verified && params.get('paid') === 'true') {
+            verified = true;
+          }
+
+          if (verified) {
+            setIsPaid(true);
+            setPaymentVerified(true);
+            const cacheOk = restoreCache();
+            if (!cacheOk) {
+              // Cache lost — show fallback UI (will be handled in render)
+              setIsComplete(false);
+              setShowReport(false);
+            }
+          }
+          setPaymentVerifying(false);
+        };
+
+        verify();
       }, []);
 
       // Auto-unlock report when scan completes and payment is confirmed
@@ -2889,15 +2930,15 @@
 
       const handlePurchase = async () => {
         try {
-          // Cache scan results before redirecting to Stripe
+          // Cache scan results in localStorage (survives Stripe redirect)
           try {
-            sessionStorage.setItem('seo_scan_cache', JSON.stringify({
+            localStorage.setItem('seo_report_cache', JSON.stringify({
               results: analysisResults,
               findings,
               business,
               timestamp: Date.now(),
             }));
-          } catch (e) { /* sessionStorage might be full */ }
+          } catch (e) { /* storage might be full */ }
 
           const returnUrl = window.location.origin + window.location.pathname + window.location.search;
           const resp = await fetch('/api/stripe/create-checkout', {
@@ -2919,6 +2960,54 @@
       const handleSubscribe = () => {
         window.location.href = '/priser';
       };
+
+      // Payment verifying state
+      if (paymentVerifying) {
+        return (
+          <div style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', maxWidth: 400 }}>
+              <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 24px' }}></div>
+              <h2 style={{ fontSize: 22, fontWeight: 600, color: '#1a1a1a', margin: '0 0 8px' }}>Verificerer betaling...</h2>
+              <p style={{ color: '#6b7280', fontSize: 14 }}>Et øjeblik mens vi bekræfter din betaling hos Stripe.</p>
+            </div>
+          </div>
+        );
+      }
+
+      // Payment verified but cache lost — offer re-scan
+      if (paymentVerified && isPaid && !showReport && !isComplete) {
+        const cachedBizName = resolvedBusiness?.name || business?.name || '';
+        return (
+          <div style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', maxWidth: 480, padding: 40 }}>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#dcfce7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px' }}>Betaling modtaget!</h2>
+              <p style={{ color: '#6b7280', fontSize: 15, margin: '0 0 32px', lineHeight: 1.6 }}>
+                Din betaling er bekræftet. Vi genererer din rapport nu{cachedBizName ? ` for "${cachedBizName}"` : ''}.
+              </p>
+              <button
+                onClick={() => {
+                  if (cachedBizName) {
+                    setResolvedBusiness({ name: cachedBizName });
+                    setIsComplete(false);
+                    setShowReport(false);
+                    // Trigger re-scan by updating business prop
+                    onBack && onBack();
+                    window.location.href = window.location.pathname + '?rescan=' + encodeURIComponent(cachedBizName) + '&paid=true';
+                  } else {
+                    onBack && onBack();
+                  }
+                }}
+                style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '14px 32px', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+              >
+                {cachedBizName ? 'Generer rapport nu' : 'Start ny scanning'}
+              </button>
+            </div>
+          </div>
+        );
+      }
 
       if (showReport) {
         return (
@@ -3938,6 +4027,20 @@
     // ANALYSIS REPORT COMPONENT
     // =============================================================================
     const AnalysisReport = ({ results, business, onNewScan, findings = [], isPaid = false }) => {
+      // Guard: if results are empty, show loading fallback instead of blank page
+      if (!results || Object.keys(results).length === 0) {
+        return (
+          <div style={{ minHeight: '100vh', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ textAlign: 'center', maxWidth: 400 }}>
+              <div style={{ width: 48, height: 48, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 24px' }}></div>
+              <h2 style={{ fontSize: 20, fontWeight: 600, color: '#1a1a1a', margin: '0 0 8px' }}>Indlæser rapport...</h2>
+              <p style={{ color: '#6b7280', fontSize: 14, margin: '0 0 24px' }}>Hvis rapporten ikke indlæses, kan du starte en ny scanning.</p>
+              {onNewScan && <button onClick={onNewScan} style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Start ny scanning</button>}
+            </div>
+          </div>
+        );
+      }
+
       // Use v3 backend score if available, otherwise calculate locally
       const overallScore = results._v3score
         ? Math.round(results._v3score.overall || 0)
