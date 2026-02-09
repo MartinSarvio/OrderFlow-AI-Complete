@@ -43890,6 +43890,14 @@ const AGENTER_PAGE_AGENTS = [
     description: 'Digital synlighedsanalyse og SEO-automatisering.',
     color: '#10b981',
     version: 'v3.0.0'
+  },
+  {
+    id: 'programmer',
+    name: 'Agent Programmer',
+    subtitle: 'Selvforbedrende meta-agent',
+    description: 'Overvåger fejl, analyserer kode og skriver automatiske forbedringer til de andre agenter.',
+    color: '#ef4444',
+    version: 'v1.0.0'
   }
 ];
 
@@ -43928,6 +43936,10 @@ var AGENT_UPDATE_REGISTRY = {
   seo: [
     { version: 'v3.0.0', date: '2026-01-01', notes: ['Major version med AI-drevet analyse'] },
     { version: 'v3.1.0', date: '2026-02-07', notes: ['Google Search Console integration', 'Keyword tracking forbedret', 'Konkurrent-analyse modul'] }
+  ],
+  programmer: [
+    { version: 'v1.0.0', date: '2026-02-09', notes: ['Initial release — Claude Code SDK meta-agent', 'Automatisk fejlsamling fra audit-logs og Supabase', 'Kodeanalyse med import-graf og kontekst-building', 'Sikkerhedshooks: bash allowlist, edit path guards, allergi-beskyttelse', 'Session persistence med resume-support'] },
+    { version: 'v1.1.0', date: '2026-02-09', notes: ['Max 3 ændringer per cyklus', 'Build-validering efter hver ændring', 'Slack/email rapport ved kodeændringer'] }
   ]
 };
 
@@ -44060,6 +44072,18 @@ function getAgentOverviewState(agentId) {
       color: isActive ? '#3b82f6' : 'var(--muted)',
       metaPrimary: facebookStatus && facebookStatus.connected ? 'Forbundet' : 'Ikke forbundet',
       metaSecondary: 'Facebook workflow'
+    };
+  }
+
+  if (agentId === 'programmer') {
+    const progState = safeParseJson(localStorage.getItem('flow_agent_programmer_state'), null);
+    const isActive = !!(progState && progState.lastCycle && (Date.now() - new Date(progState.lastCycle).getTime()) < 60 * 60000);
+    const totalChanges = progState && progState.totalChanges ? progState.totalChanges : 0;
+    return {
+      label: isActive ? 'Aktiv' : 'Standby',
+      color: isActive ? '#ef4444' : 'var(--muted)',
+      metaPrimary: totalChanges > 0 ? totalChanges + ' kodeændringer' : 'Ingen ændringer endnu',
+      metaSecondary: 'Meta-agent'
     };
   }
 
@@ -44346,6 +44370,160 @@ function renderDebuggingDetail() {
   renderActivityList('agent-debug-activity-log', 'Ingen debug-aktivitet registreret endnu.');
 }
 
+function renderProgrammerDetail() {
+  const contentEl = document.getElementById('agenter-detail-content');
+  if (!contentEl) return;
+
+  const progState = safeParseJson(localStorage.getItem('flow_agent_programmer_state'), null);
+  const progLog = safeParseJson(localStorage.getItem('flow_agent_programmer_log'), []);
+  const isActive = !!(progState && progState.lastCycle && (Date.now() - new Date(progState.lastCycle).getTime()) < 60 * 60000);
+  const statusColor = isActive ? 'var(--success)' : 'var(--muted)';
+  const statusLabel = isActive ? 'Aktiv' : 'Standby';
+  const totalChanges = progState && progState.totalChanges ? progState.totalChanges : 0;
+  const totalCycles = progState && progState.totalCycles ? progState.totalCycles : 0;
+  const lastBuild = progState && progState.lastBuildResult ? progState.lastBuildResult : 'Ingen';
+  const errorsFound = progState && progState.errorsFound ? progState.errorsFound : 0;
+
+  // Stats cards row
+  contentEl.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Status</div>' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + statusColor + '">' +
+          '<span style="width:8px;height:8px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + statusLabel +
+        '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Kodeændringer</div>' +
+        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + totalChanges + '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Cyklusser kørt</div>' +
+        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + totalCycles + '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Fejl registreret</div>' +
+        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + errorsFound + '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Sidste build</div>' +
+        '<div style="margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + (lastBuild === 'success' ? 'var(--success)' : lastBuild === 'failure' ? 'var(--danger)' : 'var(--muted)') + '">' + (lastBuild === 'success' ? 'Succes' : lastBuild === 'failure' ? 'Fejlet' : 'Ingen') + '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
+        '<div style="font-size:12px;color:var(--muted)">Sidste cyklus</div>' +
+        '<div style="margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold)">' + (progState && progState.lastCycle ? toRelativeTimeLabel(progState.lastCycle) : 'Aldrig') + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Architecture & Safety section
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Arkitektur</h3>' +
+        '<div style="font-size:var(--font-size-sm);color:var(--muted);line-height:1.7">' +
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Motor:</span> Claude Code SDK (Sonnet)</div>' +
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Interval:</span> Hver 30 min</div>' +
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Max ændringer:</span> 3 per cyklus</div>' +
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Max turns:</span> 15 per session</div>' +
+          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Session:</span> Persistent (resume)</div>' +
+          '<div style="padding:6px 0"><span style="color:var(--text);font-weight:500">Tools:</span> Read, Edit, Bash, Grep, Glob</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Sikkerhedsregler</h3>' +
+        '<div style="font-size:var(--font-size-sm);line-height:1.7">' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--success);font-size:14px;flex-shrink:0">&#10003;</span> Kun edit i <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:12px">flow-agents/src/</code></div>' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--success);font-size:14px;flex-shrink:0">&#10003;</span> Bash: kun build, test, typecheck</div>' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen sletning (rm, drop, delete)</div>' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen netværk (curl, wget, fetch)</div>' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen git push/reset</div>' +
+          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px"><span style="color:var(--warning);font-size:14px;flex-shrink:0">&#9888;</span> Allergi-kode er read-only</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    // Pipeline visualization
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-4) 0">Cyklus-pipeline</h3>' +
+      '<div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:var(--space-2)">' +
+        renderProgrammerPipelineStep('1', 'Saml fejl', 'error-collector.ts', '#ef4444') +
+        renderProgrammerPipelineArrow() +
+        renderProgrammerPipelineStep('2', 'Analyser kode', 'code-analyzer.ts', '#f59e0b') +
+        renderProgrammerPipelineArrow() +
+        renderProgrammerPipelineStep('3', 'Claude fix', 'Claude Code SDK', '#6366f1') +
+        renderProgrammerPipelineArrow() +
+        renderProgrammerPipelineStep('4', 'Build & test', 'npm run build', '#10b981') +
+        renderProgrammerPipelineArrow() +
+        renderProgrammerPipelineStep('5', 'Log & rapport', 'Supabase + Slack', '#3b82f6') +
+      '</div>' +
+    '</div>' +
+
+    // Recent changes log
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Seneste kodeændringer</h3>' +
+      '<div id="programmer-changes-log" style="max-height:300px;overflow-y:auto;font-size:var(--font-size-sm)"></div>' +
+    '</div>' +
+
+    // Observed files section
+    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
+      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Overvågede filer</h3>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-3)">' +
+        renderProgrammerFileCard('src/agents/', 'workflow-agent.ts, debugging-agent.ts', 'Agenter') +
+        renderProgrammerFileCard('src/tools/', 'sms-parser.ts, supabase-query.ts, api-monitor.ts', 'Tools') +
+        renderProgrammerFileCard('src/hooks/', 'audit-logger.ts, error-notifier.ts', 'Hooks') +
+        renderProgrammerFileCard('src/', 'config.ts', 'Konfiguration') +
+      '</div>' +
+    '</div>';
+
+  // Render changes log
+  renderProgrammerChangesLog(progLog);
+}
+
+function renderProgrammerPipelineStep(num, label, sub, color) {
+  return '<div style="text-align:center;min-width:120px;flex-shrink:0">' +
+    '<div style="width:36px;height:36px;border-radius:50%;background:' + color + ';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin:0 auto 8px">' + num + '</div>' +
+    '<div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold)">' + label + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + sub + '</div>' +
+  '</div>';
+}
+
+function renderProgrammerPipelineArrow() {
+  return '<div style="flex-shrink:0;color:var(--muted);font-size:18px;padding:0 4px;margin-bottom:20px">&rarr;</div>';
+}
+
+function renderProgrammerFileCard(path, files, category) {
+  return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + category + '</div>' +
+    '<div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">' + path + '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + files + '</div>' +
+  '</div>';
+}
+
+function renderProgrammerChangesLog(log) {
+  const logEl = document.getElementById('programmer-changes-log');
+  if (!logEl) return;
+
+  if (!Array.isArray(log) || log.length === 0) {
+    logEl.innerHTML = '<div style="padding:16px 0;color:var(--muted);text-align:center">Ingen kodeændringer registreret endnu. Agent Programmer vil logge ændringer her når den kører.</div>';
+    return;
+  }
+
+  logEl.innerHTML = log.slice(-20).reverse().map(function(entry) {
+    var time = entry.timestamp ? new Date(entry.timestamp).toLocaleString('da-DK', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--';
+    var typeColor = entry.type === 'bug_fix' ? 'var(--success)' : entry.type === 'pattern_add' ? 'var(--primary)' : entry.type === 'edit' ? 'var(--warning)' : 'var(--muted)';
+    var typeLabel = entry.type === 'bug_fix' ? 'Fix' : entry.type === 'pattern_add' ? 'Nyt pattern' : entry.type === 'edit' ? 'Ændring' : entry.type || 'Ukendt';
+    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start">' +
+      '<span style="font-size:11px;color:var(--muted);white-space:nowrap;padding-top:2px">' + time + '</span>' +
+      '<span style="font-size:11px;padding:2px 6px;border-radius:var(--radius-sm);background:' + typeColor + ';color:white;font-weight:600;white-space:nowrap;flex-shrink:0">' + typeLabel + '</span>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">' + (entry.file || 'Ukendt fil') + '</div>' +
+        '<div style="color:var(--muted);font-size:12px;margin-top:2px">' + (entry.description || '') + '</div>' +
+        (entry.reason ? '<div style="color:var(--muted);font-size:11px;margin-top:2px;font-style:italic">' + entry.reason + '</div>' : '') +
+      '</div>' +
+      '<span style="font-size:11px;padding:2px 6px;border-radius:var(--radius-sm);background:' + (entry.buildPassed ? 'var(--success)' : 'var(--danger)') + ';color:white;flex-shrink:0">' + (entry.buildPassed ? 'Build OK' : 'Build fejl') + '</span>' +
+    '</div>';
+  }).join('');
+}
+
 function renderPlaceholderDetail(agentId) {
   const contentEl = document.getElementById('agenter-detail-content');
   const agent = AGENTER_PAGE_AGENTS.find((entry) => entry.id === agentId);
@@ -44379,6 +44557,10 @@ function renderAgentDetail(agentId) {
   }
   if (agentId === 'debugging') {
     renderDebuggingDetail();
+    return;
+  }
+  if (agentId === 'programmer') {
+    renderProgrammerDetail();
     return;
   }
   renderPlaceholderDetail(agentId);
