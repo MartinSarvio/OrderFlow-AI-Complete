@@ -39,7 +39,7 @@
     btnReject: 'Kun nødvendige',
     btnSave: 'Gem mine valg',
     bannerActive: true,
-    showDetails: false
+    showDetails: true
   };
 
   // Get settings (merge defaults with any saved admin settings)
