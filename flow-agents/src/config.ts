@@ -112,6 +112,18 @@ export const SMS_PATTERNS = {
     patterns: [/(allergi|allergy|nødder|gluten|laktose|lactose|shellfish|peanut)/i],
     confidence: 0.99,
   },
+  delivery: {
+    patterns: [/^(levering|delivery|deliver|bring det|kør det|til døren|udbringning)\s*$/i],
+    confidence: 0.9,
+  },
+  pickup: {
+    patterns: [/^(afhentning|pickup|pick up|hente|afhente|selv hente|kommer og henter)\s*$/i],
+    confidence: 0.9,
+  },
+  order: {
+    patterns: [/(\d+)\s*x?\s*(pizza|burger|salat|kebab|durum|shawarma|falafel|pommes|fries|cola|vand|øl|sandwich|wrap|nuggets|menu|nr\.?\s*\d+)/i],
+    confidence: 0.85,
+  },
 } as const;
 
 export type IntentType = keyof typeof SMS_PATTERNS | 'unknown';

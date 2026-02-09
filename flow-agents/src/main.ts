@@ -188,12 +188,14 @@ async function startWorkflowPoller(): Promise<void> {
 }
 
 // ── InMobile Incoming SMS Poller ─────────────────────────────
-// Polls InMobile API for incoming SMS (official documented method).
-// Each message is returned only once by InMobile (marked as read after retrieval).
+// Polls InMobile API for incoming SMS.
+// NOTE: The API may return ALL messages (not just unread). We track the last
+// processed timestamp in memory and rely on idempotency checks as backup.
 
 let inmobileInterval: ReturnType<typeof setInterval> | null = null;
 let inmobilePollCount = 0;
 let inmobileMessagesReceived = 0;
+let lastInMobileTimestamp = new Date().toISOString(); // Only process messages newer than startup
 
 async function pollInMobileIncoming(): Promise<void> {
   if (!config.inmobileApiKey) return;
@@ -245,6 +247,11 @@ async function pollInMobileIncoming(): Promise<void> {
         const receivedAt = String(msg.receivedAt || new Date().toISOString());
         const messageId = `inmobile-${sender}-${receivedAt}`;
 
+        // Skip messages older than our last processed timestamp (prevents re-processing old messages)
+        if (receivedAt <= lastInMobileTimestamp) {
+          continue;
+        }
+
         if (!sender || !text) {
           console.log(`   Skipping: missing sender or text`);
           continue;
@@ -293,15 +300,7 @@ async function pollInMobileIncoming(): Promise<void> {
           if (tenants && tenants.length > 0) tenantId = tenants[0].id;
         }
         if (!tenantId) {
-          const { data: fallback } = await supabase
-            .from('restaurants')
-            .select('id')
-            .limit(1);
-          tenantId = fallback?.[0]?.id || null;
-        }
-
-        if (!tenantId) {
-          console.log(`   No tenant found for receiver: ${receiver}`);
+          console.warn(`   ⚠️ No tenant found for receiver: ${receiver} (sender: ${sender}). Skipping.`);
           continue;
         }
 
@@ -415,6 +414,11 @@ async function pollInMobileIncoming(): Promise<void> {
           }
         } catch (err) {
           console.error(`   ❌ Workflow processing failed for ${messageId}:`, err);
+        }
+
+        // Update high-water mark so next poll skips this message
+        if (receivedAt > lastInMobileTimestamp) {
+          lastInMobileTimestamp = receivedAt;
         }
       } catch (msgErr) {
         console.error(`   ❌ Failed to process InMobile message:`, msgErr);

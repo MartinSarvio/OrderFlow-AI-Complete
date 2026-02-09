@@ -233,6 +233,55 @@ export function parseSmsReply(message: string): ParsedSMS {
     }
   }
 
+  // 6. Delivery
+  for (const pattern of SMS_PATTERNS.delivery.patterns) {
+    if (pattern.test(normalized)) {
+      return {
+        intent: 'delivery',
+        confidence: SMS_PATTERNS.delivery.confidence,
+        rawMessage: message,
+        normalizedMessage: normalized,
+        extractedData,
+        language,
+        flags,
+      };
+    }
+  }
+
+  // 7. Pickup
+  for (const pattern of SMS_PATTERNS.pickup.patterns) {
+    if (pattern.test(normalized)) {
+      return {
+        intent: 'pickup',
+        confidence: SMS_PATTERNS.pickup.confidence,
+        rawMessage: message,
+        normalizedMessage: normalized,
+        extractedData,
+        language,
+        flags,
+      };
+    }
+  }
+
+  // 8. Order (food items with quantity)
+  for (const pattern of SMS_PATTERNS.order.patterns) {
+    if (pattern.test(normalized)) {
+      const match = normalized.match(pattern);
+      if (match) {
+        extractedData.orderItems = match[0];
+      }
+      return {
+        intent: 'order',
+        confidence: SMS_PATTERNS.order.confidence,
+        rawMessage: message,
+        normalizedMessage: normalized,
+        extractedData,
+        language,
+        flags,
+      };
+    }
+  }
+
   // No match — unknown intent
   flags.push('no_pattern_match');
   return {
@@ -337,6 +386,25 @@ export function validateAgainstOrder(
         reason: 'Customer has a question about the order',
         orderStatus,
         suggestedAction: 'answer_question',
+      };
+    }
+
+    case 'delivery':
+    case 'pickup': {
+      return {
+        valid: true,
+        reason: 'Customer selected delivery/pickup method',
+        orderStatus,
+        suggestedAction: 'process_delivery_method',
+      };
+    }
+
+    case 'order': {
+      return {
+        valid: true,
+        reason: 'Customer is ordering food items',
+        orderStatus,
+        suggestedAction: 'process_order_items',
       };
     }
 

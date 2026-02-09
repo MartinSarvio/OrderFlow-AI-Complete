@@ -150,6 +150,13 @@ export async function runDebuggingCycle(): Promise<{
   }
 
   // 3. Send report to Claude for analysis and potential auto-fix
+  if (!config.anthropicApiKey) {
+    console.warn('[DebuggingAgent] ANTHROPIC_API_KEY not set — skipping Claude analysis, returning raw diagnostics only');
+    lastReport = report;
+    auditLogger.logAgentStop({ overallStatus: report.overallStatus, note: 'no_api_key_skip_analysis' });
+    return { report, sessionId };
+  }
+
   const prompt = sessionId
     ? `Ny diagnostik-cyklus. Her er den seneste rapport:\n\n${formattedReport}\n\nTidligere status: ${lastReport?.overallStatus || 'unknown'}\n\nAnalyser ændringer siden sidst og foreslå handlinger.`
     : `Første diagnostik-cyklus. Her er rapporten:\n\n${formattedReport}\n\nAnalyser status og giv din vurdering.`;

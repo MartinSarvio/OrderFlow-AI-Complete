@@ -268,26 +268,72 @@ export async function processIncomingSms(sms: IncomingSMS): Promise<WorkflowResu
 
   if (!orderId) {
     console.log(`[WorkflowAgent] No active order found for ${sms.from}`);
-    // Start bestilling-samtale menneskeligt: spørg levering/afhentning (eller kun afhentning hvis levering er slået fra).
-    if (parsed.intent !== 'allergy' && parsed.intent !== 'question') {
-      steps.push('no_order_found');
-      auditLogger.logAgentStop({ result: 'no_order_start_order_flow' });
+
+    if (parsed.intent === 'delivery') {
+      steps.push('no_order_delivery_selected');
+      const reply = deliveryEnabled
+        ? (parsed.language === 'en'
+          ? `Great, delivery it is! What would you like to order from ${restaurantName}?`
+          : `Perfekt, levering! Hvad vil du gerne bestille fra ${restaurantName}?`)
+        : (parsed.language === 'en'
+          ? `Sorry, we only offer pickup at ${restaurantName} right now. What would you like to order?`
+          : `Beklager, vi tilbyder kun afhentning hos ${restaurantName} lige nu. Hvad vil du gerne bestille?`);
+      auditLogger.logAgentStop({ result: 'delivery_selected_no_order' });
       return {
-        messageId: sms.messageId,
-        intent: parsed.intent,
-        confidence: parsed.confidence,
-        action: 'clarify',
-        smsReply: buildInitialOrderReply(parsed.language, restaurantName, deliveryEnabled),
-        statusUpdate: null,
-        escalation: null,
-        orderId: null,
-        threadId,
+        messageId: sms.messageId, intent: 'delivery', confidence: parsed.confidence,
+        action: 'clarify', smsReply: reply, statusUpdate: null, escalation: null,
+        orderId: null, threadId,
         processing: { durationMs: Math.round(performance.now() - startTime), steps },
       };
     }
 
-    if (parsed.intent === 'question') {
-      steps.push('no_order_continue_ai');
+    if (parsed.intent === 'pickup') {
+      steps.push('no_order_pickup_selected');
+      const reply = parsed.language === 'en'
+        ? `Great, pickup it is! What would you like to order from ${restaurantName}?`
+        : `Perfekt, afhentning! Hvad vil du gerne bestille fra ${restaurantName}?`;
+      auditLogger.logAgentStop({ result: 'pickup_selected_no_order' });
+      return {
+        messageId: sms.messageId, intent: 'pickup', confidence: parsed.confidence,
+        action: 'clarify', smsReply: reply, statusUpdate: null, escalation: null,
+        orderId: null, threadId,
+        processing: { durationMs: Math.round(performance.now() - startTime), steps },
+      };
+    }
+
+    if (parsed.intent === 'order') {
+      steps.push('no_order_items_detected');
+      const reply = deliveryEnabled
+        ? (parsed.language === 'en'
+          ? `Got it! Before we continue with your order, do you want delivery or pickup?`
+          : `Modtaget! Inden vi fortsætter med din bestilling, ønsker du levering eller afhentning?`)
+        : (parsed.language === 'en'
+          ? `Got it! We offer pickup only right now. We'll add that to your order. Anything else?`
+          : `Modtaget! Vi tilbyder kun afhentning lige nu. Vi tilføjer det til din bestilling. Andet?`);
+      auditLogger.logAgentStop({ result: 'order_items_no_order' });
+      return {
+        messageId: sms.messageId, intent: 'order', confidence: parsed.confidence,
+        action: 'clarify', smsReply: reply, statusUpdate: null, escalation: null,
+        orderId: null, threadId,
+        processing: { durationMs: Math.round(performance.now() - startTime), steps },
+      };
+    }
+
+    // For allergy and question — fall through to dedicated handlers below
+    if (parsed.intent === 'allergy' || parsed.intent === 'question') {
+      if (parsed.intent === 'question') {
+        steps.push('no_order_continue_ai');
+      }
+    } else {
+      // confirm, cancel, reschedule, unknown — ask what they want to order
+      steps.push('no_order_found');
+      auditLogger.logAgentStop({ result: 'no_order_start_order_flow' });
+      return {
+        messageId: sms.messageId, intent: parsed.intent, confidence: parsed.confidence,
+        action: 'clarify', smsReply: buildInitialOrderReply(parsed.language, restaurantName, deliveryEnabled),
+        statusUpdate: null, escalation: null, orderId: null, threadId,
+        processing: { durationMs: Math.round(performance.now() - startTime), steps },
+      };
     }
   }
 
@@ -534,6 +580,34 @@ Hvis kunden spørger til bestilling og der ikke er aktiv ordre, spørg levering/
             : 'Vi har modtaget dit spørgsmål og vender tilbage snarest.';
         }
       }
+      break;
+    }
+
+    case 'delivery': {
+      action = 'answer';
+      smsReply = deliveryEnabled
+        ? (parsed.language === 'en'
+          ? 'Your order is set for delivery. We will keep you updated!'
+          : 'Din ordre er sat til levering. Vi holder dig opdateret!')
+        : (parsed.language === 'en'
+          ? 'Sorry, we only offer pickup right now.'
+          : 'Beklager, vi tilbyder kun afhentning lige nu.');
+      break;
+    }
+
+    case 'pickup': {
+      action = 'answer';
+      smsReply = parsed.language === 'en'
+        ? 'Your order is set for pickup. We will let you know when it is ready!'
+        : 'Din ordre er sat til afhentning. Vi giver dig besked når den er klar!';
+      break;
+    }
+
+    case 'order': {
+      action = 'clarify';
+      smsReply = parsed.language === 'en'
+        ? 'You already have an active order. Would you like to add items or start a new order?'
+        : 'Du har allerede en aktiv ordre. Vil du tilføje varer eller starte en ny bestilling?';
       break;
     }
 
