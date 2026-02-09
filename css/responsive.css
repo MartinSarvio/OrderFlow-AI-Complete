@@ -400,11 +400,13 @@ textarea {
   }
 
   /* Toasts */
-  .toasts,
-  .toast-container {
+  .toasts {
     left: 16px !important;
     right: 16px !important;
+    top: auto !important;
     bottom: 16px !important;
+    width: auto !important;
+    max-width: none !important;
   }
 
   /* Auth/Login */

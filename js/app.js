@@ -22833,36 +22833,124 @@ function exportCustomerAktivitetslogs(format) {
 // END CUSTOMER-SPECIFIC LOGS SYSTEM
 // ========================================
 
-function toast(msg, type = 'info') {
-  // Remove existing toast
-  const existing = document.querySelector('.toast-notification');
-  if (existing) existing.remove();
-  
-  const toast = document.createElement('div');
-  toast.className = 'toast-notification';
-  
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #D5DDEC;
-    color: #1a1a2e;
-    padding: 14px 20px;
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 10000;
-    animation: fadeIn 0.3s ease;
-    font-size: 14px;
-    font-weight: 500;
-  `;
-  
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.animation = 'fadeIn 0.3s ease reverse';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+function toast(msg, type = 'info', options = {}) {
+  const container = document.getElementById('toasts') || document.body;
+  const isSave = /gemt|saved|gemmer|saving/i.test(msg);
+
+  // Simple toast for save operations
+  if (isSave) {
+    const existing = container.querySelector('.toast-simple');
+    if (existing) existing.remove();
+    const el = document.createElement('div');
+    el.className = 'toast-simple';
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('toast-removing');
+      setTimeout(() => el.remove(), 300);
+    }, 3000);
+    return;
+  }
+
+  // Icon SVGs per type
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.5" fill="#fff"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.5" r="0.5" fill="#fff"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="0.5" fill="#fff"/><line x1="12" y1="11" x2="12" y2="17"/></svg>'
+  };
+
+  const typeClass = ['success','error','warning','info'].includes(type) ? type : 'info';
+  const duration = options.duration || 10;
+  const hasBody = !!(options.body || options.action);
+
+  const card = document.createElement('div');
+  card.className = 'toast-card toast-card--' + typeClass;
+
+  // Header
+  let html = '<div class="toast-header">';
+  html += '<div class="toast-icon">' + (icons[typeClass] || icons.info) + '</div>';
+  html += '<div class="toast-title">' + escapeHtml(msg) + '</div>';
+  html += '<div class="toast-controls">';
+  if (hasBody) html += '<button class="toast-toggle-btn" aria-label="Udvid"><svg class="toast-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>';
+  html += '<button class="toast-close-btn" aria-label="Luk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+  html += '</div></div>';
+
+  // Body (collapsed by default)
+  if (hasBody) {
+    html += '<div class="toast-body">';
+    if (options.body) html += '<div>' + escapeHtml(options.body) + '</div>';
+    if (options.action) html += '<div class="toast-action"><button class="toast-action-btn">' + escapeHtml(options.action.label || 'OK') + '</button></div>';
+    html += '</div>';
+  }
+
+  // Progress bar
+  html += '<div class="toast-progress">';
+  html += '<div class="toast-progress-bar"><div class="toast-progress-track" style="animation-duration:' + duration + 's"></div></div>';
+  html += '<div class="toast-timer-text">Lukker om <span class="toast-countdown">' + duration + '</span>s. <span class="toast-stop">Klik stop.</span></div>';
+  html += '</div>';
+
+  card.innerHTML = html;
+  container.appendChild(card);
+
+  // Countdown state
+  let remaining = duration;
+  let paused = false;
+  const countdownEl = card.querySelector('.toast-countdown');
+  const trackEl = card.querySelector('.toast-progress-track');
+
+  const countdownInterval = setInterval(() => {
+    if (paused) return;
+    remaining--;
+    if (countdownEl) countdownEl.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(countdownInterval);
+      removeToast();
+    }
+  }, 1000);
+
+  function removeToast() {
+    clearInterval(countdownInterval);
+    card.classList.add('toast-removing');
+    setTimeout(() => card.remove(), 300);
+  }
+
+  // Close button
+  card.querySelector('.toast-close-btn').addEventListener('click', removeToast);
+
+  // Toggle expand/collapse
+  if (hasBody) {
+    const toggleBtn = card.querySelector('.toast-toggle-btn');
+    const chevron = card.querySelector('.toast-chevron');
+    const body = card.querySelector('.toast-body');
+    toggleBtn.addEventListener('click', () => {
+      const isExpanded = body.classList.toggle('expanded');
+      chevron.classList.toggle('expanded', isExpanded);
+    });
+  }
+
+  // Stop timer
+  card.querySelector('.toast-stop').addEventListener('click', () => {
+    paused = true;
+    trackEl.classList.add('paused');
+    card.querySelector('.toast-timer-text').innerHTML = 'Timer stoppet.';
+  });
+
+  // Action button
+  if (options.action && options.action.onClick) {
+    const actionBtn = card.querySelector('.toast-action-btn');
+    if (actionBtn) actionBtn.addEventListener('click', () => {
+      options.action.onClick();
+      removeToast();
+    });
+  }
+
+  // Helper: escape HTML
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
 }
 
 // ========================================
