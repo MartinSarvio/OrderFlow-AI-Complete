@@ -28479,11 +28479,11 @@ function getAppPreviewBasePath() {
 
 function getAppPreviewUrl() {
   if (window.APP_PREVIEW_URL) return window.APP_PREVIEW_URL;
-  const basePath = getAppPreviewBasePath();
-  if (basePath) {
-    return basePath + 'demos/pwa-preview.html';
+  const origin = window.location.origin;
+  if (origin && origin !== 'null') {
+    return origin + '/demos/pwa-preview.html';
   }
-  return 'https://flow-lime-rho.vercel.app/pwa-preview.html';
+  return 'https://flow-lime-rho.vercel.app/demos/pwa-preview.html';
 }
 
 function ensureQRCodeLibrary() {
@@ -30816,7 +30816,7 @@ function loadWebBuilderTemplate(templateId) {
 
   // Update preview (with small delay to allow iframe to load)
   setTimeout(() => {
-    updateWebBuilderPreview();
+    updateWebBuilderPreview({ skipUnsaved: true });
   }, 100);
 
   toast('Skabelon indlæst: ' + template.branding.name, 'success');
@@ -30971,7 +30971,7 @@ function showWebBuilderPage(section) {
 
   // Update preview after page switch (give iframe time to load)
   setTimeout(() => {
-    updateWebBuilderPreview();
+    updateWebBuilderPreview({ skipUnsaved: true });
   }, 300);
 }
 
@@ -38626,7 +38626,7 @@ function sendScrollToSection(sectionId) {
 }
 
 // Update Web Builder preview
-function updateWebBuilderPreview() {
+function updateWebBuilderPreview(options) {
   const config = collectWebBuilderFormData();
   sendConfigToWebBuilderPreview(config);
 
@@ -38634,8 +38634,11 @@ function updateWebBuilderPreview() {
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(config));
 
   // Mark unsaved changes (no auto-save — user must click Gem)
-  webBuilderHasChanges = true;
-  updateWebBuilderSaveStatus('unsaved');
+  // Skip when called from page navigation or template loading
+  if (!options || !options.skipUnsaved) {
+    webBuilderHasChanges = true;
+    updateWebBuilderSaveStatus('unsaved');
+  }
 
   // Also update inline preview elements with the restaurant name
   const nameValue = document.getElementById('wb-name')?.value || 'Pizzeria Roma';
