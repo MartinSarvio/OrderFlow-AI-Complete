@@ -79,7 +79,7 @@
 | `page-wb-levering` | Levering |
 | `page-wb-funktioner` | Funktioner |
 | `page-wb-social` | Social media |
-| `page-template-editor` | Template Editor (tilg\u00e5s via FLOW CMS \u2192 Skabeloner) |
+| `page-template-editor` | Template Editor (tilgås via FLOW CMS \u2192 Skabeloner) |
 
 ### Analytics
 | Side ID | Beskrivelse |
@@ -236,10 +236,10 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 | `templates/skabelon-2/checkout.html` | Feane | 3-trins checkout med Stripe |
 | `templates/skabelon-3/checkout.html` | Pizza | 3-trins checkout med Stripe |
 
-### F\u00e6lles Template JS
+### Fælles Template JS
 | Fil | Beskrivelse |
 |-----|-------------|
-| `js/template-auth.js` | Kundevendt auth (login, signup, g\u00e6stekøb) |
+| `js/template-auth.js` | Kundevendt auth (login, signup, gæstekøb) |
 | `js/order-api.js` | Ordre-API (Supabase + Stripe integration) |
 | `templates/skabelon-2/js/cart.js` | Feane kurvsystem |
 | `templates/skabelon-3/js/cart.js` | Pizza kurvsystem |
@@ -288,11 +288,11 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 - Restaurant-save persisterer nu til Supabase (inkl. settings.sms_number for tenant resolution)
 
 ### v3.48.0 (2026-02-07)
-- Ny `page-vaerktoejer` side under Integrationer med 5 agent-kort (Instagram, Facebook, Restaurant, H\u00e5ndv\u00e6rker, SEO)
-- PROGRAMMER flyout konsolideret: 4 items \u2192 1 "V\u00e6rkt\u00f8jer"
-- Agent Status Dashboard med version-tracking og opdateringss\u00f8gning
-- Hardware-tab (Enheder) med POS Terminal, Bon-printer, KDS Sk\u00e6rm placeholders
-- F\u00e6lles v\u00e6rkt\u00f8jer: API-n\u00f8gler, Webhooks, Statistik-oversigt
+- Ny `page-vaerktoejer` side under Integrationer med 5 agent-kort (Instagram, Facebook, Restaurant, Håndværker, SEO)
+- PROGRAMMER flyout konsolideret: 4 items \u2192 1 "Værktøjer"
+- Agent Status Dashboard med version-tracking og opdateringssøgning
+- Hardware-tab (Enheder) med POS Terminal, Bon-printer, KDS Skærm placeholders
+- Fælles værktøjer: API-nøgler, Webhooks, Statistik-oversigt
 
 ### v3.44.0 (2026-02-07)
 - SEO Analyse Pro v2.0.0 integreret i SPA med sidebar
@@ -305,11 +305,11 @@ Alle skabeloner modtager dynamisk data via `postMessage` fra hovedapplikationen.
 - Opdateret `page-search-engine` med v2.0 som primær, "Start Analyse" knapper
 
 ### v3.41.0 (2026-02-07)
-- Komplet k\u00f8bsflow i alle 3 webskabeloner med Stripe integration
+- Komplet købsflow i alle 3 webskabeloner med Stripe integration
 - Nye filer: `order-api.js`, `template-auth.js` (kundevendt), cart.js per skabelon
 - Checkout-sider for skabelon-2 (Feane) og skabelon-3 (Pizza)
 - Skabelon-1 (React): Stripe Payment Element + Supabase ordrer
-- PWA/mobilapp: Checkout-scripts tilf\u00f8jet
+- PWA/mobilapp: Checkout-scripts tilføjet
 - Supabase Edge Function: `create-payment-intent` (Stripe PaymentIntent)
 - Ordrer fra templates synkroniseres til admin via Supabase Realtime
 - Template Editor flyttet til FLOW CMS \u2192 Skabeloner (fjernet fra Web Builder sidebar)

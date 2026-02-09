@@ -51,7 +51,7 @@
       }
       this.save();
       this.render();
-      this.showToast(item.name + ' tilf\u00f8jet til kurv');
+      this.showToast(item.name + ' tilføjet til kurv');
     },
 
     remove(index) {
@@ -97,7 +97,7 @@
           <div id="pizza-cart-items" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
           <div id="pizza-cart-footer" style="padding:16px 20px;border-top:2px solid #eee">
             <div id="pizza-cart-totals"></div>
-            <a href="checkout.html" id="pizza-checkout-btn" class="btn btn-primary btn-block" style="background:#000;border-color:#000;padding:12px;font-weight:700;border-radius:8px;margin-top:12px;font-size:15px">G\u00e5 til kassen</a>
+            <a href="checkout.html" id="pizza-checkout-btn" class="btn btn-primary btn-block" style="background:#000;border-color:#000;padding:12px;font-weight:700;border-radius:8px;margin-top:12px;font-size:15px">Gå til kassen</a>
           </div>
         </div>
       `);

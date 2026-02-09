@@ -21,7 +21,7 @@ const getFlowUser = () => {
     const data = FlowAuth.getCustomerData();
     if (data) return { name: data.name, email: data.email, phone: data.phone, loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
   }
-  return { name: 'G\u00e6st', email: '', phone: '', loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
+  return { name: 'Gæst', email: '', phone: '', loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
 };
 import type { MenuItem } from '@/types';
 import { Toaster } from '@/components/ui/sonner';

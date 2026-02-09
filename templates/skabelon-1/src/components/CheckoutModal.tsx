@@ -567,7 +567,7 @@ export function CheckoutModal({
                   />
                   {!stripeReady && (
                     <p className="text-sm text-center" style={{ color: branding.colors.textMuted }}>
-                      Indl\u00e6ser betalingsformular...
+                      Indlæser betalingsformular...
                     </p>
                   )}
                 </div>

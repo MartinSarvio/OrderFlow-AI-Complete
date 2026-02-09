@@ -425,7 +425,7 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
     steps.push('validation_failed');
     const failureReply = parsed.language === 'en'
       ? `Sorry, we can't process that request. ${validation.reason}`
-      : `Beklager, vi kan ikke behandle den foresp\u00f8rgsel. ${validation.reason}`;
+      : `Beklager, vi kan ikke behandle den forespørgsel. ${validation.reason}`;
 
     return {
       messageId: sms.messageId,
@@ -452,7 +452,7 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
       statusUpdate = 'confirmed';
       smsReply = parsed.language === 'en'
         ? 'Thank you! Your order is confirmed \u2705'
-        : 'Tak! Din ordre er bekr\u00e6ftet \u2705';
+        : 'Tak! Din ordre er bekræftet \u2705';
 
       if (orderId) {
         await updateOrderStatus({
@@ -489,7 +489,7 @@ Analyser beskeden og bestem den bedste handling. Svar med JSON.`;
       statusUpdate = 'rescheduled';
       smsReply = parsed.language === 'en'
         ? `Time changed to ${newTime} \u2705`
-        : `Tidspunkt \u00e6ndret til ${newTime} \u2705`;
+        : `Tidspunkt ændret til ${newTime} \u2705`;
 
       if (orderId) {
         await updateOrderStatus({

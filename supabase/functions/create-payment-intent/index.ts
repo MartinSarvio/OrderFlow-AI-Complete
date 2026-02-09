@@ -24,7 +24,7 @@ serve(async (req) => {
     // Validate required fields
     if (!amount || amount < 100) {
       return new Response(
-        JSON.stringify({ error: 'Amount must be at least 100 (1.00 DKK in \u00f8re)' }),
+        JSON.stringify({ error: 'Amount must be at least 100 (1.00 DKK in øre)' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

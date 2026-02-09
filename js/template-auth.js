@@ -193,7 +193,7 @@
     if (currentUser) {
       return currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'Kunde';
     }
-    if (guestData) return guestData.name || 'G\u00e6st';
+    if (guestData) return guestData.name || 'Gæst';
     return null;
   }
 

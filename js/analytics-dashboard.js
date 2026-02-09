@@ -152,7 +152,7 @@ const AnalyticsDashboard = {
             { product_id: 'p5', product_name: 'Tiramisu', product_category: 'Dessert', units_sold: 24, revenue_dkk: 1440, menu_views: 112 },
             { product_id: 'p6', product_name: 'Cola', product_category: 'Drikkevarer', units_sold: 56, revenue_dkk: 1680, menu_views: 89 },
             { product_id: 'p7', product_name: 'Caesar Salat', product_category: 'Salat', units_sold: 18, revenue_dkk: 1620, menu_views: 94 },
-            { product_id: 'p8', product_name: 'Pommes Frites', product_category: 'Tilbeh\u00f8r', units_sold: 42, revenue_dkk: 1890, menu_views: 67 }
+            { product_id: 'p8', product_name: 'Pommes Frites', product_category: 'Tilbehør', units_sold: 42, revenue_dkk: 1890, menu_views: 67 }
         ];
         return products;
     },

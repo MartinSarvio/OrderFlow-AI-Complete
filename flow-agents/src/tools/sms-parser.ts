@@ -23,7 +23,7 @@ export interface OrderValidation {
 
 // ── Language detection patterns ──────────────────────────────
 
-const DANISH_MARKERS = /\b(ja|nej|tak|hej|goddag|venligst|bestilling|allergi|n\u00f8dder|gluten|laktose|hvad|hvordan|hvorn\u00e5r|hvor|og|er|det|en|til|fra|med|ikke|kan|vil|skal|har|f\u00e5r|g\u00f8r|\u00e6ndre|tid|senere|annuller|bekr\u00e6ft|godkend|afbestil|fortryd)\b/i;
+const DANISH_MARKERS = /\b(ja|nej|tak|hej|goddag|venligst|bestilling|allergi|nødder|gluten|laktose|hvad|hvordan|hvornår|hvor|og|er|det|en|til|fra|med|ikke|kan|vil|skal|har|får|gør|ændre|tid|senere|annuller|bekræft|godkend|afbestil|fortryd)\b/i;
 const ENGLISH_MARKERS = /\b(yes|no|please|hello|order|allergy|nuts|gluten|lactose|what|how|when|where|and|is|the|a|to|from|with|not|can|will|shall|have|get|do|change|time|later|cancel|confirm|accept)\b/i;
 
 // ── Time extraction patterns ─────────────────────────────────
@@ -41,7 +41,7 @@ const TIME_PATTERNS = [
 const DATE_PATTERNS = [
   /i\s*(morgen|overmorgen)/i,                                    // i morgen, i overmorgen
   /(tomorrow|day after tomorrow)/i,                              // tomorrow
-  /(mandag|tirsdag|onsdag|torsdag|fredag|l\u00f8rdag|s\u00f8ndag)/i,  // weekdays Danish
+  /(mandag|tirsdag|onsdag|torsdag|fredag|lørdag|søndag)/i,  // weekdays Danish
   /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i, // weekdays English
   /(\d{1,2})[./-](\d{1,2})/,                                    // 15/3, 15.3, 15-3
 ];
@@ -67,7 +67,7 @@ function detectLanguage(message: string): 'da' | 'en' | 'unknown' {
   if (danishMatches > englishMatches) return 'da';
   if (englishMatches > danishMatches) return 'en';
   // Check for Danish-specific characters
-  if (/[\u00e6\u00f8\u00e5\u00c6\u00d8\u00c5]/.test(message)) return 'da';
+  if (/[æøåÆØÅ]/.test(message)) return 'da';
   return 'unknown';
 }
 
@@ -255,7 +255,7 @@ export function validateAgainstOrder(
   orderData?: Record<string, unknown>
 ): OrderValidation {
   // Check if order is already completed
-  const completedStatuses = ['completed', 'delivered', 'f\u00e6rdig', 'leveret', 'afsluttet'];
+  const completedStatuses = ['completed', 'delivered', 'færdig', 'leveret', 'afsluttet'];
   if (completedStatuses.includes(orderStatus.toLowerCase())) {
     return {
       valid: false,

@@ -86,7 +86,7 @@ export const ENDPOINTS = [
 // SMS intent patterns (Danish + English)
 export const SMS_PATTERNS = {
   confirm: {
-    patterns: [/^(ja|yes|ok|bekr\u00e6ft|accept|godkend|det er fint|sure|yep|jep|selvf\u00f8lgelig)/i],
+    patterns: [/^(ja|yes|ok|bekræft|accept|godkend|det er fint|sure|yep|jep|selvfølgelig)/i],
     confidence: 0.95,
   },
   cancel: {
@@ -94,15 +94,15 @@ export const SMS_PATTERNS = {
     confidence: 0.95,
   },
   reschedule: {
-    patterns: [/(\u00e6ndre tid|skubbe|senere|different time|flytte|uds\u00e6tte|rykke)/i],
+    patterns: [/(ændre tid|skubbe|senere|different time|flytte|udsætte|rykke)/i],
     confidence: 0.85,
   },
   question: {
-    patterns: [/(hvad|what|hvordan|how|kan|can|hvorn\u00e5r|when|hvor|where|\?$)/i],
+    patterns: [/(hvad|what|hvordan|how|kan|can|hvornår|when|hvor|where|\?$)/i],
     confidence: 0.8,
   },
   allergy: {
-    patterns: [/(allergi|allergy|n\u00f8dder|gluten|laktose|lactose|shellfish|peanut)/i],
+    patterns: [/(allergi|allergy|nødder|gluten|laktose|lactose|shellfish|peanut)/i],
     confidence: 0.99,
   },
 } as const;

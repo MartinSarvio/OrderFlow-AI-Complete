@@ -59,7 +59,7 @@
 
       this.save();
       this.render();
-      this.showToast(item.name + ' tilf\u00f8jet til kurv');
+      this.showToast(item.name + ' tilføjet til kurv');
     },
 
     remove(index) {
@@ -132,7 +132,7 @@
           <div id="feane-cart-footer" style="padding:16px 20px;border-top:2px solid #eee;background:#fff">
             <div id="feane-cart-totals"></div>
             <a href="checkout.html" id="feane-checkout-btn" class="btn btn-block" style="background:#1a1a2e;color:#fff;padding:12px;font-weight:600;border-radius:8px;margin-top:12px;text-align:center;font-size:15px;text-decoration:none;display:block">
-              G\u00e5 til kassen
+              Gå til kassen
             </a>
           </div>
         </div>

@@ -9,17 +9,17 @@
   // Language texts
   const LANG_TEXTS = {
     da: {
-      description: 'Vi bruger cookies og lignende teknologier til at forbedre din oplevelse, analysere trafik og personligg\u00f8re indhold. Du kan tilpasse dine pr\u00e6ferencer nedenfor.',
+      description: 'Vi bruger cookies og lignende teknologier til at forbedre din oplevelse, analysere trafik og personliggøre indhold. Du kan tilpasse dine præferencer nedenfor.',
       btnAccept: 'Accepter alle',
-      btnDeny: 'Kun n\u00f8dvendige',
+      btnDeny: 'Kun nødvendige',
       btnSave: 'Gem mine valg',
       closeLabel: 'Luk',
       cookiePolicy: 'Cookie-politik',
       privacyPolicy: 'Privatlivspolitik',
       categories: {
-        necessary: { name: 'N\u00f8dvendige', description: 'Disse cookies er n\u00f8dvendige for at hjemmesiden kan fungere korrekt.' },
-        functional: { name: 'Funktionelle', description: 'Disse cookies g\u00f8r det muligt at huske dine pr\u00e6ferencer.' },
-        analytics: { name: 'Statistik', description: 'Disse cookies hj\u00e6lper os med at forst\u00e5, hvordan bes\u00f8gende bruger vores hjemmeside.' },
+        necessary: { name: 'Nødvendige', description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt.' },
+        functional: { name: 'Funktionelle', description: 'Disse cookies gør det muligt at huske dine præferencer.' },
+        analytics: { name: 'Statistik', description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside.' },
         marketing: { name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.' }
       }
     },
@@ -47,9 +47,9 @@
 
   // Default categories (fallback if none saved)
   const DEFAULT_CATEGORIES = [
-    { id: 'necessary', name: 'N\u00f8dvendige', description: 'Disse cookies er n\u00f8dvendige for at hjemmesiden kan fungere korrekt.', required: true },
-    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies g\u00f8r det muligt at huske dine pr\u00e6ferencer.', required: false },
-    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hj\u00e6lper os med at forst\u00e5, hvordan bes\u00f8gende bruger vores hjemmeside.', required: false },
+    { id: 'necessary', name: 'Nødvendige', description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt.', required: true },
+    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies gør det muligt at huske dine præferencer.', required: false },
+    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside.', required: false },
     { id: 'marketing', name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.', required: false }
   ];
 

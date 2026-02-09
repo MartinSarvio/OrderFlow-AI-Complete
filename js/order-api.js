@@ -100,7 +100,7 @@
         id: item.id || item.product_id,
         name: item.name,
         quantity: item.quantity || 1,
-        unit_price: Math.round((item.price || item.unit_price) * 100), // DKK to \u00f8re
+        unit_price: Math.round((item.price || item.unit_price) * 100), // DKK to øre
         modifiers: item.options || item.modifiers || [],
         notes: item.notes || ''
       }));
