@@ -27785,6 +27785,7 @@ function showAppBuilderPage(page) {
   if (pageEl) {
     pageEl.classList.add('active');
   }
+  showPageIdBadge('appbuilder-' + page);
 
   // Clear all active states
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -30560,6 +30561,7 @@ function showWebBuilderPage(section) {
 
   const pageId = pageMap[section] || 'wb-branding';
   showPage(pageId);
+  showPageIdBadge('webbuilder-' + section);
 
   // Update sidebar active state
   document.querySelectorAll('#nav-webbuilder-section .nav-btn').forEach(btn => {
@@ -34094,6 +34096,7 @@ function showFlowCMSPage(tab) {
   if (activeItem) activeItem.classList.add('active');
 
   setTimeout(() => switchFlowCMSTab(tab), 50);
+  showPageIdBadge('flow-cms > ' + tab);
 }
 
 // Switch Flow CMS tab
@@ -43818,8 +43821,28 @@ window.renderAgentStatistics = renderAgentStatistics;
 window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
 window.checkAgentUpdate = checkAgentUpdate;
+window.updateAgent = updateAgent;
+window.saveQRToHistory = saveQRToHistory;
+window.loadQRHistory = loadQRHistory;
+window.removeQRHistoryItem = removeQRHistoryItem;
 
 // ============================================
+// Helper: Find API key from Settings or Opret API Nøgle
+function getApiKeyFromAnySource(keyName, searchTerms) {
+  var directKey = localStorage.getItem(keyName);
+  if (directKey) return directKey;
+  var keys = JSON.parse(localStorage.getItem('flow_api_keys') || '[]');
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    if (!k.fullKey || k.active === false) continue;
+    var haystack = ((k.name || '') + ' ' + (k.service || '')).toLowerCase();
+    for (var j = 0; j < searchTerms.length; j++) {
+      if (haystack.indexOf(searchTerms[j].toLowerCase()) !== -1) return k.fullKey;
+    }
+  }
+  return null;
+}
+
 // AI MEDIER - Image & Video Generation
 // ============================================
 
@@ -43856,8 +43879,8 @@ async function generateAiImage() {
   var prompt = document.getElementById('ai-image-prompt')?.value.trim();
   if (!prompt) { toast('Indtast en beskrivelse af billedet', 'warning'); return; }
 
-  var apiKey = localStorage.getItem('openrouter_key');
-  if (!apiKey) { toast('Konfigurer OpenRouter API n\u00f8gle under Indstillinger > API', 'warning'); return; }
+  var apiKey = getApiKeyFromAnySource('openrouter_key', ['openrouter', 'nano banana', 'billedgenerering', 'image']);
+  if (!apiKey) { toast('Tilf\u00f8j en OpenRouter API n\u00f8gle under Integrationer eller Indstillinger > API', 'warning'); return; }
 
   var style = document.getElementById('ai-image-style')?.value || 'photorealistic';
   var btn = document.getElementById('ai-image-generate-btn');
@@ -43981,8 +44004,8 @@ async function generateAiVideo() {
   var prompt = document.getElementById('ai-video-prompt')?.value.trim();
   if (!prompt) { toast('Indtast en beskrivelse af videoen', 'warning'); return; }
 
-  var apiKey = localStorage.getItem('minimax_key');
-  if (!apiKey) { toast('Konfigurer MiniMax API n\u00f8gle under Indstillinger > API', 'warning'); return; }
+  var apiKey = getApiKeyFromAnySource('minimax_key', ['minimax', 'video', 'videogenerering']);
+  if (!apiKey) { toast('Tilf\u00f8j en MiniMax API n\u00f8gle under Integrationer eller Indstillinger > API', 'warning'); return; }
 
   var btn = document.getElementById('ai-video-generate-btn');
   var progressDiv = document.getElementById('ai-video-progress');
