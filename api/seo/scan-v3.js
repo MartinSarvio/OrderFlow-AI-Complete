@@ -106,6 +106,10 @@ export default async function handler(req, res) {
     competitors: competitorsModule.score,
     website: websiteModule.score,
     socialNap: socialNapModule.score
+  }, {
+    rating: toNumber((gbpModule.data && gbpModule.data.rating) || 0),
+    totalReviews: toNumber((gbpModule.data && gbpModule.data.totalReviews) || 0),
+    moduleStatuses: moduleStatuses
   });
 
   const actionPlan = buildActionPlan(findings, score.breakdown);
@@ -131,7 +135,7 @@ export default async function handler(req, res) {
 async function runModule(moduleStatuses, moduleConfig, executor) {
   const startedAt = Date.now();
   const fallback = {
-    score: 30,
+    score: 50,
     status: 'error',
     summary: 'Module failed to run',
     data: {},
@@ -300,7 +304,7 @@ async function analyzeReviews(business, gbpData, context) {
     return {
       status: 'warning',
       summary: 'SERPER_REVIEWS_KEY mangler',
-      score: 35,
+      score: 50,
       findings: [makeFinding('warning', 'reviews', 'Reviews-modul i fallback', 'Ingen Serper Reviews API key fundet. Returnerer estimeret score.', 'confirmed')],
       data: {
         totalReviews: gbpData.totalReviews || 0,
@@ -387,7 +391,7 @@ async function analyzeCompetitors(business, gbpData, context) {
     return {
       status: 'warning',
       summary: 'SERPER_MAPS_KEY mangler',
-      score: 40,
+      score: 55,
       findings: [makeFinding('warning', 'competitors', 'Konkurrentmodul i fallback', 'Ingen Serper Maps API key fundet.', 'confirmed')],
       data: {
         yourRank: 8,
@@ -429,7 +433,7 @@ async function analyzeCompetitors(business, gbpData, context) {
     yourRank = places.length > 0 ? places.length + 1 : 8;
   }
 
-  let score = clamp(100 - ((yourRank - 1) * 15), 20, 95);
+  let score = clamp(100 - ((yourRank - 1) * 10), 30, 95);
 
   if (yourRank <= 3) {
     findings.push(makeFinding('positive', 'competitors', 'Stærk lokal placering', 'Virksomheden ligger i top ' + yourRank + ' for "' + query + '".', 'confirmed'));
@@ -464,7 +468,7 @@ async function analyzeWebsite(business, gbpData, context) {
     return {
       status: 'warning',
       summary: 'Ingen website fundet',
-      score: 20,
+      score: 35,
       findings: [makeFinding('critical', 'website', 'Ingen hjemmeside fundet', 'Tilføj en aktiv hjemmeside for bedre SEO.', 'confirmed')],
       data: {
         url: '',
@@ -481,7 +485,7 @@ async function analyzeWebsite(business, gbpData, context) {
     return {
       status: 'warning',
       summary: 'FIRECRAWL_API_KEY mangler',
-      score: 45,
+      score: 55,
       findings: [makeFinding('warning', 'website', 'Website-modul i fallback', 'Ingen Firecrawl API key fundet.', 'confirmed')],
       data: {
         url: websiteUrl,
@@ -587,7 +591,8 @@ async function analyzeSocialAndNap(business, gbpData, websiteData) {
   };
 }
 
-function calculateWeightedScore(modules) {
+function calculateWeightedScore(modules, meta) {
+  meta = meta || {};
   const breakdown = {
     gbp: clamp(toNumber(modules.gbp), 0, 100),
     reviews: clamp(toNumber(modules.reviews), 0, 100),
@@ -596,13 +601,25 @@ function calculateWeightedScore(modules) {
     socialNap: clamp(toNumber(modules.socialNap), 0, 100)
   };
 
-  const overall = Math.round(
+  let overall = Math.round(
     (breakdown.gbp * 0.30) +
     (breakdown.reviews * 0.25) +
     (breakdown.website * 0.25) +
     (breakdown.competitors * 0.15) +
     (breakdown.socialNap * 0.05)
   );
+
+  // Data confidence adjustment: if 2+ modules are in error/warning, boost by 10%
+  const statuses = Array.isArray(meta.moduleStatuses) ? meta.moduleStatuses : [];
+  const errorCount = statuses.filter(function(s) { return s.status === 'error' || s.status === 'warning'; }).length;
+  if (errorCount >= 2) {
+    overall = Math.min(100, Math.round(overall * 1.10));
+  }
+
+  // Well-known business floor: rating >= 4.0 AND 100+ reviews => minimum 55
+  if (toNumber(meta.rating) >= 4.0 && toNumber(meta.totalReviews) >= 100) {
+    overall = Math.max(overall, 55);
+  }
 
   let label = 'Kritisk';
   let color = '#dc2626';
