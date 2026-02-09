@@ -4019,6 +4019,10 @@ document.addEventListener('DOMContentLoaded', function() {
 let isNavigatingFromHistory = false;
 
 function showPage(page) {
+  // Skjul dashboard chart tooltip ved sideskift
+  var chartTooltip = document.getElementById('chartjs-tooltip');
+  if (chartTooltip) { chartTooltip.style.display = 'none'; chartTooltip.style.opacity = 0; }
+
   // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
     currentProfileRestaurantId = null;
@@ -7132,8 +7136,10 @@ function initRevenueChart() {
             // Hide if no tooltip
             if (tooltipModel.opacity === 0) {
               tooltipEl.style.opacity = 0;
+              tooltipEl.style.display = 'none';
               return;
             }
+            tooltipEl.style.display = 'block';
             
             // Set content
             if (tooltipModel.body) {
@@ -21813,7 +21819,6 @@ function formatCurrency(amount) {
 function switchSettingsTab(tab) {
   // Tab name to display title mapping
   const tabTitles = {
-    'api': 'API Adgang',
     'ailearning': 'Læring',
     'users': 'Brugerindstillinger',
     'roles': 'Roller',
@@ -24472,10 +24477,23 @@ function render2FAQrCode(otpauthUrl) {
   const container = document.getElementById('2fa-qr-container');
   if (!container) return;
   container.innerHTML = '';
-  container.style.background = '#000';
+  container.style.background = '#fff';
   container.style.borderRadius = '12px';
   container.style.padding = '16px';
-  generateBrandedQR(otpauthUrl, container, { width: 200, height: 200 });
+  // 2FA QR: ingen logo, standard sort-på-hvid for authenticator app kompatibilitet
+  if (typeof QRCodeStyling !== 'undefined') {
+    var qr = new QRCodeStyling({
+      width: 200, height: 200, data: otpauthUrl, type: 'svg',
+      dotsOptions: { color: '#000000', type: 'square' },
+      backgroundOptions: { color: '#ffffff' },
+      cornersSquareOptions: { type: 'square', color: '#000000' },
+      cornersDotOptions: { type: 'square', color: '#000000' },
+      qrOptions: { errorCorrectionLevel: 'M' }
+    });
+    qr.append(container);
+  } else {
+    generateBrandedQR(otpauthUrl, container, { width: 200, height: 200, showLogo: false });
+  }
   saveQRToHistory('2fa', otpauthUrl);
 }
 
@@ -28638,14 +28656,18 @@ function autoSaveAppBuilder() {
 function updateAppBuilderSaveStatus(status) {
   const statusEls = document.querySelectorAll('[id^="app-save-status"]');
   statusEls.forEach(el => {
-    if (status === 'saving') {
+    if (status === 'unsaved') {
+      el.textContent = '● Ugemte ændringer';
+      el.style.display = 'inline';
+      el.style.color = 'var(--warning, #f59e0b)';
+    } else if (status === 'saving') {
       el.textContent = '⏳ Gemmer...';
       el.style.display = 'inline';
-      el.style.color = 'var(--color-warning)';
+      el.style.color = 'var(--warning, #f59e0b)';
     } else if (status === 'saved') {
       el.textContent = '✓ Ændringer gemt';
       el.style.display = 'inline';
-      el.style.color = 'var(--color-success)';
+      el.style.color = 'var(--success, #22c55e)';
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
   });
@@ -28730,8 +28752,9 @@ function updateAppColor(type, color) {
   const valueEl = document.getElementById(`app-${type}-value`);
   if (valueEl) valueEl.textContent = color.toUpperCase();
 
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Save App Builder Colors
@@ -28755,8 +28778,9 @@ function updateAppInfo(field, value) {
   // Save to localStorage and sync preview immediately
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Handle App Logo Upload
@@ -28990,8 +29014,9 @@ function updateAppHours(day) {
   // Save to localStorage and sync preview immediately
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Toggle Day Closed
@@ -29021,8 +29046,9 @@ function updateAppContact(field, value) {
   // Save to localStorage and sync preview immediately
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Update App Social (Kontakt page)
@@ -29032,8 +29058,9 @@ function updateAppSocial(platform, value) {
   // Save to localStorage and sync preview immediately
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Save App Builder Contact
@@ -29050,8 +29077,9 @@ function updateAppDelivery(field, value) {
   // Save to localStorage and sync preview immediately
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveAppBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  appBuilderHasChanges = true;
+  updateAppBuilderSaveStatus('unsaved');
 }
 
 // Save App Builder Delivery
@@ -30293,7 +30321,7 @@ const webBuilderTemplates = {
   'skabelon-1': {
     templateType: 'skabelon-1',
     templatePath: 'templates/skabelon-1/',
-    previewFile: './templates/skabelon-1/dist/index.html',
+    previewFile: 'http://localhost:4173/#menu',
     branding: {
       name: 'Pizzeria Roma',
       shortName: 'Roma',
@@ -32247,8 +32275,7 @@ function autoSaveCMSChanges() {
 function markCMSChanged() {
   cmsHasChanges = true;
   updateCMSUnsavedBadge();
-  // Auto-save after 2 seconds of inactivity
-  autoSaveCMSChanges();
+  // No auto-save — user must click Gem
 }
 
 // Update unsaved badge
@@ -38132,14 +38159,18 @@ function autoSaveWebBuilder() {
 function updateWebBuilderSaveStatus(status) {
   const statusEls = document.querySelectorAll('.wb-save-status');
   statusEls.forEach(el => {
-    if (status === 'saving') {
+    if (status === 'unsaved') {
+      el.textContent = '● Ugemte ændringer';
+      el.style.display = 'inline';
+      el.style.color = 'var(--warning, #f59e0b)';
+    } else if (status === 'saving') {
       el.textContent = '⏳ Gemmer...';
-      el.style.display = 'block';
-      el.style.color = 'var(--color-warning)';
+      el.style.display = 'inline';
+      el.style.color = 'var(--warning, #f59e0b)';
     } else if (status === 'saved') {
       el.textContent = '✓ Ændringer gemt';
-      el.style.display = 'block';
-      el.style.color = 'var(--color-success)';
+      el.style.display = 'inline';
+      el.style.color = 'var(--success, #22c55e)';
       setTimeout(() => { el.style.display = 'none'; }, 3000);
     }
   });
@@ -38173,8 +38204,9 @@ function updateWebBuilderPreview() {
   // Save to localStorage immediately (for preview sync)
   localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(config));
 
-  // Debounced auto-save (syncs to Supabase after 2s)
-  autoSaveWebBuilder();
+  // Mark unsaved changes (no auto-save — user must click Gem)
+  webBuilderHasChanges = true;
+  updateWebBuilderSaveStatus('unsaved');
 
   // Also update inline preview elements with the restaurant name
   const nameValue = document.getElementById('wb-name')?.value || 'Pizzeria Roma';
@@ -44084,6 +44116,14 @@ window.agentHasUpdate = agentHasUpdate;
 window.saveQRToHistory = saveQRToHistory;
 window.loadQRHistory = loadQRHistory;
 window.removeQRHistoryItem = removeQRHistoryItem;
+
+// Unsaved changes warning
+window.addEventListener('beforeunload', function(e) {
+  if (webBuilderHasChanges || appBuilderHasChanges || (typeof cmsHasChanges !== 'undefined' && cmsHasChanges)) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // ============================================
 // Helper: Find API key from Settings or Opret API Nøgle
