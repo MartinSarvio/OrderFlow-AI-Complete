@@ -2167,7 +2167,7 @@
             }}>
               <div style={{ fontSize: 10, color: '#059669' }}>{r.url}</div>
               <div style={{ fontSize: 14, color: '#1a0dab', fontWeight: 500 }}>{r.title}</div>
-              <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>Position #{r.pos} \u00b7 {r.type}</div>
+              <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>Position #{r.pos} · {r.type}</div>
             </div>
           ))}
         </div>
@@ -2184,7 +2184,7 @@
       if (!sources) {
         return (
           <div style={{ padding: 20 }}>
-            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>S\u00f8ger efter citationer...</div>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Søger efter citationer...</div>
             {[0,1,2,3,4,5].map(i => (
               <div key={i} style={{ height: 36, marginBottom: 6, borderRadius: 8, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
             ))}
@@ -2227,7 +2227,7 @@
       if (!competitorData?.competitors?.length) {
         return (
           <div style={{ padding: 20 }}>
-            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>S\u00f8ger efter konkurrenter...</div>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Søger efter konkurrenter...</div>
             {[0,1,2,3].map(i => (
               <div key={i} style={{ marginBottom: 14 }}>
                 <div style={{ height: 14, width: '60%', marginBottom: 8, borderRadius: 4, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
@@ -2248,7 +2248,7 @@
 
       return (
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Konkurrenter i n\u00e6rheden</div>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Konkurrenter i nærheden</div>
           {items.map((c, i) => (
             <div key={i} style={{ marginBottom: 14, animation: `fadeSlideUp 0.4s ease ${i * 0.15}s both` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
@@ -2359,7 +2359,7 @@
             </div>
             <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#667eea', animation: 'pulse 1s ease-in-out infinite' }} />
-              <span style={{ fontSize: 11, color: '#6b7280' }}>Venter p\u00e5 PageSpeed data...</span>
+              <span style={{ fontSize: 11, color: '#6b7280' }}>Venter på PageSpeed data...</span>
             </div>
           </div>
         );
@@ -2468,7 +2468,7 @@
       const getColor = (name) => platformColors[name?.toLowerCase()] || '#6b7280';
       const getStatusText = (p) => !p.found ? 'Ikke fundet' : p.status === 'active' ? 'Aktiv' : p.posts30Days > 0 ? `${p.posts30Days} opslag/30d` : 'Fundet';
       const getFollowerText = (p) => {
-        if (!p.found || !p.followers) return '\u2014';
+        if (!p.found || !p.followers) return '—';
         if (p.followers >= 1000) return `${(p.followers / 1000).toFixed(1)}K`;
         return String(p.followers);
       };
@@ -2476,7 +2476,7 @@
       if (!platforms) {
         return (
           <div style={{ padding: 20 }}>
-            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>S\u00f8ger efter sociale profiler...</div>
+            <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Søger efter sociale profiler...</div>
             {[0,1,2].map(i => (
               <div key={i} style={{ height: 56, marginBottom: 8, borderRadius: 10, background: 'linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.15}s` }} />
             ))}
@@ -2486,7 +2486,7 @@
 
       return (
         <div style={{ padding: 20 }}>
-          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Social Media Tilstedev\u00e6relse</div>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Social Media Tilstedeværelse</div>
           {platforms.map((p, i) => {
             const followerText = getFollowerText(p);
             return (
@@ -2505,7 +2505,7 @@
                   <div style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{p.name}</div>
                   <div style={{ fontSize: 11, color: p.found ? '#059669' : '#9ca3af' }}>{getStatusText(p)}</div>
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: followerText === '\u2014' ? '#d1d5db' : '#374151' }}>{followerText}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: followerText === '—' ? '#d1d5db' : '#374151' }}>{followerText}</div>
               </div>
             );
           })}
@@ -2996,6 +2996,9 @@
       useEffect(() => {
         // Skip scan if results were restored from cache (post-payment)
         if (cacheRestored.current) return;
+        // Don't start a new scan when returning from Stripe - let payment verification effect handle it
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('paid') === 'true') return;
 
         const runAnalysis = async () => {
           try {
@@ -3130,7 +3133,7 @@
                     setShowReport(false);
                     // Trigger re-scan by updating business prop
                     onBack && onBack();
-                    window.location.href = window.location.pathname + '?rescan=' + encodeURIComponent(cachedBizName) + '&paid=true';
+                    window.location.href = window.location.pathname + '?name=' + encodeURIComponent(cachedBizName) + '&paid=true';
                   } else {
                     onBack && onBack();
                   }
@@ -4199,6 +4202,7 @@
               doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
             } catch (e) {
               console.error('Auto PDF download failed:', e);
+              alert('Automatisk PDF-download fejlede. Brug "Download PDF" knappen i rapporten.');
             }
           }, 1000);
         }
@@ -5303,15 +5307,20 @@
               </button>
               <button
                 onClick={() => {
-                  const doc = pdfGenerator.generate({
-                    business: business,
-                    scanDate: new Date(),
-                    overallScore: overallScore,
-                    results: results,
-                    findings: findings || [],
-                    findingsCount: findings?.length || 0,
-                  });
-                  doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                  try {
+                    const doc = pdfGenerator.generate({
+                      business: business,
+                      scanDate: new Date(),
+                      overallScore: overallScore,
+                      results: results,
+                      findings: findings || [],
+                      findingsCount: findings?.length || 0,
+                    });
+                    doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                  } catch (e) {
+                    console.error('PDF generation failed:', e);
+                    alert('PDF kunne ikke genereres. Prøv at genindlæse siden.');
+                  }
                 }}
                 style={{
                   padding: '16px 40px',

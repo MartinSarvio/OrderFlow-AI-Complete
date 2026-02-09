@@ -21625,7 +21625,7 @@ async function renderUserApiKeysOnSettings() {
           '</div>' +
         '</div>' +
         '<div class="api-config-actions">' +
-          '<span style="font-size:12px;color:var(--muted);font-family:monospace;margin-right:8px">' + (key.keyPrefix || '\u2014') + '</span>' +
+          '<span style="font-size:12px;color:var(--muted);font-family:monospace;margin-right:8px">' + (key.keyPrefix || '—') + '</span>' +
           '<span style="font-size:12px;color:' + statusColor + ';margin-right:8px">' + statusText + '</span>' +
           '<button class="btn btn-secondary" style="color:var(--danger);padding:6px 10px" onclick="deleteUserKeyFromSettings(\'' + key.id + '\',\'' + key.name.replace(/'/g, "\\'") + '\')" title="Slet">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
@@ -31142,7 +31142,7 @@ function saveTemplateFile() {
 
   var statusEl = document.getElementById('te-save-status');
   if (statusEl) {
-    statusEl.textContent = '\u2713 Gemt';
+    statusEl.textContent = '✓ Gemt';
     statusEl.style.display = '';
     statusEl.style.color = 'var(--success)';
     setTimeout(function() { statusEl.style.display = 'none'; }, 2000);
@@ -35958,7 +35958,7 @@ async function loadAnalyticsProducts() {
     const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
     table.innerHTML = products.map(p => {
       const trendColor = p.trend > 0 ? 'var(--success)' : p.trend < 0 ? 'var(--danger)' : 'var(--muted)';
-      const trendIcon = p.trend > 0 ? '\u2191' : p.trend < 0 ? '\u2193' : '\u2192';
+      const trendIcon = p.trend > 0 ? '↑' : p.trend < 0 ? '↓' : '→';
       return `<tr><td style="padding:12px 16px">${p.name}</td><td style="text-align:right">${p.qty}</td><td style="text-align:right">${fmt(p.revenue)}</td><td style="text-align:right;padding-right:16px;color:${trendColor}">${trendIcon} ${Math.abs(p.trend)}%</td></tr>`;
     }).join('');
   }
@@ -36292,7 +36292,7 @@ async function loadApiKeysList() {
     var hasKey = !!effectiveKeyValue;
     allKeys.push({
       id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
-      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '\u2014',
+      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '—',
       type: 'Konfigureret', keyType: 'configured',
       status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
       statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
@@ -43301,7 +43301,7 @@ function openAgentConfigPanel(agentId) {
   var title = document.getElementById('agent-config-title');
   var body = document.getElementById('agent-config-body');
   var footer = document.getElementById('agent-config-footer');
-  title.textContent = config.title + ' \u2014 Konfiguration';
+  title.textContent = config.title + ' — Konfiguration';
   title.style.color = config.color;
   body.innerHTML = renderAgentConfigSections(agentId, config);
   footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
@@ -43346,7 +43346,7 @@ function renderAgentConfigSections(agentId, config) {
       }
     } else if (s.type === 'field') {
       var val = localStorage.getItem(s.key) || '';
-      var displayVal = (s.sensitive && val) ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + val.slice(-4) : val;
+      var displayVal = (s.sensitive && val) ? '••••••••' + val.slice(-4) : val;
       html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
         '<input class="input" id="config-' + s.key + '" type="' + (s.sensitive ? 'password' : 'text') + '" value="' + (s.sensitive ? '' : escapeHtml(val)) + '" placeholder="' + (s.placeholder || '') + '"' + (s.readonly ? ' readonly style="opacity:0.7;cursor:not-allowed"' : '') + ' style="width:100%;font-size:var(--font-size-sm)">';
     } else if (s.type === 'webhook') {
@@ -43535,7 +43535,7 @@ function renderCustomerIntegrations() {
 
   var html = '<div style="margin-bottom:var(--space-4)">' +
     '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine Integrationer</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsværktøjer med \u00e9t klik. Alle integrationer er fuldt håndteret af FLOW.</p></div>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsværktøjer med ét klik. Alle integrationer er fuldt håndteret af FLOW.</p></div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
 
   integrations.forEach(function(ig) {
@@ -43622,7 +43622,7 @@ function openIntegrationConfig(integrationId) {
   var body = document.getElementById('agent-config-body');
   var footer = document.getElementById('agent-config-footer');
 
-  title.textContent = config.title + ' \u2014 Integration';
+  title.textContent = config.title + ' — Integration';
   title.style.color = config.color;
 
   var bodyHtml = '';
