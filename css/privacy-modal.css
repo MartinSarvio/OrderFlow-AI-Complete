@@ -1,6 +1,6 @@
 /**
  * Privacy Modal Styles
- * CMP-style privacy consent modal
+ * CMP-style privacy consent modal with 3 tabs
  */
 
 /* ==================== CSS Variables ==================== */
@@ -111,7 +111,6 @@
 .privacy-modal-header {
   padding: var(--spacing-xl);
   padding-bottom: var(--spacing-md);
-  border-bottom: 1px solid var(--color-main-border);
   position: relative;
 }
 
@@ -218,14 +217,129 @@
   color: var(--color-main-text);
 }
 
-/* ==================== Content ==================== */
+/* ==================== Tabs ==================== */
+.privacy-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-main-border);
+  background: var(--color-tabs-container-background);
+  padding: 0 var(--spacing-xl);
+  gap: 0;
+}
+
+.privacy-tab-btn {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: var(--typography-font);
+  font-size: var(--typography-size-text);
+  font-weight: 500;
+  color: var(--color-tabs-tab-inactive);
+  transition: color 0.2s, border-color 0.2s;
+  text-align: center;
+}
+
+.privacy-tab-btn:hover {
+  color: var(--color-tabs-tab-active);
+}
+
+.privacy-tab-btn.active {
+  color: var(--color-tabs-tab-active);
+  font-weight: 600;
+  border-bottom-color: var(--color-tabs-tab-active);
+}
+
+/* ==================== Content / Panels ==================== */
 .privacy-modal-content {
   padding: var(--spacing-xl);
   overflow-y: auto;
   flex: 1;
 }
 
-/* ==================== Category List ==================== */
+.privacy-panel {
+  display: none;
+}
+
+.privacy-panel.active {
+  display: block;
+}
+
+/* Screen reader only */
+.privacy-details-sr-only,
+.privacy-about-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ==================== Samtykke Tab ==================== */
+.privacy-consent-title {
+  font-weight: 700;
+  font-size: var(--typography-size-title);
+  color: var(--color-main-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.privacy-consent-text {
+  color: var(--color-main-text);
+  line-height: 1.5;
+  font-size: var(--typography-size-text);
+  margin-bottom: var(--spacing-lg);
+}
+
+.privacy-consent-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.privacy-consent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: #f8f9fa;
+  border-radius: var(--element-buttons-border-radius);
+  transition: background-color 0.2s;
+}
+
+.privacy-consent-row:hover {
+  background: #f0f1f3;
+}
+
+.privacy-consent-info {
+  flex: 1;
+}
+
+.privacy-consent-label {
+  font-weight: 600;
+  font-size: var(--typography-size-text);
+  color: var(--color-main-text);
+}
+
+.privacy-consent-show-details {
+  margin-top: var(--spacing-md);
+  text-align: right;
+}
+
+.privacy-consent-show-details a {
+  color: var(--color-links-anchor);
+  text-decoration: none;
+  font-size: var(--typography-size-link);
+}
+
+.privacy-consent-show-details a:hover {
+  text-decoration: underline;
+}
+
+/* ==================== Category List (legacy) ==================== */
 .privacy-category-list {
   display: flex;
   flex-direction: column;
@@ -265,6 +379,247 @@
   font-size: var(--typography-size-label);
   color: #666;
   line-height: 1.4;
+}
+
+/* ==================== Detaljer Tab — Accordion ==================== */
+.privacy-detail-category {
+  border: 1px solid var(--color-main-border);
+  border-radius: var(--element-buttons-border-radius);
+  margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+}
+
+.privacy-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  background: #f8f9fa;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.privacy-detail-header:hover {
+  background: #f0f1f3;
+}
+
+.privacy-detail-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex: 1;
+}
+
+.privacy-expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: transform 0.25s ease;
+  color: var(--color-main-text);
+  flex-shrink: 0;
+}
+
+.privacy-expand-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.privacy-expand-btn.expanded {
+  transform: rotate(180deg);
+}
+
+.privacy-detail-name {
+  font-weight: 600;
+  font-size: var(--typography-size-text);
+  color: var(--color-main-text);
+}
+
+.privacy-cookie-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  background: var(--color-main-border);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.privacy-detail-intro {
+  padding: 0 var(--spacing-md) var(--spacing-sm);
+  font-size: var(--typography-size-label);
+  color: #666;
+  line-height: 1.4;
+}
+
+.privacy-detail-body {
+  display: none;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.privacy-detail-body.visible {
+  display: block;
+}
+
+/* ==================== Cookie Table ==================== */
+.privacy-cookie-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-main-border);
+  border-radius: var(--element-buttons-border-radius);
+}
+
+.privacy-cookie-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--typography-size-label);
+  min-width: 500px;
+}
+
+.privacy-cookie-table th {
+  background: #f0f1f3;
+  font-weight: 600;
+  text-align: left;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-main-text);
+  border-bottom: 1px solid var(--color-main-border);
+  white-space: nowrap;
+}
+
+.privacy-cookie-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  color: var(--color-main-text);
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+  line-height: 1.4;
+}
+
+.privacy-cookie-table tr:last-child td {
+  border-bottom: none;
+}
+
+.privacy-cookie-table .privacy-cookie-name {
+  font-weight: 500;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.8em;
+  white-space: nowrap;
+}
+
+.privacy-no-cookies {
+  font-style: italic;
+  color: #999;
+  padding: var(--spacing-sm) 0;
+  font-size: var(--typography-size-label);
+}
+
+/* ==================== Cross-Domain Consent ==================== */
+.privacy-cross-domain {
+  border: 1px solid var(--color-main-border);
+  border-radius: var(--element-buttons-border-radius);
+  margin-top: var(--spacing-md);
+  overflow: hidden;
+}
+
+.privacy-cross-domain-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  cursor: pointer;
+  background: #f8f9fa;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.privacy-cross-domain-header:hover {
+  background: #f0f1f3;
+}
+
+.privacy-cross-domain-desc {
+  display: block;
+  padding: 0 var(--spacing-md) var(--spacing-sm);
+  font-size: var(--typography-size-label);
+  color: #666;
+  line-height: 1.4;
+}
+
+.privacy-cross-domain-body {
+  display: none;
+  padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.privacy-cross-domain-body.visible {
+  display: block;
+}
+
+.privacy-cross-domain-list {
+  font-size: var(--typography-size-label);
+  line-height: 1.6;
+}
+
+.privacy-cross-domain-list strong {
+  display: block;
+  margin-bottom: var(--spacing-xxs);
+}
+
+.privacy-domain-links a {
+  color: var(--color-links-anchor);
+  text-decoration: none;
+}
+
+.privacy-domain-links a:hover {
+  text-decoration: underline;
+}
+
+/* ==================== Declaration Date ==================== */
+.privacy-declaration-date {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--color-main-border);
+  font-size: 12px;
+  color: #999;
+}
+
+.privacy-declaration-date a {
+  color: var(--color-links-anchor);
+  text-decoration: none;
+}
+
+.privacy-declaration-date a:hover {
+  text-decoration: underline;
+}
+
+/* ==================== Om Tab ==================== */
+.privacy-about-content {
+  line-height: 1.6;
+  font-size: var(--typography-size-text);
+  color: var(--color-main-text);
+}
+
+.privacy-about-content p {
+  margin-bottom: var(--spacing-md);
+}
+
+.privacy-about-content p:last-child {
+  margin-bottom: 0;
+}
+
+.privacy-about-link {
+  color: var(--color-links-anchor);
+  text-decoration: none;
+}
+
+.privacy-about-link:hover {
+  text-decoration: underline;
 }
 
 /* ==================== Toggle Switch ==================== */
@@ -405,6 +760,24 @@
   margin-top: var(--spacing-sm);
 }
 
+/* ==================== Scrollbar ==================== */
+.privacy-modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.privacy-modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.privacy-modal-content::-webkit-scrollbar-thumb {
+  background: var(--color-cmp-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.privacy-modal-content::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
 /* ==================== Mobile Responsive ==================== */
 @media (max-width: 600px) {
   .privacy-modal-wrapper {
@@ -426,12 +799,33 @@
     border-radius: var(--layout-border-radius) var(--layout-border-radius) 0 0;
   }
 
+  .privacy-modal-tabs {
+    padding: 0 var(--spacing-md);
+  }
+
+  .privacy-tab-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: var(--typography-size-label);
+  }
+
+  .privacy-modal-content {
+    padding: var(--spacing-md);
+  }
+
   .privacy-modal-buttons {
     flex-direction: column;
   }
 
   .privacy-modal-buttons button {
     width: 100%;
+  }
+
+  .privacy-cookie-table {
+    min-width: 400px;
+  }
+
+  .privacy-detail-header {
+    padding: var(--spacing-xs) var(--spacing-sm);
   }
 }
 
