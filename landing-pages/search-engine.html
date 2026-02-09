@@ -26,6 +26,12 @@
     @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); } 50% { box-shadow: 0 0 15px 3px rgba(102, 126, 234, 0.3); } }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes barGrow { from { width: 0; } }
+    @keyframes typeIn { from { width: 0; } to { width: 100%; } }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes nodeConnect { 0% { stroke-dashoffset: 100; } 100% { stroke-dashoffset: 0; } }
+    @keyframes scoreCount { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+    @keyframes rowSlide { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
 
     /* Findings Feed Styles */
     .findings-feed { display: flex; flex-direction: column; gap: 16px; }
@@ -2094,22 +2100,269 @@
       );
     };
 
-    // Photo gallery preview
+    // Photo gallery preview — animated shimmer loading
     const PhotoPreview = ({ photos }) => (
       <div style={{ padding: 24 }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {(photos || [1,2,3,4,5,6]).slice(0, 6).map((_, i) => (
             <div key={i} style={{
               aspectRatio: '1',
-              background: `linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)`,
+              background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)',
+              backgroundSize: '200% 100%',
               borderRadius: 8,
-              animation: 'pulse 2s ease-in-out infinite',
-              animationDelay: `${i * 0.1}s`,
+              animation: 'shimmer 1.5s ease-in-out infinite',
+              animationDelay: `${i * 0.15}s`,
             }} />
           ))}
         </div>
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', animation: 'pulse 1s ease-in-out infinite' }} />
+          <span style={{ fontSize: 11, color: '#6b7280', animation: 'fadeSlideUp 0.5s ease' }}>Analyserer billedkvalitet og metadata...</span>
+        </div>
       </div>
     );
+
+    // SERP Visibility preview — animated search results
+    const SerpPreview = ({ business }) => {
+      const [visibleRows, setVisibleRows] = useState(0);
+      useEffect(() => { const t = setInterval(() => setVisibleRows(v => v < 5 ? v + 1 : v), 600); return () => clearInterval(t); }, []);
+      const results = [
+        { pos: 1, title: business?.name || 'Restaurant', url: 'google.dk/maps', type: 'Maps' },
+        { pos: 2, title: `${business?.name} - Anmeldelser`, url: 'trustpilot.dk', type: 'Organic' },
+        { pos: 3, title: `${business?.name} Menu & Priser`, url: 'just-eat.dk', type: 'Organic' },
+        { pos: 4, title: `${business?.name} - Åbningstider`, url: 'google.dk', type: 'Maps' },
+        { pos: 5, title: `Bedste restauranter i ${business?.address?.split(',').pop()?.trim() || 'byen'}`, url: 'tripadvisor.dk', type: 'Organic' },
+      ];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ flex: 1, background: '#f3f4f6', borderRadius: 20, padding: '8px 16px', fontSize: 13, color: '#374151', border: '1px solid #e5e7eb' }}>
+              {business?.name} restaurant
+            </div>
+          </div>
+          {results.map((r, i) => (
+            <div key={i} style={{
+              padding: '10px 0',
+              borderBottom: '1px solid #f3f4f6',
+              opacity: i < visibleRows ? 1 : 0,
+              transform: i < visibleRows ? 'translateX(0)' : 'translateX(-20px)',
+              transition: 'all 0.4s ease',
+            }}>
+              <div style={{ fontSize: 10, color: '#059669' }}>{r.url}</div>
+              <div style={{ fontSize: 14, color: '#1a0dab', fontWeight: 500 }}>{r.title}</div>
+              <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2 }}>Position #{r.pos} \u00b7 {r.type}</div>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    // Citations preview — animated link discovery
+    const CitationsPreview = ({ business }) => {
+      const [found, setFound] = useState(0);
+      useEffect(() => { const t = setInterval(() => setFound(v => v < 6 ? v + 1 : v), 700); return () => clearInterval(t); }, []);
+      const sites = ['yelp.dk', 'tripadvisor.dk', 'krak.dk', 'degulesider.dk', 'google.dk/maps', 'trustpilot.dk'];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Citationer fundet: {found}/6</div>
+          {sites.map((site, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6,
+              background: i < found ? '#f0fdf4' : '#f9fafb', borderRadius: 8,
+              opacity: i < found ? 1 : 0.4,
+              transform: i < found ? 'translateX(0)' : 'translateX(10px)',
+              transition: 'all 0.5s ease',
+            }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: i < found ? '#059669' : '#d1d5db', transition: 'background 0.3s' }} />
+              <span style={{ fontSize: 13, color: i < found ? '#374151' : '#9ca3af', flex: 1 }}>{site}</span>
+              {i < found && <span style={{ fontSize: 11, color: '#059669', animation: 'fadeIn 0.3s ease' }}>\u2713 NAP match</span>}
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    // Competitors preview — animated ranking bars
+    const CompetitorsPreview = ({ business }) => {
+      const [animate, setAnimate] = useState(false);
+      useEffect(() => { setTimeout(() => setAnimate(true), 300); }, []);
+      const competitors = [
+        { name: business?.name || 'Din restaurant', score: 72, you: true },
+        { name: 'Konkurrent A', score: 68 },
+        { name: 'Konkurrent B', score: 61 },
+        { name: 'Konkurrent C', score: 55 },
+      ];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Konkurrenter i n\u00e6rheden</div>
+          {competitors.map((c, i) => (
+            <div key={i} style={{ marginBottom: 14, animation: `fadeSlideUp 0.4s ease ${i * 0.15}s both` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
+                <span style={{ color: c.you ? '#667eea' : '#374151', fontWeight: c.you ? 600 : 400 }}>{c.name}{c.you ? ' (dig)' : ''}</span>
+                <span style={{ color: '#6b7280', fontSize: 12 }}>{c.score}/100</span>
+              </div>
+              <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 3,
+                  background: c.you ? 'linear-gradient(90deg, #667eea, #764ba2)' : '#d1d5db',
+                  width: animate ? `${c.score}%` : '0%',
+                  transition: `width 1s ease ${i * 0.2}s`,
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    // NAP Consistency preview — animated checklist
+    const NapPreview = ({ business }) => {
+      const [checks, setChecks] = useState(0);
+      useEffect(() => { const t = setInterval(() => setChecks(v => v < 4 ? v + 1 : v), 800); return () => clearInterval(t); }, []);
+      const items = [
+        { label: 'Navn', value: business?.name || 'Restaurant', match: true },
+        { label: 'Adresse', value: business?.address?.split(',')[0] || 'Adresse', match: true },
+        { label: 'Telefon', value: '+45 ** ** ** **', match: false },
+        { label: '\u00c5bningstider', value: 'Man-S\u00f8n', match: true },
+      ];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>NAP Konsistens-tjek</div>
+          {items.map((item, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', marginBottom: 6,
+              background: i < checks ? (item.match ? '#f0fdf4' : '#fef2f2') : '#f9fafb',
+              borderRadius: 8, opacity: i < checks ? 1 : 0.3,
+              transition: 'all 0.5s ease',
+            }}>
+              {i < checks ? (
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: item.match ? '#059669' : '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 11, fontWeight: 700, animation: 'scoreCount 0.3s ease' }}>
+                  {item.match ? '\u2713' : '!'}
+                </div>
+              ) : (
+                <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #d1d5db' }} />
+              )}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{item.label}</div>
+                <div style={{ fontSize: 14, color: '#374151', fontWeight: 500 }}>{item.value}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    };
+
+    // Website & Mobile preview — animated score gauges
+    const WebsitePreview = ({ business }) => {
+      const [animate, setAnimate] = useState(false);
+      useEffect(() => { setTimeout(() => setAnimate(true), 400); }, []);
+      const scores = [
+        { label: 'Mobil', score: 62, color: '#d97706' },
+        { label: 'Desktop', score: 78, color: '#059669' },
+        { label: 'SEO', score: 55, color: '#dc2626' },
+      ];
+      return (
+        <div style={{ padding: 24 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20 }}>PageSpeed Analyse</div>
+          <div style={{ display: 'flex', justifyContent: 'space-around' }}>
+            {scores.map((s, i) => (
+              <div key={i} style={{ textAlign: 'center', animation: `fadeSlideUp 0.5s ease ${i * 0.2}s both` }}>
+                <div style={{ position: 'relative', width: 70, height: 70, margin: '0 auto 8px' }}>
+                  <svg width="70" height="70" viewBox="0 0 70 70">
+                    <circle cx="35" cy="35" r="30" fill="none" stroke="#f3f4f6" strokeWidth="5" />
+                    <circle cx="35" cy="35" r="30" fill="none" stroke={s.color} strokeWidth="5"
+                      strokeDasharray={188.5} strokeDashoffset={animate ? 188.5 - (188.5 * s.score / 100) : 188.5}
+                      strokeLinecap="round" transform="rotate(-90 35 35)"
+                      style={{ transition: `stroke-dashoffset 1.5s ease ${i * 0.3}s` }} />
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: 18, fontWeight: 700, color: s.color }}>
+                    {animate ? s.score : 0}
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#667eea', animation: 'pulse 1s ease-in-out infinite' }} />
+            <span style={{ fontSize: 11, color: '#6b7280' }}>Analyserer load-tider og responsivitet...</span>
+          </div>
+        </div>
+      );
+    };
+
+    // Schema Markup preview — animated code block
+    const SchemaPreview = ({ business }) => {
+      const [lines, setLines] = useState(0);
+      useEffect(() => { const t = setInterval(() => setLines(v => v < 8 ? v + 1 : v), 400); return () => clearInterval(t); }, []);
+      const code = [
+        '{ "@context": "schema.org",',
+        '  "@type": "Restaurant",',
+        `  "name": "${business?.name || '...'}",`,
+        `  "address": "${business?.address?.split(',')[0] || '...'}",`,
+        '  "servesCuisine": "...",',
+        '  "priceRange": "$$",',
+        '  "openingHours": "Mo-Su",',
+        '  "aggregateRating": { ... } }',
+      ];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>Schema Markup Detektion</div>
+          <div style={{ background: '#1e1e2e', borderRadius: 8, padding: 16, fontFamily: 'monospace', fontSize: 12, lineHeight: 1.8 }}>
+            {code.map((line, i) => (
+              <div key={i} style={{
+                color: i < lines ? (line.includes('"@') ? '#c4a7e7' : line.includes(':') ? '#9ccfd8' : '#e0def4') : 'transparent',
+                opacity: i < lines ? 1 : 0,
+                transform: i < lines ? 'translateX(0)' : 'translateX(-8px)',
+                transition: 'all 0.3s ease',
+              }}>
+                {line}
+              </div>
+            ))}
+          </div>
+          {lines >= 8 && (
+            <div style={{ marginTop: 10, fontSize: 11, color: '#d97706', display: 'flex', alignItems: 'center', gap: 6, animation: 'fadeIn 0.3s ease' }}>
+              \u26a0 Manglende schema-felter detekteret
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // Social Media preview — animated platform cards
+    const SocialPreview = ({ business }) => {
+      const [visible, setVisible] = useState(0);
+      useEffect(() => { const t = setInterval(() => setVisible(v => v < 3 ? v + 1 : v), 600); return () => clearInterval(t); }, []);
+      const platforms = [
+        { name: 'Facebook', color: '#1877f2', followers: '1.2K', status: 'Aktiv' },
+        { name: 'Instagram', color: '#e4405f', followers: '—', status: 'Ikke fundet' },
+        { name: 'TripAdvisor', color: '#00aa6c', followers: '48', status: 'Anmeldelser' },
+      ];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 11, color: '#6b7280', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Social Media Tilstedev\u00e6relse</div>
+          {platforms.map((p, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', marginBottom: 8,
+              background: 'white', borderRadius: 10, border: '1px solid #f3f4f6',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              opacity: i < visible ? 1 : 0,
+              transform: i < visible ? 'translateY(0)' : 'translateY(12px)',
+              transition: `all 0.5s ease ${i * 0.1}s`,
+            }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: p.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 14, fontWeight: 700 }}>
+                {p.name.charAt(0)}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: '#374151' }}>{p.name}</div>
+                <div style={{ fontSize: 11, color: '#9ca3af' }}>{p.status}</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: p.followers === '\u2014' ? '#d1d5db' : '#374151' }}>{p.followers}</div>
+            </div>
+          ))}
+        </div>
+      );
+    };
 
     // =============================================================================
     // LIVE FINDINGS FEED COMPONENTS
@@ -2780,19 +3033,27 @@
                   padding: 40,
                 }}>
                   <BrowserWindow url={
-                    currentStep === 0 ? `${business.name} in ${business.address?.split(',').pop()?.trim() || 'Denmark'}` :
+                    currentStep === 0 ? `google.com/maps/${business.name}` :
                     currentStep === 1 ? `google.com/business/${business.name}` :
                     currentStep === 2 ? `google.com/reviews/${business.name}` :
                     currentStep === 3 ? `google.com/photos/${business.name}` :
-                    currentStep === 4 ? `facebook.com/${business.name?.toLowerCase().replace(/\s/g, '')}` :
-                    `pagespeed.web.dev/${business.name}`
+                    currentStep === 4 ? `firecrawl.dev/scan/${business.name?.toLowerCase().replace(/\s/g, '-')}` :
+                    currentStep === 5 ? `serper.dev/maps/${business.name?.toLowerCase().replace(/\s/g, '+')}` :
+                    currentStep === 6 ? `nap-checker.flow/${business.name?.toLowerCase().replace(/\s/g, '-')}` :
+                    currentStep === 7 ? `pagespeed.web.dev/report` :
+                    currentStep === 8 ? `schema.org/validator` :
+                    `social-scan.flow/${business.name?.toLowerCase().replace(/\s/g, '-')}`
                   }>
                     {currentStep === 0 && <MapPreview business={business} />}
                     {currentStep === 1 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
                     {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.topReviews} />}
                     {currentStep === 3 && <PhotoPreview photos={analysisResults.photos} />}
-                    {currentStep === 4 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
-                    {currentStep >= 5 && <MapPreview business={business} />}
+                    {currentStep === 4 && <CitationsPreview business={business} />}
+                    {currentStep === 5 && <CompetitorsPreview business={business} />}
+                    {currentStep === 6 && <NapPreview business={business} />}
+                    {currentStep === 7 && <WebsitePreview business={business} />}
+                    {currentStep === 8 && <SchemaPreview business={business} />}
+                    {currentStep >= 9 && <SocialPreview business={business} />}
                   </BrowserWindow>
                 </div>
               ) : (
