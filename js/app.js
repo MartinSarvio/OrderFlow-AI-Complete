@@ -35914,37 +35914,42 @@ function scrollToApiKeyGenerator() {
 }
 
 function showQuickApiKeyCreate() {
-  // Remove existing modal if any
   var existing = document.getElementById('quick-api-key-modal');
   if (existing) existing.remove();
 
   var modal = document.createElement('div');
   modal.id = 'quick-api-key-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center';
-  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5);width:100%;max-width:420px;box-shadow:var(--shadow-lg)">' +
-    '<div style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-4)">Opret API N\u00f8gle</div>' +
-    '<div class="form-group" style="margin-bottom:var(--space-3)">' +
-    '<label class="form-label">N\u00f8gle navn</label>' +
-    '<input type="text" class="input" id="quick-api-key-name" placeholder="f.eks. Min Integration">' +
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);z-index:10000;display:flex;align-items:center;justify-content:center;padding:24px';
+  modal.innerHTML = '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-xl);width:100%;max-width:480px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);overflow:hidden">' +
+    '<div style="padding:24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
+    '<div style="font-size:18px;font-weight:600">Tilf\u00f8j API N\u00f8gle</div>' +
+    '<button onclick="document.getElementById(\'quick-api-key-modal\').remove()" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:var(--muted);cursor:pointer;border-radius:var(--radius-sm);font-size:20px">&times;</button>' +
     '</div>' +
-    '<div class="form-group" style="margin-bottom:var(--space-4)">' +
-    '<label class="form-label">Tilladelser</label>' +
-    '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="customers" checked> Kunder</label>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="orders" checked> Ordrer</label>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="invoices" checked> Fakturaer</label>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="products"> Produkter</label>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="payments"> Betalinger</label>' +
-    '<label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" class="quick-perm" value="analytics"> Analytics</label>' +
-    '</div></div>' +
-    '<div id="quick-api-key-result" style="display:none;margin-bottom:var(--space-3);padding:12px;background:var(--bg2);border-radius:var(--radius-sm);border:1px solid var(--success)">' +
-    '<p style="font-size:12px;color:var(--success);margin-bottom:6px;font-weight:600">N\u00f8gle genereret!</p>' +
-    '<input type="text" class="input" id="quick-api-key-value" readonly style="font-family:monospace;font-size:12px;background:var(--bg)">' +
-    '<p style="font-size:11px;color:var(--warning);margin-top:6px">Gem denne n\u00f8gle sikkert - den vises kun \u00e9n gang.</p>' +
+    '<div style="padding:24px;display:flex;flex-direction:column;gap:16px">' +
+    '<div class="form-group" style="margin:0">' +
+    '<label class="form-label">Navn <span style="color:var(--danger)">*</span></label>' +
+    '<input type="text" class="input" id="quick-api-key-name" placeholder="f.eks. OpenRouter Production">' +
     '</div>' +
-    '<div style="display:flex;justify-content:flex-end;gap:var(--space-2)">' +
-    '<button class="btn btn-secondary" onclick="document.getElementById(\'quick-api-key-modal\').remove()">Luk</button>' +
-    '<button class="btn btn-primary" id="quick-api-key-btn" onclick="executeQuickApiKeyCreate()">Generer</button>' +
+    '<div class="form-group" style="margin:0">' +
+    '<label class="form-label">API N\u00f8gle <span style="color:var(--danger)">*</span></label>' +
+    '<div style="position:relative">' +
+    '<input type="password" class="input" id="quick-api-key-value" placeholder="Inds\u00e6t din API n\u00f8gle her..." style="padding-right:44px">' +
+    '<button type="button" onclick="toggleQuickKeyVisibility()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px" title="Vis/skjul">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+    '</button></div>' +
+    '</div>' +
+    '<div class="form-group" style="margin:0">' +
+    '<label class="form-label">Tjeneste / Beskrivelse</label>' +
+    '<input type="text" class="input" id="quick-api-key-service" placeholder="f.eks. Billedgenerering, AI Assistant...">' +
+    '</div>' +
+    '<div class="form-group" style="margin:0">' +
+    '<label class="form-label">Endpoint URL</label>' +
+    '<input type="text" class="input" id="quick-api-key-endpoint" placeholder="f.eks. https://api.openrouter.ai/v1">' +
+    '</div>' +
+    '</div>' +
+    '<div style="padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px">' +
+    '<button class="btn btn-secondary" onclick="document.getElementById(\'quick-api-key-modal\').remove()">Annuller</button>' +
+    '<button class="btn btn-primary" onclick="executeQuickApiKeyCreate()">Gem n\u00f8gle</button>' +
     '</div></div>';
 
   document.body.appendChild(modal);
@@ -35952,23 +35957,32 @@ function showQuickApiKeyCreate() {
   setTimeout(function() { document.getElementById('quick-api-key-name')?.focus(); }, 100);
 }
 
+function toggleQuickKeyVisibility() {
+  var input = document.getElementById('quick-api-key-value');
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
+}
+
 async function executeQuickApiKeyCreate() {
   var nameInput = document.getElementById('quick-api-key-name');
+  var keyInput = document.getElementById('quick-api-key-value');
+  var serviceInput = document.getElementById('quick-api-key-service');
+  var endpointInput = document.getElementById('quick-api-key-endpoint');
+
   var name = nameInput?.value?.trim();
-  if (!name) { toast('Indtast et navn til API n\u00f8glen', 'warning'); return; }
+  var apiKey = keyInput?.value?.trim();
+  var service = serviceInput?.value?.trim() || '';
+  var endpoint = endpointInput?.value?.trim() || '';
 
-  var perms = [];
-  document.querySelectorAll('.quick-perm:checked').forEach(function(cb) { perms.push(cb.value); });
-  if (perms.length === 0) { toast('V\u00e6lg mindst \u00e9n tilladelse', 'warning'); return; }
-
-  var hexChars = '0123456789abcdef';
-  var apiKey = Array.from({length: 40}, function() { return hexChars[Math.floor(Math.random() * hexChars.length)]; }).join('');
+  if (!name) { toast('Indtast et navn til API n\u00f8glen', 'warning'); nameInput?.focus(); return; }
+  if (!apiKey) { toast('Indtast API n\u00f8glen', 'warning'); keyInput?.focus(); return; }
 
   var newKey = {
     id: Date.now().toString(),
     name: name,
     keyPrefix: maskApiKey(apiKey),
-    permissions: perms,
+    fullKey: apiKey,
+    service: service,
+    endpoint: endpoint,
     createdAt: new Date().toISOString(),
     lastUsed: null,
     active: true
@@ -35979,18 +35993,12 @@ async function executeQuickApiKeyCreate() {
   await saveUserKeysToSupabase(keys);
   localStorage.setItem('flow_api_keys', JSON.stringify(keys));
 
-  // Show key in modal
-  var resultDiv = document.getElementById('quick-api-key-result');
-  var keyDisplay = document.getElementById('quick-api-key-value');
-  if (resultDiv && keyDisplay) {
-    keyDisplay.value = apiKey;
-    resultDiv.style.display = 'block';
-  }
-  nameInput.value = '';
-  document.getElementById('quick-api-key-btn').textContent = 'Generer ny';
+  // Close modal and refresh list
+  var modal = document.getElementById('quick-api-key-modal');
+  if (modal) modal.remove();
 
   loadApiKeysList();
-  toast('API n\u00f8gle genereret', 'success');
+  toast('API n\u00f8gle "' + name + '" tilf\u00f8jet', 'success');
 }
 
 // Toggle visibility for configured API keys
@@ -36015,7 +36023,11 @@ function confirmDeleteApiKey(keyId, keyName, keyType) {
   document.getElementById('delete-confirm-btn').onclick = function() {
     executeDeleteApiKey(keyId, keyType);
   };
-  document.getElementById('delete-confirm-modal').style.display = 'flex';
+  var modal = document.getElementById('delete-confirm-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+  }
 }
 
 // Execute API key deletion
@@ -41089,7 +41101,11 @@ function filterWorkflows() {
 
 // Close delete confirm modal
 function closeDeleteConfirmModal() {
-  document.getElementById('delete-confirm-modal').style.display = 'none';
+  var modal = document.getElementById('delete-confirm-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
   pendingDeleteAgentId = null;
   pendingDeleteWorkflowId = null;
 }
