@@ -27227,7 +27227,18 @@ async function deleteSegment(segmentId) {
   }
 }
 
-// viewSegmentCustomers + sendToSegment — see later definitions
+function viewSegmentCustomers(segmentId) {
+  toast('Kunde-visning kommer snart', 'info');
+}
+
+function sendToSegment(segmentId) {
+  const segment = marketingSegments.find(s => s.id === segmentId);
+  if (segment) {
+    toast(`Sender til ${segment.customerCount} kunder i "${segment.name}"`, 'info');
+  } else {
+    toast('SMS til segment kommer snart', 'info');
+  }
+}
 
 // Export segment functions
 window.renderSegmentsPage = renderSegmentsPage;
@@ -37665,9 +37676,6 @@ function addNewSegment() {
 }
 
 // deleteSegment — see earlier definition with Supabase integration
-
-// viewSegmentCustomers — see earlier definition
-// sendToSegment — see earlier definition
 
 // Initialize Marketing on page load
 function initMarketingPage() {
