@@ -7318,10 +7318,12 @@ function initRevenueChart() {
             
             // Position
             const position = context.chart.canvas.getBoundingClientRect();
+            const mouseEvent = context.chart._lastEvent;
+            const mouseY = mouseEvent ? mouseEvent.y : tooltipModel.caretY;
             tooltipEl.style.opacity = 1;
             tooltipEl.style.position = 'absolute';
             tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX + 'px';
-            tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 10 + 'px';
+            tooltipEl.style.top = position.top + window.pageYOffset + mouseY - 10 + 'px';
             tooltipEl.style.pointerEvents = 'none';
             tooltipEl.style.transform = 'translateX(-50%)';
           }
