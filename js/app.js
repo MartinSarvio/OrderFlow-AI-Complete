@@ -3457,20 +3457,34 @@ async function loginAdminLocal() {
     } catch (e) {}
   }
 
-  // 4. Final fallback: deterministic admin UUID
+  // 4. No valid identity found — require proper login
   if (!adminId) {
-    adminId = '00000000-0000-4000-a000-000000000001';
-    console.log('🔑 Using fallback admin UUID:', adminId);
+    console.warn('🔑 No valid admin UUID found. Proper authentication required.');
+    showAuthError('Kunne ikke verificere identitet. Log ind med email og adgangskode.');
+    return;
   }
 
   // Persist for future sessions
   localStorage.setItem('orderflow_user_id', adminId);
 
+  // Resolve user profile from cached auth data
+  let adminEmail = 'admin@orderflow.dk';
+  let adminName = 'Administrator';
+  try {
+    const raw = localStorage.getItem('orderflow-auth-token');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const user = parsed?.currentSession?.user || parsed?.user || parsed?.session?.user;
+      if (user?.email) adminEmail = user.email;
+      if (user?.user_metadata?.full_name) adminName = user.user_metadata.full_name;
+    }
+  } catch (e) {}
+
   const tempUser = {
     id: adminId,
-    email: 'martinsarvio@hotmail.com',
+    email: adminEmail,
     user_metadata: {
-      full_name: 'Martin Sarvio'
+      full_name: adminName
     },
     role: 'admin'
   };

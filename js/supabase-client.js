@@ -226,9 +226,9 @@ const SupabaseDB = {
   },
 
   /**
-   * Get single restaurant by ID
+   * Get single restaurant by ID (scoped to current user)
    */
-  async getRestaurant(restaurantId) {
+  async getRestaurant(restaurantId, userId) {
     try {
       // Wait for Supabase to be initialized
       if (!supabase) await ensureSupabaseClient();
@@ -237,11 +237,20 @@ const SupabaseDB = {
         return null;
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('restaurants')
         .select('*')
-        .eq('id', restaurantId)
-        .single();
+        .eq('id', restaurantId);
+
+      // Scope to user if userId provided (ownership check)
+      if (userId) {
+        const resolvedUserId = await this._resolveAuthUserId(userId);
+        if (resolvedUserId) {
+          query = query.eq('user_id', resolvedUserId);
+        }
+      }
+
+      const { data, error } = await query.single();
 
       if (error) throw error;
 

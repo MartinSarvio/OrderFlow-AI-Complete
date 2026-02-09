@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createRequestLogger, EdgeLogger } from "../_shared/logger.ts"
 import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
 import { checkRateLimit, getClientIP } from "../_shared/rate-limit.ts"
+import { verifyAuth } from "../_shared/auth.ts"
 
 const SMS_RATE_LIMIT = 5 // max SMS sends per IP per minute
 
@@ -32,6 +33,16 @@ serve(async (req) => {
           'Retry-After': String(Math.ceil(retryAfterMs / 1000)),
         },
       }
+    )
+  }
+
+  // Verify authentication
+  const auth = await verifyAuth(req)
+  if (!auth) {
+    log.warn({ event: 'channel.sms.auth_failed', client_ip: clientIP })
+    return new Response(
+      JSON.stringify({ error: 'Authentication required' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 

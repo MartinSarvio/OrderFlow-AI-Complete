@@ -1,11 +1,34 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { getCorsHeaders, handleCorsPreflightResponse } from "../_shared/cors.ts"
+import { verifyAuth } from "../_shared/auth.ts"
+import { checkRateLimit, getClientIP } from "../_shared/rate-limit.ts"
+
+const PAYMENT_RATE_LIMIT = 10 // max payment intents per IP per minute
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req)
 
   if (req.method === 'OPTIONS') {
     return handleCorsPreflightResponse(req)
+  }
+
+  // Rate limit
+  const clientIP = getClientIP(req)
+  const { allowed } = checkRateLimit(`payment:${clientIP}`, PAYMENT_RATE_LIMIT)
+  if (!allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Try again later.' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+  }
+
+  // Verify authentication
+  const auth = await verifyAuth(req)
+  if (!auth) {
+    return new Response(
+      JSON.stringify({ error: 'Authentication required' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {

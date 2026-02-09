@@ -12,6 +12,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getCorsHeaders, handleCorsPreflightResponse } from '../_shared/cors.ts'
 import { checkRateLimit } from '../_shared/rate-limit.ts'
+import { verifyAuth, verifyRestaurantOwnership } from '../_shared/auth.ts'
 
 const AI_RATE_LIMIT = 50 // requests per minute per restaurant
 
@@ -43,6 +44,23 @@ serve(async (req) => {
     if (!restaurantId) {
       return new Response(JSON.stringify({ error: 'restaurantId is required' }), {
         status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Verify auth and restaurant ownership
+    const auth = await verifyAuth(req)
+    if (!auth) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const ownsRestaurant = await verifyRestaurantOwnership(auth.userId, restaurantId)
+    if (!ownsRestaurant) {
+      return new Response(JSON.stringify({ error: 'Not authorized for this restaurant' }), {
+        status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
