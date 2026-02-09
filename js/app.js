@@ -9411,9 +9411,9 @@ function generateDemoOrdersData(restaurantId) {
 
 const DEMO_DATA_KEY = 'orderflow_demo_data_enabled';
 
-// Check if demo data is enabled
+// Check if demo data is enabled (only for DEMO role users)
 function isDemoDataEnabled() {
-  return localStorage.getItem(DEMO_DATA_KEY) === 'true';
+  return typeof currentUser !== 'undefined' && currentUser?.role === ROLES.DEMO;
 }
 
 // Toggle demo data on/off
