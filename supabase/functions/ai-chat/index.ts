@@ -112,7 +112,7 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('AI chat error:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error?.message || 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

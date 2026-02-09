@@ -1,6 +1,6 @@
 // OrderFlow Service Worker
 // Bump cache name to ensure clients don't keep the old app-shell cached under "/".
-const CACHE_NAME = 'orderflow-v3670-landing-first';
+const CACHE_NAME = 'orderflow-v3880-landing-first';
 
 const PRECACHE_URLS = [
   // Landing entry (served at "/" and "/index.html")
@@ -16,10 +16,23 @@ const PRECACHE_URLS = [
   '/css/utilities.css',
   '/css/components.css',
   '/css/appbuilder.css',
-  '/config/version.js?v=3670',
-  '/js/app.js?v=3670',
+  '/config/version.js?v=3880',
+  '/js/app.js?v=3880',
   '/images/FLOW-logo-hvid-4K.png'
 ];
+
+// Paths that should never be cached (API, auth, dynamic data)
+const NO_CACHE_PATTERNS = [
+  '/api/',
+  '/rest/',
+  '/auth/',
+  '/functions/',
+  '/supabase/',
+];
+
+function shouldCache(url) {
+  return !NO_CACHE_PATTERNS.some(pattern => url.pathname.includes(pattern));
+}
 
 // Install event - cache basic assets
 self.addEventListener('install', (event) => {
@@ -57,10 +70,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
+  // Never intercept API/auth/function routes
+  if (!shouldCache(url)) return;
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone and cache successful responses
+        // Clone and cache successful responses (static assets only)
         if (response.ok) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -108,16 +124,19 @@ self.addEventListener('fetch', (event) => {
 // Message handler for cache invalidation
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CMS_CACHE') {
-    caches.keys().then((names) => {
-      Promise.all(names.map((name) => caches.delete(name))).then(() => {
+    caches.keys()
+      .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+      .then(() => {
         self.skipWaiting();
-        // Notify all clients to refresh
-        self.clients.matchAll().then((clients) => {
-          clients.forEach((client) => {
-            client.postMessage({ type: 'CACHE_CLEARED' });
-          });
+        return self.clients.matchAll();
+      })
+      .then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'CACHE_CLEARED' });
         });
+      })
+      .catch((err) => {
+        console.error('Cache clear failed:', err);
       });
-    });
   }
 });

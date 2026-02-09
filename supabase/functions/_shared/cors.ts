@@ -16,11 +16,19 @@ export function getCorsHeaders(req: Request): Record<string, string> {
   const origin = req.headers.get('Origin') || ''
   const isAllowed = ALLOWED_ORIGINS.includes(origin)
 
+  if (!isAllowed) {
+    // Deny cross-origin access for unknown origins
+    return {
+      'Access-Control-Allow-Origin': 'null',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+    }
+  }
+
   return {
-    'Access-Control-Allow-Origin': isAllowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-trace-id, x-restaurant-id',
     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-    ...(isAllowed ? { 'Vary': 'Origin' } : {}),
+    'Vary': 'Origin',
   }
 }
 
