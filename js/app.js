@@ -36339,46 +36339,49 @@ async function loadApiKeysList() {
 
 // Render a single API key table row with consistent actions
 function renderApiKeyRow(k, disabledStates) {
-  var nameCell = k.name;
-  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + k.service + ')</span>';
+  // Helper: escape for use inside onclick attribute single-quoted params
+  function attrSafe(str) { return escapeHtml(str || '').replace(/'/g, '&#39;'); }
+
+  var nameCell = escapeHtml(k.name);
+  if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + escapeHtml(k.service) + ')</span>';
 
   var actions = '';
   var btnStyle = 'padding:4px 8px;margin-right:4px';
+  var safeId = attrSafe(k.id);
 
   // Eye icon (only if full key available)
   if (k.hasFullKey) {
     if (k.keyType === 'system') {
-      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + k.id + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleSystemKeyVisibility(\'' + safeId + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
     } else if (k.keyType === 'configured') {
-      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + k.id + '\',\'' + k.keyField + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
+      actions += '<button class="btn btn-secondary btn-sm" onclick="toggleConfiguredKeyVisibility(\'' + safeId + '\',\'' + attrSafe(k.keyField) + '\')" title="Vis/skjul nøgle" style="' + btnStyle + '">' + apiKeyEyeSvg + '</button>';
     }
   }
 
   // Gear icon
   if (k.keyType === 'system') {
     var isDisabled = disabledStates[k.id] === true;
-    var serviceUrl = k.serviceUrl;
+    var safeUrl = attrSafe(k.serviceUrl);
     var ddBtnStyle = 'display:block;width:100%;padding:10px 16px;background:none;border:none;text-align:left;cursor:pointer;font-size:13px;color:var(--text)';
     var ddHover = 'onmouseover="this.style.background=\'var(--bg-secondary)\'" onmouseout="this.style.background=\'none\'"';
     actions += '<div style="display:inline-block;position:relative">' +
-      '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + k.id + '" onclick="toggleApiKeyDropdown(\'' + k.id + '\')" title="Indstillinger" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>' +
-      '<div id="api-key-dropdown-' + k.id + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
-        '<button onclick="window.open(\'' + serviceUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>Rediger</button>' +
-        '<button onclick="toggleSystemKeyActive(\'' + k.id + '\');toggleApiKeyDropdown(\'' + k.id + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
+      '<button class="btn btn-secondary btn-sm" id="api-gear-btn-' + escapeHtml(k.id) + '" onclick="toggleApiKeyDropdown(\'' + safeId + '\')" title="Indstillinger" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>' +
+      '<div id="api-key-dropdown-' + escapeHtml(k.id) + '" style="display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;min-width:160px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.15);overflow:hidden">' +
+        '<button onclick="window.open(\'' + safeUrl + '\',\'_blank\');toggleApiKeyDropdown(\'' + safeId + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>Rediger</button>' +
+        '<button onclick="toggleSystemKeyActive(\'' + safeId + '\');toggleApiKeyDropdown(\'' + safeId + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
       '</div></div>';
   } else if (k.keyType === 'configured') {
     actions += '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>';
   }
 
   // Delete icon (all types)
-  var escapedName = k.name.replace(/'/g, "\\'");
-  actions += '<button class="btn btn-secondary btn-sm" onclick="confirmDeleteApiKey(\'' + k.id + '\',\'' + escapedName + '\',\'' + k.keyType + '\')" title="Slet" style="padding:4px 8px;color:var(--danger)">' + apiKeyTrashSvg + '</button>';
+  actions += '<button class="btn btn-secondary btn-sm" onclick="confirmDeleteApiKey(\'' + safeId + '\',\'' + attrSafe(k.name) + '\',\'' + attrSafe(k.keyType) + '\')" title="Slet" style="padding:4px 8px;color:var(--danger)">' + apiKeyTrashSvg + '</button>';
 
   return '<tr style="border-bottom:1px solid var(--border)">' +
     '<td style="padding:12px 8px;font-size:14px">' + nameCell + '</td>' +
-    '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + k.id + '" data-visible="false">' + k.maskedKey + '</td>' +
-    '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + k.type + '</td>' +
-    '<td style="padding:12px 8px;font-size:13px;color:' + k.statusColor + '">' + k.status + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)" id="key-display-' + escapeHtml(k.id) + '" data-visible="false">' + escapeHtml(k.maskedKey) + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + escapeHtml(k.type) + '</td>' +
+    '<td style="padding:12px 8px;font-size:13px;color:' + k.statusColor + '">' + escapeHtml(k.status) + '</td>' +
     '<td style="padding:12px 8px;text-align:right;white-space:nowrap">' + actions + '</td></tr>';
 }
 
@@ -36390,13 +36393,13 @@ function renderApiKeysPagination(totalPages) {
 
   var html = '';
   if (apiKeysCurrentPage > 1) {
-    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage - 1) + ')">\u2190</button>';
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage - 1) + ')">←</button>';
   }
   for (var i = 1; i <= totalPages; i++) {
     html += '<button class="btn ' + (i === apiKeysCurrentPage ? 'btn-primary' : 'btn-secondary') + '" style="padding:6px 12px;min-width:36px" onclick="goToApiKeysPage(' + i + ')">' + i + '</button>';
   }
   if (apiKeysCurrentPage < totalPages) {
-    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage + 1) + ')">\u2192</button>';
+    html += '<button class="btn btn-secondary" style="padding:6px 12px" onclick="goToApiKeysPage(' + (apiKeysCurrentPage + 1) + ')">→</button>';
   }
   container.innerHTML = html;
 }
