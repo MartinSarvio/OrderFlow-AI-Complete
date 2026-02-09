@@ -2517,12 +2517,7 @@ function showAuthTab(tab) {
   showAuthView(tab === 'signup' ? 'signup' : 'login');
 }
 
-// Toggle password visibility
-function togglePasswordVisibility(inputId) {
-  var input = document.getElementById(inputId);
-  if (!input) return;
-  input.type = input.type === 'password' ? 'text' : 'password';
-}
+// Toggle password visibility — see full implementation at line ~23428
 
 // Password setup link expiry (used for invite/reset links)
 const PASSWORD_LINK_EXPIRY_STORAGE_KEY = 'orderflow_password_link_expiry_minutes';
@@ -4048,7 +4043,7 @@ function getUnsavedChangesBuilders() {
 
 function getBuilderContext(pageId) {
   if (!pageId) return null;
-  if (pageId.startsWith('wb-') || pageId === 'webbuilder') return 'webbuilder';
+  if (pageId.startsWith('wb-') || pageId.startsWith('webbuilder')) return 'webbuilder';
   if (pageId.startsWith('appbuilder')) return 'appbuilder';
   if (pageId === 'flow-cms') return 'cms';
   return null;
@@ -27232,17 +27227,7 @@ async function deleteSegment(segmentId) {
   }
 }
 
-// View customers in segment
-function viewSegmentCustomers(segmentId) {
-  toast('Kunde-visning kommer snart', 'info');
-  // TODO: Show modal with customers matching segment
-}
-
-// Send SMS to segment
-function sendToSegment(segmentId) {
-  toast('SMS til segment kommer snart', 'info');
-  // TODO: Open campaign modal with segment pre-selected
-}
+// viewSegmentCustomers + sendToSegment — see later definitions
 
 // Export segment functions
 window.renderSegmentsPage = renderSegmentsPage;
@@ -29254,18 +29239,29 @@ function updateAppHours(day) {
 }
 
 // Toggle Day Closed
+// toggleDayClosed — unified version handling both App Builder and Web Builder
 function toggleDayClosed(day) {
-  const checkbox = document.getElementById(`app-hours-${day}-closed`);
-  const openInput = document.getElementById(`app-hours-${day}-open`);
-  const closeInput = document.getElementById(`app-hours-${day}-close`);
-
-  if (checkbox && checkbox.checked) {
-    if (openInput) openInput.disabled = true;
-    if (closeInput) closeInput.disabled = true;
-  } else {
-    if (openInput) openInput.disabled = false;
-    if (closeInput) closeInput.disabled = false;
+  // App Builder hours
+  const appClosed = document.getElementById(`app-hours-${day}-closed`);
+  const appOpen = document.getElementById(`app-hours-${day}-open`);
+  const appClose = document.getElementById(`app-hours-${day}-close`);
+  if (appClosed && appOpen && appClose) {
+    const isClosed = appClosed.checked;
+    appOpen.disabled = isClosed;
+    appClose.disabled = isClosed;
   }
+
+  // Web Builder hours
+  const wbClosed = document.getElementById('wb-hours-' + day + '-closed');
+  const wbOpen = document.getElementById('wb-hours-' + day + '-open');
+  const wbClose = document.getElementById('wb-hours-' + day + '-close');
+  if (wbClosed && wbOpen && wbClose) {
+    const isClosed = wbClosed.checked;
+    wbOpen.disabled = isClosed;
+    wbClose.disabled = isClosed;
+  }
+
+  if (typeof updateWebBuilderPreview === 'function') updateWebBuilderPreview();
 }
 
 // Save App Builder Hours
@@ -30769,10 +30765,11 @@ function initAppBuilderTemplate() {
 }
 
 // Load Web Builder template
-function loadWebBuilderTemplate(templateId) {
+function loadWebBuilderTemplate(templateId, options) {
+  const silent = options && options.silent;
   const template = resolveTemplateById(templateId);
   if (!template) {
-    toast('Skabelon ikke fundet', 'error');
+    if (!silent) toast('Skabelon ikke fundet', 'error');
     return;
   }
 
@@ -30819,7 +30816,7 @@ function loadWebBuilderTemplate(templateId) {
     updateWebBuilderPreview({ skipUnsaved: true });
   }, 100);
 
-  toast('Skabelon indlæst: ' + template.branding.name, 'success');
+  if (!silent) toast('Skabelon indlæst: ' + template.branding.name, 'success');
 }
 
 // Set inline preview device size
@@ -30963,10 +30960,10 @@ function showWebBuilderPage(section) {
     loadWebBuilderConfig();
   }
 
-  // Ensure preview iframes match selected template (only if template actually changed)
+  // Ensure preview iframes match selected template
   const selector = document.getElementById('wb-template-selector');
-  if (selector && selector.value && (!webBuilderConfig || selector.value !== webBuilderConfig._templateId)) {
-    loadWebBuilderTemplate(selector.value);
+  if (selector && selector.value) {
+    loadWebBuilderTemplate(selector.value, { silent: true });
   }
 
   // Update preview after page switch (give iframe time to load)
@@ -35385,53 +35382,7 @@ function loadProductsData() {
   initDataGrid('dg-variants');
 }
 
-// Load marketing data
-function loadMarketingData() {
-  // Stats
-  document.getElementById('mkt-campaigns').textContent = '8';
-  document.getElementById('mkt-emails-sent').textContent = '12,456';
-  document.getElementById('mkt-sms-sent').textContent = '3,421';
-  document.getElementById('mkt-open-rate').textContent = '24.5%';
-  document.getElementById('mkt-click-rate').textContent = '8.2%';
-  document.getElementById('mkt-conversions').textContent = '156';
-
-  // UTM tracking table (Kilde, Medium, Kampagne, Besøg, Ordrer, Omsætning, Konv. %)
-  const utmData = [
-    { source: 'google', medium: 'cpc', campaign: 'winter_sale', visits: 1234, orders: 45, revenue: '12,500 kr', convRate: '3.6%' },
-    { source: 'facebook', medium: 'social', campaign: 'new_menu', visits: 876, orders: 32, revenue: '8,900 kr', convRate: '3.7%' },
-    { source: 'instagram', medium: 'social', campaign: 'story_ad', visits: 654, orders: 28, revenue: '7,200 kr', convRate: '4.3%' },
-    { source: 'email', medium: 'newsletter', campaign: 'feb_promo', visits: 432, orders: 67, revenue: '15,800 kr', convRate: '15.5%' },
-  ];
-  document.getElementById('data-utm-table').innerHTML = utmData.map(u =>
-    `<tr><td>${u.source}</td><td>${u.medium}</td><td>${u.campaign}</td><td>${u.visits}</td><td>${u.orders}</td><td>${u.revenue}</td><td>${u.convRate}</td></tr>`
-  ).join('');
-
-  // Email campaigns table (Kampagne, Sendt, Leveret, Åbnet, Klikket, Konv., Dato)
-  const emailCampaigns = [
-    { name: 'Februar Tilbud', sent: 3456, delivered: 3412, opened: 1234, clicked: 456, conversions: 45, date: '2026-02-01' },
-    { name: 'Ny Menu Lancering', sent: 3456, delivered: 3398, opened: 987, clicked: 345, conversions: 32, date: '2026-01-28' },
-    { name: 'Vinter Special', sent: 2890, delivered: 2856, opened: 876, clicked: 234, conversions: 28, date: '2026-01-15' },
-    { name: 'Påske Kampagne', sent: 0, delivered: 0, opened: 0, clicked: 0, conversions: 0, date: '-' },
-  ];
-  document.getElementById('data-email-campaigns-table').innerHTML = emailCampaigns.map(e =>
-    `<tr><td>${e.name}</td><td>${e.sent}</td><td>${e.delivered}</td><td>${e.opened}</td><td>${e.clicked}</td><td>${e.conversions}</td><td>${e.date}</td></tr>`
-  ).join('');
-
-  // SMS logs table (Tid, Modtager, Type, Besked, Status, Pris)
-  const smsLogs = [
-    { time: '12:30', recipient: '+45 12 34 56 78', type: 'Order', message: 'Din ordre er klar...', status: 'Leveret', cost: '0.35 kr' },
-    { time: '11:45', recipient: '+45 23 45 67 89', type: 'Order', message: 'Tak for din ordre...', status: 'Leveret', cost: '0.35 kr' },
-    { time: '10:00', recipient: '+45 34 56 78 90', type: 'Marketing', message: 'Husk vores tilbud...', status: 'Fejl', cost: '0.00 kr' },
-  ];
-  const smsStatusColors = { 'Leveret': 'var(--success)', 'Afventer': 'var(--warning)', 'Fejl': 'var(--error)' };
-  document.getElementById('data-sms-logs-table').innerHTML = smsLogs.map(s =>
-    `<tr><td>${s.time}</td><td>${s.recipient}</td><td>${s.type}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${s.message}</td><td style="color:${smsStatusColors[s.status]}">${s.status}</td><td>${s.cost}</td></tr>`
-  ).join('');
-
-  initDataGrid('dg-utm');
-  initDataGrid('dg-email-campaigns');
-  initDataGrid('dg-sms-logs');
-}
+// loadMarketingData — see later definition with localStorage support
 
 // Load consent/GDPR data
 function loadConsentData() {
@@ -37710,29 +37661,10 @@ function addNewSegment() {
   renderSegmentsList();
 }
 
-// Delete segment
-function deleteSegment(segmentId) {
-  const segment = marketingSegments.find(s => s.id === segmentId);
-  if (!segment) return;
-  if (!confirm(`Er du sikker på at du vil slette "${segment.name}"?`)) return;
+// deleteSegment — see earlier definition with Supabase integration
 
-  marketingSegments = marketingSegments.filter(s => s.id !== segmentId);
-  markMarketingChanged();
-  renderSegmentsList();
-}
-
-// View segment customers (placeholder)
-function viewSegmentCustomers(segmentId) {
-  toast('Kundevisning kommer snart', 'info');
-}
-
-// Send to segment (placeholder)
-function sendToSegment(segmentId) {
-  const segment = marketingSegments.find(s => s.id === segmentId);
-  if (segment) {
-    toast(`Sender til ${segment.customerCount} kunder i "${segment.name}"`, 'info');
-  }
-}
+// viewSegmentCustomers — see earlier definition
+// sendToSegment — see earlier definition
 
 // Initialize Marketing on page load
 function initMarketingPage() {
@@ -38277,19 +38209,7 @@ function renderBusinessHoursGrid() {
 }
 
 // Toggle day closed
-function toggleDayClosed(day) {
-  const closedEl = document.getElementById('wb-hours-' + day + '-closed');
-  const openEl = document.getElementById('wb-hours-' + day + '-open');
-  const closeEl = document.getElementById('wb-hours-' + day + '-close');
-
-  if (closedEl && openEl && closeEl) {
-    const isClosed = closedEl.checked;
-    openEl.disabled = isClosed;
-    closeEl.disabled = isClosed;
-  }
-
-  updateWebBuilderPreview();
-}
+// toggleDayClosed — see earlier unified definition
 
 // Sync color picker with text input
 function syncColorInput(type) {
@@ -40984,15 +40904,7 @@ function toggleFacebookAgent() {
   toast(workflowAgentStatus.facebook.active ? 'Facebook agent aktiveret' : 'Facebook agent deaktiveret', 'success');
 }
 
-// Show Instagram config (placeholder)
-function showInstagramConfig() {
-  toast('Instagram konfiguration kommer snart', 'info');
-}
-
-// Show Facebook config (placeholder)
-function showFacebookConfig() {
-  toast('Facebook konfiguration kommer snart', 'info');
-}
+// showInstagramConfig + showFacebookConfig — see later definitions with openAgentConfigPanel
 
 // Export workflow functions
 window.loadWorkflowAgentPage = loadWorkflowAgentPage;
@@ -43458,9 +43370,7 @@ function hexToRgb(hex) {
   return r + ',' + g + ',' + b;
 }
 
-function escapeHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// escapeHtml — see earlier definition
 
 function saveAgentConfig(agentId) {
   var config = agentConfigDefinitions[agentId];
