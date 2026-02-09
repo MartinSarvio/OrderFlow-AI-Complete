@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- Business Scanner v1.0 - Deploy: 2026-02-06 -->
 <html lang="da">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Business Scanner - Digital Synlighedsanalyse</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <title>Agent SEO v3 - Digital Synlighedsanalyse</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autoTable.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -25,6 +25,7 @@
     @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
     @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4); } 50% { box-shadow: 0 0 15px 3px rgba(102, 126, 234, 0.3); } }
     @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* Findings Feed Styles */
     .findings-feed { display: flex; flex-direction: column; gap: 16px; }
@@ -354,56 +355,164 @@
     };
 
     // =============================================================================
-    // SERPER API CONFIGURATION
+    // V3 BACKEND SCAN API (server-side, no API keys exposed)
     // =============================================================================
-    const SERPER_CONFIG = {
-      reviews: {
-        url: 'https://google.serper.dev/reviews',
-        apiKey: '238621b449ced86740e16a0707be5b8999b87c9e'
-      },
-      images: {
-        url: 'https://google.serper.dev/images',
-        apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba'
-      },
-      maps: {
-        url: 'https://google.serper.dev/maps',
-        apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e'
-      },
-      defaultParams: {
-        gl: 'dk',
-        hl: 'da'
+    const scanWithV3Backend = async (business) => {
+      const response = await fetch('/api/seo/scan-v3', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          business: {
+            name: business.name || '',
+            place_id: business.place_id || '',
+            address: business.address || '',
+            website: business.website || ''
+          },
+          locale: 'da-DK',
+          country: 'dk'
+        })
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Scan endpoint fejl (' + response.status + ')');
       }
+      return response.json();
     };
 
-    const fetchSerperAPI = async (endpoint, query, options = {}) => {
-      const config = SERPER_CONFIG[endpoint];
-      if (!config) throw new Error(`Unknown Serper endpoint: ${endpoint}`);
+    // Stub: old client-side Serper calls removed – v3 backend handles everything server-side
+    const fetchSerperAPI = async () => ({ places: [], organic: [], images: [] });
 
-      const body = {
-        q: query,
-        ...SERPER_CONFIG.defaultParams,
-        ...options
-      };
+    // Transform v3 API response to the display format expected by report components
+    const transformV3ToDisplayFormat = (v3) => {
+      const raw = v3.rawData || {};
+      const gbp = raw.gbp || {};
+      const rev = raw.reviews || {};
+      const comp = raw.competitors || {};
+      const web = raw.website || {};
+      const sn = raw.socialNap || {};
 
-      // Remove gl param for maps endpoint (it doesn't use it)
-      if (endpoint === 'maps') {
-        delete body.gl;
-      }
-
-      const response = await fetch(config.url, {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': config.apiKey,
-          'Content-Type': 'application/json'
+      return {
+        googleProfile: {
+          name: gbp.name || v3.business?.name || '',
+          placeId: gbp.place_id || v3.business?.place_id || '',
+          rating: gbp.rating || 0,
+          totalReviews: gbp.review_count || gbp.totalReviews || 0,
+          address: { full: gbp.address || v3.business?.address || '' },
+          phone: gbp.phone || '',
+          website: gbp.website || v3.business?.website || '',
+          openingHours: gbp.opening_hours ? { isOpen: true, hoursComplete: true } : null,
+          photos: { total: gbp.photo_count || 0, ownerPhotos: 0, userPhotos: gbp.photo_count || 0 },
+          profileCompleteness: { score: gbp.completeness_score || (v3.score?.breakdown?.gbp || 50), missing: gbp.missing_fields || [] },
+          lastUpdated: gbp.last_updated || new Date().toISOString(),
+          claimed: gbp.claimed !== false,
+          types: gbp.types || ['restaurant'],
+          attributes: gbp.attributes || {},
         },
-        body: JSON.stringify(body)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Serper API error: ${response.status} ${response.statusText}`);
-      }
-
-      return response.json();
+        reviews: {
+          totalReviews: rev.total_reviews || gbp.review_count || 0,
+          averageRating: rev.average_rating || gbp.rating || 0,
+          sentiment: {
+            positive: rev.sentiment?.positive || 70,
+            neutral: rev.sentiment?.neutral || 20,
+            negative: rev.sentiment?.negative || 10,
+          },
+          velocity: {
+            monthlyAverage: rev.velocity?.monthly_avg || 3,
+            trend: rev.velocity?.trend || 'stable',
+          },
+          responseMetrics: {
+            responseRate: rev.response_rate || 0,
+            avgResponseTime: rev.avg_response_time || 'N/A',
+          },
+          topics: rev.topics || [],
+          recentReviews: rev.recent_reviews || [],
+          dataSource: 'v3_backend',
+          confidence: 'confirmed',
+        },
+        competitors: {
+          ranking: { overall: comp.ranking || comp.position || 0 },
+          competitors: (comp.top_competitors || comp.competitors || []).map(c => ({
+            name: c.name || '',
+            rating: c.rating || 0,
+            reviews: c.review_count || c.reviews || 0,
+            distance: c.distance || '',
+          })),
+          insights: (comp.insights || []).map(i => ({
+            title: i.title || '',
+            description: i.description || '',
+            type: i.type || 'info',
+            impact: i.impact || '',
+          })),
+        },
+        napConsistency: {
+          consistencyScore: sn.nap_score || sn.consistency_score || 50,
+          sources: (sn.sources || []).map(s => ({
+            name: s.name || s.platform || '',
+            found: s.found !== false,
+            nameMatch: s.name_match !== false,
+            addressMatch: s.address_match !== false,
+            phoneMatch: s.phone_match !== false,
+          })),
+          issues: (sn.issues || []).map(i => ({
+            platform: i.platform || '',
+            issue: i.issue || i.description || '',
+            severity: i.severity || 'medium',
+          })),
+        },
+        website: {
+          hasWebsite: !!(web.url || gbp.website || v3.business?.website),
+          url: web.url || gbp.website || v3.business?.website || '',
+          scores: {
+            mobile: web.mobile_score || 0,
+            desktop: web.desktop_score || 0,
+            seo: web.seo_score || 0,
+            performance: web.performance_score || 0,
+          },
+          coreWebVitals: web.core_web_vitals || {
+            LCP: { value: web.lcp || 'N/A', rating: 'needs-improvement', target: '< 2.5s' },
+            FID: { value: web.fid || 'N/A', rating: 'good', target: '< 100ms' },
+            CLS: { value: web.cls || 'N/A', rating: 'good', target: '< 0.1' },
+          },
+          localSEO: {
+            hasSchemaMarkup: web.has_schema || false,
+            hasLocalBusinessSchema: web.has_local_business_schema || false,
+            hasOpenGraph: web.has_open_graph || false,
+            hasContactPage: web.has_contact || false,
+            hasEmbeddedMap: web.has_map || false,
+            mobileResponsive: web.mobile_responsive || false,
+          },
+          issues: (web.issues || []).map(i => ({
+            issue: i.issue || i.title || '',
+            impact: i.impact || i.description || '',
+            severity: i.severity || 'medium',
+          })),
+          recommendation: web.recommendation || 'Opret en hjemmeside for at forbedre din online synlighed.',
+        },
+        social: {
+          overallScore: sn.social_score || 30,
+          platforms: (sn.social_platforms || []).map(p => ({
+            name: p.name || '',
+            found: p.found !== false,
+            followers: p.followers || 0,
+            posts30Days: p.posts_30d || 0,
+            engagement: p.engagement || 0,
+            status: p.status || (p.found ? 'active' : 'not_found'),
+          })),
+          insights: (sn.social_insights || []).map(i => ({
+            text: i.text || i.description || '',
+            type: i.type || 'info',
+          })),
+        },
+        images: {
+          totalPhotos: gbp.photo_count || 0,
+          googleMapsPhotos: gbp.photo_count || 0,
+        },
+        // Pass through v3-specific data
+        _v3score: v3.score,
+        _v3findings: v3.findings || [],
+        _v3actionPlan: v3.actionPlan || {},
+        _v3moduleStatuses: v3.moduleStatuses || [],
+      };
     };
 
     // =============================================================================
@@ -414,7 +523,7 @@
       async searchBusiness(query) {
         try {
           const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
-          if (!response.ok) throw new Error('Search failed');
+          if (!response.ok) throw new Error('Søgning mislykkedes');
           const data = await response.json();
           return data.results || [];
         } catch (error) {
@@ -1897,7 +2006,7 @@
       return (
         <div style={{ height: 280, position: 'relative', background: '#f0f0f0' }}>
           <iframe
-            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBMJxtAMiQBrCLPGmZhVB8b7tj7dTMzfKE&q=${query}&zoom=15`}
+            src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&q=${query}&zoom=15`}
             style={{ width: '100%', height: '100%', border: 0 }}
             allowFullScreen
             loading="lazy"
@@ -1915,7 +2024,7 @@
           <div style={{ borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', background: 'white' }}>
             <div style={{ height: 140, position: 'relative' }}>
               <iframe
-                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBMJxtAMiQBrCLPGmZhVB8b7tj7dTMzfKE&q=${query}&zoom=16`}
+                src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&q=${query}&zoom=16`}
                 style={{ width: '100%', height: '100%', border: 0 }}
                 loading="lazy"
               />
@@ -1966,8 +2075,8 @@
                 {review?.author?.charAt(0) || 'U'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{review?.author || 'Loading...'}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 months ago'}</div>
+                <div style={{ fontWeight: 500 }}>{review?.author || 'Indlæser...'}</div>
+                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 måneder siden'}</div>
               </div>
               <div style={{ display: 'flex', gap: 2 }}>
                 {[1,2,3,4,5].map(i => (
@@ -2246,287 +2355,6 @@
     };
 
     // =============================================================================
-    // PROGRAM DATA & COMPONENTS
-    // =============================================================================
-    const PROGRAM_DATA = {
-      name: 'SEO Analyse',
-      version: 'v1.0.0',
-      subtitle: 'Digital Synlighed & Vækst',
-      size: '2.4 MB',
-      features: [
-        'Google Business Profil',
-        'Anmeldelsesanalyse',
-        'Konkurrentoverblik',
-        'Social Media Scanning',
-        'Website Performance',
-        'NAP Konsistens'
-      ],
-      description: 'Komplet digital synlighedsanalyse for restauranter og takeaway. Analyserer Google Business, anmeldelser, konkurrenter, sociale medier og website performance.',
-      status: 'Aktiv',
-      nextVersion: {
-        version: 'v2.0.0',
-        features: [
-          'SEO Strategi & Vækstanalyse',
-          'Trustpilot Analyse',
-          'Facebook/TikTok/Instagram Playbooks',
-          'Prioriteret Forbedringsplan',
-          'Danmark & EU Benchmark'
-        ]
-      }
-    };
-
-    const ProgramCard = ({ program, onClick }) => {
-      return (
-        <div
-          onClick={onClick}
-          style={{
-            background: 'white',
-            borderRadius: 8,
-            border: '1px solid #e5e5e5',
-            padding: 24,
-            position: 'relative',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.borderColor = '#10b981';
-            e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,185,129,0.12)';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.borderColor = '#e5e5e5';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          {/* Version Badge */}
-          <span style={{
-            position: 'absolute',
-            top: 12,
-            right: 12,
-            background: '#059669',
-            color: 'white',
-            fontSize: 11,
-            padding: '2px 8px',
-            borderRadius: 6,
-            fontWeight: 500,
-          }}>{program.version}</span>
-
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{
-              width: 40,
-              height: 40,
-              background: 'linear-gradient(135deg, #10b981, #059669)',
-              borderRadius: 8,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M10 7v4m0 0v2m0-2h3m-3 0H8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </div>
-            <div>
-              <h4 style={{ fontWeight: 600, margin: 0, fontSize: 15 }}>{program.name}</h4>
-              <span style={{ color: '#6b7280', fontSize: 13 }}>{program.subtitle}</span>
-            </div>
-          </div>
-
-          {/* Features as tags */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
-            {program.features.slice(0, 4).map((feature, i) => (
-              <span key={i} style={{
-                fontSize: 11,
-                padding: '3px 8px',
-                background: '#f0fdf4',
-                color: '#059669',
-                borderRadius: 4,
-                fontWeight: 500,
-              }}>{feature}</span>
-            ))}
-            {program.features.length > 4 && (
-              <span style={{
-                fontSize: 11,
-                padding: '3px 8px',
-                background: '#f3f4f6',
-                color: '#6b7280',
-                borderRadius: 4,
-                fontWeight: 500,
-              }}>+{program.features.length - 4} mere</span>
-            )}
-          </div>
-
-          {/* Footer: Size & Status */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: '1px solid #f0f0f0' }}>
-            <span style={{ fontSize: 12, color: '#9ca3af' }}>{program.size}</span>
-            <span style={{ fontSize: 12, color: '#059669', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', display: 'inline-block' }}></span>
-              {program.status}
-            </span>
-          </div>
-        </div>
-      );
-    };
-
-    const ProgramDetailModal = ({ program, onClose }) => {
-      return (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: 20,
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-        >
-          <div style={{
-            background: 'white',
-            borderRadius: 16,
-            padding: 32,
-            maxWidth: 520,
-            width: '100%',
-            maxHeight: '85vh',
-            overflowY: 'auto',
-            boxShadow: '0 25px 80px rgba(0,0,0,0.2)',
-            animation: 'slideIn 0.3s ease',
-            position: 'relative',
-          }}>
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              style={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                background: 'none',
-                border: 'none',
-                fontSize: 20,
-                cursor: 'pointer',
-                color: '#9ca3af',
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 8,
-              }}
-            >×</button>
-
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-              <div style={{
-                width: 56,
-                height: 56,
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                borderRadius: 12,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M10 7v4m0 0v2m0-2h3m-3 0H8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>{program.name}</h2>
-                  <span style={{
-                    background: '#059669',
-                    color: 'white',
-                    fontSize: 11,
-                    padding: '2px 8px',
-                    borderRadius: 6,
-                    fontWeight: 500,
-                  }}>{program.version}</span>
-                </div>
-                <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>{program.subtitle}</p>
-              </div>
-            </div>
-
-            {/* Description */}
-            <p style={{ color: '#374151', fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
-              {program.description}
-            </p>
-
-            {/* Info row */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{program.size}</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Størrelse</div>
-              </div>
-              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#059669' }}>{program.status}</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Status</div>
-              </div>
-              <div style={{ flex: 1, background: '#f9fafb', borderRadius: 8, padding: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>{program.features.length}</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Funktioner</div>
-              </div>
-            </div>
-
-            {/* Features list */}
-            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Funktioner</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-              {program.features.map((feature, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 6 }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
-                    <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                  <span style={{ fontSize: 13, color: '#374151' }}>{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Next version */}
-            <div style={{ background: '#f9fafb', borderRadius: 10, padding: 20, border: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0, color: '#1a1a1a' }}>Næste version</h3>
-                <span style={{
-                  fontSize: 10,
-                  padding: '2px 6px',
-                  background: '#dbeafe',
-                  color: '#2563eb',
-                  borderRadius: 4,
-                  fontWeight: 600,
-                }}>{program.nextVersion.version}</span>
-                <span style={{
-                  fontSize: 10,
-                  padding: '2px 6px',
-                  background: '#fef3c7',
-                  color: '#d97706',
-                  borderRadius: 4,
-                  fontWeight: 600,
-                }}>Kommer snart</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {program.nextVersion.features.map((feature, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <path d="M8 12h8M12 8v8" strokeLinecap="round"/>
-                    </svg>
-                    <span style={{ fontSize: 13, color: '#6b7280' }}>{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // =============================================================================
     // SEARCH COMPONENT
     // =============================================================================
     const BusinessSearch = ({ onBusinessSelect }) => {
@@ -2535,7 +2363,6 @@
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [showResults, setShowResults] = useState(false);
-      const [showProgramModal, setShowProgramModal] = useState(false);
       const debounceRef = useRef(null);
 
       useEffect(() => {
@@ -2637,16 +2464,6 @@
               Start analyse
             </button>
           </div>
-
-          {/* Program Card */}
-          <div style={{ marginTop: 32, width: '100%', maxWidth: 600 }}>
-            <ProgramCard program={PROGRAM_DATA} onClick={() => setShowProgramModal(true)} />
-          </div>
-
-          {/* Program Detail Modal */}
-          {showProgramModal && (
-            <ProgramDetailModal program={PROGRAM_DATA} onClose={() => setShowProgramModal(false)} />
-          )}
         </div>
       );
     };
@@ -2662,7 +2479,45 @@
       const [showReport, setShowReport] = useState(false);
       const [findings, setFindings] = useState([]);
       const [highlightedFindingId, setHighlightedFindingId] = useState(null);
-      const [secondsRemaining, setSecondsRemaining] = useState(45);
+      const [secondsRemaining, setSecondsRemaining] = useState(150);
+      const [isPaid, setIsPaid] = useState(false);
+      const cacheRestored = useRef(false);
+
+      // Check for paid=true URL param (Stripe redirect) and restore cached results
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('paid') !== 'true') return;
+        setIsPaid(true);
+
+        // Restore cached scan results to skip re-scanning
+        try {
+          const cached = sessionStorage.getItem('seo_scan_cache');
+          if (cached) {
+            const data = JSON.parse(cached);
+            // Only use cache if less than 30 minutes old
+            if (data.timestamp && Date.now() - data.timestamp < 30 * 60 * 1000) {
+              setAnalysisResults(data.results || {});
+              setFindings(data.findings || []);
+              setIsComplete(true);
+              setShowReport(true);
+              // Mark all steps as completed visually
+              analysisSteps.forEach(step => {
+                setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
+              });
+              sessionStorage.removeItem('seo_scan_cache');
+              cacheRestored.current = true;
+              return;
+            }
+          }
+        } catch (e) { /* ignore parse errors */ }
+      }, []);
+
+      // Auto-unlock report when scan completes and payment is confirmed
+      useEffect(() => {
+        if (isComplete && isPaid) {
+          setShowReport(true);
+        }
+      }, [isComplete, isPaid]);
 
       // Countdown timer
       useEffect(() => {
@@ -2681,116 +2536,118 @@
       }, []);
 
       const analysisSteps = useMemo(() => [
-        { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin' },
-        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star' },
-        { id: 'images', name: 'Billeder & Medier', icon: 'Image' },
-        { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search' },
-        { id: 'citations', name: 'Citationer', icon: 'Link' },
-        { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target' },
-        { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle' },
-        { id: 'website', name: 'Website & Mobil', icon: 'Globe' },
-        { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code' },
-        { id: 'social', name: 'Social Media', icon: 'Share' },
+        { id: 'googleProfile', name: 'Google Business Profile', icon: 'MapPin', apiSource: 'Google Search' },
+        { id: 'reviews', name: 'Anmeldelsesanalyse', icon: 'Star', apiSource: 'Serper Review' },
+        { id: 'images', name: 'Billeder & Medier', icon: 'Image', apiSource: 'Serper Image' },
+        { id: 'serpVisibility', name: 'SERP Synlighed', icon: 'Search', apiSource: 'Google Search' },
+        { id: 'citations', name: 'Citationer', icon: 'Link', apiSource: 'Firecrawl Branding' },
+        { id: 'competitors', name: 'Konkurrentanalyse', icon: 'Target', apiSource: 'Serper Maps' },
+        { id: 'napConsistency', name: 'NAP Konsistens', icon: 'CheckCircle', apiSource: 'Firecrawl Branding' },
+        { id: 'website', name: 'Website & Mobil', icon: 'Globe', apiSource: 'Firecrawl Branding' },
+        { id: 'schemaMarkup', name: 'Schema Markup', icon: 'Code', apiSource: 'Firecrawl Branding' },
+        { id: 'social', name: 'Sociale Medier', icon: 'Share', apiSource: 'Serper Review' },
       ], []);
 
       useEffect(() => {
+        // Skip scan if results were restored from cache (post-payment)
+        if (cacheRestored.current) return;
+
         const runAnalysis = async () => {
-          for (let i = 0; i < analysisSteps.length; i++) {
-            setCurrentStep(i);
-            const step = analysisSteps[i];
+          try {
+            // Start the v3 backend scan (single API call)
+            const v3Promise = scanWithV3Backend(business);
 
-            try {
-              let result;
-              switch (step.id) {
-                case 'googleProfile':
-                  result = await AnalysisService.getGoogleBusinessProfile(
-                    business.place_id,
-                    business.name
-                  );
-                  break;
-                case 'reviews':
-                  result = await AnalysisService.getReviewAnalysis(
-                    business.place_id,
-                    business.name
-                  );
-                  break;
-                case 'images':
-                  result = await AnalysisService.getBusinessImages(business.name);
-                  break;
-                case 'serpVisibility':
-                  result = await AnalysisService.getSERPVisibility(
-                    business.name,
-                    analysisResults.googleProfile?.address || business.address,
-                    'restaurant'
-                  );
-                  break;
-                case 'citations':
-                  result = await AnalysisService.getCitationPresence(
-                    business.name,
-                    business.address,
-                    analysisResults.googleProfile?.phone || '+45 86 12 34 56'
-                  );
-                  break;
-                case 'competitors':
-                  result = await AnalysisService.getCompetitorAnalysis(
-                    business.name,
-                    business.address,
-                    'restaurant'
-                  );
-                  break;
-                case 'napConsistency':
-                  result = await AnalysisService.checkNAPConsistency(
-                    business.name,
-                    business.address,
-                    '+45 86 12 34 56'
-                  );
-                  break;
-                case 'website':
-                  const profile = analysisResults.googleProfile;
-                  result = await AnalysisService.analyzeWebsite(
-                    profile?.website || business.website
-                  );
-                  break;
-                case 'schemaMarkup':
-                  const websiteUrl = analysisResults.googleProfile?.website || business.website;
-                  result = await AnalysisService.detectSchemaMarkup(websiteUrl);
-                  break;
-                case 'social':
-                  result = await AnalysisService.analyzeSocialPresence(business.name);
-                  break;
-              }
-
-              setAnalysisResults(prev => ({ ...prev, [step.id]: result }));
-              setCompletedSteps(prev => [...prev, step.id]);
-
-              // Extract and add findings
-              const newFindings = extractFindings(step.id, step.name, result);
-              if (newFindings.length > 0) {
-                addFindings(newFindings);
-              }
-            } catch (error) {
-              console.error(`Error in ${step.id}:`, error);
-              setCompletedSteps(prev => [...prev, step.id]);
-              addFindings([{
-                id: `${step.id}_error_${Date.now()}`,
-                module: step.id,
-                moduleName: step.name,
-                category: 'warning',
-                title: 'Kunne ikke hente data',
-                description: 'Modulet blev sprunget over pga. en fejl. Analysen fortsætter.',
-                confidence: 'not_found',
-                dataSource: 'System',
-              }]);
+            // Simulate step progression while API processes
+            for (let i = 0; i < analysisSteps.length; i++) {
+              setCurrentStep(i);
+              await delay(10000 + Math.random() * 8000);
+              setCompletedSteps(prev => [...prev, analysisSteps[i].id]);
             }
-          }
 
-          setIsComplete(true);
+            // Wait for v3 API to complete
+            const v3Response = await v3Promise;
+
+            // Transform v3 response to display format
+            const displayData = transformV3ToDisplayFormat(v3Response);
+            setAnalysisResults(displayData);
+
+            // Convert v3 findings to the findings feed format
+            const v3Findings = (v3Response.findings || []).map((f, i) => ({
+              id: f.id || `v3_finding_${i}`,
+              module: f.module || 'general',
+              moduleName: f.module || 'Generelt',
+              category: f.type === 'positive' ? 'positive' : f.type === 'critical' ? 'critical' : 'warning',
+              title: f.title || 'Finding',
+              description: f.description || '',
+              confidence: f.confidence || 'indicator',
+              dataSource: 'Agent SEO v3',
+            }));
+            setFindings(v3Findings);
+
+            setIsComplete(true);
+          } catch (error) {
+            console.error('V3 scan failed:', error);
+            // Complete all steps visually even on error
+            analysisSteps.forEach(step => {
+              setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
+            });
+            addFindings([{
+              id: `v3_error_${Date.now()}`,
+              module: 'system',
+              moduleName: 'System',
+              category: 'critical',
+              title: 'Scan fejlede',
+              description: error.message || 'Kunne ikke gennemføre analysen. Prøv igen om lidt.',
+              confidence: 'not_found',
+              dataSource: 'System',
+            }]);
+            setIsComplete(true);
+          }
         };
 
         runAnalysis();
       }, [business, analysisSteps, addFindings]);
 
       const progress = (completedSteps.length / analysisSteps.length) * 100;
+
+      const overallScore = analysisResults._v3score
+        ? Math.round(analysisResults._v3score.overall || 0) : 0;
+      const getScoreColor = (s) => s >= 75 ? '#059669' : s >= 50 ? '#d97706' : '#dc2626';
+      const getScoreLabel = (s) => s >= 75 ? 'God digital tilstedeværelse' : s >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
+
+      const handlePurchase = async () => {
+        try {
+          // Cache scan results before redirecting to Stripe
+          try {
+            sessionStorage.setItem('seo_scan_cache', JSON.stringify({
+              results: analysisResults,
+              findings,
+              business,
+              timestamp: Date.now(),
+            }));
+          } catch (e) { /* sessionStorage might be full */ }
+
+          const params = new URLSearchParams(window.location.search);
+          const returnUrl = window.location.origin + window.location.pathname + '?' + params.toString();
+          const resp = await fetch('/api/stripe/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ businessName: business.name, returnUrl }),
+          });
+          const data = await resp.json();
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            alert('Betalingsfejl: ' + (data.error || 'Prøv igen'));
+          }
+        } catch (err) {
+          console.error('Stripe checkout error:', err);
+          alert('Kunne ikke oprette betaling. Prøv igen.');
+        }
+      };
+      const handleSubscribe = () => {
+        window.location.href = '/priser';
+      };
 
       if (showReport) {
         return (
@@ -2799,6 +2656,7 @@
             business={business}
             onNewScan={onBack}
             findings={findings}
+            isPaid={isPaid}
           />
         );
       }
@@ -2847,15 +2705,22 @@
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        flexShrink: 0,
                       }}>
                         {isCompleted ? (
                           <Icon name="Check" size={16} color="#059669" />
+                        ) : isCurrent ? (
+                          <svg width={20} height={20} style={{ animation: 'spin 1.5s linear infinite' }}>
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#e5e5e5" strokeWidth={2} />
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#667eea" strokeWidth={2}
+                              strokeDasharray={50.26} strokeDashoffset={37.7} strokeLinecap="round" />
+                          </svg>
                         ) : (
                           <div style={{
                             width: 8,
                             height: 8,
                             borderRadius: '50%',
-                            background: isCurrent ? '#015bf8' : '#d1d5db',
+                            background: '#d1d5db',
                           }} />
                         )}
                       </div>
@@ -2867,9 +2732,9 @@
                         }}>
                           {step.name}
                         </span>
-                        {isCurrent && (
-                          <div style={{ marginTop: 4 }}>
-                            <Spinner />
+                        {(isCurrent || isCompleted) && (
+                          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                            {step.apiSource}
                           </div>
                         )}
                       </div>
@@ -2879,27 +2744,14 @@
               </div>
 
               <div style={{ paddingTop: 24, borderTop: '1px solid #f0f0f0' }}>
-                <div style={{ height: 6, background: '#e5e5e5', borderRadius: 3, marginBottom: 16, overflow: 'hidden' }}>
+                <div style={{ height: 6, background: '#e5e5e5', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%',
                     width: `${progress}%`,
                     background: isComplete ? '#059669' : 'linear-gradient(90deg, #667eea, #764ba2)',
                     borderRadius: 3,
-                    transition: 'width 0.3s ease'
+                    transition: 'width 0.8s cubic-bezier(0.4, 0, 0.2, 1)'
                   }} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {!isComplete && <Spinner />}
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>
-                      {isComplete ? 'Analyse færdig!' : 'Running...'}
-                    </div>
-                    {!isComplete && (
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>
-                        {secondsRemaining} seconds remaining
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -2944,78 +2796,134 @@
                   </BrowserWindow>
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: 24, height: '100%', zIndex: 10 }}>
-                  {/* Completion Card */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', zIndex: 10, padding: 40 }}>
+                  {/* PDF-like Document Preview */}
                   <div style={{
                     background: 'white',
-                    borderRadius: 20,
-                    padding: 32,
-                    textAlign: 'center',
-                    boxShadow: '0 15px 50px rgba(0,0,0,0.08)',
-                    width: 320,
-                    flexShrink: 0,
-                    animation: 'slideIn 0.4s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    borderRadius: 12,
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)',
+                    width: '100%',
+                    maxWidth: 700,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    animation: 'slideIn 0.5s ease',
                   }}>
-                    <div style={{ margin: '0 auto 16px' }}>
-                      <Icon name="Check" size={32} color="#059669" />
-                    </div>
-                    <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 600 }}>Analyse færdig!</h2>
-                    <p style={{ margin: '0 0 8px', color: '#6b7280', fontSize: 14 }}>
-                      {analysisSteps.length} områder analyseret
-                    </p>
+                    {/* Document top accent */}
+                    <div style={{ height: 4, background: 'linear-gradient(90deg, #667eea, #764ba2)' }} />
 
-                    {/* Summary Stats - Inline */}
-                    <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>
-                      <span style={{ color: '#059669', fontWeight: 500 }}>{findings.filter(f => f.category === 'positive').length} positive</span>
-                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
-                      <span style={{ color: '#d97706', fontWeight: 500 }}>{findings.filter(f => f.category === 'warning').length} advarsler</span>
-                      <span style={{ margin: '0 8px', color: '#d1d5db' }}>·</span>
-                      <span style={{ color: '#dc2626', fontWeight: 500 }}>{findings.filter(f => f.category === 'critical').length} kritiske</span>
-                    </p>
+                    {/* Document content (8% preview) */}
+                    <div style={{ padding: '32px 40px 80px' }}>
+                      <p style={{ fontSize: 11, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 8px' }}>
+                        Digital Analyse
+                      </p>
+                      <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 600, color: '#1a1a1a' }}>
+                        {business.name}
+                      </h2>
+                      <p style={{ margin: '0 0 28px', color: '#6b7280', fontSize: 13 }}>
+                        {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
 
-                    <button
-                      onClick={() => setShowReport(true)}
-                      style={{
-                        padding: '14px 32px',
-                        background: '#015bf8',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        fontSize: 15,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        width: '100%',
-                      }}
-                      onMouseOver={(e) => { e.target.style.background = '#0047cc'; }}
-                      onMouseOut={(e) => { e.target.style.background = '#015bf8'; }}
-                    >
-                      Se fuld rapport
-                    </button>
-                  </div>
-
-                  {/* Final Findings Overview */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ background: 'white', borderRadius: 20, padding: 24, boxShadow: '0 15px 50px rgba(0,0,0,0.08)', height: '100%', maxHeight: 'calc(100vh - 120px)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <Icon name="FileText" size={20} color="#667eea" />
-                        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Alle fund</h3>
-                        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#6b7280' }}>{findings.length} fund</span>
+                      {/* Score preview */}
+                      <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <ProgressRing progress={overallScore} size={100} strokeWidth={6} color={getScoreColor(overallScore)} />
+                          <div style={{
+                            position: 'absolute', inset: 0,
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <span style={{ fontSize: 28, fontWeight: 700, color: '#1a1a1a' }}>{overallScore}</span>
+                            <span style={{ fontSize: 11, color: '#9ca3af' }}>af 100</span>
+                          </div>
+                        </div>
+                        <p style={{ margin: '12px 0 0', fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>
+                          {getScoreLabel(overallScore)}
+                        </p>
                       </div>
-                      <LiveFindingsFeed
-                        findings={findings}
-                        highlightedId={null}
-                        moduleStatuses={analysisSteps.map(step => ({
-                          id: step.id,
-                          name: step.name,
-                          status: 'completed',
-                          findingsCount: findings.filter(f => f.module === step.id).length,
-                        }))}
-                      />
+
+                      {/* First few findings (preview) */}
+                      <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: 16 }}>
+                        <p style={{ fontSize: 12, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 0.5, margin: '0 0 12px', fontWeight: 600 }}>
+                          Fund ({findings.length})
+                        </p>
+                        {findings.slice(0, 3).map((f, i) => (
+                          <div key={f.id || i} style={{
+                            padding: '10px 0',
+                            borderBottom: '1px solid #f3f4f6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 10,
+                          }}>
+                            <div style={{
+                              width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                              background: f.category === 'positive' ? '#059669' : f.category === 'critical' ? '#dc2626' : '#d97706',
+                            }} />
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>{f.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Gradient fade overlay + Paywall */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: '65%',
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 35%, white 50%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      alignItems: 'center',
+                      padding: '0 32px 40px',
+                    }}>
+                      <div style={{ textAlign: 'center', maxWidth: 420 }}>
+                        <Icon name="Lock" size={24} color="#667eea" />
+                        <h3 style={{ margin: '12px 0 8px', fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>
+                          Se din analyse
+                        </h3>
+                        <p style={{ color: '#6b7280', fontSize: 13, margin: '0 0 24px', lineHeight: 1.5 }}>
+                          Strategisk rapport med dokumenterede indsigter, handlingsorienteret roadmap, markedsbaseret konkurrentanalyse og målbare forbedringstiltag.
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                          <button
+                            onClick={handlePurchase}
+                            style={{
+                              padding: '12px 28px',
+                              background: '#015bf8',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#0047cc'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = '#015bf8'; }}
+                          >
+                            Køb rapport, 39 kr.
+                          </button>
+                          <button
+                            onClick={handleSubscribe}
+                            style={{
+                              padding: '12px 28px',
+                              background: 'transparent',
+                              color: '#015bf8',
+                              border: '1px solid #015bf8',
+                              borderRadius: 8,
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => { e.currentTarget.style.background = '#f0f4ff'; }}
+                            onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                          >
+                            Abonner
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3029,10 +2937,12 @@
     // =============================================================================
     // PDF REPORT GENERATOR
     // =============================================================================
+    // KOMPLET PDF-RAPPORT GENERATOR | Agent SEO v3
+    // =============================================================================
     class ScannerReportGenerator {
       constructor() {
-        this.primaryColor = [1, 91, 248];  // #015bf8 - primary blue
-        this.secondaryColor = [1, 91, 248]; // Same blue for consistency
+        this.primaryColor = [1, 91, 248];
+        this.secondaryColor = [1, 91, 248];
         this.darkColor = [26, 26, 46];
         this.successColor = [5, 150, 105];
         this.warningColor = [217, 119, 6];
@@ -3044,305 +2954,700 @@
         this.pageHeight = 297;
         this.margin = 20;
         this.contentWidth = this.pageWidth - 2 * this.margin;
+        this.bottomLimit = this.pageHeight - 25;
       }
 
-      formatDate(date) {
-        return new Date(date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' });
+      // ── Helpers ──────────────────────────────────────────────────────────────
+      fmt(date) { return new Date(date).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' }); }
+      sc(s) { return s >= 75 ? this.successColor : s >= 50 ? this.warningColor : this.dangerColor; }
+      tx(doc, ...c) { doc.setTextColor(c[0], c[1], c[2]); }
+      fl(doc, ...c) { doc.setFillColor(c[0], c[1], c[2]); }
+      wrap(doc, txt, w) { return doc.splitTextToSize(String(txt || ''), w); }
+
+      pageBreak(doc, y, need) {
+        if (y + need > this.bottomLimit) { doc.addPage(); this.pageHeader(doc); return this.margin + 10; }
+        return y;
+      }
+      pageHeader(doc) { this.fl(doc, ...this.primaryColor); doc.rect(0, 0, this.pageWidth, 3, 'F'); }
+      pageFooter(doc, pg) {
+        doc.setFontSize(8); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text(`Side ${pg}`, this.pageWidth / 2, this.pageHeight - 10, { align: 'center' });
+        doc.text('Agent SEO v3 | OrderFlow', this.pageWidth - this.margin, this.pageHeight - 10, { align: 'right' });
+      }
+      sectionHeader(doc, title, y) {
+        this.tx(doc, ...this.textColor); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+        doc.text(title, this.margin, y + 5); this.fl(doc, ...this.primaryColor);
+        doc.rect(this.margin, y + 8, 40, 2, 'F'); return y + 22;
+      }
+      metricBox(doc, x, y, w, label, value, sub) {
+        this.fl(doc, ...this.lightGray); doc.roundedRect(x, y, w, 32, 3, 3, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+        doc.text(String(value), x + w/2, y + 15, { align: 'center' });
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text(label, x + w/2, y + 23, { align: 'center' });
+        if (sub) { doc.setFontSize(7); doc.text(sub, x + w/2, y + 29, { align: 'center' }); }
+      }
+      scoreBar(doc, x, y, w, score, label, weight) {
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(label, x, y + 4);
+        if (weight) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.text(`(${weight})`, x + doc.getTextWidth(label) + 3, y + 4); }
+        const sc = this.sc(score); const numStr = String(Math.round(score || 0));
+        this.tx(doc, sc[0], sc[1], sc[2]); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text(numStr, x + w, y + 4, { align: 'right' });
+        this.fl(doc, 224, 224, 224); doc.roundedRect(x, y + 8, w, 5, 2, 2, 'F');
+        this.fl(doc, sc[0], sc[1], sc[2]); doc.roundedRect(x, y + 8, w * Math.min(1, (score || 0) / 100), 5, 2, 2, 'F');
+      }
+      checkItem(doc, x, y, ok, label) {
+        const c = ok ? this.successColor : this.dangerColor;
+        this.fl(doc, c[0], c[1], c[2]); doc.roundedRect(x, y - 3, 14, 14, 2, 2, 'F');
+        doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        doc.text(ok ? 'OK' : 'X', x + 7, y + 5, { align: 'center' });
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(label, x + 18, y + 5);
+      }
+      infoBox(doc, x, y, w, text) {
+        this.fl(doc, 239, 246, 255); doc.roundedRect(x, y, w, 28, 3, 3, 'F');
+        this.fl(doc, ...this.primaryColor); doc.rect(x, y, 3, 28, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        const lines = this.wrap(doc, text, w - 14);
+        lines.slice(0, 3).forEach((l, i) => doc.text(l, x + 10, y + 10 + i * 5));
+        return y + 32;
       }
 
-      getScoreColor(score) {
-        if (score >= 75) return this.successColor;
-        if (score >= 50) return this.warningColor;
-        return this.dangerColor;
+      // ── AutoTable helper ────────────────────────────────────────────────────
+      autoTbl(doc, y, head, body, opts) {
+        const hasPlugin = typeof doc.autoTable === 'function';
+        if (!hasPlugin) { return this.manualTable(doc, y, head, body); }
+        doc.autoTable({
+          startY: y, head: [head], body,
+          theme: 'grid',
+          headStyles: { fillColor: this.primaryColor, textColor: [255,255,255], fontSize: 9, fontStyle: 'bold', cellPadding: 3 },
+          bodyStyles: { fontSize: 9, textColor: this.textColor, cellPadding: 3 },
+          alternateRowStyles: { fillColor: [249, 250, 251] },
+          margin: { left: this.margin, right: this.margin },
+          tableWidth: this.contentWidth,
+          ...opts
+        });
+        return doc.lastAutoTable.finalY + 10;
+      }
+      manualTable(doc, y, head, body) {
+        const colW = this.contentWidth / head.length;
+        this.fl(doc, ...this.primaryColor); doc.roundedRect(this.margin, y, this.contentWidth, 10, 2, 2, 'F');
+        doc.setTextColor(255,255,255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        head.forEach((h, i) => doc.text(h, this.margin + i * colW + 3, y + 7));
+        y += 12;
+        body.forEach((row, ri) => {
+          if (ri % 2 === 0) { this.fl(doc, ...this.lightGray); doc.rect(this.margin, y - 3, this.contentWidth, 10, 'F'); }
+          this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+          row.forEach((cell, ci) => doc.text(String(cell || '-').substring(0, 28), this.margin + ci * colW + 3, y + 4));
+          y += 10;
+          y = this.pageBreak(doc, y, 12);
+        });
+        return y + 8;
       }
 
-      generate(reportData) {
+      // ── Main generate ───────────────────────────────────────────────────────
+      generate(data) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-
-        this.addCoverPage(doc, reportData);
-        this.addExecutiveSummary(doc, reportData);
-        this.addScorecards(doc, reportData);
-        this.addActionPlan(doc, reportData);
-
+        this.addCoverPage(doc, data);
+        this.addTableOfContents(doc);
+        this.addScoreOverview(doc, data);
+        this.addGoogleBusiness(doc, data);
+        this.addReviewsAnalysis(doc, data);
+        this.addCompetitorAnalysis(doc, data);
+        this.addWebsiteAnalysis(doc, data);
+        this.addNAPConsistency(doc, data);
+        this.addSocialMedia(doc, data);
+        this.addAllFindings(doc, data);
+        this.addDynamicActionPlan(doc, data);
+        this.addFutureVision(doc, data);
+        // Page numbers (skip cover)
+        const total = doc.internal.getNumberOfPages();
+        for (let i = 2; i <= total; i++) { doc.setPage(i); this.pageFooter(doc, i); }
         return doc;
       }
 
-      addCoverPage(doc, data) {
-        // Clean header bar
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(0, 0, this.pageWidth, 8, 'F');
-
-        // Title
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(32);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Digital Synlighedsrapport', this.pageWidth / 2, 45, { align: 'center' });
-
-        // Subtitle
-        doc.setFontSize(12);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Komplet analyse af din digitale tilstedeværelse', this.pageWidth / 2, 58, { align: 'center' });
-
-        // Business name
-        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setFontSize(20);
-        doc.setFont('helvetica', 'bold');
-        doc.text(data.business.name, this.pageWidth / 2, 85, { align: 'center' });
-
-        // Date and location
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-        doc.text(data.business.address || '', this.pageWidth / 2, 98, { align: 'center' });
-        doc.text(`Genereret: ${this.formatDate(data.scanDate)}`, this.pageWidth / 2, 108, { align: 'center' });
-
-        // Overall Score - Clean horizontal bar style
-        const centerX = this.pageWidth / 2;
-        const centerY = 150;
-
-        // Score circle with ring
-        const radius = 32;
-        const scoreColor = this.getScoreColor(data.overallScore);
-
-        // Outer ring
-        doc.setDrawColor(240, 240, 240);
-        doc.setLineWidth(4);
-        doc.circle(centerX, centerY, radius, 'S');
-
-        // Colored arc (approximated with circle for simplicity)
-        doc.setDrawColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.setLineWidth(4);
-        doc.circle(centerX, centerY, radius, 'S');
-
-        // Score number
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(32);
-        doc.setFont('helvetica', 'bold');
-        doc.text(String(data.overallScore), centerX, centerY + 4, { align: 'center' });
-        doc.setFontSize(10);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.setFont('helvetica', 'normal');
-        doc.text('af 100', centerX, centerY + 14, { align: 'center' });
-
-        // Score Label
-        doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-        doc.setFontSize(13);
-        doc.setFont('helvetica', 'bold');
-        const label = data.overallScore >= 75 ? 'God digital tilstedeværelse' :
-                     data.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
-        doc.text(label, centerX, centerY + 48, { align: 'center' });
-
-        // Key Stats
-        let yPos = 220;
-        doc.setFontSize(11);
-        doc.setFont('helvetica', 'normal');
-
+      // ── Page 1: Cover ───────────────────────────────────────────────────────
+      addCoverPage(doc, d) {
+        const cx = this.pageWidth / 2;
+        this.fl(doc, ...this.primaryColor); doc.rect(0, 0, this.pageWidth, 8, 'F');
+        this.tx(doc, ...this.textColor); doc.setFontSize(30); doc.setFont('helvetica', 'bold');
+        doc.text('Digital Synlighedsrapport', cx, 42, { align: 'center' });
+        doc.setFontSize(12); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('Komplet SEO-analyse og arbejdsplan', cx, 55, { align: 'center' });
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(20); doc.setFont('helvetica', 'bold');
+        doc.text(d.business.name, cx, 82, { align: 'center' });
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+        if (d.business.address) doc.text(d.business.address, cx, 95, { align: 'center' });
+        doc.text(`Genereret: ${this.fmt(d.scanDate)}`, cx, 105, { align: 'center' });
+        // Score circle
+        const cy = 148; const r = 30; const sc = this.sc(d.overallScore);
+        doc.setDrawColor(230,230,230); doc.setLineWidth(4); doc.circle(cx, cy, r, 'S');
+        doc.setDrawColor(sc[0],sc[1],sc[2]); doc.setLineWidth(4); doc.circle(cx, cy, r, 'S');
+        this.tx(doc, ...this.textColor); doc.setFontSize(30); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), cx, cy + 4, { align: 'center' });
+        doc.setFontSize(9); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('af 100', cx, cy + 13, { align: 'center' });
+        // Score label
+        const v3l = d.results._v3score?.label;
+        const lbl = v3l || (d.overallScore >= 75 ? 'God digital tilstedeværelse' : d.overallScore >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler');
+        doc.setTextColor(sc[0],sc[1],sc[2]); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+        doc.text(lbl, cx, cy + 42, { align: 'center' });
+        // Key stats
         const stats = [
-          { label: 'Rating', value: data.results.googleProfile?.rating || 'N/A' },
-          { label: 'Anmeldelser', value: data.results.reviews?.totalReviews || 0 },
-          { label: 'Fund', value: data.findingsCount || 0 },
+          { label: 'Rating', value: d.results.googleProfile?.rating || 'N/A' },
+          { label: 'Anmeldelser', value: d.results.reviews?.totalReviews || 0 },
+          { label: 'Fund', value: d.findingsCount || 0 },
+          { label: 'Moduler', value: (d.results._v3moduleStatuses || []).length || 5 },
         ];
-
-        const statWidth = this.contentWidth / 3;
-        stats.forEach((stat, i) => {
-          const x = this.margin + statWidth * i + statWidth / 2;
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.text(stat.label, x, yPos, { align: 'center' });
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(stat.value), x, yPos + 8, { align: 'center' });
-          doc.setFont('helvetica', 'normal');
+        let sy = 218; const sw = this.contentWidth / stats.length;
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        stats.forEach((s, i) => {
+          const sx = this.margin + sw * i + sw / 2;
+          this.tx(doc, ...this.mutedColor); doc.text(s.label, sx, sy, { align: 'center' });
+          this.tx(doc, ...this.textColor); doc.setFont('helvetica', 'bold');
+          doc.text(String(s.value), sx, sy + 8, { align: 'center' }); doc.setFont('helvetica', 'normal');
         });
-
-        // Footer
-        doc.setFontSize(9);
-        doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-        doc.text('Powered by OrderFlow Business Scanner', centerX, 280, { align: 'center' });
+        // Module statuses
+        const mods = d.results._v3moduleStatuses || [];
+        if (mods.length) {
+          let my = 242; doc.setFontSize(9); this.tx(doc, ...this.mutedColor);
+          doc.text('Analysemoduler:', this.margin, my);
+          mods.forEach((m, i) => {
+            const col = m.status === 'completed' ? this.successColor : m.status === 'warning' ? this.warningColor : this.dangerColor;
+            this.fl(doc, col[0], col[1], col[2]); doc.circle(this.margin + 4 + i * 35, my + 8, 2, 'F');
+            this.tx(doc, ...this.textColor); doc.setFontSize(7);
+            doc.text(m.name || m.id, this.margin + 8 + i * 35, my + 9);
+          });
+        }
+        doc.setFontSize(9); this.tx(doc, ...this.mutedColor);
+        doc.text('Genereret af Agent SEO v3. OrderFlow Business Scanner', cx, 280, { align: 'center' });
       }
 
-      addExecutiveSummary(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
+      // ── Page 2: Table of Contents ───────────────────────────────────────────
+      addTableOfContents(doc) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Indhold', this.margin + 5);
+        const items = [
+          ['Samlet Score & Scorekort', '3'],
+          ['Google Business Profile', '4'],
+          ['Anmeldelsesanalyse', '5'],
+          ['Konkurrentanalyse', '6'],
+          ['Website & Teknisk SEO', '7'],
+          ['NAP Konsistens', '8'],
+          ['Sociale Medier', '9'],
+          ['Alle Fund', '10'],
+          ['Handlingsplan (7/30/90 dage)', '11'],
+          ['Fremtidsperspektiv og næste skridt', '12'],
+        ];
+        y += 5;
+        items.forEach((item, i) => {
+          this.tx(doc, ...this.textColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal');
+          const num = `${i + 1}.`;
+          doc.text(num, this.margin, y);
+          doc.text(item[0], this.margin + 10, y);
+          // Dotted leader
+          const dots = '.'.repeat(80);
+          this.tx(doc, 200, 200, 200); doc.setFontSize(8);
+          doc.text(dots, this.margin + 10 + doc.getTextWidth(item[0]) + 2, y, { maxWidth: this.contentWidth - doc.getTextWidth(item[0]) - 30 });
+          this.tx(doc, ...this.mutedColor); doc.setFontSize(11);
+          doc.text(item[1], this.margin + this.contentWidth, y, { align: 'right' });
+          y += 14;
+        });
+      }
 
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Top 5 Vigtigste Fund', this.margin, yPos + 5);
-        yPos += 10;
+      // ── Page 3: Score Overview ──────────────────────────────────────────────
+      addScoreOverview(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Samlet Score & Scorekort', this.margin + 5);
+        // Overall score
+        const sc = this.sc(d.overallScore);
+        this.tx(doc, ...this.textColor); doc.setFontSize(48); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), this.margin + 25, y + 20);
+        doc.setFontSize(14); this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal');
+        doc.text('/ 100 point', this.margin + 58, y + 20);
+        doc.setTextColor(sc[0],sc[1],sc[2]); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        const v3l = d.results._v3score?.label || '';
+        doc.text(v3l, this.margin + 58, y + 8);
+        y += 35;
+        // Breakdown bars
+        const bd = d.results._v3score?.breakdown || {};
+        const cats = [
+          { label: 'Google Business Profile', score: bd.gbp || 0, weight: '30%' },
+          { label: 'Anmeldelser', score: bd.reviews || 0, weight: '25%' },
+          { label: 'Website & SEO', score: bd.website || 0, weight: '25%' },
+          { label: 'Konkurrenter', score: bd.competitors || 0, weight: '15%' },
+          { label: 'Social & NAP', score: bd.socialNap || 0, weight: '5%' },
+        ];
+        cats.forEach(c => { this.scoreBar(doc, this.margin, y, this.contentWidth, c.score, c.label, c.weight); y += 22; });
+        // Interpretation box
+        y += 5;
+        const interp = d.overallScore >= 75
+          ? 'Din digitale tilstedeværelse er stærk. Vedligehold det du har og forbedre de lavest scorende områder.'
+          : d.overallScore >= 50
+          ? 'Du har forbedringspotentiale. Prioriter de røde og orange områder i din handlingsplan.'
+          : 'Der er kritiske mangler. Start med Uge 1-handlingerne i din handlingsplan i dag.';
+        this.infoBox(doc, this.margin, y, this.contentWidth, interp);
+      }
 
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 15;
+      // ── Page 4: Google Business Profile ─────────────────────────────────────
+      addGoogleBusiness(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Google Business Profile', this.margin + 5);
+        const gp = d.results.googleProfile;
+        if (!gp) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Google Business Profile data ikke tilgængelig for denne virksomhed.', this.margin, y + 10); return; }
+        // Metrics
+        const mw = (this.contentWidth - 15) / 4;
+        this.metricBox(doc, this.margin, y, mw, 'Rating', gp.rating || 'N/A', gp.rating ? `${gp.rating}/5.0` : '');
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Anmeldelser', gp.totalReviews || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'Billeder', gp.photos?.total || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 3, y, mw, 'Profil %', `${gp.profileCompleteness?.score || 0}%`);
+        y += 40;
+        // Completeness bar
+        const pcs = gp.profileCompleteness?.score || 0;
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Profil-komplethed', this.margin, y + 4);
+        this.fl(doc, 224, 224, 224); doc.roundedRect(this.margin, y + 8, this.contentWidth, 6, 3, 3, 'F');
+        const pcc = this.sc(pcs); this.fl(doc, pcc[0], pcc[1], pcc[2]);
+        doc.roundedRect(this.margin, y + 8, this.contentWidth * pcs / 100, 6, 3, 3, 'F');
+        y += 22;
+        // Missing fields
+        const missing = gp.profileCompleteness?.missing || [];
+        if (missing.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Manglende elementer:', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.dangerColor);
+          missing.forEach(m => { doc.text(`• ${m}`, this.margin + 5, y); y += 6; });
+          y += 5;
+        }
+        // Claimed & categories
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        if (gp.claimed !== undefined) {
+          const claimedTxt = gp.claimed ? 'Profilen er bekræftet (claimed)' : 'Profilen er IKKE bekræftet. Gør dette hurtigst muligt.';
+          const cc = gp.claimed ? this.successColor : this.dangerColor;
+          doc.setTextColor(cc[0], cc[1], cc[2]); doc.text(claimedTxt, this.margin, y); y += 8;
+        }
+        if (gp.types?.length) { this.tx(doc, ...this.mutedColor); doc.text(`Kategorier: ${gp.types.join(', ')}`, this.margin, y); y += 12; }
+        // Tip box
+        y = this.infoBox(doc, this.margin, y, this.contentWidth, 'En komplet Google Business Profile øger lokale besøg med op til 70%. Tilføj billeder, åbningstider og menu. Svar på anmeldelser inden 24 timer.');
+      }
 
-        // Top findings
-        const topFindings = (data.findings || [])
-          .filter(f => f.category === 'critical' || f.category === 'warning')
-          .slice(0, 5);
+      // ── Page 5: Reviews Analysis ────────────────────────────────────────────
+      addReviewsAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Anmeldelsesanalyse', this.margin + 5);
+        const rv = d.results.reviews;
+        if (!rv) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Anmeldelsesdata ikke tilgængelig.', this.margin, y + 10); return; }
+        // Key metrics
+        const mw = (this.contentWidth - 10) / 3;
+        this.metricBox(doc, this.margin, y, mw, 'Gns. Rating', rv.averageRating?.toFixed(1) || 'N/A');
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Svarrate', `${rv.responseMetrics?.responseRate || 0}%`);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'Gns. Svartid', rv.responseMetrics?.avgResponseTimeHours ? `${Math.round(rv.responseMetrics.avgResponseTimeHours)}t` : 'N/A');
+        y += 40;
+        // Sentiment bar
+        const sent = rv.sentiment || {};
+        if (sent.positive || sent.neutral || sent.negative) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Sentiment-fordeling', this.margin, y); y += 8;
+          const bw = this.contentWidth;
+          const posW = bw * (sent.positive || 0) / 100;
+          const neuW = bw * (sent.neutral || 0) / 100;
+          const negW = bw * (sent.negative || 0) / 100;
+          this.fl(doc, ...this.successColor); doc.roundedRect(this.margin, y, posW || 1, 10, 0, 0, 'F');
+          this.fl(doc, ...this.warningColor); doc.rect(this.margin + posW, y, neuW || 1, 10, 'F');
+          this.fl(doc, ...this.dangerColor); doc.rect(this.margin + posW + neuW, y, negW || 1, 10, 'F');
+          y += 14;
+          doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...this.successColor); doc.text(`Positiv: ${sent.positive || 0}%`, this.margin, y);
+          doc.setTextColor(...this.warningColor); doc.text(`Neutral: ${sent.neutral || 0}%`, this.margin + 55, y);
+          doc.setTextColor(...this.dangerColor); doc.text(`Negativ: ${sent.negative || 0}%`, this.margin + 110, y);
+          y += 12;
+        }
+        // Velocity
+        const vel = rv.velocity || {};
+        if (vel.monthlyAverage !== undefined) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Anmeldelseshastighed', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.textColor);
+          doc.text(`Månedligt gennemsnit: ${vel.monthlyAverage} anmeldelser`, this.margin, y); y += 6;
+          if (vel.trend) { doc.text(`Trend: ${vel.trend}`, this.margin, y); y += 6; }
+          y += 8;
+        }
+        // Top keywords
+        const kws = rv.topKeywords || [];
+        if (kws.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Hyppigste ord i anmeldelser', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          kws.slice(0, 8).forEach(kw => {
+            const c = kw.sentiment === 'positive' ? this.successColor : kw.sentiment === 'negative' ? this.dangerColor : this.mutedColor;
+            doc.setTextColor(c[0], c[1], c[2]);
+            doc.text(`• ${kw.term || kw} (${kw.count || ''})`, this.margin + 3, y); y += 6;
+          });
+          y += 5;
+        }
+        // Tip
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'Svar på alle anmeldelser inden 24 timer. Det øger din Google-synlighed og opbygger tillid hos nye kunder.');
+      }
 
-        if (topFindings.length === 0) {
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.setFont('helvetica', 'normal');
-          doc.text('Ingen kritiske fund.', this.margin, yPos + 10);
-          yPos += 30;
-        } else {
-          topFindings.forEach((finding, i) => {
-            const color = finding.category === 'critical' ? this.dangerColor : this.warningColor;
-
-            // Number badge
-            doc.setFillColor(color[0], color[1], color[2]);
-            doc.circle(this.margin + 8, yPos + 5, 8, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text(String(i + 1), this.margin + 8, yPos + 8, { align: 'center' });
-
-            // Finding text
-            doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-            doc.setFontSize(11);
-            doc.text(finding.title, this.margin + 22, yPos + 6);
-
-            doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            const desc = finding.description?.substring(0, 100) + (finding.description?.length > 100 ? '...' : '');
-            doc.text(desc, this.margin + 22, yPos + 14);
-
-            yPos += 28;
+      // ── Page 6: Competitor Analysis ─────────────────────────────────────────
+      addCompetitorAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Konkurrentanalyse', this.margin + 5);
+        const comp = d.results.competitors;
+        if (!comp) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Konkurrentdata ikke tilgængelig.', this.margin, y + 10); return; }
+        // Ranking
+        const rank = comp.ranking?.overall || '-';
+        this.tx(doc, ...this.textColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text(`Din placering: #${rank} i området`, this.margin, y + 5); y += 15;
+        // Competitor table
+        const comps = comp.competitors || [];
+        if (comps.length) {
+          const head = ['#', 'Virksomhed', 'Rating', 'Anmeldelser', 'Afstand'];
+          const body = comps.map((c, i) => [String(i + 1), (c.name || '').substring(0, 30), String(c.rating || '-'), String(c.reviews || '-'), c.distance || '-']);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Insights
+        const insights = comp.insights || [];
+        if (insights.length) {
+          y = this.pageBreak(doc, y, 20);
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Konkurrentindsigter', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          insights.forEach((ins, i) => {
+            y = this.pageBreak(doc, y, 15);
+            const ic = ins.type === 'warning' ? this.dangerColor : ins.type === 'opportunity' ? this.primaryColor : this.successColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`${i + 1}. ${ins.title || ins.text || ''}`, this.margin, y);
+            if (ins.description) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); const dl = this.wrap(doc, ins.description, this.contentWidth - 10); dl.slice(0, 2).forEach(l => { y += 5; doc.text(l, this.margin + 5, y); }); doc.setFontSize(9); }
+            y += 8;
           });
         }
       }
 
-      addScorecards(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
-
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Scorekort', this.margin, yPos + 5);
-        yPos += 10;
-
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 20;
-
-        const scores = [
-          { name: 'Google Business Profile', score: data.results.googleProfile?.profileCompleteness?.score || 0 },
-          { name: 'Anmeldelser', score: Math.round((data.results.reviews?.averageRating / 5) * 100) || 0 },
-          { name: 'NAP Konsistens', score: data.results.napConsistency?.consistencyScore || 0 },
-          { name: 'Website', score: data.results.website?.scores?.mobile || 0 },
-          { name: 'Social Media', score: data.results.social?.overallScore || 0 },
+      // ── Page 7-8: Website & Technical SEO ───────────────────────────────────
+      addWebsiteAnalysis(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Website & Teknisk SEO', this.margin + 5);
+        const web = d.results.website;
+        if (!web || !web.hasWebsite) {
+          this.fl(doc, 254, 243, 199); doc.roundedRect(this.margin, y, this.contentWidth, 25, 3, 3, 'F');
+          this.tx(doc, ...this.warningColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+          doc.text('Ingen hjemmeside registreret', this.margin + 8, y + 10);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9); this.tx(doc, ...this.textColor);
+          doc.text('En hjemmeside er essentiel for digital synlighed. Overvej at oprette en optimeret side.', this.margin + 8, y + 19);
+          return;
+        }
+        // URL
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text(`URL: ${web.url || ''}`, this.margin, y); y += 10;
+        // Performance scores
+        const scores = web.scores || {};
+        const mw = (this.contentWidth - 15) / 4;
+        this.metricBox(doc, this.margin, y, mw, 'Mobil', scores.mobile || 0);
+        this.metricBox(doc, this.margin + mw + 5, y, mw, 'Desktop', scores.desktop || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 2, y, mw, 'SEO', scores.seo || 0);
+        this.metricBox(doc, this.margin + (mw + 5) * 3, y, mw, 'Performance', scores.performance || 0);
+        y += 42;
+        // Core Web Vitals
+        const cwv = web.coreWebVitals;
+        if (cwv) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Core Web Vitals', this.margin, y); y += 8;
+          const head = ['Metrik', 'Værdi', 'Vurdering', 'Mål'];
+          const body = [];
+          if (cwv.LCP) body.push(['LCP (Largest Contentful Paint)', cwv.LCP.value || '-', cwv.LCP.rating || '-', cwv.LCP.target || '< 2.5s']);
+          if (cwv.FID) body.push(['FID (First Input Delay)', cwv.FID.value || '-', cwv.FID.rating || '-', cwv.FID.target || '< 100ms']);
+          if (cwv.CLS) body.push(['CLS (Cumulative Layout Shift)', cwv.CLS.value || '-', cwv.CLS.rating || '-', cwv.CLS.target || '< 0.1']);
+          if (body.length) y = this.autoTbl(doc, y, head, body);
+        }
+        // Local SEO checklist
+        const lseo = web.localSEO || {};
+        y = this.pageBreak(doc, y, 90);
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Lokal SEO Tjekliste', this.margin, y); y += 10;
+        const checks = [
+          [lseo.hasSchemaMarkup, 'Schema Markup'],
+          [lseo.hasLocalBusinessSchema, 'LocalBusiness Schema'],
+          [lseo.hasOpenGraph, 'Open Graph Tags'],
+          [lseo.hasContactPage, 'Kontaktside'],
+          [lseo.hasEmbeddedMap, 'Indlejret Google Maps'],
+          [lseo.mobileResponsive, 'Mobil Responsiv'],
         ];
+        const halfLen = Math.ceil(checks.length / 2);
+        checks.forEach((ck, i) => {
+          const col = i < halfLen ? 0 : 1;
+          const row = i < halfLen ? i : i - halfLen;
+          this.checkItem(doc, this.margin + col * (this.contentWidth / 2), y + row * 16, ck[0], ck[1]);
+        });
+        y += halfLen * 16 + 8;
+        // Issues
+        const issues = web.issues || [];
+        if (issues.length) {
+          y = this.pageBreak(doc, y, 20);
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Identificerede problemer', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          issues.slice(0, 6).forEach(iss => {
+            y = this.pageBreak(doc, y, 12);
+            const ic = iss.severity === 'high' ? this.dangerColor : iss.severity === 'medium' ? this.warningColor : this.mutedColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`• ${iss.issue || iss}`, this.margin + 3, y);
+            if (iss.impact) { this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.text(`  Effekt: ${iss.impact}`, this.margin + 8, y + 5); doc.setFontSize(9); y += 5; }
+            y += 7;
+          });
+        }
+      }
 
-        const cardWidth = (this.contentWidth - 10) / 2;
-        const cardHeight = 35;
+      // ── Page 9: NAP Consistency ─────────────────────────────────────────────
+      addNAPConsistency(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'NAP Konsistens', this.margin + 5);
+        const nap = d.results.napConsistency;
+        if (!nap) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('NAP-data ikke tilgængelig.', this.margin, y + 10); return; }
+        // Score
+        this.metricBox(doc, this.margin, y, 60, 'Konsistens', `${nap.consistencyScore || 0}%`);
+        y += 40;
+        // Sources table
+        const sources = nap.sources || [];
+        if (sources.length) {
+          const head = ['Platform', 'Fundet', 'Navn', 'Adresse', 'Telefon'];
+          const body = sources.map(s => [
+            s.name || '-', s.found ? 'Ja' : 'Nej',
+            s.nameMatch ? 'OK' : 'Fejl', s.addressMatch ? 'OK' : 'Fejl', s.phoneMatch ? 'OK' : 'Fejl'
+          ]);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Issues
+        const issues = nap.issues || [];
+        if (issues.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Identificerede problemer', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          issues.forEach(iss => {
+            y = this.pageBreak(doc, y, 10);
+            const ic = iss.severity === 'critical' ? this.dangerColor : this.warningColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`• ${iss.platform || ''}: ${iss.issue || iss}`, this.margin + 3, y); y += 7;
+          });
+          y += 5;
+        }
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'NAP (Navn, Adresse, Telefon) er en topfaktor for lokal ranking. Inkonsistente oplysninger koster dig placeringer i Google Maps.');
+      }
 
-        scores.forEach((card, i) => {
-          const col = i % 2;
-          const row = Math.floor(i / 2);
-          const x = this.margin + col * (cardWidth + 10);
-          const y = yPos + row * (cardHeight + 10);
+      // ── Page 10: Social Media ───────────────────────────────────────────────
+      addSocialMedia(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Social Media Tilstedeværelse', this.margin + 5);
+        const soc = d.results.social;
+        if (!soc) { this.tx(doc, ...this.mutedColor); doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.text('Social media data ikke tilgængelig.', this.margin, y + 10); return; }
+        // Overall score
+        this.metricBox(doc, this.margin, y, 60, 'Social Score', `${soc.overallScore || 0}%`);
+        y += 40;
+        // Platforms table
+        const platforms = soc.platforms || [];
+        if (platforms.length) {
+          const head = ['Platform', 'Status', 'Følgere', 'Opslag (30d)', 'Engagement'];
+          const body = platforms.map(p => [
+            p.name || '-',
+            p.found ? (p.status || 'Aktiv') : 'Ikke fundet',
+            p.found ? String(p.followers || 0) : '-',
+            p.found ? String(p.posts30Days || 0) : '-',
+            p.found ? `${p.engagement || 0}%` : '-'
+          ]);
+          y = this.autoTbl(doc, y, head, body);
+        }
+        // Insights
+        const insights = soc.insights || [];
+        if (insights.length) {
+          this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text('Indsigter', this.margin, y); y += 8;
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+          insights.forEach((ins, i) => {
+            y = this.pageBreak(doc, y, 10);
+            const ic = ins.type === 'positive' ? this.successColor : ins.type === 'warning' ? this.warningColor : this.mutedColor;
+            doc.setTextColor(ic[0], ic[1], ic[2]);
+            doc.text(`${i + 1}. ${ins.text || ins}`, this.margin, y); y += 7;
+          });
+          y += 5;
+        }
+        y = this.pageBreak(doc, y, 35);
+        this.infoBox(doc, this.margin, y, this.contentWidth, 'TikTok, Instagram og Facebook driver lokal synlighed. Post regelmæssigt med lokalt indhold. UGC fra kunder styrker dit brand og din SEO.');
+      }
 
-          // Card background
-          doc.setFillColor(this.lightGray[0], this.lightGray[1], this.lightGray[2]);
-          doc.roundedRect(x, y, cardWidth, cardHeight, 3, 3, 'F');
-
-          // Score
-          const scoreColor = this.getScoreColor(card.score);
-          doc.setTextColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-          doc.setFontSize(22);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(card.score), x + 12, y + 22);
-
-          // Label
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.text(card.name, x + 35, y + 15);
-
-          // Score bar
-          const barWidth = cardWidth - 50;
-          const barX = x + 35;
-          const barY = y + 22;
-
-          doc.setFillColor(224, 224, 224);
-          doc.roundedRect(barX, barY, barWidth, 5, 2, 2, 'F');
-
-          doc.setFillColor(scoreColor[0], scoreColor[1], scoreColor[2]);
-          doc.roundedRect(barX, barY, barWidth * (card.score / 100), 5, 2, 2, 'F');
+      // ── Page 11+: All Findings ──────────────────────────────────────────────
+      addAllFindings(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Alle Fund fra Analysen', this.margin + 5);
+        const findings = d.findings || [];
+        const modules = new Set(findings.map(f => f.module || f.moduleName || 'Generelt'));
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(`${findings.length} fund identificeret på tværs af ${modules.size} moduler`, this.margin, y); y += 12;
+        const groups = [
+          { key: 'critical', label: 'Kritiske Fund', color: this.dangerColor },
+          { key: 'warning', label: 'Advarsler', color: this.warningColor },
+          { key: 'positive', label: 'Positive Fund', color: this.successColor },
+        ];
+        groups.forEach(g => {
+          const items = findings.filter(f => f.category === g.key);
+          if (!items.length) return;
+          y = this.pageBreak(doc, y, 25);
+          // Group header
+          this.fl(doc, g.color[0], g.color[1], g.color[2]); doc.rect(this.margin, y, 3, 12, 'F');
+          this.tx(doc, ...this.textColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+          doc.text(`${g.label} (${items.length})`, this.margin + 8, y + 8); y += 16;
+          // Items
+          items.forEach(f => {
+            y = this.pageBreak(doc, y, 22);
+            this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text(`• ${(f.title || '').substring(0, 70)}`, this.margin + 3, y);
+            y += 5;
+            if (f.description) {
+              this.tx(doc, ...this.mutedColor); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+              const dl = this.wrap(doc, f.description, this.contentWidth - 10);
+              dl.slice(0, 2).forEach(l => { doc.text(l, this.margin + 8, y); y += 4; });
+            }
+            if (f.moduleName || f.module) {
+              doc.setFontSize(7); this.tx(doc, ...this.mutedColor);
+              doc.text(`Modul: ${f.moduleName || f.module}${f.dataSource ? ' | Kilde: ' + f.dataSource : ''}`, this.margin + 8, y); y += 4;
+            }
+            y += 4;
+          });
+          y += 6;
         });
       }
 
-      addActionPlan(doc, data) {
-        doc.addPage();
-        let yPos = this.margin;
+      // ── Page 12-13: Dynamic Action Plan ─────────────────────────────────────
+      addDynamicActionPlan(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Prioriteret Handlingsplan', this.margin + 5);
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text('Konkrete tiltag baseret på din analyse. Hver handling har en KPI.', this.margin, y); y += 12;
 
-        // Clean section header
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Prioriteret Handlingsplan', this.margin, yPos + 5);
-        yPos += 10;
-
-        // Accent line
-        doc.setFillColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.rect(this.margin, yPos, 40, 2, 'F');
-        yPos += 15;
-
-        const actions = [
-          { title: 'Svar på flere anmeldelser', priority: 'high', impact: 'Høj', effort: 'Lav' },
-          { title: 'Opdater Google Business profil', priority: 'high', impact: 'Høj', effort: 'Lav' },
-          { title: 'Tilføj LocalBusiness schema markup', priority: 'high', impact: 'Høj', effort: 'Medium' },
-          { title: 'Opret manglende citationer', priority: 'medium', impact: 'Medium', effort: 'Medium' },
-          { title: 'Optimer mobil hastighed', priority: 'medium', impact: 'Medium', effort: 'Høj' },
-          { title: 'Øg social media aktivitet', priority: 'low', impact: 'Lav', effort: 'Medium' },
+        const ap = d.results._v3actionPlan || {};
+        const phases = [
+          { key: 'week1', label: 'UGE 1: Hurtige Gevinster', color: this.dangerColor, bg: [254, 242, 242] },
+          { key: 'days30', label: '30 DAGE: Forbedringer', color: this.warningColor, bg: [255, 251, 235] },
+          { key: 'days90', label: '90 DAGE: Langsigtede Tiltag', color: this.successColor, bg: [240, 253, 244] },
         ];
-
-        actions.forEach((action, i) => {
-          const color = action.priority === 'high' ? this.dangerColor :
-                       action.priority === 'medium' ? this.warningColor : this.successColor;
-
-          // Priority badge
-          doc.setFillColor(color[0], color[1], color[2]);
-          doc.roundedRect(this.margin, yPos, 18, 18, 3, 3, 'F');
-          doc.setTextColor(255, 255, 255);
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(i + 1), this.margin + 9, yPos + 12, { align: 'center' });
-
-          // Action text
-          doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
-          doc.setFontSize(11);
-          doc.text(action.title, this.margin + 25, yPos + 8);
-
-          // Impact/Effort
-          doc.setTextColor(this.mutedColor[0], this.mutedColor[1], this.mutedColor[2]);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.text(`Effekt: ${action.impact} | Indsats: ${action.effort}`, this.margin + 25, yPos + 16);
-
-          yPos += 25;
+        let globalIdx = 0;
+        phases.forEach(phase => {
+          const items = ap[phase.key] || [];
+          if (!items.length) return;
+          y = this.pageBreak(doc, y, 30);
+          // Phase header
+          this.fl(doc, phase.bg[0], phase.bg[1], phase.bg[2]);
+          doc.roundedRect(this.margin, y, this.contentWidth, 12, 3, 3, 'F');
+          this.fl(doc, phase.color[0], phase.color[1], phase.color[2]);
+          doc.rect(this.margin, y, 4, 12, 'F');
+          doc.setTextColor(phase.color[0], phase.color[1], phase.color[2]);
+          doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+          doc.text(phase.label, this.margin + 10, y + 8); y += 18;
+          // Items
+          items.forEach(item => {
+            globalIdx++;
+            y = this.pageBreak(doc, y, 30);
+            // Number badge
+            this.fl(doc, phase.color[0], phase.color[1], phase.color[2]);
+            doc.roundedRect(this.margin, y, 16, 16, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+            doc.text(String(globalIdx), this.margin + 8, y + 11, { align: 'center' });
+            // Task title
+            this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+            doc.text((item.task || '').substring(0, 65), this.margin + 22, y + 6);
+            // Detail
+            if (item.detail) {
+              this.tx(doc, ...this.mutedColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+              const dl = this.wrap(doc, item.detail, this.contentWidth - 25);
+              dl.slice(0, 2).forEach((l, li) => doc.text(l, this.margin + 22, y + 12 + li * 4));
+              y += dl.slice(0, 2).length * 4;
+            }
+            // KPI
+            if (item.kpi) {
+              doc.setTextColor(phase.color[0], phase.color[1], phase.color[2]);
+              doc.setFontSize(8); doc.setFont('helvetica', 'bold');
+              doc.text(`KPI: ${item.kpi}`, this.margin + 22, y + 12);
+            }
+            y += 20;
+          });
+          y += 5;
         });
+        // Fallback if no actions
+        if (globalIdx === 0) {
+          this.tx(doc, ...this.mutedColor); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+          doc.text('Ingen specifikke handlingspunkter genereret. Gennemgå fund-listen for inspiration.', this.margin, y); y += 15;
+        }
+        // CTA box
+        y = this.pageBreak(doc, y, 40);
+        doc.setDrawColor(...this.primaryColor); doc.setLineWidth(0.5);
+        doc.roundedRect(this.margin, y, this.contentWidth, 30, 3, 3, 'S');
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+        doc.text('Næste skridt', this.margin + 8, y + 12);
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.text('Start med Uge 1-handlingerne. De giver størst effekt med mindst indsats.', this.margin + 8, y + 22);
+      }
 
-        // Call-to-action box
-        yPos += 25;
-        doc.setDrawColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setLineWidth(0.5);
-        doc.roundedRect(this.margin, yPos, this.contentWidth, 35, 3, 3, 'S');
-        doc.setTextColor(this.primaryColor[0], this.primaryColor[1], this.primaryColor[2]);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Næste skridt', this.margin + 10, yPos + 14);
-        doc.setTextColor(this.textColor[0], this.textColor[1], this.textColor[2]);
+      // ── Page 14: Future Vision ──────────────────────────────────────────────
+      addFutureVision(doc, d) {
+        doc.addPage(); this.pageHeader(doc);
+        let y = this.sectionHeader(doc, 'Fremtidsperspektiv og næste skridt', this.margin + 5);
+        const potential = Math.min(95, d.overallScore + 28);
+        const improvement = potential - d.overallScore;
+        // Before → After
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Score-potentiale', this.margin, y); y += 12;
+        // Current box
+        this.fl(doc, 255, 251, 235); doc.roundedRect(this.margin, y, 65, 40, 5, 5, 'F');
+        this.tx(doc, ...this.warningColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text('I DAG', this.margin + 32.5, y + 10, { align: 'center' });
+        doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+        doc.text(String(d.overallScore), this.margin + 32.5, y + 28, { align: 'center' });
+        // Arrow
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(20);
+        doc.text('→', this.margin + 80, y + 25, { align: 'center' });
+        // Potential box
+        this.fl(doc, 240, 253, 244); doc.roundedRect(this.margin + 95, y, 65, 40, 5, 5, 'F');
+        this.tx(doc, ...this.successColor); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+        doc.text('POTENTIALE', this.margin + 127.5, y + 10, { align: 'center' });
+        doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+        doc.text(String(potential), this.margin + 127.5, y + 28, { align: 'center' });
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text('Start med de 3 højprioriterede handlinger for at opnå størst effekt hurtigt.', this.margin + 10, yPos + 26);
+        doc.text(`+${improvement} point`, this.margin + 127.5, y + 37, { align: 'center' });
+        y += 52;
+        // Projected improvements
+        this.tx(doc, ...this.textColor); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+        doc.text('Forventede forbedringer', this.margin, y); y += 10;
+        const projections = [
+          { label: 'Google Ranking', current: `#${d.results.competitors?.ranking?.overall || '?'}`, future: '#1-3' },
+          { label: 'Anmeldelser/måned', current: String(d.results.reviews?.velocity?.monthlyAverage || '?'), future: '8-12' },
+          { label: 'Svarrate', current: `${d.results.reviews?.responseMetrics?.responseRate || '?'}%`, future: '95%+' },
+          { label: 'Mobil Score', current: String(d.results.website?.scores?.mobile || '?'), future: '90+' },
+          { label: 'NAP Konsistens', current: `${d.results.napConsistency?.consistencyScore || '?'}%`, future: '100%' },
+        ];
+        const head = ['Metrik', 'Nu', 'Mål'];
+        const body = projections.map(p => [p.label, p.current, p.future]);
+        y = this.autoTbl(doc, y, head, body, { columnStyles: { 0: { fontStyle: 'bold' } } });
+        // Summary box
+        y = this.pageBreak(doc, y, 50);
+        this.fl(doc, 239, 246, 255); doc.roundedRect(this.margin, y, this.contentWidth, 45, 5, 5, 'F');
+        this.fl(doc, ...this.primaryColor); doc.rect(this.margin, y, 4, 45, 'F');
+        this.tx(doc, ...this.primaryColor); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text('Sådan kommer du videre', this.margin + 12, y + 14);
+        this.tx(doc, ...this.textColor); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        const steps = [
+          '1. Gennemfør Uge 1-handlingerne fra handlingsplanen',
+          '2. Sæt KPI-mål og mål fremgang efter 30 dage',
+          '3. Kør en ny scanning om 30 dage for at måle forbedringer',
+        ];
+        steps.forEach((s, i) => doc.text(s, this.margin + 12, y + 24 + i * 6));
+        y += 55;
+        // Disclaimer
+        this.tx(doc, ...this.mutedColor); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+        doc.text(`Denne rapport er genereret ${this.fmt(d.scanDate)} og baseret på data tilgængelig på analysetidspunktet.`, this.margin, y);
+        doc.text('Resultater kan variere over tid. Kør regelmæssige scanninger for opdateret indsigt.', this.margin, y + 4);
       }
     }
 
@@ -3352,8 +3657,34 @@
     // =============================================================================
     // ANALYSIS REPORT COMPONENT
     // =============================================================================
-    const AnalysisReport = ({ results, business, onNewScan, findings = [] }) => {
-      const overallScore = AnalysisService.calculateOverallScore(results);
+    const AnalysisReport = ({ results, business, onNewScan, findings = [], isPaid = false }) => {
+      // Use v3 backend score if available, otherwise calculate locally
+      const overallScore = results._v3score
+        ? Math.round(results._v3score.overall || 0)
+        : AnalysisService.calculateOverallScore(results);
+
+      // Auto-generate and download PDF after Stripe payment
+      const pdfDownloaded = useRef(false);
+      useEffect(() => {
+        if (isPaid && !pdfDownloaded.current && results && business) {
+          pdfDownloaded.current = true;
+          setTimeout(() => {
+            try {
+              const doc = pdfGenerator.generate({
+                business: business,
+                scanDate: new Date(),
+                overallScore: overallScore,
+                results: results,
+                findings: findings || [],
+                findingsCount: findings?.length || 0,
+              });
+              doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+            } catch (e) {
+              console.error('Auto PDF download failed:', e);
+            }
+          }, 500);
+        }
+      }, [isPaid, results, business, overallScore, findings]);
 
       const getScoreColor = (score) => {
         if (score >= 75) return '#059669';
@@ -3408,7 +3739,7 @@
                 {getScoreLabel(overallScore)}
               </h2>
               <p style={{ margin: 0, color: '#6b7280', fontSize: 14 }}>
-                Baseret på {Object.keys(results).length} analysepunkter
+                Baseret på {(results._v3moduleStatuses || []).length || 5} analysemoduler
               </p>
 
               {/* Inline stats */}
@@ -3439,6 +3770,40 @@
                   <div style={{ fontSize: 12, color: '#9ca3af' }}>Lokal Ranking</div>
                 </div>
               </div>
+
+              {/* V3 Score Breakdown */}
+              {results._v3score?.breakdown && (
+                <div style={{
+                  marginTop: 24,
+                  paddingTop: 24,
+                  borderTop: '1px solid #f3f4f6',
+                  textAlign: 'left'
+                }}>
+                  {[
+                    { label: 'Google Business', score: results._v3score.breakdown.gbp, weight: '30%' },
+                    { label: 'Anmeldelser', score: results._v3score.breakdown.reviews, weight: '25%' },
+                    { label: 'Website & SEO', score: results._v3score.breakdown.website, weight: '25%' },
+                    { label: 'Konkurrenter', score: results._v3score.breakdown.competitors, weight: '15%' },
+                    { label: 'Social & NAP', score: results._v3score.breakdown.socialNap, weight: '5%' },
+                  ].map((cat, i) => (
+                    <div key={i} style={{ marginBottom: i < 4 ? 12 : 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, color: '#374151' }}>{cat.label} <span style={{ color: '#9ca3af', fontSize: 11 }}>({cat.weight})</span></span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: getScoreColor(cat.score) }}>{Math.round(cat.score || 0)}</span>
+                      </div>
+                      <div style={{ height: 6, background: '#f3f4f6', borderRadius: 3 }}>
+                        <div style={{
+                          height: '100%',
+                          width: `${Math.min(100, cat.score || 0)}%`,
+                          background: getScoreColor(cat.score),
+                          borderRadius: 3,
+                          transition: 'width 0.6s ease'
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Google Business Profile */}
@@ -4335,76 +4700,66 @@
               </div>
             </div>
 
-            {/* Action Plan */}
-            <div className="report-card" style={{ background: 'linear-gradient(135deg, #667eea08 0%, #764ba208 100%)' }}>
-              <div className="report-card-header">
-                <div>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Prioriteret Handlingsplan</h3>
-                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
-                    Konkrete tiltag for at forbedre din digitale synlighed
-                  </p>
-                </div>
-              </div>
+            {/* Action Plan - Dynamic from v3 */}
+            {(() => {
+              const ap = results._v3actionPlan || {};
+              const week1 = ap.week1 || [];
+              const days30 = ap.days30 || [];
+              const days90 = ap.days90 || [];
+              const allActions = [
+                ...week1.map(a => ({ ...a, phase: 'Uge 1', phaseBg: '#fef2f2', phaseColor: '#dc2626', priority: 'high' })),
+                ...days30.map(a => ({ ...a, phase: '30 dage', phaseBg: '#fffbeb', phaseColor: '#d97706', priority: 'medium' })),
+                ...days90.map(a => ({ ...a, phase: '90 dage', phaseBg: '#f0fdf4', phaseColor: '#059669', priority: 'low' })),
+              ];
+              if (allActions.length === 0) return null;
 
-              <div style={{ marginBottom: 24 }}>
-                {[
-                  {
-                    priority: 'high',
-                    action: 'Øg svarraten på Google anmeldelser',
-                    impact: 'Direkte påvirkning på lokal ranking',
-                    details: 'Svar på alle nye anmeldelser inden for 24 timer. Start med de seneste ubesvarede anmeldelser.',
-                  },
-                  {
-                    priority: 'high',
-                    action: 'Ret NAP inkonsistenser',
-                    impact: 'Forbedrer troværdighed hos Google',
-                    details: 'Opdater telefonnummer på Facebook og adresse på Krak.dk til at matche Google Business.',
-                  },
-                  {
-                    priority: 'high',
-                    action: 'Tilføj LocalBusiness Schema til hjemmeside',
-                    impact: 'Øger synlighed i lokale søgeresultater',
-                    details: 'Implementer struktureret data markup med NAP, åbningstider og services.',
-                  },
-                  {
-                    priority: 'medium',
-                    action: 'Forbedre mobile performance',
-                    impact: 'Bedre brugeroplevelse og ranking',
-                    details: 'Optimer billeder, reducer JavaScript og forbedre LCP til under 2.5 sekunder.',
-                  },
-                  {
-                    priority: 'medium',
-                    action: 'Øg anmeldelsesfrekvensen',
-                    impact: 'Flere anmeldelser = højere synlighed',
-                    details: 'Implementer systematisk opfordring til anmeldelser efter kundebesøg.',
-                  },
-                  {
-                    priority: 'low',
-                    action: 'Udfyld alle Google Business felter',
-                    impact: 'Komplet profil performer bedre',
-                    details: 'Tilføj menu link, udvidet beskrivelse og opdater COVID-info.',
-                  },
-                ].map((item, i) => (
-                  <div key={i} className="action-item">
-                    <div className={`action-priority priority-${item.priority}`}>
-                      {i + 1}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 600, marginBottom: 2 }}>{item.action}</div>
-                      <div style={{ fontSize: 13, color: '#6b7280' }}>{item.details}</div>
-                      <span style={{
-                        fontSize: 11,
-                        color: item.priority === 'high' ? '#dc2626' : item.priority === 'medium' ? '#d97706' : '#059669',
-                        marginTop: 4,
-                        display: 'inline-block',
-                      }}>
-                        {item.impact}
-                      </span>
+              return (
+                <div className="report-card" style={{ background: 'linear-gradient(135deg, #667eea08 0%, #764ba208 100%)' }}>
+                  <div className="report-card-header">
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>Prioriteret Handlingsplan</h3>
+                      <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
+                        Konkrete tiltag baseret på din analyse
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+
+                  <div style={{ marginBottom: 24 }}>
+                    {allActions.map((item, i) => (
+                      <div key={i} className="action-item">
+                        <div className={`action-priority priority-${item.priority}`}>
+                          {i + 1}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                            <span style={{ fontWeight: 600 }}>{item.task}</span>
+                            <span style={{
+                              fontSize: 10,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: item.phaseBg,
+                              color: item.phaseColor,
+                              fontWeight: 600
+                            }}>{item.phase}</span>
+                          </div>
+                          <div style={{ fontSize: 13, color: '#6b7280' }}>{item.detail}</div>
+                          {item.kpi && (
+                            <span style={{
+                              fontSize: 11,
+                              color: item.phaseColor,
+                              marginTop: 4,
+                              display: 'inline-block',
+                            }}>
+                              KPI: {item.kpi}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* CTA */}
             <div style={{ textAlign: 'center', marginTop: 48 }}>
@@ -4472,32 +4827,80 @@
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const name = params.get('name');
-        const placeId = params.get('place_id');
-        const address = params.get('address');
+        const placeId = params.get('place_id') || '';
+        const address = params.get('address') || '';
+        const website = params.get('website') || '';
 
-        if (name && placeId) {
+        if (name) {
           setSelectedBusiness({
             name: name,
             place_id: placeId,
-            address: address || ''
+            address: address,
+            website: website
           });
         }
       }, []);
 
       const handleBusinessSelect = (business) => {
+        // Update URL with business params
+        const params = new URLSearchParams();
+        params.set('name', business.name || '');
+        if (business.place_id) params.set('place_id', business.place_id);
+        if (business.address) params.set('address', business.address);
+        if (business.website) params.set('website', business.website);
+        window.history.replaceState({}, '', '/search-engine?' + params.toString());
         setSelectedBusiness(business);
       };
 
       const handleBack = () => {
         setSelectedBusiness(null);
-        window.history.replaceState({}, '', window.location.pathname);
+        window.history.replaceState({}, '', '/search-engine');
       };
 
-      if (selectedBusiness) {
-        return <AnalysisScanner business={selectedBusiness} onBack={handleBack} />;
-      }
+      return (
+        <div>
+          {/* Top navigation bar */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '12px 24px',
+            borderBottom: '1px solid #e5e7eb',
+            background: 'white',
+            position: 'sticky',
+            top: 0,
+            zIndex: 50,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>Agent SEO v3</span>
+            </div>
+            <a href="/how-it-works" style={{
+              color: '#667eea',
+              textDecoration: 'none',
+              fontSize: 18,
+              fontWeight: 500,
+              width: 36,
+              height: 36,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              transition: 'background 0.2s',
+            }}
+              onMouseOver={(e) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              ←
+            </a>
+          </div>
 
-      return <BusinessSearch onBusinessSelect={handleBusinessSelect} />;
+          {selectedBusiness ? (
+            <AnalysisScanner business={selectedBusiness} onBack={handleBack} />
+          ) : (
+            <BusinessSearch onBusinessSelect={handleBusinessSelect} />
+          )}
+        </div>
+      );
     }
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
