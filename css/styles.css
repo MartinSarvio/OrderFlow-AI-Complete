@@ -6212,12 +6212,22 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  backdrop-filter: blur(4px);
 }
 
 .sidebar-overlay.active {
-  display: block;
+  display: block !important;
+}
+
+/* Ensure overlay works in both themes */
+[data-theme="light"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.6);
 }
 
 /* Tablet breakpoint - 1024px */
@@ -6283,6 +6293,26 @@
     display: flex !important;
   }
   
+  /* Mobile header theme support */
+  [data-theme="light"] .mobile-header {
+    background: var(--sidebar-bg) !important;
+    border-bottom-color: var(--border) !important;
+  }
+  
+  [data-theme="dark"] .mobile-header {
+    background: var(--sidebar-bg) !important;
+    border-bottom-color: var(--border) !important;
+  }
+  
+  /* Hamburger button theme support */
+  [data-theme="light"] .hamburger-btn svg {
+    stroke: #ffffff !important;
+  }
+  
+  [data-theme="dark"] .hamburger-btn svg {
+    stroke: var(--text) !important;
+  }
+  
   /* Ensure hamburger button is visible and clickable */
   .hamburger-btn {
     display: flex !important;
@@ -6322,12 +6352,27 @@
     width: 280px !important;
     height: 100vh;
     transition: left 0.3s ease;
-    z-index: 1000;
+    z-index: 1001 !important;
     transform: none !important;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
   }
 
   .sidebar.mobile-open {
-    left: 0;
+    left: 0 !important;
+  }
+  
+  /* Sidebar theme support on mobile */
+  [data-theme="light"] .sidebar {
+    background: var(--sidebar-bg) !important;
+  }
+  
+  [data-theme="dark"] .sidebar {
+    background: var(--sidebar-bg) !important;
+  }
+  
+  /* Hide search on mobile - it's in the way */
+  .sidebar .sidebar-search {
+    display: none !important;
   }
 
   /* Restore sidebar text when open on mobile */
