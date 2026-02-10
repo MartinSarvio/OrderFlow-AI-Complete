@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
   <head>
-    <title>Pizza - Free Bootstrap 4 Template by Colorlib</title>
+    <title>Pizza - Lækker Pizza</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     
@@ -27,12 +27,12 @@
     <link rel="stylesheet" href="css/flaticon.css">
     <link rel="stylesheet" href="css/icomoon.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="../shared/orderflow-cart.css">
+    
   </head>
   <body>
   	<nav class="navbar navbar-expand-lg navbar-dark ftco_navbar bg-dark ftco-navbar-light" id="ftco-navbar">
 	    <div class="container">
-	      <a class="navbar-brand" href="index.html"><span class="flaticon-pizza-1 mr-1"></span>Pizza<br><small>Delicous</small></a>
+	      <a class="navbar-brand" href="index.html"><span class="flaticon-pizza-1 mr-1"></span>Pizza<br><small>Lækker Pizza</small></a>
 	      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#ftco-nav" aria-controls="ftco-nav" aria-expanded="false" aria-label="Toggle navigation">
 	        <span class="oi oi-menu"></span> Menu
 	      </button>
@@ -40,13 +40,13 @@
 	        <ul class="navbar-nav ml-auto">
 	          <li class="nav-item"><a href="index.html" class="nav-link">Hjem</a></li>
 	          <li class="nav-item active"><a href="menu.html" class="nav-link">Menu</a></li>
-	          <li class="nav-item"><a href="services.html" class="nav-link">Services</a></li>
+	          <li class="nav-item"><a href="services.html" class="nav-link">Ydelser</a></li>
 	          <li class="nav-item"><a href="blog.html" class="nav-link">Blog</a></li>
 	          <li class="nav-item"><a href="about.html" class="nav-link">Om Os</a></li>
 	          <li class="nav-item"><a href="contact.html" class="nav-link">Kontakt</a></li>
 	          <li class="nav-item" data-auth="logged-out"><a href="javascript:void(0)" class="nav-link" onclick="FlowAuth.showLoginModal()">Log ind</a></li>
 	          <li class="nav-item" data-auth="logged-in" style="display:none"><a href="javascript:void(0)" class="nav-link" onclick="FlowAuth.showProfileModal()"><span data-auth-name>Min profil</span></a></li>
-	          <li class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="PizzaCart.open()" style="position:relative"><span class="icon-shopping-cart"></span> Kurv <span id="pizza-cart-badge-nav" style="background:#e25555;color:#fff;border-radius:50%;padding:1px 6px;font-size:11px;display:none"></span></a></li>
+	          <li class="nav-item"><a href="javascript:void(0)" class="nav-link" onclick="PizzaCart.open()" style="position:relative"><span class="icon-shopping-cart"></span> Kurv <span id="pizza-cart-badge-nav" style="background:#fac564;color:#000;border-radius:50%;padding:1px 6px;font-size:11px;display:none"></span></a></li>
 	        </ul>
 	      </div>
 		  </div>
@@ -85,9 +85,9 @@
     				<div class="services-wrap d-flex">
     					<a href="#" class="img" style="background-image: url(images/pizza-1.jpg);"></a>
     					<div class="text p-4">
-    						<h3>Italian Pizza</h3>
+    						<h3>Italiensk Pizza</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia </p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -95,9 +95,9 @@
     				<div class="services-wrap d-flex">
     					<a href="#" class="img" style="background-image: url(images/pizza-2.jpg);"></a>
     					<div class="text p-4">
-    						<h3>Greek Pizza</h3>
+    						<h3>Græsk Pizza</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia</p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -105,9 +105,9 @@
     				<div class="services-wrap d-flex">
     					<a href="#" class="img" style="background-image: url(images/pizza-3.jpg);"></a>
     					<div class="text p-4">
-    						<h3>Caucasian Pizza</h3>
+    						<h3>Kaukasisk Pizza</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia</p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -116,9 +116,9 @@
     				<div class="services-wrap d-flex">
     					<a href="#" class="img order-lg-last" style="background-image: url(images/pizza-4.jpg);"></a>
     					<div class="text p-4">
-    						<h3>American Pizza</h3>
+    						<h3>Amerikansk Pizza</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia </p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -126,9 +126,9 @@
     				<div class="services-wrap d-flex">
     					<a href="#" class="img order-lg-last" style="background-image: url(images/pizza-5.jpg);"></a>
     					<div class="text p-4">
-    						<h3>Tomatoe Pie</h3>
+    						<h3>Tomat Tærte</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia</p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -138,7 +138,7 @@
     					<div class="text p-4">
     						<h3>Margherita</h3>
     						<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia</p>
-    						<p class="price"><span>$2.90</span> <a href="#" class="ml-2 btn btn-white btn-outline-white">Order</a></p>
+    						<p class="price"><span>29 kr</span> <a href="#" class="ml-2 btn btn-white btn-outline-white" data-of-add-to-cart>Bestil</a></p>
     					</div>
     				</div>
     			</div>
@@ -159,8 +159,8 @@
         			<div class="img" style="background-image: url(images/pizza-1.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Italian Pizza</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<h3><span>Italiensk Pizza</span></h3>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -171,8 +171,8 @@
         			<div class="img" style="background-image: url(images/pizza-2.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Hawaiian Pizza</span></h3>
-	        				<span class="price">$29.00</span>
+	        				<h3><span>Hawaii Pizza</span></h3>
+	        				<span class="price">109 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -183,8 +183,8 @@
         			<div class="img" style="background-image: url(images/pizza-3.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Greek Pizza</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<h3><span>Græsk Pizza</span></h3>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -195,8 +195,8 @@
         			<div class="img" style="background-image: url(images/pizza-4.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Bacon Crispy Thins</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<h3><span>Bacon Sprøde Tynde</span></h3>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -210,8 +210,8 @@
         			<div class="img" style="background-image: url(images/pizza-5.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Hawaiian Special</span></h3>
-	        				<span class="price">$49.91</span>
+	        				<h3><span>Hawaii Special</span></h3>
+	        				<span class="price">149 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -223,7 +223,7 @@
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
 	        				<h3><span>Ultimate Overload</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -235,7 +235,7 @@
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
 	        				<h3><span>Bacon Pizza</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -246,8 +246,8 @@
         			<div class="img" style="background-image: url(images/pizza-8.jpg);"></div>
         			<div class="desc pl-3">
 	        			<div class="d-flex text align-items-center">
-	        				<h3><span>Ham &amp; Pineapple</span></h3>
-	        				<span class="price">$20.00</span>
+	        				<h3><span>Skinke Ham &amp; Pineappleamp; Ananas</span></h3>
+	        				<span class="price">89 kr</span>
 	        			</div>
 	        			<div class="d-block">
 	        				<p>A small river named Duden flows by their place and supplies</p>
@@ -270,9 +270,9 @@
 		            <div class="nav ftco-animate nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
 		              <a class="nav-link active" id="v-pills-1-tab" data-toggle="pill" href="#v-pills-1" role="tab" aria-controls="v-pills-1" aria-selected="true">Pizza</a>
 
-		              <a class="nav-link" id="v-pills-2-tab" data-toggle="pill" href="#v-pills-2" role="tab" aria-controls="v-pills-2" aria-selected="false">Drinks</a>
+		              <a class="nav-link" id="v-pills-2-tab" data-toggle="pill" href="#v-pills-2" role="tab" aria-controls="v-pills-2" aria-selected="false">Drikkevarer</a>
 
-		              <a class="nav-link" id="v-pills-3-tab" data-toggle="pill" href="#v-pills-3" role="tab" aria-controls="v-pills-3" aria-selected="false">Burgers</a>
+		              <a class="nav-link" id="v-pills-3-tab" data-toggle="pill" href="#v-pills-3" role="tab" aria-controls="v-pills-3" aria-selected="false">Burgere</a>
 
 		              <a class="nav-link" id="v-pills-4-tab" data-toggle="pill" href="#v-pills-4" role="tab" aria-controls="v-pills-4" aria-selected="false">Pasta</a>
 		            </div>
@@ -287,10 +287,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pizza-1.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -298,10 +298,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pizza-2.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -309,10 +309,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pizza-3.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -325,10 +325,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/drink-1.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Lemonade Juice</a></h3>
+		              					<h3><a href="#">Limonade</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -336,10 +336,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/drink-2.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Pineapple Juice</a></h3>
+		              					<h3><a href="#">Ananas Juice</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -347,10 +347,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/drink-3.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Soda Drinks</a></h3>
+		              					<h3><a href="#">Sodavand</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -363,10 +363,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/burger-1.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -374,10 +374,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/burger-2.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -385,10 +385,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/burger-3.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -401,10 +401,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pasta-1.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -412,10 +412,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pasta-2.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -423,10 +423,10 @@
 		              			<div class="menu-wrap">
 		              				<a href="#" class="menu-img img mb-4" style="background-image: url(images/pasta-3.jpg);"></a>
 		              				<div class="text">
-		              					<h3><a href="#">Itallian Pizza</a></h3>
+		              					<h3><a href="#">Italiensk Pizza</a></h3>
 		              					<p>Far far away, behind the word mountains, far from the countries Vokalia and Consonantia.</p>
-		              					<p class="price"><span>$2.90</span></p>
-		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Add to cart</a></p>
+		              					<p class="price"><span>29 kr</span></p>
+		              					<p><a href="#" class="btn btn-white btn-outline-white" data-of-add-to-cart>Læg i kurv</a></p>
 		              				</div>
 		              			</div>
 		              		</div>
@@ -484,18 +484,18 @@
           </div>
           <div class="col-lg-2 col-md-6 mb-5 mb-md-5">
              <div class="ftco-footer-widget mb-4 ml-md-4">
-              <h2 class="ftco-heading-2">Services</h2>
+              <h2 class="ftco-heading-2">Ydelser</h2>
               <ul class="list-unstyled">
-                <li><a href="#" class="py-2 d-block">Cooked</a></li>
-                <li><a href="#" class="py-2 d-block">Deliver</a></li>
-                <li><a href="#" class="py-2 d-block">Quality Foods</a></li>
-                <li><a href="#" class="py-2 d-block">Mixed</a></li>
+                <li><a href="#" class="py-2 d-block">Tilberedt</a></li>
+                <li><a href="#" class="py-2 d-block">Levering</a></li>
+                <li><a href="#" class="py-2 d-block">Kvalitetsmad</a></li>
+                <li><a href="#" class="py-2 d-block">Blandet</a></li>
               </ul>
             </div>
           </div>
           <div class="col-lg-3 col-md-6 mb-5 mb-md-5">
             <div class="ftco-footer-widget mb-4">
-            	<h2 class="ftco-heading-2">Have a Questions?</h2>
+            	<h2 class="ftco-heading-2">Har du spørgsmål?</h2>
             	<div class="block-23 mb-3">
 	              <ul>
 	                <li><span class="icon icon-map-marker"></span><span class="text">203 Fake St. Mountain View, San Francisco, California, USA</span></li>
@@ -540,14 +540,14 @@
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBVWaKrjvy3MaE7SQ74_uJiULgl1JY0H2s&sensor=false"></script>
   <script src="js/google-map.js"></script>
   <script src="js/main.js"></script>
-  <script src="../shared/orderflow-cart.js"></script>
+  
     
   
   <!-- Login Modal -->
   <div class="modal fade" id="flow-login-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
+        <div class="modal-header" style="background:#fac564;color:#000;border:none;padding:20px 24px">
           <h5 class="modal-title" style="font-weight:600">Log ind</h5>
           <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
         </div>
@@ -562,10 +562,10 @@
               <input type="password" class="form-control" id="flow-login-password" placeholder="Adgangskode" required>
             </div>
             <div id="flow-login-error" style="color:#dc3545;font-size:13px;margin-bottom:12px"></div>
-            <button type="submit" id="flow-login-btn" class="btn btn-block" style="background:#1a1a2e;color:#fff;padding:10px;font-weight:600;border-radius:8px">Log ind</button>
+            <button type="submit" id="flow-login-btn" class="btn btn-block" style="background:#fac564;color:#000;padding:10px;font-weight:600;border-radius:8px">Log ind</button>
           </form>
           <div style="text-align:center;margin-top:16px;font-size:13px">
-            Har du ikke en konto? <a href="javascript:void(0)" onclick="$('#flow-login-modal').modal('hide');FlowAuth.showSignupModal();" style="color:#1a1a2e;font-weight:600">Opret konto</a>
+            Har du ikke en konto? <a href="javascript:void(0)" onclick="$('#flow-login-modal').modal('hide');FlowAuth.showSignupModal();" style="color:#fac564;font-weight:600">Opret konto</a>
           </div>
           <div style="text-align:center;margin-top:8px">
             <a href="menu.html" onclick="$('#flow-login-modal').modal('hide');" style="color:#888;font-size:12px">Fortsæt som gæst &rarr;</a>
@@ -579,7 +579,7 @@
   <div class="modal fade" id="flow-signup-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
+        <div class="modal-header" style="background:#fac564;color:#000;border:none;padding:20px 24px">
           <h5 class="modal-title" style="font-weight:600">Opret konto</h5>
           <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
         </div>
@@ -602,10 +602,10 @@
               <input type="password" class="form-control" id="flow-signup-password" placeholder="Min. 6 tegn" required>
             </div>
             <div id="flow-signup-error" style="color:#dc3545;font-size:13px;margin-bottom:12px"></div>
-            <button type="submit" id="flow-signup-btn" class="btn btn-block" style="background:#1a1a2e;color:#fff;padding:10px;font-weight:600;border-radius:8px">Opret konto</button>
+            <button type="submit" id="flow-signup-btn" class="btn btn-block" style="background:#fac564;color:#000;padding:10px;font-weight:600;border-radius:8px">Opret konto</button>
           </form>
           <div style="text-align:center;margin-top:16px;font-size:13px">
-            Har du allerede en konto? <a href="javascript:void(0)" onclick="$('#flow-signup-modal').modal('hide');FlowAuth.showLoginModal();" style="color:#1a1a2e;font-weight:600">Log ind</a>
+            Har du allerede en konto? <a href="javascript:void(0)" onclick="$('#flow-signup-modal').modal('hide');FlowAuth.showLoginModal();" style="color:#fac564;font-weight:600">Log ind</a>
           </div>
         </div>
       </div>
@@ -616,19 +616,19 @@
   <div class="modal fade" id="flow-profile-modal" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content" style="border-radius:12px;overflow:hidden">
-        <div class="modal-header" style="background:#1a1a2e;color:#fff;border:none;padding:20px 24px">
+        <div class="modal-header" style="background:#fac564;color:#000;border:none;padding:20px 24px">
           <h5 class="modal-title" style="font-weight:600">Min profil</h5>
           <button type="button" class="close" style="color:#fff;opacity:0.8" data-dismiss="modal">&times;</button>
         </div>
         <div class="modal-body" style="padding:24px">
           <div style="text-align:center;margin-bottom:20px">
-            <div style="width:64px;height:64px;background:#1a1a2e;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:24px"><span class="icon-user"></span></div>
+            <div style="width:64px;height:64px;background:#fac564;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:#fff;font-size:24px"><span class="icon-user"></span></div>
             <h6 data-auth-name style="font-weight:600;margin:0"></h6>
             <small data-auth-email style="color:#888"></small>
           </div>
           <div id="flow-profile-loyalty" style="background:#f8f9fa;border-radius:8px;padding:16px;margin-bottom:12px;text-align:center;display:none">
             <div style="font-size:13px;color:#888">Loyalitetspoint</div>
-            <div id="flow-loyalty-points" style="font-size:28px;font-weight:700;color:#1a1a2e">0</div>
+            <div id="flow-loyalty-points" style="font-size:28px;font-weight:700;color:#fac564">0</div>
           </div>
           <div id="flow-profile-orders" style="margin-bottom:12px">
             <h6 style="font-weight:600;font-size:14px;margin-bottom:12px">Seneste ordrer</h6>

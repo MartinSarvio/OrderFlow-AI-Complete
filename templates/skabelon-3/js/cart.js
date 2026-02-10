@@ -86,18 +86,18 @@
       $('body').append(`
         <div id="pizza-cart-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9998;opacity:0;transition:opacity 0.3s"></div>
         <div id="pizza-cart-drawer" style="position:fixed;top:0;right:-400px;width:380px;max-width:90vw;height:100%;background:#fff;z-index:9999;transition:right 0.3s ease;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.2)">
-          <div style="padding:20px;background:#000;color:#fff;display:flex;justify-content:space-between;align-items:center">
+          <div style="padding:20px;background:#fac564;color:#000;display:flex;justify-content:space-between;align-items:center">
             <h5 style="margin:0;font-weight:700;font-family:'Josefin Sans',sans-serif"><span class="icon-shopping-cart" style="margin-right:8px"></span>Din kurv</h5>
-            <button id="pizza-cart-close" style="background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1">&times;</button>
+            <button id="pizza-cart-close" style="background:none;border:none;color:#000;font-size:28px;cursor:pointer;line-height:1">&times;</button>
           </div>
           <div style="padding:10px 20px;background:#f8f9fa;border-bottom:1px solid #eee;display:flex;gap:8px">
-            <button class="pizza-order-type active" data-type="pickup" style="flex:1;padding:10px;border:2px solid #000;background:#000;color:#fff;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Afhentning</button>
-            <button class="pizza-order-type" data-type="delivery" style="flex:1;padding:10px;border:2px solid #000;background:#fff;color:#000;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Levering (+${DELIVERY_FEE} kr.)</button>
+            <button class="pizza-order-type active" data-type="pickup" style="flex:1;padding:10px;border:2px solid #fac564;background:#fac564;color:#000;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Afhentning</button>
+            <button class="pizza-order-type" data-type="delivery" style="flex:1;padding:10px;border:2px solid #fac564;background:#fff;color:#000;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px">Levering (+${DELIVERY_FEE} kr.)</button>
           </div>
           <div id="pizza-cart-items" style="flex:1;overflow-y:auto;padding:16px 20px"></div>
           <div id="pizza-cart-footer" style="padding:16px 20px;border-top:2px solid #eee">
             <div id="pizza-cart-totals"></div>
-            <a href="checkout.html" id="pizza-checkout-btn" class="btn btn-primary btn-block" style="background:#000;border-color:#000;padding:12px;font-weight:700;border-radius:8px;margin-top:12px;font-size:15px">Gå til kassen</a>
+            <a href="checkout.html" id="pizza-checkout-btn" class="btn btn-primary btn-block" style="background:#fac564;border-color:#fac564;color:#000;padding:12px;font-weight:700;border-radius:8px;margin-top:12px;font-size:15px">Gå til kassen</a>
           </div>
         </div>
       `);
@@ -178,7 +178,7 @@
       if (this.orderType === 'delivery') {
         html += `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;color:#888"><span>Levering</span><span>${this.formatPrice(this.getDeliveryFee())}</span></div>`;
       }
-      html += `<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000"><span>Total</span><span>${this.formatPrice(this.getTotal())}</span></div>`;
+      html += `<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #fac564"><span>Total</span><span>${this.formatPrice(this.getTotal())}</span></div>`;
       $t.html(html);
     },
 
@@ -192,7 +192,7 @@
         self.orderType = type;
         $('.pizza-order-type').each(function() {
           var active = $(this).data('type') === type;
-          $(this).css({ background: active ? '#000' : '#fff', color: active ? '#fff' : '#000' }).toggleClass('active', active);
+          $(this).css({ background: active ? '#fac564' : '#fff', color: '#000' }).toggleClass('active', active);
         });
         self.renderTotals();
       });
@@ -217,7 +217,7 @@
     showToast(message) {
       var $t = $('#pizza-cart-toast');
       if ($t.length) $t.remove();
-      $t = $('<div id="pizza-cart-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);white-space:nowrap"><span class="icon-check" style="margin-right:8px;color:#28a745"></span>' + message + '</div>');
+      $t = $('<div id="pizza-cart-toast" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#fac564;color:#000;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:500;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);white-space:nowrap"><span class="icon-check" style="margin-right:8px;color:#28a745"></span>' + message + '</div>');
       $('body').append($t);
       setTimeout(function() { $t.fadeOut(300, function() { $t.remove(); }); }, 2500);
     },
