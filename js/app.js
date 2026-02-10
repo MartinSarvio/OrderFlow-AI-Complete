@@ -4077,6 +4077,7 @@ let isNavigatingFromHistory = false;
 let pendingNavigationTarget = null;
 let pendingNavigationType = null; // 'page' or 'popstate'
 let isNavigationGuardActive = false;
+let hasUserInteractedWithPage = false; // Track if user has made any changes
 
 // Initialize - ensure modal is hidden and flags are reset on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -4089,6 +4090,12 @@ document.addEventListener('DOMContentLoaded', function() {
   webBuilderHasChanges = false;
   appBuilderHasChanges = false;
   cmsHasChanges = false;
+  hasUserInteractedWithPage = false;
+  
+  // Set interaction flag after first real user action
+  setTimeout(() => {
+    hasUserInteractedWithPage = true;
+  }, 2000); // Wait 2 seconds after page load before enabling modal
 });
 
 function getUnsavedChangesBuilders() {
@@ -4124,6 +4131,7 @@ function isNavigatingWithinSameBuilder(targetPage) {
 function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
   if (isNavigationGuardActive) return false;
   if (isNavigatingWithinSameBuilder(targetPage)) return false;
+  if (!hasUserInteractedWithPage) return false; // Don't show modal during initial page load
 
   const unsavedBuilders = getUnsavedChangesBuilders();
   if (unsavedBuilders.length === 0) return false;
