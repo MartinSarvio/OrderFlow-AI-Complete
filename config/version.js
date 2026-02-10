@@ -1,14 +1,14 @@
 // OrderFlow Version Configuration
 // Single source of truth for version information
 const VERSION_CONFIG = {
-  version: '4.4.2',
-  build: 4420,
-  cacheName: 'orderflow-v4420',
+  version: '4.4.3',
+  build: 4430,
+  cacheName: 'orderflow-v4430',
   releaseDate: '2026-02-10',
 
   // Sidebar Template Metadata
   sidebarTemplate: {
-    version: '4.4.2',
+    version: '4.4.3',
     protected: true,
     authorizationRequired: true,
     lastModified: '2026-02-10'
