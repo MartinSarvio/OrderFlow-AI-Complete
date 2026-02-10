@@ -45713,6 +45713,77 @@ window.loadAiMediaHistory = loadAiMediaHistory;
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
 
+// =====================================================
+// PULL-TO-REFRESH - Mobile App Behavior
+// =====================================================
+(function initPullToRefresh() {
+  if (window.innerWidth > 640) return; // Only on mobile
+  
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  let refreshThreshold = 80;
+  
+  const mainContent = document.querySelector('.main-content-wrapper') || document.querySelector('.main');
+  if (!mainContent) return;
+  
+  // Create refresh indicator
+  const refreshIndicator = document.createElement('div');
+  refreshIndicator.id = 'pull-refresh-indicator';
+  refreshIndicator.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg><span>Træk for at opdatere</span>';
+  refreshIndicator.style.cssText = 'position:fixed;top:-100px;left:0;right:0;height:60px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bg);color:var(--text);font-size:14px;z-index:9999;transition:top 0.3s ease;';
+  refreshIndicator.querySelector('svg').style.cssText = 'width:20px;height:20px;animation:spin 1s linear infinite paused;';
+  document.body.appendChild(refreshIndicator);
+  
+  mainContent.addEventListener('touchstart', function(e) {
+    if (mainContent.scrollTop === 0) {
+      startY = e.touches[0].pageY;
+      isDragging = true;
+    }
+  }, { passive: true });
+  
+  mainContent.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    currentY = e.touches[0].pageY;
+    const diff = currentY - startY;
+    
+    if (diff > 0 && diff < 150) {
+      refreshIndicator.style.top = (diff - 100) + 'px';
+      if (diff > refreshThreshold) {
+        refreshIndicator.querySelector('span').textContent = 'Slip for at opdatere';
+      } else {
+        refreshIndicator.querySelector('span').textContent = 'Træk for at opdatere';
+      }
+    }
+  }, { passive: true });
+  
+  mainContent.addEventListener('touchend', function(e) {
+    if (!isDragging) return;
+    const diff = currentY - startY;
+    
+    if (diff > refreshThreshold) {
+      refreshIndicator.style.top = '0px';
+      refreshIndicator.querySelector('span').textContent = 'Opdaterer...';
+      refreshIndicator.querySelector('svg').style.animationPlayState = 'running';
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } else {
+      refreshIndicator.style.top = '-100px';
+    }
+    
+    isDragging = false;
+    startY = 0;
+    currentY = 0;
+  }, { passive: true });
+})();
+
+// Add spin animation for refresh icon
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(handleURLPageParam, 200);
