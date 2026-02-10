@@ -1076,15 +1076,15 @@
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200;font-family:'Inter',sans-serif}
     .sidebar.collapsed{width:72px}
 
-    /* Logo centralt i toppen - på linje med header */
-    .sidebar-logo{position:fixed;top:20px;left:0;width:260px;height:62px;display:flex;align-items:center;justify-content:center;z-index:220;background:var(--nav-bg)}
-    .sidebar-logo img{height:22px;width:auto}
+    /* Logo centralt i toppen - HØJERE OP og forbliver synligt når collapsed */
+    .sidebar-logo{position:fixed;top:8px;left:0;width:260px;height:52px;display:flex;align-items:center;justify-content:center;z-index:220;background:var(--nav-bg)}
+    .sidebar-logo img{height:22px;width:auto;transition:height 0.3s ease-in-out}
     .sidebar.collapsed .sidebar-logo{width:72px}
-    .sidebar.collapsed .sidebar-logo img{display:none}
+    .sidebar.collapsed .sidebar-logo img{height:18px}
 
-    /* Header zone - afrunding ved søgefelt */
-    .sidebar-header{padding:20px 20px 4px;transition:all 0.3s ease-in-out;position:fixed;top:82px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
-    .sidebar.collapsed .sidebar-header{padding:20px 12px 20px;width:72px;top:82px}
+    /* Header zone - afrunding ved søgefelt - søgefelt forbliver synligt */
+    .sidebar-header{padding:16px 20px 4px;transition:all 0.3s ease-in-out;position:fixed;top:60px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
+    .sidebar.collapsed .sidebar-header{padding:16px 12px;width:72px;top:60px}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
     .sidebar-toggle{position:absolute;bottom:24px;left:20px;width:32px;height:32px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.3s ease-in-out;z-index:250}
@@ -1120,17 +1120,16 @@
     /* Hide customer context in collapsed state */
     .sidebar.collapsed .nav-customer-context{display:none}
     
-    /* Sidebar search - hidden when collapsed */
-    .sidebar.collapsed .sidebar-search{display:none}
-
-    /* Logo stays fixed and centered in sidebar top */
-    .sidebar-header>div:first-child{position:fixed;top:20px;left:0;width:260px;z-index:220;margin-bottom:0;text-align:center}
-    .sidebar-header>div:first-child img{height:22px;width:auto}
+    /* Sidebar search - FORBLIVER SYNLIGT når collapsed */
+    .sidebar.collapsed .sidebar-search{display:block !important}
+    .sidebar.collapsed .sidebar-search-input{width:48px;padding:10px 8px;text-align:center}
+    .sidebar.collapsed .sidebar-search svg{left:50%;transform:translateX(-50%) translateY(-50%)}
+    .sidebar.collapsed .sidebar-search-shortcut{display:none}
     
     /* Main content adjustment */
     .main{margin-left:260px;transition:margin-left 0.3s ease-in-out}
     .sidebar.collapsed ~ .main{margin-left:72px}
-    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:162px;scrollbar-width:none;-ms-overflow-style:none}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:120px;scrollbar-width:none;-ms-overflow-style:none}
     .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
     .nav-section{margin-bottom:32px;transition:all 0.3s ease-in-out}
     .nav-section-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;padding:6px 13px;margin-bottom:3px;opacity:1;transition:all 0.3s ease-in-out}

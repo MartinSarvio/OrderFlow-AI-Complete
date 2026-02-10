@@ -44091,7 +44091,7 @@ function openAgentPage(pageId) {
 }
 
 function switchVaerktoejTab(tab) {
-  var tabs = ['agenter','enheder','agentstatus','apikeys','statistik','qrkode'];
+  var tabs = ['apikeys','agenter','enheder','agentstatus','statistik','qrkode'];
   tabs.forEach(function(t) {
     var content = document.getElementById('vaerktoejer-content-' + t);
     var tabBtn = document.getElementById('vaerktoejer-tab-' + t);
@@ -44106,7 +44106,7 @@ function switchVaerktoejTab(tab) {
   if (tab === 'statistik') renderAgentStatistics();
   if (tab === 'agentstatus') renderAgentStatusDashboard();
   if (tab === 'qrkode') loadQRHistory();
-  if (tab === 'enheder') initPrinterDeviceCard();
+  if (tab === 'enheder') initDevicesTab();
 }
 
 function checkAgentUpdate(agentName) {
@@ -44425,6 +44425,14 @@ function renderCustomerIntegrations() {
       icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
       statusKey: 'integration_sms',
       action: 'included'
+    },
+    {
+      id: 'printer', title: 'Star TSP100A Printer', color: '#6366f1',
+      desc: 'Tilslut kvitteringsprinter til automatisk print af ordre',
+      providers: 'Star TSP100',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>',
+      statusKey: 'integration_printer',
+      action: 'printer'
     }
   ];
 
@@ -44437,8 +44445,18 @@ function renderCustomerIntegrations() {
     var isConnected = localStorage.getItem(ig.statusKey) === 'connected';
     var isIncluded = ig.action === 'included';
     var isAgents = ig.action === 'agents';
+
+    // Check printer integration status from printerSettings
+    var isPrinter = ig.action === 'printer';
+    if (isPrinter) {
+      var ps = getPrinterSettings();
+      isConnected = ps.enabled && ps.printerIp;
+      if (isConnected) localStorage.setItem(ig.statusKey, 'connected');
+      else localStorage.removeItem(ig.statusKey);
+    }
+
     var statusColor = (isConnected || isIncluded) ? ig.color : 'var(--muted)';
-    var statusText = isIncluded ? 'Inkluderet' : (isConnected ? 'Forbundet' : 'Ej forbundet');
+    var statusText = isIncluded ? 'Inkluderet' : (isPrinter && isConnected ? 'Tilsluttet' : (isConnected ? 'Forbundet' : 'Ej forbundet'));
     var statusBg = (isConnected || isIncluded) ? 'rgba(' + hexToRgb(ig.color) + ',0.1)' : 'var(--bg2)';
 
     var btnHtml = '';
@@ -44446,6 +44464,10 @@ function renderCustomerIntegrations() {
       btnHtml = '<span style="font-size:12px;color:' + ig.color + ';font-weight:500">Aktiv</span>';
     } else if (isAgents) {
       btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid ' + ig.color + ';color:' + ig.color + ';background:none;border-radius:var(--radius-sm);cursor:pointer" onclick="switchVaerktoejTab(\'agenter\')">Se Agenter</button>';
+    } else if (isPrinter && isConnected) {
+      btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);color:var(--color-text);background:var(--card);border-radius:var(--radius-sm);cursor:pointer" onclick="openPrinterIntegration()">Administrer</button>';
+    } else if (isPrinter) {
+      btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;background:' + ig.color + ';color:white;border:none;border-radius:var(--radius-sm);cursor:pointer" onclick="openPrinterIntegration()">Opsæt Integration</button>';
     } else if (isConnected) {
       btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);color:var(--color-text);background:var(--card);border-radius:var(--radius-sm);cursor:pointer" onclick="openIntegrationConfig(\'' + ig.id + '\')">Administrer</button>';
     } else {
@@ -45363,6 +45385,10 @@ window.disconnectIntegration = disconnectIntegration;
 window.renderAgentStatistics = renderAgentStatistics;
 window.renderAgentStatusDashboard = renderAgentStatusDashboard;
 window.switchVaerktoejTab = switchVaerktoejTab;
+window.openPrinterIntegration = openPrinterIntegration;
+window.testPrinterIntegration = testPrinterIntegration;
+window.savePrinterIntegration = savePrinterIntegration;
+window.initDevicesTab = initDevicesTab;
 window.checkAgentUpdate = checkAgentUpdate;
 window.updateAgent = updateAgent;
 window.showAgentChangelogModal = showAgentChangelogModal;
@@ -45962,21 +45988,130 @@ function manualPrintOrder(orderId, type) {
 }
 
 // =====================================================
-// PRINTER DEVICE CARD - Enheder Tab
+// PRINTER INTEGRATION & DEVICE CARD - Værktøjer
 // =====================================================
 
 function openPrinterSettings() {
-  showSettingsPage('printer');
+  openPrinterIntegration();
+}
+
+function openPrinterIntegration() {
+  var settings = getPrinterSettings();
+  var modalHtml = '<div style="padding:var(--space-5)">' +
+    '<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-1)">🖨️ Printer Integration</h2>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Opsæt din Star TSP100A kvitteringsprinter</p>' +
+
+    '<div style="margin-bottom:var(--space-4)">' +
+    '<label style="font-size:var(--font-size-sm);font-weight:500;display:block;margin-bottom:var(--space-1)">Printer IP-adresse</label>' +
+    '<input type="text" class="form-input" id="pi-ip" value="' + (settings.printerIp || '192.168.1.100') + '" placeholder="192.168.1.100">' +
+    '</div>' +
+
+    '<div style="margin-bottom:var(--space-4)">' +
+    '<label style="font-size:var(--font-size-sm);font-weight:500;display:block;margin-bottom:var(--space-1)">Port</label>' +
+    '<input type="number" class="form-input" id="pi-port" value="' + (settings.printerPort || 80) + '" placeholder="80">' +
+    '</div>' +
+
+    '<div style="margin-bottom:var(--space-4)">' +
+    '<label style="font-size:var(--font-size-sm);font-weight:500;display:block;margin-bottom:var(--space-1)">Papirbredde</label>' +
+    '<select class="form-input" id="pi-paper">' +
+    '<option value="58"' + (settings.paperWidth == 58 ? ' selected' : '') + '>58mm</option>' +
+    '<option value="80"' + (settings.paperWidth != 58 ? ' selected' : '') + '>80mm</option>' +
+    '</select>' +
+    '</div>' +
+
+    '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-5)">' +
+    '<button class="btn btn-secondary" onclick="testPrinterIntegration()" style="flex:1">🔍 Test Forbindelse</button>' +
+    '<button class="btn btn-primary" onclick="savePrinterIntegration()" style="flex:1">💾 Gem & Aktiver</button>' +
+    '</div>' +
+
+    '<div id="pi-test-result" style="margin-top:var(--space-3);display:none"></div>' +
+    '</div>';
+
+  // Use generic modal approach
+  var overlay = document.createElement('div');
+  overlay.id = 'printer-integration-modal';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var modal = document.createElement('div');
+  modal.style.cssText = 'background:var(--card);border-radius:var(--radius-lg);max-width:440px;width:90%;max-height:90vh;overflow-y:auto;border:1px solid var(--border)';
+  modal.innerHTML = modalHtml;
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+}
+
+async function testPrinterIntegration() {
+  var result = document.getElementById('pi-test-result');
+  if (result) {
+    result.style.display = 'block';
+    result.innerHTML = '<div style="padding:12px;background:var(--bg2);border-radius:var(--radius-md);font-size:var(--font-size-sm)">⏳ Tester forbindelse...</div>';
+  }
+  try {
+    var status = await checkPrinterStatus();
+    if (status.online) {
+      result.innerHTML = '<div style="padding:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#10b981">✅ Printer fundet og online!</div>';
+    } else {
+      result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">❌ Kan ikke forbinde: ' + (status.reason || 'Ukendt fejl') + '</div>';
+    }
+  } catch(e) {
+    result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">❌ Fejl: ' + e.message + '</div>';
+  }
+}
+
+function savePrinterIntegration() {
+  var ip = document.getElementById('pi-ip')?.value || '192.168.1.100';
+  var port = parseInt(document.getElementById('pi-port')?.value) || 80;
+  var paper = parseInt(document.getElementById('pi-paper')?.value) || 80;
+
+  var settings = getPrinterSettings();
+  settings.enabled = true;
+  settings.printerIp = ip;
+  settings.printerPort = port;
+  settings.paperWidth = paper;
+  savePrinterSettings(settings);
+
+  // Update integration status
+  localStorage.setItem('integration_printer', 'connected');
+
+  // Close modal
+  var modal = document.getElementById('printer-integration-modal');
+  if (modal) modal.remove();
+
+  // Start queue processor
+  startPrintQueueProcessor();
+
+  // Refresh integrations view
+  renderCustomerIntegrations();
+
+  toast('✅ Printer integration aktiveret!', 'success');
+}
+
+function initDevicesTab() {
+  var settings = getPrinterSettings();
+  var printerCard = document.getElementById('printer-device-card');
+  var emptyState = document.getElementById('devices-empty-state');
+
+  if (settings.enabled && settings.printerIp) {
+    if (printerCard) printerCard.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
+
+    // Update device info
+    var ipEl = document.getElementById('printer-device-ip');
+    var portEl = document.getElementById('printer-device-port');
+    if (ipEl) ipEl.textContent = settings.printerIp || '192.168.1.100';
+    if (portEl) portEl.textContent = 'Port ' + (settings.printerPort || 80);
+
+    // Check status
+    checkAndUpdatePrinterDeviceCard();
+  } else {
+    if (printerCard) printerCard.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'flex';
+  }
 }
 
 function initPrinterDeviceCard() {
-  var settings = getPrinterSettings();
-  var ipEl = document.getElementById('printer-device-ip');
-  var portEl = document.getElementById('printer-device-port');
-  if (ipEl) ipEl.textContent = settings.printerIp || '192.168.1.100';
-  if (portEl) portEl.textContent = 'Port ' + (settings.printerPort || 80);
-  // Auto-check status
-  checkAndUpdatePrinterDeviceCard();
+  initDevicesTab();
 }
 
 async function checkAndUpdatePrinterDeviceCard() {
