@@ -2724,6 +2724,8 @@ async function socialLoginFacebook() {
     if (typeof toast === 'function') toast('Facebook login fejlede: ' + err.message, 'error');
   }
 }
+window.socialLoginGoogle = socialLoginGoogle;
+window.socialLoginFacebook = socialLoginFacebook;
 
 async function handleLogin(e) {
   e.preventDefault();
@@ -11089,6 +11091,10 @@ function exportInvoiceHistory() {
   URL.revokeObjectURL(url);
   toast('Fakturaer eksporteret', 'success');
 }
+window.editPaymentMethod = editPaymentMethod;
+window.savePaymentMethod = savePaymentMethod;
+window.updatePaymentCard = updatePaymentCard;
+window.exportInvoiceHistory = exportInvoiceHistory;
 
 // =====================================================
 // ABONNEMENT PAGE - Subscription Management
@@ -12995,6 +13001,12 @@ function moveProduct(idx, direction) {
   showProductSortingModal();
   renderProducts(restaurant);
 }
+window.showBulkProductModal = showBulkProductModal;
+window.showImportCSVModal = showImportCSVModal;
+window.showProductSortingModal = showProductSortingModal;
+window.addBulkProductRow = addBulkProductRow;
+window.saveBulkProducts = saveBulkProducts;
+window.moveProduct = moveProduct;
 
 // Show Add Category Modal
 function showAddCategoryModal() {
@@ -27868,6 +27880,9 @@ async function saveUdsendelse() {
 window.renderUdsendelserPage = renderUdsendelserPage;
 window.filterUdsendelser = filterUdsendelser;
 window.showCreateUdsendelseModal = showCreateUdsendelseModal;
+window.saveUdsendelse = saveUdsendelse;
+window.executeSendToSegment = executeSendToSegment;
+window.loadSegmentCustomers = loadSegmentCustomers;
 
 // =====================================================
 // ROLE MANAGEMENT
@@ -29995,6 +30010,7 @@ async function inviteTeamMember() {
     toast('Fejl: ' + err.message, 'error');
   }
 }
+window.inviteTeamMember = inviteTeamMember;
 
 function loadAdminTeam() {
   const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || 'null') || [
@@ -43334,6 +43350,12 @@ function saveGscConnection() {
   document.getElementById('gsc-modal')?.remove();
   toast('Google Search Console forbundet', 'success');
 }
+window.addSeoKeyword = addSeoKeyword;
+window.removeSeoKeyword = removeSeoKeyword;
+window.renderSeoKeywords = renderSeoKeywords;
+window.generateSitemap = generateSitemap;
+window.connectGoogleSearchConsole = connectGoogleSearchConsole;
+window.saveGscConnection = saveGscConnection;
 
 // =====================================================
 // SEO SCANNER UI FUNCTIONS
