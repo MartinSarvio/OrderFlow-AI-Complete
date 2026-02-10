@@ -2204,6 +2204,54 @@ const SupabaseDB = {
   },
 
   /**
+   * Save user setting to Supabase (user_settings table)
+   * @param {string} settingsType - Setting category (e.g. 'user_profile', 'notification_settings')
+   * @param {object} settingsData - The settings data object
+   */
+  async saveUserSetting(settingsType, settingsData) {
+    try {
+      if (!supabase) await window.waitForSupabase();
+      if (!supabase) {
+        console.warn('⚠️ Supabase not available for user setting sync');
+        return { success: false, error: 'Supabase not initialized' };
+      }
+
+      const userId = this.getCurrentUserId();
+      if (!userId) {
+        console.warn('⚠️ No user logged in for user setting sync');
+        return { success: false, error: 'No user logged in' };
+      }
+
+      const record = {
+        user_id: userId,
+        settings_type: settingsType,
+        settings_data: settingsData,
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('user_settings')
+        .upsert(record, { onConflict: 'user_id,settings_type' })
+        .select()
+        .single();
+
+      if (error) {
+        if (error.code === '42P01') {
+          console.warn('⚠️ user_settings table does not exist');
+          return { success: false, error: 'Table not found' };
+        }
+        throw error;
+      }
+
+      console.log(`✅ ${settingsType} saved to Supabase`);
+      return { success: true, data };
+    } catch (err) {
+      console.error(`❌ Error saving ${settingsType}:`, err);
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
    * Load builder configuration from Supabase
    * @param {string} configType - 'app_builder', 'web_builder', or 'cms'
    * @param {string} restaurantId - Optional restaurant ID

@@ -11400,7 +11400,11 @@ function saveBillingSettings() {
     vatRate: document.getElementById('default-vat-rate')?.value || '25'
   };
   localStorage.setItem('orderflow_billing_settings', JSON.stringify(settings));
-  // toast('Faktureringsindstillinger gemt', 'success'); // Removed - unnecessary
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('billing_settings', settings)
+      .catch(err => console.warn('Supabase sync fejl (billing):', err));
+  }
 }
 
 function savePlatformBillingInfo() {
@@ -11411,7 +11415,11 @@ function savePlatformBillingInfo() {
     bankAccount: document.getElementById('platform-bank-account')?.value || '12345678'
   };
   localStorage.setItem('orderflow_platform_billing', JSON.stringify(info));
-  // toast('Platforminfo gemt', 'success'); // Removed - unnecessary
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('platform_billing', info)
+      .catch(err => console.warn('Supabase sync fejl (platform billing):', err));
+  }
 }
 
 function showCustomModal(title, content) {
@@ -12614,7 +12622,7 @@ function markProductsUnsaved() {
 function saveProductsExplicit() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (!restaurant) return;
-  
+
   // Save to localStorage
   const key = `products_${restaurant.id}`;
   const data = {
@@ -12624,17 +12632,23 @@ function saveProductsExplicit() {
     extras: restaurant.extras || []
   };
   localStorage.setItem(key, JSON.stringify(data));
-  
+
+  // Sync to Supabase
+  if (window.SupabaseDB && restaurant.id) {
+    SupabaseDB.updateRestaurant(restaurant.id, {
+      menu_items: data.products,
+      product_categories: data.productCategories
+    }).catch(err => console.warn('Supabase sync fejl (products):', err));
+  }
+
   // Update save status
   const statusEl = document.getElementById('products-save-status');
   if (statusEl) {
     statusEl.innerHTML = '<span style="color:var(--accent)">✓ Gemt</span>';
   }
-  
+
   // Sync to workflow
   syncProductsToWorkflow();
-  
-  // toast('Produkter gemt', 'success'); // Removed - unnecessary
 }
 
 function syncProductsToWorkflow() {
@@ -13761,6 +13775,22 @@ function saveStamdata() {
   // Persist to localStorage
   persistRestaurants();
 
+  // Sync to Supabase
+  if (window.SupabaseDB && restaurant.id) {
+    SupabaseDB.updateRestaurant(restaurant.id, {
+      name: restaurant.name,
+      cvr: restaurant.cvr,
+      owner: restaurant.owner,
+      contact_person: restaurant.contactPerson,
+      email: restaurant.email,
+      phone: restaurant.phone,
+      industry: restaurant.industry,
+      address: restaurant.address,
+      country: restaurant.country,
+      website: restaurant.website
+    }).catch(err => console.warn('Supabase sync fejl (stamdata):', err));
+  }
+
   // Show save status
   showSaveStatus('stamdata-save-status', 'saved');
 }
@@ -14031,6 +14061,13 @@ function saveWorkflowSettingsExplicit() {
     // Persist to localStorage
     persistRestaurants();
 
+    // Sync to Supabase
+    if (window.SupabaseDB && restaurant.id) {
+      SupabaseDB.updateRestaurant(restaurant.id, {
+        metadata: { ...restaurant.metadata, workflow_settings: restaurant.workflowSettings }
+      }).catch(err => console.warn('Supabase sync fejl (workflow settings):', err));
+    }
+
     clearWorkflowDirty();
 
     // LOG ACTIVITY - dette vil automatisk vise blå prik på Workflow Kontrol nav item
@@ -14115,9 +14152,17 @@ function saveMessageSettings() {
 
 // Save all messages with toast notification
 function saveAllMessages() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (saveMessageSettings()) {
     // Persist to localStorage
     persistRestaurants();
+
+    // Sync to Supabase
+    if (window.SupabaseDB && restaurant?.id) {
+      SupabaseDB.updateRestaurant(restaurant.id, {
+        metadata: { ...restaurant.metadata, messages: restaurant.messages }
+      }).catch(err => console.warn('Supabase sync fejl (messages):', err));
+    }
 
     // Show save status
     showSaveStatus('messages-save-status', 'saved');
@@ -17451,6 +17496,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function saveWorkflow() {
   localStorage.setItem('workflow_nodes', JSON.stringify(workflowNodes));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('workflow_nodes', { nodes: workflowNodes })
+      .catch(err => console.warn('Supabase sync fejl (workflow):', err));
+  }
+
   // Visual feedback - brief button flash
   const btn = document.querySelector('[onclick="saveWorkflow()"]');
   if (btn) {
@@ -22771,6 +22822,17 @@ function saveCustomerKundelog() {
   }
   
   saveCustomerKundelogsForCustomer(currentProfileRestaurantId, logs);
+
+  // Sync to Supabase activity log
+  if (window.SupabaseDB) {
+    SupabaseDB.logActivity(
+      SupabaseDB.getCurrentUserId(),
+      editId ? 'update' : 'create',
+      `Kundelog ${editId ? 'opdateret' : 'oprettet'}: ${beskrivelse.substring(0, 50)}`,
+      { category: 'kunder', subCategory: 'kundelog', customerId: currentProfileRestaurantId, kunde: kundeName, type, prioritet }
+    ).catch(err => console.warn('Supabase sync fejl (kundelog):', err));
+  }
+
   closeCustomerKundelogModal();
   renderCustomerKundelogs();
 }
@@ -23179,19 +23241,21 @@ function toast(msg, type = 'info', options = {}) {
 function saveNotificationSettings() {
   const email = document.getElementById('notification-email')?.value || '';
   const cc = document.getElementById('notification-cc')?.value || '';
-  
+
   // Gem alle checkbox-indstillinger
   const checkboxes = document.querySelectorAll('[data-notif]');
   const settings = {};
   checkboxes.forEach(cb => {
     settings[cb.dataset.notif] = cb.checked;
   });
-  
-  localStorage.setItem('orderflow_notification_settings', JSON.stringify({
-    email,
-    cc,
-    settings
-  }));
+
+  const data = { email, cc, settings };
+  localStorage.setItem('orderflow_notification_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('notification_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (notifications):', err));
+  }
 
   showSaveStatus('notification-save-status', 'saved');
 }
@@ -23202,11 +23266,13 @@ function saveQuietHours() {
   const end = document.getElementById('quiet-end')?.value || '08:00';
   const allowCritical = document.getElementById('allow-critical')?.checked || true;
 
-  localStorage.setItem('orderflow_quiet_hours', JSON.stringify({
-    start,
-    end,
-    allowCritical
-  }));
+  const data = { start, end, allowCritical };
+  localStorage.setItem('orderflow_quiet_hours', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('quiet_hours', data)
+      .catch(err => console.warn('Supabase sync fejl (quiet hours):', err));
+  }
 
   showSaveStatus('quiet-hours-save-status', 'saved');
 }
@@ -23349,6 +23415,17 @@ async function saveAllNotificationSettings() {
       end: quietEnd,
       allowCritical
     }));
+
+    // Sync alle notifikationsindstillinger til Supabase
+    if (window.SupabaseDB) {
+      const allSettings = {
+        blueSettings,
+        notifications: { email, cc, settings: notifSettings },
+        quietHours: { start: quietStart, end: quietEnd, allowCritical }
+      };
+      window.SupabaseDB.saveUserSetting('all_notification_settings', allSettings)
+        .catch(err => console.warn('Supabase sync fejl (all notifications):', err));
+    }
 
     // 4. Send notifikation til header ringeklokke
     addHeaderNotification({
@@ -23553,11 +23630,14 @@ async function sendSettingsEmail(email, cc) {
 function saveMomsSettings() {
   const momsRate = document.getElementById('moms-rate')?.value || '25';
   const showMoms = document.getElementById('show-moms')?.checked || true;
-  
-  localStorage.setItem('orderflow_moms_settings', JSON.stringify({
-    rate: parseFloat(momsRate),
-    showOnReceipt: showMoms
-  }));
+
+  const data = { rate: parseFloat(momsRate), showOnReceipt: showMoms };
+  localStorage.setItem('orderflow_moms_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('moms_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (moms):', err));
+  }
 
   showSaveStatus('moms-save-status', 'saved');
 }
@@ -23568,6 +23648,11 @@ function saveLanguage() {
 
   localStorage.setItem('orderflow_language', language);
 
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('language', { language })
+      .catch(err => console.warn('Supabase sync fejl (language):', err));
+  }
+
   showSaveStatus('language-save-status', 'saved');
 }
 
@@ -23577,11 +23662,13 @@ function saveBankSettings() {
   const regNumber = document.getElementById('bank-reg')?.value || '';
   const accountNumber = document.getElementById('bank-account')?.value || '';
 
-  localStorage.setItem('orderflow_bank_settings', JSON.stringify({
-    bankName,
-    regNumber,
-    accountNumber
-  }));
+  const data = { bankName, regNumber, accountNumber };
+  localStorage.setItem('orderflow_bank_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('bank_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (bank):', err));
+  }
 }
 
 // Gem virksomhedsoplysninger
@@ -23593,14 +23680,13 @@ function saveCompanySettings() {
   const postalCode = document.getElementById('company-zip')?.value || '';
   const city = document.getElementById('company-city')?.value || '';
 
-  localStorage.setItem('orderflow_company_settings', JSON.stringify({
-    cvr,
-    phone,
-    email,
-    address,
-    postalCode,
-    city
-  }));
+  const data = { cvr, phone, email, address, postalCode, city };
+  localStorage.setItem('orderflow_company_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('company_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (company):', err));
+  }
 }
 
 // Gem alle bank- og virksomhedsoplysninger
@@ -23678,8 +23764,29 @@ function changePassword() {
     return;
   }
 
-  // Her ville normalt være et API-kald til at ændre adgangskoden
-  showSaveStatus('password-save-status', 'saved');
+  // Skift adgangskode via Supabase Auth
+  if (window.supabaseClient) {
+    window.supabaseClient.auth.updateUser({ password: newPassword })
+      .then(({ error }) => {
+        if (error) {
+          console.error('Password change failed:', error);
+          showSaveStatus('password-save-status', 'error');
+          toast('Kunne ikke ændre adgangskode: ' + error.message, 'error');
+        } else {
+          console.log('✅ Password changed via Supabase Auth');
+          showSaveStatus('password-save-status', 'saved');
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+        }
+      })
+      .catch(err => {
+        console.warn('Supabase auth fejl:', err);
+        showSaveStatus('password-save-status', 'error');
+      });
+  } else {
+    showSaveStatus('password-save-status', 'saved');
+  }
 }
 
 // Gem brugerindstillinger
@@ -23689,15 +23796,14 @@ function saveUserSettings() {
   const email = document.getElementById('user-email')?.value || '';
   const phone = document.getElementById('user-phone')?.value || '';
 
-  // Gem til localStorage (demo mode)
-  localStorage.setItem('orderflow_user_profile', JSON.stringify({
-    firstName,
-    lastName,
-    email,
-    phone
-  }));
+  const data = { firstName, lastName, email, phone };
+  localStorage.setItem('orderflow_user_profile', JSON.stringify(data));
 
-  // Vis status
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('user_profile', data)
+      .catch(err => console.warn('Supabase sync fejl (user profile):', err));
+  }
+
   showSaveStatus('users-save-status', 'saved');
 }
 
@@ -29684,6 +29790,23 @@ function removeBrandingLogo() {
 
 // Save App Branding
 function saveAppBranding() {
+  // Collect branding data from form
+  const brandingData = {
+    restaurantName: document.getElementById('branding-restaurant-name')?.value || '',
+    tagline: document.getElementById('branding-tagline')?.value || '',
+    primaryColor: document.getElementById('branding-primary-color')?.value || '#6366F1',
+    accentColor: document.getElementById('branding-accent-color')?.value || '#10B981'
+  };
+
+  // Save to localStorage
+  localStorage.setItem('orderflow_app_branding', JSON.stringify(brandingData));
+
+  // Sync to Supabase via builder config
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveBuilderConfig('app_builder', brandingData)
+      .catch(err => console.warn('Supabase sync fejl (branding):', err));
+  }
+
   const status = document.getElementById('branding-save-status');
   if (status) {
     status.style.display = 'inline';
@@ -29982,6 +30105,12 @@ function saveAdminOplysninger() {
     position: document.getElementById('admin-position')?.value || ''
   };
   localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('admin_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (admin profile):', err));
+  }
+
   showSaveStatus('admin-oplysninger-status', 'saved');
 }
 
@@ -30066,6 +30195,12 @@ function saveAdminVirksomhed() {
     email: document.getElementById('company-email')?.value || ''
   };
   localStorage.setItem('orderflow_admin_company', JSON.stringify(company));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('admin_company', company)
+      .catch(err => console.warn('Supabase sync fejl (admin company):', err));
+  }
+
   showSaveStatus('company-save-status', 'saved');
 }
 
@@ -30192,6 +30327,12 @@ function saveKundeOplysninger() {
     phone: document.getElementById('kunde-phone')?.value || ''
   };
   localStorage.setItem('orderflow_kunde_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('kunde_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (kunde profile):', err));
+  }
+
   showSaveStatus('kunde-oplysninger-status', 'saved');
 }
 
@@ -30359,6 +30500,12 @@ function saveKundePraeferencer() {
     dietary: document.getElementById('pref-dietary')?.value || ''
   };
   localStorage.setItem('orderflow_kunde_preferences', JSON.stringify(prefs));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('kunde_preferences', prefs)
+      .catch(err => console.warn('Supabase sync fejl (kunde prefs):', err));
+  }
+
   showSaveStatus('kunde-prefs-status', 'saved');
 }
 
@@ -30387,6 +30534,11 @@ function saveAccountInfo() {
   };
 
   localStorage.setItem('orderflow_user_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('user_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (account info):', err));
+  }
 
   // Update topbar display
   updateProfileDropdownDisplay(profile);
@@ -37696,6 +37848,15 @@ function saveMarketingData() {
   localStorage.setItem('orderflow_marketing_campaigns', JSON.stringify(marketingCampaigns));
   localStorage.setItem('orderflow_marketing_broadcasts', JSON.stringify(marketingBroadcasts));
   localStorage.setItem('orderflow_marketing_segments', JSON.stringify(marketingSegments));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('marketing_data', {
+      campaigns: marketingCampaigns,
+      broadcasts: marketingBroadcasts,
+      segments: marketingSegments
+    }).catch(err => console.warn('Supabase sync fejl (marketing):', err));
+  }
+
   marketingHasChanges = false;
   updateMarketingUnsavedBadge();
   toast('Marketing data gemt', 'success');
