@@ -198,7 +198,7 @@
       });
 
       // "Order" or "Add to cart" buttons in menu
-      $(document).on('click', '[data-add-to-cart]', function(e) {
+      $(document).on('click', '[data-add-to-cart], [data-of-add-to-cart]', function(e) {
         e.preventDefault();
         var $wrap = $(this).closest('.services-wrap, .menu-wrap, [data-item-id]');
         if (!$wrap.length) $wrap = $(this).closest('.col-lg-4, .col-md-6');
