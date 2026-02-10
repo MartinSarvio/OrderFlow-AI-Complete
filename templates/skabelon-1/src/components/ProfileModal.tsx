@@ -1,6 +1,6 @@
 // OrderFlow PWA Generator - Profile Modal Component
 import { useState, useEffect } from 'react';
-import { X, User as UserIcon, Phone, Mail, MapPin, Star, Package, LogOut, Edit2, Check, Plus, LogIn } from 'lucide-react';
+import { X, User as UserIcon, Phone, Mail, Star, Package, LogOut, Edit2, Check, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
