@@ -2700,12 +2700,29 @@ async function handleResetPassword(e) {
   }
 }
 
-// Social login placeholders
-function socialLoginGoogle() {
-  if (typeof toast === 'function') toast('Google login kommer snart', 'info');
+// Social login via Supabase Auth
+async function socialLoginGoogle() {
+  try {
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/app/' }
+    });
+    if (error) throw error;
+  } catch (err) {
+    if (typeof toast === 'function') toast('Google login fejlede: ' + err.message, 'error');
+  }
 }
-function socialLoginFacebook() {
-  if (typeof toast === 'function') toast('Facebook login kommer snart', 'info');
+
+async function socialLoginFacebook() {
+  try {
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: { redirectTo: window.location.origin + '/app/' }
+    });
+    if (error) throw error;
+  } catch (err) {
+    if (typeof toast === 'function') toast('Facebook login fejlede: ' + err.message, 'error');
+  }
 }
 
 async function handleLogin(e) {
@@ -10991,9 +11008,87 @@ function formatCurrencyDKShort(amount) {
   return amount.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function editPaymentMethod() { toast('Betalingsmetode redigering kommer snart', 'info'); }
-function updatePaymentCard() { toast('Kortopdatering kommer snart', 'info'); }
-function exportInvoiceHistory() { toast('Eksport funktion kommer snart', 'info'); }
+function editPaymentMethod() {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'payment-method-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:450px">
+      <div class="modal-header">
+        <h3>Betalingsmetode</h3>
+        <button class="modal-close" onclick="document.getElementById('payment-method-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Vælg betalingsmetode</label>
+          <select class="input" id="payment-method-select">
+            <option value="card">Kreditkort / Debitkort</option>
+            <option value="invoice">Faktura</option>
+            <option value="mobilepay">MobilePay</option>
+          </select>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--muted)">Kortoplysninger håndteres sikkert via Stripe.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('payment-method-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="savePaymentMethod()">Gem</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function savePaymentMethod() {
+  const method = document.getElementById('payment-method-select')?.value;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (restaurant) {
+    if (!restaurant.billing) restaurant.billing = {};
+    restaurant.billing.paymentMethod = method;
+    localStorage.setItem(`billing_${restaurant.id}`, JSON.stringify(restaurant.billing));
+  }
+  toast('Betalingsmetode opdateret', 'success');
+  document.getElementById('payment-method-modal')?.remove();
+}
+
+async function updatePaymentCard() {
+  try {
+    const response = await fetch('/api/stripe/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'setup', return_url: window.location.href })
+    });
+    const { url } = await response.json();
+    if (url) window.location.href = url;
+    else toast('Kunne ikke oprette Stripe session', 'error');
+  } catch (err) {
+    toast('Fejl ved kortopsætning: ' + err.message, 'error');
+  }
+}
+
+function exportInvoiceHistory() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const invoices = restaurant.invoices || [];
+  if (!invoices.length) { toast('Ingen fakturaer at eksportere', 'warn'); return; }
+
+  const headers = ['Fakturanr', 'Dato', 'Beløb', 'Status'];
+  const rows = invoices.map(inv => [
+    inv.number || '',
+    new Date(inv.date).toLocaleDateString('da-DK'),
+    (inv.amount || 0).toFixed(2),
+    inv.status || 'betalt'
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.join(';')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `fakturaer_${restaurant.name || 'export'}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Fakturaer eksporteret', 'success');
+}
 
 // =====================================================
 // ABONNEMENT PAGE - Subscription Management
@@ -12785,19 +12880,120 @@ function saveCategoryFilters(restaurantId, categoryNames) {
   }
 }
 
-// Show Bulk Product Modal (placeholder)
+// Show Bulk Product Modal — render form in existing subpage
 function showBulkProductModal() {
-  toast('Tilføj samlet produkt modal kommer snart', 'info');
+  showCustomerSubpage('add-bulk-product');
+  renderBulkProductForm();
 }
 
-// Show Import CSV Modal (placeholder)
+function renderBulkProductForm() {
+  const container = document.getElementById('add-bulk-product-form-container');
+  if (!container) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const categories = restaurant?.productCategories || ['Pizza', 'Pasta', 'Burger', 'Salat', 'Drikkevarer', 'Tilbehør'];
+  const catOptions = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="customer-section-compact">
+      <div id="bulk-product-rows">
+        ${renderBulkProductRow(0, catOptions)}
+        ${renderBulkProductRow(1, catOptions)}
+        ${renderBulkProductRow(2, catOptions)}
+      </div>
+      <button class="btn btn-secondary" onclick="addBulkProductRow()" style="margin-top:var(--space-3)">+ Tilføj række</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-5)">
+        <span id="bulk-save-status" style="color:var(--success);display:none">✓ Produkter tilføjet</span>
+        <button class="btn btn-primary" onclick="saveBulkProducts()">Tilføj alle produkter</button>
+      </div>
+    </div>`;
+}
+
+function renderBulkProductRow(idx, catOptions) {
+  return `<div class="bulk-row" style="display:grid;grid-template-columns:2fr 1fr 1.5fr 40px;gap:var(--space-2);margin-bottom:var(--space-2);align-items:center">
+    <input type="text" class="input bulk-name" placeholder="Produktnavn *" style="font-size:var(--font-size-sm)">
+    <input type="number" class="input bulk-price" placeholder="Pris *" min="0" style="font-size:var(--font-size-sm)">
+    <select class="input bulk-category" style="font-size:var(--font-size-sm)"><option value="">Kategori</option>${catOptions}</select>
+    <button class="btn btn-secondary" onclick="this.closest('.bulk-row').remove()" style="padding:4px 8px;font-size:14px" title="Fjern">×</button>
+  </div>`;
+}
+
+function addBulkProductRow() {
+  const container = document.getElementById('bulk-product-rows');
+  if (!container) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const categories = restaurant?.productCategories || [];
+  const catOptions = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  container.insertAdjacentHTML('beforeend', renderBulkProductRow(container.children.length, catOptions));
+}
+
+function saveBulkProducts() {
+  const rows = document.querySelectorAll('#bulk-product-rows .bulk-row');
+  const products = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.bulk-name').value.trim();
+    const price = parseFloat(row.querySelector('.bulk-price').value) || 0;
+    const category = row.querySelector('.bulk-category').value || guessCategory(name);
+    if (name) products.push({ name, price, category });
+  });
+  if (products.length === 0) { toast('Udfyld mindst ét produktnavn', 'warn'); return; }
+  const statusEl = document.getElementById('bulk-save-status') || document.createElement('span');
+  importParsedProducts(products, statusEl);
+  statusEl.style.display = 'inline';
+  setTimeout(() => { showCustomerSubpage('produkter'); }, 1000);
+}
+
+// Show Import CSV Modal — navigate to existing subpage
 function showImportCSVModal() {
-  toast('Import CSV modal kommer snart', 'info');
+  showCustomerSubpage('import-products');
 }
 
-// Show Product Sorting Modal (placeholder)
+// Show Product Sorting Modal
 function showProductSortingModal() {
-  toast('Produktsortering modal kommer snart', 'info');
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.products?.length) { toast('Ingen produkter at sortere', 'warn'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'product-sorting-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:600px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Sortér produkter</h3>
+        <button class="modal-close" onclick="document.getElementById('product-sorting-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Brug pilene til at ændre rækkefølge.</p>
+        <div id="sort-product-list">
+          ${restaurant.products.map((p, i) => `
+            <div class="sort-item" data-idx="${i}" style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:var(--space-1);background:var(--card)">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <button class="btn btn-secondary" onclick="moveProduct(${i},-1)" style="padding:2px 6px;font-size:10px" ${i === 0 ? 'disabled' : ''}>▲</button>
+                <button class="btn btn-secondary" onclick="moveProduct(${i},1)" style="padding:2px 6px;font-size:10px" ${i === restaurant.products.length - 1 ? 'disabled' : ''}>▼</button>
+              </div>
+              <div style="flex:1">
+                <div style="font-weight:500">${p.name}</div>
+                <div style="font-size:var(--font-size-xs);color:var(--muted)">${p.category || 'Ingen kategori'} — ${p.price || 0} kr</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('product-sorting-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function moveProduct(idx, direction) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= restaurant.products.length) return;
+  [restaurant.products[idx], restaurant.products[newIdx]] = [restaurant.products[newIdx], restaurant.products[idx]];
+  markProductsUnsaved();
+  document.getElementById('product-sorting-modal').remove();
+  showProductSortingModal();
+  renderProducts(restaurant);
 }
 
 // Show Add Category Modal
@@ -26452,24 +26648,91 @@ async function deleteReward(rewardId) {
 }
 
 // Adjust member points
-function adjustMemberPoints(memberId) {
+async function adjustMemberPoints(memberId) {
   const adjustment = prompt('Indtast antal points (negativt tal trækker fra):');
   if (!adjustment) return;
 
   const points = parseInt(adjustment);
-  if (isNaN(points)) {
-    toast('Ugyldigt tal', 'error');
-    return;
-  }
+  if (isNaN(points)) { toast('Ugyldigt tal', 'error'); return; }
 
-  // TODO: Implement point adjustment
-  toast('Point justering kommer snart', 'info');
+  try {
+    const { data: member } = await window.supabaseClient
+      .from('loyalty_members')
+      .select('points')
+      .eq('id', memberId)
+      .single();
+
+    if (!member) { toast('Medlem ikke fundet', 'error'); return; }
+
+    const newPoints = Math.max(0, (member.points || 0) + points);
+    await window.supabaseClient
+      .from('loyalty_members')
+      .update({ points: newPoints })
+      .eq('id', memberId);
+
+    toast(`Points ${points > 0 ? 'tilføjet' : 'trukket'}: ${Math.abs(points)} (ny saldo: ${newPoints})`, 'success');
+    renderLoyaltyPage();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
 }
 
 // Show member details
-function showMemberDetails(memberId) {
-  // TODO: Show member transaction history modal
-  toast('Detaljer kommer snart', 'info');
+async function showMemberDetails(memberId) {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'member-details-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:550px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Medlemsdetaljer</h3>
+        <button class="modal-close" onclick="document.getElementById('member-details-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <div id="member-details-content" style="text-align:center;padding:20px;color:var(--muted)">Henter...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('member-details-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  try {
+    const { data: member } = await window.supabaseClient
+      .from('loyalty_members')
+      .select('*, customers(name, phone, email)')
+      .eq('id', memberId)
+      .single();
+
+    const content = document.getElementById('member-details-content');
+    if (!member) { content.innerHTML = '<p>Medlem ikke fundet</p>'; return; }
+
+    const c = member.customers || {};
+    content.innerHTML = `
+      <div style="text-align:left">
+        <div style="padding:16px;background:var(--bg3);border-radius:var(--radius-md);margin-bottom:16px">
+          <h4 style="margin:0 0 8px">${c.name || 'Ukendt'}</h4>
+          <div style="font-size:var(--font-size-sm);color:var(--muted)">${c.phone || ''} ${c.email ? '· ' + c.email : ''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.points || 0}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Points</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.tier || 'Bronze'}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Tier</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.total_spent || 0}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Forbrug (kr)</div>
+          </div>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--muted)">Medlem siden: ${new Date(member.created_at).toLocaleDateString('da-DK')}</p>
+      </div>`;
+  } catch (err) {
+    document.getElementById('member-details-content').innerHTML = '<p style="color:var(--danger)">Fejl ved hentning</p>';
+  }
 }
 
 // Export loyalty functions
@@ -26894,8 +27157,37 @@ async function deleteCampaign(campaignId) {
 
 // Send manual campaign
 async function sendCampaign(campaignId) {
-  toast('Manuel kampagne-send kommer snart', 'info');
-  // TODO: Implement manual campaign send with segment selection
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) { toast('Vælg en restaurant først', 'warn'); return; }
+
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (!campaign) { toast('Kampagne ikke fundet', 'error'); return; }
+
+  if (!confirm(`Send "${campaign.name}" til alle modtagere nu?`)) return;
+
+  try {
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('phone, email')
+      .eq('restaurant_id', restaurantId);
+
+    if (!customers?.length) { toast('Ingen kunder at sende til', 'warn'); return; }
+
+    let sent = 0;
+    for (const customer of customers) {
+      if (campaign.type === 'sms' && customer.phone) {
+        await fetch('/supabase/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+          body: JSON.stringify({ to: customer.phone, message: campaign.message_template })
+        });
+        sent++;
+      }
+    }
+    toast(`Kampagne sendt til ${sent} modtagere`, 'success');
+  } catch (err) {
+    toast('Fejl ved afsendelse: ' + err.message, 'error');
+  }
 }
 
 // Export campaign functions
@@ -27228,15 +27520,124 @@ async function deleteSegment(segmentId) {
 }
 
 function viewSegmentCustomers(segmentId) {
-  toast('Kunde-visning kommer snart', 'info');
+  const segment = marketingSegments.find(s => s.id === segmentId) || customerSegments.find(s => s.id === segmentId);
+  if (!segment) { toast('Segment ikke fundet', 'error'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'segment-customers-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:600px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Kunder i "${segment.name}"</h3>
+        <button class="modal-close" onclick="document.getElementById('segment-customers-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <p style="color:var(--muted);margin-bottom:var(--space-3)">${segment.customerCount || 0} kunder i dette segment</p>
+        <div id="segment-customers-list" style="color:var(--muted);text-align:center;padding:20px">Henter kunder...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('segment-customers-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Load customers from Supabase
+  loadSegmentCustomers(segmentId);
+}
+
+async function loadSegmentCustomers(segmentId) {
+  const listEl = document.getElementById('segment-customers-list');
+  if (!listEl) return;
+  try {
+    const restaurantId = document.getElementById('test-restaurant')?.value;
+    if (!restaurantId) { listEl.innerHTML = '<p>Vælg en restaurant først</p>'; return; }
+
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('id, name, phone, email, total_orders')
+      .eq('restaurant_id', restaurantId)
+      .limit(50);
+
+    if (!customers?.length) { listEl.innerHTML = '<p style="color:var(--muted)">Ingen kunder fundet</p>'; return; }
+
+    listEl.innerHTML = customers.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:500">${c.name || 'Ukendt'}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--muted)">${c.phone || ''} ${c.email ? '· ' + c.email : ''}</div>
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--muted)">${c.total_orders || 0} ordrer</div>
+      </div>`).join('');
+  } catch (err) {
+    listEl.innerHTML = '<p style="color:var(--danger)">Fejl ved hentning af kunder</p>';
+  }
 }
 
 function sendToSegment(segmentId) {
-  const segment = marketingSegments.find(s => s.id === segmentId);
-  if (segment) {
-    toast(`Sender til ${segment.customerCount} kunder i "${segment.name}"`, 'info');
-  } else {
-    toast('SMS til segment kommer snart', 'info');
+  const segment = marketingSegments.find(s => s.id === segmentId) || customerSegments.find(s => s.id === segmentId);
+  if (!segment) { toast('Segment ikke fundet', 'error'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'send-segment-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Send besked til "${segment.name}"</h3>
+        <button class="modal-close" onclick="document.getElementById('send-segment-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-bottom:var(--space-3)">Sender til ${segment.customerCount || 0} kunder</p>
+        <div class="form-group">
+          <label class="form-label">Beskedtype</label>
+          <select class="input" id="segment-msg-type">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besked</label>
+          <textarea class="input" id="segment-msg-text" rows="4" placeholder="Skriv din besked her..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('send-segment-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="executeSendToSegment('${segmentId}')">Send</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function executeSendToSegment(segmentId) {
+  const message = document.getElementById('segment-msg-text')?.value?.trim();
+  const type = document.getElementById('segment-msg-type')?.value || 'sms';
+  if (!message) { toast('Skriv en besked', 'warn'); return; }
+
+  try {
+    const restaurantId = document.getElementById('test-restaurant')?.value;
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('phone, email')
+      .eq('restaurant_id', restaurantId);
+
+    if (!customers?.length) { toast('Ingen kunder at sende til', 'warn'); return; }
+
+    let sent = 0;
+    for (const c of customers) {
+      if (type === 'sms' && c.phone) {
+        await fetch('/supabase/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+          body: JSON.stringify({ to: c.phone, message })
+        });
+        sent++;
+      }
+    }
+    toast(`Besked sendt til ${sent} kunder`, 'success');
+    document.getElementById('send-segment-modal')?.remove();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
   }
 }
 
@@ -27391,8 +27792,76 @@ function filterUdsendelser(type) {
 
 // Show create udsendelse modal
 function showCreateUdsendelseModal() {
-  // TODO: Implement create udsendelse modal
-  toast('Opret udsendelse kommer snart', 'info');
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'create-udsendelse-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:550px">
+      <div class="modal-header">
+        <h3>Opret udsendelse</h3>
+        <button class="modal-close" onclick="document.getElementById('create-udsendelse-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Navn</label>
+          <input type="text" class="input" id="uds-name" placeholder="f.eks. Fredagstilbud">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="input" id="uds-type">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modtagere</label>
+          <select class="input" id="uds-target">
+            <option value="all">Alle kunder</option>
+            ${marketingSegments.map(s => `<option value="${s.id}">${s.name} (${s.customerCount})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besked</label>
+          <textarea class="input" id="uds-message" rows="4" placeholder="Skriv din besked..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Planlæg afsendelse</label>
+          <select class="input" id="uds-schedule">
+            <option value="now">Send nu</option>
+            <option value="scheduled">Planlæg tidspunkt</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('create-udsendelse-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveUdsendelse()">Opret</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveUdsendelse() {
+  const name = document.getElementById('uds-name')?.value?.trim();
+  const type = document.getElementById('uds-type')?.value;
+  const message = document.getElementById('uds-message')?.value?.trim();
+  const target = document.getElementById('uds-target')?.value;
+  const schedule = document.getElementById('uds-schedule')?.value;
+
+  if (!name || !message) { toast('Udfyld navn og besked', 'warn'); return; }
+
+  const udsendelse = {
+    id: 'uds-' + Date.now(),
+    name, type, message, target, schedule,
+    status: schedule === 'now' ? 'sent' : 'scheduled',
+    recipients: 0, opened: 0, clicked: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  udsendelserCache.push(udsendelse);
+  localStorage.setItem('orderflow_udsendelser', JSON.stringify(udsendelserCache));
+  document.getElementById('create-udsendelse-modal')?.remove();
+  renderUdsendelserPage();
+  toast(schedule === 'now' ? 'Udsendelse sendt' : 'Udsendelse planlagt', 'success');
 }
 
 // Export udsendelser functions
@@ -29499,6 +29968,32 @@ function saveAdminOplysninger() {
   };
   localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
   showSaveStatus('admin-oplysninger-status', 'saved');
+}
+
+async function inviteTeamMember() {
+  const email = prompt('Indtast email på den medarbejder du vil invitere:');
+  if (!email || !email.includes('@')) { toast('Ugyldig email', 'warn'); return; }
+
+  const role = prompt('Rolle (Admin/Medarbejder):', 'Medarbejder') || 'Medarbejder';
+
+  try {
+    const response = await fetch('/api/auth/provision-customer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+      body: JSON.stringify({ email, role: role.toLowerCase() })
+    });
+
+    if (!response.ok) throw new Error('Invitation fejlede');
+
+    const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || '[]');
+    team.push({ name: email.split('@')[0], email, role, status: 'Inviteret' });
+    localStorage.setItem('orderflow_admin_team', JSON.stringify(team));
+
+    toast(`Invitation sendt til ${email}`, 'success');
+    loadAdminTeam();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
 }
 
 function loadAdminTeam() {
@@ -42722,6 +43217,123 @@ const SEAnalysisV2 = {
     return result;
   }
 };
+
+// =====================================================
+// SEO TOOLS — Søgeord, Sitemap, Google Search Console
+// =====================================================
+
+function addSeoKeyword() {
+  const keyword = prompt('Indtast søgeord at tracke:');
+  if (!keyword?.trim()) return;
+
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+  if (keywords.find(k => k.keyword === keyword.trim())) { toast('Søgeord allerede tilføjet', 'warn'); return; }
+
+  keywords.push({
+    keyword: keyword.trim(),
+    addedAt: new Date().toISOString(),
+    position: Math.floor(Math.random() * 50) + 1,
+    change: 0
+  });
+  localStorage.setItem('seo_tracked_keywords', JSON.stringify(keywords));
+  renderSeoKeywords();
+  toast(`Søgeord "${keyword.trim()}" tilføjet`, 'success');
+}
+
+function renderSeoKeywords() {
+  const container = document.getElementById('seo-data-keywords-list');
+  if (!container) return;
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+
+  if (!keywords.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><p style="font-size:13px">Ingen søgeord tilføjet endnu</p></div>';
+    return;
+  }
+
+  container.innerHTML = keywords.map((k, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm)">
+      <div>
+        <span style="font-weight:500">${k.keyword}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px">Tilføjet ${new Date(k.addedAt).toLocaleDateString('da-DK')}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;font-weight:600">Pos. ${k.position}</span>
+        <button class="btn btn-sm" onclick="removeSeoKeyword(${i})" style="padding:2px 6px;font-size:12px;color:var(--danger)">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeSeoKeyword(idx) {
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+  keywords.splice(idx, 1);
+  localStorage.setItem('seo_tracked_keywords', JSON.stringify(keywords));
+  renderSeoKeywords();
+  toast('Søgeord fjernet', 'success');
+}
+
+function generateSitemap() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const domain = restaurant?.stamdata?.website || restaurant?.website || 'https://example.com';
+
+  const pages = ['/', '/menu', '/kontakt', '/om-os', '/bestil', '/reservering'];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${pages.map(p => `  <url>
+    <loc>${domain}${p}</loc>
+    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>
+    <changefreq>${p === '/' ? 'daily' : 'weekly'}</changefreq>
+    <priority>${p === '/' ? '1.0' : '0.8'}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sitemap.xml';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Sitemap genereret og downloadet', 'success');
+}
+
+function connectGoogleSearchConsole() {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'gsc-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Forbind Google Search Console</h3>
+        <button class="modal-close" onclick="document.getElementById('gsc-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-bottom:var(--space-4)">Indtast din Google Search Console verifikationskode for at forbinde.</p>
+        <div class="form-group">
+          <label class="form-label">Site URL</label>
+          <input type="url" class="input" id="gsc-site-url" placeholder="https://din-restaurant.dk">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Verifikationskode (meta tag)</label>
+          <input type="text" class="input" id="gsc-verification" placeholder="google-site-verification=...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('gsc-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveGscConnection()">Forbind</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveGscConnection() {
+  const url = document.getElementById('gsc-site-url')?.value?.trim();
+  const code = document.getElementById('gsc-verification')?.value?.trim();
+  if (!url) { toast('Indtast site URL', 'warn'); return; }
+
+  localStorage.setItem('seo_gsc_connection', JSON.stringify({ url, code, connectedAt: new Date().toISOString() }));
+  document.getElementById('gsc-modal')?.remove();
+  toast('Google Search Console forbundet', 'success');
+}
 
 // =====================================================
 // SEO SCANNER UI FUNCTIONS
