@@ -1,6 +1,6 @@
 {
   "name": "orderflow",
-  "version": "4.4.7",
+  "version": "4.4.9",
   "type": "module",
   "description": "OrderFlow - Restaurant order management system",
   "scripts": {

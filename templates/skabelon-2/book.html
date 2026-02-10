@@ -30,6 +30,7 @@
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
 
+  <link rel="stylesheet" href="../shared/orderflow-cart.css" />
 </head>
 
 <body class="sub_page">
@@ -71,7 +72,7 @@
               <a href="" class="user_link">
                 <i class="fa fa-user" aria-hidden="true"></i>
               </a>
-              <a class="cart_link" href="#">
+              <a class="cart_link" href="#" data-of-cart-open>
                 <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 456.029 456.029" style="enable-background:new 0 0 456.029 456.029;" xml:space="preserve">
                   <g>
                     <g>
@@ -130,7 +131,7 @@
                   <i class="fa fa-search" aria-hidden="true"></i>
                 </button>
               </form>
-              <a href="" class="order_online">
+              <a href="#" class="order_online" data-of-cart-open>
                 Bestil Online
               </a>
             </div>
@@ -215,13 +216,13 @@
               <a href="">
                 <i class="fa fa-map-marker" aria-hidden="true"></i>
                 <span>
-                  Location
+                  Adresse
                 </span>
               </a>
               <a href="">
                 <i class="fa fa-phone" aria-hidden="true"></i>
                 <span>
-                  Call +01 1234567890
+                  Ring +45 12 34 56 78
                 </span>
               </a>
               <a href="">
@@ -239,7 +240,7 @@
               Feane
             </a>
             <p>
-              Necessary, making this the first true generator on the Internet. It uses a dictionary of over 200 Latin words, combined with
+              De bedste retter lavet med kærlighed og friske ingredienser. Besøg os og oplev forskellen.
             </p>
             <div class="footer_social">
               <a href="">
@@ -265,18 +266,18 @@
             Åbningstider
           </h4>
           <p>
-            Everyday
+            Hver dag
           </p>
           <p>
-            10.00 Am -10.00 Pm
+            10:00 - 22:00
           </p>
         </div>
       </div>
       <div class="footer-info">
         <p>
-          &copy; <span id="displayYear"></span> All Rights Reserved By
+          &copy; <span id="displayYear"></span> Alle rettigheder forbeholdt af
           <a href="https://html.design/">Free Html Templates</a><br><br>
-          &copy; <span id="displayYear"></span> Distributed By
+          &copy; <span id="displayYear"></span> Distribueret af
           <a href="https://themewagon.com/" target="_blank">ThemeWagon</a>
         </p>
       </div>
@@ -311,6 +312,7 @@
   <script src="../../js/order-api.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/auth-ui.js"></script>
+  <script src="../shared/orderflow-cart.js"></script>
 </body>
 
 </html>
