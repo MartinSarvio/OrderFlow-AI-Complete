@@ -58,9 +58,9 @@ export function CheckoutModal({
   const [deliveryNotes, setDeliveryNotes] = useState('');
   
   // Stripe Payment Element state
-  const [stripeElements, setStripeElements] = useState<any>(null);
+  const [_stripeElements, setStripeElements] = useState<any>(null);
   const [stripeReady, setStripeReady] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
+  const [_orderNumber, _setOrderNumber] = useState('');
 
   if (!restaurant) return null;
 
