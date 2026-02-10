@@ -4066,141 +4066,12 @@ document.addEventListener('DOMContentLoaded', function() {
 // Browser history navigation flag
 let isNavigatingFromHistory = false;
 
-// =====================================================
-// UNSAVED CHANGES NAVIGATION GUARD
-// =====================================================
-let pendingNavigationTarget = null;
-let pendingNavigationType = null; // 'page' or 'popstate'
-let isNavigationGuardActive = false;
-
-function getUnsavedChangesBuilders() {
-  const builders = [];
-  if (webBuilderHasChanges) builders.push({ name: 'Web Builder', save: () => { autoSaveWebBuilder(); webBuilderHasChanges = false; } });
-  if (appBuilderHasChanges) builders.push({ name: 'App Builder', save: () => { autoSaveAppBuilder(); appBuilderHasChanges = false; } });
-  if (typeof cmsHasChanges !== 'undefined' && cmsHasChanges) builders.push({ name: 'Flow CMS', save: saveCMSPages });
-  return builders;
-}
-
-function getBuilderContext(pageId) {
-  if (!pageId) return null;
-  if (pageId.startsWith('wb-') || pageId.startsWith('webbuilder')) return 'webbuilder';
-  if (pageId.startsWith('appbuilder')) return 'appbuilder';
-  if (pageId === 'flow-cms') return 'cms';
-  return null;
-}
-
-function getCurrentActivePage() {
-  const activePage = document.querySelector('.page.active, .workflow-page.active');
-  if (!activePage) return null;
-  return activePage.id.replace('page-', '');
-}
-
-function isNavigatingWithinSameBuilder(targetPage) {
-  const currentPage = getCurrentActivePage();
-  const currentContext = getBuilderContext(currentPage);
-  const targetContext = getBuilderContext(targetPage);
-  if (currentContext && currentContext === targetContext) return true;
-  return false;
-}
-
-function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
-  if (isNavigationGuardActive) return false;
-  if (isNavigatingWithinSameBuilder(targetPage)) return false;
-
-  const unsavedBuilders = getUnsavedChangesBuilders();
-  if (unsavedBuilders.length === 0) return false;
-
-  pendingNavigationTarget = targetPage;
-  pendingNavigationType = navigationType;
-
-  const detailsEl = document.getElementById('unsaved-changes-details');
-  if (detailsEl) {
-    const builderNames = unsavedBuilders.map(b => b.name).join(', ');
-    detailsEl.textContent = 'Ændringer i: ' + builderNames;
-  }
-
-  const modal = document.getElementById('unsaved-changes-modal');
-  if (modal) {
-    modal.style.display = 'flex';
-    modal.classList.add('active');
-  }
-
-  return true;
-}
-
-function closeUnsavedChangesModal() {
-  const modal = document.getElementById('unsaved-changes-modal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
-
-  if (pendingNavigationType === 'popstate') {
-    const currentPage = getCurrentActivePage();
-    if (currentPage) {
-      history.pushState({ page: currentPage }, '', '#' + currentPage);
-    }
-  }
-
-  pendingNavigationTarget = null;
-  pendingNavigationType = null;
-}
-
-function discardAndNavigate() {
-  webBuilderHasChanges = false;
-  appBuilderHasChanges = false;
-  if (typeof cmsHasChanges !== 'undefined') cmsHasChanges = false;
-
-  const target = pendingNavigationTarget;
-  const navType = pendingNavigationType;
-
-  closeUnsavedChangesModal();
-
-  if (target) {
-    isNavigationGuardActive = true;
-    if (navType === 'popstate') {
-      isNavigatingFromHistory = true;
-    }
-    showPage(target);
-    isNavigationGuardActive = false;
-  }
-}
-
-async function saveAndNavigate() {
-  const unsavedBuilders = getUnsavedChangesBuilders();
-
-  for (const builder of unsavedBuilders) {
-    try {
-      await Promise.resolve(builder.save());
-    } catch (err) {
-      console.warn('Save failed for ' + builder.name + ':', err);
-    }
-  }
-
-  const target = pendingNavigationTarget;
-  const navType = pendingNavigationType;
-
-  closeUnsavedChangesModal();
-
-  if (target) {
-    isNavigationGuardActive = true;
-    if (navType === 'popstate') {
-      isNavigatingFromHistory = true;
-    }
-    showPage(target);
-    isNavigationGuardActive = false;
-  }
-}
+// Navigation guard removed - auto-save handles persistence
 
 function showPage(page) {
   // Skjul dashboard chart tooltip ved sideskift
   var chartTooltip = document.getElementById('chartjs-tooltip');
   if (chartTooltip) { chartTooltip.style.display = 'none'; chartTooltip.style.opacity = 0; }
-
-  // === UNSAVED CHANGES GUARD ===
-  if (!isNavigationGuardActive && checkUnsavedChangesBeforeNavigation(page, isNavigatingFromHistory ? 'popstate' : 'page')) {
-    return;
-  }
 
   // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
@@ -28802,6 +28673,12 @@ function showAppBuilderPage(page) {
   if (page === 'branding') {
     initBrandingPage();
   }
+
+  // Reset unsaved flag after page load - no user changes yet
+  setTimeout(() => {
+    appBuilderHasChanges = false;
+    updateAppBuilderSaveStatus('saved');
+  }, 400);
 }
 
 // Update App Builder color
@@ -29495,23 +29372,7 @@ function autoSaveAppBuilder() {
 }
 
 function updateAppBuilderSaveStatus(status) {
-  const statusEls = document.querySelectorAll('[id^="app-save-status"]');
-  statusEls.forEach(el => {
-    if (status === 'unsaved') {
-      el.textContent = '● Ugemte ændringer';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saving') {
-      el.textContent = '⏳ Gemmer...';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saved') {
-      el.textContent = '✓ Ændringer gemt';
-      el.style.display = 'inline';
-      el.style.color = 'var(--success, #22c55e)';
-      setTimeout(() => { el.style.display = 'none'; }, 3000);
-    }
-  });
+  // Status indicators removed
 }
 
 // Collect form data from current App Builder page
@@ -31664,7 +31525,10 @@ function showWebBuilderPage(section) {
   // Update preview after page switch (give iframe time to load)
   setTimeout(() => {
     updateWebBuilderPreview({ skipUnsaved: true });
-  }, 300);
+    // Reset unsaved flag after initialization - no user changes yet
+    webBuilderHasChanges = false;
+    updateWebBuilderSaveStatus('saved');
+  }, 400);
 }
 
 // Navigate to Flow landing page (opens in new window)
@@ -31760,9 +31624,7 @@ function loadTemplateEditorFiles(templateId) {
 }
 
 async function loadTemplateFile(path, name) {
-  if (templateEditorState.unsaved) {
-    if (!confirm('Du har ugemte ændringer. Vil du fortsætte?')) return;
-  }
+  // Load new file directly (auto-save handles persistence)
 
   const storageKey = 'te_file_' + path;
   const savedContent = localStorage.getItem(storageKey);
@@ -31804,12 +31666,6 @@ function highlightActiveFile(path) {
 
 function markTemplateFileUnsaved() {
   templateEditorState.unsaved = true;
-  var statusEl = document.getElementById('te-save-status');
-  if (statusEl) {
-    statusEl.textContent = 'Ugemte ændringer';
-    statusEl.style.display = '';
-    statusEl.style.color = 'var(--warning)';
-  }
 }
 
 function saveTemplateFile() {
@@ -39371,23 +39227,7 @@ function autoSaveWebBuilder() {
 }
 
 function updateWebBuilderSaveStatus(status) {
-  const statusEls = document.querySelectorAll('.wb-save-status');
-  statusEls.forEach(el => {
-    if (status === 'unsaved') {
-      el.textContent = '● Ugemte ændringer';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saving') {
-      el.textContent = '⏳ Gemmer...';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saved') {
-      el.textContent = '✓ Ændringer gemt';
-      el.style.display = 'inline';
-      el.style.color = 'var(--success, #22c55e)';
-      setTimeout(() => { el.style.display = 'none'; }, 3000);
-    }
-  });
+  // Status indicators removed
 }
 
 // Send scroll command to preview iframe
@@ -45455,18 +45295,7 @@ window.saveQRToHistory = saveQRToHistory;
 window.loadQRHistory = loadQRHistory;
 window.removeQRHistoryItem = removeQRHistoryItem;
 
-// Unsaved changes navigation guard (modal handlers)
-window.closeUnsavedChangesModal = closeUnsavedChangesModal;
-window.discardAndNavigate = discardAndNavigate;
-window.saveAndNavigate = saveAndNavigate;
-
-// Unsaved changes warning
-window.addEventListener('beforeunload', function(e) {
-  if (webBuilderHasChanges || appBuilderHasChanges || (typeof cmsHasChanges !== 'undefined' && cmsHasChanges)) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+// Navigation guard removed
 
 // ============================================
 // Helper: Find API key from Settings or Opret API Nøgle
