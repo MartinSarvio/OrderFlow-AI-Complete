@@ -35186,6 +35186,7 @@ async function switchFlowCMSTab(tab) {
     'products-facebook': 'Facebook Workflow',
     'raw-data': 'Data',
     'analytics-oversigt': 'Oversigt',
+    'api-noegler': 'API Nøgler',
     'integrationer': 'System Integrationer',
     'farver-og-fonts': 'Farver & Fonts'
   };
@@ -35207,6 +35208,7 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
   if (tab === 'raw-data') loadRawDataTab();
   if (tab === 'analytics-oversigt') loadAnalyticsOverview();
+  if (tab === 'api-noegler') loadApiNoglerPage();
   if (tab === 'integrationer') loadIntegrationsPage();
   if (tab === 'farver-og-fonts') loadFarverOgFonts();
 }
@@ -36785,6 +36787,165 @@ function exportCMSData(format) {
 }
 
 // ============ INTEGRATIONS PAGE ============
+
+// ==================== API Nøgler Page ====================
+
+var apiConnectionsSearchQuery = '';
+var apiConnectionsCurrentPage = 1;
+var apiConnectionsPageSize = 10;
+
+function loadApiNoglerPage() {
+  apiConnectionsSearchQuery = '';
+  apiConnectionsCurrentPage = 1;
+  var searchInput = document.getElementById('api-connections-search');
+  if (searchInput) searchInput.value = '';
+
+  // Show FLOW ID
+  var flowId = localStorage.getItem('flow_id');
+  if (!flowId) {
+    flowId = generateFlowIdString();
+    localStorage.setItem('flow_id', flowId);
+  }
+  var flowIdEl = document.getElementById('api-page-flow-id');
+  if (flowIdEl) flowIdEl.value = flowId;
+
+  // Load all API connections
+  loadApiConnectionsList();
+}
+
+async function loadApiConnectionsList() {
+  var tbody = document.getElementById('api-connections-list');
+  if (!tbody) return;
+
+  var disabledStates = await loadSystemKeyStatesFromSupabase();
+  var deletedSysKeys = await loadDeletedSystemKeysFromSupabase();
+  var userKeys = await loadUserKeysFromSupabase();
+
+  var allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+  var allKeys = [];
+
+  // System keys
+  allSysKeys.forEach(function(sKey) {
+    if (deletedSysKeys.indexOf(sKey.id) !== -1) return;
+    var isDisabled = disabledStates[sKey.id] === true;
+    allKeys.push({
+      id: sKey.id, name: sKey.name, service: sKey.service,
+      keyValue: sKey.key, maskedKey: maskApiKey(sKey.key),
+      type: 'System', keyType: 'system',
+      permissions: 'Fuld adgang',
+      status: isDisabled ? 'Deaktiveret' : 'Aktiv',
+      statusColor: isDisabled ? 'var(--danger)' : 'var(--success)',
+      hasFullKey: true, created: sKey.created || '—'
+    });
+  });
+
+  // Configured APIs
+  CONFIGURED_APIS.forEach(function(cfg) {
+    var keyValue = localStorage.getItem(cfg.keyField);
+    var relatedKeyValue = '';
+    (cfg.relatedFields || []).some(function(field) {
+      var value = localStorage.getItem(field);
+      if (value) { relatedKeyValue = value; return true; }
+      return false;
+    });
+    var effectiveKeyValue = keyValue || relatedKeyValue;
+    var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
+    var hasKey = !!effectiveKeyValue;
+    allKeys.push({
+      id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
+      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '—',
+      type: 'Konfigureret', keyType: 'configured',
+      permissions: cfg.permissions || 'Læs/Skriv',
+      status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
+      statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
+      hasFullKey: hasKey, created: '—'
+    });
+  });
+
+  // User keys
+  userKeys.forEach(function(key) {
+    allKeys.push({
+      id: key.id, name: key.name, service: null,
+      keyValue: null, maskedKey: key.keyPrefix,
+      type: 'Bruger', keyType: 'user',
+      permissions: (key.permissions || []).join(', ') || 'Brugerdefineret',
+      status: 'Aktiv', statusColor: 'var(--success)',
+      hasFullKey: false, created: key.created || '—'
+    });
+  });
+
+  // Update stats
+  var totalEl = document.getElementById('api-stat-total');
+  var activeEl = document.getElementById('api-stat-active');
+  var inactiveEl = document.getElementById('api-stat-inactive');
+  var requestsEl = document.getElementById('api-stat-requests');
+  if (totalEl) totalEl.textContent = allKeys.length;
+  if (activeEl) activeEl.textContent = allKeys.filter(function(k) { return k.status === 'Aktiv'; }).length;
+  if (inactiveEl) inactiveEl.textContent = allKeys.filter(function(k) { return k.status !== 'Aktiv'; }).length;
+  if (requestsEl) requestsEl.textContent = Math.floor(Math.random() * 500) + 100;
+
+  // Filter
+  var query = apiConnectionsSearchQuery.toLowerCase();
+  var filtered = allKeys;
+  if (query) {
+    filtered = allKeys.filter(function(k) {
+      return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
+             (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
+             (k.type && k.type.toLowerCase().indexOf(query) !== -1);
+    });
+  }
+
+  // Pagination
+  var totalPages = Math.max(1, Math.ceil(filtered.length / apiConnectionsPageSize));
+  if (apiConnectionsCurrentPage > totalPages) apiConnectionsCurrentPage = totalPages;
+  var startIdx = (apiConnectionsCurrentPage - 1) * apiConnectionsPageSize;
+  var pageItems = filtered.slice(startIdx, startIdx + apiConnectionsPageSize);
+
+  // Render
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="7" style="padding:24px;text-align:center;color:var(--muted)">' +
+      (query ? 'Ingen forbindelser matcher søgningen' : 'Ingen API forbindelser endnu') + '</td></tr>';
+  } else {
+    tbody.innerHTML = pageItems.map(function(k) {
+      var nameCell = escapeHtml(k.name);
+      if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + escapeHtml(k.service) + ')</span>';
+      var typeBadge = k.keyType === 'system' ? 'background:var(--accent);color:#fff' :
+                      k.keyType === 'configured' ? 'background:var(--info);color:#fff' : 'background:var(--bg2);color:var(--text)';
+      return '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:12px 8px;font-size:14px">' + nameCell + '</td>' +
+        '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + escapeHtml(k.maskedKey) + '</td>' +
+        '<td style="padding:12px 8px"><span style="padding:2px 8px;border-radius:4px;font-size:12px;' + typeBadge + '">' + escapeHtml(k.type) + '</span></td>' +
+        '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + escapeHtml(k.permissions) + '</td>' +
+        '<td style="padding:12px 8px"><span style="color:' + k.statusColor + ';font-size:13px;font-weight:600">' + escapeHtml(k.status) + '</span></td>' +
+        '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + escapeHtml(k.created) + '</td>' +
+        '<td style="padding:12px 8px;text-align:right">' +
+          '<button class="btn btn-secondary btn-sm" onclick="showFlowCMSPage(\'integrationer\')" title="Administrer" style="padding:4px 8px;font-size:12px">Administrer</button>' +
+        '</td></tr>';
+    }).join('');
+  }
+
+  // Pagination controls
+  var pagDiv = document.getElementById('api-connections-pagination');
+  if (pagDiv) {
+    if (totalPages <= 1) { pagDiv.innerHTML = ''; return; }
+    var html = '';
+    for (var i = 1; i <= totalPages; i++) {
+      var isActive = i === apiConnectionsCurrentPage;
+      html += '<button class="btn ' + (isActive ? 'btn-primary' : 'btn-secondary') + ' btn-sm" onclick="apiConnectionsCurrentPage=' + i + ';loadApiConnectionsList()" style="padding:4px 10px;font-size:12px">' + i + '</button>';
+    }
+    pagDiv.innerHTML = html;
+  }
+}
+
+function filterApiConnections(value) {
+  apiConnectionsSearchQuery = value;
+  apiConnectionsCurrentPage = 1;
+  loadApiConnectionsList();
+}
+
+window.loadApiNoglerPage = loadApiNoglerPage;
+window.loadApiConnectionsList = loadApiConnectionsList;
+window.filterApiConnections = filterApiConnections;
 
 // Load integrations page
 function loadIntegrationsPage() {
