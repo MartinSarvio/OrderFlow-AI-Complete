@@ -4057,8 +4057,14 @@ function handleMobileNavClick() {
 // Add click handlers to all nav buttons for mobile
 document.addEventListener('DOMContentLoaded', function() {
   // Close mobile menu when navigating
-  document.querySelectorAll('.sidebar .nav-btn, .sidebar .nav-dropdown-menu button').forEach(btn => {
-    btn.addEventListener('click', handleMobileNavClick);
+  document.querySelectorAll('.sidebar .nav-btn, .sidebar .nav-dropdown-menu button, .sidebar .nav-dropdown-item').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      // Don't close if clicking dropdown toggle (let it toggle instead)
+      if (btn.classList.contains('nav-dropdown-toggle')) {
+        return;
+      }
+      handleMobileNavClick();
+    });
   });
 
   // Handle window resize
