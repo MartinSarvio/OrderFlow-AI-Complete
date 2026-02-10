@@ -6272,7 +6272,15 @@
 @media (max-width: 640px) {
   /* Show mobile header */
   .mobile-header {
-    display: flex;
+    display: flex !important;
+  }
+  
+  /* Ensure hamburger button is visible and clickable */
+  .hamburger-btn {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
   }
 
   /* CRITICAL: Allow scrolling on mobile */

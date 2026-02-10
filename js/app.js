@@ -90,11 +90,14 @@ let appBuilderHasChanges = false;
 let cmsHasChanges = false;
 let pageInitialLoadComplete = false; // Track if initial page load is complete
 
-// Wait 3 seconds after page load before allowing unsaved changes modal
+// Track page load time for modal blocking
+window.pageLoadTime = Date.now();
+
+// Wait 5 seconds after page load before allowing unsaved changes modal
 setTimeout(() => {
   pageInitialLoadComplete = true;
   console.log('✅ Page initial load complete - unsaved changes modal enabled');
-}, 3000);
+}, 5000);
 
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
@@ -4142,9 +4145,14 @@ function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
   if (isNavigationGuardActive) return false;
   if (isNavigatingWithinSameBuilder(targetPage)) return false;
   
-  // CRITICAL: Don't show modal during initial page load (first 3 seconds)
-  if (!pageInitialLoadComplete) {
-    console.log('🚫 Blocking unsaved changes modal - page still loading');
+  // CRITICAL: Don't show modal during initial page load (first 5 seconds)
+  const timeSincePageLoad = Date.now() - window.pageLoadTime;
+  if (timeSincePageLoad < 5000) {
+    console.log('🚫 Blocking unsaved changes modal - only', timeSincePageLoad, 'ms since page load');
+    // Force reset flags during initial load
+    webBuilderHasChanges = false;
+    appBuilderHasChanges = false;
+    cmsHasChanges = false;
     return false;
   }
   
