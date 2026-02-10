@@ -18,6 +18,9 @@
     { "source": "/om-os", "destination": "/public/pages/company/om-os.html" },
     { "source": "/karriere", "destination": "/public/pages/company/karriere.html" },
     { "source": "/help-center", "destination": "/public/pages/support/help-center.html" },
-    { "source": "/tools/image-generator", "destination": "/tools/image-generator.html" }
+    { "source": "/tools/image-generator", "destination": "/tools/image-generator.html" },
+    { "source": "/demo/roma", "destination": "/templates/skabelon-1/dist/index.html" },
+    { "source": "/demo/feane", "destination": "/templates/skabelon-2/index.html" },
+    { "source": "/demo/pizza", "destination": "/templates/skabelon-3/index.html" }
   ]
 }
