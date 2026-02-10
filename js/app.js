@@ -454,7 +454,7 @@ function normalizePhoneNumber(raw) {
 // SESSION MANAGEMENT - Rolle-baseret timeout med inaktivitets-prompt
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION_ADMIN = 2 * 60 * 1000;      // 2 minutter for admin/employee
+const SESSION_DURATION_ADMIN = 30 * 60 * 1000;     // 30 minutter for admin/employee
 const SESSION_DURATION_CUSTOMER = 10 * 60 * 1000;  // 10 minutter for customer/demo
 const INACTIVITY_WARNING_TIME = 30 * 1000;         // 30 sek warning før logout
 let sessionTimeoutId = null;
@@ -3867,10 +3867,31 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Close dropdowns on Escape key
+// Close dropdowns and modals on Escape key
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAllDropdowns();
+    // Close active modal-overlays
+    document.querySelectorAll('.modal-overlay.active').forEach(m => {
+      m.classList.remove('active');
+      m.style.display = 'none';
+    });
+    // Close dynamically created modals (inline display, no .active class)
+    ['inactivity-modal', 'wb-preview-modal', 'quick-api-key-modal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none') {
+        el.style.display = 'none';
+        if (id === 'inactivity-modal') dismissInactivityWarning();
+      }
+    });
+  }
+});
+
+// Close modal-overlays when clicking outside the dialog
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+    e.target.classList.remove('active');
+    e.target.style.display = 'none';
   }
 });
 

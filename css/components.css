@@ -849,53 +849,9 @@
 }
 
 /* ==================== MODALS ==================== */
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition-normal);
-}
-
-.modal.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal-backdrop {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  z-index: -1;
-}
-
-.modal-content {
-  background: var(--color-card);
-  border: none;
-  border-radius: var(--radius-xl);  /* 20px */
-  box-shadow: none;
-  max-width: 90%;
-  max-height: 90vh;
-  overflow: hidden;
-  transform: scale(0.95);
-  transition: var(--transition-normal);
-}
-
-.modal.active .modal-content {
-  transform: scale(1);
-}
+/* Note: .modal, .modal-backdrop, .modal-content rules removed —
+   they conflicted with the .modal-overlay pattern used in styles.css.
+   Modal styling is handled entirely by styles.css (.modal-overlay + .modal). */
 
 .modal-header {
   padding: var(--space-5);  /* 24px */
