@@ -41,5 +41,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Flow Agents runtime
+flow-agents/logs/
+
 # Local config
 .claude/settings.local.json
