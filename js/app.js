@@ -22139,7 +22139,8 @@ function switchSettingsTab(tab) {
     'cookies': 'Cookie Samtykke',
     'templates': 'Skabeloner',
     'domains': 'Custom Domains',
-    'bank': 'Bank'
+    'bank': 'Bank',
+    'printer': 'Printer'
   };
   
   // Update dynamic page title
@@ -22222,6 +22223,11 @@ function switchSettingsTab(tab) {
   // Refresh API status and toggles when API tab is opened
   if (tab === 'api') {
     loadAllApiSettings();
+  }
+
+  // Load printer settings when printer tab is opened
+  if (tab === 'printer') {
+    loadPrinterSettingsUI();
   }
 }
 

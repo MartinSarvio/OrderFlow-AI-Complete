@@ -1357,11 +1357,11 @@
     .user-email{font-size:12px;color:var(--muted)}
     
     /* Main content area with rounded corner */
-    .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden;border-top-left-radius:var(--content-radius)}
     .main-content-wrapper{flex:1;background:var(--content-bg);border-top-left-radius:var(--content-radius);position:relative;overflow:hidden;display:flex;flex-direction:column}
     
     /* Topbar */
-    .topbar{height:62px;padding:0 24px;background:var(--content-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50}
+    .topbar{height:62px;padding:0 24px;background:var(--content-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50;border-top-left-radius:var(--content-radius)}
     .topbar-left{display:flex;align-items:center;gap:20px;flex:1}
     .topbar-right{display:flex;align-items:center;gap:8px}
     
