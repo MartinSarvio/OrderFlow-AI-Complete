@@ -502,9 +502,9 @@
       color: var(--color-text-muted);
     }
     [data-theme="light"] .auth-input-group .input {
-      background: #F9FAFB;
-      border: 1px solid #E5E7EB;
-      color: var(--color-text);
+      background: #1E1E30;
+      border: 1px solid #2A2A40;
+      color: #F0F2F5;
     }
     [data-theme="light"] input[type="time"],
     [data-theme="light"] input[type="date"] {
@@ -668,9 +668,74 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
 
-    /* Auth light theme */
+    /* Auth - altid mørkt tema uanset system theme */
     [data-theme="light"] .auth-content {
-      background: #fff;
+      background: #13131F;
+    }
+    [data-theme="light"] .auth-title {
+      color: #F0F2F5;
+    }
+    [data-theme="light"] .auth-subtitle {
+      color: #9CA3AF;
+    }
+    [data-theme="light"] .auth-content .auth-input-group .input {
+      background: #1E1E30;
+      border-color: #2A2A40;
+      color: #F0F2F5;
+    }
+    [data-theme="light"] .auth-content .auth-input-group .input::placeholder {
+      color: #64748B;
+    }
+    [data-theme="light"] .auth-input-icon {
+      color: #64748B;
+    }
+    [data-theme="light"] .auth-eye-btn {
+      color: #64748B;
+    }
+    [data-theme="light"] .auth-checkbox-row {
+      color: #9CA3AF;
+    }
+    [data-theme="light"] .auth-forgot-link {
+      color: #9CA3AF;
+    }
+    [data-theme="light"] .auth-divider {
+      color: #64748B;
+    }
+    [data-theme="light"] .auth-divider::before,
+    [data-theme="light"] .auth-divider::after {
+      background: #2A2A40;
+    }
+    [data-theme="light"] .auth-social-btn {
+      background: #1E1E30;
+      border-color: #2A2A40;
+      color: #F0F2F5;
+    }
+    [data-theme="light"] .auth-social-btn:hover {
+      background: #2A2A40;
+      border-color: #3A3A55;
+    }
+    [data-theme="light"] .auth-footer-text {
+      color: #9CA3AF;
+    }
+    [data-theme="light"] .auth-link {
+      color: #F0F2F5;
+    }
+    [data-theme="light"] .auth-content .auth-btn {
+      background: #1E1E30;
+      color: #F0F2F5;
+    }
+    [data-theme="light"] .auth-content .auth-btn-dark {
+      background: #F0F2F5;
+      color: #13131F;
+    }
+    [data-theme="light"] .auth-content .auth-btn-dark:hover {
+      background: #E2E8F0;
+    }
+    [data-theme="light"] .auth-error {
+      background: rgba(248,113,113,.15);
+    }
+    [data-theme="light"] .auth-content .auth-back-btn {
+      color: #9CA3AF;
     }
 
     /* Message elements */
