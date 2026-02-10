@@ -88,6 +88,13 @@ initTheme();
 let webBuilderHasChanges = false;
 let appBuilderHasChanges = false;
 let cmsHasChanges = false;
+let pageInitialLoadComplete = false; // Track if initial page load is complete
+
+// Wait 3 seconds after page load before allowing unsaved changes modal
+setTimeout(() => {
+  pageInitialLoadComplete = true;
+  console.log('✅ Page initial load complete - unsaved changes modal enabled');
+}, 3000);
 
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
@@ -4092,9 +4099,12 @@ document.addEventListener('DOMContentLoaded', function() {
   cmsHasChanges = false;
   hasUserInteractedWithPage = false;
   
+  console.log('🔄 DOMContentLoaded - reset unsaved changes flags');
+  
   // Set interaction flag after first real user action
   setTimeout(() => {
     hasUserInteractedWithPage = true;
+    console.log('✅ User interaction enabled');
   }, 2000); // Wait 2 seconds after page load before enabling modal
 });
 
@@ -4131,10 +4141,19 @@ function isNavigatingWithinSameBuilder(targetPage) {
 function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
   if (isNavigationGuardActive) return false;
   if (isNavigatingWithinSameBuilder(targetPage)) return false;
+  
+  // CRITICAL: Don't show modal during initial page load (first 3 seconds)
+  if (!pageInitialLoadComplete) {
+    console.log('🚫 Blocking unsaved changes modal - page still loading');
+    return false;
+  }
+  
   if (!hasUserInteractedWithPage) return false; // Don't show modal during initial page load
 
   const unsavedBuilders = getUnsavedChangesBuilders();
   if (unsavedBuilders.length === 0) return false;
+  
+  console.log('✋ Showing unsaved changes modal for:', unsavedBuilders.map(b => b.name).join(', '));
 
   pendingNavigationTarget = targetPage;
   pendingNavigationType = navigationType;
