@@ -4440,6 +4440,7 @@ function toggleNavDropdown(name) {
   const dropdown = document.getElementById('nav-' + name);
   const sidebar = document.getElementById('sidebar');
   const wasOpen = dropdown && dropdown.classList.contains('open');
+  const isMobile = window.innerWidth <= 640;
 
   // Luk alle åbne dropdowns (accordion logik)
   document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
@@ -4461,19 +4462,23 @@ function toggleNavDropdown(name) {
     setTimeout(() => {
       if (dropdown) {
         dropdown.classList.add('open');
-        // Auto-navigér til første side i dropdown
-        const firstItem = dropdown.querySelector('.nav-dropdown-item');
-        if (firstItem && !wasOpen) {
-          firstItem.click();
+        // Auto-navigér til første side i dropdown (ONLY on desktop)
+        if (!isMobile) {
+          const firstItem = dropdown.querySelector('.nav-dropdown-item');
+          if (firstItem && !wasOpen) {
+            firstItem.click();
+          }
         }
       }
     }, 100);
   } else if (dropdown && !wasOpen) {
     dropdown.classList.add('open');
-    // Auto-navigér til første side i dropdown (1 klik = åben + vis første side)
-    const firstItem = dropdown.querySelector('.nav-dropdown-item');
-    if (firstItem) {
-      firstItem.click();
+    // Auto-navigér til første side i dropdown (1 klik = åben + vis første side) - ONLY on desktop
+    if (!isMobile) {
+      const firstItem = dropdown.querySelector('.nav-dropdown-item');
+      if (firstItem) {
+        firstItem.click();
+      }
     }
   }
 }
