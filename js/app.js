@@ -31225,7 +31225,7 @@ const webBuilderTemplates = {
   'skabelon-1': {
     templateType: 'skabelon-1',
     templatePath: 'templates/skabelon-1/',
-    previewFile: 'http://localhost:4173/#menu',
+    previewFile: './templates/skabelon-1/dist/index.html#menu',
     branding: {
       name: 'Pizzeria Roma',
       shortName: 'Roma',
