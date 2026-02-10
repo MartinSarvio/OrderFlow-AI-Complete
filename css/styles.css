@@ -6111,13 +6111,16 @@
   z-index: 999;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 12px;
+  gap: 12px;
 }
 
 .mobile-header .logo {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  justify-content: center;
 }
 
 .mobile-header .logo-text {
@@ -6171,6 +6174,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 /* Logo is switched via JavaScript using updateLogos() - no CSS filter needed */
@@ -6180,10 +6184,13 @@
   border: none;
   padding: 8px;
   cursor: pointer;
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   border-radius: var(--radius-sm);
+  min-width: 40px;
+  min-height: 40px;
+  flex-shrink: 0;
 }
 
 .hamburger-btn:hover {
@@ -6194,6 +6201,7 @@
   width: 24px;
   height: 24px;
   stroke: var(--text);
+  display: block !important;
 }
 
 /* Mobile overlay */
