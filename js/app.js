@@ -4078,6 +4078,19 @@ let pendingNavigationTarget = null;
 let pendingNavigationType = null; // 'page' or 'popstate'
 let isNavigationGuardActive = false;
 
+// Initialize - ensure modal is hidden and flags are reset on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('unsaved-changes-modal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  }
+  // Reset all change flags
+  webBuilderHasChanges = false;
+  appBuilderHasChanges = false;
+  cmsHasChanges = false;
+});
+
 function getUnsavedChangesBuilders() {
   const builders = [];
   if (webBuilderHasChanges) builders.push({ name: 'Web Builder', save: () => { autoSaveWebBuilder(); webBuilderHasChanges = false; } });
