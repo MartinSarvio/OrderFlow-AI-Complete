@@ -19,8 +19,11 @@
     { "source": "/karriere", "destination": "/public/pages/company/karriere.html" },
     { "source": "/help-center", "destination": "/public/pages/support/help-center.html" },
     { "source": "/tools/image-generator", "destination": "/tools/image-generator.html" },
+    { "source": "/demo/roma/:path*", "destination": "/templates/skabelon-1/dist/:path*" },
     { "source": "/demo/roma", "destination": "/templates/skabelon-1/dist/index.html" },
+    { "source": "/demo/feane/:path*", "destination": "/templates/skabelon-2/:path*" },
     { "source": "/demo/feane", "destination": "/templates/skabelon-2/index.html" },
+    { "source": "/demo/pizza/:path*", "destination": "/templates/skabelon-3/:path*" },
     { "source": "/demo/pizza", "destination": "/templates/skabelon-3/index.html" }
   ]
 }
