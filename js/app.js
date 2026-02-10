@@ -84,6 +84,11 @@ function initTheme() {
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
+// Builder change-tracking flags (declared early to avoid TDZ errors)
+let webBuilderHasChanges = false;
+let appBuilderHasChanges = false;
+let cmsHasChanges = false;
+
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
   const oldKeys = [
@@ -29456,7 +29461,7 @@ function saveAppBuilderConfig(config) {
 
 // Auto-save App Builder changes with debounce
 let appBuilderAutoSaveTimer = null;
-let appBuilderHasChanges = false;
+appBuilderHasChanges = false;
 let appBuilderIsSaving = false;
 let appBuilderSaveCount = 0;
 
@@ -32198,7 +32203,7 @@ const defaultFlowPageContent = {
 // CMS State
 let cmsPages = [];
 let currentCMSPageId = null;
-let cmsHasChanges = false;
+cmsHasChanges = false;
 let originalCMSPages = null;
 
 // BroadcastChannel for cross-tab CMS sync
@@ -39333,7 +39338,7 @@ function saveWebBuilderConfig(section) {
 
 // Auto-save Web Builder changes with debounce
 let webBuilderAutoSaveTimer = null;
-let webBuilderHasChanges = false;
+webBuilderHasChanges = false;
 let webBuilderIsSaving = false;
 let webBuilderSaveCount = 0;
 

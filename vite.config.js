@@ -13,7 +13,15 @@ function orderflowRouteRewritePlugin() {
     '/how-it-works': '/landing-pages/how-it-works.html',
     '/search-engine': '/landing-pages/search-engine.html',
     '/business-scanner': '/landing-pages/search-engine.html',
-    '/blog': '/landing-pages/blog.html'
+    '/blog': '/landing-pages/blog.html',
+
+    // Legal, company, support & tools (mirror vercel.json)
+    '/privacy': '/public/legal/privacy.html',
+    '/terms': '/public/legal/terms.html',
+    '/om-os': '/public/pages/company/om-os.html',
+    '/karriere': '/public/pages/company/karriere.html',
+    '/help-center': '/public/pages/support/help-center.html',
+    '/tools/image-generator': '/tools/image-generator.html'
   }
 
   const rewriteMiddleware = (req, _res, next) => {

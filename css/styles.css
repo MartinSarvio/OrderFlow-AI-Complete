@@ -953,7 +953,7 @@
     .card-elevated{background:var(--card-elevated);box-shadow:none}
     
     /* Auth */
-    .auth{min-height:100vh;background:var(--bg);position:relative;z-index:1}
+    .auth{min-height:100vh;background:#fff;position:relative;z-index:1;--text:#1A1A2E;--text2:#6B7280;--muted:#9CA3AF;--border:#E5E7EB;--bg2:#F9FAFB;--bg3:#F0F2F5}
     .auth-split{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;width:100%}
     .auth-media{position:relative;overflow:hidden;background-image:url("../images/auth-bg.jpg");background-size:cover;background-position:center}
     .auth-media::after{content:"";position:absolute;inset:0;background:linear-gradient(130deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2),rgba(10,10,12,0.4))}
