@@ -84,6 +84,11 @@ function initTheme() {
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
+// Builder change-tracking flags (declared early to avoid TDZ errors)
+let webBuilderHasChanges = false;
+let appBuilderHasChanges = false;
+let cmsHasChanges = false;
+
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
   const oldKeys = [
@@ -3848,10 +3853,26 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Close dropdowns on Escape key
+// Close dropdowns and modals on Escape key
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAllDropdowns();
+    // Close topmost active modal overlay
+    const activeModal = document.querySelector('.modal-overlay.active, .modal-overlay[style*="display: flex"]');
+    if (activeModal) {
+      activeModal.style.display = 'none';
+      activeModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+});
+
+// Close modals when clicking on backdrop
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.style.display = 'none';
+    e.target.classList.remove('active');
+    document.body.style.overflow = '';
   }
 });
 
@@ -28828,7 +28849,7 @@ function saveAppBuilderConfig(config) {
 
 // Auto-save App Builder changes with debounce
 let appBuilderAutoSaveTimer = null;
-let appBuilderHasChanges = false;
+appBuilderHasChanges = false;
 let appBuilderIsSaving = false;
 let appBuilderSaveCount = 0;
 
@@ -31494,7 +31515,7 @@ const defaultFlowPageContent = {
 // CMS State
 let cmsPages = [];
 let currentCMSPageId = null;
-let cmsHasChanges = false;
+cmsHasChanges = false;
 let originalCMSPages = null;
 
 // BroadcastChannel for cross-tab CMS sync
@@ -34491,6 +34512,7 @@ async function switchFlowCMSTab(tab) {
     'products-facebook': 'Facebook Workflow',
     'raw-data': 'Data',
     'analytics-oversigt': 'Oversigt',
+    'api-noegler': 'API Nøgler',
     'integrationer': 'System Integrationer',
     'farver-og-fonts': 'Farver & Fonts'
   };
@@ -34512,6 +34534,7 @@ async function switchFlowCMSTab(tab) {
   if (tab === 'products-facebook') loadWorkflowConfig('facebook');
   if (tab === 'raw-data') loadRawDataTab();
   if (tab === 'analytics-oversigt') loadAnalyticsOverview();
+  if (tab === 'api-noegler') loadApiNoglerPage();
   if (tab === 'integrationer') loadIntegrationsPage();
   if (tab === 'farver-og-fonts') loadFarverOgFonts();
 }
@@ -36092,7 +36115,7 @@ function exportCMSData(format) {
 // ============ INTEGRATIONS PAGE ============
 
 // Load integrations page
-function loadIntegrationsPage() {
+function loadApiNoglerPage() {
   // Reset search and pagination state
   apiKeysSearchQuery = '';
   apiKeysCurrentPage = 1;
@@ -36111,7 +36134,9 @@ function loadIntegrationsPage() {
 
   // Load API keys
   loadApiKeysList();
+}
 
+function loadIntegrationsPage() {
   // Load connected integrations
   loadConnectedIntegrations();
 }
@@ -38462,7 +38487,7 @@ function saveWebBuilderConfig(section) {
 
 // Auto-save Web Builder changes with debounce
 let webBuilderAutoSaveTimer = null;
-let webBuilderHasChanges = false;
+webBuilderHasChanges = false;
 let webBuilderIsSaving = false;
 let webBuilderSaveCount = 0;
 
