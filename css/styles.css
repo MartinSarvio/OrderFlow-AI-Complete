@@ -1076,9 +1076,15 @@
     .sidebar{width:260px;background:var(--nav-bg);position:fixed;height:100vh;display:flex;flex-direction:column;transition:width 0.3s ease-in-out;z-index:200;font-family:'Inter',sans-serif}
     .sidebar.collapsed{width:72px}
 
-    /* Header zone */
-    .sidebar-header{padding:20px 20px 4px;transition:all 0.3s ease-in-out;position:fixed;top:0;left:0;width:260px;z-index:210;background:var(--nav-bg)}
-    .sidebar.collapsed .sidebar-header{padding:20px 12px 20px;width:72px}
+    /* Logo centralt i toppen - på linje med header */
+    .sidebar-logo{position:fixed;top:20px;left:0;width:260px;height:62px;display:flex;align-items:center;justify-content:center;z-index:220;background:var(--nav-bg)}
+    .sidebar-logo img{height:22px;width:auto}
+    .sidebar.collapsed .sidebar-logo{width:72px}
+    .sidebar.collapsed .sidebar-logo img{display:none}
+
+    /* Header zone - afrunding ved søgefelt */
+    .sidebar-header{padding:20px 20px 4px;transition:all 0.3s ease-in-out;position:fixed;top:82px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
+    .sidebar.collapsed .sidebar-header{padding:20px 12px 20px;width:72px;top:82px}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
     .sidebar-toggle{position:absolute;bottom:24px;left:20px;width:32px;height:32px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.3s ease-in-out;z-index:250}
@@ -1124,7 +1130,7 @@
     /* Main content adjustment */
     .main{margin-left:260px;transition:margin-left 0.3s ease-in-out}
     .sidebar.collapsed ~ .main{margin-left:72px}
-    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:100px;scrollbar-width:none;-ms-overflow-style:none}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:162px;scrollbar-width:none;-ms-overflow-style:none}
     .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
     .nav-section{margin-bottom:32px;transition:all 0.3s ease-in-out}
     .nav-section-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;padding:6px 13px;margin-bottom:3px;opacity:1;transition:all 0.3s ease-in-out}
@@ -1356,12 +1362,12 @@
     .user-name{font-size:14px;font-weight:600}
     .user-email{font-size:12px;color:var(--muted)}
     
-    /* Main content area with rounded corner */
-    .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden;border-top-left-radius:var(--content-radius)}
-    .main-content-wrapper{flex:1;background:var(--content-bg);border-top-left-radius:var(--content-radius);position:relative;overflow:hidden;display:flex;flex-direction:column}
+    /* Main content area */
+    .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+    .main-content-wrapper{flex:1;background:var(--content-bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
     
-    /* Topbar */
-    .topbar{height:62px;padding:0 24px;background:var(--content-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50;border-top-left-radius:var(--content-radius)}
+    /* Topbar - på linje med sidebar logo */
+    .topbar{height:62px;padding:0 24px;background:var(--content-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50}
     .topbar-left{display:flex;align-items:center;gap:20px;flex:1}
     .topbar-right{display:flex;align-items:center;gap:8px}
     
@@ -6261,8 +6267,14 @@
   }
   
   /* Hide logo on tablet to save space */
-  .sidebar-header img {
+  .sidebar-logo {
     display: none;
+  }
+  
+  .sidebar-header {
+    top: 0 !important;
+    width: 72px;
+    border-top-left-radius: 0;
   }
 
   .sidebar .nav-btn {
@@ -6315,10 +6327,13 @@
     display: flex !important;
   }
   
-  /* Mobile: Ingen afrundede hjørner da sidebar er skjult */
-  .main,
-  .topbar,
-  .main-content-wrapper {
+  /* Mobile: Skjul logo og fjern afrunding */
+  .sidebar-logo {
+    display: none !important;
+  }
+  
+  .sidebar-header {
+    top: 0 !important;
     border-top-left-radius: 0 !important;
   }
   
