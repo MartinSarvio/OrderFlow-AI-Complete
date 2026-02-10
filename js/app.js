@@ -45890,6 +45890,10 @@ window.downloadAiImage = downloadAiImage;
 window.generateAiVideo = generateAiVideo;
 window.loadAiMediaHistory = loadAiMediaHistory;
 
+// Expose mobile menu functions globally (for onclick handlers in HTML)
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
+
 // Handle ?page= URL parameter on load (for landing page redirects)
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(handleURLPageParam, 200);
