@@ -283,6 +283,16 @@
       color: var(--color-text-secondary);
     }
 
+    /* ==================== DARK MODE: TOPBAR MATCHES SIDEBAR ==================== */
+    /* Default theme (dark mode) - topbar should match sidebar for rounded corner effect */
+    [data-theme="dark"] .topbar {
+      background: #1B1B2F !important;
+      border-bottom: none;
+    }
+    [data-theme="dark"] .main {
+      background: #1B1B2F !important;
+    }
+
     /* ==================== LIGHT MODE OVERRIDES (BetaCRM Style) ==================== */
 
     /* Sidebar - Craftwork dark navy in both themes */
@@ -6230,6 +6240,13 @@
   background: rgba(0, 0, 0, 0.6);
 }
 
+/* Desktop - ensure logo image is visible */
+@media (min-width: 1025px) {
+  .sidebar-header img {
+    display: block !important;
+  }
+}
+
 /* Tablet breakpoint - 1024px */
 @media (max-width: 1024px) {
   .sidebar {
@@ -6240,6 +6257,11 @@
   .sidebar .nav-btn span,
   .sidebar .sidebar-footer span,
   .sidebar .nav-dropdown-menu {
+    display: none;
+  }
+  
+  /* Hide logo on tablet to save space */
+  .sidebar-header img {
     display: none;
   }
 
