@@ -119,7 +119,7 @@ export function Hero({ restaurant, isOpen, nextOpeningTime, onOrderClick }: Hero
             {features.loyalty && (
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 backdrop-blur-sm text-white border border-white/20">
                 <Star className="w-4 h-4" />
-                <span className="text-sm font-medium">Loyalty program</span>
+                <span className="text-sm font-medium">Loyalitetsprogram</span>
               </div>
             )}
           </div>
