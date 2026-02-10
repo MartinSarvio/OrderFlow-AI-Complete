@@ -801,8 +801,8 @@ function applyRoleBasedSidebar() {
     }
   });
 
-  // === VIRKSOMHEDS PROFIL, MARKETING: Synlige for ALLE ===
-  ['nav-virksomheds-profil', 'nav-marketing'].forEach(id => {
+  // === VIRKSOMHEDS PROFIL, MARKETING, APP/WEB BUILDER: Synlige for ALLE ===
+  ['nav-virksomheds-profil', 'nav-marketing', 'nav-appbuilder', 'nav-webbuilder'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.style.setProperty('display', '', 'important');
@@ -4372,7 +4372,23 @@ function showPage(page) {
       }
     }
   });
-  
+
+  // Håndter Web Builder sider (wb-*) som ikke fanges af standard matching
+  if (page.startsWith('wb-')) {
+    const wbDropdown = document.getElementById('nav-webbuilder');
+    if (wbDropdown) {
+      wbDropdown.classList.add('open');
+      activeDropdowns.add(wbDropdown);
+      const section = page.replace('wb-', '');
+      wbDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+        const onclick = item.getAttribute('onclick');
+        if (onclick && onclick.includes(`'${section}'`)) {
+          item.classList.add('active');
+        }
+      });
+    }
+  }
+
   if (activeDropdowns.size > 0) {
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     activeDropdowns.forEach(dropdown => {
@@ -28644,6 +28660,9 @@ function showAppBuilderPage(page) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.nav-dropdown-item').forEach(i => i.classList.remove('active'));
   document.querySelectorAll('.nav-dropdown-toggle').forEach(t => t.classList.remove('active'));
+
+  // Luk alle åbne dropdowns (accordion logik)
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
 
   // Activate the App Builder dropdown
   const appBuilderDropdown = document.getElementById('nav-appbuilder');
