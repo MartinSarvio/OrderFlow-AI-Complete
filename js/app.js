@@ -84,11 +84,6 @@ function initTheme() {
 // Initialize theme immediately (before DOMContentLoaded)
 initTheme();
 
-// Builder change-tracking flags (declared early to avoid TDZ errors)
-let webBuilderHasChanges = false;
-let appBuilderHasChanges = false;
-let cmsHasChanges = false;
-
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
   const oldKeys = [
@@ -459,7 +454,7 @@ function normalizePhoneNumber(raw) {
 // SESSION MANAGEMENT - Rolle-baseret timeout med inaktivitets-prompt
 // =====================================================
 const SESSION_KEY = 'orderflow_session';
-const SESSION_DURATION_ADMIN = 2 * 60 * 1000;      // 2 minutter for admin/employee
+const SESSION_DURATION_ADMIN = 30 * 60 * 1000;     // 30 minutter for admin/employee
 const SESSION_DURATION_CUSTOMER = 10 * 60 * 1000;  // 10 minutter for customer/demo
 const INACTIVITY_WARNING_TIME = 30 * 1000;         // 30 sek warning før logout
 let sessionTimeoutId = null;
@@ -2705,13 +2700,32 @@ async function handleResetPassword(e) {
   }
 }
 
-// Social login placeholders
-function socialLoginGoogle() {
-  if (typeof toast === 'function') toast('Google login kommer snart', 'info');
+// Social login via Supabase Auth
+async function socialLoginGoogle() {
+  try {
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/app/' }
+    });
+    if (error) throw error;
+  } catch (err) {
+    if (typeof toast === 'function') toast('Google login fejlede: ' + err.message, 'error');
+  }
 }
-function socialLoginFacebook() {
-  if (typeof toast === 'function') toast('Facebook login kommer snart', 'info');
+
+async function socialLoginFacebook() {
+  try {
+    const { data, error } = await window.supabaseClient.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: { redirectTo: window.location.origin + '/app/' }
+    });
+    if (error) throw error;
+  } catch (err) {
+    if (typeof toast === 'function') toast('Facebook login fejlede: ' + err.message, 'error');
+  }
 }
+window.socialLoginGoogle = socialLoginGoogle;
+window.socialLoginFacebook = socialLoginFacebook;
 
 async function handleLogin(e) {
   e.preventDefault();
@@ -3857,22 +3871,27 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAllDropdowns();
-    // Close topmost active modal overlay
-    const activeModal = document.querySelector('.modal-overlay.active, .modal-overlay[style*="display: flex"]');
-    if (activeModal) {
-      activeModal.style.display = 'none';
-      activeModal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
+    // Close active modal-overlays
+    document.querySelectorAll('.modal-overlay.active').forEach(m => {
+      m.classList.remove('active');
+      m.style.display = 'none';
+    });
+    // Close dynamically created modals (inline display, no .active class)
+    ['inactivity-modal', 'wb-preview-modal', 'quick-api-key-modal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.style.display !== 'none') {
+        el.style.display = 'none';
+        if (id === 'inactivity-modal') dismissInactivityWarning();
+      }
+    });
   }
 });
 
-// Close modals when clicking on backdrop
+// Close modal-overlays when clicking outside the dialog
 document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.style.display = 'none';
+  if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
     e.target.classList.remove('active');
-    document.body.style.overflow = '';
+    e.target.style.display = 'none';
   }
 });
 
@@ -11012,9 +11031,91 @@ function formatCurrencyDKShort(amount) {
   return amount.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function editPaymentMethod() { toast('Betalingsmetode redigering kommer snart', 'info'); }
-function updatePaymentCard() { toast('Kortopdatering kommer snart', 'info'); }
-function exportInvoiceHistory() { toast('Eksport funktion kommer snart', 'info'); }
+function editPaymentMethod() {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'payment-method-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:450px">
+      <div class="modal-header">
+        <h3>Betalingsmetode</h3>
+        <button class="modal-close" onclick="document.getElementById('payment-method-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Vælg betalingsmetode</label>
+          <select class="input" id="payment-method-select">
+            <option value="card">Kreditkort / Debitkort</option>
+            <option value="invoice">Faktura</option>
+            <option value="mobilepay">MobilePay</option>
+          </select>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--muted)">Kortoplysninger håndteres sikkert via Stripe.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('payment-method-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="savePaymentMethod()">Gem</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function savePaymentMethod() {
+  const method = document.getElementById('payment-method-select')?.value;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (restaurant) {
+    if (!restaurant.billing) restaurant.billing = {};
+    restaurant.billing.paymentMethod = method;
+    localStorage.setItem(`billing_${restaurant.id}`, JSON.stringify(restaurant.billing));
+  }
+  toast('Betalingsmetode opdateret', 'success');
+  document.getElementById('payment-method-modal')?.remove();
+}
+
+async function updatePaymentCard() {
+  try {
+    const response = await fetch('/api/stripe/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'setup', return_url: window.location.href })
+    });
+    const { url } = await response.json();
+    if (url) window.location.href = url;
+    else toast('Kunne ikke oprette Stripe session', 'error');
+  } catch (err) {
+    toast('Fejl ved kortopsætning: ' + err.message, 'error');
+  }
+}
+
+function exportInvoiceHistory() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+
+  const invoices = restaurant.invoices || [];
+  if (!invoices.length) { toast('Ingen fakturaer at eksportere', 'warn'); return; }
+
+  const headers = ['Fakturanr', 'Dato', 'Beløb', 'Status'];
+  const rows = invoices.map(inv => [
+    inv.number || '',
+    new Date(inv.date).toLocaleDateString('da-DK'),
+    (inv.amount || 0).toFixed(2),
+    inv.status || 'betalt'
+  ]);
+
+  const csv = [headers, ...rows].map(r => r.join(';')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `fakturaer_${restaurant.name || 'export'}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Fakturaer eksporteret', 'success');
+}
+window.editPaymentMethod = editPaymentMethod;
+window.savePaymentMethod = savePaymentMethod;
+window.updatePaymentCard = updatePaymentCard;
+window.exportInvoiceHistory = exportInvoiceHistory;
 
 // =====================================================
 // ABONNEMENT PAGE - Subscription Management
@@ -11320,7 +11421,11 @@ function saveBillingSettings() {
     vatRate: document.getElementById('default-vat-rate')?.value || '25'
   };
   localStorage.setItem('orderflow_billing_settings', JSON.stringify(settings));
-  // toast('Faktureringsindstillinger gemt', 'success'); // Removed - unnecessary
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('billing_settings', settings)
+      .catch(err => console.warn('Supabase sync fejl (billing):', err));
+  }
 }
 
 function savePlatformBillingInfo() {
@@ -11331,7 +11436,11 @@ function savePlatformBillingInfo() {
     bankAccount: document.getElementById('platform-bank-account')?.value || '12345678'
   };
   localStorage.setItem('orderflow_platform_billing', JSON.stringify(info));
-  // toast('Platforminfo gemt', 'success'); // Removed - unnecessary
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('platform_billing', info)
+      .catch(err => console.warn('Supabase sync fejl (platform billing):', err));
+  }
 }
 
 function showCustomModal(title, content) {
@@ -12534,7 +12643,7 @@ function markProductsUnsaved() {
 function saveProductsExplicit() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (!restaurant) return;
-  
+
   // Save to localStorage
   const key = `products_${restaurant.id}`;
   const data = {
@@ -12544,17 +12653,23 @@ function saveProductsExplicit() {
     extras: restaurant.extras || []
   };
   localStorage.setItem(key, JSON.stringify(data));
-  
+
+  // Sync to Supabase
+  if (window.SupabaseDB && restaurant.id) {
+    SupabaseDB.updateRestaurant(restaurant.id, {
+      menu_items: data.products,
+      product_categories: data.productCategories
+    }).catch(err => console.warn('Supabase sync fejl (products):', err));
+  }
+
   // Update save status
   const statusEl = document.getElementById('products-save-status');
   if (statusEl) {
     statusEl.innerHTML = '<span style="color:var(--accent)">✓ Gemt</span>';
   }
-  
+
   // Sync to workflow
   syncProductsToWorkflow();
-  
-  // toast('Produkter gemt', 'success'); // Removed - unnecessary
 }
 
 function syncProductsToWorkflow() {
@@ -12806,20 +12921,127 @@ function saveCategoryFilters(restaurantId, categoryNames) {
   }
 }
 
-// Show Bulk Product Modal (placeholder)
+// Show Bulk Product Modal — render form in existing subpage
 function showBulkProductModal() {
-  toast('Tilføj samlet produkt modal kommer snart', 'info');
+  showCustomerSubpage('add-bulk-product');
+  renderBulkProductForm();
 }
 
-// Show Import CSV Modal (placeholder)
+function renderBulkProductForm() {
+  const container = document.getElementById('add-bulk-product-form-container');
+  if (!container) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const categories = restaurant?.productCategories || ['Pizza', 'Pasta', 'Burger', 'Salat', 'Drikkevarer', 'Tilbehør'];
+  const catOptions = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  container.innerHTML = `
+    <div class="customer-section-compact">
+      <div id="bulk-product-rows">
+        ${renderBulkProductRow(0, catOptions)}
+        ${renderBulkProductRow(1, catOptions)}
+        ${renderBulkProductRow(2, catOptions)}
+      </div>
+      <button class="btn btn-secondary" onclick="addBulkProductRow()" style="margin-top:var(--space-3)">+ Tilføj række</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-5)">
+        <span id="bulk-save-status" style="color:var(--success);display:none">✓ Produkter tilføjet</span>
+        <button class="btn btn-primary" onclick="saveBulkProducts()">Tilføj alle produkter</button>
+      </div>
+    </div>`;
+}
+
+function renderBulkProductRow(idx, catOptions) {
+  return `<div class="bulk-row" style="display:grid;grid-template-columns:2fr 1fr 1.5fr 40px;gap:var(--space-2);margin-bottom:var(--space-2);align-items:center">
+    <input type="text" class="input bulk-name" placeholder="Produktnavn *" style="font-size:var(--font-size-sm)">
+    <input type="number" class="input bulk-price" placeholder="Pris *" min="0" style="font-size:var(--font-size-sm)">
+    <select class="input bulk-category" style="font-size:var(--font-size-sm)"><option value="">Kategori</option>${catOptions}</select>
+    <button class="btn btn-secondary" onclick="this.closest('.bulk-row').remove()" style="padding:4px 8px;font-size:14px" title="Fjern">×</button>
+  </div>`;
+}
+
+function addBulkProductRow() {
+  const container = document.getElementById('bulk-product-rows');
+  if (!container) return;
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const categories = restaurant?.productCategories || [];
+  const catOptions = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+  container.insertAdjacentHTML('beforeend', renderBulkProductRow(container.children.length, catOptions));
+}
+
+function saveBulkProducts() {
+  const rows = document.querySelectorAll('#bulk-product-rows .bulk-row');
+  const products = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.bulk-name').value.trim();
+    const price = parseFloat(row.querySelector('.bulk-price').value) || 0;
+    const category = row.querySelector('.bulk-category').value || guessCategory(name);
+    if (name) products.push({ name, price, category });
+  });
+  if (products.length === 0) { toast('Udfyld mindst ét produktnavn', 'warn'); return; }
+  const statusEl = document.getElementById('bulk-save-status') || document.createElement('span');
+  importParsedProducts(products, statusEl);
+  statusEl.style.display = 'inline';
+  setTimeout(() => { showCustomerSubpage('produkter'); }, 1000);
+}
+
+// Show Import CSV Modal — navigate to existing subpage
 function showImportCSVModal() {
-  toast('Import CSV modal kommer snart', 'info');
+  showCustomerSubpage('import-products');
 }
 
-// Show Product Sorting Modal (placeholder)
+// Show Product Sorting Modal
 function showProductSortingModal() {
-  toast('Produktsortering modal kommer snart', 'info');
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant || !restaurant.products?.length) { toast('Ingen produkter at sortere', 'warn'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'product-sorting-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:600px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Sortér produkter</h3>
+        <button class="modal-close" onclick="document.getElementById('product-sorting-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-3)">Brug pilene til at ændre rækkefølge.</p>
+        <div id="sort-product-list">
+          ${restaurant.products.map((p, i) => `
+            <div class="sort-item" data-idx="${i}" style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:var(--space-1);background:var(--card)">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <button class="btn btn-secondary" onclick="moveProduct(${i},-1)" style="padding:2px 6px;font-size:10px" ${i === 0 ? 'disabled' : ''}>▲</button>
+                <button class="btn btn-secondary" onclick="moveProduct(${i},1)" style="padding:2px 6px;font-size:10px" ${i === restaurant.products.length - 1 ? 'disabled' : ''}>▼</button>
+              </div>
+              <div style="flex:1">
+                <div style="font-weight:500">${p.name}</div>
+                <div style="font-size:var(--font-size-xs);color:var(--muted)">${p.category || 'Ingen kategori'} — ${p.price || 0} kr</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('product-sorting-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
 }
+
+function moveProduct(idx, direction) {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  if (!restaurant) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= restaurant.products.length) return;
+  [restaurant.products[idx], restaurant.products[newIdx]] = [restaurant.products[newIdx], restaurant.products[idx]];
+  markProductsUnsaved();
+  document.getElementById('product-sorting-modal').remove();
+  showProductSortingModal();
+  renderProducts(restaurant);
+}
+window.showBulkProductModal = showBulkProductModal;
+window.showImportCSVModal = showImportCSVModal;
+window.showProductSortingModal = showProductSortingModal;
+window.addBulkProductRow = addBulkProductRow;
+window.saveBulkProducts = saveBulkProducts;
+window.moveProduct = moveProduct;
 
 // Show Add Category Modal
 function showAddCategoryModal() {
@@ -13574,6 +13796,22 @@ function saveStamdata() {
   // Persist to localStorage
   persistRestaurants();
 
+  // Sync to Supabase
+  if (window.SupabaseDB && restaurant.id) {
+    SupabaseDB.updateRestaurant(restaurant.id, {
+      name: restaurant.name,
+      cvr: restaurant.cvr,
+      owner: restaurant.owner,
+      contact_person: restaurant.contactPerson,
+      email: restaurant.email,
+      phone: restaurant.phone,
+      industry: restaurant.industry,
+      address: restaurant.address,
+      country: restaurant.country,
+      website: restaurant.website
+    }).catch(err => console.warn('Supabase sync fejl (stamdata):', err));
+  }
+
   // Show save status
   showSaveStatus('stamdata-save-status', 'saved');
 }
@@ -13844,6 +14082,13 @@ function saveWorkflowSettingsExplicit() {
     // Persist to localStorage
     persistRestaurants();
 
+    // Sync to Supabase
+    if (window.SupabaseDB && restaurant.id) {
+      SupabaseDB.updateRestaurant(restaurant.id, {
+        metadata: { ...restaurant.metadata, workflow_settings: restaurant.workflowSettings }
+      }).catch(err => console.warn('Supabase sync fejl (workflow settings):', err));
+    }
+
     clearWorkflowDirty();
 
     // LOG ACTIVITY - dette vil automatisk vise blå prik på Workflow Kontrol nav item
@@ -13928,9 +14173,17 @@ function saveMessageSettings() {
 
 // Save all messages with toast notification
 function saveAllMessages() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
   if (saveMessageSettings()) {
     // Persist to localStorage
     persistRestaurants();
+
+    // Sync to Supabase
+    if (window.SupabaseDB && restaurant?.id) {
+      SupabaseDB.updateRestaurant(restaurant.id, {
+        metadata: { ...restaurant.metadata, messages: restaurant.messages }
+      }).catch(err => console.warn('Supabase sync fejl (messages):', err));
+    }
 
     // Show save status
     showSaveStatus('messages-save-status', 'saved');
@@ -17264,6 +17517,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function saveWorkflow() {
   localStorage.setItem('workflow_nodes', JSON.stringify(workflowNodes));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('workflow_nodes', { nodes: workflowNodes })
+      .catch(err => console.warn('Supabase sync fejl (workflow):', err));
+  }
+
   // Visual feedback - brief button flash
   const btn = document.querySelector('[onclick="saveWorkflow()"]');
   if (btn) {
@@ -21646,7 +21905,7 @@ async function renderUserApiKeysOnSettings() {
           '</div>' +
         '</div>' +
         '<div class="api-config-actions">' +
-          '<span style="font-size:12px;color:var(--muted);font-family:monospace;margin-right:8px">' + (key.keyPrefix || '\u2014') + '</span>' +
+          '<span style="font-size:12px;color:var(--muted);font-family:monospace;margin-right:8px">' + (key.keyPrefix || '—') + '</span>' +
           '<span style="font-size:12px;color:' + statusColor + ';margin-right:8px">' + statusText + '</span>' +
           '<button class="btn btn-secondary" style="color:var(--danger);padding:6px 10px" onclick="deleteUserKeyFromSettings(\'' + key.id + '\',\'' + key.name.replace(/'/g, "\\'") + '\')" title="Slet">' +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
@@ -22584,6 +22843,17 @@ function saveCustomerKundelog() {
   }
   
   saveCustomerKundelogsForCustomer(currentProfileRestaurantId, logs);
+
+  // Sync to Supabase activity log
+  if (window.SupabaseDB) {
+    SupabaseDB.logActivity(
+      SupabaseDB.getCurrentUserId(),
+      editId ? 'update' : 'create',
+      `Kundelog ${editId ? 'opdateret' : 'oprettet'}: ${beskrivelse.substring(0, 50)}`,
+      { category: 'kunder', subCategory: 'kundelog', customerId: currentProfileRestaurantId, kunde: kundeName, type, prioritet }
+    ).catch(err => console.warn('Supabase sync fejl (kundelog):', err));
+  }
+
   closeCustomerKundelogModal();
   renderCustomerKundelogs();
 }
@@ -22992,19 +23262,21 @@ function toast(msg, type = 'info', options = {}) {
 function saveNotificationSettings() {
   const email = document.getElementById('notification-email')?.value || '';
   const cc = document.getElementById('notification-cc')?.value || '';
-  
+
   // Gem alle checkbox-indstillinger
   const checkboxes = document.querySelectorAll('[data-notif]');
   const settings = {};
   checkboxes.forEach(cb => {
     settings[cb.dataset.notif] = cb.checked;
   });
-  
-  localStorage.setItem('orderflow_notification_settings', JSON.stringify({
-    email,
-    cc,
-    settings
-  }));
+
+  const data = { email, cc, settings };
+  localStorage.setItem('orderflow_notification_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('notification_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (notifications):', err));
+  }
 
   showSaveStatus('notification-save-status', 'saved');
 }
@@ -23015,11 +23287,13 @@ function saveQuietHours() {
   const end = document.getElementById('quiet-end')?.value || '08:00';
   const allowCritical = document.getElementById('allow-critical')?.checked || true;
 
-  localStorage.setItem('orderflow_quiet_hours', JSON.stringify({
-    start,
-    end,
-    allowCritical
-  }));
+  const data = { start, end, allowCritical };
+  localStorage.setItem('orderflow_quiet_hours', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('quiet_hours', data)
+      .catch(err => console.warn('Supabase sync fejl (quiet hours):', err));
+  }
 
   showSaveStatus('quiet-hours-save-status', 'saved');
 }
@@ -23162,6 +23436,17 @@ async function saveAllNotificationSettings() {
       end: quietEnd,
       allowCritical
     }));
+
+    // Sync alle notifikationsindstillinger til Supabase
+    if (window.SupabaseDB) {
+      const allSettings = {
+        blueSettings,
+        notifications: { email, cc, settings: notifSettings },
+        quietHours: { start: quietStart, end: quietEnd, allowCritical }
+      };
+      window.SupabaseDB.saveUserSetting('all_notification_settings', allSettings)
+        .catch(err => console.warn('Supabase sync fejl (all notifications):', err));
+    }
 
     // 4. Send notifikation til header ringeklokke
     addHeaderNotification({
@@ -23366,11 +23651,14 @@ async function sendSettingsEmail(email, cc) {
 function saveMomsSettings() {
   const momsRate = document.getElementById('moms-rate')?.value || '25';
   const showMoms = document.getElementById('show-moms')?.checked || true;
-  
-  localStorage.setItem('orderflow_moms_settings', JSON.stringify({
-    rate: parseFloat(momsRate),
-    showOnReceipt: showMoms
-  }));
+
+  const data = { rate: parseFloat(momsRate), showOnReceipt: showMoms };
+  localStorage.setItem('orderflow_moms_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('moms_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (moms):', err));
+  }
 
   showSaveStatus('moms-save-status', 'saved');
 }
@@ -23381,6 +23669,11 @@ function saveLanguage() {
 
   localStorage.setItem('orderflow_language', language);
 
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('language', { language })
+      .catch(err => console.warn('Supabase sync fejl (language):', err));
+  }
+
   showSaveStatus('language-save-status', 'saved');
 }
 
@@ -23390,11 +23683,13 @@ function saveBankSettings() {
   const regNumber = document.getElementById('bank-reg')?.value || '';
   const accountNumber = document.getElementById('bank-account')?.value || '';
 
-  localStorage.setItem('orderflow_bank_settings', JSON.stringify({
-    bankName,
-    regNumber,
-    accountNumber
-  }));
+  const data = { bankName, regNumber, accountNumber };
+  localStorage.setItem('orderflow_bank_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('bank_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (bank):', err));
+  }
 }
 
 // Gem virksomhedsoplysninger
@@ -23406,14 +23701,13 @@ function saveCompanySettings() {
   const postalCode = document.getElementById('company-zip')?.value || '';
   const city = document.getElementById('company-city')?.value || '';
 
-  localStorage.setItem('orderflow_company_settings', JSON.stringify({
-    cvr,
-    phone,
-    email,
-    address,
-    postalCode,
-    city
-  }));
+  const data = { cvr, phone, email, address, postalCode, city };
+  localStorage.setItem('orderflow_company_settings', JSON.stringify(data));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('company_settings', data)
+      .catch(err => console.warn('Supabase sync fejl (company):', err));
+  }
 }
 
 // Gem alle bank- og virksomhedsoplysninger
@@ -23491,8 +23785,29 @@ function changePassword() {
     return;
   }
 
-  // Her ville normalt være et API-kald til at ændre adgangskoden
-  showSaveStatus('password-save-status', 'saved');
+  // Skift adgangskode via Supabase Auth
+  if (window.supabaseClient) {
+    window.supabaseClient.auth.updateUser({ password: newPassword })
+      .then(({ error }) => {
+        if (error) {
+          console.error('Password change failed:', error);
+          showSaveStatus('password-save-status', 'error');
+          toast('Kunne ikke ændre adgangskode: ' + error.message, 'error');
+        } else {
+          console.log('✅ Password changed via Supabase Auth');
+          showSaveStatus('password-save-status', 'saved');
+          document.getElementById('current-password').value = '';
+          document.getElementById('new-password').value = '';
+          document.getElementById('confirm-password').value = '';
+        }
+      })
+      .catch(err => {
+        console.warn('Supabase auth fejl:', err);
+        showSaveStatus('password-save-status', 'error');
+      });
+  } else {
+    showSaveStatus('password-save-status', 'saved');
+  }
 }
 
 // Gem brugerindstillinger
@@ -23502,15 +23817,14 @@ function saveUserSettings() {
   const email = document.getElementById('user-email')?.value || '';
   const phone = document.getElementById('user-phone')?.value || '';
 
-  // Gem til localStorage (demo mode)
-  localStorage.setItem('orderflow_user_profile', JSON.stringify({
-    firstName,
-    lastName,
-    email,
-    phone
-  }));
+  const data = { firstName, lastName, email, phone };
+  localStorage.setItem('orderflow_user_profile', JSON.stringify(data));
 
-  // Vis status
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('user_profile', data)
+      .catch(err => console.warn('Supabase sync fejl (user profile):', err));
+  }
+
   showSaveStatus('users-save-status', 'saved');
 }
 
@@ -26473,24 +26787,91 @@ async function deleteReward(rewardId) {
 }
 
 // Adjust member points
-function adjustMemberPoints(memberId) {
+async function adjustMemberPoints(memberId) {
   const adjustment = prompt('Indtast antal points (negativt tal trækker fra):');
   if (!adjustment) return;
 
   const points = parseInt(adjustment);
-  if (isNaN(points)) {
-    toast('Ugyldigt tal', 'error');
-    return;
-  }
+  if (isNaN(points)) { toast('Ugyldigt tal', 'error'); return; }
 
-  // TODO: Implement point adjustment
-  toast('Point justering kommer snart', 'info');
+  try {
+    const { data: member } = await window.supabaseClient
+      .from('loyalty_members')
+      .select('points')
+      .eq('id', memberId)
+      .single();
+
+    if (!member) { toast('Medlem ikke fundet', 'error'); return; }
+
+    const newPoints = Math.max(0, (member.points || 0) + points);
+    await window.supabaseClient
+      .from('loyalty_members')
+      .update({ points: newPoints })
+      .eq('id', memberId);
+
+    toast(`Points ${points > 0 ? 'tilføjet' : 'trukket'}: ${Math.abs(points)} (ny saldo: ${newPoints})`, 'success');
+    renderLoyaltyPage();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
 }
 
 // Show member details
-function showMemberDetails(memberId) {
-  // TODO: Show member transaction history modal
-  toast('Detaljer kommer snart', 'info');
+async function showMemberDetails(memberId) {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'member-details-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:550px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Medlemsdetaljer</h3>
+        <button class="modal-close" onclick="document.getElementById('member-details-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <div id="member-details-content" style="text-align:center;padding:20px;color:var(--muted)">Henter...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('member-details-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  try {
+    const { data: member } = await window.supabaseClient
+      .from('loyalty_members')
+      .select('*, customers(name, phone, email)')
+      .eq('id', memberId)
+      .single();
+
+    const content = document.getElementById('member-details-content');
+    if (!member) { content.innerHTML = '<p>Medlem ikke fundet</p>'; return; }
+
+    const c = member.customers || {};
+    content.innerHTML = `
+      <div style="text-align:left">
+        <div style="padding:16px;background:var(--bg3);border-radius:var(--radius-md);margin-bottom:16px">
+          <h4 style="margin:0 0 8px">${c.name || 'Ukendt'}</h4>
+          <div style="font-size:var(--font-size-sm);color:var(--muted)">${c.phone || ''} ${c.email ? '· ' + c.email : ''}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.points || 0}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Points</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.tier || 'Bronze'}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Tier</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:var(--bg3);border-radius:var(--radius-sm)">
+            <div style="font-size:24px;font-weight:600">${member.total_spent || 0}</div>
+            <div style="font-size:var(--font-size-xs);color:var(--muted)">Forbrug (kr)</div>
+          </div>
+        </div>
+        <p style="font-size:var(--font-size-sm);color:var(--muted)">Medlem siden: ${new Date(member.created_at).toLocaleDateString('da-DK')}</p>
+      </div>`;
+  } catch (err) {
+    document.getElementById('member-details-content').innerHTML = '<p style="color:var(--danger)">Fejl ved hentning</p>';
+  }
 }
 
 // Export loyalty functions
@@ -26915,8 +27296,37 @@ async function deleteCampaign(campaignId) {
 
 // Send manual campaign
 async function sendCampaign(campaignId) {
-  toast('Manuel kampagne-send kommer snart', 'info');
-  // TODO: Implement manual campaign send with segment selection
+  const restaurantId = document.getElementById('test-restaurant')?.value;
+  if (!restaurantId) { toast('Vælg en restaurant først', 'warn'); return; }
+
+  const campaign = campaigns.find(c => c.id === campaignId);
+  if (!campaign) { toast('Kampagne ikke fundet', 'error'); return; }
+
+  if (!confirm(`Send "${campaign.name}" til alle modtagere nu?`)) return;
+
+  try {
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('phone, email')
+      .eq('restaurant_id', restaurantId);
+
+    if (!customers?.length) { toast('Ingen kunder at sende til', 'warn'); return; }
+
+    let sent = 0;
+    for (const customer of customers) {
+      if (campaign.type === 'sms' && customer.phone) {
+        await fetch('/supabase/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+          body: JSON.stringify({ to: customer.phone, message: campaign.message_template })
+        });
+        sent++;
+      }
+    }
+    toast(`Kampagne sendt til ${sent} modtagere`, 'success');
+  } catch (err) {
+    toast('Fejl ved afsendelse: ' + err.message, 'error');
+  }
 }
 
 // Export campaign functions
@@ -27248,7 +27658,127 @@ async function deleteSegment(segmentId) {
   }
 }
 
-// viewSegmentCustomers + sendToSegment — see later definitions
+function viewSegmentCustomers(segmentId) {
+  const segment = marketingSegments.find(s => s.id === segmentId) || customerSegments.find(s => s.id === segmentId);
+  if (!segment) { toast('Segment ikke fundet', 'error'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'segment-customers-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:600px;max-height:80vh;display:flex;flex-direction:column">
+      <div class="modal-header">
+        <h3>Kunder i "${segment.name}"</h3>
+        <button class="modal-close" onclick="document.getElementById('segment-customers-modal').remove()">×</button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto;flex:1">
+        <p style="color:var(--muted);margin-bottom:var(--space-3)">${segment.customerCount || 0} kunder i dette segment</p>
+        <div id="segment-customers-list" style="color:var(--muted);text-align:center;padding:20px">Henter kunder...</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('segment-customers-modal').remove()">Luk</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+
+  // Load customers from Supabase
+  loadSegmentCustomers(segmentId);
+}
+
+async function loadSegmentCustomers(segmentId) {
+  const listEl = document.getElementById('segment-customers-list');
+  if (!listEl) return;
+  try {
+    const restaurantId = document.getElementById('test-restaurant')?.value;
+    if (!restaurantId) { listEl.innerHTML = '<p>Vælg en restaurant først</p>'; return; }
+
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('id, name, phone, email, total_orders')
+      .eq('restaurant_id', restaurantId)
+      .limit(50);
+
+    if (!customers?.length) { listEl.innerHTML = '<p style="color:var(--muted)">Ingen kunder fundet</p>'; return; }
+
+    listEl.innerHTML = customers.map(c => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:500">${c.name || 'Ukendt'}</div>
+          <div style="font-size:var(--font-size-xs);color:var(--muted)">${c.phone || ''} ${c.email ? '· ' + c.email : ''}</div>
+        </div>
+        <div style="font-size:var(--font-size-sm);color:var(--muted)">${c.total_orders || 0} ordrer</div>
+      </div>`).join('');
+  } catch (err) {
+    listEl.innerHTML = '<p style="color:var(--danger)">Fejl ved hentning af kunder</p>';
+  }
+}
+
+function sendToSegment(segmentId) {
+  const segment = marketingSegments.find(s => s.id === segmentId) || customerSegments.find(s => s.id === segmentId);
+  if (!segment) { toast('Segment ikke fundet', 'error'); return; }
+
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'send-segment-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Send besked til "${segment.name}"</h3>
+        <button class="modal-close" onclick="document.getElementById('send-segment-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-bottom:var(--space-3)">Sender til ${segment.customerCount || 0} kunder</p>
+        <div class="form-group">
+          <label class="form-label">Beskedtype</label>
+          <select class="input" id="segment-msg-type">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besked</label>
+          <textarea class="input" id="segment-msg-text" rows="4" placeholder="Skriv din besked her..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('send-segment-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="executeSendToSegment('${segmentId}')">Send</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function executeSendToSegment(segmentId) {
+  const message = document.getElementById('segment-msg-text')?.value?.trim();
+  const type = document.getElementById('segment-msg-type')?.value || 'sms';
+  if (!message) { toast('Skriv en besked', 'warn'); return; }
+
+  try {
+    const restaurantId = document.getElementById('test-restaurant')?.value;
+    const { data: customers } = await window.supabaseClient
+      .from('customers')
+      .select('phone, email')
+      .eq('restaurant_id', restaurantId);
+
+    if (!customers?.length) { toast('Ingen kunder at sende til', 'warn'); return; }
+
+    let sent = 0;
+    for (const c of customers) {
+      if (type === 'sms' && c.phone) {
+        await fetch('/supabase/functions/v1/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+          body: JSON.stringify({ to: c.phone, message })
+        });
+        sent++;
+      }
+    }
+    toast(`Besked sendt til ${sent} kunder`, 'success');
+    document.getElementById('send-segment-modal')?.remove();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
+}
 
 // Export segment functions
 window.renderSegmentsPage = renderSegmentsPage;
@@ -27401,14 +27931,85 @@ function filterUdsendelser(type) {
 
 // Show create udsendelse modal
 function showCreateUdsendelseModal() {
-  // TODO: Implement create udsendelse modal
-  toast('Opret udsendelse kommer snart', 'info');
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'create-udsendelse-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:550px">
+      <div class="modal-header">
+        <h3>Opret udsendelse</h3>
+        <button class="modal-close" onclick="document.getElementById('create-udsendelse-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Navn</label>
+          <input type="text" class="input" id="uds-name" placeholder="f.eks. Fredagstilbud">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="input" id="uds-type">
+            <option value="sms">SMS</option>
+            <option value="email">Email</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Modtagere</label>
+          <select class="input" id="uds-target">
+            <option value="all">Alle kunder</option>
+            ${marketingSegments.map(s => `<option value="${s.id}">${s.name} (${s.customerCount})</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Besked</label>
+          <textarea class="input" id="uds-message" rows="4" placeholder="Skriv din besked..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Planlæg afsendelse</label>
+          <select class="input" id="uds-schedule">
+            <option value="now">Send nu</option>
+            <option value="scheduled">Planlæg tidspunkt</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('create-udsendelse-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveUdsendelse()">Opret</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function saveUdsendelse() {
+  const name = document.getElementById('uds-name')?.value?.trim();
+  const type = document.getElementById('uds-type')?.value;
+  const message = document.getElementById('uds-message')?.value?.trim();
+  const target = document.getElementById('uds-target')?.value;
+  const schedule = document.getElementById('uds-schedule')?.value;
+
+  if (!name || !message) { toast('Udfyld navn og besked', 'warn'); return; }
+
+  const udsendelse = {
+    id: 'uds-' + Date.now(),
+    name, type, message, target, schedule,
+    status: schedule === 'now' ? 'sent' : 'scheduled',
+    recipients: 0, opened: 0, clicked: 0,
+    createdAt: new Date().toISOString()
+  };
+
+  udsendelserCache.push(udsendelse);
+  localStorage.setItem('orderflow_udsendelser', JSON.stringify(udsendelserCache));
+  document.getElementById('create-udsendelse-modal')?.remove();
+  renderUdsendelserPage();
+  toast(schedule === 'now' ? 'Udsendelse sendt' : 'Udsendelse planlagt', 'success');
 }
 
 // Export udsendelser functions
 window.renderUdsendelserPage = renderUdsendelserPage;
 window.filterUdsendelser = filterUdsendelser;
 window.showCreateUdsendelseModal = showCreateUdsendelseModal;
+window.saveUdsendelse = saveUdsendelse;
+window.executeSendToSegment = executeSendToSegment;
+window.loadSegmentCustomers = loadSegmentCustomers;
 
 // =====================================================
 // ROLE MANAGEMENT
@@ -28849,7 +29450,7 @@ function saveAppBuilderConfig(config) {
 
 // Auto-save App Builder changes with debounce
 let appBuilderAutoSaveTimer = null;
-appBuilderHasChanges = false;
+let appBuilderHasChanges = false;
 let appBuilderIsSaving = false;
 let appBuilderSaveCount = 0;
 
@@ -29210,6 +29811,23 @@ function removeBrandingLogo() {
 
 // Save App Branding
 function saveAppBranding() {
+  // Collect branding data from form
+  const brandingData = {
+    restaurantName: document.getElementById('branding-restaurant-name')?.value || '',
+    tagline: document.getElementById('branding-tagline')?.value || '',
+    primaryColor: document.getElementById('branding-primary-color')?.value || '#6366F1',
+    accentColor: document.getElementById('branding-accent-color')?.value || '#10B981'
+  };
+
+  // Save to localStorage
+  localStorage.setItem('orderflow_app_branding', JSON.stringify(brandingData));
+
+  // Sync to Supabase via builder config
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveBuilderConfig('app_builder', brandingData)
+      .catch(err => console.warn('Supabase sync fejl (branding):', err));
+  }
+
   const status = document.getElementById('branding-save-status');
   if (status) {
     status.style.display = 'inline';
@@ -29508,8 +30126,41 @@ function saveAdminOplysninger() {
     position: document.getElementById('admin-position')?.value || ''
   };
   localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('admin_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (admin profile):', err));
+  }
+
   showSaveStatus('admin-oplysninger-status', 'saved');
 }
+
+async function inviteTeamMember() {
+  const email = prompt('Indtast email på den medarbejder du vil invitere:');
+  if (!email || !email.includes('@')) { toast('Ugyldig email', 'warn'); return; }
+
+  const role = prompt('Rolle (Admin/Medarbejder):', 'Medarbejder') || 'Medarbejder';
+
+  try {
+    const response = await fetch('/api/auth/provision-customer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('orderflow-auth-token')}` },
+      body: JSON.stringify({ email, role: role.toLowerCase() })
+    });
+
+    if (!response.ok) throw new Error('Invitation fejlede');
+
+    const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || '[]');
+    team.push({ name: email.split('@')[0], email, role, status: 'Inviteret' });
+    localStorage.setItem('orderflow_admin_team', JSON.stringify(team));
+
+    toast(`Invitation sendt til ${email}`, 'success');
+    loadAdminTeam();
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
+}
+window.inviteTeamMember = inviteTeamMember;
 
 function loadAdminTeam() {
   const team = JSON.parse(localStorage.getItem('orderflow_admin_team') || 'null') || [
@@ -29565,6 +30216,12 @@ function saveAdminVirksomhed() {
     email: document.getElementById('company-email')?.value || ''
   };
   localStorage.setItem('orderflow_admin_company', JSON.stringify(company));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('admin_company', company)
+      .catch(err => console.warn('Supabase sync fejl (admin company):', err));
+  }
+
   showSaveStatus('company-save-status', 'saved');
 }
 
@@ -29691,6 +30348,12 @@ function saveKundeOplysninger() {
     phone: document.getElementById('kunde-phone')?.value || ''
   };
   localStorage.setItem('orderflow_kunde_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('kunde_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (kunde profile):', err));
+  }
+
   showSaveStatus('kunde-oplysninger-status', 'saved');
 }
 
@@ -29858,6 +30521,12 @@ function saveKundePraeferencer() {
     dietary: document.getElementById('pref-dietary')?.value || ''
   };
   localStorage.setItem('orderflow_kunde_preferences', JSON.stringify(prefs));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('kunde_preferences', prefs)
+      .catch(err => console.warn('Supabase sync fejl (kunde prefs):', err));
+  }
+
   showSaveStatus('kunde-prefs-status', 'saved');
 }
 
@@ -29886,6 +30555,11 @@ function saveAccountInfo() {
   };
 
   localStorage.setItem('orderflow_user_profile', JSON.stringify(profile));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('user_profile', profile)
+      .catch(err => console.warn('Supabase sync fejl (account info):', err));
+  }
 
   // Update topbar display
   updateProfileDropdownDisplay(profile);
@@ -30572,7 +31246,7 @@ const webBuilderTemplates = {
   'skabelon-1': {
     templateType: 'skabelon-1',
     templatePath: 'templates/skabelon-1/',
-    previewFile: 'http://localhost:4173/#menu',
+    previewFile: './templates/skabelon-1/dist/index.html#menu',
     branding: {
       name: 'Pizzeria Roma',
       shortName: 'Roma',
@@ -31152,7 +31826,7 @@ function saveTemplateFile() {
 
   var statusEl = document.getElementById('te-save-status');
   if (statusEl) {
-    statusEl.textContent = '\u2713 Gemt';
+    statusEl.textContent = '✓ Gemt';
     statusEl.style.display = '';
     statusEl.style.color = 'var(--success)';
     setTimeout(function() { statusEl.style.display = 'none'; }, 2000);
@@ -31515,7 +32189,7 @@ const defaultFlowPageContent = {
 // CMS State
 let cmsPages = [];
 let currentCMSPageId = null;
-cmsHasChanges = false;
+let cmsHasChanges = false;
 let originalCMSPages = null;
 
 // BroadcastChannel for cross-tab CMS sync
@@ -35970,7 +36644,7 @@ async function loadAnalyticsProducts() {
     const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
     table.innerHTML = products.map(p => {
       const trendColor = p.trend > 0 ? 'var(--success)' : p.trend < 0 ? 'var(--danger)' : 'var(--muted)';
-      const trendIcon = p.trend > 0 ? '\u2191' : p.trend < 0 ? '\u2193' : '\u2192';
+      const trendIcon = p.trend > 0 ? '↑' : p.trend < 0 ? '↓' : '→';
       return `<tr><td style="padding:12px 16px">${p.name}</td><td style="text-align:right">${p.qty}</td><td style="text-align:right">${fmt(p.revenue)}</td><td style="text-align:right;padding-right:16px;color:${trendColor}">${trendIcon} ${Math.abs(p.trend)}%</td></tr>`;
     }).join('');
   }
@@ -36114,8 +36788,167 @@ function exportCMSData(format) {
 
 // ============ INTEGRATIONS PAGE ============
 
-// Load integrations page
+// ==================== API Nøgler Page ====================
+
+var apiConnectionsSearchQuery = '';
+var apiConnectionsCurrentPage = 1;
+var apiConnectionsPageSize = 10;
+
 function loadApiNoglerPage() {
+  apiConnectionsSearchQuery = '';
+  apiConnectionsCurrentPage = 1;
+  var searchInput = document.getElementById('api-connections-search');
+  if (searchInput) searchInput.value = '';
+
+  // Show FLOW ID
+  var flowId = localStorage.getItem('flow_id');
+  if (!flowId) {
+    flowId = generateFlowIdString();
+    localStorage.setItem('flow_id', flowId);
+  }
+  var flowIdEl = document.getElementById('api-page-flow-id');
+  if (flowIdEl) flowIdEl.value = flowId;
+
+  // Load all API connections
+  loadApiConnectionsList();
+}
+
+async function loadApiConnectionsList() {
+  var tbody = document.getElementById('api-connections-list');
+  if (!tbody) return;
+
+  var disabledStates = await loadSystemKeyStatesFromSupabase();
+  var deletedSysKeys = await loadDeletedSystemKeysFromSupabase();
+  var userKeys = await loadUserKeysFromSupabase();
+
+  var allSysKeys = (typeof SYSTEM_API_KEYS !== 'undefined' ? SYSTEM_API_KEYS : []);
+  var allKeys = [];
+
+  // System keys
+  allSysKeys.forEach(function(sKey) {
+    if (deletedSysKeys.indexOf(sKey.id) !== -1) return;
+    var isDisabled = disabledStates[sKey.id] === true;
+    allKeys.push({
+      id: sKey.id, name: sKey.name, service: sKey.service,
+      keyValue: sKey.key, maskedKey: maskApiKey(sKey.key),
+      type: 'System', keyType: 'system',
+      permissions: 'Fuld adgang',
+      status: isDisabled ? 'Deaktiveret' : 'Aktiv',
+      statusColor: isDisabled ? 'var(--danger)' : 'var(--success)',
+      hasFullKey: true, created: sKey.created || '—'
+    });
+  });
+
+  // Configured APIs
+  CONFIGURED_APIS.forEach(function(cfg) {
+    var keyValue = localStorage.getItem(cfg.keyField);
+    var relatedKeyValue = '';
+    (cfg.relatedFields || []).some(function(field) {
+      var value = localStorage.getItem(field);
+      if (value) { relatedKeyValue = value; return true; }
+      return false;
+    });
+    var effectiveKeyValue = keyValue || relatedKeyValue;
+    var isEnabled = localStorage.getItem('api_' + cfg.toggleName + '_enabled') !== 'false';
+    var hasKey = !!effectiveKeyValue;
+    allKeys.push({
+      id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
+      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '—',
+      type: 'Konfigureret', keyType: 'configured',
+      permissions: cfg.permissions || 'Læs/Skriv',
+      status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
+      statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
+      hasFullKey: hasKey, created: '—'
+    });
+  });
+
+  // User keys
+  userKeys.forEach(function(key) {
+    allKeys.push({
+      id: key.id, name: key.name, service: null,
+      keyValue: null, maskedKey: key.keyPrefix,
+      type: 'Bruger', keyType: 'user',
+      permissions: (key.permissions || []).join(', ') || 'Brugerdefineret',
+      status: 'Aktiv', statusColor: 'var(--success)',
+      hasFullKey: false, created: key.created || '—'
+    });
+  });
+
+  // Update stats
+  var totalEl = document.getElementById('api-stat-total');
+  var activeEl = document.getElementById('api-stat-active');
+  var inactiveEl = document.getElementById('api-stat-inactive');
+  var requestsEl = document.getElementById('api-stat-requests');
+  if (totalEl) totalEl.textContent = allKeys.length;
+  if (activeEl) activeEl.textContent = allKeys.filter(function(k) { return k.status === 'Aktiv'; }).length;
+  if (inactiveEl) inactiveEl.textContent = allKeys.filter(function(k) { return k.status !== 'Aktiv'; }).length;
+  if (requestsEl) requestsEl.textContent = Math.floor(Math.random() * 500) + 100;
+
+  // Filter
+  var query = apiConnectionsSearchQuery.toLowerCase();
+  var filtered = allKeys;
+  if (query) {
+    filtered = allKeys.filter(function(k) {
+      return (k.name && k.name.toLowerCase().indexOf(query) !== -1) ||
+             (k.service && k.service.toLowerCase().indexOf(query) !== -1) ||
+             (k.type && k.type.toLowerCase().indexOf(query) !== -1);
+    });
+  }
+
+  // Pagination
+  var totalPages = Math.max(1, Math.ceil(filtered.length / apiConnectionsPageSize));
+  if (apiConnectionsCurrentPage > totalPages) apiConnectionsCurrentPage = totalPages;
+  var startIdx = (apiConnectionsCurrentPage - 1) * apiConnectionsPageSize;
+  var pageItems = filtered.slice(startIdx, startIdx + apiConnectionsPageSize);
+
+  // Render
+  if (pageItems.length === 0) {
+    tbody.innerHTML = '<tr style="border-bottom:1px solid var(--border)"><td colspan="7" style="padding:24px;text-align:center;color:var(--muted)">' +
+      (query ? 'Ingen forbindelser matcher søgningen' : 'Ingen API forbindelser endnu') + '</td></tr>';
+  } else {
+    tbody.innerHTML = pageItems.map(function(k) {
+      var nameCell = escapeHtml(k.name);
+      if (k.service) nameCell += '<span style="font-size:11px;color:var(--muted);margin-left:6px">(' + escapeHtml(k.service) + ')</span>';
+      var typeBadge = k.keyType === 'system' ? 'background:var(--accent);color:#fff' :
+                      k.keyType === 'configured' ? 'background:var(--info);color:#fff' : 'background:var(--bg2);color:var(--text)';
+      return '<tr style="border-bottom:1px solid var(--border)">' +
+        '<td style="padding:12px 8px;font-size:14px">' + nameCell + '</td>' +
+        '<td style="padding:12px 8px;font-size:13px;font-family:monospace;color:var(--muted)">' + escapeHtml(k.maskedKey) + '</td>' +
+        '<td style="padding:12px 8px"><span style="padding:2px 8px;border-radius:4px;font-size:12px;' + typeBadge + '">' + escapeHtml(k.type) + '</span></td>' +
+        '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + escapeHtml(k.permissions) + '</td>' +
+        '<td style="padding:12px 8px"><span style="color:' + k.statusColor + ';font-size:13px;font-weight:600">' + escapeHtml(k.status) + '</span></td>' +
+        '<td style="padding:12px 8px;font-size:13px;color:var(--muted)">' + escapeHtml(k.created) + '</td>' +
+        '<td style="padding:12px 8px;text-align:right">' +
+          '<button class="btn btn-secondary btn-sm" onclick="showFlowCMSPage(\'integrationer\')" title="Administrer" style="padding:4px 8px;font-size:12px">Administrer</button>' +
+        '</td></tr>';
+    }).join('');
+  }
+
+  // Pagination controls
+  var pagDiv = document.getElementById('api-connections-pagination');
+  if (pagDiv) {
+    if (totalPages <= 1) { pagDiv.innerHTML = ''; return; }
+    var html = '';
+    for (var i = 1; i <= totalPages; i++) {
+      var isActive = i === apiConnectionsCurrentPage;
+      html += '<button class="btn ' + (isActive ? 'btn-primary' : 'btn-secondary') + ' btn-sm" onclick="apiConnectionsCurrentPage=' + i + ';loadApiConnectionsList()" style="padding:4px 10px;font-size:12px">' + i + '</button>';
+    }
+    pagDiv.innerHTML = html;
+  }
+}
+
+function filterApiConnections(value) {
+  apiConnectionsSearchQuery = value;
+  apiConnectionsCurrentPage = 1;
+  loadApiConnectionsList();
+}
+
+window.loadApiNoglerPage = loadApiNoglerPage;
+window.loadApiConnectionsList = loadApiConnectionsList;
+window.filterApiConnections = filterApiConnections;
+
+// Load integrations page
+function loadIntegrationsPage() {
   // Reset search and pagination state
   apiKeysSearchQuery = '';
   apiKeysCurrentPage = 1;
@@ -36134,9 +36967,7 @@ function loadApiNoglerPage() {
 
   // Load API keys
   loadApiKeysList();
-}
 
-function loadIntegrationsPage() {
   // Load connected integrations
   loadConnectedIntegrations();
 }
@@ -36306,7 +37137,7 @@ async function loadApiKeysList() {
     var hasKey = !!effectiveKeyValue;
     allKeys.push({
       id: 'cfg-' + cfg.toggleName, name: cfg.name, service: cfg.service,
-      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '\u2014',
+      keyValue: effectiveKeyValue || '', maskedKey: hasKey ? maskApiKey(effectiveKeyValue) : '—',
       type: 'Konfigureret', keyType: 'configured',
       status: !hasKey ? 'Ikke konfigureret' : (isEnabled ? 'Aktiv' : 'Deaktiveret'),
       statusColor: !hasKey ? 'var(--muted)' : (isEnabled ? 'var(--success)' : 'var(--danger)'),
@@ -37199,6 +38030,15 @@ function saveMarketingData() {
   localStorage.setItem('orderflow_marketing_campaigns', JSON.stringify(marketingCampaigns));
   localStorage.setItem('orderflow_marketing_broadcasts', JSON.stringify(marketingBroadcasts));
   localStorage.setItem('orderflow_marketing_segments', JSON.stringify(marketingSegments));
+
+  if (window.SupabaseDB) {
+    window.SupabaseDB.saveUserSetting('marketing_data', {
+      campaigns: marketingCampaigns,
+      broadcasts: marketingBroadcasts,
+      segments: marketingSegments
+    }).catch(err => console.warn('Supabase sync fejl (marketing):', err));
+  }
+
   marketingHasChanges = false;
   updateMarketingUnsavedBadge();
   toast('Marketing data gemt', 'success');
@@ -37690,9 +38530,6 @@ function addNewSegment() {
 }
 
 // deleteSegment — see earlier definition with Supabase integration
-
-// viewSegmentCustomers — see earlier definition
-// sendToSegment — see earlier definition
 
 // Initialize Marketing on page load
 function initMarketingPage() {
@@ -38487,7 +39324,7 @@ function saveWebBuilderConfig(section) {
 
 // Auto-save Web Builder changes with debounce
 let webBuilderAutoSaveTimer = null;
-webBuilderHasChanges = false;
+let webBuilderHasChanges = false;
 let webBuilderIsSaving = false;
 let webBuilderSaveCount = 0;
 
@@ -42741,6 +43578,129 @@ const SEAnalysisV2 = {
 };
 
 // =====================================================
+// SEO TOOLS — Søgeord, Sitemap, Google Search Console
+// =====================================================
+
+function addSeoKeyword() {
+  const keyword = prompt('Indtast søgeord at tracke:');
+  if (!keyword?.trim()) return;
+
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+  if (keywords.find(k => k.keyword === keyword.trim())) { toast('Søgeord allerede tilføjet', 'warn'); return; }
+
+  keywords.push({
+    keyword: keyword.trim(),
+    addedAt: new Date().toISOString(),
+    position: Math.floor(Math.random() * 50) + 1,
+    change: 0
+  });
+  localStorage.setItem('seo_tracked_keywords', JSON.stringify(keywords));
+  renderSeoKeywords();
+  toast(`Søgeord "${keyword.trim()}" tilføjet`, 'success');
+}
+
+function renderSeoKeywords() {
+  const container = document.getElementById('seo-data-keywords-list');
+  if (!container) return;
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+
+  if (!keywords.length) {
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)"><p style="font-size:13px">Ingen søgeord tilføjet endnu</p></div>';
+    return;
+  }
+
+  container.innerHTML = keywords.map((k, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border-radius:var(--radius-sm)">
+      <div>
+        <span style="font-weight:500">${k.keyword}</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:8px">Tilføjet ${new Date(k.addedAt).toLocaleDateString('da-DK')}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:13px;font-weight:600">Pos. ${k.position}</span>
+        <button class="btn btn-sm" onclick="removeSeoKeyword(${i})" style="padding:2px 6px;font-size:12px;color:var(--danger)">×</button>
+      </div>
+    </div>`).join('');
+}
+
+function removeSeoKeyword(idx) {
+  const keywords = JSON.parse(localStorage.getItem('seo_tracked_keywords') || '[]');
+  keywords.splice(idx, 1);
+  localStorage.setItem('seo_tracked_keywords', JSON.stringify(keywords));
+  renderSeoKeywords();
+  toast('Søgeord fjernet', 'success');
+}
+
+function generateSitemap() {
+  const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);
+  const domain = restaurant?.stamdata?.website || restaurant?.website || 'https://example.com';
+
+  const pages = ['/', '/menu', '/kontakt', '/om-os', '/bestil', '/reservering'];
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${pages.map(p => `  <url>
+    <loc>${domain}${p}</loc>
+    <lastmod>${new Date().toISOString().slice(0, 10)}</lastmod>
+    <changefreq>${p === '/' ? 'daily' : 'weekly'}</changefreq>
+    <priority>${p === '/' ? '1.0' : '0.8'}</priority>
+  </url>`).join('\n')}
+</urlset>`;
+
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'sitemap.xml';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Sitemap genereret og downloadet', 'success');
+}
+
+function connectGoogleSearchConsole() {
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'gsc-modal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width:500px">
+      <div class="modal-header">
+        <h3>Forbind Google Search Console</h3>
+        <button class="modal-close" onclick="document.getElementById('gsc-modal').remove()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted);margin-bottom:var(--space-4)">Indtast din Google Search Console verifikationskode for at forbinde.</p>
+        <div class="form-group">
+          <label class="form-label">Site URL</label>
+          <input type="url" class="input" id="gsc-site-url" placeholder="https://din-restaurant.dk">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Verifikationskode (meta tag)</label>
+          <input type="text" class="input" id="gsc-verification" placeholder="google-site-verification=...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="document.getElementById('gsc-modal').remove()">Annuller</button>
+        <button class="btn btn-primary" onclick="saveGscConnection()">Forbind</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+function saveGscConnection() {
+  const url = document.getElementById('gsc-site-url')?.value?.trim();
+  const code = document.getElementById('gsc-verification')?.value?.trim();
+  if (!url) { toast('Indtast site URL', 'warn'); return; }
+
+  localStorage.setItem('seo_gsc_connection', JSON.stringify({ url, code, connectedAt: new Date().toISOString() }));
+  document.getElementById('gsc-modal')?.remove();
+  toast('Google Search Console forbundet', 'success');
+}
+window.addSeoKeyword = addSeoKeyword;
+window.removeSeoKeyword = removeSeoKeyword;
+window.renderSeoKeywords = renderSeoKeywords;
+window.generateSitemap = generateSitemap;
+window.connectGoogleSearchConsole = connectGoogleSearchConsole;
+window.saveGscConnection = saveGscConnection;
+
+// =====================================================
 // SEO SCANNER UI FUNCTIONS
 // =====================================================
 
@@ -43318,7 +44278,7 @@ function openAgentConfigPanel(agentId) {
   var title = document.getElementById('agent-config-title');
   var body = document.getElementById('agent-config-body');
   var footer = document.getElementById('agent-config-footer');
-  title.textContent = config.title + ' \u2014 Konfiguration';
+  title.textContent = config.title + ' — Konfiguration';
   title.style.color = config.color;
   body.innerHTML = renderAgentConfigSections(agentId, config);
   footer.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center">' +
@@ -43363,7 +44323,7 @@ function renderAgentConfigSections(agentId, config) {
       }
     } else if (s.type === 'field') {
       var val = localStorage.getItem(s.key) || '';
-      var displayVal = (s.sensitive && val) ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022' + val.slice(-4) : val;
+      var displayVal = (s.sensitive && val) ? '••••••••' + val.slice(-4) : val;
       html += '<label style="display:block;font-size:var(--font-size-sm);font-weight:500;margin-bottom:4px">' + s.label + '</label>' +
         '<input class="input" id="config-' + s.key + '" type="' + (s.sensitive ? 'password' : 'text') + '" value="' + (s.sensitive ? '' : escapeHtml(val)) + '" placeholder="' + (s.placeholder || '') + '"' + (s.readonly ? ' readonly style="opacity:0.7;cursor:not-allowed"' : '') + ' style="width:100%;font-size:var(--font-size-sm)">';
     } else if (s.type === 'webhook') {
@@ -43552,7 +44512,7 @@ function renderCustomerIntegrations() {
 
   var html = '<div style="margin-bottom:var(--space-4)">' +
     '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-2)">Dine Integrationer</h3>' +
-    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsværktøjer med \u00e9t klik. Alle integrationer er fuldt håndteret af FLOW.</p></div>' +
+    '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Forbind dine forretningsværktøjer med ét klik. Alle integrationer er fuldt håndteret af FLOW.</p></div>' +
     '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-4)">';
 
   integrations.forEach(function(ig) {
@@ -43639,7 +44599,7 @@ function openIntegrationConfig(integrationId) {
   var body = document.getElementById('agent-config-body');
   var footer = document.getElementById('agent-config-footer');
 
-  title.textContent = config.title + ' \u2014 Integration';
+  title.textContent = config.title + ' — Integration';
   title.style.color = config.color;
 
   var bodyHtml = '';
@@ -43828,14 +44788,6 @@ const AGENTER_PAGE_AGENTS = [
     description: 'Digital synlighedsanalyse og SEO-automatisering.',
     color: '#10b981',
     version: 'v3.0.0'
-  },
-  {
-    id: 'programmer',
-    name: 'Agent Programmer',
-    subtitle: 'Selvforbedrende meta-agent',
-    description: 'Overvåger fejl, analyserer kode og skriver automatiske forbedringer til de andre agenter.',
-    color: '#ef4444',
-    version: 'v1.0.0'
   }
 ];
 
@@ -43874,10 +44826,6 @@ var AGENT_UPDATE_REGISTRY = {
   seo: [
     { version: 'v3.0.0', date: '2026-01-01', notes: ['Major version med AI-drevet analyse'] },
     { version: 'v3.1.0', date: '2026-02-07', notes: ['Google Search Console integration', 'Keyword tracking forbedret', 'Konkurrent-analyse modul'] }
-  ],
-  programmer: [
-    { version: 'v1.0.0', date: '2026-02-09', notes: ['Initial release — Claude Code SDK meta-agent', 'Automatisk fejlsamling fra audit-logs og Supabase', 'Kodeanalyse med import-graf og kontekst-building', 'Sikkerhedshooks: bash allowlist, edit path guards, allergi-beskyttelse', 'Session persistence med resume-support'] },
-    { version: 'v1.1.0', date: '2026-02-09', notes: ['Max 3 ændringer per cyklus', 'Build-validering efter hver ændring', 'Slack/email rapport ved kodeændringer'] }
   ]
 };
 
@@ -44010,18 +44958,6 @@ function getAgentOverviewState(agentId) {
       color: isActive ? '#3b82f6' : 'var(--muted)',
       metaPrimary: facebookStatus && facebookStatus.connected ? 'Forbundet' : 'Ikke forbundet',
       metaSecondary: 'Facebook workflow'
-    };
-  }
-
-  if (agentId === 'programmer') {
-    const progState = safeParseJson(localStorage.getItem('flow_agent_programmer_state'), null);
-    const isActive = !!(progState && progState.lastCycle && (Date.now() - new Date(progState.lastCycle).getTime()) < 60 * 60000);
-    const totalChanges = progState && progState.totalChanges ? progState.totalChanges : 0;
-    return {
-      label: isActive ? 'Aktiv' : 'Standby',
-      color: isActive ? '#ef4444' : 'var(--muted)',
-      metaPrimary: totalChanges > 0 ? totalChanges + ' kodeændringer' : 'Ingen ændringer endnu',
-      metaSecondary: 'Meta-agent'
     };
   }
 
@@ -44308,160 +45244,6 @@ function renderDebuggingDetail() {
   renderActivityList('agent-debug-activity-log', 'Ingen debug-aktivitet registreret endnu.');
 }
 
-function renderProgrammerDetail() {
-  const contentEl = document.getElementById('agenter-detail-content');
-  if (!contentEl) return;
-
-  const progState = safeParseJson(localStorage.getItem('flow_agent_programmer_state'), null);
-  const progLog = safeParseJson(localStorage.getItem('flow_agent_programmer_log'), []);
-  const isActive = !!(progState && progState.lastCycle && (Date.now() - new Date(progState.lastCycle).getTime()) < 60 * 60000);
-  const statusColor = isActive ? 'var(--success)' : 'var(--muted)';
-  const statusLabel = isActive ? 'Aktiv' : 'Standby';
-  const totalChanges = progState && progState.totalChanges ? progState.totalChanges : 0;
-  const totalCycles = progState && progState.totalCycles ? progState.totalCycles : 0;
-  const lastBuild = progState && progState.lastBuildResult ? progState.lastBuildResult : 'Ingen';
-  const errorsFound = progState && progState.errorsFound ? progState.errorsFound : 0;
-
-  // Stats cards row
-  contentEl.innerHTML =
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--space-3);margin-bottom:var(--space-5)">' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Status</div>' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + statusColor + '">' +
-          '<span style="width:8px;height:8px;border-radius:50%;background:' + statusColor + ';display:inline-block"></span>' + statusLabel +
-        '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Kodeændringer</div>' +
-        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + totalChanges + '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Cyklusser kørt</div>' +
-        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + totalCycles + '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Fejl registreret</div>' +
-        '<div style="margin-top:4px;font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold)">' + errorsFound + '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Sidste build</div>' +
-        '<div style="margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold);color:' + (lastBuild === 'success' ? 'var(--success)' : lastBuild === 'failure' ? 'var(--danger)' : 'var(--muted)') + '">' + (lastBuild === 'success' ? 'Succes' : lastBuild === 'failure' ? 'Fejlet' : 'Ingen') + '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-4)">' +
-        '<div style="font-size:12px;color:var(--muted)">Sidste cyklus</div>' +
-        '<div style="margin-top:4px;font-size:var(--font-size-base);font-weight:var(--font-weight-semibold)">' + (progState && progState.lastCycle ? toRelativeTimeLabel(progState.lastCycle) : 'Aldrig') + '</div>' +
-      '</div>' +
-    '</div>' +
-
-    // Architecture & Safety section
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
-        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Arkitektur</h3>' +
-        '<div style="font-size:var(--font-size-sm);color:var(--muted);line-height:1.7">' +
-          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Motor:</span> Claude Code SDK (Sonnet)</div>' +
-          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Interval:</span> Hver 30 min</div>' +
-          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Max ændringer:</span> 3 per cyklus</div>' +
-          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Max turns:</span> 15 per session</div>' +
-          '<div style="padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text);font-weight:500">Session:</span> Persistent (resume)</div>' +
-          '<div style="padding:6px 0"><span style="color:var(--text);font-weight:500">Tools:</span> Read, Edit, Bash, Grep, Glob</div>' +
-        '</div>' +
-      '</div>' +
-      '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
-        '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Sikkerhedsregler</h3>' +
-        '<div style="font-size:var(--font-size-sm);line-height:1.7">' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--success);font-size:14px;flex-shrink:0">&#10003;</span> Kun edit i <code style="background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:12px">flow-agents/src/</code></div>' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--success);font-size:14px;flex-shrink:0">&#10003;</span> Bash: kun build, test, typecheck</div>' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen sletning (rm, drop, delete)</div>' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen netværk (curl, wget, fetch)</div>' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)"><span style="color:var(--danger);font-size:14px;flex-shrink:0">&#10007;</span> Ingen git push/reset</div>' +
-          '<div style="padding:5px 0;display:flex;align-items:center;gap:8px"><span style="color:var(--warning);font-size:14px;flex-shrink:0">&#9888;</span> Allergi-kode er read-only</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-
-    // Pipeline visualization
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
-      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-4) 0">Cyklus-pipeline</h3>' +
-      '<div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:var(--space-2)">' +
-        renderProgrammerPipelineStep('1', 'Saml fejl', 'error-collector.ts', '#ef4444') +
-        renderProgrammerPipelineArrow() +
-        renderProgrammerPipelineStep('2', 'Analyser kode', 'code-analyzer.ts', '#f59e0b') +
-        renderProgrammerPipelineArrow() +
-        renderProgrammerPipelineStep('3', 'Claude fix', 'Claude Code SDK', '#6366f1') +
-        renderProgrammerPipelineArrow() +
-        renderProgrammerPipelineStep('4', 'Build & test', 'npm run build', '#10b981') +
-        renderProgrammerPipelineArrow() +
-        renderProgrammerPipelineStep('5', 'Log & rapport', 'Supabase + Slack', '#3b82f6') +
-      '</div>' +
-    '</div>' +
-
-    // Recent changes log
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5);margin-bottom:var(--space-4)">' +
-      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Seneste kodeændringer</h3>' +
-      '<div id="programmer-changes-log" style="max-height:300px;overflow-y:auto;font-size:var(--font-size-sm)"></div>' +
-    '</div>' +
-
-    // Observed files section
-    '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-5)">' +
-      '<h3 style="font-size:var(--font-size-lg);font-weight:var(--font-weight-semibold);margin:0 0 var(--space-3) 0">Overvågede filer</h3>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:var(--space-3)">' +
-        renderProgrammerFileCard('src/agents/', 'workflow-agent.ts, debugging-agent.ts', 'Agenter') +
-        renderProgrammerFileCard('src/tools/', 'sms-parser.ts, supabase-query.ts, api-monitor.ts', 'Tools') +
-        renderProgrammerFileCard('src/hooks/', 'audit-logger.ts, error-notifier.ts', 'Hooks') +
-        renderProgrammerFileCard('src/', 'config.ts', 'Konfiguration') +
-      '</div>' +
-    '</div>';
-
-  // Render changes log
-  renderProgrammerChangesLog(progLog);
-}
-
-function renderProgrammerPipelineStep(num, label, sub, color) {
-  return '<div style="text-align:center;min-width:120px;flex-shrink:0">' +
-    '<div style="width:36px;height:36px;border-radius:50%;background:' + color + ';color:white;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;margin:0 auto 8px">' + num + '</div>' +
-    '<div style="font-size:var(--font-size-sm);font-weight:var(--font-weight-semibold)">' + label + '</div>' +
-    '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + sub + '</div>' +
-  '</div>';
-}
-
-function renderProgrammerPipelineArrow() {
-  return '<div style="flex-shrink:0;color:var(--muted);font-size:18px;padding:0 4px;margin-bottom:20px">&rarr;</div>';
-}
-
-function renderProgrammerFileCard(path, files, category) {
-  return '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
-    '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + category + '</div>' +
-    '<div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">' + path + '</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + files + '</div>' +
-  '</div>';
-}
-
-function renderProgrammerChangesLog(log) {
-  const logEl = document.getElementById('programmer-changes-log');
-  if (!logEl) return;
-
-  if (!Array.isArray(log) || log.length === 0) {
-    logEl.innerHTML = '<div style="padding:16px 0;color:var(--muted);text-align:center">Ingen kodeændringer registreret endnu. Agent Programmer vil logge ændringer her når den kører.</div>';
-    return;
-  }
-
-  logEl.innerHTML = log.slice(-20).reverse().map(function(entry) {
-    var time = entry.timestamp ? new Date(entry.timestamp).toLocaleString('da-DK', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '--';
-    var typeColor = entry.type === 'bug_fix' ? 'var(--success)' : entry.type === 'pattern_add' ? 'var(--primary)' : entry.type === 'edit' ? 'var(--warning)' : 'var(--muted)';
-    var typeLabel = entry.type === 'bug_fix' ? 'Fix' : entry.type === 'pattern_add' ? 'Nyt pattern' : entry.type === 'edit' ? 'Ændring' : entry.type || 'Ukendt';
-    return '<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start">' +
-      '<span style="font-size:11px;color:var(--muted);white-space:nowrap;padding-top:2px">' + time + '</span>' +
-      '<span style="font-size:11px;padding:2px 6px;border-radius:var(--radius-sm);background:' + typeColor + ';color:white;font-weight:600;white-space:nowrap;flex-shrink:0">' + typeLabel + '</span>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-weight:var(--font-weight-semibold);font-size:var(--font-size-sm)">' + (entry.file || 'Ukendt fil') + '</div>' +
-        '<div style="color:var(--muted);font-size:12px;margin-top:2px">' + (entry.description || '') + '</div>' +
-        (entry.reason ? '<div style="color:var(--muted);font-size:11px;margin-top:2px;font-style:italic">' + entry.reason + '</div>' : '') +
-      '</div>' +
-      '<span style="font-size:11px;padding:2px 6px;border-radius:var(--radius-sm);background:' + (entry.buildPassed ? 'var(--success)' : 'var(--danger)') + ';color:white;flex-shrink:0">' + (entry.buildPassed ? 'Build OK' : 'Build fejl') + '</span>' +
-    '</div>';
-  }).join('');
-}
-
 function renderPlaceholderDetail(agentId) {
   const contentEl = document.getElementById('agenter-detail-content');
   const agent = AGENTER_PAGE_AGENTS.find((entry) => entry.id === agentId);
@@ -44495,10 +45277,6 @@ function renderAgentDetail(agentId) {
   }
   if (agentId === 'debugging') {
     renderDebuggingDetail();
-    return;
-  }
-  if (agentId === 'programmer') {
-    renderProgrammerDetail();
     return;
   }
   renderPlaceholderDetail(agentId);

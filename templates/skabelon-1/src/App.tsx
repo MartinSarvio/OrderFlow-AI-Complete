@@ -15,15 +15,31 @@ import { useRestaurant } from '@/hooks/useRestaurant';
 import { useCart } from '@/hooks/useCart';
 import { useOffline } from '@/hooks/useOffline';
 // Customer data from FlowAuth (replaces mockUser)
-const getFlowUser = () => {
+import type { MenuItem, User } from '@/types';
+
+const getFlowUser = (): User => {
   const FlowAuth = (window as any).FlowAuth;
+  const base: User = {
+    id: 'guest',
+    phone: '',
+    name: 'Gæst',
+    email: '',
+    addresses: [],
+    favoriteRestaurants: [],
+    orderHistory: [],
+    loyaltyPoints: {},
+    createdAt: new Date().toISOString(),
+  };
   if (FlowAuth) {
     const data = FlowAuth.getCustomerData();
-    if (data) return { name: data.name, email: data.email, phone: data.phone, loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
+    if (data) {
+      base.name = data.name || 'Gæst';
+      base.email = data.email || '';
+      base.phone = data.phone || '';
+    }
   }
-  return { name: 'Gæst', email: '', phone: '', loyaltyPoints: 0, loyaltyTier: 'bronze' as const };
+  return base;
 };
-import type { MenuItem } from '@/types';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 
@@ -209,7 +225,7 @@ function CustomerApp() {
       {/* Profile Modal */}
       <ProfileModal
         restaurant={restaurant}
-        user={mockUser}
+        user={getFlowUser()}
         orderHistory={orderHistory}
         isOpen={profileOpen}
         onClose={() => setProfileOpen(false)}

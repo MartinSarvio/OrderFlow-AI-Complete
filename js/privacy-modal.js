@@ -14,19 +14,19 @@
     necessary: [
       { name: 'cookieConsent', provider: 'FLOW', purpose: 'Gemmer brugerens cookie-samtykkevalg', purposeEN: 'Stores the user\'s cookie consent choices', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_session', provider: 'FLOW', purpose: 'Session-data til aktiv brugersession', purposeEN: 'Session data for active user session', type: 'localStorage', expiry: 'Session' },
-      { name: 'theme', provider: 'FLOW', purpose: 'Gemmer brugerens valg af lyst/m\u00f8rkt tema', purposeEN: 'Stores user\'s light/dark theme preference', type: 'localStorage', expiry: 'Permanent' },
+      { name: 'theme', provider: 'FLOW', purpose: 'Gemmer brugerens valg af lyst/mørkt tema', purposeEN: 'Stores user\'s light/dark theme preference', type: 'localStorage', expiry: 'Permanent' },
       { name: 'sidebarCollapsed', provider: 'FLOW', purpose: 'Husker sidebar UI-tilstand', purposeEN: 'Remembers sidebar UI state', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_language', provider: 'FLOW', purpose: 'Gemmer sprogvalg for applikationen', purposeEN: 'Stores application language selection', type: 'localStorage', expiry: 'Permanent' },
       { name: 'privacy_language', provider: 'FLOW', purpose: 'Gemmer sprogvalg i privatlivsindstillinger', purposeEN: 'Stores privacy modal language selection', type: 'localStorage', expiry: 'Permanent' }
     ],
     functional: [
-      { name: 'orderflow_notification_settings', provider: 'FLOW', purpose: 'Notifikationspr\u00e6ferencer', purposeEN: 'Notification preferences', type: 'localStorage', expiry: 'Permanent' },
+      { name: 'orderflow_notification_settings', provider: 'FLOW', purpose: 'Notifikationspræferencer', purposeEN: 'Notification preferences', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_quiet_hours', provider: 'FLOW', purpose: 'Indstillinger for stille timer', purposeEN: 'Quiet hours settings', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_webbuilder_config_*', provider: 'FLOW', purpose: 'Web builder konfiguration per skabelon', purposeEN: 'Web builder config per template', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_activity_indicator_settings', provider: 'FLOW', purpose: 'Aktivitetsindikator indstillinger', purposeEN: 'Activity indicator settings', type: 'localStorage', expiry: 'Permanent' }
     ],
     analytics: [
-      { name: 'orderflow_visitor_id', provider: 'FLOW', purpose: 'Anonymt bes\u00f8gs-ID til statistik', purposeEN: 'Anonymous visitor ID for analytics', type: 'localStorage', expiry: 'Permanent' },
+      { name: 'orderflow_visitor_id', provider: 'FLOW', purpose: 'Anonymt besøgs-ID til statistik', purposeEN: 'Anonymous visitor ID for analytics', type: 'localStorage', expiry: 'Permanent' },
       { name: 'orderflow_session_data', provider: 'FLOW', purpose: 'Sessionsanalyse data', purposeEN: 'Session analytics data', type: 'sessionStorage', expiry: 'Session' },
       { name: 'orderflow_activity_log', provider: 'FLOW', purpose: 'Aktivitetssporing', purposeEN: 'Activity tracking', type: 'localStorage', expiry: 'Permanent' }
     ],
@@ -42,7 +42,7 @@
       tabAbout: 'Om',
       // Samtykke tab
       consentTitle: 'Denne hjemmeside bruger cookies',
-      consentText: 'Vi bruger cookies og lignende teknologier til at tilpasse vores indhold, til at analysere vores trafik og til at forbedre din oplevelse. Du kan tilpasse dine pr\u00e6ferencer nedenfor eller acceptere alle.',
+      consentText: 'Vi bruger cookies og lignende teknologier til at tilpasse vores indhold, til at analysere vores trafik og til at forbedre din oplevelse. Du kan tilpasse dine præferencer nedenfor eller acceptere alle.',
       // Buttons
       btnAccept: 'Tillad alle',
       btnDeny: 'Afvis',
@@ -57,25 +57,25 @@
       // Cookie table headers
       thName: 'Navn',
       thProvider: 'Udbyder',
-      thPurpose: 'Form\u00e5l',
+      thPurpose: 'Formål',
       thType: 'Type',
-      thExpiry: 'Udl\u00f8b',
+      thExpiry: 'Udløb',
       // Om tab
-      aboutText1: 'Cookies er sm\u00e5 tekstfiler, som kan bruges af websteder til at g\u00f8re en brugers oplevelse mere effektiv.',
-      aboutText2: 'Loven fastsl\u00e5r, at vi kan gemme cookies p\u00e5 din enhed, hvis de er strengt n\u00f8dvendige for at sikre leveringen af den tjeneste, du udtrykkeligt har anmodet om at bruge. For alle andre typer cookies skal vi indhente dit samtykke. Det betyder, at cookies, der kategoriseres som n\u00f8dvendige, behandles i henhold til GDPR art. 6(1)(f). Alle andre cookies, dvs. cookies fra kategorierne pr\u00e6ferencer og marketing, behandles i henhold til GDPR art. 6(1)(a).',
-      aboutText3: 'Dette websted bruger forskellige typer af cookies. Nogle cookies s\u00e6ttes af tredjeparts tjenester, der vises p\u00e5 vores sider.',
-      aboutText4: 'Du kan til enhver tid \u00e6ndre eller tilbagetr\u00e6kke dit samtykke fra Cookiedeklarationen p\u00e5 vores hjemmeside.',
-      aboutText5: 'F\u00e5 mere at vide om, hvem vi er, hvordan du kan kontakte os, og hvordan vi behandler persondata i vores',
+      aboutText1: 'Cookies er små tekstfiler, som kan bruges af websteder til at gøre en brugers oplevelse mere effektiv.',
+      aboutText2: 'Loven fastslår, at vi kan gemme cookies på din enhed, hvis de er strengt nødvendige for at sikre leveringen af den tjeneste, du udtrykkeligt har anmodet om at bruge. For alle andre typer cookies skal vi indhente dit samtykke. Det betyder, at cookies, der kategoriseres som nødvendige, behandles i henhold til GDPR art. 6(1)(f). Alle andre cookies, dvs. cookies fra kategorierne præferencer og marketing, behandles i henhold til GDPR art. 6(1)(a).',
+      aboutText3: 'Dette websted bruger forskellige typer af cookies. Nogle cookies sættes af tredjeparts tjenester, der vises på vores sider.',
+      aboutText4: 'Du kan til enhver tid ændre eller tilbagetrække dit samtykke fra Cookiedeklarationen på vores hjemmeside.',
+      aboutText5: 'Få mere at vide om, hvem vi er, hvordan du kan kontakte os, og hvordan vi behandler persondata i vores',
       cookieDeclaration: 'Cookiedeklarationen',
       // Categories
       categories: {
         necessary: {
-          name: 'N\u00f8dvendige',
-          description: 'N\u00f8dvendige cookies hj\u00e6lper med at g\u00f8re en hjemmeside brugbar ved at aktivere grundl\u00e6ggende funktioner s\u00e5som side-navigation og adgang til sikre omr\u00e5der af hjemmesiden. Hjemmesiden kan ikke fungere ordentligt uden disse cookies.'
+          name: 'Nødvendige',
+          description: 'Nødvendige cookies hjælper med at gøre en hjemmeside brugbar ved at aktivere grundlæggende funktioner såsom side-navigation og adgang til sikre områder af hjemmesiden. Hjemmesiden kan ikke fungere ordentligt uden disse cookies.'
         },
         functional: {
-          name: 'Pr\u00e6ferencer',
-          description: 'Pr\u00e6ference-cookies g\u00f8r det muligt for en hjemmeside at huske oplysninger, der \u00e6ndrer den m\u00e5de hjemmesiden ser ud eller opf\u00f8rer sig p\u00e5. F.eks. dit foretrukne sprog, eller den region du befinder dig i.'
+          name: 'Præferencer',
+          description: 'Præference-cookies gør det muligt for en hjemmeside at huske oplysninger, der ændrer den måde hjemmesiden ser ud eller opfører sig på. F.eks. dit foretrukne sprog, eller den region du befinder dig i.'
         },
         analytics: {
           name: 'Statistik',
@@ -83,7 +83,7 @@
         },
         marketing: {
           name: 'Marketing',
-          description: 'Marketing cookies bruges til at spore brugere p\u00e5 tv\u00e6rs af websites. Hensigten er at vise annoncer, der er relevante og engagerende for den enkelte bruger, og dermed mere v\u00e6rdifulde for udgivere og tredjeparts-annoncerer.'
+          description: 'Marketing cookies bruges til at spore brugere på tværs af websites. Hensigten er at vise annoncer, der er relevante og engagerende for den enkelte bruger, og dermed mere værdifulde for udgivere og tredjeparts-annoncerer.'
         }
       }
     },
@@ -140,9 +140,9 @@
 
   // Default categories (fallback if none saved)
   const DEFAULT_CATEGORIES = [
-    { id: 'necessary', name: 'N\u00f8dvendige', description: 'Disse cookies er n\u00f8dvendige for at hjemmesiden kan fungere korrekt.', required: true },
-    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies g\u00f8r det muligt at huske dine pr\u00e6ferencer.', required: false },
-    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hj\u00e6lper os med at forst\u00e5, hvordan bes\u00f8gende bruger vores hjemmeside.', required: false },
+    { id: 'necessary', name: 'Nødvendige', description: 'Disse cookies er nødvendige for at hjemmesiden kan fungere korrekt.', required: true },
+    { id: 'functional', name: 'Funktionelle', description: 'Disse cookies gør det muligt at huske dine præferencer.', required: false },
+    { id: 'analytics', name: 'Statistik', description: 'Disse cookies hjælper os med at forstå, hvordan besøgende bruger vores hjemmeside.', required: false },
     { id: 'marketing', name: 'Marketing', description: 'Disse cookies bruges til at vise dig relevante annoncer.', required: false }
   ];
 
@@ -319,13 +319,13 @@
         '<button class="privacy-expand-btn" id="privacy-expand-cross" aria-expanded="false">' +
           '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>' +
         '</button>' +
-        '<span class="privacy-detail-name">Samtykke p\u00e5 tv\u00e6rs af dom\u00e6ner</span>' +
+        '<span class="privacy-detail-name">Samtykke på tværs af domæner</span>' +
         '<span class="privacy-cookie-count">1</span>' +
       '</div>' +
-      '<span class="privacy-cross-domain-desc">Dit samtykke g\u00e6lder for f\u00f8lgende dom\u00e6ner:</span>' +
+      '<span class="privacy-cross-domain-desc">Dit samtykke gælder for følgende domæner:</span>' +
       '<div class="privacy-cross-domain-body" id="privacy-cross-domains">' +
         '<div class="privacy-cross-domain-list">' +
-          '<strong>Liste over dom\u00e6ner, dit samtykke g\u00e6lder for:</strong>' +
+          '<strong>Liste over domæner, dit samtykke gælder for:</strong>' +
           '<div class="privacy-domain-links">' +
             '<a href="https://orderflow.dk" target="_blank" rel="noopener noreferrer">orderflow.dk</a>' +
           '</div>' +
@@ -356,10 +356,10 @@
             '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>' +
             '<div class="privacy-lang-dropdown" id="privacy-lang-dropdown">' +
               '<button class="privacy-lang-option' + (lang === 'da' ? ' active' : '') + '" onclick="PrivacyModal.setLanguage(\'da\',event)">' +
-                '<span>\ud83c\udde9\ud83c\uddf0</span> Dansk' +
+                '<span>🇩🇰</span> Dansk' +
               '</button>' +
               '<button class="privacy-lang-option' + (lang === 'en' ? ' active' : '') + '" onclick="PrivacyModal.setLanguage(\'en\',event)">' +
-                '<span>\ud83c\uddec\ud83c\udde7</span> English' +
+                '<span>🇬🇧</span> English' +
               '</button>' +
             '</div>' +
           '</div>' +

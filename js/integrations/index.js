@@ -52,6 +52,9 @@ export {
 
 // Connectors
 export { EconomicConnector } from './connectors/economic/index.js';
+export { DineroConnector } from './connectors/dinero/index.js';
+export { BillyConnector } from './connectors/billy/index.js';
+export { VismaConnector } from './connectors/visma/index.js';
 
 /**
  * Create a connector instance by type
@@ -63,18 +66,17 @@ export function createConnector(type, config) {
   switch (type.toLowerCase()) {
     case 'economic':
     case 'e-conomic':
-      const { EconomicConnector } = require('./connectors/economic/index.js');
       return new EconomicConnector(config);
 
     case 'dinero':
-      throw new Error('Dinero connector not yet implemented. Coming Q1 2026.');
+      return new DineroConnector(config);
 
     case 'billy':
-      throw new Error('Billy connector not yet implemented. Coming Q2 2026.');
+      return new BillyConnector(config);
 
     case 'visma':
     case 'visma.net':
-      throw new Error('Visma.net connector not yet implemented. Coming Q3 2026.');
+      return new VismaConnector(config);
 
     default:
       throw new Error(`Unknown connector type: ${type}`);
@@ -97,23 +99,23 @@ export function getAvailableConnectors() {
     {
       name: 'Dinero',
       type: 'dinero',
-      status: 'planned',
-      version: null,
-      eta: 'Q1 2026'
+      status: 'available',
+      version: '1.0.0',
+      features: ['customers', 'products', 'invoices']
     },
     {
       name: 'Billy',
       type: 'billy',
-      status: 'planned',
-      version: null,
-      eta: 'Q2 2026'
+      status: 'available',
+      version: '1.0.0',
+      features: ['customers', 'products', 'invoices']
     },
     {
       name: 'Visma.net',
       type: 'visma',
-      status: 'planned',
-      version: null,
-      eta: 'Q3 2026'
+      status: 'available',
+      version: '1.0.0',
+      features: ['customers', 'invoices']
     }
   ];
 }

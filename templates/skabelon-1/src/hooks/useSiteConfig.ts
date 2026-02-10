@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import type { RestaurantConfig } from '@/types';
+import type { RestaurantConfig as _RestaurantConfig } from '@/types';
 
 // API base URL - uses same origin or configured API URL
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -303,7 +303,7 @@ function getDefaultDevConfig(): SiteConfigResponse {
 /**
  * Convert API config to RestaurantConfig type (for backwards compatibility)
  */
-export function toRestaurantConfig(siteConfig: SiteConfigResponse): RestaurantConfig {
+export function toRestaurantConfig(siteConfig: SiteConfigResponse): any {
   const { config, restaurant, menu } = siteConfig;
 
   return {
