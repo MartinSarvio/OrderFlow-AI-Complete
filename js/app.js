@@ -44106,6 +44106,7 @@ function switchVaerktoejTab(tab) {
   if (tab === 'statistik') renderAgentStatistics();
   if (tab === 'agentstatus') renderAgentStatusDashboard();
   if (tab === 'qrkode') loadQRHistory();
+  if (tab === 'enheder') initPrinterDeviceCard();
 }
 
 function checkAgentUpdate(agentName) {
@@ -45959,3 +45960,71 @@ function manualPrintOrder(orderId, type) {
     toast('🖨️ Kunde-kvittering sendt til printer', 'info');
   }
 }
+
+// =====================================================
+// PRINTER DEVICE CARD - Enheder Tab
+// =====================================================
+
+function openPrinterSettings() {
+  showSettingsPage('printer');
+}
+
+function initPrinterDeviceCard() {
+  var settings = getPrinterSettings();
+  var ipEl = document.getElementById('printer-device-ip');
+  var portEl = document.getElementById('printer-device-port');
+  if (ipEl) ipEl.textContent = settings.printerIp || '192.168.1.100';
+  if (portEl) portEl.textContent = 'Port ' + (settings.printerPort || 80);
+  // Auto-check status
+  checkAndUpdatePrinterDeviceCard();
+}
+
+async function checkAndUpdatePrinterDeviceCard() {
+  var badge = document.getElementById('printer-device-status-badge');
+  if (!badge) return;
+
+  badge.className = 'device-status-badge checking';
+  badge.textContent = 'Tjekker...';
+
+  try {
+    var settings = getPrinterSettings();
+    if (!settings.enabled) {
+      badge.className = 'device-status-badge offline';
+      badge.textContent = 'Deaktiveret';
+      console.log('🖨️ Device card: Printer deaktiveret');
+      return;
+    }
+
+    var status = await checkPrinterStatus();
+    if (status.online) {
+      badge.className = 'device-status-badge online';
+      badge.textContent = 'Online';
+      console.log('🖨️ Device card: Printer online');
+    } else {
+      badge.className = 'device-status-badge offline';
+      badge.textContent = 'Offline';
+      console.log('🖨️ Device card: Printer offline -', status.reason);
+    }
+  } catch (e) {
+    badge.className = 'device-status-badge offline';
+    badge.textContent = 'Fejl';
+    console.error('🖨️ Device card status check fejlede:', e);
+  }
+}
+
+// Update device card info when settings change
+function updatePrinterDeviceInfo() {
+  var settings = getPrinterSettings();
+  var ipEl = document.getElementById('printer-device-ip');
+  var portEl = document.getElementById('printer-device-port');
+  if (ipEl) ipEl.textContent = settings.printerIp || '192.168.1.100';
+  if (portEl) portEl.textContent = 'Port ' + (settings.printerPort || 80);
+}
+
+// Auto-refresh printer status every 30 seconds when Enheder tab is visible
+setInterval(function() {
+  var enhederTab = document.getElementById('vaerktoejer-content-enheder');
+  if (enhederTab && enhederTab.style.display !== 'none') {
+    checkAndUpdatePrinterDeviceCard();
+  }
+}, 30000);
