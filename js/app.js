@@ -85,19 +85,10 @@ function initTheme() {
 initTheme();
 
 // Builder change-tracking flags (declared early to avoid TDZ errors)
+// Used for auto-save functionality only (unsaved changes modal removed)
 let webBuilderHasChanges = false;
 let appBuilderHasChanges = false;
 let cmsHasChanges = false;
-let pageInitialLoadComplete = false; // Track if initial page load is complete
-
-// Track page load time for modal blocking
-window.pageLoadTime = Date.now();
-
-// Wait 5 seconds after page load before allowing unsaved changes modal
-setTimeout(() => {
-  pageInitialLoadComplete = true;
-  console.log('✅ Page initial load complete - unsaved changes modal enabled');
-}, 5000);
 
 // Clean up old SMS provider localStorage keys (removed providers: Twilio, GatewayAPI)
 (function cleanupOldSmsProviders() {
@@ -4081,179 +4072,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // Browser history navigation flag
 let isNavigatingFromHistory = false;
 
-// =====================================================
-// UNSAVED CHANGES NAVIGATION GUARD
-// =====================================================
-let pendingNavigationTarget = null;
-let pendingNavigationType = null; // 'page' or 'popstate'
-let isNavigationGuardActive = false;
-let hasUserInteractedWithPage = false; // Track if user has made any changes
-
-// Initialize - ensure modal is hidden and flags are reset on page load
-document.addEventListener('DOMContentLoaded', function() {
-  const modal = document.getElementById('unsaved-changes-modal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
-  // Reset all change flags
-  webBuilderHasChanges = false;
-  appBuilderHasChanges = false;
-  cmsHasChanges = false;
-  hasUserInteractedWithPage = false;
-  
-  console.log('🔄 DOMContentLoaded - reset unsaved changes flags');
-  
-  // Set interaction flag after first real user action
-  setTimeout(() => {
-    hasUserInteractedWithPage = true;
-    console.log('✅ User interaction enabled');
-  }, 2000); // Wait 2 seconds after page load before enabling modal
-});
-
-function getUnsavedChangesBuilders() {
-  const builders = [];
-  if (webBuilderHasChanges) builders.push({ name: 'Web Builder', save: () => { autoSaveWebBuilder(); webBuilderHasChanges = false; } });
-  if (appBuilderHasChanges) builders.push({ name: 'App Builder', save: () => { autoSaveAppBuilder(); appBuilderHasChanges = false; } });
-  if (typeof cmsHasChanges !== 'undefined' && cmsHasChanges) builders.push({ name: 'Flow CMS', save: saveCMSPages });
-  return builders;
-}
-
-function getBuilderContext(pageId) {
-  if (!pageId) return null;
-  if (pageId.startsWith('wb-') || pageId.startsWith('webbuilder')) return 'webbuilder';
-  if (pageId.startsWith('appbuilder')) return 'appbuilder';
-  if (pageId === 'flow-cms') return 'cms';
-  return null;
-}
-
-function getCurrentActivePage() {
-  const activePage = document.querySelector('.page.active, .workflow-page.active');
-  if (!activePage) return null;
-  return activePage.id.replace('page-', '');
-}
-
-function isNavigatingWithinSameBuilder(targetPage) {
-  const currentPage = getCurrentActivePage();
-  const currentContext = getBuilderContext(currentPage);
-  const targetContext = getBuilderContext(targetPage);
-  if (currentContext && currentContext === targetContext) return true;
-  return false;
-}
-
-function checkUnsavedChangesBeforeNavigation(targetPage, navigationType) {
-  if (isNavigationGuardActive) return false;
-  if (isNavigatingWithinSameBuilder(targetPage)) return false;
-  
-  // CRITICAL: Don't show modal during initial page load (first 5 seconds)
-  const timeSincePageLoad = Date.now() - window.pageLoadTime;
-  if (timeSincePageLoad < 5000) {
-    console.log('🚫 Blocking unsaved changes modal - only', timeSincePageLoad, 'ms since page load');
-    // Force reset flags during initial load
-    webBuilderHasChanges = false;
-    appBuilderHasChanges = false;
-    cmsHasChanges = false;
-    return false;
-  }
-  
-  if (!hasUserInteractedWithPage) return false; // Don't show modal during initial page load
-
-  const unsavedBuilders = getUnsavedChangesBuilders();
-  if (unsavedBuilders.length === 0) return false;
-  
-  console.log('✋ Showing unsaved changes modal for:', unsavedBuilders.map(b => b.name).join(', '));
-
-  pendingNavigationTarget = targetPage;
-  pendingNavigationType = navigationType;
-
-  const detailsEl = document.getElementById('unsaved-changes-details');
-  if (detailsEl) {
-    const builderNames = unsavedBuilders.map(b => b.name).join(', ');
-    detailsEl.textContent = 'Ændringer i: ' + builderNames;
-  }
-
-  const modal = document.getElementById('unsaved-changes-modal');
-  if (modal) {
-    modal.style.display = 'flex';
-    modal.classList.add('active');
-  }
-
-  return true;
-}
-
-function closeUnsavedChangesModal() {
-  const modal = document.getElementById('unsaved-changes-modal');
-  if (modal) {
-    modal.style.display = 'none';
-    modal.classList.remove('active');
-  }
-
-  if (pendingNavigationType === 'popstate') {
-    const currentPage = getCurrentActivePage();
-    if (currentPage) {
-      history.pushState({ page: currentPage }, '', '#' + currentPage);
-    }
-  }
-
-  pendingNavigationTarget = null;
-  pendingNavigationType = null;
-}
-
-function discardAndNavigate() {
-  webBuilderHasChanges = false;
-  appBuilderHasChanges = false;
-  if (typeof cmsHasChanges !== 'undefined') cmsHasChanges = false;
-
-  const target = pendingNavigationTarget;
-  const navType = pendingNavigationType;
-
-  closeUnsavedChangesModal();
-
-  if (target) {
-    isNavigationGuardActive = true;
-    if (navType === 'popstate') {
-      isNavigatingFromHistory = true;
-    }
-    showPage(target);
-    isNavigationGuardActive = false;
-  }
-}
-
-async function saveAndNavigate() {
-  const unsavedBuilders = getUnsavedChangesBuilders();
-
-  for (const builder of unsavedBuilders) {
-    try {
-      await Promise.resolve(builder.save());
-    } catch (err) {
-      console.warn('Save failed for ' + builder.name + ':', err);
-    }
-  }
-
-  const target = pendingNavigationTarget;
-  const navType = pendingNavigationType;
-
-  closeUnsavedChangesModal();
-
-  if (target) {
-    isNavigationGuardActive = true;
-    if (navType === 'popstate') {
-      isNavigatingFromHistory = true;
-    }
-    showPage(target);
-    isNavigationGuardActive = false;
-  }
-}
-
 function showPage(page) {
   // Skjul dashboard chart tooltip ved sideskift
   var chartTooltip = document.getElementById('chartjs-tooltip');
   if (chartTooltip) { chartTooltip.style.display = 'none'; chartTooltip.style.opacity = 0; }
-
-  // === UNSAVED CHANGES GUARD ===
-  if (!isNavigationGuardActive && checkUnsavedChangesBeforeNavigation(page, isNavigatingFromHistory ? 'popstate' : 'page')) {
-    return;
-  }
 
   // Nulstil kunde-kontekst når man navigerer væk fra kunder
   if (page !== 'kunder') {
@@ -45517,18 +45339,7 @@ window.saveQRToHistory = saveQRToHistory;
 window.loadQRHistory = loadQRHistory;
 window.removeQRHistoryItem = removeQRHistoryItem;
 
-// Unsaved changes navigation guard (modal handlers)
-window.closeUnsavedChangesModal = closeUnsavedChangesModal;
-window.discardAndNavigate = discardAndNavigate;
-window.saveAndNavigate = saveAndNavigate;
-
-// Unsaved changes warning
-window.addEventListener('beforeunload', function(e) {
-  if (webBuilderHasChanges || appBuilderHasChanges || (typeof cmsHasChanges !== 'undefined' && cmsHasChanges)) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
+// Unsaved changes warning removed - feature disabled
 
 // ============================================
 // Helper: Find API key from Settings or Opret API Nøgle
