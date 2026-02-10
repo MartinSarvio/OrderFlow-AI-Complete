@@ -28802,6 +28802,12 @@ function showAppBuilderPage(page) {
   if (page === 'branding') {
     initBrandingPage();
   }
+
+  // Reset unsaved flag - page load is not a user change
+  setTimeout(() => {
+    appBuilderHasChanges = false;
+    updateAppBuilderSaveStatus('saved');
+  }, 400);
 }
 
 // Update App Builder color
@@ -31664,7 +31670,10 @@ function showWebBuilderPage(section) {
   // Update preview after page switch (give iframe time to load)
   setTimeout(() => {
     updateWebBuilderPreview({ skipUnsaved: true });
-  }, 300);
+    // Reset unsaved flag - page load is not a user change
+    webBuilderHasChanges = false;
+    updateWebBuilderSaveStatus('saved');
+  }, 400);
 }
 
 // Navigate to Flow landing page (opens in new window)
