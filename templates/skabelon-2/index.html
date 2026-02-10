@@ -1408,6 +1408,20 @@
         var heroImg = document.getElementById('hero-bg-image');
         if (heroImg) heroImg.src = config.images.hero;
       }
+
+      // Delivery info
+      if (config.delivery) {
+        var d = config.delivery;
+        updateText('#delivery-fee', d.fee ? d.fee + ' kr' : '');
+        updateText('#delivery-time', d.estimatedTime ? 'ca. ' + d.estimatedTime + ' min' : '');
+        updateText('#min-order', d.minimumOrder ? 'Min. ' + d.minimumOrder + ' kr' : '');
+      }
+
+      // Features - show/hide sections
+      if (config.features) {
+        var orderSection = document.getElementById('order-section');
+        if (orderSection) orderSection.style.display = config.features.ordering ? '' : 'none';
+      }
     }
 
     function updateText(selector, text) {

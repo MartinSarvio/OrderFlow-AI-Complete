@@ -921,6 +921,47 @@
         var heroSlider = document.querySelector('.home-slider');
         if (heroSlider) heroSlider.style.backgroundImage = 'url(' + config.images.hero + ')';
       }
+
+      if (config.businessHours) {
+        updateBusinessHours(config.businessHours);
+      }
+
+      // Delivery info
+      if (config.delivery) {
+        var d = config.delivery;
+        updateText('#delivery-fee', d.fee ? d.fee + ' kr' : '');
+        updateText('#delivery-time', d.estimatedTime ? 'ca. ' + d.estimatedTime + ' min' : '');
+        updateText('#min-order', d.minimumOrder ? 'Min. ' + d.minimumOrder + ' kr' : '');
+      }
+
+      // Features - show/hide sections
+      if (config.features) {
+        var orderSection = document.getElementById('order-section');
+        if (orderSection) orderSection.style.display = config.features.ordering ? '' : 'none';
+      }
+    }
+
+    function updateBusinessHours(hours) {
+      var footerHours = document.getElementById('footer-hours');
+      if (footerHours && hours) {
+        var html = '';
+        var days = [
+          { key: 'monday', label: 'Mandag' },
+          { key: 'tuesday', label: 'Tirsdag' },
+          { key: 'wednesday', label: 'Onsdag' },
+          { key: 'thursday', label: 'Torsdag' },
+          { key: 'friday', label: 'Fredag' },
+          { key: 'saturday', label: 'Lørdag' },
+          { key: 'sunday', label: 'Søndag' }
+        ];
+        days.forEach(function(d) {
+          var h = hours[d.key];
+          if (h) {
+            html += '<p>' + d.label + ': ' + (h.closed ? 'Lukket' : h.open + ' - ' + h.close) + '</p>';
+          }
+        });
+        footerHours.innerHTML = html;
+      }
     }
 
     function updateText(selector, text) {
