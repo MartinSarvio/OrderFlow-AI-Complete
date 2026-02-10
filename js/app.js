@@ -4355,6 +4355,9 @@ function showPage(page) {
     }
   });
   
+  // Luk alle åbne dropdowns før vi åbner den relevante
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+
   // Highlight dropdown items
   const activeDropdowns = new Set();
   document.querySelectorAll('.nav-dropdown-item').forEach(item => {
