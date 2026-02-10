@@ -6315,6 +6315,13 @@
     display: flex !important;
   }
   
+  /* Mobile: Ingen afrundede hjørner da sidebar er skjult */
+  .main,
+  .topbar,
+  .main-content-wrapper {
+    border-top-left-radius: 0 !important;
+  }
+  
   /* Mobile header theme support */
   [data-theme="light"] .mobile-header {
     background: var(--sidebar-bg) !important;

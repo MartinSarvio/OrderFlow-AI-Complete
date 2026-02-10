@@ -19588,6 +19588,7 @@ function loadOrdersPage() {
       // I gang: Færdig knap
       actionButtons = `
         <button class="btn btn-primary" style="flex:1;font-size:12px" onclick="completeOrder(${order.id})">Færdig</button>
+        <button class="btn btn-secondary" style="font-size:12px;padding:6px 8px" onclick="manualPrintOrder(${order.id},'kitchen')" title="Print køkken-kvittering">🖨️</button>
       `;
     } else if (order.status === 'Færdig' || order.status === 'Afvist') {
       // Færdig/Afvist: Slet knap
@@ -19867,6 +19868,14 @@ async function completeOrder(orderId) {
   order.completedAt = new Date().toISOString();
   localStorage.setItem('orders_module', JSON.stringify(orders));
   loadOrdersPage();
+
+  // 🖨️ Trigger customer receipt print
+  try {
+    const printerSettings = getPrinterSettings();
+    if (printerSettings.autoPrintCustomer) {
+      triggerCustomerPrint(order, restaurant);
+    }
+  } catch (e) { console.warn('Customer print trigger error:', e); }
   
   toast(`Ordre #${order.id} markeret som færdig`, 'success');
 }
@@ -19922,6 +19931,13 @@ function saveOrderToModule(orderData) {
   localStorage.setItem('orders_module', JSON.stringify(orders));
   
   addLog(`📋 Ordre gemt: #${newOrder.id} - ${newOrder.customerName}`, 'success');
+
+  // 🖨️ Trigger kitchen print for new order
+  try {
+    const restaurant = restaurants.find(r => r.id === newOrder.restaurantId) || restaurants[0];
+    triggerKitchenPrint(newOrder, restaurant);
+  } catch (e) { console.warn('Kitchen print trigger error:', e); }
+
   return newOrder;
 }
 
@@ -45805,3 +45821,141 @@ document.head.appendChild(style);
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(handleURLPageParam, 200);
 });
+
+// =====================================================
+// 🖨️ PRINTER SETTINGS UI FUNCTIONS
+// =====================================================
+
+function loadPrinterSettingsUI() {
+  const s = getPrinterSettings();
+
+  const el = (id) => document.getElementById(id);
+  if (el('printer-enabled')) el('printer-enabled').checked = s.enabled;
+  if (el('printer-ip')) el('printer-ip').value = s.printerIp || '';
+  if (el('printer-port')) el('printer-port').value = s.printerPort || 80;
+  if (el('printer-paper-width')) el('printer-paper-width').value = s.paperWidth || 80;
+  if (el('printer-https')) el('printer-https').checked = s.useHttps || false;
+  if (el('printer-auto-kitchen')) el('printer-auto-kitchen').checked = s.autoPrintKitchen;
+  if (el('printer-auto-customer')) el('printer-auto-customer').checked = s.autoPrintCustomer;
+  if (el('printer-sound')) el('printer-sound').checked = s.soundOnKitchenPrint;
+  if (el('printer-restaurant-name')) el('printer-restaurant-name').value = s.restaurantName || '';
+  if (el('printer-restaurant-address')) el('printer-restaurant-address').value = s.restaurantAddress || '';
+  if (el('printer-restaurant-phone')) el('printer-restaurant-phone').value = s.restaurantPhone || '';
+  if (el('printer-cvr')) el('printer-cvr').value = s.restaurantCvr || '';
+  if (el('printer-footer')) el('printer-footer').value = s.footerText || '';
+  if (el('printer-qr-enabled')) el('printer-qr-enabled').checked = s.showQrCode || false;
+  if (el('printer-qr-url')) el('printer-qr-url').value = s.qrCodeUrl || '';
+
+  // Order type checkboxes
+  document.querySelectorAll('.printer-order-type').forEach(cb => {
+    cb.checked = (s.kitchenOrderTypes || ['all']).includes(cb.value);
+  });
+
+  // Update queue stats
+  updatePrinterQueueStats();
+}
+
+function savePrinterSettingsFromUI() {
+  const el = (id) => document.getElementById(id);
+  const orderTypes = [];
+  document.querySelectorAll('.printer-order-type:checked').forEach(cb => orderTypes.push(cb.value));
+
+  const settings = {
+    enabled: el('printer-enabled')?.checked || false,
+    printerIp: el('printer-ip')?.value || '192.168.1.100',
+    printerPort: parseInt(el('printer-port')?.value) || 80,
+    paperWidth: parseInt(el('printer-paper-width')?.value) || 80,
+    useHttps: el('printer-https')?.checked || false,
+    autoPrintKitchen: el('printer-auto-kitchen')?.checked || false,
+    autoPrintCustomer: el('printer-auto-customer')?.checked || false,
+    soundOnKitchenPrint: el('printer-sound')?.checked || false,
+    soundRepeat: 3,
+    cutAfterPrint: true,
+    kitchenOrderTypes: orderTypes.length > 0 ? orderTypes : ['all'],
+    restaurantName: el('printer-restaurant-name')?.value || '',
+    restaurantAddress: el('printer-restaurant-address')?.value || '',
+    restaurantPhone: el('printer-restaurant-phone')?.value || '',
+    restaurantCvr: el('printer-cvr')?.value || '',
+    footerText: el('printer-footer')?.value || 'Tak for din bestilling!',
+    showQrCode: el('printer-qr-enabled')?.checked || false,
+    qrCodeUrl: el('printer-qr-url')?.value || '',
+  };
+
+  savePrinterSettings(settings);
+
+  // Start/stop queue processor
+  if (settings.enabled) {
+    startPrintQueueProcessor();
+  } else {
+    stopPrintQueueProcessor();
+  }
+}
+
+async function checkAndDisplayPrinterStatus() {
+  const badge = document.getElementById('printer-status-badge');
+  const details = document.getElementById('printer-status-details');
+  if (badge) { badge.textContent = 'Tjekker...'; badge.style.background = '#555'; badge.style.color = '#fff'; }
+
+  try {
+    const status = await checkPrinterStatus();
+    if (status.online) {
+      if (badge) { badge.textContent = '🟢 Online'; badge.style.background = '#065f46'; badge.style.color = '#6ee7b7'; }
+      if (details) {
+        let msg = 'Printer er tilsluttet og klar';
+        if (status.paperNearEnd) msg += ' ⚠️ Papir snart slut!';
+        details.textContent = msg;
+      }
+    } else {
+      if (badge) { badge.textContent = '🔴 Offline'; badge.style.background = '#7f1d1d'; badge.style.color = '#fca5a5'; }
+      if (details) details.textContent = status.reason || 'Kan ikke nå printer';
+    }
+  } catch (e) {
+    if (badge) { badge.textContent = '🔴 Fejl'; badge.style.background = '#7f1d1d'; badge.style.color = '#fca5a5'; }
+    if (details) details.textContent = e.message;
+  }
+
+  updatePrinterQueueStats();
+}
+
+async function handleTestPrint() {
+  try {
+    toast('Sender test print...', 'info');
+    await printTestReceipt();
+    toast('✅ Test print sendt!', 'success');
+  } catch (e) {
+    toast('❌ Test print fejlede: ' + e.message, 'error');
+  }
+}
+
+function handleRetryFailedPrints() {
+  retryFailedJobs();
+  toast('Genforsøger fejlede print jobs...', 'info');
+  setTimeout(updatePrinterQueueStats, 2000);
+}
+
+function updatePrinterQueueStats() {
+  const statsEl = document.getElementById('printer-queue-stats');
+  if (!statsEl) return;
+  const stats = getPrintQueueStats();
+  if (stats.total === 0) {
+    statsEl.textContent = 'Print kø: Tom';
+  } else {
+    statsEl.textContent = `Print kø: ${stats.pending} ventende, ${stats.printing} printer, ${stats.failed} fejlede, ${stats.done} færdige`;
+  }
+}
+
+// Manual print from order list
+function manualPrintOrder(orderId, type) {
+  const orders = JSON.parse(localStorage.getItem('orders_module') || '[]');
+  const order = orders.find(o => String(o.id) === String(orderId));
+  if (!order) { toast('Ordre ikke fundet', 'error'); return; }
+
+  const restaurant = restaurants.find(r => r.id === order.restaurantId) || restaurants[0];
+  if (type === 'kitchen') {
+    addToPrintQueue('kitchen', order, restaurant);
+    toast('🖨️ Køkken-kvittering sendt til printer', 'info');
+  } else {
+    addToPrintQueue('customer', order, restaurant);
+    toast('🖨️ Kunde-kvittering sendt til printer', 'info');
+  }
+}
