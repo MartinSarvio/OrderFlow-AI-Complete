@@ -14,7 +14,7 @@
   // Each entry: { selector, group, nested }
   const SORTABLE_CONTAINERS = [
     // Sidebar (logo + toggle + header kan flyttes)
-    { selector: '.sidebar',                group: 'sidebar-top', handle: null, filter: '.sidebar-nav' },
+    { selector: '.sidebar',                group: 'sidebar-top', handle: null, filter: '.sidebar-nav,.sidebar-search-input' },
     // Dashboard stat cards
     { selector: '.stats-primary',          group: 'stats',     handle: null },
     { selector: '.stats-secondary',        group: 'stats-sec', handle: null },
