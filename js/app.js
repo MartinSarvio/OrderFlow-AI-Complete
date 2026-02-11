@@ -26007,51 +26007,7 @@ function renderLoyaltyDemoPage() {
       </div>
     </div>
 
-    <!-- Demo Members -->
-    <div class="card">
-      <div class="card-header">
-        <h3>Medlemmer</h3>
-        <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" disabled>
-      </div>
-      <div class="card-body">
-        <div class="table-container">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Kunde</th>
-                <th>Telefon</th>
-                <th>Tier</th>
-                <th>Points</th>
-                <th>Lifetime</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Demo Kunde</td>
-                <td>+45 12 34 56 78</td>
-                <td><span class="badge badge-gold">Guld</span></td>
-                <td>1.234</td>
-                <td>4.567</td>
-              </tr>
-              <tr>
-                <td>Test Person</td>
-                <td>+45 87 65 43 21</td>
-                <td><span class="badge badge-silver">Sølv</span></td>
-                <td>567</td>
-                <td>1.890</td>
-              </tr>
-              <tr>
-                <td>Ny Bruger</td>
-                <td>+45 11 22 33 44</td>
-                <td><span class="badge badge-bronze">Bronze</span></td>
-                <td>123</td>
-                <td>123</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <!-- Members section removed -->
   `;
 }
 
@@ -26240,48 +26196,7 @@ async function renderLoyaltyPage() {
         </div>
       </div>
 
-      <!-- Members -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Medlemmer</h3>
-          <input type="text" class="input" placeholder="Søg på telefon eller navn..." style="width:250px" oninput="filterLoyaltyMembers(this.value)">
-        </div>
-        <div class="card-body">
-          <div class="table-container">
-            <table class="data-table" id="loyalty-members-table">
-              <thead>
-                <tr>
-                  <th>Kunde</th>
-                  <th>Telefon</th>
-                  <th>Tier</th>
-                  <th>Points</th>
-                  <th>Lifetime</th>
-                  <th>Handlinger</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${members.map(m => `
-                  <tr data-phone="${m.customer_phone}" data-name="${m.customer_name || ''}">
-                    <td>${m.customer_name || '<span class="text-secondary">Ukendt</span>'}</td>
-                    <td>${m.customer_phone}</td>
-                    <td>
-                      <span class="tier-badge tier-${m.tier}">
-                        ${LOYALTY_TIERS[m.tier]?.icon || ''} ${LOYALTY_TIERS[m.tier]?.name || 'Bronze'}
-                      </span>
-                    </td>
-                    <td><strong>${(m.points || 0).toLocaleString('da-DK')}</strong></td>
-                    <td>${(m.lifetime_points || 0).toLocaleString('da-DK')}</td>
-                    <td>
-                      <button class="btn btn-sm" onclick="showMemberDetails('${m.id}')">Detaljer</button>
-                      <button class="btn btn-sm" onclick="adjustMemberPoints('${m.id}')">+/- Points</button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <!-- Members section removed -->
     `;
 
     document.getElementById('main-content').innerHTML = html;
