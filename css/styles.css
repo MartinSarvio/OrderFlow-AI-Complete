@@ -1379,6 +1379,10 @@
     
     /* Sidebar Search */
     .sidebar-search{position:relative;margin-top:8px;margin-bottom:12px}
+    /* Enable dragging in Edit Mode */
+    body.edit-mode .sidebar-search{cursor:move}
+    body.edit-mode .sidebar-search *{pointer-events:none}
+    body.edit-mode .sidebar-search{pointer-events:auto}
     .sidebar-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;z-index:1}
     .sidebar-search-input{width:100%;padding:10px 40px 10px 36px;background:rgba(255,255,255,0.05);border:none;border-radius:var(--radius-md);font-size:13px;color:rgba(255,255,255,0.8);transition:background .15s}
     .sidebar-search-input:focus{outline:none;background:rgba(255,255,255,0.08)}
