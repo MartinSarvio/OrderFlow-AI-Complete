@@ -21,7 +21,7 @@
 .cookie-banner-container {
   max-width: 140rem;
   margin: 0 auto;
-  padding: 2.4rem 4rem;
+  padding: 1.8rem 4rem; /* Reduced from 2.4rem (25% mindre i højden) */
 }
 
 /* Banner Header */
@@ -29,12 +29,12 @@
   display: flex;
   align-items: flex-start;
   gap: 1.6rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem; /* Reduced from 2rem (25% mindre) */
 }
 
 .cookie-banner-icon {
-  width: 4.8rem;
-  height: 4.8rem;
+  width: 3.6rem; /* Reduced from 4.8rem (25% mindre) */
+  height: 3.6rem; /* Reduced from 4.8rem (25% mindre) */
   background: var(--color-gray-100, #f3f4f6);
   border-radius: 1.2rem;
   display: flex;
@@ -72,8 +72,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 1.2rem;
-  margin-bottom: 2rem;
-  padding: 2rem;
+  margin-bottom: 1.5rem; /* Reduced from 2rem (25% mindre) */
+  padding: 1.5rem; /* Reduced from 2rem (25% mindre) */
   background: var(--color-gray-50, #f9fafb);
   border-radius: 1.2rem;
 }
@@ -365,7 +365,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .cookie-banner-container {
-    padding: 2rem;
+    padding: 1.5rem; /* Reduced from 2rem (25% mindre) */
   }
 
   .cookie-banner-header {
