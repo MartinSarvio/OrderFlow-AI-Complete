@@ -2118,26 +2118,43 @@
     };
 
     // Photo gallery preview — animated shimmer loading
-    const PhotoPreview = ({ photos }) => (
-      <div style={{ padding: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {(photos || [1,2,3,4,5,6]).slice(0, 6).map((_, i) => (
-            <div key={i} style={{
-              aspectRatio: '1',
-              background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)',
-              backgroundSize: '200% 100%',
-              borderRadius: 8,
-              animation: 'shimmer 1.5s ease-in-out infinite',
-              animationDelay: `${i * 0.15}s`,
-            }} />
-          ))}
+    const PhotoPreview = ({ photos }) => {
+      const hasRealPhotos = Array.isArray(photos) && photos.length > 0 && typeof photos[0] === 'string';
+      const items = hasRealPhotos ? photos.slice(0, 6) : [1,2,3,4,5,6];
+      return (
+        <div style={{ padding: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+            {items.map((item, i) => (
+              hasRealPhotos ? (
+                <div key={i} style={{
+                  aspectRatio: '1', borderRadius: 8, overflow: 'hidden',
+                  animation: `fadeSlideUp 0.4s ease ${i * 0.1}s both`,
+                }}>
+                  <img src={item} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = '#f3f4f6'; }}
+                  />
+                </div>
+              ) : (
+                <div key={i} style={{
+                  aspectRatio: '1',
+                  background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)',
+                  backgroundSize: '200% 100%',
+                  borderRadius: 8,
+                  animation: 'shimmer 1.5s ease-in-out infinite',
+                  animationDelay: `${i * 0.15}s`,
+                }} />
+              )
+            ))}
+          </div>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasRealPhotos ? '#059669' : '#667eea', animation: hasRealPhotos ? 'none' : 'pulse 1s ease-in-out infinite' }} />
+            <span style={{ fontSize: 11, color: '#6b7280' }}>
+              {hasRealPhotos ? `${photos.length} billeder fundet` : 'Analyserer billedkvalitet og metadata...'}
+            </span>
+          </div>
         </div>
-        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#059669', animation: 'pulse 1s ease-in-out infinite' }} />
-          <span style={{ fontSize: 11, color: '#6b7280', animation: 'fadeSlideUp 0.5s ease' }}>Analyserer billedkvalitet og metadata...</span>
-        </div>
-      </div>
-    );
+      );
+    };
 
     // SERP Visibility preview — animated search results
     const SerpPreview = ({ business }) => {
@@ -2887,6 +2904,7 @@
       const [paymentVerified, setPaymentVerified] = useState(false);
       const [resolvedBusiness, setResolvedBusiness] = useState(null);
       const cacheRestored = useRef(false);
+      const autoRescanTriggered = useRef(false);
 
       // Check for paid=true URL param (Stripe redirect), verify payment, restore cache
       useEffect(() => {
@@ -3006,7 +3024,7 @@
         if (cacheRestored.current) return;
         // Don't start a new scan when returning from Stripe - let payment verification effect handle it
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('paid') === 'true') return;
+        if (urlParams.get('paid') === 'true' && urlParams.get('rescan') !== 'true') return;
 
         const runAnalysis = async () => {
           try {
@@ -3124,12 +3142,11 @@
       if (paymentVerified && isPaid && !showReport && !isComplete) {
         const cachedBizName = resolvedBusiness?.name || business?.name || '';
         // Auto-redirect to re-scan if we have a business name
-        const autoRescanTriggered = useRef(false);
         if (cachedBizName && !autoRescanTriggered.current) {
           autoRescanTriggered.current = true;
           setTimeout(() => {
             window.location.href = window.location.pathname + '?name=' + encodeURIComponent(cachedBizName) + '&paid=true&rescan=true';
-          }, 2000);
+          }, 2500);
         }
         return (
           <div style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3140,17 +3157,22 @@
               <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a', margin: '0 0 8px' }}>Betaling modtaget!</h2>
               <p style={{ color: '#6b7280', fontSize: 15, margin: '0 0 32px', lineHeight: 1.6 }}>
                 {cachedBizName
-                  ? `Din betaling er bekræftet. Vi starter scanning af "${cachedBizName}" automatisk...`
+                  ? `Din betaling er bekræftet. Vi genererer din rapport for "${cachedBizName}"...`
                   : 'Din betaling er bekræftet.'}
               </p>
               {cachedBizName ? (
-                <div style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                  <p style={{ color: '#9ca3af', fontSize: 13 }}>Starter scanning automatisk...</p>
+                </div>
               ) : (
                 <button
-                  onClick={() => { onBack && onBack(); }}
+                  onClick={() => {
+                    window.location.href = window.location.pathname;
+                  }}
                   style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '14px 32px', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
                 >
-                  Start ny scanning
+                  Generer rapport nu
                 </button>
               )}
             </div>
@@ -4198,24 +4220,38 @@
       // Auto-generate and download PDF after Stripe payment
       const pdfDownloaded = useRef(false);
       useEffect(() => {
-        if (isPaid && !pdfDownloaded.current && results && business && Object.keys(results).length > 0) {
+        if (isPaid && !pdfDownloaded.current && results && business?.name && Object.keys(results).length > 0) {
           pdfDownloaded.current = true;
           setTimeout(() => {
             try {
+              const safeResults = {
+                googleProfile: results.googleProfile || {},
+                reviews: results.reviews || {},
+                competitors: results.competitors || {},
+                website: results.website || {},
+                napConsistency: results.napConsistency || {},
+                social: results.social || {},
+                photos: results.photos || [],
+                _v3score: results._v3score || { overall: 0, label: 'Ukendt' },
+                _v3moduleStatuses: results._v3moduleStatuses || [],
+                _v3actionPlan: results._v3actionPlan || { week1: [], days30: [], days90: [] },
+                ...results
+              };
               const doc = pdfGenerator.generate({
                 business: business,
                 scanDate: new Date(),
-                overallScore: overallScore,
-                results: results,
+                overallScore: overallScore || 0,
+                results: safeResults,
                 findings: findings || [],
                 findingsCount: findings?.length || 0,
               });
-              doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+              const safeName = (business.name || 'rapport').replace(/[^a-zA-Z0-9\u00C0-\u024F\s-]/g, '').replace(/\s+/g, '_');
+              doc.save(`synlighedsrapport_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
             } catch (e) {
               console.error('Auto PDF download failed:', e);
               alert('Automatisk PDF-download fejlede. Brug "Download PDF" knappen i rapporten.');
             }
-          }, 1000);
+          }, 2000);
         }
       }, [isPaid, results, business, overallScore, findings]);
 
@@ -5319,15 +5355,20 @@
               <button
                 onClick={() => {
                   try {
+                    if (!results || !business?.name) {
+                      alert('Rapport-data mangler. Prøv at genindlæse siden.');
+                      return;
+                    }
                     const doc = pdfGenerator.generate({
                       business: business,
                       scanDate: new Date(),
-                      overallScore: overallScore,
+                      overallScore: overallScore || 0,
                       results: results,
                       findings: findings || [],
                       findingsCount: findings?.length || 0,
                     });
-                    doc.save(`synlighedsrapport_${business.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+                    const safeName = (business.name || 'rapport').replace(/[^a-zA-Z0-9\u00C0-\u024F\s-]/g, '').replace(/\s+/g, '_');
+                    doc.save(`synlighedsrapport_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
                   } catch (e) {
                     console.error('PDF generation failed:', e);
                     alert('PDF kunne ikke genereres. Prøv at genindlæse siden.');

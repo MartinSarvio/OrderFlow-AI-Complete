@@ -21413,6 +21413,16 @@ function updateApiStatus() {
                    localStorage.getItem('serper_maps_key') ||
                    localStorage.getItem('serper_places_key');
   const webhookOk = localStorage.getItem('api_webhook_enabled') !== 'false';
+  const openrouterOk = localStorage.getItem('openrouter_key');
+  const minimaxOk = localStorage.getItem('minimax_key');
+  const supabaseOk = localStorage.getItem('supabase_url') && localStorage.getItem('supabase_key');
+  const stripeOk = localStorage.getItem('stripe_publishable_key') || localStorage.getItem('stripe_secret_key');
+  const instagramOk = localStorage.getItem('instagram_access_token');
+  const facebookOk = localStorage.getItem('facebook_access_token');
+  const economicOk = localStorage.getItem('economic_app_secret') && localStorage.getItem('economic_agreement_token');
+  const dineroOk = localStorage.getItem('dinero_api_key');
+  const billyOk = localStorage.getItem('billy_api_token');
+  const vismaOk = localStorage.getItem('visma_bearer_token');
 
   // Status elements
   const smsStatusEl = document.getElementById('status-sms');
@@ -21431,7 +21441,17 @@ function updateApiStatus() {
     'firecrawl-indicator': firecrawlOk,
     'googleapi-indicator': googleapiOk,
     'serper-indicator': serperOk,
-    'webhook-indicator': webhookOk
+    'webhook-indicator': webhookOk,
+    'openrouter-indicator': openrouterOk,
+    'minimax-indicator': minimaxOk,
+    'supabase-indicator': supabaseOk,
+    'stripe-indicator': stripeOk,
+    'instagram-indicator': instagramOk,
+    'facebook-indicator': facebookOk,
+    'economic-indicator': economicOk,
+    'dinero-indicator': dineroOk,
+    'billy-indicator': billyOk,
+    'visma-indicator': vismaOk
   };
 
   Object.entries(indicators).forEach(([id, isConnected]) => {
@@ -21447,7 +21467,7 @@ function updateApiStatus() {
 
 // Update toggle button states based on localStorage
 function updateApiToggles() {
-  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'];
+  const apis = ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper', 'openrouter', 'minimax', 'supabase', 'stripe', 'instagram', 'facebook', 'economic', 'dinero', 'billy', 'visma'];
 
   apis.forEach(api => {
     const toggle = document.getElementById(`${api}-toggle`);
@@ -21480,7 +21500,7 @@ async function saveApiEnabledStates() {
   try {
     if (window.supabaseClient && currentUser?.id) {
       const enabledStates = {};
-      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper'].forEach(api => {
+      ['openai', 'inmobile', 'google', 'trustpilot', 'webhook', 'firecrawl', 'googleapi', 'serper', 'openrouter', 'minimax', 'supabase', 'stripe', 'instagram', 'facebook', 'economic', 'dinero', 'billy', 'visma'].forEach(api => {
         enabledStates[api] = localStorage.getItem(`api_${api}_enabled`) !== 'false';
       });
 
@@ -21666,7 +21686,22 @@ async function saveAllApiSettings() {
     serper_maps_key: document.getElementById('serper-maps-key')?.value.trim() || '',
     serper_places_key: document.getElementById('serper-places-key')?.value.trim() || '',
     openrouter_key: document.getElementById('openrouter-api-key-input')?.value.trim() || '',
-    minimax_key: document.getElementById('minimax-api-key-input')?.value.trim() || ''
+    minimax_key: document.getElementById('minimax-api-key-input')?.value.trim() || '',
+    supabase_url: document.getElementById('supabase-url-input')?.value.trim() || '',
+    supabase_key: document.getElementById('supabase-key-input')?.value.trim() || '',
+    stripe_publishable_key: document.getElementById('stripe-publishable-key-input')?.value.trim() || '',
+    stripe_secret_key: document.getElementById('stripe-secret-key-input')?.value.trim() || '',
+    instagram_access_token: document.getElementById('instagram-access-token-input')?.value.trim() || '',
+    instagram_page_id: document.getElementById('instagram-page-id-input')?.value.trim() || '',
+    facebook_access_token: document.getElementById('facebook-access-token-input')?.value.trim() || '',
+    facebook_page_id: document.getElementById('facebook-page-id-input')?.value.trim() || '',
+    economic_app_secret: document.getElementById('economic-app-secret-input')?.value.trim() || '',
+    economic_agreement_token: document.getElementById('economic-agreement-token-input')?.value.trim() || '',
+    dinero_api_key: document.getElementById('dinero-api-key-input')?.value.trim() || '',
+    dinero_organization_id: document.getElementById('dinero-organization-id-input')?.value.trim() || '',
+    billy_api_token: document.getElementById('billy-api-token-input')?.value.trim() || '',
+    visma_bearer_token: document.getElementById('visma-bearer-token-input')?.value.trim() || '',
+    visma_company_id: document.getElementById('visma-company-id-input')?.value.trim() || ''
   };
 
   // Save to localStorage as backup
@@ -21731,7 +21766,7 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key', 'openrouter_key', 'minimax_key'];
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key', 'openrouter_key', 'minimax_key', 'supabase_url', 'supabase_key', 'stripe_publishable_key', 'stripe_secret_key', 'instagram_access_token', 'instagram_page_id', 'facebook_access_token', 'facebook_page_id', 'economic_app_secret', 'economic_agreement_token', 'dinero_api_key', 'dinero_organization_id', 'billy_api_token', 'visma_bearer_token', 'visma_company_id'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -21753,7 +21788,22 @@ async function loadAllApiSettings() {
     'serper-maps-key': 'serper_maps_key',
     'serper-places-key': 'serper_places_key',
     'openrouter-api-key-input': 'openrouter_key',
-    'minimax-api-key-input': 'minimax_key'
+    'minimax-api-key-input': 'minimax_key',
+    'supabase-url-input': 'supabase_url',
+    'supabase-key-input': 'supabase_key',
+    'stripe-publishable-key-input': 'stripe_publishable_key',
+    'stripe-secret-key-input': 'stripe_secret_key',
+    'instagram-access-token-input': 'instagram_access_token',
+    'instagram-page-id-input': 'instagram_page_id',
+    'facebook-access-token-input': 'facebook_access_token',
+    'facebook-page-id-input': 'facebook_page_id',
+    'economic-app-secret-input': 'economic_app_secret',
+    'economic-agreement-token-input': 'economic_agreement_token',
+    'dinero-api-key-input': 'dinero_api_key',
+    'dinero-organization-id-input': 'dinero_organization_id',
+    'billy-api-token-input': 'billy_api_token',
+    'visma-bearer-token-input': 'visma_bearer_token',
+    'visma-company-id-input': 'visma_company_id'
   };
 
   Object.entries(fieldMappings).forEach(([elementId, settingKey]) => {
