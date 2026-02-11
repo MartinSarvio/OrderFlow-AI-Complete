@@ -1,9 +1,9 @@
 // OrderFlow Version Configuration
 // Single source of truth for version information
 const VERSION_CONFIG = {
-  version: '4.9.7',
-  build: 4907,
-  cacheName: 'orderflow-v4907',
+  version: '4.9.8',
+  build: 4908,
+  cacheName: 'orderflow-v4908',
   releaseDate: '2026-02-11',
 
   // Sidebar Template Metadata
