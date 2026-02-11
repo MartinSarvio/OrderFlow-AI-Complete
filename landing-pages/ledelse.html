@@ -159,15 +159,15 @@
     .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
     .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
-    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 400; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
     .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
@@ -194,7 +194,7 @@
 
     .hero-section { position: relative; min-height: 60vh; display: flex; align-items: center; padding-top: 8rem; background: linear-gradient(135deg, var(--color-dark) 0%, #1a1a2e 100%); overflow: hidden; }
     .hero-content { position: relative; z-index: 1; max-width: 80rem; padding: 6rem 4rem; margin: 0 auto; text-align: center; }
-    .hero-content h1 { font-family: 'Inter', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-white); line-height: 1.1; margin-bottom: 2rem; letter-spacing: -0.02em; }
+    .hero-content h1 { font-family: 'Inter', sans-serif; font-size: 5.6rem; font-weight: 500; color: var(--color-white); line-height: 1.1; margin-bottom: 2rem; letter-spacing: -0.028em; }
     .hero-content p { font-size: 2rem; color: rgba(255,255,255,0.85); margin: 0 auto 3rem auto; max-width: 60rem; }
     .hero-buttons { display: flex; gap: 1.6rem; justify-content: center; flex-wrap: wrap; }
 
@@ -208,20 +208,20 @@
     .content-section { background: var(--color-white); padding: 10rem 0; }
     .content-container { max-width: 1000px; margin: 0 auto; padding: 0 4rem; }
     .section-intro { text-align: center; margin-bottom: 6rem; }
-    .section-intro h2 { font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2rem; }
+    .section-intro h2 { font-size: 4rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
     .section-intro p { font-size: 1.8rem; color: var(--color-gray-600); line-height: 1.7; }
 
     .leadership-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4rem; margin-bottom: 8rem; }
     .leader-card { text-align: center; }
     .leader-image { width: 20rem; height: 20rem; border-radius: 50%; overflow: hidden; margin: 0 auto 2rem; }
     .leader-image img { width: 100%; height: 100%; object-fit: cover; }
-    .leader-card h3 { font-size: 2.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.5rem; }
+    .leader-card h3 { font-size: 2.2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 0.5rem; }
     .leader-card .role { font-size: 1.5rem; color: var(--color-primary); font-weight: 500; margin-bottom: 1.5rem; }
     .leader-card p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; }
 
     .mission-section { background: var(--color-gray-100); padding: 10rem 0; }
     .mission-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6rem; align-items: center; }
-    .mission-content h3 { font-size: 3.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2rem; }
+    .mission-content h3 { font-size: 3.2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
     .mission-content p { font-size: 1.7rem; color: var(--color-gray-600); line-height: 1.8; margin-bottom: 2rem; }
     .mission-image { border-radius: 2rem; overflow: hidden; }
     .mission-image img { width: 100%; height: auto; }
@@ -229,12 +229,12 @@
     .values-list { display: flex; flex-direction: column; gap: 3rem; margin-top: 4rem; }
     .value-item { display: flex; gap: 2rem; align-items: flex-start; }
     .value-number { width: 5rem; height: 5rem; background: var(--color-primary); color: var(--color-white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; flex-shrink: 0; }
-    .value-content h4 { font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1rem; }
+    .value-content h4 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1rem; }
     .value-content p { font-size: 1.6rem; color: var(--color-gray-600); line-height: 1.6; }
 
     .cta-section { background: var(--color-dark); padding: 10rem 0; }
     .cta-content { text-align: center; max-width: 80rem; margin: 0 auto; padding: 0 4rem; }
-    .cta-content h2 { font-size: 4.8rem; font-weight: 600; color: var(--color-white); margin-bottom: 2rem; }
+    .cta-content h2 { font-size: 4.8rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-white); margin-bottom: 2rem; }
     .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
 
     .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
@@ -246,7 +246,7 @@
     .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
     .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
 
-    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }

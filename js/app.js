@@ -44460,12 +44460,20 @@ function renderCustomerIntegrations() {
       action: 'connect'
     },
     {
-      id: 'social', title: 'Social Media', color: '#ec4899',
-      desc: 'Instagram og Facebook er forbundet via dine agenter',
-      providers: 'Instagram, Facebook',
-      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>',
-      statusKey: 'integration_social',
-      action: 'agents'
+      id: 'instagram', title: 'Agent Instagram', color: '#ec4899',
+      desc: 'Instagram Business API — auto-reply DM, ordremodtagelse og produktbeskeder',
+      providers: 'Instagram Graph API',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/></svg>',
+      statusKey: 'orderflow_instagram_agent_status',
+      action: 'agent_instagram'
+    },
+    {
+      id: 'facebook', title: 'Agent Facebook', color: '#3b82f6',
+      desc: 'Facebook Page & Messenger API — auto-reply, ordremodtagelse og push-beskeder',
+      providers: 'Facebook Messenger API',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>',
+      statusKey: 'orderflow_facebook_agent_status',
+      action: 'agent_facebook'
     },
     {
       id: 'sms', title: 'SMS & Kommunikation', color: '#f97316',
@@ -44494,6 +44502,13 @@ function renderCustomerIntegrations() {
     var isConnected = localStorage.getItem(ig.statusKey) === 'connected';
     var isIncluded = ig.action === 'included';
     var isAgents = ig.action === 'agents';
+    var isAgentPlatform = ig.action === 'agent_instagram' || ig.action === 'agent_facebook';
+
+    // Check agent platform connection from agent status
+    if (isAgentPlatform) {
+      var agentStatus = JSON.parse(localStorage.getItem(ig.statusKey) || '{}');
+      isConnected = agentStatus.connected === true;
+    }
 
     // Check printer integration status from printerSettings
     var isPrinter = ig.action === 'printer';
@@ -44511,6 +44526,13 @@ function renderCustomerIntegrations() {
     var btnHtml = '';
     if (isIncluded) {
       btnHtml = '<span style="font-size:12px;color:' + ig.color + ';font-weight:500">Aktiv</span>';
+    } else if (isAgentPlatform) {
+      var agentId = ig.action === 'agent_instagram' ? 'instagram' : 'facebook';
+      if (isConnected) {
+        btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid var(--border);color:var(--color-text);background:var(--card);border-radius:var(--radius-sm);cursor:pointer" onclick="openAgentConfigPanel(\'' + agentId + '\')">Administrer</button>';
+      } else {
+        btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;background:' + ig.color + ';color:white;border:none;border-radius:var(--radius-sm);cursor:pointer" onclick="openAgentConfigPanel(\'' + agentId + '\')">Forbind konto</button>';
+      }
     } else if (isAgents) {
       btnHtml = '<button class="btn btn-sm" style="font-size:12px;padding:6px 14px;border:1px solid ' + ig.color + ';color:' + ig.color + ';background:none;border-radius:var(--radius-sm);cursor:pointer" onclick="switchVaerktoejTab(\'agenter\')">Se Agenter</button>';
     } else if (isPrinter && isConnected) {
