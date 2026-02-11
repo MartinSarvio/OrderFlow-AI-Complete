@@ -11,6 +11,8 @@ const DEFAULT_PRINTER_SETTINGS = {
   printerIp: '192.168.1.100',
   printerPort: 80,
   useHttps: false,
+  useProxy: true, // Use VPS proxy via Tailscale (recommended for Vercel deployment)
+  proxyUrl: 'http://31.220.111.87:3456/print',
   paperWidth: 80, // 80mm or 58mm
   autoPrintKitchen: true,
   autoPrintCustomer: false,
@@ -42,6 +44,13 @@ function savePrinterSettings(settings) {
 
 function getPrinterUrl() {
   const s = getPrinterSettings();
+  
+  // Use proxy if enabled (recommended for production/Vercel)
+  if (s.useProxy && s.proxyUrl) {
+    return s.proxyUrl;
+  }
+  
+  // Direct connection (local development only)
   const protocol = s.useHttps ? 'https' : 'http';
   return `${protocol}://${s.printerIp}:${s.printerPort}/StarWebPRNT/SendMessage`;
 }
