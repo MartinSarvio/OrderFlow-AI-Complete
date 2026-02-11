@@ -46212,3 +46212,506 @@ setInterval(function() {
     checkAndUpdatePrinterDeviceCard();
   }
 }, 30000);
+
+// =====================================================
+// EDIT MODE - Toggle & Visual Overlay System (v4.8.0)
+// =====================================================
+
+const EDIT_MODE_KEY = 'orderflow_edit_mode';
+const EDIT_GRIDLINES_KEY = 'orderflow_edit_gridlines';
+
+// Editable selectors - elements that get highlighted in edit mode
+const EDITABLE_SELECTORS = [
+  { selector: '.card', label: 'card' },
+  { selector: '.kpi-card', label: 'kpi' },
+  { selector: '.stat-card', label: 'stat' },
+  { selector: '.setting-card', label: 'setting' },
+  { selector: 'section', label: 'section' },
+  { selector: '.page-content > div', label: 'div' },
+  { selector: '.crm-table', label: 'table' },
+  { selector: '.chart-container', label: 'chart' },
+  { selector: '.quick-action-card', label: 'action' }
+];
+
+function toggleEditMode() {
+  const isActive = document.body.classList.toggle('edit-mode');
+  localStorage.setItem(EDIT_MODE_KEY, isActive ? 'on' : 'off');
+
+  if (isActive) {
+    applyEditableAttributes();
+    populateEditSectionList();
+  } else {
+    removeEditableAttributes();
+    document.body.classList.remove('show-gridlines');
+    const gridCb = document.getElementById('edit-mode-gridlines');
+    if (gridCb) gridCb.checked = false;
+  }
+
+  console.log('✏️ Edit mode:', isActive ? 'ON' : 'OFF');
+}
+
+function applyEditableAttributes() {
+  // Only tag visible elements inside .page-content or main content
+  const scope = document.querySelector('.page-content') || document.querySelector('.main');
+  if (!scope) return;
+
+  EDITABLE_SELECTORS.forEach(({ selector, label }) => {
+    scope.querySelectorAll(selector).forEach(el => {
+      if (!el.dataset.editable && el.offsetParent !== null) {
+        el.dataset.editable = label;
+      }
+    });
+  });
+}
+
+function removeEditableAttributes() {
+  document.querySelectorAll('[data-editable]').forEach(el => {
+    delete el.dataset.editable;
+  });
+}
+
+function populateEditSectionList() {
+  const list = document.getElementById('edit-mode-section-list');
+  if (!list) return;
+
+  const elements = document.querySelectorAll('[data-editable]');
+  const counts = {};
+  elements.forEach(el => {
+    const label = el.dataset.editable;
+    counts[label] = (counts[label] || 0) + 1;
+  });
+
+  if (Object.keys(counts).length === 0) {
+    list.innerHTML = '<li style="color:rgba(255,255,255,0.4)">Ingen redigerbare elementer fundet</li>';
+    return;
+  }
+
+  list.innerHTML = Object.entries(counts).map(([label, count]) =>
+    `<li onclick="highlightEditElements('${label}')">
+      <span>${label}</span>
+      <span class="edit-badge">${count}</span>
+    </li>`
+  ).join('');
+}
+
+function highlightEditElements(label) {
+  // Flash highlight matching elements
+  document.querySelectorAll(`[data-editable="${label}"]`).forEach(el => {
+    el.style.outline = '3px solid #3B82F6';
+    el.style.outlineOffset = '3px';
+    setTimeout(() => {
+      el.style.outline = '';
+      el.style.outlineOffset = '';
+    }, 1500);
+  });
+}
+
+function toggleEditGridlines(checked) {
+  document.body.classList.toggle('show-gridlines', checked);
+  localStorage.setItem(EDIT_GRIDLINES_KEY, checked ? 'on' : 'off');
+}
+
+// Restore edit mode state on load
+function initEditMode() {
+  const saved = localStorage.getItem(EDIT_MODE_KEY);
+  if (saved === 'on') {
+    document.body.classList.add('edit-mode');
+    applyEditableAttributes();
+    populateEditSectionList();
+
+    const gridSaved = localStorage.getItem(EDIT_GRIDLINES_KEY);
+    if (gridSaved === 'on') {
+      document.body.classList.add('show-gridlines');
+      const gridCb = document.getElementById('edit-mode-gridlines');
+      if (gridCb) gridCb.checked = true;
+    }
+  }
+}
+
+// Initialize on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initEditMode);
+} else {
+  initEditMode();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INLINE TEXT EDITOR (Edit Mode)
+// ═══════════════════════════════════════════════════════════════
+const TEXT_EDITS_KEY = 'orderflow_text_edits';
+const TEXT_ORIGINALS_KEY = 'orderflow_text_originals';
+
+// Undo stack: { id, oldText, newText }
+let _textEditUndoStack = [];
+
+function _getTextEdits() {
+  try { return JSON.parse(localStorage.getItem(TEXT_EDITS_KEY) || '{}'); } catch { return {}; }
+}
+function _saveTextEdits(edits) {
+  localStorage.setItem(TEXT_EDITS_KEY, JSON.stringify(edits));
+}
+function _getTextOriginals() {
+  try { return JSON.parse(localStorage.getItem(TEXT_ORIGINALS_KEY) || '{}'); } catch { return {}; }
+}
+function _saveTextOriginals(originals) {
+  localStorage.setItem(TEXT_ORIGINALS_KEY, JSON.stringify(originals));
+}
+
+// Store original text the first time we see an element
+function _ensureOriginal(el) {
+  const id = el.dataset.editableText;
+  if (!id) return;
+  const originals = _getTextOriginals();
+  if (!(id in originals)) {
+    originals[id] = el.textContent;
+    _saveTextOriginals(originals);
+  }
+}
+
+// Restore all saved text edits on load
+function restoreTextEdits() {
+  const edits = _getTextEdits();
+  Object.entries(edits).forEach(([id, text]) => {
+    const el = document.querySelector(`[data-editable-text="${id}"]`);
+    if (el) {
+      _ensureOriginal(el);
+      el.textContent = text;
+      if (document.body.classList.contains('edit-mode')) {
+        el.classList.add('text-modified');
+      }
+    }
+  });
+}
+
+// Also dynamically find editable text inside page-content (titles, headers, buttons, cards)
+function autoTagEditableText() {
+  const scope = document.querySelector('.page-content') || document.querySelector('.main');
+  if (!scope) return;
+  
+  const selectors = [
+    { sel: 'h1', prefix: 'h1' },
+    { sel: 'h2', prefix: 'h2' },
+    { sel: 'h3', prefix: 'h3' },
+    { sel: '.page-title', prefix: 'title' },
+    { sel: '.card-title', prefix: 'card' },
+    { sel: '.stat-title', prefix: 'stat' },
+    { sel: '.stat-value', prefix: 'statval' },
+  ];
+
+  let idx = 0;
+  selectors.forEach(({ sel, prefix }) => {
+    scope.querySelectorAll(sel).forEach(el => {
+      if (!el.dataset.editableText && el.offsetParent !== null && el.children.length === 0) {
+        el.dataset.editableText = `${prefix}-auto-${idx++}`;
+      }
+    });
+  });
+}
+
+// Mark modified elements
+function markModifiedElements() {
+  const edits = _getTextEdits();
+  document.querySelectorAll('[data-editable-text]').forEach(el => {
+    const id = el.dataset.editableText;
+    if (id in edits) {
+      el.classList.add('text-modified');
+    }
+  });
+}
+
+// Remove toolbar/counter from element
+function _cleanupTextEditUI(el) {
+  const parent = el.parentElement;
+  if (parent) {
+    parent.querySelectorAll('.text-edit-toolbar, .text-edit-char-counter, .text-edit-error-msg').forEach(x => x.remove());
+  }
+  // Also check siblings of el
+  if (el.nextElementSibling && el.nextElementSibling.classList.contains('text-edit-toolbar')) {
+    el.nextElementSibling.remove();
+  }
+}
+
+// Start editing an element
+function startTextEdit(el) {
+  if (el.classList.contains('text-editing')) return;
+  if (!document.body.classList.contains('edit-mode')) return;
+
+  const id = el.dataset.editableText;
+  if (!id) return;
+
+  _ensureOriginal(el);
+
+  // Stop any other active edits
+  document.querySelectorAll('[data-editable-text].text-editing').forEach(other => {
+    if (other !== el) finishTextEdit(other, true);
+  });
+
+  el.classList.add('text-editing');
+  el.setAttribute('contenteditable', 'true');
+  el.focus();
+
+  // Select all text
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  // Store pre-edit text for undo
+  el._preEditText = el.textContent;
+
+  // Create toolbar
+  el.style.position = 'relative';
+  const toolbar = document.createElement('div');
+  toolbar.className = 'text-edit-toolbar';
+  toolbar.innerHTML = `
+    <button class="text-edit-save" onclick="event.stopPropagation();finishTextEdit(this.closest('.text-edit-toolbar').previousElementSibling||this.closest('[data-editable-text]'),true)" title="Gem">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Gem
+    </button>
+    <button class="text-edit-restore" onclick="event.stopPropagation();restoreOriginalText(this)" title="Gendan original">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Gendan
+    </button>
+  `;
+  el.insertAdjacentElement('afterend', toolbar);
+  // If el has no positioned parent, re-parent toolbar
+  if (toolbar.parentElement !== el.parentElement) {
+    el.parentElement.appendChild(toolbar);
+  }
+
+  // Character counter for limited fields
+  const maxLen = el.dataset.maxLength ? parseInt(el.dataset.maxLength) : null;
+  if (maxLen) {
+    const counter = document.createElement('div');
+    counter.className = 'text-edit-char-counter';
+    counter.textContent = `${el.textContent.length}/${maxLen}`;
+    el.insertAdjacentElement('afterend', counter);
+
+    el._charCounter = counter;
+    el._maxLen = maxLen;
+  }
+
+  // Handle input for char counter
+  el.addEventListener('input', _onTextEditInput);
+  // Handle Enter to save, Escape to cancel
+  el.addEventListener('keydown', _onTextEditKeydown);
+}
+
+function _onTextEditInput(e) {
+  const el = e.target;
+  if (el._charCounter && el._maxLen) {
+    const len = el.textContent.length;
+    el._charCounter.textContent = `${len}/${el._maxLen}`;
+    el._charCounter.classList.toggle('over-limit', len > el._maxLen);
+  }
+}
+
+function _onTextEditKeydown(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    finishTextEdit(e.target, true);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    // Revert to pre-edit text
+    e.target.textContent = e.target._preEditText || e.target.textContent;
+    finishTextEdit(e.target, false);
+  }
+}
+
+// Finish editing
+function finishTextEdit(el, save) {
+  if (!el || !el.classList.contains('text-editing')) return;
+
+  el.classList.remove('text-editing');
+  el.removeAttribute('contenteditable');
+  el.removeEventListener('input', _onTextEditInput);
+  el.removeEventListener('keydown', _onTextEditKeydown);
+
+  const id = el.dataset.editableText;
+  const newText = el.textContent.trim();
+
+  // Validation: required fields can't be empty
+  const isRequired = el.dataset.required !== undefined || el.dataset.editableText?.startsWith('nav-');
+  if (save && isRequired && !newText) {
+    el.classList.add('text-edit-error');
+    // Show error msg briefly
+    const errMsg = document.createElement('div');
+    errMsg.className = 'text-edit-error-msg';
+    errMsg.textContent = 'Feltet må ikke være tomt';
+    el.insertAdjacentElement('afterend', errMsg);
+    setTimeout(() => {
+      errMsg.remove();
+      el.classList.remove('text-edit-error');
+    }, 2000);
+    // Revert
+    el.textContent = el._preEditText || newText || 'Tekst';
+    _cleanupTextEditUI(el);
+    delete el._preEditText;
+    delete el._charCounter;
+    delete el._maxLen;
+    return;
+  }
+
+  // Max length validation
+  if (save && el._maxLen && newText.length > el._maxLen) {
+    el.textContent = newText.substring(0, el._maxLen);
+  }
+
+  if (save && id) {
+    const oldText = el._preEditText;
+    const finalText = el.textContent.trim();
+    
+    if (oldText !== finalText) {
+      // Push to undo stack
+      _textEditUndoStack.push({ id, oldText, newText: finalText });
+
+      // Save to localStorage
+      const edits = _getTextEdits();
+      const originals = _getTextOriginals();
+      
+      // If text matches original, remove the edit
+      if (originals[id] === finalText) {
+        delete edits[id];
+        el.classList.remove('text-modified');
+      } else {
+        edits[id] = finalText;
+        el.classList.add('text-modified');
+      }
+      _saveTextEdits(edits);
+    }
+  }
+
+  _cleanupTextEditUI(el);
+  delete el._preEditText;
+  delete el._charCounter;
+  delete el._maxLen;
+}
+
+// Restore original text for a specific element
+function restoreOriginalText(btn) {
+  // Find the editable element
+  const toolbar = btn.closest('.text-edit-toolbar');
+  let el = toolbar ? toolbar.previousElementSibling : null;
+  if (!el || !el.dataset.editableText) {
+    // Try parent
+    el = toolbar?.parentElement?.querySelector('[data-editable-text].text-editing');
+  }
+  if (!el) return;
+
+  const id = el.dataset.editableText;
+  const originals = _getTextOriginals();
+  const original = originals[id];
+  
+  if (original !== undefined) {
+    el.textContent = original;
+    
+    // Remove from edits
+    const edits = _getTextEdits();
+    delete edits[id];
+    _saveTextEdits(edits);
+    el.classList.remove('text-modified');
+    
+    // Push undo entry
+    _textEditUndoStack.push({ id, oldText: el._preEditText, newText: original });
+  }
+
+  finishTextEdit(el, false);
+}
+
+// Undo last text edit (Ctrl+Z in edit mode)
+function undoLastTextEdit() {
+  const entry = _textEditUndoStack.pop();
+  if (!entry) return;
+
+  const el = document.querySelector(`[data-editable-text="${entry.id}"]`);
+  if (!el) return;
+
+  el.textContent = entry.oldText;
+  
+  const edits = _getTextEdits();
+  const originals = _getTextOriginals();
+  
+  if (originals[entry.id] === entry.oldText) {
+    delete edits[entry.id];
+    el.classList.remove('text-modified');
+  } else {
+    edits[entry.id] = entry.oldText;
+    el.classList.add('text-modified');
+  }
+  _saveTextEdits(edits);
+}
+
+// Global double-click handler for edit mode
+function _onEditModeDoubleClick(e) {
+  if (!document.body.classList.contains('edit-mode')) return;
+
+  // Find closest editable-text element
+  const el = e.target.closest('[data-editable-text]');
+  if (!el) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  startTextEdit(el);
+}
+
+// Global Ctrl+Z handler for edit mode text undo
+function _onEditModeKeydown(e) {
+  if (!document.body.classList.contains('edit-mode')) return;
+  if (e.ctrlKey && e.key === 'z' && !e.target.closest('[contenteditable]')) {
+    e.preventDefault();
+    undoLastTextEdit();
+  }
+}
+
+// Click outside to save active edit
+function _onEditModeClickOutside(e) {
+  if (!document.body.classList.contains('edit-mode')) return;
+  const activeEdit = document.querySelector('[data-editable-text].text-editing');
+  if (activeEdit && !activeEdit.contains(e.target) && !e.target.closest('.text-edit-toolbar')) {
+    finishTextEdit(activeEdit, true);
+  }
+}
+
+// Initialize inline text editor
+function initInlineTextEditor() {
+  document.addEventListener('dblclick', _onEditModeDoubleClick);
+  document.addEventListener('keydown', _onEditModeKeydown);
+  document.addEventListener('click', _onEditModeClickOutside);
+
+  // Restore saved edits
+  restoreTextEdits();
+}
+
+// Hook into edit mode toggle to auto-tag and mark
+const _origToggleEditMode = toggleEditMode;
+toggleEditMode = function() {
+  _origToggleEditMode();
+  if (document.body.classList.contains('edit-mode')) {
+    autoTagEditableText();
+    restoreTextEdits();
+    markModifiedElements();
+  } else {
+    // Close any active text edit
+    document.querySelectorAll('[data-editable-text].text-editing').forEach(el => finishTextEdit(el, true));
+    // Remove auto-tagged elements (keep manually tagged ones)
+    document.querySelectorAll('[data-editable-text*="-auto-"]').forEach(el => {
+      delete el.dataset.editableText;
+      el.classList.remove('text-modified');
+    });
+  }
+};
+
+// Init on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initInlineTextEditor);
+} else {
+  initInlineTextEditor();
+}
+
+// Make functions globally available
+window.toggleEditMode = toggleEditMode;
+window.toggleEditGridlines = toggleEditGridlines;
+window.highlightEditElements = highlightEditElements;
+window.startTextEdit = startTextEdit;
+window.finishTextEdit = finishTextEdit;
+window.restoreOriginalText = restoreOriginalText;
+window.undoLastTextEdit = undoLastTextEdit;
