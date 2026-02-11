@@ -19597,7 +19597,7 @@ function loadOrdersPage() {
     }
     
     return `
-    <div class="order-item" style="padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;background:var(--card);${order.status === 'Ny' || order.status === 'Afventer' ? 'border-left:3px solid #fbbf24;' : ''}">
+    <div class="order-item" data-channel="${order.channel || 'sms'}" data-status="${order.status || 'Ny'}" style="padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;background:var(--card);${order.status === 'Ny' || order.status === 'Afventer' ? 'border-left:3px solid #fbbf24;' : ''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
         <div>
           <div style="font-weight:600;font-size:15px">${order.customerName || 'Ukendt kunde'}</div>
@@ -19623,6 +19623,28 @@ function loadOrdersPage() {
       </div>
     </div>
   `}).join('');
+}
+
+// Filter orders by channel and status dropdowns
+function filterOrders() {
+  const channel = document.getElementById('orders-filter-channel')?.value || 'all';
+  const status = document.getElementById('orders-filter-status')?.value || 'all';
+  const items = document.querySelectorAll('#orders-list .order-item');
+  let visible = 0;
+  items.forEach(item => {
+    const matchChannel = channel === 'all' || item.dataset.channel === channel;
+    const matchStatus = status === 'all' || item.dataset.status === status;
+    if (matchChannel && matchStatus) {
+      item.style.display = '';
+      visible++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  const countEl = document.getElementById('orders-count');
+  if (countEl) {
+    countEl.textContent = `${visible} ordre${visible !== 1 ? 'r' : ''} vist`;
+  }
 }
 
 // ACCEPT ordre - sender bekræftelses-SMS
