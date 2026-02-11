@@ -20,17 +20,20 @@
     { selector: '.stats-secondary',        group: 'stats-sec', handle: null },
     // Dashboard quick actions
     { selector: '.dashboard-actions',      group: 'actions',   handle: null },
-    // Sidebar nav
+    // Sidebar nav sections
     { selector: '.sidebar-nav .nav-section', group: 'sidebar', handle: null },
-    // Flyout panel items
+    // Flyout panel categories (move entire categories up/down)
+    { selector: '.flyout-content',         group: 'flyout-cats', handle: '.flyout-category-title' },
+    // Flyout panel items within categories
     { selector: '.flyout-category-items',  group: 'flyout',    handle: null },
-    { selector: '.flyout-content',         group: 'flyout-cats', handle: null },
     // Generic draggable containers
     { selector: '[data-sortable-group]',   group: null,        handle: null },
     // Page sections (children of .page)
     { selector: '.page',                   group: 'page-sections', handle: null, filter: '.page-title,h1,h2,script' },
     // Individual page content sections
     { selector: '.page-content',           group: 'page-content', handle: null },
+    // All page containers with sections
+    { selector: '.nav-section',            group: 'nav-sections', handle: null },
   ];
 
   // ─── Layout persistence ───

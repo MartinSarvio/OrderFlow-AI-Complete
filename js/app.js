@@ -46251,16 +46251,36 @@ function toggleEditMode() {
 }
 
 function applyEditableAttributes() {
-  // Only tag visible elements inside .page-content or main content
-  const scope = document.querySelector('.page-content') || document.querySelector('.main');
-  if (!scope) return;
+  // Tag visible elements inside main content AND sidebar
+  const scopes = [
+    document.querySelector('.page-content'),
+    document.querySelector('.main'),
+    document.querySelector('.sidebar')
+  ].filter(Boolean);
+  
+  if (scopes.length === 0) return;
 
-  EDITABLE_SELECTORS.forEach(({ selector, label }) => {
-    scope.querySelectorAll(selector).forEach(el => {
-      if (!el.dataset.editable && el.offsetParent !== null) {
-        el.dataset.editable = label;
-      }
+  scopes.forEach(scope => {
+    EDITABLE_SELECTORS.forEach(({ selector, label }) => {
+      scope.querySelectorAll(selector).forEach(el => {
+        if (!el.dataset.editable && el.offsetParent !== null) {
+          el.dataset.editable = label;
+        }
+      });
     });
+  });
+  
+  // Also tag specific sidebar elements directly
+  const sidebarElements = [
+    { el: document.querySelector('.sidebar-logo'), label: 'logo' },
+    { el: document.querySelector('.sidebar-search'), label: 'search' },
+    { el: document.querySelector('.sidebar-header'), label: 'header' },
+  ];
+  
+  sidebarElements.forEach(({ el, label }) => {
+    if (el && !el.dataset.editable) {
+      el.dataset.editable = label;
+    }
   });
 }
 
