@@ -46757,3 +46757,99 @@ window.startTextEdit = startTextEdit;
 window.finishTextEdit = finishTextEdit;
 window.restoreOriginalText = restoreOriginalText;
 window.undoLastTextEdit = undoLastTextEdit;
+
+// ==================== API NØGLER PAGINATION ====================
+let apiCurrentPage = 1;
+let apiItemsPerPage = 10;
+let apiAllCards = [];
+let apiFilteredCards = [];
+
+function initApiPagination() {
+  apiAllCards = Array.from(document.querySelectorAll('#api-cards-container .api-config-card'));
+  apiFilteredCards = [...apiAllCards];
+  updateApiPagination();
+}
+
+function filterApiCards() {
+  const searchTerm = document.getElementById('api-search-input')?.value.toLowerCase() || '';
+  apiFilteredCards = apiAllCards.filter(card => {
+    const name = card.querySelector('.api-config-name')?.textContent.toLowerCase() || '';
+    const desc = card.querySelector('.api-config-desc')?.textContent.toLowerCase() || '';
+    return name.includes(searchTerm) || desc.includes(searchTerm);
+  });
+  apiCurrentPage = 1;
+  updateApiPagination();
+}
+
+function updateApiPagination() {
+  const perPageSelect = document.getElementById('api-items-per-page');
+  const selectedValue = perPageSelect?.value || '10';
+  
+  if (selectedValue === 'all') {
+    apiItemsPerPage = apiFilteredCards.length;
+  } else {
+    apiItemsPerPage = parseInt(selectedValue);
+  }
+
+  const totalPages = Math.ceil(apiFilteredCards.length / apiItemsPerPage);
+  
+  // Ensure current page is within bounds
+  if (apiCurrentPage > totalPages && totalPages > 0) {
+    apiCurrentPage = totalPages;
+  }
+  if (apiCurrentPage < 1) apiCurrentPage = 1;
+
+  // Hide all cards first
+  apiAllCards.forEach(card => card.style.display = 'none');
+
+  // Show only cards for current page
+  const start = (apiCurrentPage - 1) * apiItemsPerPage;
+  const end = start + apiItemsPerPage;
+  apiFilteredCards.slice(start, end).forEach(card => card.style.display = '');
+
+  // Update pagination controls
+  const pageInfo = document.getElementById('api-page-info');
+  const prevBtn = document.getElementById('api-prev-btn');
+  const nextBtn = document.getElementById('api-next-btn');
+  
+  if (pageInfo) {
+    if (apiFilteredCards.length === 0) {
+      pageInfo.textContent = 'Ingen resultater';
+    } else if (selectedValue === 'all') {
+      pageInfo.textContent = `Viser ${apiFilteredCards.length} af ${apiFilteredCards.length}`;
+    } else {
+      pageInfo.textContent = `Side ${apiCurrentPage} af ${totalPages}`;
+    }
+  }
+  
+  if (prevBtn) prevBtn.disabled = apiCurrentPage <= 1;
+  if (nextBtn) nextBtn.disabled = apiCurrentPage >= totalPages || selectedValue === 'all';
+}
+
+function apiPrevPage() {
+  if (apiCurrentPage > 1) {
+    apiCurrentPage--;
+    updateApiPagination();
+  }
+}
+
+function apiNextPage() {
+  const totalPages = Math.ceil(apiFilteredCards.length / apiItemsPerPage);
+  if (apiCurrentPage < totalPages) {
+    apiCurrentPage++;
+    updateApiPagination();
+  }
+}
+
+// Initialize when API nøgler page is shown
+document.addEventListener('DOMContentLoaded', () => {
+  const observer = new MutationObserver((mutations) => {
+    const apiSection = document.getElementById('flow-cms-content-api-noegler');
+    if (apiSection && apiSection.classList.contains('active') && apiAllCards.length === 0) {
+      initApiPagination();
+    }
+  });
+  
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+});
+
