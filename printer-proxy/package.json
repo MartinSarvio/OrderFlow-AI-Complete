@@ -1,0 +1,12 @@
+{
+  "name": "printer-proxy",
+  "version": "1.0.0",
+  "description": "HTTPS proxy for Star TSP100A thermal printer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["printer", "proxy", "star", "tsp100a"],
+  "author": "FLOW",
+  "license": "MIT"
+}
