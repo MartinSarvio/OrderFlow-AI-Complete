@@ -435,6 +435,46 @@
       return;
     }
     if (e.key === 'Escape') closePanel();
+    
+    // Arrow keys to move selected element
+    if (selectedElement && ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+      e.preventDefault();
+      moveElement(e.key, e.shiftKey);
+    }
+  }
+  
+  function moveElement(direction, shift) {
+    if (!selectedElement || !selectorPath) return;
+    
+    const step = shift ? 10 : 1; // Shift = 10px, normal = 1px
+    const computed = window.getComputedStyle(selectedElement);
+    const position = computed.position;
+    
+    // Decide which properties to adjust based on position
+    let propX = position === 'fixed' || position === 'absolute' ? 'left' : 'margin-left';
+    let propY = position === 'fixed' || position === 'absolute' ? 'top' : 'margin-top';
+    
+    let currentX = parseFloat(customStyles[selectorPath]?.[propX] || computed.getPropertyValue(propX)) || 0;
+    let currentY = parseFloat(customStyles[selectorPath]?.[propY] || computed.getPropertyValue(propY)) || 0;
+    
+    switch(direction) {
+      case 'ArrowUp':    currentY -= step; break;
+      case 'ArrowDown':  currentY += step; break;
+      case 'ArrowLeft':  currentX -= step; break;
+      case 'ArrowRight': currentX += step; break;
+    }
+    
+    // Apply changes
+    if (direction === 'ArrowUp' || direction === 'ArrowDown') {
+      applyStyleDirect(selectorPath, propY, currentY + 'px');
+    } else {
+      applyStyleDirect(selectorPath, propX, currentX + 'px');
+    }
+    
+    // Refresh panel to show updated values
+    renderProperties();
+    
+    console.log(`🎯 Moved ${selectorPath}: ${direction} ${shift ? '(+10px)' : '(+1px)'}`);
   }
 
   // ---- Watch for edit mode toggle ----
