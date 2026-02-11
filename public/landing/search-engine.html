@@ -2911,17 +2911,11 @@
         const params = new URLSearchParams(window.location.search);
         if (params.get('paid') !== 'true') return;
 
-        // If rescan=true, skip verification — payment was already confirmed
-        if (params.get('rescan') === 'true') {
-          setIsPaid(true);
-          setPaymentVerified(false); // Don't show the "cache lost" screen
-          return; // Let the scan proceed normally with isPaid=true
-        }
-
         const sessionId = params.get('session_id');
         setPaymentVerifying(true);
 
         // Helper: restore cached scan results (tries localStorage first, then sessionStorage)
+        // NOTE: Cache is NOT deleted here — it's deleted after PDF is successfully generated
         const restoreCache = () => {
           try {
             const cached = localStorage.getItem('seo_report_cache') || sessionStorage.getItem('seo_report_cache');
@@ -2936,8 +2930,6 @@
                 analysisSteps.forEach(step => {
                   setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
                 });
-                localStorage.removeItem('seo_report_cache');
-                sessionStorage.removeItem('seo_report_cache');
                 cacheRestored.current = true;
                 return true;
               }
@@ -3024,7 +3016,7 @@
         if (cacheRestored.current) return;
         // Don't start a new scan when returning from Stripe - let payment verification effect handle it
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('paid') === 'true' && urlParams.get('rescan') !== 'true') return;
+        if (urlParams.get('paid') === 'true') return;
 
         const runAnalysis = async () => {
           try {
@@ -3138,15 +3130,37 @@
         );
       }
 
-      // Payment verified but cache lost — auto re-scan with paid flag
+      // Payment verified — try to restore cache and show report
       if (paymentVerified && isPaid && !showReport && !isComplete) {
         const cachedBizName = resolvedBusiness?.name || business?.name || '';
-        // Auto-redirect to re-scan if we have a business name
-        if (cachedBizName && !autoRescanTriggered.current) {
+        // Auto-retry cache restore (cache might not be available on first render)
+        if (!autoRescanTriggered.current) {
           autoRescanTriggered.current = true;
-          setTimeout(() => {
-            window.location.href = window.location.pathname + '?name=' + encodeURIComponent(cachedBizName) + '&paid=true&rescan=true';
-          }, 2500);
+          // Retry cache restore up to 5 times with delays
+          let retries = 0;
+          const tryRestore = () => {
+            try {
+              const cached = localStorage.getItem('seo_report_cache') || sessionStorage.getItem('seo_report_cache');
+              if (cached) {
+                const data = JSON.parse(cached);
+                if (data.timestamp && Date.now() - data.timestamp < 60 * 60 * 1000) {
+                  setAnalysisResults(data.results || {});
+                  setFindings(data.findings || []);
+                  setIsComplete(true);
+                  setShowReport(true);
+                  if (data.business) setResolvedBusiness(data.business);
+                  analysisSteps.forEach(step => {
+                    setCompletedSteps(prev => prev.includes(step.id) ? prev : [...prev, step.id]);
+                  });
+                  cacheRestored.current = true;
+                  return;
+                }
+              }
+            } catch (e) { /* ignore */ }
+            retries++;
+            if (retries < 5) setTimeout(tryRestore, 800);
+          };
+          setTimeout(tryRestore, 500);
         }
         return (
           <div style={{ minHeight: '100vh', background: '#f5f5f7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3158,23 +3172,36 @@
               <p style={{ color: '#6b7280', fontSize: 15, margin: '0 0 32px', lineHeight: 1.6 }}>
                 {cachedBizName
                   ? `Din betaling er bekræftet. Vi genererer din rapport for "${cachedBizName}"...`
-                  : 'Din betaling er bekræftet.'}
+                  : 'Din betaling er bekræftet. Henter din rapport...'}
               </p>
-              {cachedBizName ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                  <p style={{ color: '#9ca3af', fontSize: 13 }}>Starter scanning automatisk...</p>
-                </div>
-              ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                <div style={{ width: 32, height: 32, border: '3px solid #e5e7eb', borderTop: '3px solid #6366f1', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ color: '#9ca3af', fontSize: 13 }}>Henter rapport-data...</p>
                 <button
                   onClick={() => {
-                    window.location.href = window.location.pathname;
+                    // Retry cache restore on manual click
+                    try {
+                      const cached = localStorage.getItem('seo_report_cache') || sessionStorage.getItem('seo_report_cache');
+                      if (cached) {
+                        const data = JSON.parse(cached);
+                        setAnalysisResults(data.results || {});
+                        setFindings(data.findings || []);
+                        setIsComplete(true);
+                        setShowReport(true);
+                        if (data.business) setResolvedBusiness(data.business);
+                        cacheRestored.current = true;
+                      } else {
+                        alert('Rapport-data er ikke tilgængelig. Kontakt support for at få din rapport tilsendt.');
+                      }
+                    } catch (e) {
+                      alert('Rapport-data er ikke tilgængelig. Kontakt support for at få din rapport tilsendt.');
+                    }
                   }}
-                  style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '14px 32px', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+                  style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 8 }}
                 >
-                  Generer rapport nu
+                  Vis rapport nu
                 </button>
-              )}
+              </div>
             </div>
           </div>
         );
@@ -4247,6 +4274,9 @@
               });
               const safeName = (business.name || 'rapport').replace(/[^a-zA-Z0-9\u00C0-\u024F\s-]/g, '').replace(/\s+/g, '_');
               doc.save(`synlighedsrapport_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
+              // Clean up cache after successful PDF generation
+              try { localStorage.removeItem('seo_report_cache'); } catch (e) {}
+              try { sessionStorage.removeItem('seo_report_cache'); } catch (e) {}
             } catch (e) {
               console.error('Auto PDF download failed:', e);
               alert('Automatisk PDF-download fejlede. Brug "Download PDF" knappen i rapporten.');
@@ -5369,6 +5399,9 @@
                     });
                     const safeName = (business.name || 'rapport').replace(/[^a-zA-Z0-9\u00C0-\u024F\s-]/g, '').replace(/\s+/g, '_');
                     doc.save(`synlighedsrapport_${safeName}_${new Date().toISOString().split('T')[0]}.pdf`);
+                    // Clean up cache after successful PDF generation
+                    try { localStorage.removeItem('seo_report_cache'); } catch (e2) {}
+                    try { sessionStorage.removeItem('seo_report_cache'); } catch (e2) {}
                   } catch (e) {
                     console.error('PDF generation failed:', e);
                     alert('PDF kunne ikke genereres. Prøv at genindlæse siden.');
