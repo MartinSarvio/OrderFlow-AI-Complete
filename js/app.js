@@ -45998,7 +45998,7 @@ function openPrinterSettings() {
 function openPrinterIntegration() {
   var settings = getPrinterSettings();
   var modalHtml = '<div style="padding:var(--space-5)">' +
-    '<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-1)">🖨️ Printer Integration</h2>' +
+    '<h2 style="font-size:var(--font-size-xl);font-weight:var(--font-weight-semibold);margin-bottom:var(--space-1)">Printer Integration</h2>' +
     '<p style="color:var(--muted);font-size:var(--font-size-sm);margin-bottom:var(--space-5)">Opsæt din Star TSP100A kvitteringsprinter</p>' +
 
     '<div style="margin-bottom:var(--space-4)">' +
@@ -46020,8 +46020,8 @@ function openPrinterIntegration() {
     '</div>' +
 
     '<div style="display:flex;gap:var(--space-3);margin-top:var(--space-5)">' +
-    '<button class="btn btn-secondary" onclick="testPrinterIntegration()" style="flex:1">🔍 Test Forbindelse</button>' +
-    '<button class="btn btn-primary" onclick="savePrinterIntegration()" style="flex:1">💾 Gem & Aktiver</button>' +
+    '<button class="btn btn-secondary" onclick="testPrinterIntegration()" style="flex:1">Test Forbindelse</button>' +
+    '<button class="btn btn-primary" onclick="savePrinterIntegration()" style="flex:1">Gem & Aktiver</button>' +
     '</div>' +
 
     '<div id="pi-test-result" style="margin-top:var(--space-3);display:none"></div>' +
@@ -46045,17 +46045,17 @@ async function testPrinterIntegration() {
   var result = document.getElementById('pi-test-result');
   if (result) {
     result.style.display = 'block';
-    result.innerHTML = '<div style="padding:12px;background:var(--bg2);border-radius:var(--radius-md);font-size:var(--font-size-sm)">⏳ Tester forbindelse...</div>';
+    result.innerHTML = '<div style="padding:12px;background:var(--bg2);border-radius:var(--radius-md);font-size:var(--font-size-sm)">Tester forbindelse...</div>';
   }
   try {
     var status = await checkPrinterStatus();
     if (status.online) {
-      result.innerHTML = '<div style="padding:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#10b981">✅ Printer fundet og online!</div>';
+      result.innerHTML = '<div style="padding:12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#10b981">Printer fundet og online!</div>';
     } else {
-      result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">❌ Kan ikke forbinde: ' + (status.reason || 'Ukendt fejl') + '</div>';
+      result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">Kan ikke forbinde: ' + (status.reason || 'Ukendt fejl') + '</div>';
     }
   } catch(e) {
-    result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">❌ Fejl: ' + e.message + '</div>';
+    result.innerHTML = '<div style="padding:12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:var(--font-size-sm);color:#ef4444">Fejl: ' + e.message + '</div>';
   }
 }
 
@@ -46084,7 +46084,7 @@ function savePrinterIntegration() {
   // Refresh integrations view
   renderCustomerIntegrations();
 
-  toast('✅ Printer integration aktiveret!', 'success');
+  toast('Printer integration aktiveret!', 'success');
 }
 
 function initDevicesTab() {
