@@ -13,6 +13,8 @@
   // ─── Sortable container config ───
   // Each entry: { selector, group, nested }
   const SORTABLE_CONTAINERS = [
+    // Sidebar (logo + toggle + header kan flyttes)
+    { selector: '.sidebar',                group: 'sidebar-top', handle: null, filter: '.sidebar-nav' },
     // Dashboard stat cards
     { selector: '.stats-primary',          group: 'stats',     handle: null },
     { selector: '.stats-secondary',        group: 'stats-sec', handle: null },
@@ -20,10 +22,15 @@
     { selector: '.dashboard-actions',      group: 'actions',   handle: null },
     // Sidebar nav
     { selector: '.sidebar-nav .nav-section', group: 'sidebar', handle: null },
+    // Flyout panel items
+    { selector: '.flyout-category-items',  group: 'flyout',    handle: null },
+    { selector: '.flyout-content',         group: 'flyout-cats', handle: null },
     // Generic draggable containers
     { selector: '[data-sortable-group]',   group: null,        handle: null },
     // Page sections (children of .page)
     { selector: '.page',                   group: 'page-sections', handle: null, filter: '.page-title,h1,h2,script' },
+    // Individual page content sections
+    { selector: '.page-content',           group: 'page-content', handle: null },
   ];
 
   // ─── Layout persistence ───
