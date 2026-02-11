@@ -1365,7 +1365,7 @@
     
     /* Main content area */
     .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-    .main-content-wrapper{flex:1;background:var(--content-bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+    .main-content-wrapper{flex:1;background:var(--content-bg);position:relative;overflow:hidden;display:flex;flex-direction:column;border-top-left-radius:var(--radius-md)}
     
     /* Topbar - på linje med sidebar logo */
     .topbar{height:62px;padding:0 24px;background:var(--content-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50}
