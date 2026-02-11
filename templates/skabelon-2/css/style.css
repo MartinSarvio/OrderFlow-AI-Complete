@@ -140,6 +140,167 @@ a:focus {
 
 .header_section {
   padding: 15px 0;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.header_section.header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+  padding: 10px 0;
+}
+
+.header-spacer {
+  display: none;
+}
+
+.header-spacer.active {
+  display: block;
+}
+
+/* Cart header controls */
+.cart_link {
+  position: relative;
+}
+
+.feane-cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ffbe33;
+  color: #000;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.feane-header-total {
+  color: #ffbe33;
+  font-weight: 600;
+  font-size: 13px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+/* Button consistency - Skabelon 2 */
+.btn-feane-primary {
+  display: inline-block;
+  padding: 10px 30px;
+  background-color: #ffbe33;
+  color: #ffffff;
+  border-radius: 45px;
+  border: 2px solid #ffbe33;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.btn-feane-primary:hover {
+  background-color: #e69c00;
+  border-color: #e69c00;
+  color: #ffffff;
+}
+
+.btn-feane-primary:active {
+  background-color: #cc8800;
+  border-color: #cc8800;
+  transform: scale(0.98);
+}
+
+.btn-feane-primary:focus {
+  outline: 2px solid #ffbe33;
+  outline-offset: 2px;
+}
+
+.btn-feane-primary:disabled,
+.btn-feane-primary.disabled {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.btn-feane-primary.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none;
+}
+
+.btn-feane-primary.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: feane-spin 0.6s linear infinite;
+}
+
+@keyframes feane-spin {
+  to { transform: rotate(360deg); }
+}
+
+.btn-feane-secondary {
+  display: inline-block;
+  padding: 10px 30px;
+  background-color: transparent;
+  color: #ffbe33;
+  border-radius: 45px;
+  border: 2px solid #ffbe33;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.btn-feane-secondary:hover {
+  background-color: #ffbe33;
+  color: #ffffff;
+}
+
+.btn-feane-secondary:active {
+  background-color: #e69c00;
+  border-color: #e69c00;
+  transform: scale(0.98);
+}
+
+.btn-feane-secondary:focus {
+  outline: 2px solid #ffbe33;
+  outline-offset: 2px;
+}
+
+.btn-feane-secondary:disabled,
+.btn-feane-secondary.disabled {
+  border-color: #ccc;
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .header_section .container-fluid {

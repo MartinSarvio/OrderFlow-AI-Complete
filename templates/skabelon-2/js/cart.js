@@ -165,14 +165,27 @@
 
     updateBadge() {
       const count = this.getItemCount();
+      const total = this.getTotal();
+
+      // Badge
       let $badge = $('#feane-cart-badge');
       if (!$badge.length) {
-        $('.cart_link').css('position', 'relative').append(
-          '<span id="feane-cart-badge" style="position:absolute;top:-8px;right:-8px;background:#f00;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700"></span>'
-        );
+        $('.cart_link').append('<span id="feane-cart-badge" class="feane-cart-badge"></span>');
         $badge = $('#feane-cart-badge');
       }
       $badge.text(count || '').toggle(count > 0);
+
+      // Header total
+      let $total = $('#feane-header-total');
+      if (!$total.length) {
+        $('.cart_link').after('<span id="feane-header-total" class="feane-header-total"></span>');
+        $total = $('#feane-header-total');
+      }
+      if (count > 0) {
+        $total.text(this.formatPrice(total)).show();
+      } else {
+        $total.hide();
+      }
     },
 
     renderItems() {
@@ -278,12 +291,20 @@
         self.renderTotals();
       });
 
-      // Add to cart from menu (data attribute based)
-      $(document).on('click', '[data-add-to-cart]', function(e) {
+      // Add to cart from menu (data attribute based + food section cart icons)
+      $(document).on('click', '[data-add-to-cart], .food_section .options a, .food_section .options svg', function(e) {
         e.preventDefault();
-        const $item = $(this).closest('[data-item-id]').length
-          ? $(this).closest('[data-item-id]')
-          : $(this).closest('.box, .col-sm-6');
+        e.stopPropagation();
+        const $this = $(this).closest('a').length ? $(this).closest('a') : $(this);
+        const $item = $this.closest('[data-item-id]').length
+          ? $this.closest('[data-item-id]')
+          : $this.closest('.box, .col-sm-6');
+
+        // Loading state
+        const $btn = $this.closest('a, button');
+        if ($btn.hasClass('loading')) return;
+        $btn.addClass('loading');
+        setTimeout(function() { $btn.removeClass('loading'); }, 600);
 
         self.add({
           id: $item.attr('data-item-id') || 'item-' + Math.random().toString(36).slice(2, 8),
@@ -294,10 +315,14 @@
         });
       });
 
-      // "Order Online" button
-      $(document).on('click', '.order_online', function(e) {
+      // "Order Online" / data-of-cart-open buttons
+      $(document).on('click', '.order_online, [data-of-cart-open]', function(e) {
         e.preventDefault();
-        window.location.href = 'menu.html';
+        if (self.getItemCount() > 0) {
+          self.open();
+        } else {
+          window.location.href = 'menu.html';
+        }
       });
 
       // Escape key
@@ -339,12 +364,50 @@
     }
   };
 
+  // ========== STICKY HEADER ==========
+
+  function initStickyHeader() {
+    var $header = $('.header_section');
+    if (!$header.length) return;
+
+    var headerHeight = $header.outerHeight();
+    var headerTop = $header.offset().top;
+
+    // Create spacer to prevent content jump
+    var $spacer = $('<div class="header-spacer"></div>').css('height', headerHeight).insertAfter($header);
+
+    $(window).on('scroll.stickyHeader', function() {
+      var scrollTop = $(this).scrollTop();
+      if (scrollTop > headerTop + headerHeight) {
+        if (!$header.hasClass('header-fixed')) {
+          $header.addClass('header-fixed');
+          $spacer.addClass('active');
+        }
+      } else {
+        if ($header.hasClass('header-fixed')) {
+          $header.removeClass('header-fixed');
+          $spacer.removeClass('active');
+        }
+      }
+    });
+
+    // Handle resize
+    $(window).on('resize.stickyHeader', function() {
+      if (!$header.hasClass('header-fixed')) {
+        headerHeight = $header.outerHeight();
+        headerTop = $header.offset().top;
+        $spacer.css('height', headerHeight);
+      }
+    });
+  }
+
   // Expose globally
   window.FeaneCart = FeaneCart;
 
   // Init on DOM ready
   $(function() {
     FeaneCart.init();
+    initStickyHeader();
   });
 
 })(jQuery);

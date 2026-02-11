@@ -126,10 +126,24 @@
 
     updateBadge() {
       const count = this.getItemCount();
+      const total = this.getTotal();
+
       // Nav badge
       let $navBadge = $('#pizza-cart-badge-nav');
       if ($navBadge.length) {
         $navBadge.text(count || '').toggle(count > 0);
+      }
+
+      // Header total
+      let $total = $('#pizza-header-total');
+      if (!$total.length) {
+        $navBadge.closest('a').after('<span id="pizza-header-total" class="nav-link pizza-header-total" style="color:#fac564;font-weight:600;font-size:13px;padding:0;margin-left:-10px;white-space:nowrap;display:none"></span>');
+        $total = $('#pizza-header-total');
+      }
+      if (count > 0) {
+        $total.text(this.formatPrice(total)).show();
+      } else {
+        $total.hide();
       }
     },
 
@@ -198,10 +212,18 @@
       });
 
       // "Order" or "Add to cart" buttons in menu
-      $(document).on('click', '[data-add-to-cart], [data-of-add-to-cart]', function(e) {
+      $(document).on('click', '[data-add-to-cart], [data-of-add-to-cart], .menu-wrap .btn-primary, .menu-entry .btn-primary', function(e) {
         e.preventDefault();
-        var $wrap = $(this).closest('.services-wrap, .menu-wrap, [data-item-id]');
-        if (!$wrap.length) $wrap = $(this).closest('.col-lg-4, .col-md-6');
+        var $btn = $(this);
+        var $wrap = $btn.closest('.services-wrap, .menu-wrap, .menu-entry, [data-item-id]');
+        if (!$wrap.length) $wrap = $btn.closest('.col-lg-4, .col-md-6');
+
+        // Loading state
+        if ($btn.hasClass('loading')) return;
+        $btn.addClass('loading');
+        var origText = $btn.html();
+        $btn.html('<span class="pizza-spinner"></span>');
+        setTimeout(function() { $btn.removeClass('loading').html(origText); }, 600);
 
         self.add({
           id: $wrap.attr('data-item-id') || 'pizza-' + Math.random().toString(36).slice(2, 8),

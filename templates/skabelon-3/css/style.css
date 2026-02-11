@@ -8973,3 +8973,133 @@ textarea.form-control {
   100% {
     stroke-dasharray: 89, 200;
     stroke-dashoffset: -136px; } }
+
+/* ========== Skabelon 3 - Design Consistency & Enhancements ========== */
+
+/* Ensure scrolled nav text is readable */
+.ftco-navbar-light.scrolled .nav-link {
+  color: rgba(255, 255, 255, 0.9) !important; }
+.ftco-navbar-light.scrolled .nav-item.active > a,
+.ftco-navbar-light.scrolled .nav-link:hover {
+  color: #fac564 !important; }
+
+/* Button consistency */
+.btn-primary {
+  background: #fac564;
+  border-color: #fac564;
+  color: #000;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 4px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 24px;
+  transition: all 0.3s ease; }
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background: #e5b055;
+  border-color: #e5b055;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(250, 197, 100, 0.3); }
+
+.btn-primary:active {
+  background: #d4a040;
+  border-color: #d4a040;
+  transform: scale(0.98); }
+
+.btn-primary:disabled,
+.btn-primary.disabled {
+  background: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.7; }
+
+.btn-primary.loading {
+  position: relative;
+  color: transparent;
+  pointer-events: none; }
+
+.btn-outline-white {
+  background: transparent;
+  border: 2px solid #fff;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 4px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 24px;
+  transition: all 0.3s ease; }
+
+.btn-outline-white:hover {
+  background: #fff;
+  color: #000; }
+
+.btn-outline-white:active {
+  background: #eee;
+  transform: scale(0.98); }
+
+/* Loading spinner for add-to-cart */
+.pizza-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #000;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: pizza-spin 0.6s linear infinite; }
+
+@keyframes pizza-spin {
+  to { transform: rotate(360deg); } }
+
+/* Quantity stepper consistency */
+.qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden; }
+
+.qty-stepper button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f8f9fa;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  min-width: 44px;
+  min-height: 44px; }
+
+.qty-stepper button:hover {
+  background: #fac564; }
+
+.qty-stepper input {
+  width: 40px;
+  text-align: center;
+  border: none;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  font-weight: 600;
+  font-size: 14px; }
+
+/* Cart total in header */
+.pizza-header-total {
+  display: inline-block;
+  vertical-align: middle; }
+
+/* Mobile touch targets */
+@media (max-width: 991.98px) {
+  .navbar-nav .nav-link {
+    min-height: 44px;
+    display: flex;
+    align-items: center; }
+  .btn-primary, .btn-outline-white, .btn {
+    min-height: 44px; }
+}
