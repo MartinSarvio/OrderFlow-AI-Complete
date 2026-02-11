@@ -1077,14 +1077,14 @@
     .sidebar.collapsed{width:72px}
 
     /* Logo centralt i toppen - FIXED position, forbliver på plads ved scroll og collapse */
-    .sidebar-logo{position:fixed;top:0;left:0;width:260px;height:48px;display:flex;align-items:center;justify-content:center;z-index:220;background:var(--nav-bg)}
+    .sidebar-logo{position:fixed;top:0;left:0;width:260px;height:44px;display:flex;align-items:center;justify-content:center;z-index:220;background:var(--nav-bg)}
     .sidebar-logo img{height:22px;width:auto;transition:height 0.3s ease-in-out}
     .sidebar.collapsed .sidebar-logo{width:72px;left:0;top:0}
     .sidebar.collapsed .sidebar-logo img{height:18px}
 
     /* Header zone - søgefelt under logo, over navigation */
-    .sidebar-header{padding:4px 20px 8px;transition:all 0.3s ease-in-out;position:fixed;top:48px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
-    .sidebar.collapsed .sidebar-header{padding:4px 12px;width:72px;top:48px}
+    .sidebar-header{padding:4px 20px 8px;transition:all 0.3s ease-in-out;position:fixed;top:44px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
+    .sidebar.collapsed .sidebar-header{padding:4px 12px;width:72px;top:44px}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
     .sidebar-toggle{position:absolute;bottom:24px;left:20px;width:32px;height:32px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.3s ease-in-out;z-index:250}
@@ -1129,7 +1129,7 @@
     /* Main content adjustment */
     .main{margin-left:260px;transition:margin-left 0.3s ease-in-out}
     .sidebar.collapsed ~ .main{margin-left:72px}
-    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:105px;scrollbar-width:none;-ms-overflow-style:none}
+    .sidebar-nav{flex:1;padding:16px 12px;overflow-y:auto;transition:all 0.3s ease-in-out;margin-top:115px;scrollbar-width:none;-ms-overflow-style:none}
     .sidebar-nav::-webkit-scrollbar{width:0;background:transparent}
     .nav-section{margin-bottom:32px;transition:all 0.3s ease-in-out}
     .nav-section-title{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;padding:6px 13px;margin-bottom:3px;opacity:1;transition:all 0.3s ease-in-out}
