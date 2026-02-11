@@ -33,9 +33,8 @@ function toggleTheme() {
 
 // Update logo images based on theme
 function updateLogos(theme) {
-  const logoSrc = theme === 'light'
-    ? 'images/FLOW-logo-sort-4K.png'
-    : 'images/FLOW-logo-hvid-4K.png';
+  // Always use white logo in both dark and light mode
+  const logoSrc = 'images/FLOW-logo-hvid-4K.png';
 
   // Update all logo images (including sidebar logo and any with flow-logo class)
   document.querySelectorAll('.logo img, .app-logo img, .auth-logo img, .flow-logo, img[src*="FLOW-logo"]').forEach(img => {
