@@ -1077,10 +1077,10 @@
     .sidebar.collapsed{width:72px}
 
     /* Logo centralt i toppen - FIXED position, forbliver på plads ved scroll og collapse */
-    .sidebar-logo{position:fixed;top:0;left:20px;width:auto;height:40px;display:flex;align-items:center;z-index:220;pointer-events:none}
+    .sidebar-logo{position:fixed;top:0;left:36px;width:auto;height:40px;display:flex;align-items:center;z-index:220;pointer-events:none;margin-top:1px}
     /* Enable pointer events in Edit Mode so logo can be dragged */
     body.edit-mode .sidebar-logo{pointer-events:auto;cursor:move}
-    .sidebar-logo img{height:22px;width:auto}
+    .sidebar-logo img{height:22px;width:auto;margin-top:18px}
     .sidebar.collapsed .sidebar-logo{left:20px;top:0}
     .sidebar.collapsed .sidebar-logo img{height:22px}
 
@@ -1379,6 +1379,8 @@
     
     /* Sidebar Search */
     .sidebar-search{position:relative;margin-top:8px;margin-bottom:12px}
+    #command-search{margin-left:0;margin-top:16px}
+    #sidebar > nav.sidebar-nav > div.nav-section > button.nav-btn:nth-child(1){margin-top:-9px}
     /* Enable dragging in Edit Mode */
     body.edit-mode .sidebar-header{cursor:move}
     /* Disable pointer events on search decorations but keep input functional */
