@@ -474,12 +474,8 @@ function exportCMSData(format) {
   toast('Data eksporteret som ' + format.toUpperCase(), 'success');
 }
 
-// ============ INTEGRATIONS PAGE ============
-
-// ==================== API Nøgler Page ====================
+// ============ INTEGRATIONS PAGE — Global variables ============
 
 var apiConnectionsSearchQuery = '';
 var apiConnectionsCurrentPage = 1;
 var apiConnectionsPageSize = 10;
-
-function loadApiNoglerPage() {

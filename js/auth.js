@@ -448,6 +448,8 @@ if (typeof window.waitForSupabase === 'function') {
     })
     .catch((err) => {
       console.warn('⚠️ Supabase client not ready in app.js bootstrap:', err?.message || err);
+    });
+}
 
 // =====================================================
 // AUTH
@@ -3351,5 +3353,3 @@ const LOYALTY_TIERS = {
   gold: { color: '#ffd700', icon: '', name: 'Guld' },
   platinum: { color: '#e5e4e2', icon: '', name: 'Platin' }
 };
-
-// Get loyalty settings for restaurant

@@ -2052,8 +2052,6 @@ const DEMO_RESTAURANTS = [
 
 // Supabase client reference used by legacy code paths in this file.
 // Some parts of this app still reference `supabaseClient` directly, so we keep a global alias.
-    });
-}
 
 function toggleDropdown(type) {
   const dropdowns = {
@@ -6871,15 +6869,6 @@ function generateClosedMessage(restaurant, openStatus) {
   return message;
 }
 
-// Trin 3: Gem ordre til intern Ordrer-side (sidebar menu)
-  const selectedRestaurant = getSelectedRestaurant();
-  const phoneInput = document.getElementById('test-phone');
-  const phone = phoneInput ? phoneInput.value : 'default';
-  const restaurantId = selectedRestaurant ? selectedRestaurant.id : 'default';
-
-  return `${restaurantId}-${phone}`;
-}
-
 /**
  * Toggle AdvancedAI system on/off
  */
@@ -8773,34 +8762,6 @@ function deleteUserKeyFromSettings(keyId, keyName) {
 let leads = [];
 
 // Leads View Switching
-  return (window.currentUser && window.currentUser.id) || localStorage.getItem('demo_user_id') || 'demo-user';
-}
-
-// Export functions to window
-window.loadAiAgents = loadAiAgents;
-window.renderAgentsList = renderAgentsList;
-window.showCreateAgentModal = showCreateAgentModal;
-window.editAgent = editAgent;
-window.closeAgentModal = closeAgentModal;
-window.saveAgent = saveAgent;
-window.confirmDeleteAgent = confirmDeleteAgent;
-window.deleteAgent = deleteAgent;
-window.filterAgents = filterAgents;
-
-window.loadSmsWorkflows = loadSmsWorkflows;
-window.renderWorkflowsList = renderWorkflowsList;
-window.showCreateWorkflowModal = showCreateWorkflowModal;
-window.editSmsWorkflow = editSmsWorkflow;
-window.closeSmsWorkflowModal = closeSmsWorkflowModal;
-window.saveSmsWorkflow = saveSmsWorkflow;
-window.openWorkflowInBuilder = openWorkflowInBuilder;
-window.onWorkflowVariantChange = onWorkflowVariantChange;
-window.confirmDeleteWorkflow = confirmDeleteWorkflow;
-window.deleteWorkflow = deleteWorkflow;
-window.filterWorkflows = filterWorkflows;
-
-window.closeDeleteConfirmModal = closeDeleteConfirmModal;
-window.populateRestaurantDropdownForAgents = populateRestaurantDropdownForAgents;
 
 // =====================================================
 // SEARCH ENGINE - SEO ANALYSE (Digital Synlighed v1.0)

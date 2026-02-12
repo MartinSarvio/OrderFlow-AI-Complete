@@ -881,6 +881,8 @@ function populateRestaurantDropdownForAgents(selectId, selectedValue) {
 
 // Get current user ID (helper)
 function getCurrentUserId() {
+  return (window.currentUser && window.currentUser.id) || localStorage.getItem('demo_user_id') || 'demo-user';
+}
 
 function openAgentPage(pageId) {
   if (typeof showPage === 'function') {
@@ -2556,5 +2558,3 @@ window.closeMobileMenu = closeMobileMenu;
 const style = document.createElement('style');
 style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
 document.head.appendChild(style);
-
-// Handle ?page= URL parameter on load (for landing page redirects)

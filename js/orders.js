@@ -596,6 +596,12 @@ function clearAllOrders() {
  * Get current conversation ID for AdvancedAI
  */
 function getCurrentConversationId() {
+  const selectedRestaurant = getSelectedRestaurant();
+  const phoneInput = document.getElementById('test-phone');
+  const phone = phoneInput ? phoneInput.value : 'default';
+  const restaurantId = selectedRestaurant ? selectedRestaurant.id : 'default';
+  return `${restaurantId}-${phone}`;
+}
 
 function loadOrderHistory() {
   // Get orders from the orders_module (existing system) and mark completed ones
@@ -1064,5 +1070,3 @@ const appBuilderTemplates = {
 };
 
 let currentAppTemplate = 'app-skabelon-1';
-
-// Load App Builder template

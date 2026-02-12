@@ -562,16 +562,6 @@ const alleKunderPageSize = 25;
 let alleKunderStatusFilter = 'all';
 let alleKunderSearchQuery = '';
 
-
-// =====================================================
-// ALLE KUNDER LIST VIEW
-// =====================================================
-
-let alleKunderCurrentPage = 1;
-const alleKunderPageSize = 25;
-let alleKunderStatusFilter = 'all';
-let alleKunderSearchQuery = '';
-
 function loadAlleKunderGrid() {
   const tbody = document.getElementById('alle-kunder-tbody');
   if (!tbody) return;
