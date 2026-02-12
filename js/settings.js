@@ -927,8 +927,8 @@ function saveUserSettings() {
   showSaveStatus('users-save-status', 'saved');
 }
 
-// Vis salgsoversigt
-function loadSalgsoversigt() {
+// Vis salgsoversigt — henter ægte data fra Supabase
+async function loadSalgsoversigt() {
   const fromDate = document.getElementById('sales-from-date')?.value || '';
   const toDate = document.getElementById('sales-to-date')?.value || '';
   
@@ -937,41 +937,81 @@ function loadSalgsoversigt() {
     return;
   }
   
-  // Demo data
-  const demoSales = {
-    total: Math.floor(Math.random() * 50000) + 10000,
-    orders: Math.floor(Math.random() * 200) + 50,
-    avgOrder: 0
-  };
-  demoSales.avgOrder = Math.round(demoSales.total / demoSales.orders);
-  
   const salesContainer = document.getElementById('sales-overview-result');
-  if (salesContainer) {
+  if (!salesContainer) return;
+
+  salesContainer.innerHTML = '<p style="text-align:center;color:var(--muted);padding:16px">Indlæser...</p>';
+  salesContainer.style.display = 'block';
+
+  let total = 0, orderCount = 0, avgOrder = 0;
+  let source = '';
+
+  try {
+    const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+    const base = CONFIG.SUPABASE_URL + '/rest/v1';
+    const fromISO = new Date(fromDate).toISOString();
+    const toISO = new Date(toDate + 'T23:59:59').toISOString();
+
+    // Try unified_orders first, then orders
+    for (const table of ['unified_orders', 'orders']) {
+      const res = await fetch(base + '/' + table + '?select=total,status&created_at=gte.' + fromISO + '&created_at=lte.' + toISO, { headers });
+      if (res.ok) {
+        const orders = (await res.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+        if (orders.length > 0) {
+          total = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          orderCount = orders.length;
+          avgOrder = Math.round(total / orderCount);
+          source = 'Supabase';
+          break;
+        }
+      }
+    }
+
+    // Demo mode fallback
+    if (orderCount === 0 && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+      const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
+      const filtered = demoOrders.filter(o => {
+        const d = o.created_at;
+        return d >= fromDate && d <= toDate + 'T23:59:59';
+      });
+      if (filtered.length > 0) {
+        total = filtered.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+        orderCount = filtered.length;
+        avgOrder = Math.round(total / orderCount);
+        source = 'demo';
+      }
+    }
+  } catch (e) {
+    console.warn('[Salgsoversigt] Fejl:', e);
+  }
+
+  if (orderCount === 0) {
+    salesContainer.innerHTML = `
+      <p style="text-align:center;color:var(--muted);padding:24px;font-size:14px">Ingen ordrer fundet i perioden ${fromDate} til ${toDate}</p>
+    `;
+  } else {
     salesContainer.innerHTML = `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px">
         <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
-          <div style="font-size:24px;font-weight:700;color:var(--accent)">${demoSales.total.toLocaleString('da-DK')} kr</div>
+          <div style="font-size:24px;font-weight:700;color:var(--accent)">${total.toLocaleString('da-DK')} kr</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">Total omsætning</div>
         </div>
         <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
-          <div style="font-size:24px;font-weight:700;color:var(--green)">${demoSales.orders}</div>
+          <div style="font-size:24px;font-weight:700;color:var(--green)">${orderCount}</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">Antal ordrer</div>
         </div>
         <div style="background:var(--bg3);padding:16px;border-radius:var(--radius-md);text-align:center">
-          <div style="font-size:24px;font-weight:700;color:var(--purple)">${demoSales.avgOrder} kr</div>
+          <div style="font-size:24px;font-weight:700;color:var(--purple)">${avgOrder} kr</div>
           <div style="font-size:12px;color:var(--muted);margin-top:4px">Gns. ordre</div>
         </div>
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">Data fra ${fromDate} til ${toDate} (demo)</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">Data fra ${fromDate} til ${toDate}${source === 'demo' ? ' (demo)' : ''}</p>
     `;
-    salesContainer.style.display = 'block';
   }
-  
-  toast('Salgsoversigt indlæst', 'success');
 }
 
-// Vis korttransaktioner
-function loadKorttransaktioner() {
+// Vis korttransaktioner — henter fra Supabase payments tabel
+async function loadKorttransaktioner() {
   const fromDate = document.getElementById('transactions-from-date')?.value || '';
   const toDate = document.getElementById('transactions-to-date')?.value || '';
   
@@ -980,51 +1020,61 @@ function loadKorttransaktioner() {
     return;
   }
   
-  // Demo transaktioner
-  const demoTransactions = [];
-  const numTransactions = Math.floor(Math.random() * 20) + 5;
-  
-  for (let i = 0; i < numTransactions; i++) {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    
-    demoTransactions.push({
-      id: 'TXN' + Math.random().toString(36).substr(2, 8).toUpperCase(),
-      date: date.toLocaleDateString('da-DK'),
-      time: date.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }),
-      amount: Math.floor(Math.random() * 500) + 50,
-      card: '**** ' + Math.floor(1000 + Math.random() * 9000),
-      status: Math.random() > 0.1 ? 'Godkendt' : 'Afvist'
-    });
-  }
-  
   const transContainer = document.getElementById('transactions-result');
-  if (transContainer) {
+  if (!transContainer) return;
+
+  transContainer.innerHTML = '<p style="text-align:center;color:var(--muted);padding:16px">Indlæser...</p>';
+  transContainer.style.display = 'block';
+
+  let transactions = [];
+
+  try {
+    const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+    const base = CONFIG.SUPABASE_URL + '/rest/v1';
+    const fromISO = new Date(fromDate).toISOString();
+    const toISO = new Date(toDate + 'T23:59:59').toISOString();
+
+    const res = await fetch(base + '/payments?select=id,amount,currency,status,stripe_payment_intent_id,created_at&created_at=gte.' + fromISO + '&created_at=lte.' + toISO + '&order=created_at.desc', { headers });
+    if (res.ok) {
+      const payments = await res.json();
+      transactions = payments.map(p => {
+        const d = new Date(p.created_at);
+        return {
+          id: (p.stripe_payment_intent_id || p.id).substring(0, 16),
+          date: d.toLocaleDateString('da-DK'),
+          amount: Math.round((p.amount || 0) / 100), // øre to DKK
+          currency: (p.currency || 'dkk').toUpperCase(),
+          status: p.status === 'completed' ? 'Godkendt' : p.status === 'failed' ? 'Afvist' : p.status
+        };
+      });
+    }
+  } catch (e) {
+    console.warn('[Korttransaktioner] Fejl:', e);
+  }
+
+  if (transactions.length === 0) {
+    transContainer.innerHTML = `<p style="text-align:center;color:var(--muted);padding:24px;font-size:14px">Ingen transaktioner fundet i perioden ${fromDate} til ${toDate}</p>`;
+  } else {
     transContainer.innerHTML = `
       <div style="margin-top:16px;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden">
-        <div style="display:grid;grid-template-columns:100px 80px 100px 100px 100px;gap:8px;padding:12px;background:var(--bg);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
+        <div style="display:grid;grid-template-columns:1fr 100px 100px 100px;gap:8px;padding:12px;background:var(--bg);font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase">
           <div>ID</div>
           <div>Dato</div>
           <div>Beløb</div>
-          <div>Kort</div>
           <div>Status</div>
         </div>
-        ${demoTransactions.map(t => `
-          <div style="display:grid;grid-template-columns:100px 80px 100px 100px 100px;gap:8px;padding:12px;border-top:1px solid var(--border);font-size:13px">
-            <div style="font-family:monospace;font-size:11px">${t.id}</div>
+        ${transactions.map(t => `
+          <div style="display:grid;grid-template-columns:1fr 100px 100px 100px;gap:8px;padding:12px;border-top:1px solid var(--border);font-size:13px">
+            <div style="font-family:monospace;font-size:11px">${escapeHtml(t.id)}</div>
             <div>${t.date}</div>
-            <div style="font-weight:600">${t.amount} kr</div>
-            <div style="color:var(--muted)">${t.card}</div>
+            <div style="font-weight:600">${t.amount} ${t.currency}</div>
             <div style="color:${t.status === 'Godkendt' ? 'var(--green)' : 'var(--danger)'}">${t.status}</div>
           </div>
         `).join('')}
       </div>
-      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">${demoTransactions.length} transaktioner fundet (demo)</p>
+      <p style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center">${transactions.length} transaktioner fundet</p>
     `;
-    transContainer.style.display = 'block';
   }
-  
-  toast('Korttransaktioner indlæst', 'success');
 }
 
 // ==================== TEST FUNCTIONS ====================

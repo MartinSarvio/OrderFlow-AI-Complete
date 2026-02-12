@@ -5,16 +5,14 @@
 // =====================================================
 let dagsrapportData = null;
 
-function generateDagsrapport(demoDato, silent) {
+async function generateDagsrapport(demoDato, silent) {
   const dato = demoDato || document.getElementById('dagsrapport-dato').value;
   if (!dato) {
     toast('Vælg venligst en dato', 'error');
     return;
   }
   
-  // Generate demo data based on date
   const dateObj = new Date(dato);
-  const seed = dateObj.getDate() + dateObj.getMonth() * 31;
   
   // Format date to Danish (DD.MM.YYYY)
   const formatDateDK = (d) => {
@@ -25,20 +23,65 @@ function generateDagsrapport(demoDato, silent) {
   };
   
   const datoDK = formatDateDK(dateObj);
-  
-  // Pseudo-random but consistent for same date
-  const random = (min, max) => {
-    const x = Math.sin(seed * 9999 + min) * 10000;
-    return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
-  };
-  
-  const brutto = random(150000, 550000) + random(0, 99) / 100;
-  const rabatter = random(0, 5000) + random(0, 99) / 100;
-  const kontantSalg = random(20000, 80000) + random(0, 99) / 100;
-  const kortSalg = brutto - kontantSalg - rabatter;
-  const surcharge = random(200, 800) + random(0, 99) / 100;
-  const drikkepenge = random(0, 500) + random(0, 99) / 100;
   const momsRate = 0.25;
+
+  // Try to fetch real data from Supabase
+  let brutto = 0, rabatter = 0, kontantSalg = 0, kortSalg = 0, surcharge = 0, drikkepenge = 0;
+  let hasRealData = false;
+
+  try {
+    const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+    const base = CONFIG.SUPABASE_URL + '/rest/v1';
+    const dayStart = dato + 'T00:00:00';
+    const dayEnd = dato + 'T23:59:59';
+
+    for (const table of ['unified_orders', 'orders']) {
+      const res = await fetch(base + '/' + table + '?select=total,payment_method,status,discount&created_at=gte.' + dayStart + '&created_at=lte.' + dayEnd, { headers });
+      if (res.ok) {
+        const orders = (await res.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+        if (orders.length > 0) {
+          hasRealData = true;
+          brutto = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          rabatter = orders.reduce((s, o) => s + (parseFloat(o.discount) || 0), 0);
+          kontantSalg = orders.filter(o => o.payment_method === 'cash' || o.payment_method === 'kontant').reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          kortSalg = brutto - kontantSalg;
+          break;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Dagsrapport] Supabase fejl:', e);
+  }
+
+  // Demo fallback — use seeded pseudo-random for consistent results
+  if (!hasRealData) {
+    // Check demo mode
+    if (typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+      const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
+      const dayOrders = demoOrders.filter(o => o.created_at?.startsWith(dato));
+      if (dayOrders.length > 0) {
+        hasRealData = true;
+        brutto = dayOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+        kontantSalg = Math.round(brutto * 0.25);
+        kortSalg = brutto - kontantSalg;
+      }
+    }
+
+    // If still no data, use seeded demo
+    if (!hasRealData) {
+      const seed = dateObj.getDate() + dateObj.getMonth() * 31;
+      const random = (min, max) => {
+        const x = Math.sin(seed * 9999 + min) * 10000;
+        return Math.floor((x - Math.floor(x)) * (max - min + 1)) + min;
+      };
+      brutto = random(150000, 550000) + random(0, 99) / 100;
+      rabatter = random(0, 5000) + random(0, 99) / 100;
+      kontantSalg = random(20000, 80000) + random(0, 99) / 100;
+      kortSalg = brutto - kontantSalg - rabatter;
+      surcharge = random(200, 800) + random(0, 99) / 100;
+      drikkepenge = random(0, 500) + random(0, 99) / 100;
+    }
+  }
   
   dagsrapportData = {
     dato: dato, // Keep ISO for filename

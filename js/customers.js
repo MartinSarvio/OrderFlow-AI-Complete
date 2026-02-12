@@ -2893,18 +2893,135 @@ function savePaymentMethod() {
 
 async function updatePaymentCard() {
   try {
-    const response = await fetch('/api/stripe/create-checkout', {
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const token = (await window.supabaseClient?.auth?.getSession())?.data?.session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+    const response = await fetch(supabaseUrl + '/functions/v1/stripe-connect?action=billing-portal', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'setup', return_url: window.location.href })
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ returnUrl: window.location.href })
     });
-    const { url } = await response.json();
-    if (url) window.location.href = url;
+    const result = await response.json();
+    if (result.url) window.location.href = result.url;
     else toast('Kunne ikke oprette Stripe session', 'error');
   } catch (err) {
     toast('Fejl ved kortopsætning: ' + err.message, 'error');
   }
 }
+
+// Start Stripe Checkout for subscription plan
+async function startSubscriptionCheckout(priceId, planName) {
+  try {
+    toast('Opretter checkout...', 'info');
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const token = (await window.supabaseClient?.auth?.getSession())?.data?.session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+    const response = await fetch(supabaseUrl + '/functions/v1/stripe-connect?action=create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        priceId: priceId,
+        successUrl: window.location.origin + '/?checkout=success',
+        cancelUrl: window.location.origin + '/?checkout=cancelled'
+      })
+    });
+    const result = await response.json();
+    if (result.url) {
+      window.location.href = result.url;
+    } else {
+      toast(result.error || 'Kunne ikke oprette checkout session', 'error');
+    }
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
+}
+
+// Load subscription status from Supabase
+async function loadSubscriptionStatus() {
+  try {
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const token = (await window.supabaseClient?.auth?.getSession())?.data?.session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+    const response = await fetch(supabaseUrl + '/functions/v1/stripe-connect?action=subscription-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CONFIG.SUPABASE_ANON_KEY
+      },
+      body: '{}'
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.warn('[Subscription] Status fejl:', e);
+  }
+  return { subscription: null, recentPayments: [] };
+}
+
+// Cancel subscription
+async function cancelSubscription() {
+  if (!confirm('Er du sikker på du vil opsige dit abonnement? Det vil forblive aktivt til slutningen af den nuværende periode.')) return;
+  try {
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const token = (await window.supabaseClient?.auth?.getSession())?.data?.session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+    const response = await fetch(supabaseUrl + '/functions/v1/stripe-connect?action=cancel-subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CONFIG.SUPABASE_ANON_KEY
+      },
+      body: '{}'
+    });
+    const result = await response.json();
+    if (result.success) {
+      toast('Abonnement opsagt — aktivt til periodeudløb', 'success');
+    } else {
+      toast(result.error || 'Kunne ikke opsige', 'error');
+    }
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
+}
+
+// Change subscription plan
+async function changeSubscriptionPlan(newPriceId) {
+  if (!confirm('Skift plan? Der kan blive beregnet en proration.')) return;
+  try {
+    const supabaseUrl = CONFIG.SUPABASE_URL;
+    const token = (await window.supabaseClient?.auth?.getSession())?.data?.session?.access_token || CONFIG.SUPABASE_ANON_KEY;
+    const response = await fetch(supabaseUrl + '/functions/v1/stripe-connect?action=change-plan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+        'apikey': CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ newPriceId })
+    });
+    const result = await response.json();
+    if (result.success) {
+      toast('Plan ændret', 'success');
+    } else {
+      toast(result.error || 'Kunne ikke ændre plan', 'error');
+    }
+  } catch (err) {
+    toast('Fejl: ' + err.message, 'error');
+  }
+}
+
+// Export subscription functions
+window.startSubscriptionCheckout = startSubscriptionCheckout;
+window.loadSubscriptionStatus = loadSubscriptionStatus;
+window.cancelSubscription = cancelSubscription;
+window.changeSubscriptionPlan = changeSubscriptionPlan;
 
 function exportInvoiceHistory() {
   const restaurant = restaurants.find(r => r.id === currentProfileRestaurantId);

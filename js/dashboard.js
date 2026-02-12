@@ -47,11 +47,12 @@ let dashboardStats = {
 
 let revenueChart = null;
 
-function loadDashboard() {
+async function loadDashboard() {
   // Combine real restaurants with demo customers if enabled
   let allRestaurants = [...restaurants];
-  if (isDemoDataEnabled()) {
-    const demoCustomers = getDemoDataCustomers();
+  const demoEnabled = typeof isDemoDataEnabled === 'function' && isDemoDataEnabled();
+  if (demoEnabled) {
+    const demoCustomers = typeof getDemoDataCustomers === 'function' ? getDemoDataCustomers() : [];
     allRestaurants = [...allRestaurants, ...demoCustomers];
   }
 
@@ -61,41 +62,80 @@ function loadDashboard() {
   const churned = allRestaurants.filter(r => r.status === 'churned' || r.status === 'cancelled').length;
   const terminated = allRestaurants.filter(r => r.status === 'terminated').length;
 
-  // Order counts - include demo data stats when enabled
-  let ordersToday = allRestaurants.reduce((s, r) => s + (r.orders || 0), 0);
-  dashboardStats.ordersThisMonth = allRestaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
-  dashboardStats.ordersTotal = allRestaurants.reduce((s, r) => s + (r.ordersTotal || r.orders_total || 0), 0);
+  // Try to fetch real order/revenue data from Supabase
+  let ordersToday = 0, revenueToday = 0;
+  let supabaseDataLoaded = false;
+  const today = new Date().toISOString().split('T')[0];
+  const thisMonth = new Date().toISOString().slice(0, 7);
+
+  try {
+    const headers = { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + CONFIG.SUPABASE_ANON_KEY };
+    const base = CONFIG.SUPABASE_URL + '/rest/v1';
+    const monthStart = thisMonth + '-01T00:00:00';
+
+    // Fetch this month's orders from Supabase
+    for (const table of ['unified_orders', 'orders']) {
+      const res = await fetch(base + '/' + table + '?select=total,status,created_at&created_at=gte.' + monthStart + '&order=created_at.desc', { headers });
+      if (res.ok) {
+        const orders = (await res.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+        if (orders.length > 0) {
+          supabaseDataLoaded = true;
+          dashboardStats.ordersThisMonth = orders.length;
+          dashboardStats.revenueThisMonth = orders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          ordersToday = orders.filter(o => o.created_at?.startsWith(today)).length;
+          revenueToday = orders.filter(o => o.created_at?.startsWith(today)).reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          // Estimate total from this month (or fetch all)
+          dashboardStats.ordersTotal = orders.length; // will be overridden below
+          dashboardStats.revenueTotal = dashboardStats.revenueThisMonth;
+          break;
+        }
+      }
+    }
+
+    // Fetch all-time totals
+    if (supabaseDataLoaded) {
+      for (const table of ['unified_orders', 'orders']) {
+        const totalRes = await fetch(base + '/' + table + '?select=total,status&limit=10000', { headers });
+        if (totalRes.ok) {
+          const allOrders = (await totalRes.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
+          if (allOrders.length > 0) {
+            dashboardStats.ordersTotal = allOrders.length;
+            dashboardStats.revenueTotal = allOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+            break;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Dashboard] Supabase fetch fejl:', e);
+  }
+
+  // Fallback to restaurant-aggregated data if no Supabase data
+  if (!supabaseDataLoaded) {
+    ordersToday = allRestaurants.reduce((s, r) => s + (r.orders || 0), 0);
+    dashboardStats.ordersThisMonth = allRestaurants.reduce((s, r) => s + (r.ordersThisMonth || 0), 0);
+    dashboardStats.ordersTotal = allRestaurants.reduce((s, r) => s + (r.ordersTotal || r.orders_total || 0), 0);
+    revenueToday = allRestaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
+    dashboardStats.revenueThisMonth = allRestaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
+    dashboardStats.revenueTotal = allRestaurants.reduce((s, r) => s + (r.revenueTotal || r.revenue_total || 0), 0);
+  }
 
   // Demo data: calculate demo stats from demo orders
-  if (isDemoDataEnabled()) {
-    const demoOrders = getDemoDataOrders();
-    const today = new Date().toISOString().split('T')[0];
-    const thisMonth = new Date().toISOString().slice(0, 7);
+  if (demoEnabled && !supabaseDataLoaded) {
+    const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
     const demoOrdersToday = demoOrders.filter(o => o.created_at?.startsWith(today)).length;
     const demoOrdersMonth = demoOrders.filter(o => o.created_at?.startsWith(thisMonth)).length;
     ordersToday += demoOrdersToday;
     dashboardStats.ordersThisMonth += demoOrdersMonth || Math.floor(demoOrders.length * 0.3);
     if (dashboardStats.ordersTotal === 0) dashboardStats.ordersTotal = demoOrders.length;
-  }
-
-  // Conversations: derive from orders, no random numbers
-  const conversations = isDemoDataEnabled() ? Math.floor(ordersToday * 0.3) : 0;
-
-  // Revenue calculations
-  let revenueToday = allRestaurants.reduce((s, r) => s + (r.revenueToday || 0), 0);
-  dashboardStats.revenueThisMonth = allRestaurants.reduce((s, r) => s + (r.revenueThisMonth || 0), 0);
-  dashboardStats.revenueTotal = allRestaurants.reduce((s, r) => s + (r.revenueTotal || r.revenue_total || 0), 0);
-
-  // Demo data: calculate demo revenue
-  if (isDemoDataEnabled()) {
-    const demoOrders = getDemoDataOrders();
-    const today = new Date().toISOString().split('T')[0];
-    const thisMonth = new Date().toISOString().slice(0, 7);
     const demoRevenueToday = demoOrders.filter(o => o.created_at?.startsWith(today)).reduce((s, o) => s + (o.total || 0), 0);
     const demoRevenueMonth = demoOrders.filter(o => o.created_at?.startsWith(thisMonth)).reduce((s, o) => s + (o.total || 0), 0);
     revenueToday += demoRevenueToday;
     dashboardStats.revenueThisMonth += demoRevenueMonth || Math.floor(demoOrders.reduce((s, o) => s + (o.total || 0), 0) * 0.3);
   }
+
+  // Conversations: derive from orders, no random numbers
+  const conversations = demoEnabled ? Math.floor(ordersToday * 0.3) : 0;
 
   // Generate revenue history for chart
   generateRevenueHistory();

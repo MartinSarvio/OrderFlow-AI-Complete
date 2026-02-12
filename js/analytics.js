@@ -51,35 +51,65 @@ async function loadAnalyticsOverview() {
   const base = CONFIG.SUPABASE_URL + '/rest/v1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  // Fallback demo data
   let revenue = 0, orderCount = 0, aov = 0, visitorCount = 0, aiConv = 0, aiComp = 0;
   let channelData = {}, topProductsList = [];
+  let hasRealData = false;
 
   try {
-    // Fetch orders (last 30 days)
+    // Fetch orders from both orders and unified_orders (last 30 days)
     const ordersRes = await fetch(base + '/unified_orders?select=total,source_channel,line_items,status&created_at=gte.' + thirtyDaysAgo, { headers });
     if (ordersRes.ok) {
       const orders = await ordersRes.json();
       const completed = orders.filter(o => !['cancelled','refunded','draft'].includes(o.status));
-      revenue = completed.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
-      orderCount = completed.length;
-      aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
+      if (completed.length > 0) {
+        hasRealData = true;
+        revenue = completed.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+        orderCount = completed.length;
+        aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
 
-      // Channel distribution
-      completed.forEach(o => {
-        const ch = o.source_channel || 'unknown';
-        channelData[ch] = (channelData[ch] || 0) + 1;
-      });
-
-      // Top products from line_items
-      const productCounts = {};
-      completed.forEach(o => {
-        (o.line_items || []).forEach(item => {
-          const name = item.name || 'Ukendt';
-          productCounts[name] = (productCounts[name] || 0) + (item.quantity || 1);
+        // Channel distribution
+        completed.forEach(o => {
+          const ch = o.source_channel || 'unknown';
+          channelData[ch] = (channelData[ch] || 0) + 1;
         });
-      });
-      topProductsList = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+        // Top products from line_items
+        const productCounts = {};
+        completed.forEach(o => {
+          (o.line_items || []).forEach(item => {
+            const name = item.name || 'Ukendt';
+            productCounts[name] = (productCounts[name] || 0) + (item.quantity || 1);
+          });
+        });
+        topProductsList = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      }
+    }
+
+    // Also try orders table if unified_orders had no data
+    if (!hasRealData) {
+      const ordersRes2 = await fetch(base + '/orders?select=total,source_channel,line_items,status&created_at=gte.' + thirtyDaysAgo, { headers });
+      if (ordersRes2.ok) {
+        const orders2 = await ordersRes2.json();
+        const completed2 = orders2.filter(o => !['cancelled','refunded','draft'].includes(o.status));
+        if (completed2.length > 0) {
+          hasRealData = true;
+          revenue = completed2.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+          orderCount = completed2.length;
+          aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
+          completed2.forEach(o => {
+            const ch = o.source_channel || 'unknown';
+            channelData[ch] = (channelData[ch] || 0) + 1;
+          });
+          const productCounts = {};
+          completed2.forEach(o => {
+            (o.line_items || []).forEach(item => {
+              const name = item.name || 'Ukendt';
+              productCounts[name] = (productCounts[name] || 0) + (item.quantity || 1);
+            });
+          });
+          topProductsList = Object.entries(productCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        }
+      }
     }
 
     // Fetch visitors (page_views last 30 days)
@@ -95,24 +125,47 @@ async function loadAnalyticsOverview() {
     if (aiRes.ok) {
       const convs = await aiRes.json();
       aiConv = convs.length;
-      const completed = convs.filter(c => c.outcome === 'completed').length;
-      aiComp = aiConv > 0 ? Math.round((completed / aiConv) * 100) : 0;
+      const completedConvs = convs.filter(c => c.outcome === 'completed').length;
+      aiComp = aiConv > 0 ? Math.round((completedConvs / aiConv) * 100) : 0;
     }
   } catch (e) {
-    console.warn('[Analytics] Supabase fetch fejl, viser demo-data:', e);
-    revenue = 47850; orderCount = 156; aov = 307; visitorCount = 1247; aiConv = 89; aiComp = 94;
-    channelData = { app: 70, web: 47, sms: 23, walkin: 16 };
-    topProductsList = [['Margherita Pizza', 47], ['Pepperoni Pizza', 38], ['Quattro Formaggi', 29], ['Tiramisu', 24], ['Cola', 21]];
+    console.warn('[Analytics] Supabase fetch fejl:', e);
   }
 
-  // Use demo fallback if no real data
-  if (orderCount === 0 && revenue === 0) {
-    revenue = 47850; orderCount = 156; aov = 307; visitorCount = 1247; aiConv = 89; aiComp = 94;
-    channelData = { app: 70, web: 47, sms: 23, walkin: 16 };
-    topProductsList = [['Margherita Pizza', 47], ['Pepperoni Pizza', 38], ['Quattro Formaggi', 29], ['Tiramisu', 24], ['Cola', 21]];
+  // Demo mode: use calculated demo data from localStorage
+  if (!hasRealData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+    const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
+    if (demoOrders.length > 0) {
+      const thirtyDaysAgoMs = Date.now() - 30 * 86400000;
+      const recentDemo = demoOrders.filter(o => new Date(o.created_at).getTime() > thirtyDaysAgoMs);
+      revenue = recentDemo.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      orderCount = recentDemo.length;
+      aov = orderCount > 0 ? Math.round(revenue / orderCount) : 0;
+      visitorCount = Math.floor(orderCount * 3.5);
+      aiConv = Math.floor(orderCount * 0.6);
+      aiComp = 94;
+      channelData = { app: Math.floor(orderCount * 0.45), web: Math.floor(orderCount * 0.3), sms: Math.floor(orderCount * 0.15), walkin: Math.floor(orderCount * 0.1) };
+      // Extract products from demo orders
+      const demoProdCounts = {};
+      recentDemo.forEach(o => {
+        (o.items || o.line_items || []).forEach(item => {
+          const name = item.name || 'Ukendt';
+          demoProdCounts[name] = (demoProdCounts[name] || 0) + (item.quantity || 1);
+        });
+      });
+      topProductsList = Object.entries(demoProdCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      if (topProductsList.length === 0) {
+        topProductsList = [['Demo Produkt 1', orderCount], ['Demo Produkt 2', Math.floor(orderCount * 0.7)]];
+      }
+      hasRealData = true; // treat demo as valid data
+    }
   }
+
+  // No data at all — show "Ingen data endnu"
+  const noDataMessage = !hasRealData;
 
   const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
+  const noData = '—';
   const revenueEl = document.getElementById('inline-stat-revenue');
   const ordersEl = document.getElementById('inline-stat-orders');
   const aovEl = document.getElementById('inline-stat-aov');
@@ -120,16 +173,18 @@ async function loadAnalyticsOverview() {
   const aiConvEl = document.getElementById('inline-ai-conversations');
   const aiCompEl = document.getElementById('inline-ai-completion');
 
-  if (revenueEl) revenueEl.textContent = fmt(revenue);
-  if (ordersEl) ordersEl.textContent = orderCount.toLocaleString('da-DK');
-  if (aovEl) aovEl.textContent = fmt(aov);
-  if (visitorsEl) visitorsEl.textContent = visitorCount.toLocaleString('da-DK');
-  if (aiConvEl) aiConvEl.textContent = aiConv.toLocaleString('da-DK');
-  if (aiCompEl) aiCompEl.textContent = aiComp + '%';
+  if (revenueEl) revenueEl.textContent = noDataMessage ? noData : fmt(revenue);
+  if (ordersEl) ordersEl.textContent = noDataMessage ? noData : orderCount.toLocaleString('da-DK');
+  if (aovEl) aovEl.textContent = noDataMessage ? noData : fmt(aov);
+  if (visitorsEl) visitorsEl.textContent = noDataMessage ? noData : visitorCount.toLocaleString('da-DK');
+  if (aiConvEl) aiConvEl.textContent = noDataMessage ? noData : aiConv.toLocaleString('da-DK');
+  if (aiCompEl) aiCompEl.textContent = noDataMessage ? noData : aiComp + '%';
 
   // Channel bars
   const channelBars = document.getElementById('inline-channel-bars');
-  if (channelBars) {
+  if (channelBars && noDataMessage) {
+    channelBars.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Ingen data endnu</p>';
+  } else if (channelBars) {
     const total = Object.values(channelData).reduce((s, v) => s + v, 0) || 1;
     const channelLabels = { app: 'App', web: 'Website', website: 'Website', sms: 'SMS', phone: 'Telefon', walkin: 'Walk-in', instagram: 'Instagram', facebook: 'Facebook' };
     const channelColors = { app: 'var(--primary)', web: 'var(--success)', website: 'var(--success)', sms: 'var(--info, #3B82F6)', phone: 'var(--warning)', walkin: 'var(--accent)', instagram: '#E1306C', facebook: '#1877F2' };
@@ -150,7 +205,9 @@ async function loadAnalyticsOverview() {
 
   // Top products
   const topProducts = document.getElementById('inline-top-products');
-  if (topProducts) {
+  if (topProducts && noDataMessage) {
+    topProducts.innerHTML = '<tr><td colspan="2" style="padding:16px;text-align:center;color:var(--muted)">Ingen data endnu</td></tr>';
+  } else if (topProducts) {
     topProducts.innerHTML = topProductsList.map(([name, count]) =>
       `<tr><td style="padding:12px 16px">${escapeHtml(name)}</td><td style="text-align:right;padding-right:16px">${escapeHtml(String(count))}</td></tr>`
     ).join('');
@@ -163,7 +220,8 @@ async function loadAnalyticsSales() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
   const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString();
 
-  let total = 47850, orders = 156, avg = 307, growth = '+12%';
+  let total = 0, orders = 0, avg = 0, growth = '—';
+  let hasData = false;
 
   try {
     // Current period
@@ -171,6 +229,7 @@ async function loadAnalyticsSales() {
     if (currRes.ok) {
       const currOrders = (await currRes.json()).filter(o => !['cancelled','refunded','draft'].includes(o.status));
       if (currOrders.length > 0) {
+        hasData = true;
         total = currOrders.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
         orders = currOrders.length;
         avg = Math.round(total / orders);
@@ -189,16 +248,31 @@ async function loadAnalyticsSales() {
     }
   } catch (e) { console.warn('[Analytics Sales] Fejl:', e); }
 
+  // Demo mode fallback
+  if (!hasData && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+    const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
+    const thirtyDaysAgoMs = Date.now() - 30 * 86400000;
+    const recent = demoOrders.filter(o => new Date(o.created_at).getTime() > thirtyDaysAgoMs);
+    if (recent.length > 0) {
+      hasData = true;
+      total = recent.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+      orders = recent.length;
+      avg = Math.round(total / orders);
+      growth = '—';
+    }
+  }
+
   const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
   const salesTotalEl = document.getElementById('sales-total');
   const salesOrdersEl = document.getElementById('sales-orders');
   const salesAvgEl = document.getElementById('sales-avg');
   const salesGrowthEl = document.getElementById('sales-growth');
 
-  if (salesTotalEl) salesTotalEl.textContent = fmt(total);
-  if (salesOrdersEl) salesOrdersEl.textContent = orders.toLocaleString('da-DK');
-  if (salesAvgEl) salesAvgEl.textContent = fmt(avg);
-  if (salesGrowthEl) salesGrowthEl.textContent = growth;
+  const nd = '—';
+  if (salesTotalEl) salesTotalEl.textContent = hasData ? fmt(total) : nd;
+  if (salesOrdersEl) salesOrdersEl.textContent = hasData ? orders.toLocaleString('da-DK') : nd;
+  if (salesAvgEl) salesAvgEl.textContent = hasData ? fmt(avg) : nd;
+  if (salesGrowthEl) salesGrowthEl.textContent = hasData ? growth : nd;
 }
 
 async function loadAnalyticsProducts() {
@@ -206,13 +280,7 @@ async function loadAnalyticsProducts() {
   const base = CONFIG.SUPABASE_URL + '/rest/v1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  let products = [
-    { name: 'Margherita Pizza', qty: 47, revenue: 4230, trend: 15 },
-    { name: 'Pepperoni Pizza', qty: 38, revenue: 3800, trend: 8 },
-    { name: 'Quattro Formaggi', qty: 29, revenue: 3190, trend: -3 },
-    { name: 'Tiramisu', qty: 24, revenue: 1440, trend: 22 },
-    { name: 'Cola', qty: 21, revenue: 630, trend: 0 }
-  ];
+  let products = [];
 
   try {
     const res = await fetch(base + '/unified_orders?select=line_items,status&created_at=gte.' + thirtyDaysAgo, { headers });
@@ -238,8 +306,30 @@ async function loadAnalyticsProducts() {
     }
   } catch (e) { console.warn('[Analytics Products] Fejl:', e); }
 
+  // Demo mode fallback
+  if (products.length === 0 && typeof isDemoDataEnabled === 'function' && isDemoDataEnabled()) {
+    const demoOrders = typeof getDemoDataOrders === 'function' ? getDemoDataOrders() : [];
+    const productMap = {};
+    demoOrders.forEach(o => {
+      (o.items || o.line_items || []).forEach(item => {
+        const name = item.name || 'Ukendt';
+        if (!productMap[name]) productMap[name] = { qty: 0, revenue: 0 };
+        productMap[name].qty += (item.quantity || 1);
+        productMap[name].revenue += (item.unit_price || item.price || 0) * (item.quantity || 1);
+      });
+    });
+    const sorted = Object.entries(productMap).sort((a, b) => b[1].qty - a[1].qty);
+    if (sorted.length > 0) {
+      products = sorted.slice(0, 10).map(([name, data]) => ({
+        name, qty: data.qty, revenue: Math.round(data.revenue), trend: 0
+      }));
+    }
+  }
+
   const table = document.getElementById('products-analytics-table');
-  if (table) {
+  if (table && products.length === 0) {
+    table.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--muted)">Ingen data endnu</td></tr>';
+  } else if (table) {
     const fmt = (n) => n.toLocaleString('da-DK') + ' kr';
     table.innerHTML = products.map(p => {
       const trendColor = p.trend > 0 ? 'var(--success)' : p.trend < 0 ? 'var(--danger)' : 'var(--muted)';
@@ -254,12 +344,8 @@ async function loadAnalyticsAI() {
   const base = CONFIG.SUPABASE_URL + '/rest/v1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  let totalConv = 89, compRate = 94, ordersCreated = 67, escRate = 6;
-  let recentConvs = [
-    { label: 'Kunde #1247', desc: 'Bestilling: 2x Margherita, 1x Cola', outcome: 'completed' },
-    { label: 'Kunde #1246', desc: 'Spørgsmål: Åbningstider', outcome: 'completed' },
-    { label: 'Kunde #1245', desc: 'Bestilling: 3x Pepperoni', outcome: 'escalated' }
-  ];
+  let totalConv = 0, compRate = 0, ordersCreated = 0, escRate = 0;
+  let recentConvs = [];
 
   try {
     const res = await fetch(base + '/ai_conversations?select=*&started_at=gte.' + thirtyDaysAgo + '&order=started_at.desc&limit=100', { headers });
@@ -287,15 +373,18 @@ async function loadAnalyticsAI() {
   const ordersEl = document.getElementById('ai-orders-created');
   const escEl = document.getElementById('ai-escalation-rate');
 
-  if (convEl) convEl.textContent = totalConv.toLocaleString('da-DK');
-  if (compEl) compEl.textContent = compRate + '%';
-  if (ordersEl) ordersEl.textContent = ordersCreated.toLocaleString('da-DK');
-  if (escEl) escEl.textContent = escRate + '%';
+  const aiNoData = totalConv === 0 && recentConvs.length === 0;
+  if (convEl) convEl.textContent = aiNoData ? '—' : totalConv.toLocaleString('da-DK');
+  if (compEl) compEl.textContent = aiNoData ? '—' : compRate + '%';
+  if (ordersEl) ordersEl.textContent = aiNoData ? '—' : ordersCreated.toLocaleString('da-DK');
+  if (escEl) escEl.textContent = aiNoData ? '—' : escRate + '%';
 
   const outcomeColors = { completed: 'var(--success)', escalated: 'var(--warning)', abandoned: 'var(--danger)', in_progress: 'var(--muted)' };
   const outcomeLabels = { completed: 'Fuldført', escalated: 'Eskaleret', abandoned: 'Forladt', in_progress: 'I gang' };
   const convList = document.getElementById('ai-conversations-list');
-  if (convList) {
+  if (convList && recentConvs.length === 0) {
+    convList.innerHTML = '<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Ingen data endnu</p>';
+  } else if (convList) {
     convList.innerHTML = recentConvs.map(c => `
       <div style="padding:12px;background:var(--bg-secondary);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
         <div><strong>${c.label}</strong><div style="font-size:12px;color:var(--muted)">${c.desc}</div></div>
@@ -310,7 +399,7 @@ async function loadAnalyticsChannels() {
   const base = CONFIG.SUPABASE_URL + '/rest/v1';
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
-  let channelCounts = { app: 70, web: 47, phone: 23, walkin: 16 };
+  let channelCounts = {};
 
   try {
     const res = await fetch(base + '/unified_orders?select=source_channel,status&created_at=gte.' + thirtyDaysAgo, { headers });
