@@ -501,8 +501,9 @@ function publishMobileApp() {
   config.publishedAt = new Date().toISOString();
   config.status = 'published';
 
-  // Save to localStorage
+  // Save to localStorage + Supabase
   localStorage.setItem('published_mobile_app', JSON.stringify(config));
+  _saveBuilderConfigToSupabase('app_builder', config);
 
   toast('App publiceret!', 'success');
 }
@@ -653,12 +654,16 @@ function getCMSHistory() {
   return getConfigHistory(CMS_HISTORY_KEY);
 }
 
-// Load App Builder Config
+// Load App Builder Config — Supabase FIRST, localStorage as fallback/cache
 function loadAppBuilderConfig() {
   const saved = localStorage.getItem(APP_BUILDER_CONFIG_KEY);
   if (saved) {
     return JSON.parse(saved);
   }
+  return getDefaultAppBuilderConfig();
+}
+
+function getDefaultAppBuilderConfig() {
   return {
     farver: { primary: '#D4380D', secondary: '#FFF7E6', background: '#FFFFFF', text: '#1F2937' },
     billeder: { name: '', tagline: '', logo: null, banner: null },
@@ -678,25 +683,114 @@ function loadAppBuilderConfig() {
   };
 }
 
-// Save App Builder Config
+// Async loader: tries Supabase first, falls back to localStorage, caches result
+async function loadAppBuilderConfigAsync() {
+  try {
+    const client = window.supabaseClient || window.supabase;
+    if (client) {
+      const { data: { user } } = await client.auth.getUser();
+      if (user) {
+        const { data, error } = await client
+          .from('builder_configs')
+          .select('config_json')
+          .eq('user_id', user.id)
+          .eq('builder_type', 'app_builder')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!error && data && data.config_json) {
+          // Cache to localStorage
+          localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(data.config_json));
+          console.log('✅ App Builder config loaded from Supabase');
+          return data.config_json;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Supabase load failed, using localStorage:', err.message);
+  }
+
+  // Fallback to localStorage
+  return loadAppBuilderConfig();
+}
+
+// Save App Builder Config — Supabase FIRST, localStorage as cache
 function saveAppBuilderConfig(config) {
-  // Always save to localStorage first (instant)
+  // Always save to localStorage immediately (instant UX)
   localStorage.setItem(APP_BUILDER_CONFIG_KEY, JSON.stringify(config));
   syncAllAppPreviews(config);
 
   // Broadcast to other tabs for cross-tab sync
   appBuilderChannel.postMessage({ type: 'appbuilder_update', config: config });
 
-  // Sync to Supabase in background (non-blocking)
-  if (window.SupabaseDB) {
-    window.SupabaseDB.saveBuilderConfig('app_builder', config)
-      .then(result => {
-        if (result.success) {
-          console.log('✅ App Builder config synced to Supabase');
-        }
-      })
-      .catch(err => console.warn('⚠️ Supabase sync failed:', err));
+  // Save to Supabase FIRST (primary storage)
+  _saveBuilderConfigToSupabase('app_builder', config);
+}
+
+// Shared async Supabase save for both builders
+async function _saveBuilderConfigToSupabase(builderType, config) {
+  try {
+    const client = window.supabaseClient || window.supabase;
+    if (!client) return;
+
+    const { data: { user } } = await client.auth.getUser();
+    if (!user) return;
+
+    const { error } = await client
+      .from('builder_configs')
+      .upsert({
+        user_id: user.id,
+        builder_type: builderType,
+        config_json: config,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,builder_type'
+      });
+
+    if (error) {
+      console.warn('⚠️ Supabase builder save failed:', error.message);
+      // Also try via SupabaseDB helper if available
+      if (window.SupabaseDB) {
+        await window.SupabaseDB.saveBuilderConfig(builderType, config);
+      }
+    } else {
+      console.log('✅ ' + builderType + ' config synced to Supabase');
+    }
+  } catch (err) {
+    console.warn('⚠️ Supabase sync failed:', err.message);
+    // localStorage already has the data — no data loss
   }
+}
+
+// Load Web Builder config from Supabase (async)
+async function loadWebBuilderConfigAsync() {
+  try {
+    const client = window.supabaseClient || window.supabase;
+    if (client) {
+      const { data: { user } } = await client.auth.getUser();
+      if (user) {
+        const { data, error } = await client
+          .from('builder_configs')
+          .select('config_json')
+          .eq('user_id', user.id)
+          .eq('builder_type', 'web_builder')
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (!error && data && data.config_json) {
+          localStorage.setItem('orderflow_webbuilder_config', JSON.stringify(data.config_json));
+          console.log('✅ Web Builder config loaded from Supabase');
+          return data.config_json;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ Web Builder Supabase load failed:', err.message);
+  }
+  const saved = localStorage.getItem('orderflow_webbuilder_config');
+  return saved ? JSON.parse(saved) : null;
 }
 
 // Auto-save App Builder changes with debounce
@@ -727,16 +821,8 @@ function autoSaveAppBuilder() {
     // Broadcast to other tabs
     appBuilderChannel.postMessage({ type: 'appbuilder_update', config: config });
 
-    // Sync to Supabase in background
-    if (window.SupabaseDB) {
-      window.SupabaseDB.saveBuilderConfig('app_builder', config)
-        .then(result => {
-          if (result.success) {
-            console.log('✅ App Builder config synced to Supabase');
-          }
-        })
-        .catch(err => console.warn('⚠️ Supabase sync failed:', err));
-    }
+    // Sync to Supabase in background (primary storage)
+    _saveBuilderConfigToSupabase('app_builder', config);
 
     appBuilderHasChanges = false;
     appBuilderIsSaving = false;
@@ -1074,10 +1160,7 @@ function saveAppBranding() {
   localStorage.setItem('orderflow_app_branding', JSON.stringify(brandingData));
 
   // Sync to Supabase via builder config
-  if (window.SupabaseDB) {
-    window.SupabaseDB.saveBuilderConfig('app_builder', brandingData)
-      .catch(err => console.warn('Supabase sync fejl (branding):', err));
-  }
+  _saveBuilderConfigToSupabase('app_builder', brandingData);
 
   const status = document.getElementById('branding-save-status');
   if (status) {
@@ -1378,10 +1461,8 @@ function saveAdminOplysninger() {
   };
   localStorage.setItem('orderflow_admin_profile', JSON.stringify(profile));
 
-  if (window.SupabaseDB) {
-    window.SupabaseDB.saveUserSetting('admin_profile', profile)
-      .catch(err => console.warn('Supabase sync fejl (admin profile):', err));
-  }
+  // Sync profile to Supabase
+  _saveBuilderConfigToSupabase('admin_profile', profile);
 
   showSaveStatus('admin-oplysninger-status', 'saved');
 }
@@ -1468,10 +1549,8 @@ function saveAdminVirksomhed() {
   };
   localStorage.setItem('orderflow_admin_company', JSON.stringify(company));
 
-  if (window.SupabaseDB) {
-    window.SupabaseDB.saveUserSetting('admin_company', company)
-      .catch(err => console.warn('Supabase sync fejl (admin company):', err));
-  }
+  // Sync company to Supabase
+  _saveBuilderConfigToSupabase('admin_company', company);
 
   showSaveStatus('company-save-status', 'saved');
 }

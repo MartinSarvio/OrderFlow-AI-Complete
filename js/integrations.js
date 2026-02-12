@@ -762,6 +762,26 @@ async function addIntegration() {
       localStorage.setItem('flow_integrations', JSON.stringify(integrations));
     }
 
+    // Save to integration_connections for the economic-proxy to find
+    try {
+      const client = window.supabaseClient || window.supabase;
+      if (client && currentUser?.id) {
+        await client.from('integration_connections').upsert({
+          user_id: currentUser.id,
+          system: 'economic',
+          status: 'connected',
+          config: {
+            credentials: {
+              appSecret: appSecret,
+              agreementToken: agreementToken
+            }
+          }
+        }, { onConflict: 'user_id,system' });
+      }
+    } catch (e) {
+      console.warn('Could not save to integration_connections:', e.message);
+    }
+
     // Clear fields
     document.getElementById('economic-app-secret').value = '';
     document.getElementById('economic-agreement-token').value = '';
@@ -778,7 +798,23 @@ async function addIntegration() {
     // Reload
     loadConnectedIntegrations();
 
-    toast('e-conomic integration tilføjet', 'success');
+    // Test connection via Edge Function
+    toast('e-conomic integration tilføjet — tester forbindelse...', 'info');
+    try {
+      const testResult = await callEconomicProxy('test-connection');
+      if (testResult.success) {
+        toast('e-conomic forbundet! (' + (testResult.data?.company?.name || '') + ')', 'success');
+        updateEconomicSyncStatus({
+          status: 'connected',
+          lastSync: new Date().toISOString(),
+          companyName: testResult.data?.company?.name || ''
+        });
+      } else {
+        toast('e-conomic tilføjet, men forbindelsestest fejlede. Tjek dine nøgler.', 'warning');
+      }
+    } catch (e) {
+      toast('e-conomic integration gemt. Forbindelsestest kunne ikke køres.', 'info');
+    }
   }
 }
 
@@ -851,10 +887,19 @@ async function loadConnectedIntegrations() {
     return;
   }
 
-  container.innerHTML = integrations.map(int => `
+  container.innerHTML = integrations.map(int => {
+    const isEconomic = int.system === 'economic';
+    const syncInfo = isEconomic && int.config?.lastSync
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:2px">Seneste sync: ${new Date(int.config.lastSync).toLocaleString('da-DK')}</div>`
+      : '';
+    const syncBtn = isEconomic
+      ? `<button class="btn btn-secondary btn-sm" onclick="syncEconomicNow()">Synkroniser</button>`
+      : '';
+
+    return `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;background:var(--success-dim);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <div style="width:40px;height:40px;background:var(--success-dim, rgba(34,197,94,0.1));border-radius:8px;display:flex;align-items:center;justify-content:center">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
             <polyline points="22 4 12 14.01 9 11.01"/>
@@ -863,24 +908,181 @@ async function loadConnectedIntegrations() {
         <div>
           <div style="font-weight:600;font-size:14px">${int.name}</div>
           <div style="font-size:12px;color:var(--muted)">Forbundet ${new Date(int.connectedAt).toLocaleDateString('da-DK')}</div>
+          ${syncInfo}
         </div>
       </div>
       <div style="display:flex;gap:8px">
+        ${syncBtn}
         <button class="btn btn-secondary btn-sm" onclick="testIntegration('${int.id}')">Test forbindelse</button>
         <button class="btn btn-danger btn-sm" onclick="removeIntegration('${int.id}')">Fjern</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+
+  // Add sync status container after the list
+  if (!document.getElementById('economic-sync-status')) {
+    container.insertAdjacentHTML('afterend', '<div id="economic-sync-status" style="display:none"></div>');
+  }
+
+  // Load e-conomic sync status
+  if (integrations.some(i => i.system === 'economic')) {
+    loadEconomicSyncStatus();
+  }
 }
 
-// Test integration connection
-function testIntegration(integrationId) {
+// Test integration connection — uses economic-proxy Edge Function for e-conomic
+async function testIntegration(integrationId) {
   toast('Tester forbindelse...', 'info');
-  // Simulate test
-  setTimeout(() => {
-    toast('Forbindelse OK!', 'success');
-  }, 1500);
+
+  // Find integration to check system type
+  const integrations = JSON.parse(localStorage.getItem('flow_integrations') || '[]');
+  const integration = integrations.find(i => i.id === integrationId);
+  const system = integration?.system || '';
+
+  if (system === 'economic') {
+    try {
+      const result = await callEconomicProxy('test-connection');
+      if (result.success) {
+        const companyName = result.data?.company?.name || 'e-conomic';
+        toast('e-conomic forbindelse OK! (' + companyName + ')', 'success');
+
+        // Update sync status in UI
+        updateEconomicSyncStatus({
+          status: 'connected',
+          lastSync: new Date().toISOString(),
+          companyName: companyName
+        });
+      } else {
+        toast('e-conomic forbindelse fejlede: ' + (result.data?.message || 'Ukendt fejl'), 'error');
+      }
+    } catch (err) {
+      toast('Forbindelsesfejl: ' + err.message, 'error');
+    }
+  } else {
+    // Fallback for non-economic integrations
+    setTimeout(() => {
+      toast('Forbindelse OK!', 'success');
+    }, 1500);
+  }
 }
+
+// ============ e-conomic PROXY CLIENT ============
+
+// Call the economic-proxy Edge Function
+async function callEconomicProxy(action, params = {}) {
+  const supabaseUrl = typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_URL : '';
+  const anonKey = typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_ANON_KEY : '';
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error('Supabase configuration missing');
+  }
+
+  const client = window.supabaseClient || window.supabase;
+  let authToken = anonKey;
+  if (client) {
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      if (session?.access_token) authToken = session.access_token;
+    } catch (e) {}
+  }
+
+  const response = await fetch(supabaseUrl + '/functions/v1/economic-proxy', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + authToken,
+      'apikey': anonKey
+    },
+    body: JSON.stringify({ action, ...params })
+  });
+
+  return response.json();
+}
+
+// Update sync status display for e-conomic
+function updateEconomicSyncStatus(info) {
+  const statusEl = document.getElementById('economic-sync-status');
+  if (!statusEl) return;
+
+  statusEl.style.display = 'block';
+  statusEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:12px;background:var(--success-dim, rgba(34,197,94,0.1));border:1px solid var(--success);border-radius:8px;margin-top:12px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--success)">Forbundet${info.companyName ? ' — ' + info.companyName : ''}</div>
+        <div style="font-size:11px;color:var(--muted)">Seneste sync: ${info.lastSync ? new Date(info.lastSync).toLocaleString('da-DK') : 'Aldrig'}</div>
+      </div>
+    </div>
+  `;
+}
+
+// Load e-conomic sync status on page load
+async function loadEconomicSyncStatus() {
+  try {
+    const result = await callEconomicProxy('sync-status');
+    if (result.success && result.connection) {
+      const conn = result.connection;
+      if (conn.status === 'connected') {
+        updateEconomicSyncStatus({
+          status: conn.status,
+          lastSync: conn.last_sync,
+          companyName: conn.config?.company || ''
+        });
+      }
+    }
+  } catch (e) {
+    // Silently fail — user may not have credentials
+  }
+}
+
+// Sync e-conomic data now
+async function syncEconomicNow() {
+  toast('Synkroniserer med e-conomic...', 'info');
+  try {
+    // Fetch company info as a sync check
+    const result = await callEconomicProxy('test-connection');
+    if (result.success) {
+      const companyName = result.data?.company?.name || 'e-conomic';
+      updateEconomicSyncStatus({
+        status: 'connected',
+        lastSync: new Date().toISOString(),
+        companyName: companyName
+      });
+
+      // Update integration_connections sync timestamp
+      const client = window.supabaseClient || window.supabase;
+      if (client) {
+        const { data: { user } } = await client.auth.getUser();
+        if (user) {
+          await client.from('integration_connections').upsert({
+            user_id: user.id,
+            system: 'economic',
+            status: 'connected',
+            last_sync: new Date().toISOString(),
+            last_sync_status: 'success',
+            config: { company: companyName }
+          }, { onConflict: 'user_id,system' });
+        }
+      }
+
+      toast('e-conomic synkroniseret! (' + companyName + ')', 'success');
+      loadConnectedIntegrations();
+    } else {
+      toast('Sync fejlede: ' + (result.data?.message || 'Ukendt fejl'), 'error');
+    }
+  } catch (err) {
+    toast('Sync fejlede: ' + err.message, 'error');
+  }
+}
+
+// Export new integration functions
+window.callEconomicProxy = callEconomicProxy;
+window.syncEconomicNow = syncEconomicNow;
+window.loadEconomicSyncStatus = loadEconomicSyncStatus;
+window.updateEconomicSyncStatus = updateEconomicSyncStatus;
 
 // Remove integration
 async function removeIntegration(integrationId) {

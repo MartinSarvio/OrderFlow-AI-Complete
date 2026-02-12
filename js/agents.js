@@ -961,7 +961,9 @@ var agentConfigDefinitions = {
       { type: 'field', key: 'restaurant_phone', label: 'Afsendernummer', placeholder: '+45...' },
       { type: 'toggle', key: 'sms_order_confirm', label: 'Ordrebekræftelse SMS', desc: 'Send automatisk SMS når ordre modtages' },
       { type: 'toggle', key: 'sms_delivery_update', label: 'Leveringsstatus SMS', desc: 'Opdater kunde om leveringsstatus' },
-      { type: 'toggle', key: 'sms_feedback_request', label: 'Feedback-anmodning', desc: 'Anmod om feedback efter levering' }
+      { type: 'toggle', key: 'sms_feedback_request', label: 'Feedback-anmodning', desc: 'Anmod om feedback efter levering' },
+      { type: 'sms_test' },
+      { type: 'webhook', label: 'InMobile Webhook URL', url: (typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_URL : '') + '/functions/v1/receive-sms-inmobile' }
     ]
   },
   haandvaerker: {
@@ -971,7 +973,9 @@ var agentConfigDefinitions = {
       { type: 'field', key: 'haandvaerker_phone', label: 'Afsendernummer', placeholder: '+45...' },
       { type: 'toggle', key: 'sms_booking_confirm', label: 'Booking-bekræftelse', desc: 'SMS ved ny booking' },
       { type: 'toggle', key: 'sms_reminder', label: 'Påmindelser', desc: 'Påmindelse før aftale' },
-      { type: 'toggle', key: 'sms_followup', label: 'Opfølgning', desc: 'Opfølgning efter udført arbejde' }
+      { type: 'toggle', key: 'sms_followup', label: 'Opfølgning', desc: 'Opfølgning efter udført arbejde' },
+      { type: 'sms_test' },
+      { type: 'webhook', label: 'InMobile Webhook URL', url: (typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_URL : '') + '/functions/v1/receive-sms-inmobile' }
     ]
   },
   seo: {
@@ -1058,6 +1062,16 @@ function renderAgentConfigSections(agentId, config) {
         '<select class="input" id="config-' + s.key + '" style="width:100%;font-size:var(--font-size-sm)">';
       s.options.forEach(function(opt) { html += '<option value="' + opt + '"' + (opt === current ? ' selected' : '') + '>' + opt + '</option>'; });
       html += '</select>';
+    } else if (s.type === 'sms_test') {
+      html += '<div style="padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
+        '<div style="font-weight:500;font-size:var(--font-size-sm);margin-bottom:8px">Test SMS</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<input class="input" id="sms-test-phone" type="tel" placeholder="+45 12345678" style="font-size:var(--font-size-sm)">' +
+        '<input class="input" id="sms-test-message" type="text" value="Test fra FLOW 🚀" placeholder="Besked..." style="font-size:var(--font-size-sm)">' +
+        '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="btn btn-primary btn-sm" onclick="sendTestSms()" style="font-size:var(--font-size-sm)">Send test SMS</button>' +
+        '<span id="sms-test-status" style="font-size:12px;display:none"></span>' +
+        '</div></div></div>';
     } else if (s.type === 'payment') {
       var payConfigured = workflowAgentStatus[s.key] && workflowAgentStatus[s.key].paymentsConfigured;
       html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3);background:var(--bg2);border-radius:var(--radius-sm)">' +
@@ -1915,6 +1929,148 @@ function testAgentSmsParser() {
     (flags.length > 0 ? '<div><span style="color:var(--muted)">Flags:</span> <strong style="color:#8B0000">' + flags.join(', ') + '</strong></div>' : '') +
     '</div></div>';
 }
+
+// ============================================
+// SEND TEST SMS via Edge Function (end-to-end)
+// ============================================
+
+async function sendTestSms() {
+  const phoneInput = document.getElementById('sms-test-phone');
+  const messageInput = document.getElementById('sms-test-message');
+  const statusEl = document.getElementById('sms-test-status');
+
+  const phone = (phoneInput?.value || '').trim();
+  const message = (messageInput?.value || '').trim();
+
+  if (!phone) {
+    toast('Indtast et telefonnummer', 'warning');
+    phoneInput?.focus();
+    return;
+  }
+  if (!message) {
+    toast('Indtast en besked', 'warning');
+    messageInput?.focus();
+    return;
+  }
+
+  // Show sending status
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    statusEl.style.color = 'var(--warning, #f59e0b)';
+    statusEl.textContent = '⏳ Sender...';
+  }
+
+  const supabaseUrl = typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_URL : '';
+  const anonKey = typeof CONFIG !== 'undefined' ? CONFIG.SUPABASE_ANON_KEY : '';
+
+  if (!supabaseUrl || !anonKey) {
+    toast('Supabase konfiguration mangler', 'error');
+    if (statusEl) { statusEl.style.color = 'var(--danger)'; statusEl.textContent = '❌ Konfigurationsfejl'; }
+    return;
+  }
+
+  // Get auth token
+  let authToken = anonKey;
+  const client = window.supabaseClient || window.supabase;
+  if (client) {
+    try {
+      const { data: { session } } = await client.auth.getSession();
+      if (session?.access_token) authToken = session.access_token;
+    } catch (e) {}
+  }
+
+  // Get sender from config
+  const sender = localStorage.getItem('restaurant_phone') || localStorage.getItem('haandvaerker_phone') || undefined;
+
+  try {
+    const response = await fetch(supabaseUrl + '/functions/v1/send-sms', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + authToken,
+        'apikey': anonKey
+      },
+      body: JSON.stringify({
+        to: phone,
+        message: message,
+        sender: sender
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      toast('SMS sendt! (ID: ' + (result.sid || 'OK') + ')', 'success');
+      if (statusEl) {
+        statusEl.style.color = 'var(--success, #22c55e)';
+        statusEl.textContent = '✅ Sendt! ID: ' + (result.sid || 'OK');
+      }
+
+      // Log to sms_send_log via Supabase if available
+      if (client) {
+        try {
+          const { data: { user } } = await client.auth.getUser();
+          if (user) {
+            await client.from('sms_send_log').insert({
+              user_id: user.id,
+              phone_to: phone,
+              message_text: message,
+              sender: sender || 'default',
+              status: 'sent',
+              provider_message_id: result.sid || null,
+              provider: 'inmobile'
+            });
+          }
+        } catch (e) {
+          console.warn('Could not log SMS send:', e.message);
+        }
+      }
+
+      // Log to agent activity
+      var activity = JSON.parse(localStorage.getItem('flow_agent_activity') || '[]');
+      activity.push({
+        timestamp: new Date().toISOString(),
+        event: 'sms_test_sent',
+        message: 'Test SMS sendt til ' + phone,
+        severity: 'info'
+      });
+      localStorage.setItem('flow_agent_activity', JSON.stringify(activity.slice(-50)));
+    } else {
+      const errorMsg = result.error || 'Ukendt fejl';
+      toast('SMS fejlede: ' + errorMsg, 'error');
+      if (statusEl) {
+        statusEl.style.color = 'var(--danger)';
+        statusEl.textContent = '❌ ' + errorMsg;
+      }
+
+      // Log failed attempt
+      if (client) {
+        try {
+          const { data: { user } } = await client.auth.getUser();
+          if (user) {
+            await client.from('sms_send_log').insert({
+              user_id: user.id,
+              phone_to: phone,
+              message_text: message,
+              sender: sender || 'default',
+              status: 'failed',
+              error_message: errorMsg,
+              provider: 'inmobile'
+            });
+          }
+        } catch (e) {}
+      }
+    }
+  } catch (err) {
+    toast('Netværksfejl: ' + err.message, 'error');
+    if (statusEl) {
+      statusEl.style.color = 'var(--danger)';
+      statusEl.textContent = '❌ Netværksfejl';
+    }
+  }
+}
+
+window.sendTestSms = sendTestSms;
 
 window.loadAgenterPage = loadAgenterPage;
 window.runAgentEndpointCheck = runAgentEndpointCheck;
