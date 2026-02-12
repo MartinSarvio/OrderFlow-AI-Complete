@@ -25940,86 +25940,106 @@ function renderLoyaltyDemoPage() {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="page-header">
-      <h1>Loyalty Program</h1>
+    <h1 class="page-title">Loyalty Program</h1>
+    <div class="support-banner" style="margin-bottom:24px">
+      <div class="support-banner-content">
+        <h1 class="support-banner-title">Loyalty <span>Program</span></h1>
+        <p class="support-banner-desc">Administrer dit kundeloyalitetsprogram, belønninger og tiers.</p>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-bottom:24px">
+      <div class="setting-card" style="text-align:center;padding:20px">
+        <div style="font-size:28px;font-weight:700;margin-bottom:4px">342</div>
+        <div style="font-size:13px;color:var(--muted)">Medlemmer</div>
+      </div>
+      <div class="setting-card" style="text-align:center;padding:20px">
+        <div style="font-size:28px;font-weight:700;margin-bottom:4px">12.450</div>
+        <div style="font-size:13px;color:var(--muted)">Aktive points</div>
+      </div>
+      <div class="setting-card" style="text-align:center;padding:20px">
+        <div style="font-size:28px;font-weight:700;margin-bottom:4px">45</div>
+        <div style="font-size:13px;color:var(--muted)">VIP medlemmer</div>
+      </div>
+      <div class="setting-card" style="text-align:center;padding:20px">
+        <div style="font-size:28px;font-weight:700;margin-bottom:4px">5</div>
+        <div style="font-size:13px;color:var(--muted)">Aktive belønninger</div>
+      </div>
     </div>
 
     <!-- Settings -->
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header">
-        <h3>Indstillinger</h3>
-        <label class="switch">
+    <div class="setting-card" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="setting-title">Indstillinger</div>
+        <label class="toggle">
           <input type="checkbox" disabled checked>
-          <span class="slider"></span>
+          <span class="toggle-slider"></span>
         </label>
       </div>
-      <div class="card-body">
-        <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
-          <div class="form-group">
-            <label class="form-label">Points pr. krone</label>
-            <input type="number" class="input" value="1" disabled>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Min. ordre for points</label>
-            <input type="number" class="input" value="50" disabled>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Velkomstbonus</label>
-            <input type="number" class="input" value="50" disabled>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Fødselsdagsbonus</label>
-            <input type="number" class="input" value="100" disabled>
-          </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+        <div class="form-group">
+          <label class="form-label">Points pr. krone</label>
+          <input type="number" class="input" value="1" disabled>
         </div>
+        <div class="form-group">
+          <label class="form-label">Min. ordre for points</label>
+          <input type="number" class="input" value="50" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Velkomstbonus</label>
+          <input type="number" class="input" value="50" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fødselsdagsbonus</label>
+          <input type="number" class="input" value="100" disabled>
+        </div>
+      </div>
 
-        <h4 style="margin:24px 0 16px">Tier-grænser</h4>
-        <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
-          <div class="form-group">
-            <label class="form-label">Sølv fra</label>
-            <input type="number" class="input" value="500" disabled>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Guld fra</label>
-            <input type="number" class="input" value="1500" disabled>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Platin fra</label>
-            <input type="number" class="input" value="5000" disabled>
-          </div>
+      <div class="setting-title" style="margin-top:24px">Tier-grænser</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-top:12px">
+        <div class="form-group">
+          <label class="form-label">Sølv fra</label>
+          <input type="number" class="input" value="500" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guld fra</label>
+          <input type="number" class="input" value="1500" disabled>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Platin fra</label>
+          <input type="number" class="input" value="5000" disabled>
         </div>
       </div>
     </div>
 
     <!-- Demo Rewards -->
-    <div class="card" style="margin-bottom:24px">
-      <div class="card-header">
-        <h3>Belønninger</h3>
+    <div class="setting-card" style="margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="setting-title">Belønninger</div>
         <button class="btn btn-primary btn-sm" disabled>+ Tilføj belønning</button>
       </div>
-      <div class="card-body">
-        <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
-          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-              <h4 style="margin:0">Gratis drink</h4>
-              <span class="badge" style="background:var(--accent);color:white">250 pts</span>
-            </div>
-            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Valgfri sodavand eller juice</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+            <span style="font-weight:600">Gratis drink</span>
+            <span class="badge" style="background:var(--color-primary, #6366F1);color:white;padding:4px 10px;border-radius:var(--radius-full);font-size:12px">250 pts</span>
           </div>
-          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-              <h4 style="margin:0">Gratis dessert</h4>
-              <span class="badge" style="background:var(--accent);color:white">500 pts</span>
-            </div>
-            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Valgfri dessert fra menuen</p>
+          <p style="font-size:13px;color:var(--muted);margin:0">Valgfri sodavand eller juice</p>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+            <span style="font-weight:600">Gratis dessert</span>
+            <span class="badge" style="background:var(--color-primary, #6366F1);color:white;padding:4px 10px;border-radius:var(--radius-full);font-size:12px">500 pts</span>
           </div>
-          <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-              <h4 style="margin:0">50 kr rabat</h4>
-              <span class="badge" style="background:var(--accent);color:white">1000 pts</span>
-            </div>
-            <p class="text-secondary" style="font-size:13px;margin-bottom:12px">Rabat på næste ordre over 200 kr</p>
+          <p style="font-size:13px;color:var(--muted);margin:0">Valgfri dessert fra menuen</p>
+        </div>
+        <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+            <span style="font-weight:600">50 kr rabat</span>
+            <span class="badge" style="background:var(--color-primary, #6366F1);color:white;padding:4px 10px;border-radius:var(--radius-full);font-size:12px">1000 pts</span>
           </div>
+          <p style="font-size:13px;color:var(--muted);margin:0">Rabat på næste ordre over 200 kr</p>
         </div>
       </div>
     </div>
@@ -26073,144 +26093,141 @@ async function renderLoyaltyPage() {
     members.forEach(m => { if (tierCounts[m.tier] !== undefined) tierCounts[m.tier]++; });
 
     const html = `
-      <div class="page-header">
-        <h1>Loyalty Program</h1>
-        <p class="text-secondary">Administrer dit kundeloyalitetsprogram</p>
+      <h1 class="page-title">Loyalty Program</h1>
+      <div class="support-banner" style="margin-bottom:24px">
+        <div class="support-banner-content">
+          <h1 class="support-banner-title">Loyalty <span>Program</span></h1>
+          <p class="support-banner-desc">Administrer dit kundeloyalitetsprogram, belønninger og tiers.</p>
+        </div>
       </div>
 
       <!-- Stats -->
-      <div class="stats-grid" style="margin-bottom:24px">
-        <div class="stat-card">
-          <div class="stat-value">${totalMembers}</div>
-          <div class="stat-label">Medlemmer</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-bottom:24px">
+        <div class="setting-card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${totalMembers}</div>
+          <div style="font-size:13px;color:var(--muted)">Medlemmer</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">${totalPoints.toLocaleString('da-DK')}</div>
-          <div class="stat-label">Aktive points</div>
+        <div class="setting-card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${totalPoints.toLocaleString('da-DK')}</div>
+          <div style="font-size:13px;color:var(--muted)">Aktive points</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">${tierCounts.gold + tierCounts.platinum}</div>
-          <div class="stat-label">VIP medlemmer</div>
+        <div class="setting-card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${tierCounts.gold + tierCounts.platinum}</div>
+          <div style="font-size:13px;color:var(--muted)">VIP medlemmer</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">${rewards.length}</div>
-          <div class="stat-label">Aktive belønninger</div>
+        <div class="setting-card" style="text-align:center;padding:20px">
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${rewards.length}</div>
+          <div style="font-size:13px;color:var(--muted)">Aktive belønninger</div>
         </div>
       </div>
 
       <!-- Settings -->
-      <div class="card" style="margin-bottom:24px">
-        <div class="card-header">
-          <h3>Indstillinger</h3>
-          <label class="switch">
+      <div class="setting-card" style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="setting-title">Indstillinger</div>
+          <label class="toggle">
             <input type="checkbox" id="loyalty-enabled" ${settings?.enabled ? 'checked' : ''} onchange="toggleLoyaltyEnabled()">
-            <span class="slider"></span>
+            <span class="toggle-slider"></span>
           </label>
         </div>
-        <div class="card-body">
-          <div class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
-            <div class="form-group">
-              <label class="form-label">Points pr. krone</label>
-              <input type="number" class="input" id="loyalty-points-per-kr" value="${settings?.points_per_kr || 1}" step="0.1" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Min. ordre for points</label>
-              <input type="number" class="input" id="loyalty-min-order" value="${settings?.min_order_for_points || 50}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Velkomstbonus</label>
-              <input type="number" class="input" id="loyalty-welcome-bonus" value="${settings?.welcome_bonus || 50}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Fødselsdagsbonus</label>
-              <input type="number" class="input" id="loyalty-birthday-bonus" value="${settings?.birthday_bonus || 100}" min="0">
-            </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
+          <div class="form-group">
+            <label class="form-label">Points pr. krone</label>
+            <input type="number" class="input" id="loyalty-points-per-kr" value="${settings?.points_per_kr || 1}" step="0.1" min="0">
           </div>
+          <div class="form-group">
+            <label class="form-label">Min. ordre for points</label>
+            <input type="number" class="input" id="loyalty-min-order" value="${settings?.min_order_for_points || 50}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Velkomstbonus</label>
+            <input type="number" class="input" id="loyalty-welcome-bonus" value="${settings?.welcome_bonus || 50}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fødselsdagsbonus</label>
+            <input type="number" class="input" id="loyalty-birthday-bonus" value="${settings?.birthday_bonus || 100}" min="0">
+          </div>
+        </div>
 
-          <h4 style="margin:24px 0 16px">Tier-grænser</h4>
-          <div class="form-grid" style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
-            <div class="form-group">
-              <label class="form-label">Sølv fra</label>
-              <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Guld fra</label>
-              <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Platin fra</label>
-              <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
-            </div>
+        <div class="setting-title" style="margin-top:24px">Tier-grænser</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">Sølv fra</label>
+            <input type="number" class="input" id="loyalty-tier-silver" value="${settings?.tier_silver_min || 500}" min="0">
           </div>
+          <div class="form-group">
+            <label class="form-label">Guld fra</label>
+            <input type="number" class="input" id="loyalty-tier-gold" value="${settings?.tier_gold_min || 1500}" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Platin fra</label>
+            <input type="number" class="input" id="loyalty-tier-platinum" value="${settings?.tier_platinum_min || 5000}" min="0">
+          </div>
+        </div>
 
-          <h4 style="margin:24px 0 16px">Tier-bonusser</h4>
-          <div class="form-grid" style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px">
-            <div class="form-group">
-              <label class="form-label">Sølv multiplier</label>
-              <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Guld multiplier</label>
-              <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Platin multiplier</label>
-              <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
-            </div>
+        <div class="setting-title" style="margin-top:24px">Tier-bonusser</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-top:12px">
+          <div class="form-group">
+            <label class="form-label">Sølv multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-silver" value="${settings?.silver_multiplier || 1.25}" step="0.05" min="1">
           </div>
+          <div class="form-group">
+            <label class="form-label">Guld multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-gold" value="${settings?.gold_multiplier || 1.5}" step="0.05" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Platin multiplier</label>
+            <input type="number" class="input" id="loyalty-mult-platinum" value="${settings?.platinum_multiplier || 2.0}" step="0.05" min="1">
+          </div>
+        </div>
 
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px">
-            <span id="settings-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
-            <button class="btn btn-primary" onclick="saveLoyaltySettings()">Gem indstillinger</button>
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+          <span id="settings-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
+          <button class="btn btn-primary" onclick="saveLoyaltySettings()">Gem indstillinger</button>
         </div>
       </div>
 
       <!-- Loyalty Tiers for Website & App -->
-      <div class="card" style="margin-bottom:24px">
-        <div class="card-header">
-          <div>
-            <h3>Loyalty Tiers</h3>
-            <p class="text-secondary" style="margin:4px 0 0;font-size:13px">Konfigurer tiers for website og app</p>
-          </div>
+      <div class="setting-card" style="margin-bottom:24px">
+        <div style="margin-bottom:16px">
+          <div class="setting-title">Loyalty Tiers</div>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px">Konfigurer tiers for website og app</p>
         </div>
-        <div class="card-body" id="loyalty-tiers-container">
+        <div id="loyalty-tiers-container">
           ${renderLoyaltyTiersHTML(settings)}
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
           <span id="tiers-save-status" style="color:var(--success);display:none">Ændringer gemt</span>
           <button class="btn btn-primary" onclick="saveLoyaltyTiers()">Gem tiers</button>
         </div>
       </div>
 
       <!-- Rewards -->
-      <div class="card" style="margin-bottom:24px">
-        <div class="card-header">
-          <h3>Belønninger</h3>
+      <div class="setting-card" style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="setting-title">Belønninger</div>
           <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
         </div>
-        <div class="card-body">
-          ${rewards.length === 0 ? '<p class="text-secondary">Ingen belønninger oprettet endnu</p>' : `
-            <div class="rewards-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
-              ${rewards.map(r => `
-                <div class="reward-card" style="background:var(--card2);border-radius:12px;padding:16px;border:1px solid var(--border)">
-                  <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
-                    <h4 style="margin:0">${r.name}</h4>
-                    <span class="badge" style="background:var(--accent);color:white">${r.points_required} pts</span>
-                  </div>
-                  <p class="text-secondary" style="font-size:13px;margin-bottom:12px">${r.description || ''}</p>
-                  <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span class="text-secondary" style="font-size:12px">${r.current_redemptions || 0} indløst</span>
-                    <div>
-                      <button class="btn btn-sm" onclick="editReward('${r.id}')">Rediger</button>
-                      <button class="btn btn-sm btn-danger" onclick="deleteReward('${r.id}')">Slet</button>
-                    </div>
+        ${rewards.length === 0 ? '<p style="color:var(--muted);font-size:14px">Ingen belønninger oprettet endnu</p>' : `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
+            ${rewards.map(r => `
+              <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+                  <span style="font-weight:600">${r.name}</span>
+                  <span class="badge" style="background:var(--color-primary, #6366F1);color:white;padding:4px 10px;border-radius:var(--radius-full);font-size:12px">${r.points_required} pts</span>
+                </div>
+                <p style="font-size:13px;color:var(--muted);margin-bottom:12px">${r.description || ''}</p>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:12px;color:var(--muted)">${r.current_redemptions || 0} indløst</span>
+                  <div>
+                    <button class="btn btn-sm btn-secondary" onclick="editReward('${r.id}')">Rediger</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteReward('${r.id}')">Slet</button>
                   </div>
                 </div>
-              `).join('')}
-            </div>
-          `}
-        </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
       </div>
 
       <!-- Members section removed -->
@@ -46739,10 +46756,9 @@ function updateApiPagination() {
   const end = start + apiItemsPerPage;
   apiFilteredCards.slice(start, end).forEach(card => card.style.display = '');
 
-  // Update pagination controls
+  // Update pagination controls (crm-style)
   const pageInfo = document.getElementById('api-page-info');
-  const prevBtn = document.getElementById('api-prev-btn');
-  const nextBtn = document.getElementById('api-next-btn');
+  const paginationEl = document.getElementById('api-pagination');
   
   if (pageInfo) {
     if (apiFilteredCards.length === 0) {
@@ -46750,12 +46766,24 @@ function updateApiPagination() {
     } else if (selectedValue === 'all') {
       pageInfo.textContent = `Viser ${apiFilteredCards.length} af ${apiFilteredCards.length}`;
     } else {
-      pageInfo.textContent = `Side ${apiCurrentPage} af ${totalPages}`;
+      pageInfo.textContent = `${apiCurrentPage} af ${totalPages}`;
     }
   }
   
-  if (prevBtn) prevBtn.disabled = apiCurrentPage <= 1;
-  if (nextBtn) nextBtn.disabled = apiCurrentPage >= totalPages || selectedValue === 'all';
+  if (paginationEl) {
+    const btns = paginationEl.querySelectorAll('.crm-page-btn');
+    if (btns.length >= 4) {
+      btns[0].disabled = apiCurrentPage <= 1; // Første
+      btns[1].disabled = apiCurrentPage <= 1; // Forrige
+      btns[2].disabled = apiCurrentPage >= totalPages || selectedValue === 'all'; // Næste
+      btns[3].disabled = apiCurrentPage >= totalPages || selectedValue === 'all'; // Sidste
+    }
+  }
+}
+
+function apiFirstPage() {
+  apiCurrentPage = 1;
+  updateApiPagination();
 }
 
 function apiPrevPage() {
@@ -46771,6 +46799,12 @@ function apiNextPage() {
     apiCurrentPage++;
     updateApiPagination();
   }
+}
+
+function apiLastPage() {
+  const totalPages = Math.ceil(apiFilteredCards.length / apiItemsPerPage);
+  apiCurrentPage = totalPages;
+  updateApiPagination();
 }
 
 // Initialize when API nøgler page is shown
