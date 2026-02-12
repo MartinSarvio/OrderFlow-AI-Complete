@@ -1,5 +1,5 @@
 // =====================================================
-// ORDERFLOW AI - APP.JS (v137)
+// ORDERFLOW AI - APP.JS (v138 — Security Release v4.12.0)
 // =====================================================
 
 // =====================================================
@@ -1015,7 +1015,8 @@ function renderDemoStep() {
 function addDemoMessage(text, dir) {
   const container = document.getElementById('demo-messages');
   if (!container) return;
-  container.innerHTML += `<div class="demo-msg ${dir}">${text}</div>`;
+  // SECURITY FIX v4.12.0: Escape user text to prevent XSS
+  container.innerHTML += `<div class="demo-msg ${escapeHtml(dir)}">${escapeHtml(text)}</div>`;
   container.scrollTop = container.scrollHeight;
 }
 
@@ -5024,7 +5025,8 @@ function loadDoc(docId) {
   document.getElementById('docs-article-time').textContent = doc.time;
   
   // Opdater indhold
-  document.getElementById('docs-article-content').innerHTML = doc.content;
+  // SECURITY FIX v4.12.0: Sanitize CMS content with DOMPurify to prevent XSS
+  document.getElementById('docs-article-content').innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(doc.content) : escapeHtml(doc.content);
   
   // Opdater footer navigation
   const prevLink = document.getElementById('docs-prev-link');
@@ -6947,7 +6949,8 @@ function updateBreadcrumb(page, subpage) {
   };
   
   if (subpage) {
-    pageTitle.innerHTML = `${pageTitles[page] || page} <span style="color:var(--muted);font-weight:400"> / </span> <span style="color:var(--text)">${subpage}</span>`;
+    // SECURITY FIX v4.12.0: Escape dynamic page names to prevent XSS
+    pageTitle.innerHTML = `${escapeHtml(pageTitles[page] || page)} <span style="color:var(--muted);font-weight:400"> / </span> <span style="color:var(--text)">${escapeHtml(subpage)}</span>`;
   } else {
     pageTitle.textContent = pageTitles[page] || page;
   }
@@ -7461,8 +7464,8 @@ function loadRestaurants() {
       <div class="restaurant-header">
         <div class="restaurant-logo">${getRestaurantLogoSvg(r.logo)}</div>
         <div style="flex:1">
-          <div class="restaurant-name">${r.name}</div>
-          <div class="restaurant-phone">${r.phone || 'Ikke tildelt'}</div>
+          <div class="restaurant-name">${escapeHtml(r.name)}</div>
+          <div class="restaurant-phone">${escapeHtml(r.phone || 'Ikke tildelt')}</div>
           ${openBadge}
         </div>
         <span class="restaurant-status status-${r.status}">${r.status === 'active' ? '● Aktiv' : '○ Afventer'}</span>
@@ -7924,12 +7927,12 @@ function loadAlleKunderGrid() {
     const userId = restaurant.user_id ? restaurant.user_id.substring(0, 8) + '...' : 'N/A';
 
     return `
-      <tr onclick="openCustomerFromAlleKunder('${restaurant.id}')" style="cursor:pointer">
-        <td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">${userId}</code></td>
-        <td style="font-weight:var(--font-weight-medium)">${restaurant.name || 'Unavngivet'}</td>
-        <td>${restaurant.metadata?.owner || restaurant.contact_name || '-'}</td>
-        <td>${restaurant.phone || restaurant.contact_phone || '-'}</td>
-        <td>${restaurant.cvr || '-'}</td>
+      <tr onclick="openCustomerFromAlleKunder('${escapeHtml(restaurant.id)}')" style="cursor:pointer">
+        <td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">${escapeHtml(userId)}</code></td>
+        <td style="font-weight:var(--font-weight-medium)">${escapeHtml(restaurant.name || 'Unavngivet')}</td>
+        <td>${escapeHtml(restaurant.metadata?.owner || restaurant.contact_name || '-')}</td>
+        <td>${escapeHtml(restaurant.phone || restaurant.contact_phone || '-')}</td>
+        <td>${escapeHtml(restaurant.cvr || '-')}</td>
         <td>${restaurant.orders_total || 0}</td>
         <td>${statusBadge}</td>
       </tr>
@@ -11501,10 +11504,10 @@ function renderProducts(restaurant) {
 
     return `
     <div style="display:grid;grid-template-columns:60px 2fr 1.5fr 1fr 80px;gap:var(--space-3);padding:12px 16px;background:var(--bg);border-bottom:1px solid var(--border);align-items:center">
-      <div style="width:32px;height:32px;background:var(--bg3);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--muted)">${product.number || idx + 1}</div>
-      <div style="font-weight:500;font-size:14px">${product.name}</div>
-      <div style="font-size:12px;color:var(--muted)">${categoryName}</div>
-      <div style="font-weight:600;color:var(--accent);text-align:right">${product.price || '0'} kr</div>
+      <div style="width:32px;height:32px;background:var(--bg3);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;color:var(--muted)">${escapeHtml(product.number || idx + 1)}</div>
+      <div style="font-weight:500;font-size:14px">${escapeHtml(product.name)}</div>
+      <div style="font-size:12px;color:var(--muted)">${escapeHtml(categoryName)}</div>
+      <div style="font-weight:600;color:var(--accent);text-align:right">${escapeHtml(product.price || '0')} kr</div>
       <div style="display:flex;gap:4px;justify-content:flex-end">
         <button class="btn btn-secondary btn-sm" onclick="editProduct(${originalIdx})" title="Rediger">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -11969,7 +11972,7 @@ Gæt kategori baseret på produktnavn hvis ikke angivet.`
     }
   } catch (err) {
     console.error('Import error:', err);
-    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${err.message}</span>`;
+    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -12112,7 +12115,7 @@ async function importFromStamdataWebsite() {
   const statusEl = document.getElementById('import-status');
   if (statusEl) {
     statusEl.style.display = 'block';
-    statusEl.innerHTML = `<span style="color:var(--accent)">⏳ Henter menu fra ${websiteUrl}...</span>`;
+    statusEl.innerHTML = `<span style="color:var(--accent)">⏳ Henter menu fra ${escapeHtml(websiteUrl)}...</span>`;
   }
 
   const products = await importMenuFromWebsite(websiteUrl, restaurant.id, false);
@@ -12123,7 +12126,7 @@ async function importFromStamdataWebsite() {
       loadProductsPage();
       markProductsUnsaved();
     } else {
-      statusEl.innerHTML = `<span style="color:var(--warn)">⚠️ Ingen produkter fundet på ${websiteUrl}</span>`;
+      statusEl.innerHTML = `<span style="color:var(--warn)">⚠️ Ingen produkter fundet på ${escapeHtml(websiteUrl)}</span>`;
     }
   }
 }
@@ -12205,7 +12208,7 @@ async function importMenuFromFile(file) {
   } catch (error) {
     console.error('File import error:', error);
     if (statusEl) {
-      statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${error.message}</span>`;
+      statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${escapeHtml(error.message)}</span>`;
     }
     toast('Kunne ikke importere fra fil', 'error');
     return [];
@@ -12410,7 +12413,7 @@ Svar KUN med JSON array.`
     }
   } catch (err) {
     console.error('Parse error:', err);
-    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${err.message}</span>`;
+    statusEl.innerHTML = `<span style="color:var(--danger)">❌ Fejl: ${escapeHtml(err.message)}</span>`;
   }
 }
 
@@ -12943,7 +12946,8 @@ function showAddCategoryModal() {
       vatSelect.innerHTML = '<option value="">Vælg momssats (valgfri)</option>';
       const vatRates = restaurant.vatRates || [];
       vatRates.forEach(vat => {
-        vatSelect.innerHTML += `<option value="${vat.rate}">${vat.name} (${vat.rate}%)</option>`;
+        // SECURITY FIX v4.12.0: Escape VAT data
+        vatSelect.innerHTML += `<option value="${escapeHtml(String(vat.rate))}">${escapeHtml(vat.name)} (${escapeHtml(String(vat.rate))}%)</option>`;
       });
     }
 
@@ -21439,7 +21443,8 @@ function updateApiStatus() {
   const openrouterOk = localStorage.getItem('openrouter_key');
   const minimaxOk = localStorage.getItem('minimax_key');
   const supabaseOk = localStorage.getItem('supabase_url') && localStorage.getItem('supabase_key');
-  const stripeOk = localStorage.getItem('stripe_publishable_key') || localStorage.getItem('stripe_secret_key');
+  // SECURITY FIX v4.12.0: Only check publishable key (secret key is server-side only)
+  const stripeOk = localStorage.getItem('stripe_publishable_key');
   const instagramOk = localStorage.getItem('instagram_access_token');
   const facebookOk = localStorage.getItem('facebook_access_token');
   const economicOk = localStorage.getItem('economic_app_secret') && localStorage.getItem('economic_agreement_token');
@@ -21713,7 +21718,7 @@ async function saveAllApiSettings() {
     supabase_url: document.getElementById('supabase-url-input')?.value.trim() || '',
     supabase_key: document.getElementById('supabase-key-input')?.value.trim() || '',
     stripe_publishable_key: document.getElementById('stripe-publishable-key-input')?.value.trim() || '',
-    stripe_secret_key: document.getElementById('stripe-secret-key-input')?.value.trim() || '',
+    // SECURITY FIX v4.12.0: stripe_secret_key removed — must only exist server-side
     instagram_access_token: document.getElementById('instagram-access-token-input')?.value.trim() || '',
     instagram_page_id: document.getElementById('instagram-page-id-input')?.value.trim() || '',
     facebook_access_token: document.getElementById('facebook-access-token-input')?.value.trim() || '',
@@ -21789,7 +21794,8 @@ async function loadAllApiSettings() {
   }
 
   // Merge with localStorage (localStorage takes precedence for non-empty values)
-  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key', 'openrouter_key', 'minimax_key', 'supabase_url', 'supabase_key', 'stripe_publishable_key', 'stripe_secret_key', 'instagram_access_token', 'instagram_page_id', 'facebook_access_token', 'facebook_page_id', 'economic_app_secret', 'economic_agreement_token', 'dinero_api_key', 'dinero_organization_id', 'billy_api_token', 'visma_bearer_token', 'visma_company_id'];
+  // SECURITY FIX v4.12.0: stripe_secret_key removed from localStorage keys
+  const localKeys = ['openai_key', 'inmobile_api_key', 'inmobile_sender', 'google_place_id', 'google_api_key', 'trustpilot_business_id', 'trustpilot_api_key', 'firecrawl_api_key', 'googleapi_api_key', 'serper_reviews_key', 'serper_images_key', 'serper_maps_key', 'serper_places_key', 'openrouter_key', 'minimax_key', 'supabase_url', 'supabase_key', 'stripe_publishable_key', 'instagram_access_token', 'instagram_page_id', 'facebook_access_token', 'facebook_page_id', 'economic_app_secret', 'economic_agreement_token', 'dinero_api_key', 'dinero_organization_id', 'billy_api_token', 'visma_bearer_token', 'visma_company_id'];
   localKeys.forEach(key => {
     const localValue = localStorage.getItem(key);
     if (localValue) settings[key] = localValue;
@@ -21815,7 +21821,7 @@ async function loadAllApiSettings() {
     'supabase-url-input': 'supabase_url',
     'supabase-key-input': 'supabase_key',
     'stripe-publishable-key-input': 'stripe_publishable_key',
-    'stripe-secret-key-input': 'stripe_secret_key',
+    // SECURITY FIX v4.12.0: stripe_secret_key removed from frontend
     'instagram-access-token-input': 'instagram_access_token',
     'instagram-page-id-input': 'instagram_page_id',
     'facebook-access-token-input': 'facebook_access_token',
@@ -24776,7 +24782,7 @@ function generateBrandedQR(data, container, options = {}) {
           wrapper.appendChild(img);
         })
         .catch(() => {
-          wrapper.innerHTML = `<p style="color:#fff;font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+          wrapper.innerHTML = `<p style="color:#fff;font-size:12px;word-break:break-all;padding:10px;">${escapeHtml(data)}</p>`;
         });
     } else if (typeof QRCode === 'function') {
       new QRCode(wrapper, { text: data, width, height, colorDark: '#ffffff', colorLight: '#000000' });
@@ -24784,7 +24790,7 @@ function generateBrandedQR(data, container, options = {}) {
     return null;
   }
 
-  container.innerHTML = `<p style="color:var(--muted);font-size:12px;word-break:break-all;padding:10px;">${data}</p>`;
+  container.innerHTML = `<p style="color:var(--muted);font-size:12px;word-break:break-all;padding:10px;">${escapeHtml(data)}</p>`;
   return null;
 }
 
@@ -33538,7 +33544,8 @@ function updateImagePickerPreview(inputId, imageUrl) {
     if (!removeBtn || !removeBtn.textContent.includes('Fjern')) {
       const parts = picker.dataset.pickerId.split('-');
       const sectionId = parts.length > 2 ? parts.slice(1, -1).join('-') : parts[1];
-      actionsDiv.innerHTML += `<button type="button" class="btn btn-sm" style="color:var(--danger)" onclick="clearImagePicker('${picker.dataset.pickerId}', '${sectionId}', '')">Fjern</button>`;
+      // SECURITY FIX v4.12.0: Escape dynamic IDs to prevent XSS via data attributes
+      actionsDiv.innerHTML += `<button type="button" class="btn btn-sm" style="color:var(--danger)" onclick="clearImagePicker('${escapeHtml(picker.dataset.pickerId)}', '${escapeHtml(sectionId)}', '')">Fjern</button>`;
     }
   }
 }
@@ -36186,7 +36193,8 @@ function loadSupabaseTableData() {
     return;
   }
 
-  viewer.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted)">Indlæser ${table} (limit: ${limit})...</div>`;
+  // SECURITY FIX v4.12.0: Escape table name
+  viewer.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted)">Indlæser ${escapeHtml(table)} (limit: ${escapeHtml(String(limit))})...</div>`;
 
   // Demo: Show sample data
   setTimeout(() => {
@@ -36495,7 +36503,7 @@ async function loadAnalyticsOverview() {
   const topProducts = document.getElementById('inline-top-products');
   if (topProducts) {
     topProducts.innerHTML = topProductsList.map(([name, count]) =>
-      `<tr><td style="padding:12px 16px">${name}</td><td style="text-align:right;padding-right:16px">${count}</td></tr>`
+      `<tr><td style="padding:12px 16px">${escapeHtml(name)}</td><td style="text-align:right;padding-right:16px">${escapeHtml(String(count))}</td></tr>`
     ).join('');
   }
 }
@@ -42925,13 +42933,16 @@ const SEAnalysisService = {
 };
 
 // --- System API Keys (for Integrations page) ---
+// SECURITY FIX v4.12.0: API keys removed from frontend source code.
+// Keys are now stored server-side in api_credentials table or environment variables.
+// The display below shows masked placeholders only.
 const SYSTEM_API_KEYS = [
-  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '238621b449ced86740e16a0707be5b8999b87c9e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
-  { id: 'sys-serper-images', name: 'Serper Images', key: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
-  { id: 'sys-serper-maps', name: 'Serper Maps', key: '071a75aeaf9e4434466f91caf455e6ddfe72a76e', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
-  { id: 'sys-serper-places', name: 'Serper Places', key: 'a1239b0bd9682b2d0ee19956ba7c8c2cdcf51f62', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
-  { id: 'sys-firecrawl', name: 'Firecrawl', key: 'fc-c12a209b1d6d44939e0b8faa393515e3', type: 'System', service: 'SEO Analyse v2.0', url: 'https://firecrawl.dev' },
-  { id: 'sys-google-api', name: 'Google API', key: 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo', type: 'System', service: 'SEO Analyse v2.0', url: 'https://console.cloud.google.com' }
+  { id: 'sys-serper-reviews', name: 'Serper Reviews', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-images', name: 'Serper Images', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-maps', name: 'Serper Maps', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-serper-places', name: 'Serper Places', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v1.0', url: 'https://serper.dev' },
+  { id: 'sys-firecrawl', name: 'Firecrawl', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v2.0', url: 'https://firecrawl.dev' },
+  { id: 'sys-google-api', name: 'Google API', key: '[SERVER-SIDE]', type: 'System', service: 'SEO Analyse v2.0', url: 'https://console.cloud.google.com' }
 ];
 
 // --- Mask API key for display ---
@@ -43080,7 +43091,8 @@ let seoScannerState = {
 
 // --- Firecrawl v2 Integration ---
 async function firecrawlScrape(url) {
-  const apiKey = 'fc-c12a209b1d6d44939e0b8faa393515e3';
+  // SECURITY FIX v4.12.0: Removed hardcoded API key, load from credentials
+  const apiKey = await window.loadApiCredential('firecrawl_api_key') || localStorage.getItem('firecrawl_api_key');
   try {
     const response = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
@@ -45573,7 +45585,8 @@ async function generateAiImage() {
       resultContent.innerHTML = '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Kunne ikke generere billede. API svar: ' + (typeof content === 'string' ? content.substring(0, 200) : 'Ukendt format') + '</div>';
     }
   } catch (err) {
-    resultContent.innerHTML = '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Fejl: ' + err.message + '</div>';
+    // SECURITY FIX v4.12.0: Escape error message to prevent XSS
+    resultContent.innerHTML = '<div style="color:var(--danger);padding:var(--space-3);background:rgba(239,68,68,0.1);border-radius:var(--radius-sm)">Fejl: ' + escapeHtml(err.message) + '</div>';
   } finally {
     btn.disabled = false;
     btn.textContent = 'Generer Billede';
