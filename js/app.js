@@ -25936,9 +25936,31 @@ function formatLoyaltyMessage(member, earnedPoints = 0) {
 }
 
 // Render loyalty demo page (when no restaurant is selected)
+function saveDemoLoyaltySettings() {
+  const settings = {
+    points_per_kr: parseFloat(document.getElementById('demo-loyalty-points-per-kr')?.value || 1),
+    min_order_for_points: parseInt(document.getElementById('demo-loyalty-min-order')?.value || 50),
+    welcome_bonus: parseInt(document.getElementById('demo-loyalty-welcome-bonus')?.value || 50),
+    birthday_bonus: parseInt(document.getElementById('demo-loyalty-birthday-bonus')?.value || 100),
+    tier_silver_min: parseInt(document.getElementById('demo-loyalty-tier-silver')?.value || 500),
+    tier_gold_min: parseInt(document.getElementById('demo-loyalty-tier-gold')?.value || 1500),
+    tier_platinum_min: parseInt(document.getElementById('demo-loyalty-tier-platinum')?.value || 5000)
+  };
+  localStorage.setItem('demo_loyalty_settings', JSON.stringify(settings));
+  toast('Loyalty indstillinger gemt', 'success');
+}
+
+function getDemoLoyaltySettings() {
+  try {
+    return JSON.parse(localStorage.getItem('demo_loyalty_settings')) || {};
+  } catch { return {}; }
+}
+
 function renderLoyaltyDemoPage() {
   const container = document.getElementById('main-content');
   if (!container) return;
+
+  const ds = getDemoLoyaltySettings();
 
   container.innerHTML = `
     <h1 class="page-title">Loyalty Program</h1>
@@ -25981,19 +26003,19 @@ function renderLoyaltyDemoPage() {
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px">
         <div class="form-group">
           <label class="form-label">Points pr. krone</label>
-          <input type="number" class="input" value="1" disabled>
+          <input type="number" class="input" id="demo-loyalty-points-per-kr" value="${ds.points_per_kr || 1}" step="0.1" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Min. ordre for points</label>
-          <input type="number" class="input" value="50" disabled>
+          <input type="number" class="input" id="demo-loyalty-min-order" value="${ds.min_order_for_points || 50}" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Velkomstbonus</label>
-          <input type="number" class="input" value="50" disabled>
+          <input type="number" class="input" id="demo-loyalty-welcome-bonus" value="${ds.welcome_bonus || 50}" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Fødselsdagsbonus</label>
-          <input type="number" class="input" value="100" disabled>
+          <input type="number" class="input" id="demo-loyalty-birthday-bonus" value="${ds.birthday_bonus || 100}" min="0">
         </div>
       </div>
 
@@ -26001,16 +26023,20 @@ function renderLoyaltyDemoPage() {
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-top:12px">
         <div class="form-group">
           <label class="form-label">Sølv fra</label>
-          <input type="number" class="input" value="500" disabled>
+          <input type="number" class="input" id="demo-loyalty-tier-silver" value="${ds.tier_silver_min || 500}" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Guld fra</label>
-          <input type="number" class="input" value="1500" disabled>
+          <input type="number" class="input" id="demo-loyalty-tier-gold" value="${ds.tier_gold_min || 1500}" min="0">
         </div>
         <div class="form-group">
           <label class="form-label">Platin fra</label>
-          <input type="number" class="input" value="5000" disabled>
+          <input type="number" class="input" id="demo-loyalty-tier-platinum" value="${ds.tier_platinum_min || 5000}" min="0">
         </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+        <button class="btn btn-primary" onclick="saveDemoLoyaltySettings()">Gem indstillinger</button>
       </div>
     </div>
 
@@ -26018,7 +26044,7 @@ function renderLoyaltyDemoPage() {
     <div class="setting-card" style="margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div class="setting-title">Belønninger</div>
-        <button class="btn btn-primary btn-sm" disabled>+ Tilføj belønning</button>
+        <button class="btn btn-primary btn-sm" onclick="showAddRewardModal()">+ Tilføj belønning</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:16px">
         <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:16px;border:1px solid var(--border)">
