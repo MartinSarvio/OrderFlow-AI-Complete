@@ -22307,11 +22307,6 @@ function switchSettingsTab(tab) {
     renderInstalledTemplates();
   }
 
-  // Refresh API status and toggles when API tab is opened
-  if (tab === 'api') {
-    loadAllApiSettings();
-  }
-
   // Load printer settings when printer tab is opened
   if (tab === 'printer') {
     loadPrinterSettingsUI();
@@ -37130,7 +37125,7 @@ function renderApiKeyRow(k, disabledStates) {
         '<button onclick="toggleSystemKeyActive(\'' + safeId + '\');toggleApiKeyDropdown(\'' + safeId + '\')" style="' + ddBtnStyle + '" ' + ddHover + '>' + (isDisabled ? 'Aktiver' : 'Deaktiver') + '</button>' +
       '</div></div>';
   } else if (k.keyType === 'configured') {
-    actions += '<button class="btn btn-secondary btn-sm" onclick="showSettingsPage(\'api\')" title="Rediger i API Adgang" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>';
+    actions += '<button class="btn btn-secondary btn-sm" onclick="showFlowCMSPage(\'api-noegler\')" title="Rediger i API Nøgler" style="' + btnStyle + '">' + apiKeyGearSvg + '</button>';
   }
 
   // Delete icon (all types)
