@@ -214,9 +214,10 @@
 
   // Initialize
   function init() {
-    // Only run on pages that should show cookie consent
-    // (not on admin pages like index.html)
-    if (window.location.pathname.includes('index.html')) {
+    // Only show cookie consent on the main landing page
+    const path = window.location.pathname.toLowerCase();
+    const isLandingPage = path === '/' || path === '/landing.html' || path.endsWith('/landing.html');
+    if (!isLandingPage) {
       return;
     }
 
