@@ -34,40 +34,6 @@
 .stagger-children > .fade-in-up:nth-child(5) { transition-delay: 0.4s; }
 .stagger-children > .fade-in-up:nth-child(6) { transition-delay: 0.5s; }
 
-/* ==================== HERO ENHANCEMENTS ==================== */
-.hero-section {
-  min-height: 65vh !important;
-  padding-top: 10rem !important;
-  padding-bottom: 6rem !important;
-}
-
-.hero-section .hero-content {
-  padding: 8rem 4rem 6rem !important;
-}
-
-.hero-section .hero-content h1 {
-  margin-bottom: 2.4rem !important;
-}
-
-.hero-section .hero-content p {
-  margin-bottom: 3.6rem !important;
-  font-size: 2rem !important;
-  line-height: 1.7 !important;
-}
-
-/* Subtle gradient overlay on hero */
-.hero-section::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 12rem;
-  background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.15));
-  pointer-events: none;
-  z-index: 0;
-}
-
 /* ==================== SECTION SPACING ==================== */
 .content-section,
 .features-section,
@@ -205,23 +171,6 @@ section + section {
 
 /* ==================== RESPONSIVE ENHANCEMENTS ==================== */
 @media (max-width: 768px) {
-  .hero-section {
-    min-height: 50vh !important;
-    padding-top: 8rem !important;
-  }
-
-  .hero-section .hero-content {
-    padding: 4rem 2rem !important;
-  }
-
-  .hero-section .hero-content h1 {
-    font-size: 3.6rem !important;
-  }
-
-  .hero-section .hero-content p {
-    font-size: 1.7rem !important;
-  }
-
   .content-section,
   .features-section,
   .benefits-section,
@@ -245,10 +194,6 @@ section + section {
 }
 
 @media (max-width: 480px) {
-  .hero-section .hero-content h1 {
-    font-size: 2.8rem !important;
-  }
-
   .content-section,
   .features-section,
   .benefits-section {

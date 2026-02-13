@@ -574,108 +574,6 @@
       color: var(--color-dark);
     }
 
-    /* ==================== HERO SECTION WITH VIDEO ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding-top: 8rem;
-      overflow: hidden;
-    }
-
-    .hero-video-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background: #000;
-    }
-
-    .hero-video-bg video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .hero-video-bg::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
-    }
-
-    /* Video blur når dropdown er åben */
-    .hero-video-bg video {
-      transition: filter 0.3s ease;
-    }
-
-    body.dropdown-open .hero-video-bg video {
-      filter: blur(10px);
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 60rem;
-      padding: 4rem;
-      text-align: center;
-      margin: 0 auto;
-    }
-
-    .hero-content h1 {
-      font-family: 'Archivo Black', 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-white);
-      line-height: 0.95;
-      margin-bottom: 2rem;
-      text-transform: uppercase;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content h1 .big {
-      font-size: 115%;
-      display: inline;
-    }
-
-    /* Typed text animation */
-    .hero-content h1 .typed-text {
-      color: #000000;
-    }
-
-    .hero-content h1 .typed-cursor {
-      color: #000;
-      font-weight: 100;
-    }
-
-    .typed-cursor--blink {
-      animation: cursorBlink 0.7s infinite;
-    }
-
-    @keyframes cursorBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .hero-content p {
-      font-size: 1.8rem;
-      color: rgba(255,255,255,0.85);
-      margin: 0 auto 3rem auto;
-      max-width: 48rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
 
     /* ==================== TABS SECTION (Owner.com style) ==================== */
     .tabs-section {
@@ -1074,7 +972,6 @@
         display: none;
       }
 
-      .hero-content h1 {
         font-size: 4rem;
       }
 
@@ -1121,7 +1018,6 @@
         padding-right: 2rem;
       }
 
-      .hero-buttons {
         flex-direction: column;
       }
 

@@ -192,11 +192,6 @@
 
 
 
-    .hero-section { position: relative; min-height: 60vh; display: flex; align-items: center; padding-top: 8rem; background: linear-gradient(135deg, var(--color-dark) 0%, #1a1a2e 100%); overflow: hidden; }
-    .hero-content { position: relative; z-index: 1; max-width: 80rem; padding: 6rem 4rem; margin: 0 auto; text-align: center; }
-    .hero-content h1 { font-family: 'Inter', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-white); line-height: 1.1; margin-bottom: 2rem; letter-spacing: -0.02em; }
-    .hero-content p { font-size: 2rem; color: rgba(255,255,255,0.85); margin: 0 auto 3rem auto; max-width: 60rem; }
-    .hero-buttons { display: flex; gap: 1.6rem; justify-content: center; flex-wrap: wrap; }
 
     .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
     .button:hover { background: var(--color-primary-hover); }
@@ -259,7 +254,6 @@
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-content h1 { font-size: 4rem; }
       .guide-chapter h3 { font-size: 2.4rem; flex-direction: column; align-items: flex-start; }
       .comparison-table { font-size: 1.3rem; }
       .comparison-table th, .comparison-table td { padding: 1rem; }
@@ -267,8 +261,6 @@
     }
     @media (max-width: 480px) {
       .nav-container { padding: 1.2rem 2rem; }
-      .hero-content { padding: 4rem 2rem; }
-      .hero-content h1 { font-size: 3.2rem; }
       .guide-container { padding: 0 2rem; }
       .comparison-table { display: block; overflow-x: auto; }
       .footer-content { grid-template-columns: 1fr; }
@@ -328,19 +320,7 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Sammenligning af bestillingssystemer (ærlig version)</h1>
-        <p>Vi sælger et af dem, så vi er bias. Men her er hvad vi ville sige hvis vi var din ven og ikke havde noget at sælge dig.</p>
-        <div class="hero-buttons">
-          <a href="#guide" class="button button-white">Se sammenligningen</a>
-          <a href="#demo" class="button button-outline">Spørg os direkte</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Guide Content Section -->
+        <!-- Guide Content Section -->
     <section class="guide-section" id="guide">
       <div class="guide-container">
         <div class="guide-intro">

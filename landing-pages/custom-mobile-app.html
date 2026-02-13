@@ -54,8 +54,6 @@
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
-    /* Hero */
-    .hero-section {
       position: relative;
       min-height: 70vh;
       display: flex;
@@ -66,7 +64,6 @@
       overflow: hidden;
     }
 
-    .hero-section::before {
       content: '';
       position: absolute;
       inset: 0;
@@ -79,7 +76,6 @@
       pointer-events: none;
     }
 
-    .hero-section::after {
       content: '';
       position: absolute;
       top: 20%;
@@ -91,7 +87,6 @@
       pointer-events: none;
     }
 
-    .hero-content {
       position: relative;
       z-index: 1;
       max-width: 90rem;
@@ -100,7 +95,6 @@
       text-align: center;
     }
 
-    .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
@@ -115,13 +109,11 @@
       backdrop-filter: blur(10px);
     }
 
-    .hero-badge svg {
       width: 1.6rem;
       height: 1.6rem;
       color: var(--color-primary);
     }
 
-    .hero-content h1 {
       font-family: 'Inter', sans-serif;
       font-size: 5.6rem;
       font-weight: 500;
@@ -131,14 +123,12 @@
       letter-spacing: -0.02em;
     }
 
-    .hero-content h1 .gradient-text {
       background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .hero-content p {
       font-size: 2rem;
       color: rgba(255,255,255,0.7);
       margin: 0 auto 3rem auto;
@@ -146,7 +136,6 @@
       line-height: 1.6;
     }
 
-    .hero-buttons {
       display: flex;
       gap: 1.6rem;
       justify-content: center;
@@ -363,12 +352,10 @@
       margin-bottom: 3rem;
     }
 
-    .cta-content .hero-buttons .button.button-white {
       background: var(--color-white);
       color: var(--color-dark);
     }
 
-    .cta-content .hero-buttons .button.button-white:hover {
       background: var(--color-gray-100);
     }
 
@@ -389,16 +376,11 @@
     @media (max-width: 1024px) {
       .features-grid { grid-template-columns: repeat(2, 1fr); }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-content h1 { font-size: 4.8rem; }
     }
 
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section { min-height: 60vh; padding-top: 8rem; padding-bottom: 6rem; }
-      .hero-content h1 { font-size: 3.6rem; }
-      .hero-content p { font-size: 1.6rem; }
-      .hero-badge { font-size: 1.2rem; padding: 0.6rem 1.2rem; }
       .logo-cloud { padding: 4rem 2rem; }
       .logo-cloud-item span { font-size: 1.4rem; }
       .logo-cloud-track { gap: 4rem; }
@@ -411,10 +393,6 @@
 
     @media (max-width: 480px) {
       .nav-container { padding: 1.2rem 2rem; }
-      .hero-content { padding: 2rem; }
-      .hero-content h1 { font-size: 2.8rem; }
-      .hero-buttons { flex-direction: column; }
-      .hero-buttons .button { width: 100%; padding: 1.4rem 2rem; }
       .logo-cloud-wrapper::before,
       .logo-cloud-wrapper::after { width: 60px; }
       .stats-grid { grid-template-columns: 1fr; }
@@ -447,23 +425,7 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          App Store & Google Play
-        </div>
-        <h1>Din egen restaurant app <span class="gradient-text">med dit brand</span></h1>
-        <p>Få en 5-stjernet branded app med push-notifikationer, loyalitetsprogram og online bestilling. Spar penge på SMS og byg direkte kunderelationer.</p>
-        <div class="hero-buttons">
-          <a href="#demo" class="button">Få en gratis demo</a>
-          <a href="restaurant-mobile-app.html" class="button button-outline">Læs app guiden</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Logo Cloud Trust Section -->
+        <!-- Logo Cloud Trust Section -->
     <section class="logo-cloud">
       <p class="logo-cloud-label">Betroet af 500+ restauranter i Danmark</p>
       <div class="logo-cloud-wrapper">

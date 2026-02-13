@@ -359,121 +359,6 @@
       column-gap: 2rem;
     }
 
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 70vh;
-      display: flex;
-      align-items: center;
-      padding-top: 10rem;
-      padding-bottom: 8rem;
-      background: linear-gradient(135deg, #090a0b 0%, #1a1a2e 50%, #16213e 100%);
-      overflow: hidden;
-    }
-
-    .hero-section::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 70%);
-      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-section::after {
-      content: '';
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80%;
-      height: 60%;
-      background: radial-gradient(ellipse at center, rgba(1,91,248,0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 90rem;
-      padding: 4rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.8rem 1.6rem;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 10rem;
-      font-size: 1.3rem;
-      font-weight: 500;
-      color: rgba(255,255,255,0.9);
-      margin-bottom: 2.4rem;
-      backdrop-filter: blur(10px);
-    }
-
-    .hero-badge svg {
-      width: 1.6rem;
-      height: 1.6rem;
-      color: var(--color-primary);
-    }
-
-    .hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 500;
-      color: var(--color-white);
-      line-height: 1.1;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content h1 .gradient-text {
-      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-content p {
-      font-size: 2rem;
-      color: rgba(255,255,255,0.7);
-      margin: 0 auto 3rem auto;
-      max-width: 70rem;
-      line-height: 1.6;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .hero-buttons .button {
-      padding: 1.6rem 3.2rem;
-      font-size: 1.6rem;
-    }
-
-    .hero-buttons .button:hover {
-      transform: translateY(-2px);
-    }
-
-    .hero-buttons .button-outline {
-      border: 2px solid rgba(255,255,255,0.3);
-    }
-
-    .hero-buttons .button-outline:hover {
-      border-color: rgba(255,255,255,0.5);
-    }
 
     /* ==================== LOGO CLOUD ==================== */
     .logo-cloud {
@@ -765,12 +650,10 @@
       margin-bottom: 3rem;
     }
 
-    .cta-content .hero-buttons .button.button-white {
       background: var(--color-white);
       color: var(--color-dark);
     }
 
-    .cta-content .hero-buttons .button.button-white:hover {
       background: var(--color-gray-100);
     }
 
@@ -809,7 +692,6 @@
         grid-template-columns: 1fr;
         gap: 4rem;
       }
-      .hero-content h1 {
         font-size: 4.8rem;
       }
     }
@@ -821,18 +703,14 @@
       .nav-links {
         display: none;
       }
-      .hero-section {
         min-height: 60vh;
         padding-top: 8rem;
         padding-bottom: 6rem;
       }
-      .hero-content h1 {
         font-size: 3.6rem;
       }
-      .hero-content p {
         font-size: 1.6rem;
       }
-      .hero-badge {
         font-size: 1.2rem;
         padding: 0.6rem 1.2rem;
       }
@@ -864,16 +742,12 @@
         padding-left: 2rem;
         padding-right: 2rem;
       }
-      .hero-content {
         padding: 2rem;
       }
-      .hero-content h1 {
         font-size: 2.8rem;
       }
-      .hero-buttons {
         flex-direction: column;
       }
-      .hero-buttons .button {
         width: 100%;
         padding: 1.4rem 2rem;
       }
@@ -945,23 +819,7 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <div class="hero-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-          0% kommission
-        </div>
-        <h1>Levering uden at <span class="gradient-text">miste kontrollen</span></h1>
-        <p>Wolt og Just Eat tager 25-30% og ejer dine kunder bagefter. Der findes en anden måde: Du styrer leveringen, du beholder pengene, du ejer relationen.</p>
-        <div class="hero-buttons">
-          <a href="#demo" class="button">Se hvordan det virker</a>
-          <a href="#features" class="button button-outline">Dine muligheder</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Logo Cloud Trust Section -->
+        <!-- Logo Cloud Trust Section -->
     <section class="logo-cloud">
       <p class="logo-cloud-label">Betroet af 500+ restauranter i Danmark</p>
       <div class="logo-cloud-wrapper">
