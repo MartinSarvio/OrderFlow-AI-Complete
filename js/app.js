@@ -142,6 +142,37 @@ const CONFIG = {
 };
 
 // =====================================================
+// AI CHAT PROXY - Routes through Supabase Edge Function
+// =====================================================
+async function callAIChat(systemPrompt, userMessage, restaurantId, maxTokens) {
+  const rid = restaurantId || localStorage.getItem('current_restaurant_id') || 'default';
+  try {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/ai-chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        systemPrompt: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }],
+        restaurantId: rid,
+        maxTokens: maxTokens || 1024
+      })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || `AI service error: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.response || '';
+  } catch (e) {
+    console.warn('AI chat proxy failed:', e.message);
+    throw e;
+  }
+}
+
+// =====================================================
 // DEMO MENU DATA (Used when no API endpoint is configured)
 // =====================================================
 const DEMO_MENUS = {
@@ -6438,10 +6469,7 @@ function saveCustomMenu(restaurantId, menuItems) {
 
 // Trin 2: Parse ordre med menu-matching og priskalkulation - FORBEDRET
 async function parseOrderWithMenu(orderText, menu, restaurantName) {
-  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
-    addLog('⚠️ OpenAI API key mangler - bruger fallback', 'warn');
-    return { items: [], total: 0, valid: false, orderText: orderText };
-  }
+  // AI is now handled via backend (Supabase Edge Function) - no local API key needed
   
   addLog('🤖 AI parser ordre med menu (JSON integration)...', 'ai');
   
@@ -6459,13 +6487,16 @@ async function parseOrderWithMenu(orderText, menu, restaurantName) {
   ).join('\n');
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
+        service: 'openai',
+        endpoint: '/chat/completions',
+        payload: {
         model: 'gpt-4o-mini',
         messages: [
           {
@@ -6517,7 +6548,7 @@ VIGTIGT:
         ],
         max_tokens: 800,
         temperature: 0.05  // Lavere temperatur for mere præcis parsing
-      })
+      }})
     });
     
     const data = await response.json();
@@ -6927,10 +6958,7 @@ async function classifyWithAI(message, context = '', expectedCategories = null) 
   }
   
   // TRIN 2: Brug AI hvis tilgængelig
-  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
-    addLog('⚠️ OpenAI API key ikke konfigureret - bruger fallback', 'warn');
-    return classifyWithFallback(message, context);
-  }
+  // AI calls now routed through backend (Supabase Edge Function)
   
   addLog('🤖 AI analyserer besked...', 'ai');
   
@@ -6938,13 +6966,16 @@ async function classifyWithAI(message, context = '', expectedCategories = null) 
   const systemPrompt = buildContextualPrompt(context, expectedCategories);
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
+        service: 'openai',
+        endpoint: '/chat/completions',
+        payload: {
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
@@ -6952,7 +6983,7 @@ async function classifyWithAI(message, context = '', expectedCategories = null) 
         ],
         max_tokens: 250,
         temperature: 0.1  // Lavere = mere deterministisk
-      })
+      }})
     });
     
     const data = await response.json();
@@ -7206,9 +7237,7 @@ function capitalizeWords(str) {
 
 // Generate AI response (med åbningstider context)
 async function generateAIResponse(customerMessage, context, restaurant) {
-  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
-    return generateSmartFallbackResponse(customerMessage, context, restaurant);
-  }
+  // AI calls now routed through backend (Supabase Edge Function)
   
   // Hent restaurant navn (håndter både string og objekt)
   const restaurantName = typeof restaurant === 'string' ? restaurant : restaurant?.name || 'Restauranten';
@@ -7228,13 +7257,16 @@ async function generateAIResponse(customerMessage, context, restaurant) {
   addLog('🤖 AI genererer svar...', 'ai');
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
+        service: 'openai',
+        endpoint: '/chat/completions',
+        payload: {
         model: 'gpt-4o-mini',
         messages: [
           {
@@ -7266,7 +7298,7 @@ VIGTIGT:
         ],
         max_tokens: 100,
         temperature: 0.5  // Lavere for mere konsistente svar
-      })
+      }})
     });
     
     const data = await response.json();
@@ -7631,9 +7663,7 @@ function triggerStaffNotification(restaurant, message) {
 
 // Generate AI fallback response for unhandled messages
 async function generateAIFallbackResponse(message, restaurant, context) {
-  if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
-    return 'Beklager, jeg forstod ikke helt din besked. Kan du prøve at omformulere, eller kontakt os direkte? 📞';
-  }
+  // AI calls now routed through backend (Supabase Edge Function)
   
   const restaurantName = restaurant?.name || 'restauranten';
   let openingHoursInfo = '';
@@ -7642,13 +7672,16 @@ async function generateAIFallbackResponse(message, restaurant, context) {
   }
   
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
+        service: 'openai',
+        endpoint: '/chat/completions',
+        payload: {
         model: 'gpt-4o-mini',
         messages: [
           {
@@ -7677,7 +7710,7 @@ Almindelige forespørgsler du kan hjælpe med:
         ],
         max_tokens: 100,
         temperature: 0.6
-      })
+      }})
     });
     
     const data = await response.json();
@@ -8801,10 +8834,44 @@ async function seFetchSerperAPI(endpoint, query, options = {}) {
 // --- Analysis Service ---
 const SEAnalysisService = {
   async searchBusiness(query) {
-    const response = await fetch('/api/places/search?query=' + encodeURIComponent(query));
-    if (!response.ok) throw new Error('Search failed');
-    const data = await response.json();
-    return data.results || [];
+    try {
+      // Try Supabase Edge Function for Google Places search
+      const response = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          service: 'serper',
+          endpoint: '/places',
+          payload: { q: query + ' restaurant', gl: 'dk', hl: 'da' }
+        })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.places && data.places.length > 0) {
+          return data.places.map(p => ({
+            place_id: p.placeId || p.cid,
+            name: p.title,
+            address: p.address,
+            rating: p.rating,
+            reviews: p.reviewsCount
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Places search via proxy failed:', e.message);
+    }
+    // Fallback: try original API route
+    try {
+      const response = await fetch('/api/places/search?query=' + encodeURIComponent(query));
+      if (response.ok) {
+        const data = await response.json();
+        return data.results || [];
+      }
+    } catch (e) { /* fallback failed */ }
+    return [];
   },
 
   async getGoogleBusinessProfile(placeId, businessName) {

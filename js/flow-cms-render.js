@@ -1113,7 +1113,9 @@
         return pSlug === pageSlug || p.slug === pageSlug + '.html';
       });
 
-      if (pageData && pageData.showCookieBanner === true) {
+      // Never show cookie banner on how-it-works page (it's a marketing/analysis page)
+      const noCookiePages = ['how-it-works', 'landing'];
+      if (pageData && pageData.showCookieBanner === true && !noCookiePages.includes(pageSlug)) {
         // Load cookie consent CSS
         if (!document.querySelector('link[href*="cookie-consent.css"]')) {
           const link = document.createElement('link');

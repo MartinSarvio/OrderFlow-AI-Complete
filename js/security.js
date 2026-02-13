@@ -134,6 +134,19 @@
   }
 
   // Global uncaught error handler
+  // Errors that should NOT show a toast to the user (background/API failures)
+  const SILENT_ERROR_PATTERNS = [
+    /fetch/i, /network/i, /api\.openai/i, /supabase/i, /Failed to fetch/i,
+    /Load failed/i, /NetworkError/i, /AbortError/i, /timeout/i,
+    /CORS/i, /403/i, /401/i, /429/i, /ResizeObserver/i,
+    /Script error/i, /ChunkLoadError/i, /Loading chunk/i
+  ];
+
+  function isSilentError(message) {
+    const msg = String(message || '');
+    return SILENT_ERROR_PATTERNS.some(p => p.test(msg));
+  }
+
   window.onerror = function(message, source, line, col, error) {
     logError({
       type: 'uncaught_error',
@@ -143,7 +156,10 @@
       line: line,
       col: col
     });
-    showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    // Only show toast for genuine user-facing errors, not background/API failures
+    if (!isSilentError(message) && !isSilentError(error?.message)) {
+      showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    }
     return false; // Don't suppress default console error
   };
 
@@ -155,7 +171,10 @@
       message: reason?.message || String(reason),
       stack: reason?.stack
     });
-    showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    // Only show toast for genuine user-facing errors
+    if (!isSilentError(reason?.message) && !isSilentError(String(reason))) {
+      showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    }
   });
 
   // =====================================================
