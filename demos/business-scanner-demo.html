@@ -1943,63 +1943,311 @@
       );
     };
 
-    // Review preview
+    // Review preview — shows up to 3 real reviews
     const ReviewPreview = ({ reviews }) => {
-      const review = reviews?.[0];
+      const reviewList = reviews || [];
       return (
-        <div style={{ padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: 18,
-              }}>
-                {review?.author?.charAt(0) || 'U'}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{review?.author || 'Loading...'}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 months ago'}</div>
-              </div>
-              <div style={{ display: 'flex', gap: 2 }}>
-                {[1,2,3,4,5].map(i => (
-                  <span key={i} style={{ color: i <= (review?.rating || 4) ? '#fbbf24' : '#e5e5e5', fontSize: 16 }}>★</span>
-                ))}
-              </div>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto' }}>
+          {reviewList.length === 0 && (
+            <div style={{ background: 'white', borderRadius: 12, padding: 20, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>
+              Henter anmeldelser...
             </div>
-            {review?.text && (
-              <p style={{ margin: '16px 0 0', fontSize: 14, color: '#374151', lineHeight: 1.5 }}>
-                {review.text}
-              </p>
-            )}
-          </div>
+          )}
+          {reviewList.slice(0, 3).map((review, idx) => (
+            <div key={idx} style={{
+              background: 'white', borderRadius: 12, padding: 16,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              animation: 'slideInRight 0.3s ease',
+              animationDelay: `${idx * 0.1}s`,
+              animationFillMode: 'both',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: `hsl(${(idx * 90 + 240) % 360}, 60%, 60%)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 600, fontSize: 14, flexShrink: 0,
+                }}>
+                  {review.author?.charAt(0) || '?'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>{review.author || 'Anonym'}</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>{review.time || ''}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 1 }}>
+                  {[1,2,3,4,5].map(i => (
+                    <span key={i} style={{ color: i <= (review.rating || 0) ? '#fbbf24' : '#e5e5e5', fontSize: 13 }}>★</span>
+                  ))}
+                </div>
+              </div>
+              {review.text && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#374151', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {review.text}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       );
     };
 
     // Photo gallery preview
-    const PhotoPreview = ({ photos }) => (
-      <div style={{ padding: 24 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-          {(photos || [1,2,3,4,5,6]).slice(0, 6).map((_, i) => (
-            <div key={i} style={{
-              aspectRatio: '1',
-              background: `linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)`,
-              borderRadius: 8,
-              animation: 'pulse 2s ease-in-out infinite',
-              animationDelay: `${i * 0.1}s`,
-            }} />
-          ))}
+    const PhotoPreview = ({ photos }) => {
+      const images = photos?.images || [];
+      return (
+        <div style={{ padding: 24 }}>
+          {images.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {images.slice(0, 6).map((img, i) => (
+                <div key={i} style={{
+                  aspectRatio: '1',
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  background: '#f3f4f6',
+                  animation: 'slideIn 0.4s ease',
+                  animationDelay: `${i * 0.08}s`,
+                  animationFillMode: 'both',
+                }}>
+                  <img
+                    src={img.thumbnailUrl || img.url}
+                    alt={img.title || 'Business photo'}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+              {[1,2,3,4,5,6].map((_, i) => (
+                <div key={i} style={{
+                  aspectRatio: '1',
+                  background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+                  borderRadius: 8,
+                  animation: 'pulse 2s ease-in-out infinite',
+                  animationDelay: `${i * 0.1}s`,
+                }} />
+              ))}
+            </div>
+          )}
+          {images.length > 0 && (
+            <div style={{ marginTop: 12, fontSize: 12, color: '#6b7280', textAlign: 'center' }}>
+              {photos.totalImages || images.length} billeder fundet
+              {photos.hasFoodPhotos && <span style={{ margin: '0 4px', color: '#059669' }}>· Mad</span>}
+              {photos.hasInteriorPhotos && <span style={{ margin: '0 4px', color: '#059669' }}>· Interiør</span>}
+              {photos.hasExteriorPhotos && <span style={{ margin: '0 4px', color: '#059669' }}>· Facade</span>}
+            </div>
+          )}
         </div>
-      </div>
-    );
+      );
+    };
+
+    // SERP Visibility preview
+    const SERPPreview = ({ data, business }) => {
+      const keywords = data?.keywords || [];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Søgeresultater for "{business?.name}"</div>
+          {keywords.length > 0 ? keywords.slice(0, 5).map((kw, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px',
+              background: i === 0 ? '#f0f7ff' : 'white', borderRadius: 8, marginBottom: 6,
+              animation: 'slideInRight 0.3s ease', animationDelay: `${i * 0.08}s`, animationFillMode: 'both',
+            }}>
+              <span style={{ fontSize: 18, fontWeight: 700, color: kw.position <= 3 ? '#059669' : kw.position <= 10 ? '#d97706' : '#dc2626', minWidth: 28 }}>
+                #{kw.position || '—'}
+              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{kw.keyword || kw.query}</div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>{kw.url || 'google.dk'}</div>
+              </div>
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, padding: 20 }}>Søger efter placeringer...</div>
+          )}
+        </div>
+      );
+    };
+
+    // Citation preview
+    const CitationPreview = ({ data }) => {
+      const citations = data?.citations || data?.directories || [];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Citationer & Kataloger</div>
+          {citations.length > 0 ? citations.slice(0, 6).map((c, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0',
+              borderBottom: i < 5 ? '1px solid #f3f4f6' : 'none',
+              animation: 'slideInRight 0.3s ease', animationDelay: `${i * 0.06}s`, animationFillMode: 'both',
+            }}>
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: c.found || c.status === 'found' ? '#059669' : '#dc2626',
+              }} />
+              <span style={{ fontSize: 13, flex: 1 }}>{c.name || c.directory || c.source}</span>
+              <span style={{ fontSize: 11, color: c.found || c.status === 'found' ? '#059669' : '#dc2626' }}>
+                {c.found || c.status === 'found' ? 'Fundet' : 'Mangler'}
+              </span>
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, padding: 20 }}>Tjekker kataloger...</div>
+          )}
+        </div>
+      );
+    };
+
+    // Competitor preview
+    const CompetitorPreview = ({ data, business }) => {
+      const competitors = data?.competitors || [];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Konkurrenter i området</div>
+          {competitors.length > 0 ? competitors.slice(0, 4).map((comp, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+              background: 'white', borderRadius: 8, marginBottom: 6, border: '1px solid #f0f0f0',
+              animation: 'slideInRight 0.3s ease', animationDelay: `${i * 0.08}s`, animationFillMode: 'both',
+            }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: `hsl(${i * 60 + 200}, 50%, 92%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: `hsl(${i * 60 + 200}, 50%, 40%)` }}>
+                {(i + 1)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comp.name || comp.title}</div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>
+                  {comp.rating ? `★ ${comp.rating}` : ''}
+                  {comp.reviewCount ? ` · ${comp.reviewCount} anmeldelser` : ''}
+                </div>
+              </div>
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, padding: 20 }}>Finder konkurrenter...</div>
+          )}
+        </div>
+      );
+    };
+
+    // NAP Consistency preview
+    const NAPPreview = ({ data, business }) => {
+      const checks = data?.checks || data?.sources || [];
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>NAP Konsistens</div>
+          <div style={{ background: '#f9fafb', borderRadius: 8, padding: 12, marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 4 }}>Virksomhed</div>
+            <div style={{ fontSize: 14, fontWeight: 500 }}>{business?.name}</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{business?.address}</div>
+          </div>
+          {checks.length > 0 ? checks.slice(0, 4).map((c, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0',
+              borderBottom: i < 3 ? '1px solid #f3f4f6' : 'none',
+            }}>
+              <span style={{ fontSize: 14 }}>{c.consistent || c.match ? '✓' : '✗'}</span>
+              <span style={{ fontSize: 13, flex: 1 }}>{c.source || c.directory}</span>
+              <span style={{ fontSize: 11, color: c.consistent || c.match ? '#059669' : '#d97706' }}>
+                {c.consistent || c.match ? 'Konsistent' : 'Afvigelse'}
+              </span>
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, padding: 12 }}>Verificerer NAP...</div>
+          )}
+        </div>
+      );
+    };
+
+    // Website analysis preview
+    const WebsitePreview = ({ data }) => {
+      if (!data) return <div style={{ padding: 20, textAlign: 'center', color: '#6b7280', fontSize: 13 }}>Analyserer website...</div>;
+      const score = data.mobileScore || data.performanceScore || data.score || 0;
+      const scoreColor = score >= 70 ? '#059669' : score >= 50 ? '#d97706' : '#dc2626';
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', border: `3px solid ${scoreColor}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: scoreColor }}>{score}</span>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Website Score</div>
+              <div style={{ fontSize: 12, color: '#6b7280' }}>{data.url || 'Analyseret'}</div>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { label: 'HTTPS', ok: data.hasSSL || data.https },
+              { label: 'Mobilvenlig', ok: data.mobileResponsive || data.mobileFriendly },
+              { label: 'Hurtig load', ok: (data.loadTime || 999) < 3 },
+              { label: 'Meta tags', ok: data.hasMetaTags || data.metaTitle },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, padding: '6px 8px', background: '#f9fafb', borderRadius: 6 }}>
+                <span style={{ color: item.ok ? '#059669' : '#dc2626' }}>{item.ok ? '✓' : '✗'}</span>
+                <span>{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Schema markup preview
+    const SchemaPreview = ({ data }) => {
+      const types = data?.schemaTypes || data?.types || [];
+      return (
+        <div style={{ padding: 20, fontFamily: 'monospace' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, fontFamily: '-apple-system, sans-serif' }}>Schema Markup</div>
+          {types.length > 0 ? (
+            <div style={{ background: '#1a1a2e', borderRadius: 8, padding: 16, color: '#e5e5e5', fontSize: 12, lineHeight: 1.8 }}>
+              {types.slice(0, 5).map((t, i) => (
+                <div key={i}>
+                  <span style={{ color: '#667eea' }}>@type</span>: <span style={{ color: '#a78bfa' }}>"{typeof t === 'string' ? t : t.type || t.name}"</span>
+                  {i === 0 && <span style={{ color: '#059669' }}> ✓</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ background: '#fef2f2', borderRadius: 8, padding: 16, color: '#dc2626', fontSize: 13, fontFamily: '-apple-system, sans-serif' }}>
+              {data ? 'Ingen schema markup fundet — anbefales at tilføje LocalBusiness schema' : 'Scanner schema...'}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    // Social media preview
+    const SocialPreview = ({ data, business }) => {
+      const platforms = data?.platforms || data?.profiles || [];
+      const socialItems = platforms.length > 0 ? platforms : [
+        { name: 'Facebook', found: data?.facebook },
+        { name: 'Instagram', found: data?.instagram },
+        { name: 'LinkedIn', found: data?.linkedin },
+      ].filter(p => p.found !== undefined);
+      return (
+        <div style={{ padding: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Social Media Tilstedeværelse</div>
+          {socialItems.length > 0 ? socialItems.map((p, i) => (
+            <div key={i} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0',
+              borderBottom: i < socialItems.length - 1 ? '1px solid #f3f4f6' : 'none',
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 6,
+                background: p.found || p.url ? '#f0f7ff' : '#fef2f2',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 14,
+              }}>
+                {p.name === 'Facebook' ? '📘' : p.name === 'Instagram' ? '📸' : p.name === 'LinkedIn' ? '💼' : '🌐'}
+              </div>
+              <span style={{ fontSize: 13, flex: 1 }}>{p.name || p.platform}</span>
+              <span style={{ fontSize: 11, color: p.found || p.url ? '#059669' : '#dc2626', fontWeight: 500 }}>
+                {p.found || p.url ? 'Fundet' : 'Ikke fundet'}
+              </span>
+            </div>
+          )) : (
+            <div style={{ textAlign: 'center', color: '#6b7280', fontSize: 13, padding: 20 }}>Søger sociale profiler...</div>
+          )}
+        </div>
+      );
+    };
 
     // =============================================================================
     // LIVE FINDINGS FEED COMPONENTS
@@ -2639,15 +2887,25 @@
                     currentStep === 1 ? `google.com/business/${business.name}` :
                     currentStep === 2 ? `google.com/reviews/${business.name}` :
                     currentStep === 3 ? `google.com/photos/${business.name}` :
-                    currentStep === 4 ? `facebook.com/${business.name?.toLowerCase().replace(/\s/g, '')}` :
-                    `pagespeed.web.dev/${business.name}`
+                    currentStep === 4 ? `google.dk/search?q=${encodeURIComponent(business.name)}` :
+                    currentStep === 5 ? `citationer.dk/${business.name?.toLowerCase().replace(/\s/g, '-')}` :
+                    currentStep === 6 ? `google.dk/maps/konkurrenter` :
+                    currentStep === 7 ? `nap-check.dk/${business.name?.toLowerCase().replace(/\s/g, '-')}` :
+                    currentStep === 8 ? (analysisResults.googleProfile?.website || `${business.name?.toLowerCase().replace(/\s/g, '')}.dk`) :
+                    currentStep === 9 ? `schema.org/LocalBusiness` :
+                    `social-scan/${business.name?.toLowerCase().replace(/\s/g, '')}`
                   }>
                     {currentStep === 0 && <MapPreview business={business} />}
                     {currentStep === 1 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
                     {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.topReviews} />}
-                    {currentStep === 3 && <PhotoPreview photos={analysisResults.photos} />}
-                    {currentStep === 4 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
-                    {currentStep >= 5 && <MapPreview business={business} />}
+                    {currentStep === 3 && <PhotoPreview photos={analysisResults.images} />}
+                    {currentStep === 4 && <SERPPreview data={analysisResults.serpVisibility} business={business} />}
+                    {currentStep === 5 && <CitationPreview data={analysisResults.citations} />}
+                    {currentStep === 6 && <CompetitorPreview data={analysisResults.competitors} business={business} />}
+                    {currentStep === 7 && <NAPPreview data={analysisResults.napConsistency} business={business} />}
+                    {currentStep === 8 && <WebsitePreview data={analysisResults.website} />}
+                    {currentStep === 9 && <SchemaPreview data={analysisResults.schemaMarkup} />}
+                    {currentStep >= 10 && <SocialPreview data={analysisResults.social} business={business} />}
                   </BrowserWindow>
                 </div>
               ) : (
