@@ -1577,6 +1577,7 @@
   <link rel="stylesheet" href="/css/cookie-consent.css">
   <link rel="stylesheet" href="/css/privacy-modal.css">
 <link rel="stylesheet" href="/css/cookie-popup.css">
+<link rel="stylesheet" href="../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -1723,5 +1724,6 @@
 <script src="/js/flow-cms-render.js"></script>
 <!-- Blog Renderer -->
 <script src="/js/blog-render.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>
