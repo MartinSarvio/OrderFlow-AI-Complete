@@ -81,7 +81,7 @@
     }
     .search-title {
       font-size: 32px;
-      font-weight: 700;
+      font-weight: 500;
       margin-bottom: 8px;
       color: #1a1a1a;
       text-align: center;
@@ -233,7 +233,7 @@
       flex: 1;
     }
     .signal-title {
-      font-weight: 600;
+      font-weight: 500;
       color: #1a1a1a;
       margin-bottom: 4px;
     }
@@ -329,6 +329,7 @@
     .metric-negative { background: #fee2e2; color: #dc2626; }
     .metric-neutral { background: #f3f4f6; color: #6b7280; }
   </style>
+<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div id="root"></div>
@@ -401,6 +402,7 @@
       const img = raw.images || {};
 
       return {
+        // Images from Serper Images API
         images: {
           totalImages: img.totalImages || 0,
           images: img.images || [],
@@ -2147,6 +2149,7 @@
 
     // Photo gallery preview — shows real images from API
     const PhotoPreview = ({ photos }) => {
+      // photos can be: { images: [{url, thumbnailUrl, ...}], totalImages, ... } or array of strings
       const imageList = photos?.images || (Array.isArray(photos) ? photos : []);
       const hasRealPhotos = imageList.length > 0;
       return (
@@ -2932,7 +2935,6 @@
       const [paymentVerifying, setPaymentVerifying] = useState(false);
       const [paymentVerified, setPaymentVerified] = useState(false);
       const [resolvedBusiness, setResolvedBusiness] = useState(null);
-      const [selectedModule, setSelectedModule] = useState(null);
       const cacheRestored = useRef(false);
       const autoRescanTriggered = useRef(false);
 
@@ -3114,122 +3116,6 @@
       const getScoreColor = (s) => s >= 75 ? '#059669' : s >= 50 ? '#d97706' : '#dc2626';
       const getScoreLabel = (s) => s >= 75 ? 'God digital tilstedeværelse' : s >= 50 ? 'Forbedringspotentiale' : 'Kritiske mangler';
 
-      // Helper: extract display data for sidebar module detail panels
-      const getModuleDisplayData = (moduleId, results) => {
-        if (!results || Object.keys(results).length === 0) return null;
-        const gp = results.googleProfile || {};
-        const rev = results.reviews || {};
-        const img = results.images || {};
-        const comp = results.competitors || {};
-        const nap = results.napConsistency || {};
-        const web = results.website || {};
-        const soc = results.social || {};
-
-        switch (moduleId) {
-          case 'googleProfile':
-            return [
-              { label: 'Firmanavn', value: gp.name || 'Ikke fundet' },
-              { label: 'Adresse', value: gp.address?.full || 'Ikke fundet' },
-              { label: 'Telefon', value: gp.phone || 'Ikke fundet' },
-              { label: 'Kategori', value: (gp.types || []).join(', ') || 'Ukendt' },
-              { label: 'Rating', value: gp.rating ? `${gp.rating} ★` : 'Ingen', color: gp.rating >= 4 ? '#059669' : gp.rating >= 3 ? '#d97706' : '#dc2626' },
-              { label: 'Anmeldelser', value: String(gp.totalReviews || 0) },
-              { label: 'Profil fuldstændighed', value: `${gp.profileCompleteness?.score || 0}%`, color: (gp.profileCompleteness?.score || 0) >= 70 ? '#059669' : '#d97706' },
-              { label: 'Ejer-verificeret', value: gp.claimed ? 'Ja ✓' : 'Nej ✗', color: gp.claimed ? '#059669' : '#dc2626' },
-            ];
-          case 'reviews':
-            const recentList = (rev.recentReviews || []).slice(0, 3);
-            return [
-              { label: 'Antal anmeldelser', value: String(rev.totalReviews || 0) },
-              { label: 'Gennemsnitlig rating', value: rev.averageRating ? `${rev.averageRating.toFixed(1)} ★` : 'N/A', color: rev.averageRating >= 4 ? '#059669' : '#d97706' },
-              { label: 'Positive', value: `${rev.sentiment?.positive || 0}%`, color: '#059669' },
-              { label: 'Negative', value: `${rev.sentiment?.negative || 0}%`, color: rev.sentiment?.negative > 20 ? '#dc2626' : '#6b7280' },
-              { label: 'Månedlige', value: `~${rev.velocity?.monthlyAverage || 0} /mdr` },
-              { label: 'Svarrate', value: `${rev.responseMetrics?.responseRate || 0}%` },
-              ...recentList.map((r, i) => ({ label: `Seneste ${i + 1}`, value: `${r.rating || '?'}★ ${(r.text || r.summary || '').substring(0, 40)}${(r.text || r.summary || '').length > 40 ? '...' : ''}` })),
-            ];
-          case 'images':
-            return [
-              { label: 'Billeder total', value: String(img.totalPhotos || gp.photos?.total || 0) },
-              { label: 'Google Maps', value: String(img.googleMapsPhotos || gp.photos?.total || 0) },
-              { label: 'Ejer-billeder', value: String(gp.photos?.ownerPhotos || 0) },
-              { label: 'Bruger-billeder', value: String(gp.photos?.userPhotos || 0) },
-            ];
-          case 'serpVisibility': {
-            const v3f = (results._v3findings || []).filter(f => f.module === 'serp' || f.module === 'visibility');
-            return v3f.length > 0
-              ? v3f.slice(0, 6).map(f => ({ label: f.type === 'positive' ? '✓' : f.type === 'critical' ? '✗' : '⚠', value: f.title || f.description || '' }))
-              : [{ label: 'Status', value: 'Ingen synlighedsdata tilgængelig' }];
-          }
-          case 'citations': {
-            const sources = nap.sources || [];
-            const found = sources.filter(s => s.found);
-            return [
-              { label: 'Fundet på', value: `${found.length} af ${sources.length} kilder` },
-              ...sources.slice(0, 6).map(s => ({
-                label: s.name || 'Ukendt',
-                value: s.found ? 'Fundet ✓' : 'Ikke fundet ✗',
-                color: s.found ? '#059669' : '#dc2626',
-              })),
-            ];
-          }
-          case 'competitors': {
-            const comps = comp.competitors || [];
-            return [
-              { label: 'Din ranking', value: comp.ranking?.overall ? `#${comp.ranking.overall}` : 'Ukendt' },
-              { label: 'Konkurrenter fundet', value: String(comps.length) },
-              ...comps.slice(0, 5).map(c => ({
-                label: c.name,
-                value: `${c.rating || '?'}★ · ${c.reviews || 0} anm.${c.distance ? ` · ${c.distance}` : ''}`,
-              })),
-            ];
-          }
-          case 'napConsistency': {
-            const sources = nap.sources || [];
-            const allMatch = sources.filter(s => s.found && s.nameMatch && s.addressMatch && s.phoneMatch);
-            return [
-              { label: 'Konsistens-score', value: `${nap.consistencyScore || 0}%`, color: (nap.consistencyScore || 0) >= 70 ? '#059669' : '#d97706' },
-              { label: 'Fuld match', value: `${allMatch.length} af ${sources.length}` },
-              ...sources.slice(0, 5).map(s => ({
-                label: s.name,
-                value: !s.found ? 'Ikke fundet' : [s.nameMatch && 'N', s.addressMatch && 'A', s.phoneMatch && 'P'].filter(Boolean).join('') + ' ✓',
-                color: !s.found ? '#dc2626' : (s.nameMatch && s.addressMatch && s.phoneMatch) ? '#059669' : '#d97706',
-              })),
-              ...(nap.issues || []).slice(0, 2).map(i => ({ label: '⚠ Problem', value: i.issue || i.description || '', color: '#d97706' })),
-            ];
-          }
-          case 'website':
-            return [
-              { label: 'URL', value: web.url || 'Ingen website' },
-              { label: 'Mobil-score', value: web.scores?.mobile ? `${web.scores.mobile}/100` : 'N/A', color: (web.scores?.mobile || 0) >= 70 ? '#059669' : '#d97706' },
-              { label: 'SEO-score', value: web.scores?.seo ? `${web.scores.seo}/100` : 'N/A', color: (web.scores?.seo || 0) >= 70 ? '#059669' : '#d97706' },
-              { label: 'Performance', value: web.scores?.performance ? `${web.scores.performance}/100` : 'N/A' },
-              { label: 'Mobilvenlig', value: web.localSEO?.mobileResponsive ? 'Ja ✓' : 'Nej ✗', color: web.localSEO?.mobileResponsive ? '#059669' : '#dc2626' },
-              { label: 'Kontaktside', value: web.localSEO?.hasContactPage ? 'Ja ✓' : 'Nej ✗', color: web.localSEO?.hasContactPage ? '#059669' : '#dc2626' },
-            ];
-          case 'schemaMarkup':
-            return [
-              { label: 'Schema Markup', value: web.localSEO?.hasSchemaMarkup ? 'Fundet ✓' : 'Ikke fundet ✗', color: web.localSEO?.hasSchemaMarkup ? '#059669' : '#dc2626' },
-              { label: 'LocalBusiness', value: web.localSEO?.hasLocalBusinessSchema ? 'Fundet ✓' : 'Ikke fundet ✗', color: web.localSEO?.hasLocalBusinessSchema ? '#059669' : '#dc2626' },
-              { label: 'Open Graph', value: web.localSEO?.hasOpenGraph ? 'Fundet ✓' : 'Ikke fundet ✗', color: web.localSEO?.hasOpenGraph ? '#059669' : '#dc2626' },
-              { label: 'Indlejret kort', value: web.localSEO?.hasEmbeddedMap ? 'Fundet ✓' : 'Ikke fundet ✗', color: web.localSEO?.hasEmbeddedMap ? '#059669' : '#dc2626' },
-            ];
-          case 'social': {
-            const platforms = soc.platforms || [];
-            return [
-              { label: 'Social score', value: `${soc.overallScore || 0}/100`, color: (soc.overallScore || 0) >= 50 ? '#059669' : '#d97706' },
-              ...platforms.map(p => ({
-                label: p.name,
-                value: !p.found ? 'Ikke fundet' : p.status === 'active' ? `Aktiv · ${p.followers || 0} følgere` : 'Fundet',
-                color: !p.found ? '#dc2626' : '#059669',
-              })),
-            ];
-          }
-          default:
-            return null;
-        }
-      };
-
       const handlePurchase = async () => {
         try {
           // Cache scan results in both localStorage AND sessionStorage (survives Stripe redirect)
@@ -3242,13 +3128,7 @@
           try { localStorage.setItem('seo_report_cache', cacheData); } catch (e) { /* storage might be full */ }
           try { sessionStorage.setItem('seo_report_cache', cacheData); } catch (e) { /* ignore */ }
 
-          // Ensure business params are preserved in the return URL so App can restore selectedBusiness
-          const returnParams = new URLSearchParams(window.location.search);
-          if (!returnParams.has('name') && business.name) returnParams.set('name', business.name);
-          if (!returnParams.has('place_id') && business.place_id) returnParams.set('place_id', business.place_id);
-          if (!returnParams.has('address') && business.address) returnParams.set('address', business.address);
-          if (!returnParams.has('website') && business.website) returnParams.set('website', business.website);
-          const returnUrl = window.location.origin + window.location.pathname + '?' + returnParams.toString();
+          const returnUrl = window.location.origin + window.location.pathname + window.location.search;
           const resp = await fetch('/api/stripe/create-checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3331,6 +3211,7 @@
                 <p style={{ color: '#9ca3af', fontSize: 13 }}>Henter rapport-data...</p>
                 <button
                   onClick={() => {
+                    // Retry cache restore on manual click
                     try {
                       const cached = localStorage.getItem('seo_report_cache') || sessionStorage.getItem('seo_report_cache');
                       if (cached) {
@@ -3342,11 +3223,13 @@
                         if (data.business) setResolvedBusiness(data.business);
                         cacheRestored.current = true;
                       } else {
+                        // Cache lost — run a fresh scan with payment already confirmed
                         setIsPaid(true);
                         setPaymentVerified(true);
                         setIsComplete(false);
                         setShowReport(false);
-                        cacheRestored.current = true;
+                        cacheRestored.current = true; // prevent loop
+                        // Reset to trigger fresh scan
                         setCompletedSteps([]);
                         setAnalysisResults({});
                         setFindings([]);
@@ -3361,6 +3244,7 @@
                 </button>
                 <button
                   onClick={() => {
+                    // Force a fresh scan — payment is already confirmed
                     setIsPaid(true);
                     setPaymentVerified(true);
                     cacheRestored.current = false;
@@ -3370,10 +3254,12 @@
                     setFindings([]);
                     setIsComplete(false);
                     setShowReport(false);
+                    // Remove paid param from URL to allow fresh scan
                     const p = new URLSearchParams(window.location.search);
                     p.delete('paid');
                     p.delete('session_id');
                     window.history.replaceState({}, '', window.location.pathname + (p.toString() ? '?' + p.toString() : ''));
+                    // Force re-render to trigger scan useEffect
                     window.location.reload();
                   }}
                   style={{ background: 'transparent', color: '#6366f1', border: '1px solid #6366f1', borderRadius: 8, padding: '10px 24px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
@@ -3423,102 +3309,59 @@
               <h1 style={{ margin: '0 0 8px', fontSize: 24, fontWeight: 700 }}>{business.name}</h1>
               <p style={{ margin: '0 0 32px', fontSize: 14, color: '#6b7280' }}>{business.address}</p>
 
-              <div style={{ flex: 1, overflowY: 'auto' }}>
+              <div style={{ flex: 1 }}>
                 {analysisSteps.map((step, index) => {
                   const isCompleted = completedSteps.includes(step.id);
                   const isCurrent = index === currentStep && !isComplete;
-                  const isSelected = selectedModule === step.id;
-                  const moduleData = getModuleDisplayData(step.id, analysisResults);
 
                   return (
-                    <div key={step.id}>
-                      <div
-                        onClick={() => isCompleted ? setSelectedModule(isSelected ? null : step.id) : null}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 12,
-                          padding: '12px 8px',
-                          borderBottom: isSelected ? 'none' : '1px solid #f0f0f0',
-                          cursor: isCompleted ? 'pointer' : 'default',
-                          borderRadius: isSelected ? '8px 8px 0 0' : 0,
-                          background: isSelected ? '#f0f7ff' : 'transparent',
-                          transition: 'background 0.15s',
-                        }}
-                        onMouseOver={(e) => { if (isCompleted && !isSelected) e.currentTarget.style.background = '#f9fafb'; }}
-                        onMouseOut={(e) => { if (!isSelected) e.currentTarget.style.background = 'transparent'; }}
-                      >
-                        <div style={{
-                          width: 20,
-                          height: 20,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}>
-                          {isCompleted ? (
-                            <Icon name="Check" size={16} color="#059669" />
-                          ) : isCurrent ? (
-                            <svg width={20} height={20} style={{ animation: 'spin 1.5s linear infinite' }}>
-                              <circle cx={10} cy={10} r={8} fill="none" stroke="#e5e5e5" strokeWidth={2} />
-                              <circle cx={10} cy={10} r={8} fill="none" stroke="#667eea" strokeWidth={2}
-                                strokeDasharray={50.26} strokeDashoffset={37.7} strokeLinecap="round" />
-                            </svg>
-                          ) : (
-                            <div style={{
-                              width: 8,
-                              height: 8,
-                              borderRadius: '50%',
-                              background: '#d1d5db',
-                              animation: `dotPulse 2s ease-in-out ${index * 0.15}s infinite`,
-                            }} />
-                          )}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <span style={{
-                            fontSize: 14,
-                            color: isCompleted ? '#059669' : isCurrent ? '#1a1a1a' : '#9ca3af',
-                            fontWeight: isCurrent || isSelected ? 500 : 400
-                          }}>
-                            {step.name}
-                          </span>
-                          {(isCurrent || isCompleted) && (
-                            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
-                              {step.apiSource}
-                            </div>
-                          )}
-                        </div>
-                        {isCompleted && (
-                          <Icon name={isSelected ? 'ChevronUp' : 'ChevronDown'} size={14} color="#9ca3af" />
+                    <div key={step.id} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '12px 0',
+                      borderBottom: '1px solid #f0f0f0',
+                    }}>
+                      <div style={{
+                        width: 20,
+                        height: 20,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}>
+                        {isCompleted ? (
+                          <Icon name="Check" size={16} color="#059669" />
+                        ) : isCurrent ? (
+                          <svg width={20} height={20} style={{ animation: 'spin 1.5s linear infinite' }}>
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#e5e5e5" strokeWidth={2} />
+                            <circle cx={10} cy={10} r={8} fill="none" stroke="#667eea" strokeWidth={2}
+                              strokeDasharray={50.26} strokeDashoffset={37.7} strokeLinecap="round" />
+                          </svg>
+                        ) : (
+                          <div style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: '#d1d5db',
+                            animation: `dotPulse 2s ease-in-out ${index * 0.15}s infinite`,
+                          }} />
                         )}
                       </div>
-                      {/* Expanded module detail panel */}
-                      {isSelected && isCompleted && moduleData && (
-                        <div style={{
-                          background: '#f8fafc',
-                          border: '1px solid #e5e7eb',
-                          borderTop: 'none',
-                          borderRadius: '0 0 8px 8px',
-                          padding: '12px',
-                          marginBottom: 4,
-                          fontSize: 13,
-                          color: '#374151',
-                          animation: 'fadeSlideUp 0.2s ease',
+                      <div style={{ flex: 1 }}>
+                        <span style={{
+                          fontSize: 14,
+                          color: isCompleted ? '#059669' : isCurrent ? '#1a1a1a' : '#9ca3af',
+                          fontWeight: isCurrent ? 500 : 400
                         }}>
-                          {moduleData.map((item, i) => (
-                            <div key={i} style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'flex-start',
-                              padding: '6px 0',
-                              borderBottom: i < moduleData.length - 1 ? '1px solid #e5e7eb' : 'none',
-                            }}>
-                              <span style={{ color: '#6b7280', fontSize: 12 }}>{item.label}</span>
-                              <span style={{ fontWeight: 500, fontSize: 12, textAlign: 'right', maxWidth: '60%', color: item.color || '#1a1a1a' }}>{item.value}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                          {step.name}
+                        </span>
+                        {(isCurrent || isCompleted) && (
+                          <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 2 }}>
+                            {step.apiSource}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -5685,9 +5528,11 @@
               if (data.business && data.business.name) {
                 setSelectedBusiness(data.business);
               } else {
+                // Fallback: use a placeholder so AnalysisScanner renders
                 setSelectedBusiness({ name: 'Din virksomhed', place_id: '', address: '' });
               }
             } else {
+              // No cache at all — still show scanner with payment verified state
               setSelectedBusiness({ name: 'Din virksomhed', place_id: '', address: '' });
             }
           } catch (e) {
@@ -5776,5 +5621,6 @@
       }
     });
   </script>
+<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>

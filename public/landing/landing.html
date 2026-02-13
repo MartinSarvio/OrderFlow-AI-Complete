@@ -14,18 +14,21 @@
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
-      --color-primary: #015bf8;
-      --color-primary-hover: #0047cc;
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
       --color-black: #000000;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
       --color-gray-300: #dee2e6;
       --color-gray-400: #787a7d;
-      --color-gray-500: #6c6f75;
-      --color-gray-600: #495057;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --section-radius: 2.4rem;
@@ -107,23 +110,23 @@
     }
 
     /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
-    .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
-    .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
+    .h56 { font-size: 5.6rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+    .h52 { font-size: 5.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+    .h48 { font-size: 4.8rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+    .h44 { font-size: 4.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+    .h36 { font-size: 3.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+    .h28 { font-size: 2.8rem; font-weight: 700; line-height: 1.25; }
+    .h24 { font-size: 2.4rem; font-weight: 700; line-height: 1.3; }
+    .h20 { font-size: 2rem; font-weight: 600; line-height: 1.4; }
+    .h18 { font-size: 1.8rem; font-weight: 600; line-height: 1.4; }
     .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
     .h15 { font-size: 1.5rem; font-weight: 500; line-height: 1.5; }
     .h14 { font-size: 1.4rem; font-weight: 400; line-height: 1.5; }
     .h13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; }
-    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
+    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; color: var(--color-gray-600); }
     .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
     .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
+    .p32 { font-size: 3.2rem; font-weight: 700; line-height: 1.2; }
 
     /* ==================== UTILITY CLASSES ==================== */
     .text-color-content-secondary { color: var(--color-gray-600); }
@@ -173,7 +176,7 @@
       padding: 1.4rem 2.8rem;
       font-size: 1.5rem;
       font-weight: 500;
-      border-radius: 0.68rem;
+      border-radius: 0.8rem;
       background: var(--color-primary);
       color: var(--color-white);
       transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1);
@@ -188,11 +191,12 @@
     .button.is-secondary {
       background: transparent;
       color: var(--color-dark);
-      border: 1px solid var(--color-gray-300);
+      border: 2px solid var(--color-dark);
     }
 
     .button.is-secondary:hover {
-      background: var(--color-gray-100);
+      background: var(--color-dark);
+      color: var(--color-white);
     }
 
     .button.is-black {
@@ -432,10 +436,10 @@
     }
 
     /* BENTO SECTION - Owner.com Style */
-    .bento { padding: 8rem 0; background: var(--color-white); }
+    .bento { padding: 10rem 0; background: var(--color-beige); }
     .bento-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; }
     .bento-header { text-align: center; margin-bottom: 4rem; }
-    .bento-title { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
+    .bento-title { font-size: 4.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
     /* Bento Hero */
     .bento-hero { margin-bottom: 3rem; border-radius: 2rem; overflow: hidden; position: relative; }
     .bento-hero img { width: 100%; height: auto; display: block; min-height: 40rem; object-fit: cover; }
@@ -446,7 +450,7 @@
     .bento-card { background: var(--color-gray-100); border-radius: 2rem; overflow: hidden; display: flex; flex-direction: column; }
     .bento-card-content { padding: 3.2rem; }
     .bento-card-label { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 0.8rem; }
-    .bento-card-title { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); line-height: 1.3; }
+    .bento-card-title { font-size: 2.4rem; font-weight: 700; color: var(--color-dark); line-height: 1.3; }
     .bento-card-image { margin-top: auto; padding: 0 2rem 2rem; }
     .bento-card-image img { width: 100%; height: auto; object-fit: contain; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     .bento-card > img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; border-radius: 0 0 2rem 2rem; }
@@ -456,10 +460,10 @@
       .bento-hero-overlay { max-width: 100%; font-size: 1.4rem; padding: 1.6rem 2rem; }
     }
     /* BELIEFS SECTION */
-    .beliefs { padding: 8rem 0; background: var(--color-gray-100); }
+    .beliefs { padding: 10rem 0; background: var(--color-white); }
     .beliefs-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; display: flex; gap: 6rem; }
     .beliefs-left { flex: 0 0 36rem; position: sticky; top: 12rem; height: fit-content; }
-    .beliefs-title { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-dark); margin-bottom: 1.6rem; }
+    .beliefs-title { font-size: 3.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-dark); margin-bottom: 1.6rem; }
     .beliefs-subtitle { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 3.2rem; }
     .beliefs-author { display: flex; align-items: center; gap: 1.2rem; }
     .beliefs-author img { width: 4.8rem; height: 4.8rem; border-radius: 50%; object-fit: cover; }
@@ -469,7 +473,7 @@
     .belief-item { padding: 3.2rem 0; border-bottom: 1px solid var(--color-gray-300); }
     .belief-item:first-child { padding-top: 0; }
     .belief-item:last-child { border-bottom: none; }
-    .belief-heading { font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
+    .belief-heading { font-size: 2rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.2rem; }
     .belief-text { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; }
 
     /* ==================== LOGO CLOUD SECTION ==================== */
@@ -490,7 +494,7 @@
 
     .logo-cloud-header h2 {
       font-size: 2.8rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--color-dark);
       margin-bottom: 1.2rem;
     }
@@ -746,7 +750,7 @@
     /* ==================== TABS SECTION (Owner.com style) ==================== */
     .tabs-section {
       background: var(--color-white);
-      padding: 8rem 0;
+      padding: 10rem 0;
     }
 
     .tabs-header {
@@ -843,7 +847,7 @@
 
     .tab-text-content h3 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
       line-height: 1.2;
@@ -902,8 +906,8 @@
 
     /* ==================== TRUSTED CAROUSEL ==================== */
     .trusted-section {
-      background: #ffffff;
-      padding: 8rem 0;
+      background: var(--color-beige);
+      padding: 10rem 0;
       overflow: hidden;
     }
 
@@ -914,7 +918,7 @@
 
     .trusted-header h2 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--color-dark);
     }
 
@@ -979,7 +983,7 @@
     /* ==================== CREATIONS GALLERY ==================== */
     .creations-section {
       background: var(--color-white);
-      padding: 8rem 0;
+      padding: 10rem 0;
     }
 
     .creations-header {
@@ -991,13 +995,13 @@
 
     .creations-header h2 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
     }
 
     .creations-header h2 span {
-      background: linear-gradient(to top, var(--color-primary) 0%, var(--color-dark) 100%);
+      background: linear-gradient(to top, var(--color-green-accent) 0%, var(--color-dark) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -1059,7 +1063,7 @@
 
     .creations-card-title {
       font-size: 2.8rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 0.8rem;
     }
 
@@ -1085,7 +1089,7 @@
 
     .cta-content h2 {
       font-size: 4.8rem;
-      font-weight: 600;
+      font-weight: 800;
       color: var(--color-white);
       margin-bottom: 2rem;
     }
@@ -1203,12 +1207,12 @@
   
 
   /* Testimonials Section */
-  .testimonials-section { background: var(--color-white); padding: 8rem 4rem; border-top: 1px solid #e5e5e5; }
+  .testimonials-section { background: var(--color-beige); padding: 10rem 4rem; border-top: 1px solid rgba(0,0,0,0.08); }
   .testimonials-content { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
   .testimonial-quote-wrapper { min-height: 12rem; width: 100%; display: flex; align-items: center; justify-content: center; }
   .testimonial-quote {
     font-size: 2.4rem;
-    font-weight: 600;
+    font-weight: 700;
     text-align: center;
     color: var(--color-black);
     line-height: 1.4;
@@ -1262,7 +1266,7 @@
     left: 0;
     height: 100%;
     width: 0;
-    background: var(--color-primary, #2dd4bf);
+    background: var(--color-primary);
     border-radius: inherit;
   }
   .testimonial-indicator.active .testimonial-indicator-fill {
@@ -1530,7 +1534,7 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>

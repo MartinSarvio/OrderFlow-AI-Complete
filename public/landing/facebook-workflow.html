@@ -27,6 +27,8 @@
       --color-gray-600: #495057;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
+      --color-facebook: #1877F2;
+      --color-facebook-dark: #0d65d9;
       --section-radius: 2.4rem;
       --section-overlap: -2.4rem;
       --container-max: 1200px;
@@ -105,13 +107,13 @@
     }
 
     /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
+    .h56 { font-size: 5.6rem; font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; }
+    .h52 { font-size: 5.2rem; font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; }
+    .h48 { font-size: 4.8rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; }
+    .h44 { font-size: 4.4rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; }
+    .h36 { font-size: 3.6rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+    .h28 { font-size: 2.8rem; font-weight: 500; line-height: 1.25; }
+    .h24 { font-size: 2.4rem; font-weight: 500; line-height: 1.3; }
     .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
     .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
     .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
@@ -121,21 +123,7 @@
     .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
     .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
     .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
-
-    /* ==================== UTILITY CLASSES ==================== */
-    .text-color-content-secondary { color: var(--color-gray-600); }
-    .text-color-content-tertiary { color: var(--color-gray-500); }
-    .text-color-white { color: var(--color-white); }
-    .text-align-center { text-align: center; }
-    .max-width-460 { max-width: 46rem; }
-    .max-width-560 { max-width: 56rem; }
-    .max-width-580 { max-width: 58rem; }
-    .margin-bottom { margin-bottom: 0; }
-    .margin-bottom.margin-8 { margin-bottom: 0.8rem; }
-    .margin-bottom.margin-12 { margin-bottom: 1.2rem; }
-    .margin-bottom.margin-16 { margin-bottom: 1.6rem; }
-    .margin-bottom.margin-32 { margin-bottom: 3.2rem; }
+    .p32 { font-size: 3.2rem; font-weight: 500; line-height: 1.2; }
 
     /* ==================== LAYOUT ==================== */
     .page-wrapper {
@@ -219,6 +207,14 @@
 
     .button.button-outline:hover {
       background: rgba(255, 255, 255, 0.1);
+    }
+
+    .button.button-facebook {
+      background: var(--color-facebook);
+    }
+
+    .button.button-facebook:hover {
+      background: var(--color-facebook-dark);
     }
 
     /* ==================== NAVIGATION ==================== */
@@ -329,14 +325,14 @@
     .nav-dropdown-menu.is-small { }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
     .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
     .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
@@ -359,291 +355,513 @@
       column-gap: 2rem;
     }
 
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 80vh;
-      display: flex;
-      align-items: center;
-      padding-top: 8rem;
-      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-      overflow: hidden;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      padding: 8rem 4rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      line-height: 1.1;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content p {
-      font-size: 2rem;
-      color: var(--color-gray-700);
-      margin: 0 auto 3rem auto;
-      max-width: 60rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .hero-buttons .button {
-      background: var(--color-dark);
-      color: var(--color-white);
-    }
-
-    .hero-buttons .button:hover {
-      background: var(--color-gray-800);
-    }
-
-    .hero-buttons .button-outline {
-      background: transparent;
-      color: var(--color-dark);
-      border: 2px solid var(--color-dark);
-    }
-
-    .hero-buttons .button-outline:hover {
-      background: rgba(0, 0, 0, 0.1);
-    }
-
-    .workflow-meta {
-      margin: 2.8rem auto 3.2rem;
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.2rem;
-      max-width: 72rem;
-    }
-
-    .meta-card {
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px solid var(--color-gray-200);
-      border-radius: 1.2rem;
-      padding: 1.6rem;
-      backdrop-filter: blur(8px);
-    }
-
-    .meta-label {
-      font-size: 1.1rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--color-gray-500);
-      font-weight: 600;
-    }
-
-    .meta-value {
-      margin-top: 0.4rem;
-      font-size: 1.7rem;
-      font-weight: 600;
-      color: var(--color-dark);
-    }
-
-    /* ==================== FEATURES SECTION ==================== */
-    .features-section {
+    /* ==================== INTRO SECTION (Problem Statement) ==================== */
+    .intro-section {
+      padding: 14rem 4rem 8rem;
       background: var(--color-white);
-      padding: 10rem 0;
     }
 
-    .features-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-
-    .features-header h2 {
-      font-size: 4.8rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1.6rem;
-    }
-
-    .features-header p {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto;
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3rem;
+    .intro-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 4rem;
-    }
-
-    .feature-card {
-      background: var(--color-gray-50);
-      border-radius: 1.6rem;
-      padding: 3rem;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
-    }
-
-    .feature-icon {
-      width: 4.8rem;
-      height: 4.8rem;
-      background: var(--color-primary);
-      border-radius: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 2rem;
-    }
-
-    .feature-icon svg {
-      width: 2.4rem;
-      height: 2.4rem;
-      color: var(--color-white);
-    }
-
-    .feature-card h3 {
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 1rem;
-    }
-
-    .feature-card p {
-      font-size: 1.5rem;
-      color: var(--color-gray-600);
-      line-height: 1.6;
-    }
-
-    /* ==================== BENEFITS SECTION ==================== */
-    .benefits-section {
-      background: var(--color-gray-100);
-      padding: 10rem 0;
-    }
-
-    .benefits-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 4rem;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6rem;
       align-items: center;
     }
 
-    .benefits-content h2 {
-      font-size: 4.4rem;
-      font-weight: 600;
+    .intro-content h1 {
+      font-size: 4.8rem;
+      font-weight: 500;
       color: var(--color-dark);
+      line-height: 1.1;
       margin-bottom: 2rem;
-      line-height: 1.15;
     }
 
-    .benefits-content p {
+    .intro-content p {
       font-size: 1.8rem;
       color: var(--color-gray-600);
       margin-bottom: 3rem;
+      line-height: 1.6;
     }
 
-    .benefits-list {
+    .problem-list {
       display: flex;
       flex-direction: column;
       gap: 1.6rem;
     }
 
-    .benefit-item {
+    .problem-item {
       display: flex;
       align-items: flex-start;
       gap: 1.2rem;
+      padding: 1.6rem;
+      background: #fff5f5;
+      border-radius: 1.2rem;
+      border-left: 4px solid #ef4444;
     }
 
-    .benefit-icon {
+    .problem-icon {
       width: 2.4rem;
       height: 2.4rem;
-      background: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #ef4444;
+    }
+
+    .problem-icon svg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .problem-text {
+      font-size: 1.5rem;
+      color: var(--color-dark);
+      font-weight: 500;
+    }
+
+    .intro-visual {
+      position: relative;
+    }
+
+    .messenger-mockup {
+      background: var(--color-white);
+      border-radius: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+      overflow: hidden;
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .messenger-header {
+      background: var(--color-facebook);
+      padding: 1.6rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .messenger-avatar {
+      width: 4rem;
+      height: 4rem;
+      background: var(--color-white);
       border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .messenger-avatar svg {
+      width: 2rem;
+      height: 2rem;
+      color: var(--color-facebook);
+    }
+
+    .messenger-info {
+      color: var(--color-white);
+    }
+
+    .messenger-name {
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
+    .messenger-status {
+      font-size: 1.2rem;
+      opacity: 0.8;
+    }
+
+    .messenger-body {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+      min-height: 32rem;
+    }
+
+    .msg-incoming {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.8rem;
+    }
+
+    .msg-incoming .msg-avatar {
+      width: 2.8rem;
+      height: 2.8rem;
+      background: var(--color-gray-200);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .msg-bubble {
+      max-width: 70%;
+      padding: 1.2rem 1.6rem;
+      border-radius: 1.8rem;
+      font-size: 1.4rem;
+      line-height: 1.4;
+    }
+
+    .msg-incoming .msg-bubble {
+      background: var(--color-gray-100);
+      color: var(--color-dark);
+      border-bottom-left-radius: 0.4rem;
+    }
+
+    .msg-outgoing {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .msg-outgoing .msg-bubble {
+      background: var(--color-facebook);
+      color: var(--color-white);
+      border-bottom-right-radius: 0.4rem;
+    }
+
+    .msg-typing {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 1.2rem 1.6rem;
+      background: var(--color-gray-100);
+      border-radius: 1.8rem;
+      width: fit-content;
+    }
+
+    .msg-typing span {
+      width: 0.8rem;
+      height: 0.8rem;
+      background: var(--color-gray-400);
+      border-radius: 50%;
+      animation: typing 1.4s infinite;
+    }
+
+    .msg-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .msg-typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-4px); }
+    }
+
+    .wait-indicator {
+      text-align: center;
+      padding: 2rem;
+      color: var(--color-gray-500);
+      font-size: 1.3rem;
+    }
+
+    .wait-indicator strong {
+      color: #ef4444;
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ==================== SOLUTION SECTION ==================== */
+    .solution-section {
+      padding: 8rem 4rem;
+      background: var(--color-gray-50);
+    }
+
+    .solution-header {
+      text-align: center;
+      max-width: 80rem;
+      margin: 0 auto 6rem;
+    }
+
+    .solution-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(24, 119, 242, 0.1);
+      color: var(--color-facebook);
+      padding: 0.8rem 1.6rem;
+      border-radius: 3rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+    }
+
+    .solution-header h2 {
+      font-size: 4.4rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+
+    .solution-header p {
+      font-size: 1.8rem;
+      color: var(--color-gray-600);
+    }
+
+    .solution-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .solution-card {
+      background: var(--color-white);
+      border-radius: 1.6rem;
+      padding: 3rem;
+      display: flex;
+      gap: 2rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .solution-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+
+    .solution-icon {
+      width: 5.6rem;
+      height: 5.6rem;
+      background: var(--color-facebook);
+      border-radius: 1.4rem;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
     }
 
-    .benefit-icon svg {
-      width: 1.4rem;
-      height: 1.4rem;
+    .solution-icon svg {
+      width: 2.8rem;
+      height: 2.8rem;
       color: var(--color-white);
     }
 
-    .benefit-text {
+    .solution-content h3 {
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+
+    .solution-content p {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
+      margin-bottom: 1.2rem;
+    }
+
+    .solution-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #f0fdf4;
+      color: #16a34a;
+      padding: 0.6rem 1.2rem;
+      border-radius: 2rem;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    /* ==================== AUTOMATION FLOW SECTION ==================== */
+    .automation-section {
+      padding: 8rem 4rem;
+      background: var(--color-white);
+    }
+
+    .automation-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .automation-header {
+      text-align: center;
+      margin-bottom: 5rem;
+    }
+
+    .automation-header h2 {
+      font-size: 3.6rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .automation-header p {
       font-size: 1.6rem;
+      color: var(--color-gray-600);
+    }
+
+    .automation-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flow-item {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .flow-trigger {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .flow-trigger-label {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #d97706;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .flow-trigger-text {
+      font-size: 1.5rem;
+      font-weight: 600;
       color: var(--color-dark);
     }
 
-    .benefits-image {
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    .flow-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: var(--color-gray-400);
     }
 
-    .benefits-image img {
-      width: 100%;
-      height: auto;
+    .flow-arrow svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    .flow-action {
+      background: #ecfdf5;
+      border: 2px solid #10b981;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .flow-action-label {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #059669;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .flow-action-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+
+    .flow-connector {
+      display: flex;
+      justify-content: center;
+      padding: 1.2rem 0;
+    }
+
+    .flow-connector-line {
+      width: 2px;
+      height: 3rem;
+      background: var(--color-gray-300);
+    }
+
+    /* ==================== RESULTS SECTION ==================== */
+    .results-section {
+      padding: 8rem 4rem;
+      background: linear-gradient(135deg, var(--color-facebook) 0%, #0d65d9 100%);
+    }
+
+    .results-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .results-header {
+      margin-bottom: 5rem;
+    }
+
+    .results-header h2 {
+      font-size: 4rem;
+      font-weight: 500;
+      color: var(--color-white);
+      margin-bottom: 1.2rem;
+    }
+
+    .results-header p {
+      font-size: 1.8rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
+    }
+
+    .result-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 1.6rem;
+      padding: 3rem 2rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .result-number {
+      font-size: 4.8rem;
+      font-weight: 700;
+      color: var(--color-white);
+      margin-bottom: 0.8rem;
+    }
+
+    .result-label {
+      font-size: 1.5rem;
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
     }
 
     /* ==================== CTA SECTION ==================== */
     .cta-section {
+      padding: 8rem 4rem;
       background: var(--color-dark);
-      padding: 10rem 0;
     }
 
-    .cta-content {
-      text-align: center;
+    .cta-container {
       max-width: 80rem;
       margin: 0 auto;
-      padding: 0 4rem;
+      text-align: center;
     }
 
-    .cta-content h2 {
-      font-size: 4.8rem;
-      font-weight: 600;
+    .cta-container h2 {
+      font-size: 4rem;
+      font-weight: 500;
       color: var(--color-white);
-      margin-bottom: 2rem;
+      margin-bottom: 1.6rem;
     }
 
-    .cta-content p {
+    .cta-container p {
       font-size: 1.8rem;
       color: rgba(255,255,255,0.7);
       margin-bottom: 3rem;
     }
 
-    /* ==================== PRE-FOOTER ==================== */
-    .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-    .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-    .pre-footer-brand { flex-shrink: 0; }
-    .pre-footer-logo { height: 4rem; width: auto; }
-    .pre-footer-cards { display: flex; gap: 2rem; }
-    .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-    .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-    .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-    .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
+    .cta-buttons {
+      display: flex;
+      gap: 1.6rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
 
     /* ==================== FOOTER ==================== */
-    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -658,12 +876,22 @@
 
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
-      .features-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .benefits-container {
+      .intro-container {
         grid-template-columns: 1fr;
         gap: 4rem;
+      }
+      .solution-grid {
+        grid-template-columns: 1fr;
+      }
+      .results-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .flow-item {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      .flow-arrow {
+        transform: rotate(90deg);
       }
     }
 
@@ -674,13 +902,10 @@
       .nav-links {
         display: none;
       }
-      .workflow-meta {
-        grid-template-columns: 1fr;
+      .intro-content h1 {
+        font-size: 3.6rem;
       }
-      .hero-content h1 {
-        font-size: 4rem;
-      }
-      .features-grid {
+      .results-grid {
         grid-template-columns: 1fr;
       }
       .footer-content {
@@ -693,22 +918,19 @@
         padding-left: 2rem;
         padding-right: 2rem;
       }
-      .hero-buttons {
+      .intro-section {
+        padding: 10rem 2rem 6rem;
+      }
+      .cta-buttons {
         flex-direction: column;
       }
       .footer-content {
         grid-template-columns: 1fr;
       }
-      .pre-footer-content {
-        flex-direction: column;
-      }
-      .pre-footer-cards {
-        flex-direction: column;
-        width: 100%;
-      }
     }
   </style>
 <link rel="stylesheet" href="/css/cookie-popup.css">
+<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -753,199 +975,298 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Facebook på autopilot</h1>
-        <p>Nogen skriver "Hvad koster en burger?" på Messenger. Systemet svarer med det samme med menu og bestillingslink. Du fokuserer på maden - vi håndterer Facebook.</p>
-        <div class="workflow-meta">
-          <div class="meta-card">
-            <div class="meta-label">Agent</div>
-            <div class="meta-value" id="workflow-agent-name">Facebook Bestillingsagent</div>
-          </div>
-          <div class="meta-card">
-            <div class="meta-label">Workflow</div>
-            <div class="meta-value">Facebook Workflow</div>
-          </div>
-          <div class="meta-card">
-            <div class="meta-label">Version</div>
-            <div class="meta-value" id="workflow-version">v3.12.0</div>
+    <!-- Intro Section: Problem Statement -->
+    <section class="intro-section">
+      <div class="intro-container">
+        <div class="intro-content">
+          <h1>Dine kunder venter på Facebook</h1>
+          <p>Hver dag mister restauranter salg, fordi beskeder på Messenger og kommentarer ikke bliver besvaret i tide. Problemet?</p>
+
+          <div class="problem-list">
+            <div class="problem-item">
+              <div class="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              </div>
+              <span class="problem-text">"Hvad koster en burger?" - besked ubesvaret i 3 timer</span>
+            </div>
+            <div class="problem-item">
+              <div class="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              </div>
+              <span class="problem-text">Kunde kommenterer "Har I glutenfri?" - ingen svar</span>
+            </div>
+            <div class="problem-item">
+              <div class="problem-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              </div>
+              <span class="problem-text">5-stjernet anmeldelse - ikke engang et "tak"</span>
+            </div>
           </div>
         </div>
-        <div class="hero-buttons">
-          <a href="#demo" class="button button-white">Se hvordan det virker</a>
-          <a href="#features" class="button button-outline">Hvad du kan gøre</a>
+
+        <div class="intro-visual">
+          <div class="messenger-mockup">
+            <div class="messenger-header">
+              <div class="messenger-avatar">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.913 1.454 5.512 3.726 7.21V22l3.405-1.869c.909.252 1.871.388 2.869.388 5.523 0 10-4.145 10-9.259S17.523 2 12 2z"/></svg>
+              </div>
+              <div class="messenger-info">
+                <div class="messenger-name">Din Restaurant</div>
+                <div class="messenger-status">Svarer typisk inden for 1 dag</div>
+              </div>
+            </div>
+            <div class="messenger-body">
+              <div class="msg-incoming">
+                <div class="msg-avatar"></div>
+                <div class="msg-bubble">Hej! Hvad koster en burger hos jer?</div>
+              </div>
+
+              <div class="wait-indicator">
+                <strong>3 timer senere...</strong>
+                Stadig ingen svar
+              </div>
+
+              <div class="msg-incoming">
+                <div class="msg-avatar"></div>
+                <div class="msg-bubble">Hallo? Er I åbne?</div>
+              </div>
+
+              <div class="msg-incoming">
+                <div class="msg-avatar"></div>
+                <div class="msg-msg-typing">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+
+              <div class="wait-indicator">
+                Kunden gik til konkurrenten
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section" id="features">
-      <div class="features-header">
-        <h2>Facebook automation der konverterer</h2>
-        <p>Automatiske svar på Messenger, kommentarer og anmeldelser. Vær tilgængelig 24/7 uden at være online.</p>
+    <!-- Solution Section -->
+    <section class="solution-section">
+      <div class="solution-header">
+        <div class="solution-badge">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.259c0 2.913 1.454 5.512 3.726 7.21V22l3.405-1.869c.909.252 1.871.388 2.869.388 5.523 0 10-4.145 10-9.259S17.523 2 12 2z"/></svg>
+          Flow Facebook Automation
+        </div>
+        <h2>Løsningen: Svar på 0 sekunder</h2>
+        <p>Flow svarer automatisk på Messenger, kommentarer og anmeldelser. Dine kunder får svar med det samme - du fokuserer på maden.</p>
       </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
+
+      <div class="solution-grid">
+        <div class="solution-card">
+          <div class="solution-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           </div>
-          <h3>Messenger Auto-svar</h3>
-          <p>Svar på de mest stillede spørgsmål automatisk. Menu, priser, åbningstider - kunderne får svar med det samme.</p>
+          <div class="solution-content">
+            <h3>Messenger Auto-svar</h3>
+            <p>Svar på de mest stillede spørgsmål automatisk. Menu, priser, åbningstider - kunderne får svar med det samme.</p>
+            <div class="solution-stat">Svartid: 0 sekunder</div>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
+
+        <div class="solution-card">
+          <div class="solution-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           </div>
-          <h3>Kommentar-håndtering</h3>
-          <p>Automatisk svar på kommentarer med spørgsmål. Like nye kommentarer. Hold engagement højt uden indsats.</p>
+          <div class="solution-content">
+            <h3>Kommentar-håndtering</h3>
+            <p>Automatisk svar på kommentarer med spørgsmål. Like nye kommentarer. Hold engagement højt uden indsats.</p>
+            <div class="solution-stat">Sparer 1+ time/dag</div>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
+
+        <div class="solution-card">
+          <div class="solution-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
           </div>
-          <h3>Anmeldelser</h3>
-          <p>Automatisk tak-besked når nogen giver 5 stjerner. Hurtig notifikation ved negative anmeldelser.</p>
+          <div class="solution-content">
+            <h3>Anmeldelses-respons</h3>
+            <p>Automatisk tak-besked når nogen giver 5 stjerner. Hurtig notifikation ved negative anmeldelser.</p>
+            <div class="solution-stat">22% flere anmeldelser</div>
+          </div>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
+
+        <div class="solution-card">
+          <div class="solution-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
           </div>
-          <h3>Lead Capture</h3>
-          <p>Saml kundeoplysninger via Messenger. Integrer med dit CRM og opbyg din kundeliste.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <div class="solution-content">
+            <h3>Lead Capture</h3>
+            <p>Saml kundeoplysninger via Messenger. Integrer med dit CRM og opbyg din kundeliste automatisk.</p>
+            <div class="solution-stat">+340 leads/md</div>
           </div>
-          <h3>Bestilling via Messenger</h3>
-          <p>Lad kunderne bestille direkte i Messenger. Ingen app, ingen hjemmeside - bare en samtale.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          </div>
-          <h3>Facebook Analytics</h3>
-          <p>Se hvilke opslag der driver mest engagement. Forstå hvornår dine kunder er online.</p>
         </div>
       </div>
     </section>
 
-    <!-- Benefits Section -->
-    <section class="benefits-section">
-      <div class="benefits-container">
-        <div class="benefits-content">
-          <h2>Facebook workflows der virker</h2>
-          <p>Fire automatiseringer der holder dit engagement højt og konverterer til salg.</p>
-          <div class="benefits-list">
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Ny besked" → Auto-svar med menu og bestillingslink (svartid: 0 sek)</span>
+    <!-- Automation Flow Section -->
+    <section class="automation-section">
+      <div class="automation-container">
+        <div class="automation-header">
+          <h2>Sådan virker det</h2>
+          <p>Tre automatiske workflows der kører 24/7</p>
+        </div>
+
+        <div class="automation-flow">
+          <div class="flow-item">
+            <div class="flow-trigger">
+              <div class="flow-trigger-label">Trigger</div>
+              <div class="flow-trigger-text">"Ny besked på Messenger"</div>
             </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Ny anmeldelse 5★" → Automatisk tak + del opfordring (øger reach)</span>
+            <div class="flow-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Kommentar med spørgsmål" → Svar med FAQ link (sparer 1+ time/dag)</span>
+            <div class="flow-action">
+              <div class="flow-action-label">Handling</div>
+              <div class="flow-action-text">Auto-svar med menu og bestillingslink</div>
             </div>
-            <div class="benefit-item">
-              <div class="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
-              </div>
-              <span class="benefit-text">"Ny page like" → Velkomstbesked med tilbud (22% konvertering)</span>
+          </div>
+
+          <div class="flow-connector"><div class="flow-connector-line"></div></div>
+
+          <div class="flow-item">
+            <div class="flow-trigger">
+              <div class="flow-trigger-label">Trigger</div>
+              <div class="flow-trigger-text">"Ny 5-stjernet anmeldelse"</div>
+            </div>
+            <div class="flow-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="flow-action">
+              <div class="flow-action-label">Handling</div>
+              <div class="flow-action-text">Tak-besked + opfordring til at dele</div>
+            </div>
+          </div>
+
+          <div class="flow-connector"><div class="flow-connector-line"></div></div>
+
+          <div class="flow-item">
+            <div class="flow-trigger">
+              <div class="flow-trigger-label">Trigger</div>
+              <div class="flow-trigger-text">"Ny side-følger"</div>
+            </div>
+            <div class="flow-arrow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="flow-action">
+              <div class="flow-action-label">Handling</div>
+              <div class="flow-action-text">Velkomstbesked med 10% rabatkode</div>
             </div>
           </div>
         </div>
-        <div class="benefits-image">
-          <img src="https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&h=600&fit=crop" alt="Facebook på laptop">
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section">
+      <div class="results-container">
+        <div class="results-header">
+          <h2>Resultater fra vores kunder</h2>
+          <p>Restauranter der bruger Flow Facebook Automation</p>
+        </div>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <div class="result-number">0 sek</div>
+            <div class="result-label">Gennemsnitlig svartid</div>
+          </div>
+          <div class="result-card">
+            <div class="result-number">+47%</div>
+            <div class="result-label">Flere bookinger</div>
+          </div>
+          <div class="result-card">
+            <div class="result-number">8+ timer</div>
+            <div class="result-label">Sparet per uge</div>
+          </div>
+          <div class="result-card">
+            <div class="result-number">22%</div>
+            <div class="result-label">Konvertering fra DM</div>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section" id="demo">
-      <div class="cta-content">
-        <h2>Lad Facebook arbejde for dig</h2>
+      <div class="cta-container">
+        <h2>Stop med at miste kunder på Facebook</h2>
         <p>Vi sætter Messenger auto-svar og kommentar-håndtering op for dig. Du fokuserer på maden.</p>
-        <div class="hero-buttons">
-          <a href="#" class="button button-white">Book en gennemgang</a>
+        <div class="cta-buttons">
+          <a href="#" class="button button-facebook">Book en gennemgang</a>
           <a href="landing.html#priser" class="button button-outline">Se priser</a>
         </div>
       </div>
     </section>
 
-    <!-- Pre-Footer Section -->
-
     <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h4>PRODUKTER</h4>
-        <ul>
-          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-          <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-        <ul>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-        </ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>VIRKSOMHED</h4>
-        <ul>
-          <li><a href="om-os.html">Om os</a></li>
-          <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="#">Cookie Settings</a>
+          <a href="#">Privacy</a>
+          <a href="#">Website Terms</a>
+          <a href="#">Disclaimer</a>
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>SUPPORT</h4>
-        <ul>
-          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-        </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>2026 © Flow. All rights reserved.</p>
-      <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
   </div>
 
   <!-- JavaScript -->
@@ -961,25 +1282,8 @@
     });
   </script>
   <script src="/config/version.js"></script>
-  <script>
-    (function() {
-      const agentEl = document.getElementById('workflow-agent-name');
-      const versionEl = document.getElementById('workflow-version');
-
-      try {
-        const agents = JSON.parse(localStorage.getItem('orderflow_ai_agents') || '[]');
-        const match = agents.find(agent => (agent.channel || '').toLowerCase() === 'facebook');
-        if (agentEl && match?.name) agentEl.textContent = match.name;
-      } catch (err) {
-        // Ignore missing/blocked localStorage
-      }
-
-      const version = window.VERSION_CONFIG?.getDisplayVersion?.() ||
-        (window.VERSION_CONFIG?.version ? `v${window.VERSION_CONFIG.version}` : null);
-      if (versionEl && version) versionEl.textContent = version;
-    })();
-  </script>
   <!-- Flow CMS Dynamic Content -->
   <script src="/js/flow-cms-render.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>

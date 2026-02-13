@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Flow Blog v1.0 - Deploy: 2026-02-06 -->
 <html lang="da">
 <head>
   <meta charset="UTF-8">
@@ -107,13 +108,13 @@
     }
 
     /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
+    .h56 { font-size: 5.6rem; font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; }
+    .h52 { font-size: 5.2rem; font-weight: 500; line-height: 1.1; letter-spacing: -0.02em; }
+    .h48 { font-size: 4.8rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; }
+    .h44 { font-size: 4.4rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; }
+    .h36 { font-size: 3.6rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; }
+    .h28 { font-size: 2.8rem; font-weight: 500; line-height: 1.25; }
+    .h24 { font-size: 2.4rem; font-weight: 500; line-height: 1.3; }
     .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
     .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
     .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
@@ -123,7 +124,7 @@
     .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
     .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
     .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
+    .p32 { font-size: 3.2rem; font-weight: 500; line-height: 1.2; }
 
     /* ==================== UTILITY CLASSES ==================== */
     .text-color-content-secondary { color: var(--color-gray-600); }
@@ -383,14 +384,14 @@
     .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
     .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
     .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
@@ -418,7 +419,7 @@
     .bento { padding: 8rem 0; background: var(--color-white); }
     .bento-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; }
     .bento-header { text-align: center; margin-bottom: 4rem; }
-    .bento-title { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
+    .bento-title { font-size: 4.4rem; font-weight: 500; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
     /* Bento Hero */
     .bento-hero { margin-bottom: 3rem; border-radius: 2rem; overflow: hidden; position: relative; }
     .bento-hero img { width: 100%; height: auto; display: block; min-height: 40rem; object-fit: cover; }
@@ -429,7 +430,7 @@
     .bento-card { background: var(--color-gray-100); border-radius: 2rem; overflow: hidden; display: flex; flex-direction: column; }
     .bento-card-content { padding: 3.2rem; }
     .bento-card-label { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 0.8rem; }
-    .bento-card-title { font-size: 2.4rem; font-weight: 600; color: var(--color-dark); line-height: 1.3; }
+    .bento-card-title { font-size: 2.4rem; font-weight: 500; color: var(--color-dark); line-height: 1.3; }
     .bento-card-image { margin-top: auto; padding: 0 2rem 2rem; }
     .bento-card-image img { width: 100%; height: auto; object-fit: contain; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     .bento-card > img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; border-radius: 0 0 2rem 2rem; }
@@ -442,7 +443,7 @@
     .beliefs { padding: 8rem 0; background: var(--color-gray-100); }
     .beliefs-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; display: flex; gap: 6rem; }
     .beliefs-left { flex: 0 0 36rem; position: sticky; top: 12rem; height: fit-content; }
-    .beliefs-title { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-dark); margin-bottom: 1.6rem; }
+    .beliefs-title { font-size: 3.6rem; font-weight: 500; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-dark); margin-bottom: 1.6rem; }
     .beliefs-subtitle { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 3.2rem; }
     .beliefs-author { display: flex; align-items: center; gap: 1.2rem; }
     .beliefs-author img { width: 4.8rem; height: 4.8rem; border-radius: 50%; object-fit: cover; }
@@ -452,7 +453,7 @@
     .belief-item { padding: 3.2rem 0; border-bottom: 1px solid var(--color-gray-300); }
     .belief-item:first-child { padding-top: 0; }
     .belief-item:last-child { border-bottom: none; }
-    .belief-heading { font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
+    .belief-heading { font-size: 2rem; font-weight: 500; color: var(--color-dark); margin-bottom: 1.2rem; }
     .belief-text { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; }
 
     /* ==================== LOGO CLOUD SECTION ==================== */
@@ -473,7 +474,7 @@
 
     .logo-cloud-header h2 {
       font-size: 2.8rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 1.2rem;
     }
@@ -573,108 +574,6 @@
       color: var(--color-dark);
     }
 
-    /* ==================== HERO SECTION WITH VIDEO ==================== */
-    .hero-section {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding-top: 8rem;
-      overflow: hidden;
-    }
-
-    .hero-video-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      background: #000;
-    }
-
-    .hero-video-bg video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .hero-video-bg::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
-    }
-
-    /* Video blur når dropdown er åben */
-    .hero-video-bg video {
-      transition: filter 0.3s ease;
-    }
-
-    body.dropdown-open .hero-video-bg video {
-      filter: blur(10px);
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 60rem;
-      padding: 4rem;
-      text-align: center;
-      margin: 0 auto;
-    }
-
-    .hero-content h1 {
-      font-family: 'Archivo Black', 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-white);
-      line-height: 0.95;
-      margin-bottom: 2rem;
-      text-transform: uppercase;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content h1 .big {
-      font-size: 115%;
-      display: inline;
-    }
-
-    /* Typed text animation */
-    .hero-content h1 .typed-text {
-      color: #000000;
-    }
-
-    .hero-content h1 .typed-cursor {
-      color: #000;
-      font-weight: 100;
-    }
-
-    .typed-cursor--blink {
-      animation: cursorBlink 0.7s infinite;
-    }
-
-    @keyframes cursorBlink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .hero-content p {
-      font-size: 1.8rem;
-      color: rgba(255,255,255,0.85);
-      margin: 0 auto 3rem auto;
-      max-width: 48rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
 
     /* ==================== TABS SECTION (Owner.com style) ==================== */
     .tabs-section {
@@ -776,7 +675,7 @@
 
     .tab-text-content h3 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
       line-height: 1.2;
@@ -847,7 +746,7 @@
 
     .trusted-header h2 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
     }
 
@@ -924,7 +823,7 @@
 
     .creations-header h2 {
       font-size: 3.6rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
     }
@@ -1018,7 +917,7 @@
 
     .cta-content h2 {
       font-size: 4.8rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-white);
       margin-bottom: 2rem;
     }
@@ -1073,7 +972,6 @@
         display: none;
       }
 
-      .hero-content h1 {
         font-size: 4rem;
       }
 
@@ -1120,7 +1018,6 @@
         padding-right: 2rem;
       }
 
-      .hero-buttons {
         flex-direction: column;
       }
 
@@ -1208,7 +1105,7 @@
   }
 
   /* Updated Footer */
-  .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+  .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
   .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
   .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
   .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -1576,6 +1473,7 @@
   <link rel="stylesheet" href="/css/cookie-consent.css">
   <link rel="stylesheet" href="/css/privacy-modal.css">
 <link rel="stylesheet" href="/css/cookie-popup.css">
+<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -1620,7 +1518,7 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
@@ -1722,5 +1620,6 @@
 <script src="/js/flow-cms-render.js"></script>
 <!-- Blog Renderer -->
 <script src="/js/blog-render.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>

@@ -11,25 +11,28 @@
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
-      --color-primary: #015bf8;
-      --color-primary-hover: #0047cc;
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
       --color-black: #000000;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
       --color-gray-300: #dee2e6;
       --color-gray-400: #787a7d;
-      --color-gray-500: #6c6f75;
-      --color-gray-600: #495057;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --section-radius: 2.4rem;
       --section-overlap: -2.4rem;
       --container-max: 1200px;
       --container-huge: 1400px;
-      --color-success: #10b981;
+      --color-success: #22C55E;
       --color-warning: #f59e0b;
       --color-danger: #ef4444;
     }
@@ -280,12 +283,12 @@
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
-      background: rgba(1, 91, 248, 0.1);
-      color: var(--color-primary);
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--color-green-accent);
       padding: 0.8rem 1.6rem;
       border-radius: 10rem;
       font-size: 1.4rem;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 2.4rem;
     }
 
@@ -305,7 +308,7 @@
     .hero-title {
       font-family: 'Inter', sans-serif;
       font-size: 5.6rem;
-      font-weight: 400;
+      font-weight: 800;
       line-height: 0.95;
       letter-spacing: -0.02em;
       margin-bottom: 2.4rem;
@@ -319,7 +322,7 @@
     }
 
     .hero-title .gradient {
-      background: linear-gradient(135deg, var(--color-primary) 0%, #0d9488 100%);
+      background: linear-gradient(135deg, var(--color-green-accent) 0%, var(--color-primary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -479,8 +482,8 @@
 
     .autocomplete-type {
       font-size: 1.2rem;
-      color: var(--color-primary);
-      background: rgba(1, 91, 248, 0.1);
+      color: var(--color-green-accent);
+      background: rgba(34, 197, 94, 0.1);
       padding: 0.4rem 0.8rem;
       border-radius: 0.4rem;
     }

@@ -11,25 +11,28 @@
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
-      --color-primary: #015bf8;
-      --color-primary-hover: #0047cc;
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
       --color-black: #000000;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
       --color-gray-300: #dee2e6;
       --color-gray-400: #787a7d;
-      --color-gray-500: #6c6f75;
-      --color-gray-600: #495057;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --section-radius: 2.4rem;
       --section-overlap: -2.4rem;
       --container-max: 1200px;
       --container-huge: 1400px;
-      --color-success: #10b981;
+      --color-success: #22C55E;
       --color-warning: #f59e0b;
       --color-danger: #ef4444;
     }
@@ -280,12 +283,12 @@
       display: inline-flex;
       align-items: center;
       gap: 0.8rem;
-      background: rgba(1, 91, 248, 0.1);
-      color: var(--color-primary);
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--color-green-accent);
       padding: 0.8rem 1.6rem;
       border-radius: 10rem;
       font-size: 1.4rem;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 2.4rem;
     }
 
@@ -305,7 +308,7 @@
     .hero-title {
       font-family: 'Inter', sans-serif;
       font-size: 5.6rem;
-      font-weight: 400;
+      font-weight: 800;
       line-height: 0.95;
       letter-spacing: -0.02em;
       margin-bottom: 2.4rem;
@@ -319,7 +322,7 @@
     }
 
     .hero-title .gradient {
-      background: linear-gradient(135deg, var(--color-primary) 0%, #0d9488 100%);
+      background: linear-gradient(135deg, var(--color-green-accent) 0%, var(--color-primary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -479,8 +482,8 @@
 
     .autocomplete-type {
       font-size: 1.2rem;
-      color: var(--color-primary);
-      background: rgba(1, 91, 248, 0.1);
+      color: var(--color-green-accent);
+      background: rgba(34, 197, 94, 0.1);
       padding: 0.4rem 0.8rem;
       border-radius: 0.4rem;
     }
@@ -1876,8 +1879,6 @@
   </style>
 
   <!-- Google Maps Places API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo&libraries=places" async defer></script>
-<link rel="stylesheet" href="/css/cookie-popup.css">
 </head>
 <body>
   <!-- Navigation -->
@@ -1921,7 +1922,7 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
@@ -3001,6 +3002,8 @@
     let searchTimeout = null;
     let autocompleteService = null;
     let placesService = null;
+    let googlePlacesInitAttempts = 0;
+    const MAX_GOOGLE_INIT_ATTEMPTS = 10;
 
     // DOM Elements
     const searchInput = document.getElementById('searchInput');
@@ -3012,12 +3015,24 @@
 
     // Initialize Google Places services when API is loaded
     function initGooglePlaces() {
-      if (window.google && google.maps && google.maps.places) {
+      if (autocompleteService) return true;
+
+      if (window.google && window.google.maps && window.google.maps.places) {
         autocompleteService = new google.maps.places.AutocompleteService();
         // Create a hidden div for PlacesService (required)
         const placesDiv = document.createElement('div');
         placesService = new google.maps.places.PlacesService(placesDiv);
+        return true;
       }
+
+      googlePlacesInitAttempts += 1;
+      if (googlePlacesInitAttempts < MAX_GOOGLE_INIT_ATTEMPTS) {
+        setTimeout(initGooglePlaces, 350);
+      } else {
+        console.warn('Google Places blev ikke initialiseret - bruger fallback søgning.');
+      }
+
+      return false;
     }
 
     // Initialize
@@ -3037,6 +3052,7 @@
 
       // Search input handler
       searchInput.addEventListener('input', handleSearchInput);
+      searchInput.addEventListener('keydown', handleSearchEnter);
 
       // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
@@ -3045,18 +3061,54 @@
         }
       });
 
-      // Search button handler - redirect to business-scanner-demo.html
+      // Search button handler - navigate to dedicated scanner page
       searchBtn.addEventListener('click', startAnalysis);
     });
+
+    function showSearchSelectionRequired() {
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Vælg en virksomhed fra listen før du starter analysen.</div>';
+      autocompleteDropdown.classList.add('active');
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function mapSerperMapsPlaceToAutocomplete(place, index) {
+      return {
+        place_id: place.cid || place.placeId || `maps_${Date.now()}_${index}`,
+        name: place.title || place.name || 'Ukendt virksomhed',
+        address: place.address || '',
+        type: place.category || place.type || 'Virksomhed',
+        website: place.website || place.link || ''
+      };
+    }
+
+    function handleSearchEnter(e) {
+      if (e.key !== 'Enter') return;
+      if (selectedPlace) return;
+
+      const firstSuggestion = autocompleteDropdown.querySelector('.autocomplete-item[data-place-id]');
+      if (!firstSuggestion) return;
+
+      e.preventDefault();
+      selectPlace(firstSuggestion);
+    }
 
     // Handle search input
     function handleSearchInput(e) {
       const query = e.target.value.trim();
 
+      selectedPlace = null;
+      searchBtn.disabled = true;
+
       if (query.length < 2) {
         autocompleteDropdown.classList.remove('active');
-        searchBtn.disabled = true;
-        selectedPlace = null;
         return;
       }
 
@@ -3108,10 +3160,26 @@
         if (data.results && data.results.length > 0) {
           renderAutocomplete(data.results);
         } else {
-          autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
+          await searchWithSerperMapsFallback(query);
         }
       } catch (error) {
         console.error('Serper search error:', error);
+        await searchWithSerperMapsFallback(query);
+      }
+    }
+
+    async function searchWithSerperMapsFallback(query) {
+      try {
+        const mapsData = await fetchSerperAPI('maps', query);
+        const mappedResults = (mapsData?.places || []).map(mapSerperMapsPlaceToAutocomplete);
+
+        if (mappedResults.length > 0) {
+          renderAutocomplete(mappedResults);
+        } else {
+          autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
+        }
+      } catch (error) {
+        console.error('Serper maps fallback error:', error);
         autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Der opstod en fejl ved søgning. Prøv igen.</div>';
       }
     }
@@ -3138,20 +3206,28 @@
 
     // Render autocomplete results
     function renderAutocomplete(results) {
+      if (!results || results.length === 0) {
+        autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet.</div>';
+        autocompleteDropdown.classList.add('active');
+        return;
+      }
+
       autocompleteDropdown.innerHTML = results.map(place => `
-        <div class="autocomplete-item" data-place-id="${place.place_id}" data-name="${place.name}" data-address="${place.address || ''}">
+        <div class="autocomplete-item" data-place-id="${escapeHtml(place.place_id)}" data-name="${escapeHtml(place.name)}" data-address="${escapeHtml(place.address || '')}" data-website="${escapeHtml(place.website || '')}">
           <div class="autocomplete-icon">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
           </div>
           <div class="autocomplete-content">
-            <div class="autocomplete-name">${place.name}</div>
-            <div class="autocomplete-address">${place.address || 'Danmark'}</div>
+            <div class="autocomplete-name">${escapeHtml(place.name)}</div>
+            <div class="autocomplete-address">${escapeHtml(place.address || 'Danmark')}</div>
           </div>
-          <span class="autocomplete-type">${place.type || 'Virksomhed'}</span>
+          <span class="autocomplete-type">${escapeHtml(place.type || 'Virksomhed')}</span>
         </div>
       `).join('');
+
+      autocompleteDropdown.classList.add('active');
 
       // Add click handlers
       autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
@@ -3162,11 +3238,13 @@
     // Select a place
     function selectPlace(item) {
       const placeId = item.dataset.placeId;
+      if (!placeId || !item.dataset.name) return;
 
       selectedPlace = {
         place_id: placeId,
         name: item.dataset.name,
-        address: item.dataset.address
+        address: item.dataset.address,
+        website: item.dataset.website || ''
       };
 
       searchInput.value = selectedPlace.name;
@@ -3174,39 +3252,21 @@
       searchBtn.disabled = false;
     }
 
-    // Start analysis - run inline scanner (no redirect)
+    // Start analysis on dedicated public scanner page
     function startAnalysis() {
-      if (!selectedPlace) return;
+      if (!selectedPlace) {
+        searchBtn.disabled = true;
+        showSearchSelectionRequired();
+        return;
+      }
 
-      // Hide hero, show loading section
-      heroSection.style.display = 'none';
-      loadingSection.classList.add('active');
+      const params = new URLSearchParams();
+      params.set('name', selectedPlace.name || '');
+      if (selectedPlace.place_id) params.set('place_id', selectedPlace.place_id);
+      if (selectedPlace.address) params.set('address', selectedPlace.address);
+      if (selectedPlace.website) params.set('website', selectedPlace.website);
 
-      // Scroll to loading section
-      loadingSection.scrollIntoView({ behavior: 'smooth' });
-
-      // Run the endpoint scanner with real API calls
-      runEndpointScanner().then(results => {
-        // Build report data from scan results
-        const reportData = buildReportData(results);
-
-        // Save to localStorage for Flow CMS Data tab
-        try {
-          localStorage.setItem('flow_seo_analysis_latest', JSON.stringify({
-            business: selectedPlace,
-            results: results,
-            score: reportData.score,
-            timestamp: Date.now()
-          }));
-        } catch(e) { console.warn('Could not save analysis data:', e); }
-
-        // Show report
-        showReport(reportData);
-      }).catch(err => {
-        console.error('Scanner error:', err);
-        // Fallback: show report with mock data
-        showReport(buildReportData({}));
-      });
+      window.location.href = '/search-engine?' + params.toString();
     }
 
     // Build report data from scanner results
@@ -3760,18 +3820,16 @@
 
     // Serper API configuration
     const SERPER_CONFIG = {
-      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '238621b449ced86740e16a0707be5b8999b87c9e' },
-      images: { url: 'https://google.serper.dev/images', apiKey: 'da98172d4d07091a3ca1e6c72572b7da2c4130ba' },
-      maps: { url: 'https://google.serper.dev/maps', apiKey: '071a75aeaf9e4434466f91caf455e6ddfe72a76e' }
+      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '' },
+      images: { url: 'https://google.serper.dev/images', apiKey: '' },
+      maps: { url: 'https://google.serper.dev/maps', apiKey: '' }
     };
-
-    const GOOGLE_API_KEY = 'AIzaSyBKipBk7jFnAH-3kQUqqoSu5pDZTQRlOPo';
 
     // Fetch from Serper API
     async function fetchSerperAPI(endpoint, query, extraParams = {}) {
       try {
         const config = SERPER_CONFIG[endpoint];
-        if (!config) return null;
+        if (!config || !config.apiKey) return null;
         const res = await fetch(config.url, {
           method: 'POST',
           headers: { 'X-API-KEY': config.apiKey, 'Content-Type': 'application/json' },
@@ -3929,6 +3987,7 @@
 
     // Show report - clean, professional design
     function showReport(data) {
+      heroSection.style.display = 'none';
       loadingSection.classList.remove('active');
       reportSection.classList.add('active');
 

@@ -13,18 +13,21 @@
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
-      --color-primary: #015bf8;
-      --color-primary-hover: #0047cc;
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
       --color-black: #000000;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
       --color-gray-300: #dee2e6;
       --color-gray-400: #787a7d;
-      --color-gray-500: #6c6f75;
-      --color-gray-600: #495057;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --section-radius: 2.4rem;
@@ -105,23 +108,23 @@
     }
 
     /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 600; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 600; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 600; line-height: 1.3; }
-    .h20 { font-size: 2rem; font-weight: 500; line-height: 1.4; }
-    .h18 { font-size: 1.8rem; font-weight: 500; line-height: 1.4; }
+    .h56 { font-size: 5.6rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+    .h52 { font-size: 5.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
+    .h48 { font-size: 4.8rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+    .h44 { font-size: 4.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
+    .h36 { font-size: 3.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
+    .h28 { font-size: 2.8rem; font-weight: 700; line-height: 1.25; }
+    .h24 { font-size: 2.4rem; font-weight: 700; line-height: 1.3; }
+    .h20 { font-size: 2rem; font-weight: 600; line-height: 1.4; }
+    .h18 { font-size: 1.8rem; font-weight: 600; line-height: 1.4; }
     .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
     .h15 { font-size: 1.5rem; font-weight: 500; line-height: 1.5; }
     .h14 { font-size: 1.4rem; font-weight: 400; line-height: 1.5; }
     .h13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; }
-    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; }
+    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; color: var(--color-gray-600); }
     .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
     .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 600; line-height: 1.2; }
+    .p32 { font-size: 3.2rem; font-weight: 700; line-height: 1.2; }
 
     /* ==================== UTILITY CLASSES ==================== */
     .text-color-content-secondary { color: var(--color-gray-600); }
@@ -186,7 +189,7 @@
     .button.is-secondary {
       background: transparent;
       color: var(--color-dark);
-      border: 1px solid var(--color-gray-300);
+      border: 2px solid var(--color-dark);
     }
 
     .button.is-secondary:hover {
@@ -329,14 +332,14 @@
     .nav-dropdown-menu.is-small { }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
     .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
     .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
@@ -359,48 +362,89 @@
       column-gap: 2rem;
     }
 
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
+
+    /* ==================== LOGO CLOUD ==================== */
+    .logo-cloud {
+      padding: 6rem 0;
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-gray-200);
+    }
+
+    .logo-cloud-label {
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--color-gray-500);
+      margin-bottom: 3rem;
+    }
+
+    .logo-cloud-wrapper {
       position: relative;
-      min-height: 80vh;
+      overflow: hidden;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo-cloud-wrapper::before,
+    .logo-cloud-wrapper::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 150px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .logo-cloud-wrapper::before {
+      left: 0;
+      background: linear-gradient(to right, var(--color-white), transparent);
+    }
+
+    .logo-cloud-wrapper::after {
+      right: 0;
+      background: linear-gradient(to left, var(--color-white), transparent);
+    }
+
+    .logo-cloud-track {
+      display: flex;
+      gap: 6rem;
+      animation: logoScroll 30s linear infinite;
+      width: max-content;
+    }
+
+    .logo-cloud-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes logoScroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .logo-cloud-item {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      padding-top: 8rem;
-      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-      overflow: hidden;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      max-width: 80rem;
-      padding: 8rem 4rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-
-    .hero-content h1 {
-      font-family: 'Inter', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-white);
-      line-height: 1.1;
-      margin-bottom: 2rem;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-content p {
-      font-size: 2rem;
-      color: rgba(255,255,255,0.85);
-      margin: 0 auto 3rem auto;
-      max-width: 60rem;
-    }
-
-    .hero-buttons {
-      display: flex;
-      gap: 1.6rem;
       justify-content: center;
-      flex-wrap: wrap;
+      height: 4rem;
+      opacity: 0.6;
+      filter: grayscale(100%);
+      transition: all 0.3s ease;
+    }
+
+    .logo-cloud-item:hover {
+      opacity: 1;
+      filter: grayscale(0%);
+    }
+
+    .logo-cloud-item span {
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+      white-space: nowrap;
     }
 
     /* ==================== FEATURES SECTION ==================== */
@@ -416,7 +460,7 @@
 
     .features-header h2 {
       font-size: 4.8rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
     }
@@ -468,7 +512,7 @@
 
     .feature-card h3 {
       font-size: 2rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 1rem;
     }
@@ -497,7 +541,7 @@
 
     .benefits-content h2 {
       font-size: 4.4rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-dark);
       margin-bottom: 2rem;
       line-height: 1.15;
@@ -556,11 +600,40 @@
 
     /* ==================== CTA SECTION ==================== */
     .cta-section {
-      background: var(--color-dark);
+      position: relative;
+      background: linear-gradient(135deg, #090a0b 0%, #1a1a2e 50%, #16213e 100%);
       padding: 10rem 0;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 50px 50px;
+      mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, rgba(0,0,0,0.5) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60%;
+      height: 80%;
+      background: radial-gradient(ellipse at center, rgba(1,91,248,0.1) 0%, transparent 60%);
+      pointer-events: none;
     }
 
     .cta-content {
+      position: relative;
+      z-index: 1;
       text-align: center;
       max-width: 80rem;
       margin: 0 auto;
@@ -569,7 +642,7 @@
 
     .cta-content h2 {
       font-size: 4.8rem;
-      font-weight: 600;
+      font-weight: 500;
       color: var(--color-white);
       margin-bottom: 2rem;
     }
@@ -578,6 +651,13 @@
       font-size: 1.8rem;
       color: rgba(255,255,255,0.7);
       margin-bottom: 3rem;
+    }
+
+      background: var(--color-white);
+      color: var(--color-dark);
+    }
+
+      background: var(--color-gray-100);
     }
 
     /* ==================== PRE-FOOTER ==================== */
@@ -593,7 +673,7 @@
     .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
 
     /* ==================== FOOTER ==================== */
-    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -615,6 +695,8 @@
         grid-template-columns: 1fr;
         gap: 4rem;
       }
+        font-size: 4.8rem;
+      }
     }
 
     @media (max-width: 768px) {
@@ -624,11 +706,34 @@
       .nav-links {
         display: none;
       }
-      .hero-content h1 {
-        font-size: 4rem;
+        min-height: 60vh;
+        padding-top: 8rem;
+        padding-bottom: 6rem;
+      }
+        font-size: 3.6rem;
+      }
+        font-size: 1.6rem;
+      }
+        font-size: 1.2rem;
+        padding: 0.6rem 1.2rem;
+      }
+      .logo-cloud {
+        padding: 4rem 2rem;
+      }
+      .logo-cloud-item span {
+        font-size: 1.4rem;
+      }
+      .logo-cloud-track {
+        gap: 4rem;
       }
       .features-grid {
         grid-template-columns: 1fr;
+      }
+      .features-header h2 {
+        font-size: 3.2rem;
+      }
+      .cta-content h2 {
+        font-size: 3.2rem;
       }
       .footer-content {
         grid-template-columns: 1fr 1fr;
@@ -640,8 +745,18 @@
         padding-left: 2rem;
         padding-right: 2rem;
       }
-      .hero-buttons {
+        padding: 2rem;
+      }
+        font-size: 2.8rem;
+      }
         flex-direction: column;
+      }
+        width: 100%;
+        padding: 1.4rem 2rem;
+      }
+      .logo-cloud-wrapper::before,
+      .logo-cloud-wrapper::after {
+        width: 60px;
       }
       .footer-content {
         grid-template-columns: 1fr;
@@ -656,6 +771,7 @@
     }
   </style>
 <link rel="stylesheet" href="/css/cookie-popup.css">
+<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
@@ -700,20 +816,33 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="../../index.html" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Login</a>
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Ikke endnu et stempelkort</h1>
-        <p>Et stempelkort bliver væk. Et digitalt loyalitetsprogram ved hvem dine kunder er, hvad de køber, og hvornår de sidst var forbi. Det sender den rigtige besked på det rigtige tidspunkt.</p>
-        <div class="hero-buttons">
-          <a href="#demo" class="button button-white">Se hvordan det virker</a>
-          <a href="#features" class="button button-outline">Hvad du får</a>
+        <!-- Logo Cloud Trust Section -->
+    <section class="logo-cloud">
+      <p class="logo-cloud-label">Betroet af 500+ restauranter i Danmark</p>
+      <div class="logo-cloud-wrapper">
+        <div class="logo-cloud-track">
+          <div class="logo-cloud-item"><span>Madklubben</span></div>
+          <div class="logo-cloud-item"><span>Gorms Pizza</span></div>
+          <div class="logo-cloud-item"><span>Halifax</span></div>
+          <div class="logo-cloud-item"><span>Jensens Bøfhus</span></div>
+          <div class="logo-cloud-item"><span>Sticks'n'Sushi</span></div>
+          <div class="logo-cloud-item"><span>Sunset Boulevard</span></div>
+          <div class="logo-cloud-item"><span>The Pescatarian</span></div>
+          <div class="logo-cloud-item"><span>Café Norden</span></div>
+          <div class="logo-cloud-item"><span>Madklubben</span></div>
+          <div class="logo-cloud-item"><span>Gorms Pizza</span></div>
+          <div class="logo-cloud-item"><span>Halifax</span></div>
+          <div class="logo-cloud-item"><span>Jensens Bøfhus</span></div>
+          <div class="logo-cloud-item"><span>Sticks'n'Sushi</span></div>
+          <div class="logo-cloud-item"><span>Sunset Boulevard</span></div>
+          <div class="logo-cloud-item"><span>The Pescatarian</span></div>
+          <div class="logo-cloud-item"><span>Café Norden</span></div>
         </div>
       </div>
     </section>
@@ -895,5 +1024,6 @@
   </script>
 <!-- Flow CMS Dynamic Content -->
 <script src="/js/flow-cms-render.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>
