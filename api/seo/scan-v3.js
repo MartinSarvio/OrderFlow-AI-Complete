@@ -100,6 +100,25 @@ export default async function handler(req, res) {
   rawData.socialNap = socialNapModule.data;
   findings.push(...socialNapModule.findings);
 
+  // Fetch business images via Serper Images API (non-blocking, no module status)
+  try {
+    if (context.env.serper.images) {
+      const imagesData = await fetchSerper('images', business.name + ' ' + (gbpModule.data.city || business.address || ''), context, { num: 12 });
+      rawData.images = {
+        totalImages: (imagesData && imagesData.images) ? imagesData.images.length : 0,
+        images: ((imagesData && imagesData.images) || []).slice(0, 12).map((img, i) => ({
+          id: i,
+          url: img.imageUrl || '',
+          thumbnailUrl: img.thumbnailUrl || '',
+          title: img.title || '',
+          source: img.source || img.domain || '',
+        })),
+      };
+    }
+  } catch (e) {
+    rawData.images = { totalImages: 0, images: [] };
+  }
+
   const score = calculateWeightedScore({
     gbp: gbpModule.score,
     reviews: reviewsModule.score,

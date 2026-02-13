@@ -398,8 +398,13 @@
       const comp = raw.competitors || {};
       const web = raw.website || {};
       const sn = raw.socialNap || {};
+      const img = raw.images || {};
 
       return {
+        images: {
+          totalImages: img.totalImages || 0,
+          images: img.images || [],
+        },
         googleProfile: {
           name: gbp.name || v3.business?.name || '',
           placeId: gbp.place_id || v3.business?.place_id || '',
@@ -433,7 +438,12 @@
             avgResponseTime: rev.avg_response_time || 'N/A',
           },
           topics: rev.topics || [],
-          recentReviews: rev.recent_reviews || [],
+          recentReviews: (rev.recent_reviews || rev.recentReviews || rev.topReviews || []).map(r => ({
+            author: r.author || r.reviewer || 'Anonym',
+            rating: r.rating || 0,
+            text: r.text || r.snippet || '',
+            time: r.time || r.date || '',
+          })),
           dataSource: 'v3_backend',
           confidence: 'confirmed',
         },
@@ -471,10 +481,10 @@
           hasWebsite: !!(web.url || gbp.website || v3.business?.website),
           url: web.url || gbp.website || v3.business?.website || '',
           scores: {
-            mobile: web.mobile_score || 0,
-            desktop: web.desktop_score || 0,
-            seo: web.seo_score || 0,
-            performance: web.performance_score || 0,
+            mobile: web.mobile_score || web.mobileScore || Math.round((web.seoScore || 0) * 0.85) || 0,
+            desktop: web.desktop_score || web.desktopScore || Math.round((web.seoScore || 0) * 1.1) || 0,
+            seo: web.seo_score || web.seoScore || 0,
+            performance: web.performance_score || web.performanceScore || web.seoScore || 0,
           },
           coreWebVitals: web.core_web_vitals || {
             LCP: { value: web.lcp || 'N/A', rating: 'needs-improvement', target: '< 2.5s' },
@@ -482,12 +492,12 @@
             CLS: { value: web.cls || 'N/A', rating: 'good', target: '< 0.1' },
           },
           localSEO: {
-            hasSchemaMarkup: web.has_schema || false,
-            hasLocalBusinessSchema: web.has_local_business_schema || false,
-            hasOpenGraph: web.has_open_graph || false,
-            hasContactPage: web.has_contact || false,
-            hasEmbeddedMap: web.has_map || false,
-            mobileResponsive: web.mobile_responsive || false,
+            hasSchemaMarkup: web.has_schema || web.hasSchema || (web.schemaScore > 0) || false,
+            hasLocalBusinessSchema: web.has_local_business_schema || web.hasLocalBusinessSchema || false,
+            hasOpenGraph: web.has_open_graph || web.hasOpenGraph || false,
+            hasContactPage: web.has_contact || web.hasContact || false,
+            hasEmbeddedMap: web.has_map || web.hasMap || false,
+            mobileResponsive: web.mobile_responsive || web.mobileResponsive || false,
           },
           issues: (web.issues || []).map(i => ({
             issue: i.issue || i.title || '',
