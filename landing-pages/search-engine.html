@@ -3192,15 +3192,48 @@
                         if (data.business) setResolvedBusiness(data.business);
                         cacheRestored.current = true;
                       } else {
-                        alert('Rapport-data er ikke tilgængelig. Kontakt support for at få din rapport tilsendt.');
+                        // Cache lost — run a fresh scan with payment already confirmed
+                        setIsPaid(true);
+                        setPaymentVerified(true);
+                        setIsComplete(false);
+                        setShowReport(false);
+                        cacheRestored.current = true; // prevent loop
+                        // Reset to trigger fresh scan
+                        setCompletedSteps([]);
+                        setAnalysisResults({});
+                        setFindings([]);
                       }
                     } catch (e) {
-                      alert('Rapport-data er ikke tilgængelig. Kontakt support for at få din rapport tilsendt.');
+                      alert('Rapport-data er ikke tilgængelig. Kontakt support@flow.dk for at få din rapport tilsendt.');
                     }
                   }}
                   style={{ background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, padding: '12px 28px', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 8 }}
                 >
                   Vis rapport nu
+                </button>
+                <button
+                  onClick={() => {
+                    // Force a fresh scan — payment is already confirmed
+                    setIsPaid(true);
+                    setPaymentVerified(true);
+                    cacheRestored.current = false;
+                    autoRescanTriggered.current = false;
+                    setCompletedSteps([]);
+                    setAnalysisResults({});
+                    setFindings([]);
+                    setIsComplete(false);
+                    setShowReport(false);
+                    // Remove paid param from URL to allow fresh scan
+                    const p = new URLSearchParams(window.location.search);
+                    p.delete('paid');
+                    p.delete('session_id');
+                    window.history.replaceState({}, '', window.location.pathname + (p.toString() ? '?' + p.toString() : ''));
+                    // Force re-render to trigger scan useEffect
+                    window.location.reload();
+                  }}
+                  style={{ background: 'transparent', color: '#6366f1', border: '1px solid #6366f1', borderRadius: 8, padding: '10px 24px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                >
+                  Kør ny scanning (gratis)
                 </button>
               </div>
             </div>
@@ -5455,6 +5488,25 @@
             address: address,
             website: website
           });
+        } else if (params.get('paid') === 'true') {
+          // Returning from Stripe without name param — restore from cache
+          try {
+            const cached = localStorage.getItem('seo_report_cache') || sessionStorage.getItem('seo_report_cache');
+            if (cached) {
+              const data = JSON.parse(cached);
+              if (data.business && data.business.name) {
+                setSelectedBusiness(data.business);
+              } else {
+                // Fallback: use a placeholder so AnalysisScanner renders
+                setSelectedBusiness({ name: 'Din virksomhed', place_id: '', address: '' });
+              }
+            } else {
+              // No cache at all — still show scanner with payment verified state
+              setSelectedBusiness({ name: 'Din virksomhed', place_id: '', address: '' });
+            }
+          } catch (e) {
+            setSelectedBusiness({ name: 'Din virksomhed', place_id: '', address: '' });
+          }
         }
       }, []);
 
