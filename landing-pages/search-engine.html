@@ -2079,78 +2079,98 @@
 
     // Review preview
     const ReviewPreview = ({ reviews }) => {
-      const review = reviews?.[0];
-      return (
-        <div style={{ padding: 24 }}>
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontWeight: 600,
-                fontSize: 18,
-              }}>
-                {review?.author?.charAt(0) || 'U'}
+      const reviewList = reviews || [];
+      if (reviewList.length === 0) {
+        return (
+          <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ background: 'white', borderRadius: 12, padding: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.2}s` }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ height: 12, width: '40%', borderRadius: 4, background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.2}s`, marginBottom: 6 }} />
+                    <div style={{ height: 10, width: '25%', borderRadius: 4, background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)', backgroundSize: '200% 100%', animation: `shimmer 1.5s ease-in-out infinite ${i * 0.2}s` }} />
+                  </div>
+                </div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{review?.author || 'Indlæser...'}</div>
-                <div style={{ fontSize: 12, color: '#6b7280' }}>{review?.time || '3 måneder siden'}</div>
-              </div>
-              <div style={{ display: 'flex', gap: 2 }}>
-                {[1,2,3,4,5].map(i => (
-                  <span key={i} style={{ color: i <= (review?.rating || 4) ? '#fbbf24' : '#e5e5e5', fontSize: 16 }}>★</span>
-                ))}
-              </div>
-            </div>
-            {review?.text && (
-              <p style={{ margin: '16px 0 0', fontSize: 14, color: '#374151', lineHeight: 1.5 }}>
-                {review.text}
-              </p>
-            )}
+            ))}
+            <div style={{ fontSize: 11, color: '#6b7280', textAlign: 'center' }}>Henter anmeldelser...</div>
           </div>
+        );
+      }
+      return (
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 280, overflowY: 'auto' }}>
+          {reviewList.slice(0, 3).map((review, idx) => (
+            <div key={idx} style={{
+              background: 'white', borderRadius: 12, padding: 14,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              animation: `fadeSlideUp 0.3s ease ${idx * 0.1}s both`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  background: `hsl(${(idx * 90 + 240) % 360}, 60%, 60%)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontWeight: 600, fontSize: 14,
+                }}>
+                  {review.author?.charAt(0) || '?'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, fontSize: 13 }}>{review.author || 'Anonym'}</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>{review.time || ''}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 1 }}>
+                  {[1,2,3,4,5].map(i => (
+                    <span key={i} style={{ color: i <= (review.rating || 0) ? '#fbbf24' : '#e5e5e5', fontSize: 13 }}>★</span>
+                  ))}
+                </div>
+              </div>
+              {review.text && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#374151', lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {review.text}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       );
     };
 
-    // Photo gallery preview — animated shimmer loading
+    // Photo gallery preview — shows real images from API
     const PhotoPreview = ({ photos }) => {
-      const hasRealPhotos = Array.isArray(photos) && photos.length > 0 && typeof photos[0] === 'string';
-      const items = hasRealPhotos ? photos.slice(0, 6) : [1,2,3,4,5,6];
+      // photos can be: { images: [{url, thumbnailUrl, ...}], totalImages, ... } or array of strings
+      const imageList = photos?.images || (Array.isArray(photos) ? photos : []);
+      const hasRealPhotos = imageList.length > 0;
       return (
         <div style={{ padding: 24 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-            {items.map((item, i) => (
-              hasRealPhotos ? (
+            {hasRealPhotos ? imageList.slice(0, 6).map((img, i) => {
+              const src = typeof img === 'string' ? img : (img.thumbnailUrl || img.url);
+              return (
                 <div key={i} style={{
-                  aspectRatio: '1', borderRadius: 8, overflow: 'hidden',
+                  aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#f3f4f6',
                   animation: `fadeSlideUp 0.4s ease ${i * 0.1}s both`,
                 }}>
-                  <img src={item} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  <img src={src} alt={img.title || `Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.style.background = '#f3f4f6'; }}
                   />
                 </div>
-              ) : (
-                <div key={i} style={{
-                  aspectRatio: '1',
-                  background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)',
-                  backgroundSize: '200% 100%',
-                  borderRadius: 8,
-                  animation: 'shimmer 1.5s ease-in-out infinite',
-                  animationDelay: `${i * 0.15}s`,
-                }} />
-              )
+              );
+            }) : [1,2,3,4,5,6].map((_, i) => (
+              <div key={i} style={{
+                aspectRatio: '1',
+                background: 'linear-gradient(90deg, #f3f4f6 25%, #e8eaed 50%, #f3f4f6 75%)',
+                backgroundSize: '200% 100%',
+                borderRadius: 8,
+                animation: 'shimmer 1.5s ease-in-out infinite',
+                animationDelay: `${i * 0.15}s`,
+              }} />
             ))}
           </div>
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: hasRealPhotos ? '#059669' : '#667eea', animation: hasRealPhotos ? 'none' : 'pulse 1s ease-in-out infinite' }} />
             <span style={{ fontSize: 11, color: '#6b7280' }}>
-              {hasRealPhotos ? `${photos.length} billeder fundet` : 'Analyserer billedkvalitet og metadata...'}
+              {hasRealPhotos ? `${photos?.totalImages || imageList.length} billeder fundet` : 'Analyserer billedkvalitet og metadata...'}
             </span>
           </div>
         </div>
@@ -3387,8 +3407,8 @@
                     {currentStep === 0 && <MapPreview business={business} />}
                     {currentStep === 1 && <BusinessCardPreview business={business} data={analysisResults.googleProfile} />}
                     {currentStep === 2 && <ReviewPreview reviews={analysisResults.reviews?.recentReviews} />}
-                    {currentStep === 3 && <PhotoPreview photos={analysisResults.photos} />}
-                    {currentStep === 4 && <CitationsPreview business={business} napData={analysisResults.napConsistency} />}
+                    {currentStep === 3 && <PhotoPreview photos={analysisResults.images} />}
+                    {currentStep === 4 && <CitationsPreview business={business} napData={analysisResults.citations} />}
                     {currentStep === 5 && <CompetitorsPreview business={business} competitorData={analysisResults.competitors} />}
                     {currentStep === 6 && <NapPreview business={business} napData={analysisResults.napConsistency} />}
                     {currentStep === 7 && <WebsitePreview business={business} websiteData={analysisResults.website} />}
