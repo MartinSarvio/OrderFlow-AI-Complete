@@ -3,24 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kommissionsfri Levering | Flow</title>
-  <meta name="description" content="Slip for dyre leveringsplatforme. Med Flows kommissionsfri levering beholder du 100% af dit salg og ejer dine kunder.">
-  <meta property="og:title" content="Kommissionsfri Levering | Flow">
-  <meta property="og:description" content="Slip for dyre leveringsplatforme. Behold 100% af dit salg og ej dine kunder.">
+  <title>Zero-Commission Delivery | Flow</title>
+  <meta name="description" content="Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.">
+  <meta property="og:title" content="Zero-Commission Delivery | Flow">
+  <meta property="og:description" content="Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    /* ==================== CSS VARIABLES ==================== */
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
+      --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
       --color-green-accent: #22C55E;
-      --color-black: #000000;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -31,213 +30,56 @@
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
-      --section-radius: 2.4rem;
-      --section-overlap: -2.4rem;
       --container-max: 1200px;
-      --container-huge: 1400px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
-    /* ==================== RESET & BASE ==================== */
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
     }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
-    html {
-      font-size: 62.5%;
-      scroll-behavior: smooth;
-    }
+    /* Scrollbars */
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 1.6rem;
-      line-height: 1.6;
-      color: var(--color-dark);
-      background: var(--color-white);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overscroll-behavior: none;
-      overflow-x: hidden;
-    }
+    /* Navigation from landing.html - UNCHANGED */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.816rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
 
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: transparent transparent;
-    }
-
-    *:hover {
-      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-    }
-
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: transparent;
-      border-radius: 10px;
-      transition: background 0.3s ease;
-    }
-
-    *:hover::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    *:hover::-webkit-scrollbar-thumb:hover {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== BUTTONS ==================== */
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.8rem;
-      padding: 1.4rem 2.8rem;
-      font-size: 1.5rem;
-      font-weight: 500;
-      border-radius: 0.8rem;
-      background: var(--color-primary);
-      color: var(--color-white);
-      transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1);
-      cursor: pointer;
-      border: none;
-    }
-
-    .button:hover {
-      background: var(--color-primary-hover);
-    }
-
-    .button.button-white {
-      background: var(--color-white);
-      color: var(--color-dark);
-      border: none;
-    }
-
-    .button.button-white:hover {
-      background: var(--color-gray-100);
-    }
-
-    /* ==================== NAVIGATION ==================== */
-    .nav-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: var(--color-white);
-      border-bottom: none;
-      transition: background 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.32rem 4.4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 2.816rem;
-      width: auto;
-    }
-
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.54rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-      letter-spacing: -0.026em;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.54rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1.1rem 1.98rem;
-      border-radius: 0.8rem;
-      font-size: 1.54rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
-
-    /* DROPDOWN MEGA MENU */
+    /* Dropdown */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -245,7 +87,6 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
@@ -268,170 +109,414 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      padding: 16rem 4rem 10rem;
+    /* === NEW CONTENT SECTIONS === */
+
+    /* Hero - Massive Typography */
+    .hero {
       background: var(--color-white);
-      text-align: center;
-    }
-
-    .hero-section h1 {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      margin-bottom: 2.4rem;
-      line-height: 1.1;
-      max-width: 90rem;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .hero-section p {
-      font-family: 'Inter', sans-serif;
-      font-size: 2rem;
-      font-weight: 400;
-      color: var(--color-gray-600);
-      margin-bottom: 3.2rem;
-      max-width: 68rem;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    /* ==================== CONTENT SECTIONS ==================== */
-    .content-section {
-      padding: 10rem 4rem;
-    }
-
-    .content-section.beige {
-      background: var(--color-beige);
-    }
-
-    .content-section.white {
-      background: var(--color-white);
-    }
-
-    .section-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-
-    .section-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6rem;
-      align-items: center;
-    }
-
-    .section-grid.reverse {
-      direction: rtl;
-    }
-
-    .section-grid.reverse > * {
-      direction: ltr;
-    }
-
-    .section-content h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 3.6rem;
-      font-weight: 700;
-      color: var(--color-dark);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-    }
-
-    .section-content p {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.8rem;
-      font-weight: 400;
-      color: var(--color-gray-600);
-      line-height: 1.6;
-      margin-bottom: 2.4rem;
-    }
-
-    .section-content ul {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 2.4rem 0;
-    }
-
-    .section-content li {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: var(--color-gray-700);
-      padding: 1.2rem 0;
-      padding-left: 3rem;
+      padding: 16rem 4rem 8rem;
       position: relative;
-    }
-
-    .section-content li:before {
-      content: '✓';
-      position: absolute;
-      left: 0;
-      color: var(--color-green-accent);
-      font-weight: 700;
-      font-size: 1.8rem;
-    }
-
-    .section-image {
-      border-radius: 2rem;
       overflow: hidden;
     }
-
-    .section-image img {
-      width: 100%;
-      height: auto;
-      object-fit: cover;
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
     }
-
-    /* ==================== STATS SECTION ==================== */
-    .stats-section {
-      padding: 12rem 4rem;
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
       background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
     }
 
+    /* Stats Bar - Dark */
+    .stats-bar {
+      background: var(--color-black);
+      padding: 6rem 4rem;
+      color: var(--color-white);
+    }
     .stats-container {
       max-width: var(--container-max);
       margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
       text-align: center;
     }
-
-    .stats-container h2 {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: 4.4rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      margin-bottom: 6rem;
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
       text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
-    .stats-grid {
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
+
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 4rem;
     }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    .stat-card {
+    /* Big Quote - Dark */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
       text-align: center;
     }
-
-    .stat-card h3 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 700;
-      color: var(--color-dark);
-      margin-bottom: 1.2rem;
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
     }
 
-    .stat-card p {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.6rem;
+    /* Process Steps - Beige */
+    .process-steps {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 12rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Social Proof - White */
+    .social-proof {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .social-proof-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .social-proof-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+    .social-proof-header h2 {
+      font-family: var(--font-display);
+      font-size: 5.6rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+    .testimonial-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+      position: relative;
+    }
+    .testimonial-quote {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+    }
+    .testimonial-author-info {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .testimonial-avatar {
+      width: 6.4rem;
+      height: 6.4rem;
+      border-radius: 50%;
+      border: 3px solid var(--color-black);
+    }
+    .testimonial-author-name {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+    }
+    .testimonial-author-title {
+      font-family: var(--font-body);
+      font-size: 1.5rem;
       font-weight: 500;
       color: var(--color-gray-600);
     }
 
-    /* ==================== FOOTER ==================== */
+    /* CTA Final - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -445,25 +530,23 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    /* ==================== RESPONSIVE ==================== */
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section h1 { font-size: 3.6rem; }
-      .section-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .section-grid.reverse { direction: ltr; }
-      .stats-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .hero-content .subtitle { font-size: 2.4rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .process-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .footer-content { grid-template-columns: 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <!-- Navigation -->
-    <nav class="nav-wrapper">
+  <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
@@ -509,113 +592,150 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
-
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <h1>SLIP FOR KOMMISSION.<br>BEHOLD DINE KUNDER.</h1>
-      <p>Med Flows kommissionsfri levering beholder du 100% af dit salg og ejer dine kunder. Ingen flere 30% til Wolt eller Just Eat.</p>
-      <div class="hero-buttons">
-        <a href="#demo" class="button">Beregn din besparelse</a>
-        <a href="priser.html" class="button button-white">Se priser</a>
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Levering. Nul provision.</h1>
+        <p class="subtitle">Stop med at betale 30% til Wolt og Just Eat. Med Flow beholder du hele din omsætning — og dine kunder.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary">Se priser</a>
+        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Section 1: Image + Content -->
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=700&h=500&fit=crop" alt="Levering cykel">
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item"><h3>0%</h3><p>provision</p></div>
+      <div class="stat-item"><h3>+30%</h3><p>højere margin</p></div>
+      <div class="stat-item"><h3>25min</h3><p>gns. leveringstid</p></div>
+    </div>
+  </section>
+
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=1200&h=900&fit=crop" alt="Zero-Commission Delivery | Flow">
+      </div>
+      <div class="image-split-content">
+        <h2>Dine kunder. Din omsætning.</h2>
+        <p>Tredjepartsplatforme ejer dine kunder og tager 30% af hver ordre. Med Flow ejer du relationen.</p>
+        <p>En restaurant med 200.000 kr/md i delivery sparer 60.000 kr/md med zero-commission.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Hvad du får</h2>
+        <p>Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.</p>
+      </div>
+      <div class="features-items">
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>Ingen Provision</h3>
+          <p>Behold 100% af din omsætning. Ingen skjulte gebyrer.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗺️</div>
+          <h3>Smart Routing</h3>
+          <p>Intelligent ruteoptimering der minimerer leveringstid og brændstof.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Real-time Tracking</h3>
+          <p>Kunder kan følge deres levering live på et kort.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🚴</div>
+          <h3>Fleksible Chauffører</h3>
+          <p>Brug dine egne chauffører eller vores netværk af uafhængige.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>Ordrehåndtering</h3>
+          <p>Automatisk ordretildeling og status-opdateringer til køkkenet.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Delivery Analytics</h3>
+          <p>Track leveringstider, kundetilfredshed og chauffør-performance.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Vi sparede 72.000 kr om måneden ved at skifte fra Wolt til Flows delivery. Vores kunder bemærkede ingen forskel."</blockquote>
+      <div class="big-quote-author">Frederik Lund — Dragon Wok</div>
+    </div>
+  </section>
+
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Sådan kommer du i gang</h2>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
+          <h3>Opsæt leveringszone</h3>
+          <p>Definer dit leveringsområde og minimum ordrebeløb.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">02</div>
+          <h3>Tilslut chauffører</h3>
+          <p>Brug dine egne eller aktiver vores chauffør-netværk.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">03</div>
+          <h3>Start levering</h3>
+          <p>Modtag ordrer direkte og lever med 0% provision.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="social-proof">
+    <div class="social-proof-container">
+      <div class="social-proof-header">
+        <h2>Hvad vores kunder siger</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"30% provision til Wolt var en dræber. Med Flow beholder vi alt og vores kunder bestiller direkte hos os."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=7" alt="Henrik Andersen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Henrik Andersen</div>
+              <div class="testimonial-author-title">Pizza Express, Roskilde</div>
+            </div>
           </div>
-          <div class="section-content">
-            <h2>Vælg mellem dine egne bude eller vores netværk</h2>
-            <p>Har du allerede en bud eller to? Så bruger du dem. Vi giver dig rute-planlægning og tracking. Ingen bude? Vi kobler dig på chauffører i dit område.</p>
-            <ul>
-              <li>Fast pris per levering - ikke procent af ordren</li>
-              <li>Real-time tracking for dine kunder</li>
-              <li>Rute-optimering for hurtigere levering</li>
-              <li>Push-notifikationer om leveringsstatus</li>
-            </ul>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Real-time tracking gør at kunderne stoler på vores levering. Vi har 4.8 i kundetilfredshed."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=25" alt="Julie Thomsen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Julie Thomsen</div>
+              <div class="testimonial-author-title">Sund & Go, Frederiksberg</div>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Section 2: Content + Image -->
-    <section class="content-section white">
-      <div class="section-container">
-        <div class="section-grid reverse">
-          <div class="section-content">
-            <h2>100% af salget går til dig</h2>
-            <p>En pizza til 100 kr eller en catering-ordre til 2.000 kr - leveringsprisen er den samme. Ingen procentbaseret kommission betyder at du beholder hele fortjenesten.</p>
-            <ul>
-              <li>Spar 30-50.000 kr/md ved høj volumen</li>
-              <li>Ingen skjulte gebyrer eller afgifter</li>
-              <li>Du ejer kundedata og relationen</li>
-              <li>Start småt og skalér op</li>
-            </ul>
-          </div>
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&h=500&fit=crop" alt="Mad levering">
-          </div>
-        </div>
-      </div>
-    </section>
+  <section class="cta-final">
+    <h2>Stop med at betale provision</h2>
+    <p>Skift til zero-commission delivery i dag og behold din omsætning.</p>
+    <a href="#demo" class="button">Få gratis demo nu</a>
+  </section>
 
-    <!-- Section 3: Image + Content -->
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=700&h=500&fit=crop" alt="Restaurant køkken">
-          </div>
-          <div class="section-content">
-            <h2>Automatisk koordinering med dit køkken</h2>
-            <p>Vi integrerer direkte med dit POS-system. Når en ordre kommer ind, sendes den automatisk til køkkenet. Buddet bliver tilkaldt præcis når maden er klar.</p>
-            <ul>
-              <li>Integration med Touchbistro, Toast, Square</li>
-              <li>Automatisk estimering af tilberedningstid</li>
-              <li>Buddet kommer præcis når maden er klar</li>
-              <li>Mindre spildtid og koldere mad</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats-section">
-      <div class="stats-container">
-        <h2>TALLENE TALER FOR SIG SELV</h2>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>0%</h3>
-            <p>Kommission på ordrer</p>
-          </div>
-          <div class="stat-card">
-            <h3>45 kr</h3>
-            <p>Gennemsnitlig leveringsomkostning</p>
-          </div>
-          <div class="stat-card">
-            <h3>100%</h3>
-            <p>Du ejer kundedata</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Final CTA Section -->
-    <section class="content-section white">
-      <div class="section-container" style="text-align: center; max-width: 80rem; margin: 0 auto;">
-        <h2 style="font-family: 'Archivo Black', sans-serif; font-size: 4.4rem; margin-bottom: 2.4rem; text-transform: uppercase;">KLAR TIL AT DROPPE KOMMISSIONEN?</h2>
-        <p style="font-size: 1.8rem; color: var(--color-gray-600); margin-bottom: 3.2rem;">Vi tager dine nuværende leveringstal og viser dig hvad du reelt kan spare. Ingen forpligtelser.</p>
-        <a href="#demo" class="button" style="padding: 1.6rem 3.2rem; font-size: 1.6rem;">Beregn din besparelse</a>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
+  <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
         <h4>PRODUKTER</h4>
@@ -669,21 +789,7 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script></div>
-
-  <!-- JavaScript -->
-  <script>
-    window.addEventListener('scroll', function() {
-      const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
-      }
-    });
-  </script>
+<script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
 </body>
 </html>

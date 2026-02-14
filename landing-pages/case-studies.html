@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Case Studies | Flow - Succeshistorier fra restauranter</title>
-  <meta name="description" content="Se hvordan restauranter bruger Flow til at vokse deres forretning. Læs succeshistorier og case studies fra vores kunder.">
-  <meta property="og:title" content="Case Studies | Flow - Succeshistorier fra restauranter">
-  <meta property="og:description" content="Se hvordan restauranter bruger Flow til at vokse deres forretning med online bestilling, mobile apps og marketing.">
+  <title>Case Studies — Succeshistorier | Flow</title>
+  <meta name="description" content="Se hvordan restauranter vokser med Flow. Rigtige resultater fra rigtige restauranter.">
+  <meta property="og:title" content="Case Studies — Succeshistorier | Flow">
+  <meta property="og:description" content="Se hvordan restauranter vokser med Flow. Rigtige resultater fra rigtige restauranter.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
+      --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
       --color-green-accent: #22C55E;
-      --color-black: #000000;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -31,26 +31,38 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+
+    /* Scrollbars */
     * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
     *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
-    a { color: inherit; text-decoration: none; }
-    img, video { max-width: 100%; height: auto; display: block; }
-    ul, ol { list-style: none; }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); }
-    .button.button-white:hover { background: var(--color-gray-100); }
-
+    /* Navigation from landing.html - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -67,18 +79,19 @@
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
+    /* Dropdown */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
     .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
@@ -96,27 +109,414 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .hero-section { padding: 16rem 4rem 10rem; background: var(--color-white); text-align: center; }
-    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.1; max-width: 90rem; margin-left: auto; margin-right: auto; text-transform: uppercase; }
-    .hero-section p { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 400; color: var(--color-gray-600); margin-bottom: 3.2rem; max-width: 68rem; margin-left: auto; margin-right: auto; }
+    /* === NEW CONTENT SECTIONS === */
 
-    .case-section { padding: 10rem 4rem; }
-    .case-section.beige { background: var(--color-beige); }
-    .case-section.white { background: var(--color-white); }
-    .section-container { max-width: var(--container-max); margin: 0 auto; }
-    .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; margin-bottom: 8rem; padding-bottom: 8rem; border-bottom: 1px solid var(--color-gray-300); }
-    .case-grid:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .case-grid.reverse { direction: rtl; }
-    .case-grid.reverse > * { direction: ltr; }
-    .case-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.6rem; line-height: 1.2; }
-    .case-content .case-category { font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 600; color: var(--color-gray-600); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.2rem; }
-    .case-content p { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
-    .case-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4rem; margin-bottom: 2.4rem; }
-    .case-stat h3 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.4rem; }
-    .case-stat p { font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-gray-600); }
-    .case-image { border-radius: 2rem; overflow: hidden; }
-    .case-image img { width: 100%; height: auto; object-fit: cover; }
+    /* Hero - Massive Typography */
+    .hero {
+      background: var(--color-white);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
 
+    /* Stats Bar - Dark */
+    .stats-bar {
+      background: var(--color-black);
+      padding: 6rem 4rem;
+      color: var(--color-white);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
+
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4rem;
+    }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Big Quote - Dark */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Process Steps - Beige */
+    .process-steps {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 12rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Social Proof - White */
+    .social-proof {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .social-proof-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .social-proof-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+    .social-proof-header h2 {
+      font-family: var(--font-display);
+      font-size: 5.6rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+    .testimonial-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+      position: relative;
+    }
+    .testimonial-quote {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+    }
+    .testimonial-author-info {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .testimonial-avatar {
+      width: 6.4rem;
+      height: 6.4rem;
+      border-radius: 50%;
+      border: 3px solid var(--color-black);
+    }
+    .testimonial-author-name {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+    }
+    .testimonial-author-title {
+      font-family: var(--font-body);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+    }
+
+    /* CTA Final - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -131,22 +531,22 @@
     .footer-legal a:hover { color: var(--color-white); }
 
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section h1 { font-size: 3.6rem; }
-      .case-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .case-grid.reverse { direction: ltr; }
-      .case-stats { grid-template-columns: 1fr; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .hero-content .subtitle { font-size: 2.4rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .process-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .footer-content { grid-template-columns: 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <nav class="nav-wrapper">
+  <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
@@ -192,93 +592,148 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Rigtige resultater. Rigtige restauranter.</h1>
+        <p class="subtitle">Se hvordan restauranter over hele Danmark bruger Flow til at vækste deres online salg, bygge loyalitet og spare penge.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary">Se priser</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <section class="hero-section">
-      <h1>Succeshistorier<br>Fra Restauranter</h1>
-      <p>Se hvordan restauranter bruger Flow til at vokse deres forretning med online bestilling, mobile apps og automatiseret marketing.</p>
-    </section>
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item"><h3>500+</h3><p>restauranter</p></div>
+      <div class="stat-item"><h3>+127%</h3><p>gns. vækst i salg</p></div>
+      <div class="stat-item"><h3>4.9★</h3><p>kundetilfredshed</p></div>
+    </div>
+  </section>
 
-    <section class="case-section white">
-      <div class="section-container">
-        <div class="case-grid">
-          <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&h=500&fit=crop" alt="Gourmet restaurant">
-          </div>
-          <div class="case-content">
-            <div class="case-category">Pizzeria</div>
-            <h2>Bella Pizza øgede online salg med 285%</h2>
-            <p>Bella Pizza implementerede Flow's online bestillingssystem og egen mobile app. Efter 6 måneder havde de tredoblet deres online salg.</p>
-            <div class="case-stats">
-              <div class="case-stat">
-                <h3>285%</h3>
-                <p>Øgning i online ordrer</p>
-              </div>
-              <div class="case-stat">
-                <h3>45k kr</h3>
-                <p>Sparet i kommission/md</p>
-              </div>
-              <div class="case-stat">
-                <h3>4.8★</h3>
-                <p>App Store rating</p>
-              </div>
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&h=900&fit=crop" alt="Case Studies — Succeshistorier | Flow">
+      </div>
+      <div class="image-split-content">
+        <h2>Resultater der taler for sig selv</h2>
+        <p>Fra små caféer til store restaurantkæder — Flow hjælper alle med at vokse online.</p>
+        <p>Gennemsnitlig ser vores kunder +127% i online salg inden for de første 3 måneder.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Hvad du får</h2>
+        <p>Se hvordan restauranter vokser med Flow. Rigtige resultater fra rigtige restauranter.</p>
+      </div>
+      <div class="features-items">
+        <div class="feature-card">
+          <div class="feature-icon">🍕</div>
+          <h3>Pizzeria Napoli</h3>
+          <p>+127% online ordrer, 24t til live hjemmeside, 0% provision på delivery.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🍣</div>
+          <h3>Sushi House CPH</h3>
+          <p>2.400 app-brugere, 85% genkøbsrate, +42% i ordreværdi.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">☕</div>
+          <h3>Café Hygge</h3>
+          <p>68% genkøbsrate med loyalitetsprogram, +35% omsætning.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🍔</div>
+          <h3>Burger Joint</h3>
+          <p>Sparede 72.000 kr/md ved at droppe Wolt, +200% direkte ordrer.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🥗</div>
+          <h3>Green Kitchen</h3>
+          <p>Top 3 på Google for lokale søgninger, +156% organisk trafik.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🍜</div>
+          <h3>Thai Kitchen</h3>
+          <p>Marketing automation genererer 180.000 kr/md ekstra omsætning.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Flow ændrede vores forretning. Vi gik fra at overleve til at vokse. Online salg er nu 45% af vores omsætning."</blockquote>
+      <div class="big-quote-author">Anders & Sophie — Café Hygge, København</div>
+    </div>
+  </section>
+
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Sådan kommer du i gang</h2>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
+          <h3>Udfordringen</h3>
+          <p>Mange restauranter kæmper med høje provisioner og manglende online synlighed.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">02</div>
+          <h3>Løsningen</h3>
+          <p>Flow giver restauranter deres egne digitale værktøjer uden mellemled.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">03</div>
+          <h3>Resultatet</h3>
+          <p>Højere margins, flere kunder, bedre data — og fuld kontrol.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="social-proof">
+    <div class="social-proof-container">
+      <div class="social-proof-header">
+        <h2>Hvad vores kunder siger</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Vi havde aldrig forestillet os at online salg kunne blive så stor en del af vores forretning. Flow gjorde det muligt."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=6" alt="Per Andersen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Per Andersen</div>
+              <div class="testimonial-author-title">Steak & Co, Fredericia</div>
             </div>
           </div>
         </div>
-
-        <div class="case-grid reverse">
-          <div class="case-content">
-            <div class="case-category">Sushi Restaurant</div>
-            <h2>Sushi House byggede 12.000 app downloads</h2>
-            <p>Med Flow's custom mobile app og loyalitetsprogram fik Sushi House 12.000 aktive app-brugere på 8 måneder.</p>
-            <div class="case-stats">
-              <div class="case-stat">
-                <h3>12k</h3>
-                <p>App downloads</p>
-              </div>
-              <div class="case-stat">
-                <h3>65%</h3>
-                <p>Loyalitetsrate</p>
-              </div>
-              <div class="case-stat">
-                <h3>3.2x</h3>
-                <p>Højere ordreværdi</p>
-              </div>
-            </div>
-          </div>
-          <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=700&h=500&fit=crop" alt="Sushi restaurant">
-          </div>
-        </div>
-
-        <div class="case-grid">
-          <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&h=500&fit=crop" alt="Burger restaurant">
-          </div>
-          <div class="case-content">
-            <div class="case-category">Burger Bar</div>
-            <h2>Burger Joint reducerede kundeemissionsomkostninger med 60%</h2>
-            <p>Ved at skifte fra tredjepartsplatforme til Flow's kommissionsfri levering sparede Burger Joint over 50.000 kr om måneden.</p>
-            <div class="case-stats">
-              <div class="case-stat">
-                <h3>60%</h3>
-                <p>Lavere delivery costs</p>
-              </div>
-              <div class="case-stat">
-                <h3>50k kr</h3>
-                <p>Sparet per måned</p>
-              </div>
-              <div class="case-stat">
-                <h3>100%</h3>
-                <p>Ejer kundedata</p>
-              </div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Support-teamet er fantastisk. De hjælper os med alt fra opsætning til strategi."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=22" alt="Ida Nørregaard" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Ida Nørregaard</div>
+              <div class="testimonial-author-title">Smoothie Bar, Silkeborg</div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    
+  <section class="cta-final">
+    <h2>Bliv den næste succeshistorie</h2>
+    <p>Lad os vise dig hvad Flow kan gøre for din restaurant.</p>
+    <a href="#demo" class="button">Få gratis demo nu</a>
+  </section>
 
   <footer class="footer">
     <div class="footer-content">
@@ -334,20 +789,7 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script></div>
-
-  <script>
-    window.addEventListener('scroll', function() {
-      const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
-      }
-    });
-  </script>
+<script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
 </body>
 </html>

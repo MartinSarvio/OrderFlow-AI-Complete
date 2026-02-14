@@ -3,34 +3,546 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automatiske belønninger til Restaurant | Flow</title>
-  <meta name="description" content="Byg kundeloyalitet med et automatiseret belønningssystem. Få flere tilbagevendende kunder og øg din omsætning.">
+  <title>Loyalitetsprogram for Restauranter | Flow</title>
+  <meta name="description" content="Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.">
+  <meta property="og:title" content="Loyalitetsprogram for Restauranter | Flow">
+  <meta property="og:description" content="Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root {--color-primary:#1A1A1A;--color-dark:#090a0b;--color-white:#ffffff;--color-beige:#F5F0EB;--color-beige-light:#FAF8F5;--color-green-accent:#22C55E;--color-gray-100:#f2f0ed;--color-gray-500:#6B7280;--color-gray-600:#6B7280;--color-gray-700:#343a40;--color-gray-800:#212529;--color-gray-900:#9CA3AF;--color-black:#000000;--container-max:1200px}
-    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}html{font-size:62.5%;scroll-behavior:smooth}body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:1.6rem;line-height:1.6;color:var(--color-dark);background:var(--color-white);-webkit-font-smoothing:antialiased;overflow-x:hidden}a{color:inherit;text-decoration:none}img,video{max-width:100%;height:auto;display:block}ul,ol{list-style:none}
-    .nav-wrapper{position:fixed;top:0;left:0;right:0;z-index:1000;background:var(--color-white);transition:background .3s ease,backdrop-filter .3s ease}.nav-wrapper.scrolled{background:rgba(255,255,255,0.85);backdrop-filter:blur(10px)}
-    .nav-container{display:flex;align-items:center;justify-content:space-between;padding: 1.32rem 4.4rem;width:100%}.nav-left{display:flex;align-items:center;gap:1.2rem}.nav-logo{display:flex;align-items:center;gap:0.4rem}.nav-logo img{height: 2.816rem;width:auto}.logo-f{display:inline-block;transition:transform .6s cubic-bezier(0.68,-0.55,0.265,1.55)}.nav-logo:hover .logo-f{transform:rotate(360deg)}
-    .nav-links{display:flex;align-items:center;gap:0.8rem}.nav-link{font-family:'Space Grotesk',sans-serif;font-size: 1.54rem;font-weight:500;color:var(--color-dark);padding:0.8rem 1.2rem;border-radius:0.6rem;transition:background .2s ease;letter-spacing:-0.026em}.nav-link:hover{background:var(--color-gray-100)}
-    .nav-right{display:flex;align-items:center;gap:1.6rem}.nav-login{font-size: 1.54rem;font-weight:500;color:var(--color-dark)}.nav-cta{background:var(--color-dark);color:var(--color-white);padding: 1.1rem 1.98rem;border-radius:0.8rem;font-size: 1.54rem;font-weight:500;transition:background .2s ease}.nav-cta:hover{background:var(--color-gray-800)}
-    .nav-dropdown{position:relative}.nav-dropdown-toggle{display:flex;align-items:center;gap:0.4rem;font-family:'Inter',sans-serif;font-size: 1.54rem;font-weight:500;color:var(--color-dark);padding:0.8rem 1.2rem;border-radius:0.6rem;transition:background .2s ease;cursor:pointer;background:transparent;border:none}.nav-dropdown-toggle:hover{background:var(--color-gray-100)}
-    .nav-dropdown-toggle svg{width:1.2rem;height:1.2rem;transition:transform .2s ease}.nav-dropdown:hover .nav-dropdown-toggle svg{transform:rotate(180deg)}.nav-dropdown-menu{position:fixed;top:6rem;left:0;right:0;width:100%;background:var(--color-white);border-radius:0 0 1.6rem 1.6rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);padding:3.2rem 4rem;margin:0;opacity:0;visibility:hidden;transition:all .3s ease;z-index:1001}.nav-dropdown:hover .nav-dropdown-menu{opacity:1;visibility:visible}
-    .dropdown-content{display:flex;gap:4rem;max-width:140rem;margin:0 auto}.dropdown-left{flex:2}.dropdown-label{font-size:1.2rem;font-weight:700;color:var(--color-gray-500);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:1.6rem}.dropdown-links{display:flex;flex-direction:column;gap:0.4rem}.dropdown-link{display:flex;align-items:flex-start;gap:1.2rem;padding:1.2rem;border-radius:1rem;transition:background .2s ease;text-decoration:none}.dropdown-link:hover{background:var(--color-gray-100)}
-    .dropdown-link-icon{width:2.4rem;height:2.4rem;display:flex;align-items:center;justify-content:center;background:var(--color-gray-100);border-radius:0.6rem;flex-shrink:0}.dropdown-link-icon svg{width:1.4rem;height:1.4rem;color:var(--color-gray-600)}.dropdown-link-content{flex:1}.dropdown-link-title{font-size:1.5rem;font-weight:700;color:var(--color-dark);margin-bottom:0.2rem}.dropdown-link-desc{font-size:1.3rem;font-weight:600;color:var(--color-gray-500);line-height:1.4}
-    .dropdown-right{width:32rem;flex-shrink:0}.dropdown-card{position:relative;border-radius:1.2rem;overflow:hidden;height:100%;min-height:18rem}.dropdown-card img{width:100%;height:100%;object-fit:cover}.dropdown-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:1.6rem;background:linear-gradient(to top,rgba(0,0,0,0.8),transparent);color:white}.dropdown-card-title{font-size: 1.54rem;font-weight:800;margin-bottom:0.4rem}.dropdown-card-subtitle{font-size:1.2rem;opacity:0.8}
-    .dropdown-cards{display:flex;flex-direction:column;gap:1.2rem}.dropdown-cards .dropdown-card{min-height:11rem}.nav-dropdown:first-of-type .dropdown-left{flex:1;max-width:100%}.nav-dropdown:first-of-type .dropdown-links{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;column-gap:2rem}
-    .hero{background:var(--color-white);padding:18rem 4rem 10rem;text-align:center}.hero h1{font-family:'Archivo Black',sans-serif;font-size:6.4rem;font-weight:400;line-height:1;color:#090a0b;margin-bottom:2.4rem;letter-spacing:-0.03em;text-transform:uppercase}.hero p{font-size:2rem;color:var(--color-gray-600);max-width:70rem;margin:0 auto 3.2rem;line-height:1.5}.hero-buttons{display:flex;gap:1.6rem;justify-content:center}
-    .button{display:inline-flex;align-items:center;justify-content:center;gap:0.8rem;padding:1.6rem 3.2rem;font-size:1.6rem;font-weight:500;border-radius:0.8rem;background:var(--color-dark);color:var(--color-white);transition:all .3s ease;cursor:pointer;border:none}.button:hover{background:var(--color-gray-800);transform:translateY(-2px)}.button.is-secondary{background:transparent;color:var(--color-dark);border:2px solid var(--color-dark)}.button.is-secondary:hover{background:var(--color-dark);color:var(--color-white)}
-    .features{background:var(--color-beige);padding:10rem 4rem}.features-container{max-width:var(--container-max);margin:0 auto}.features-header{text-align:center;margin-bottom:6rem}.features-header h2{font-family:'Space Grotesk',sans-serif;font-size:4.4rem;font-weight:700;color:#1A1A1A;margin-bottom:1.6rem;line-height:1.15}.features-header p{font-size:1.8rem;color:var(--color-gray-600);max-width:70rem;margin:0 auto}
-    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem}.feature-card{background:var(--color-white);border-radius:1.6rem;padding:3.2rem;transition:transform .3s ease}.feature-card:hover{transform:translateY(-8px)}.feature-icon{width:5.6rem;height:5.6rem;background:#343a40;border-radius:1.2rem;display:flex;align-items:center;justify-content:center;margin-bottom:2rem}.feature-icon svg{width:2.8rem;height:2.8rem;color:var(--color-white)}.feature-card h3{font-size:2rem;font-weight:600;color:#1A1A1A;margin-bottom:1rem}.feature-card p{font-size:1.5rem;color:var(--color-gray-600);line-height:1.7}
-    .image-section{background:var(--color-white);padding:10rem 4rem}.image-container{max-width:var(--container-max);margin:0 auto;border-radius:1.6rem;overflow:hidden}.image-container img{width:100%;height:55rem;object-fit:cover}
-    .stats{background:var(--color-beige);padding:10rem 4rem}.stats-container{max-width:var(--container-max);margin:0 auto}.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4rem;text-align:center}.stat-item h3{font-family:'Archivo Black',sans-serif;font-size:5.6rem;font-weight:400;color:#1A1A1A;margin-bottom:0.8rem}.stat-item p{font-size:1.6rem;color:#6B7280;font-weight:500}
-    .cta{background:var(--color-white);padding:10rem 4rem;text-align:center}.cta h2{font-family:'Space Grotesk',sans-serif;font-size:4.8rem;font-weight:700;color:#1A1A1A;margin-bottom:2.4rem;line-height:1.2}.cta p{font-size:2rem;color:#6B7280;margin-bottom:3.2rem;max-width:70rem;margin-left:auto;margin-right:auto}.cta-buttons{display:flex;gap:1.6rem;justify-content:center}
-    .footer{background:var(--color-black);color:var(--color-white);padding:6rem 4rem 3rem}.footer-content{max-width:140rem;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4rem;padding-bottom:4rem;border-bottom:1px solid rgba(255,255,255,0.1)}.footer-column h4{font-size:1.2rem;font-weight:600;letter-spacing:0.1em;margin-bottom:2rem;color:rgba(255,255,255,0.5)}.footer-column ul{list-style:none;padding:0;margin:0}.footer-column li{margin-bottom:1.2rem}.footer-column a{color:var(--color-white);text-decoration:none;font-size:1.5rem;transition:opacity .2s}.footer-column a:hover{opacity:0.7}
-    .footer-bottom{max-width:140rem;margin:0 auto;padding-top:3rem;display:flex;justify-content:space-between;align-items:center}.footer-bottom p{font-size: 1.54rem;color:rgba(255,255,255,0.5);margin:0}.footer-legal{display:flex;gap:2.4rem}.footer-legal a{color:rgba(255,255,255,0.5);text-decoration:none;font-size: 1.54rem;transition:color .2s}.footer-legal a:hover{color:var(--color-white)}
-    @media (max-width:768px){html{font-size:56.25%}.nav-links{display:none}.features-grid,.stats-grid{grid-template-columns:1fr}.footer-content{grid-template-columns:1fr 1fr}}
+    :root {
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-black: #000000;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --color-gray-900: #9CA3AF;
+      --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+
+    /* Scrollbars */
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+
+    /* Navigation from landing.html - UNCHANGED */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.816rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
+
+    /* Dropdown */
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.54rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+
+    /* === NEW CONTENT SECTIONS === */
+
+    /* Hero - Massive Typography */
+    .hero {
+      background: var(--color-white);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
+
+    /* Stats Bar - Dark */
+    .stats-bar {
+      background: var(--color-black);
+      padding: 6rem 4rem;
+      color: var(--color-white);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
+
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4rem;
+    }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Big Quote - Dark */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Process Steps - Beige */
+    .process-steps {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 12rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Social Proof - White */
+    .social-proof {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .social-proof-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .social-proof-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+    .social-proof-header h2 {
+      font-family: var(--font-display);
+      font-size: 5.6rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+    .testimonial-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+      position: relative;
+    }
+    .testimonial-quote {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+    }
+    .testimonial-author-info {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .testimonial-avatar {
+      width: 6.4rem;
+      height: 6.4rem;
+      border-radius: 50%;
+      border: 3px solid var(--color-black);
+    }
+    .testimonial-author-name {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+    }
+    .testimonial-author-title {
+      font-family: var(--font-body);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+    }
+
+    /* CTA Final - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer - UNCHANGED */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.54rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
+
+    @media (max-width: 768px) {
+      html { font-size: 56.25%; }
+      .nav-links { display: none; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .hero-content .subtitle { font-size: 2.4rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .process-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
+    }
   </style>
 </head>
 <body>
@@ -80,98 +592,148 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Gæster der kommer igen. Og igen.</h1>
+        <p class="subtitle">Et intelligent loyalitetsprogram der belønner dine bedste kunder og driver genkøb. Ingen klippekort — bare resultater.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary">Se priser</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="hero">
-<h1>Automatiske belønninger<br>Der Virker</h1>
-<p>Beløn dine loyale kunder og få dem til at vende tilbage igen og igen. Automatisk point-system og belønninger built-in.</p>
-<div class="hero-buttons">
-<a href="#demo" class="button">Få en gratis demo</a>
-<a href="priser.html" class="button is-secondary">Se priser</a>
-</div>
-</section>
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item"><h3>3.2x</h3><p>flere besøg per kunde</p></div>
+      <div class="stat-item"><h3>+42%</h3><p>højere ordreværdi</p></div>
+      <div class="stat-item"><h3>68%</h3><p>genkøbsrate</p></div>
+    </div>
+  </section>
 
-<section class="features">
-<div class="features-container">
-<div class="features-header">
-<h2>Byg kundeloyalitet automatisk</h2>
-<p>Få flere tilbagevendende kunder med et automatiseret belønningssystem der kører af sig selv.</p>
-</div>
-<div class="features-grid">
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-</div>
-<h3>Point ved hver ordre</h3>
-<p>Kunder optjener automatisk point hver gang de bestiller. Jo mere de køber, desto mere får de.</p>
-</div>
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
-</div>
-<h3>Automatiske belønninger</h3>
-<p>Kunder indløser point til rabatter, gratis retter eller andre belønninger du vælger.</p>
-</div>
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-</div>
-<h3>Tiers Genbestilling niveauer</h3>
-<p>Bronze, Sølv, Guld medlemskaber med stigende fordele. Gør dine bedste kunder til VIP.</p>
-</div>
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-</div>
-<h3>Fødselsdagsbelønninger</h3>
-<p>Automatiske fødselsdags-tilbud til alle medlemmer. Få dem til at fejre med dig.</p>
-</div>
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
-</div>
-<h3>Medlemskort i appen</h3>
-<p>Kunder ser deres point-saldo direkte i din mobile app. Intet fysisk kort nødvendigt.</p>
-</div>
-<div class="feature-card">
-<div class="feature-icon">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-</div>
-<h3>Analytics</h3>
-<p>Se præcist hvor mange downloads, ordrer og engagement din app får.</p>
-</div>
-</div>
-</div>
-</section>
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=900&fit=crop" alt="Loyalitetsprogram for Restauranter | Flow">
+      </div>
+      <div class="image-split-content">
+        <h2>Loyalitet bygget på data, ikke klippekort</h2>
+        <p>Automatisk points-optjening, personaliserede belønninger og real-time tracking for dine gæster.</p>
+        <p>Det koster 5x mere at skaffe en ny kunde end at beholde en eksisterende. Invester i loyalitet.</p>
+      </div>
+    </div>
+  </section>
 
-<section class="image-section">
-<div class="image-container">
-<img src="https://images.unsplash.com/photo-1714976326351-0ecf0244f0fc?w=1400&h=700&fit=crop" alt="Mobile app mockup">
-</div>
-</section>
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Hvad du får</h2>
+        <p>Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.</p>
+      </div>
+      <div class="features-items">
+        <div class="feature-card">
+          <div class="feature-icon">⭐</div>
+          <h3>Points System</h3>
+          <p>Automatisk optjening ved hvert køb. Kunder kan indløse points til rabatter og gratis retter.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎁</div>
+          <h3>Personlige Belønninger</h3>
+          <p>AI-drevne tilbud baseret på kundens historik og præferencer.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Digital Stempel</h3>
+          <p>Digitalt stempelkort i appen. Ingen fysiske kort der går tabt.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Kundesegmentering</h3>
+          <p>Opdel kunder i VIP, regulære og sovende — og målret tilbud.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔔</div>
+          <h3>Auto-Påmindelser</h3>
+          <p>Automatiske beskeder til kunder der ikke har besøgt i 30 dage.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💰</div>
+          <h3>ROI Tracking</h3>
+          <p>Se præcis hvor meget omsætning dit loyalitetsprogram genererer.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="stats">
-<div class="stats-container">
-<div class="stats-grid">
-<div class="stat-item">
-<h3>67%</h3>
-<p>Højere gennemsnitlig ordre</p>
-</div>
-<div class="stat-item">
-<h3>3x</h3>
-<p>Højere gennemsnitlig ordre</p>
-</div>
-<div class="stat-item">
-<h3>100%</h3>
-<p>Automatiseret</p>
-</div>
-<div class="stat-item">
-<h3>100%</h3>
-<p>Dit brand</p>
-</div>
-</div>
-</div>
-</section>
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Vi gik fra 20% til 68% genkøbsrate på 3 måneder. Vores faste gæster bestiller 3x oftere nu."</blockquote>
+      <div class="big-quote-author">Maria Skov — Pasta Fresca</div>
+    </div>
+  </section>
+
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Sådan kommer du i gang</h2>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
+          <h3>Vælg din model</h3>
+          <p>Points, stempelkort eller tier-baseret. Vi hjælper dig med at vælge den rigtige.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">02</div>
+          <h3>Sæt belønninger op</h3>
+          <p>Definer hvad kunder optjener og hvad de kan indløse.</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">03</div>
+          <h3>Se resultater</h3>
+          <p>Track genkøb, kundeværdi og ROI i real-time dashboardet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="social-proof">
+    <div class="social-proof-container">
+      <div class="social-proof-header">
+        <h2>Hvad vores kunder siger</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Klippekort er fortid. Vores digitale loyalitetsprogram har 4x flere aktive brugere."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=8" alt="Peter Sørensen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Peter Sørensen</div>
+              <div class="testimonial-author-title">Grill House, Odense</div>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"De automatiske påmindelser bringer gæster tilbage. Vi ser en stigning på 42% i ordreværdi fra loyale kunder."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=20" alt="Amalie Berg" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Amalie Berg</div>
+              <div class="testimonial-author-title">Sushi Time, Aalborg</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-final">
+    <h2>Byg loyalitet der varer</h2>
+    <p>Start dit loyalitetsprogram i dag og se genkøbsraten stige.</p>
+    <a href="#demo" class="button">Få gratis demo nu</a>
+  </section>
 
   <footer class="footer">
     <div class="footer-content">
@@ -227,10 +789,7 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script>
 <script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
 </body>
 </html>

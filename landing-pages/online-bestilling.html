@@ -9,7 +9,7 @@
   <meta property="og:description" content="Stop med at betale 25-30% i kommission. Et online bestillingssystem med fast månedligt beløb.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -31,11 +31,25 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
@@ -48,7 +62,7 @@
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    /* Navigation from landing.html */
+    /* Navigation from landing.html - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -95,69 +109,321 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Hero */
-    .hero { background: var(--color-white); padding: 16rem 4rem 12rem; text-align: center; }
-    .hero h1 { font-family: 'Archivo Black', sans-serif; font-size: 6.4rem; font-weight: 400; line-height: 1; color: #090a0b; margin-bottom: 2.4rem; letter-spacing: -0.03em; text-transform: uppercase; }
-    .hero p { font-size: 2rem; color: var(--color-gray-600); max-width: 70rem; margin: 0 auto 3.2rem; line-height: 1.5; }
-    .hero-buttons { display: flex; gap: 1.6rem; justify-content: center; }
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.6rem 3.2rem; font-size: 1.6rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-dark); color: var(--color-white); transition: all 0.3s ease; cursor: pointer; border: none; }
-    .button:hover { background: var(--color-gray-800); transform: translateY(-2px); }
-    .button.is-secondary { background: transparent; color: var(--color-dark); border: 2px solid var(--color-dark); }
-    .button.is-secondary:hover { background: var(--color-dark); color: var(--color-white); }
+    /* === NEW CONTENT SECTIONS === */
 
-    /* Features Section - Beige */
-    .features { background: var(--color-beige); padding: 10rem 4rem; }
-    .features-container { max-width: var(--container-max); margin: 0 auto; }
-    .features-header { text-align: center; margin-bottom: 6rem; }
-    .features-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.4rem; font-weight: 700; color: #1A1A1A; margin-bottom: 1.6rem; line-height: 1.15; }
-    .features-header p { font-size: 1.8rem; color: var(--color-gray-600); max-width: 70rem; margin: 0 auto; }
-    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; }
-    .feature-card { background: var(--color-white); border-radius: 1.6rem; padding: 3.2rem; transition: transform 0.3s ease; }
-    .feature-card:hover { transform: translateY(-8px); }
-    .feature-icon { width: 5.6rem; height: 5.6rem; background: #343a40; border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
-    .feature-icon svg { width: 2.8rem; height: 2.8rem; color: var(--color-white); }
-    .feature-card h3 { font-size: 2rem; font-weight: 600; color: #1A1A1A; margin-bottom: 1rem; }
-    .feature-card p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.7; }
+    /* Hero - Massive Typography */
+    .hero {
+      background: var(--color-black);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-white);
+      color: var(--color-black);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-white);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: transparent;
+      color: var(--color-white);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(255,255,255,0.2);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-white);
+      border: 3px solid var(--color-white);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+    }
 
-    /* Image + Text Section - White */
-    .image-text { background: var(--color-white); padding: 10rem 4rem; }
-    .image-text-container { max-width: var(--container-max); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .image-text-img { border-radius: 1.6rem; overflow: hidden; }
-    .image-text-img img { width: 100%; height: 50rem; object-fit: cover; }
-    .image-text-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: #090a0b; margin-bottom: 2rem; line-height: 1.2; }
-    .image-text-content p { font-size: 1.7rem; color: #6B7280; line-height: 1.7; margin-bottom: 2.4rem; font-weight: 300; }
-    .image-text-content ul { list-style: none; padding: 0; }
-    .image-text-content li { font-size: 1.6rem; color: #343a40; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 1rem; font-weight: 400; }
-    .image-text-content li:before { content: '✓'; color: var(--color-green-accent); font-weight: 700; font-size: 1.8rem; }
+    /* Process Steps - Beige */
+    .process-steps {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    /* Stats Section - Beige */
-    .stats { background: var(--color-beige); padding: 10rem 4rem; }
-    .stats-container { max-width: var(--container-max); margin: 0 auto; }
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; text-align: center; }
-    .stat-item h3 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: #1A1A1A; margin-bottom: 0.8rem; }
-    .stat-item p { font-size: 1.6rem; color: #6B7280; font-weight: 500; }
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      font-style: italic;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4rem;
+    }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    /* Comparison Table - White */
-    .comparison { background: var(--color-white); padding: 12rem 4rem; }
-    .comparison-container { max-width: 90rem; margin: 0 auto; text-align: center; }
-    .comparison h2 { font-family: 'Archivo Black', sans-serif; font-size: 4.8rem; font-weight: 400; color: #090a0b; margin-bottom: 6rem; text-transform: uppercase; }
-    .comparison-table { background: var(--color-beige); border-radius: 1.6rem; overflow: hidden; }
-    .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; border-bottom: 1px solid rgba(0,0,0,0.08); }
-    .comparison-row:last-child { border-bottom: none; }
-    .comparison-cell { padding: 2.4rem; text-align: left; font-size: 1.6rem; font-weight: 500; }
-    .comparison-cell:nth-child(2), .comparison-cell:nth-child(3) { text-align: center; }
-    .comparison-header { background: #1A1A1A; color: var(--color-white); }
-    .comparison-header .comparison-cell { font-weight: 700; font-size: 1.8rem; }
-    .check { color: var(--color-green-accent); font-size: 2.4rem; }
-    .cross { color: #ef4444; font-size: 2.4rem; }
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: var(--color-white);
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
 
-    /* CTA Section - Beige */
-    .cta { background: var(--color-beige); padding: 10rem 4rem; text-align: center; }
-    .cta h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.4rem; font-weight: 700; color: #1A1A1A; margin-bottom: 2.4rem; line-height: 1.2; }
-    .cta p { font-size: 2rem; color: #6B7280; margin-bottom: 3.2rem; max-width: 70rem; margin-left: auto; margin-right: auto; }
-    .cta-buttons { display: flex; gap: 1.6rem; justify-content: center; }
+    /* Stats Bar - Black */
+    .stats-bar {
+      background: var(--color-black);
+      padding: 8rem 4rem;
+      color: var(--color-white);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    /* Footer */
+    /* CTA Final - Beige */
+    .cta-final {
+      background: var(--color-beige);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-black);
+      color: var(--color-white);
+      border-color: var(--color-black);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-black);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -174,16 +440,19 @@
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .features-grid, .stats-grid { grid-template-columns: 1fr; }
-      .image-text-container { grid-template-columns: 1fr; }
-      .comparison-row { grid-template-columns: 1fr; }
-      .comparison-cell:nth-child(2), .comparison-cell:nth-child(3) { display: none; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .hero-content .subtitle { font-size: 2.4rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .process-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation (exact copy from landing.html) -->
+  <!-- Navigation (UNCHANGED from landing.html) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -230,181 +499,125 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <!-- === NEW REDESIGNED CONTENT === -->
 
-  <!-- Hero Section -->
+  <!-- Hero - Massive Typography -->
   <section class="hero">
-    <h1>Online Bestilling<br>uden Kommission</h1>
-    <p>Stop med at betale 25-30% i kommission til tredjepartsplatforme. Med Flow får du et online bestillingssystem der koster et fast månedligt beløb – ingen procentdel af dit salg.</p>
-    <div class="hero-buttons">
-      <a href="#demo" class="button">Få en gratis demo</a>
-      <a href="priser.html" class="button is-secondary">Se priser</a>
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Stop kommission. Start profit.</h1>
+        <p class="subtitle">Et online bestillingssystem uden den vanvittige 30% kommission til tredjepartsplatforme. Behold alle pengene. Ej dine kunder.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary">Se priser</a>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Features Section - Beige Background -->
-  <section class="features">
-    <div class="features-container">
-      <div class="features-header">
-        <h2>Alt hvad du har brug for<br>til online bestilling</h2>
-        <p>Et komplet bestillingssystem med alle funktioner built-in. Ingen plugins, ingen tredjepartsintegr
-
-ationer.</p>
+  <!-- Process Steps - Beige -->
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Sådan virker det</h2>
       </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-          </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
           <h3>Mobiloptimeret</h3>
-          <p>Over 80% af online ordrer kommer fra mobil. Vores system er bygget mobile-first for perfekt brugeroplevelse på alle enheder.</p>
+          <p>Perfekt brugeroplevelse på alle enheder. 80% af ordrer kommer fra mobil.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-          </div>
-          <h3>Alle betalingsmetoder</h3>
-          <p>Accepter alle kort, MobilePay, Apple Pay og Google Pay. Hurtig checkout med gemte betalingsmetoder.</p>
+        <div class="process-step">
+          <div class="process-number">02</div>
+          <h3>Alle betalinger</h3>
+          <p>MobilePay, Apple Pay, Google Pay og alle kort. Hurtig checkout.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          </div>
+        <div class="process-step">
+          <div class="process-number">03</div>
           <h3>Levering & afhentning</h3>
-          <p>Lad dine kunder vælge mellem levering og afhentning. Automatisk beregning af leveringsomkostninger baseret på afstand.</p>
+          <p>Kunder vælger selv. Automatisk beregning af leveringsomkostninger.</p>
         </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          </div>
+        <div class="process-step">
+          <div class="process-number">04</div>
           <h3>Tidsbestilling</h3>
-          <p>Kunder kan bestille på forhånd eller til senere levering. Du bestemmer hvor lang tid i forvejen der kan bestilles.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          </div>
-          <h3>Menu management</h3>
-          <p>Administrer din menu, priser og tilgængelighed i realtid. Skjul automatisk produkter når de er udsolgte.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          </div>
-          <h3>Analytics & rapporter</h3>
-          <p>Se præcist hvor mange ordrer du får, hvad der sælger bedst, og hvor meget du tjener. Data i realtid.</p>
+          <p>Bestil nu eller senere. Du bestemmer hvor langt i forvejen.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Image + Text Section - White Background -->
-  <section class="image-text">
-    <div class="image-text-container">
-      <div class="image-text-img">
-        <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=800&h=600&fit=crop" alt="Restaurant online bestilling">
+  <!-- Features Grid - White -->
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Alt hvad du har brug for er indbygget</h2>
+        <p>Intet bureaukrati. Intet setup-bøvl. Alt fungerer bare — fra dag 1.</p>
       </div>
-      <div class="image-text-content">
-        <h2>Spar tusindvis om måneden på kommission</h2>
-        <p>De fleste restauranter betaler 25-30% i kommission til tredjepartsplatforme som Just Eat, Wolt og Foodora. Med Flow betaler du kun et fast månedligt beløb – uanset hvor meget du sælger.</p>
-        <ul>
-          <li>Ingen kommission på ordrer</li>
-          <li>Behold 100% af dit salg</li>
-          <li>Du ejer dine kundedata</li>
-          <li>Byg direkte kunderelationer</li>
-        </ul>
+      <div class="features-items">
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Menu Management</h3>
+          <p>Opdater menu, priser og tilgængelighed i realtid. Skjul automatisk udsolgte produkter fra kunderne.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Analytics & Rapporter</h3>
+          <p>Se præcist hvor mange ordrer du får, hvad der sælger bedst, og hvor meget du tjener. Live data hele tiden.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💳</div>
+          <h3>POS Integration</h3>
+          <p>Flow integrerer direkte med de fleste POS-systemer. Ordrer synkroniseres automatisk — ingen manuel indtastning.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📧</div>
+          <h3>Email Marketing</h3>
+          <p>Byg din email-liste direkte fra bestillingssiden. Send automatiske kampagner til kunder der har bestilt før.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Stats Section - Beige Background -->
-  <section class="stats">
+  <!-- Image Split - Beige/White -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=1200&h=900&fit=crop" alt="Restaurant online bestilling">
+      </div>
+      <div class="image-split-content">
+        <h2>Spar tusindvis om måneden</h2>
+        <p>De fleste restauranter betaler 25-30% i kommission til Just Eat, Wolt og Foodora. Med Flow betaler du kun et fast månedligt beløb — uanset hvor meget du sælger.</p>
+        <p>Du beholder 100% af dit salg. Du ejer dine kundedata. Du bygger direkte kunderelationer.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Bar - Black -->
+  <section class="stats-bar">
     <div class="stats-container">
-      <div class="stats-grid">
-        <div class="stat-item">
-          <h3>0%</h3>
-          <p>Kommission</p>
-        </div>
-        <div class="stat-item">
-          <h3>2.5x</h3>
-          <p>Flere ordrer</p>
-        </div>
-        <div class="stat-item">
-          <h3>24t</h3>
-          <p>Setup tid</p>
-        </div>
-        <div class="stat-item">
-          <h3>100%</h3>
-          <p>Dit brand</p>
-        </div>
+      <div class="stat-item">
+        <h3>0%</h3>
+        <p>Kommission på ordrer</p>
+      </div>
+      <div class="stat-item">
+        <h3>2.5x</h3>
+        <p>Flere online ordrer</p>
+      </div>
+      <div class="stat-item">
+        <h3>100%</h3>
+        <p>Du ejer dine kunder</p>
       </div>
     </div>
   </section>
 
-  <!-- Image + Text Section (reversed) - White Background -->
-  <section class="image-text">
-    <div class="image-text-container" style="grid-template-columns: 1fr 1fr;">
-      <div class="image-text-content">
-        <h2>Integration med dit POS-system</h2>
-        <p>Flow integrerer direkte med de fleste POS-systemer. Ordrer synkroniseres automatisk, så du kan styre alt fra ét sted.</p>
-        <ul>
-          <li>Automatisk synkronisering</li>
-          <li>Ingen manuel indtastning</li>
-          <li>Reducér fejl og ventetid</li>
-          <li>Fungerer med de fleste POS</li>
-        </ul>
-      </div>
-      <div class="image-text-img">
-        <img src="https://images.unsplash.com/photo-1556740758-90de374c12ad?w=800&h=600&fit=crop" alt="POS integration">
-      </div>
-    </div>
+  <!-- CTA Final - Beige -->
+  <section class="cta-final">
+    <h2>Klar til at vækste dit salg?</h2>
+    <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse online — uden kommission.</p>
+    <a href="#demo" class="button">Få gratis demo nu</a>
   </section>
 
-  <!-- Comparison Table - White Background -->
-  <section class="comparison">
-    <div class="comparison-container">
-      <h2>Flow vs Tredjepartsplatforme</h2>
-      <div class="comparison-table">
-        <div class="comparison-row comparison-header">
-          <div class="comparison-cell">Funktion</div>
-          <div class="comparison-cell">Flow</div>
-          <div class="comparison-cell">Just Eat, Wolt, Foodora</div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">Kommission</div>
-          <div class="comparison-cell"><span class="check">✓</span> 0%</div>
-          <div class="comparison-cell"><span class="cross">✗</span> 25-30%</div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">Du ejer kundedata</div>
-          <div class="comparison-cell"><span class="check">✓</span></div>
-          <div class="comparison-cell"><span class="cross">✗</span></div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">Direkte marketing til kunder</div>
-          <div class="comparison-cell"><span class="check">✓</span></div>
-          <div class="comparison-cell"><span class="cross">✗</span></div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">100% branded</div>
-          <div class="comparison-cell"><span class="check">✓</span></div>
-          <div class="comparison-cell"><span class="cross">✗</span></div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">Loyalitetsprogram</div>
-          <div class="comparison-cell"><span class="check">✓</span></div>
-          <div class="comparison-cell"><span class="cross">✗</span></div>
-        </div>
-        <div class="comparison-row">
-          <div class="comparison-cell">Mobil app</div>
-          <div class="comparison-cell"><span class="check">✓</span></div>
-          <div class="comparison-cell"><span class="cross">✗</span></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer (exact copy from landing.html) -->
+  <!-- Footer (UNCHANGED from landing.html) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -459,11 +672,8 @@ ationer.</p>
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script>
-
+  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
