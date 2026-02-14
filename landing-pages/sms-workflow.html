@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SMS Workflow til Restaurant | Flow</title>
+  <title>SMS Workflow til Restauranter | Flow</title>
   <meta name="description" content="Automatiser din SMS marketing med 98% åbningsrate. Win-back kampagner, fødselsdagstilbud og ordrebekræftelser.">
-  <meta property="og:title" content="SMS Workflow til Restaurant | Flow">
+  <meta property="og:title" content="SMS Workflow til Restauranter | Flow">
   <meta property="og:description" content="Automatiser din SMS marketing og få flere genbestillinger med 98% åbningsrate.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
+      --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
       --color-green-accent: #22C55E;
-      --color-black: #000000;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -31,26 +31,38 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+
+    /* Scrollbars */
     * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
     *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
-    a { color: inherit; text-decoration: none; }
-    img, video { max-width: 100%; height: auto; display: block; }
-    ul, ol { list-style: none; }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); }
-    .button.button-white:hover { background: var(--color-gray-100); }
-
+    /* Navigation from landing.html - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -67,18 +79,19 @@
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
+    /* Dropdown */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
     .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
@@ -96,25 +109,327 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .hero-section { padding: 16rem 4rem 10rem; background: var(--color-white); text-align: center; }
-    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.1; max-width: 90rem; margin-left: auto; margin-right: auto; text-transform: uppercase; }
-    .hero-section p { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 400; color: var(--color-gray-600); margin-bottom: 3.2rem; max-width: 68rem; margin-left: auto; margin-right: auto; }
+    /* === CONTENT SECTIONS === */
 
-    .content-section { padding: 12rem 4rem; }
-    .content-section.beige { background: var(--color-beige); }
-    .content-section.white { background: var(--color-white); }
-    .section-container { max-width: var(--container-max); margin: 0 auto; }
-    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .section-grid.reverse { direction: rtl; }
-    .section-grid.reverse > * { direction: ltr; }
-    .section-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 2rem; line-height: 1.2; }
-    .section-content p { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
-    .section-content ul { list-style: none; padding: 0; margin: 0 0 2.4rem 0; }
-    .section-content li { font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 500; color: var(--color-gray-700); padding: 1.2rem 0; padding-left: 3rem; position: relative; }
-    .section-content li:before { content: '✓'; position: absolute; left: 0; color: var(--color-green-accent); font-weight: 700; font-size: 1.8rem; }
-    .section-image { border-radius: 2rem; overflow: hidden; }
-    .section-image img { width: 100%; height: auto; object-fit: cover; }
+    /* Hero - Beige Background */
+    .hero {
+      background: var(--color-beige);
+      padding: 16rem 4rem 10rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8rem;
+      align-items: center;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
+    .hero-image {
+      position: relative;
+      height: 60rem;
+      border: 3px solid var(--color-black);
+      overflow: hidden;
+    }
+    .hero-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4rem;
+    }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Stats Section - Dark */
+    .stats-section {
+      background: var(--color-black);
+      padding: 10rem 4rem;
+    }
+    .stats-grid {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* How It Works - Beige */
+    .how-it-works {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .how-it-works-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .how-it-works-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .how-it-works-header h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .workflow-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3rem;
+    }
+    .workflow-step {
+      text-align: center;
+      position: relative;
+    }
+    .workflow-step:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      top: 4rem;
+      right: -2rem;
+      font-size: 3rem;
+      color: var(--color-black);
+      opacity: 0.2;
+    }
+    .workflow-number {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 1.6rem;
+      line-height: 1;
+    }
+    .workflow-step h3 {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+    .workflow-step p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      line-height: 1.5;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Big Quote - White */
+    .big-quote {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-black);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--color-gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* CTA Final - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -129,21 +444,21 @@
     .footer-legal a:hover { color: var(--color-white); }
 
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section h1 { font-size: 3.6rem; }
-      .section-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .section-grid.reverse { direction: ltr; }
+      .hero-container { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr; gap: 4rem; }
+      .workflow-steps { grid-template-columns: 1fr; }
+      .workflow-step:not(:last-child)::after { content: '↓'; top: auto; bottom: -2rem; right: 50%; transform: translateX(50%); }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .footer-content { grid-template-columns: 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <nav class="nav-wrapper">
+  <!-- Navigation (UNCHANGED from landing.html) -->
+  <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
@@ -177,7 +492,7 @@
                 <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
                 <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
                 <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></dropdown></div></a>
               </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
             </div>
           </div>
@@ -189,79 +504,122 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <!-- === REDESIGNED CONTENT === -->
 
-    <section class="hero-section">
-      <h1>SMS Marketing<br>med 98% Åbningsrate</h1>
-      <p>Automatiserede win-back kampagner, fødselsdagstilbud og ordrebekræftelser. Få kunder til at vende tilbage.</p>
-      <div class="hero-buttons">
-        <a href="#demo" class="button">Se hvordan det virker</a>
-        <a href="priser.html" class="button button-white">Se priser</a>
-      </div>
-    </section>
-
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&h=500&fit=crop" alt="Mobile SMS">
-          </div>
-          <div class="section-content">
-            <h2>Win-back kampagner der fungerer</h2>
-            <p>Når en kunde ikke har bestilt på 30 dage, send automatisk en SMS med 20% rabat. Simpelt, effektivt, profitabelt.</p>
-            <ul>
-              <li>98% åbningsrate vs. 20% for email</li>
-              <li>Gennemsnitlig konverteringsrate på 12%</li>
-              <li>ROI på 450% på win-back SMS</li>
-              <li>Automatisk segmentering efter adfærd</li>
-            </ul>
-          </div>
+  <!-- Hero - Beige with Split Layout -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>SMS der konverterer</h1>
+        <p class="subtitle">98% åbningsrate. Automatiserede kampagner der bringer kunder tilbage. Win-back flows, fødselsdage og ordrebekræftelser — alt kører på autopilot.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Start gratis</a>
+          <a href="#how-it-works" class="button is-secondary">Se hvordan</a>
         </div>
       </div>
-    </section>
+      <div class="hero-image">
+        <img src="https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&h=1000&fit=crop" alt="SMS Marketing">
+      </div>
+    </div>
+  </section>
 
-    <section class="content-section white">
-      <div class="section-container">
-        <div class="section-grid reverse">
-          <div class="section-content">
-            <h2>Fødselsdagstilbud automatisk</h2>
-            <p>Send automatisk en personlig fødselsdag-SMS med en gratis dessert eller 15% rabat. Byg loyalitet når det betyder mest.</p>
-            <ul>
-              <li>Automatisk udsendelse på kundens fødselsdag</li>
-              <li>Personlig besked med kundens navn</li>
-              <li>Unik rabatkode per kunde</li>
-              <li>Sporing af indløsningsrate</li>
-            </ul>
-          </div>
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1530651788726-1dbf58eeef1f?w=700&h=500&fit=crop" alt="Birthday celebration">
-          </div>
+  <!-- Stats Section - Dark -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <h3>98%</h3>
+        <p>Åbningsrate på SMS</p>
+      </div>
+      <div class="stat-item">
+        <h3>3.2x</h3>
+        <p>Højere ROI end email</p>
+      </div>
+      <div class="stat-item">
+        <h3>24t</h3>
+        <p>Setup tid fra start til live</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Grid - White -->
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Automatisk. Effektivt. Profitabelt.</h2>
+        <p>Alle SMS workflows du har brug for, built-in og klar til brug.</p>
+      </div>
+      <div class="features-items">
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Win-back Kampagner</h3>
+          <p>Automatisk SMS til kunder der ikke har bestilt i 30 dage. "Vi savner dig! 20% rabat på din næste ordre."</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎂</div>
+          <h3>Fødselsdags-SMS</h3>
+          <p>Send personlige fødselsdagshilsner med eksklusiv rabat. Konverteringsrate på 42%.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📦</div>
+          <h3>Ordrebekræftelser</h3>
+          <p>Automatisk SMS når ordren modtages, er klar til afhentning eller er på vej.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">⏰</div>
+          <h3>Timing Perfekt</h3>
+          <p>Send SMS på det rigtige tidspunkt — frokost-tilbud kl. 11, aftensmad kl. 17.</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=700&h=500&fit=crop" alt="Restaurant order">
-          </div>
-          <div class="section-content">
-            <h2>Ordrebekræftelser og status</h2>
-            <p>Send automatisk ordrebekræftelse, tilberedningstid og leveringsstatus via SMS. Ingen "hvor er min mad?" opkald mere.</p>
-            <ul>
-              <li>Automatisk bekræftelse ved ordre</li>
-              <li>Opdateringer om leveringsstatus</li>
-              <li>SMS når buddet er på vej</li>
-              <li>Reducer support-opkald med 70%</li>
-            </ul>
-          </div>
+  <!-- How It Works - Beige -->
+  <section class="how-it-works">
+    <div class="how-it-works-container">
+      <div class="how-it-works-header">
+        <h2>Sådan virker SMS Workflow</h2>
+      </div>
+      <div class="workflow-steps">
+        <div class="workflow-step">
+          <div class="workflow-number">01</div>
+          <h3>Trigger</h3>
+          <p>Kunden bestiller eller registrerer sig</p>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-number">02</div>
+          <h3>Segment</h3>
+          <p>Automatisk kategorisering baseret på adfærd</p>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-number">03</div>
+          <h3>Timing</h3>
+          <p>SMS sendes på optimalt tidspunkt</p>
+        </div>
+        <div class="workflow-step">
+          <div class="workflow-number">04</div>
+          <h3>Konverter</h3>
+          <p>Kunden klikker og bestiller</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    
+  <!-- Big Quote - White -->
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"SMS-kampagnerne bragte 34% af vores inaktive kunder tilbage. Det er den bedste investering vi har lavet."</blockquote>
+      <div class="big-quote-author">Mette Hansen — Burger Bar Copenhagen</div>
+    </div>
+  </section>
 
+  <!-- CTA Final - Black -->
+  <section class="cta-final">
+    <h2>Klar til at automatisere?</h2>
+    <p>Få din første SMS-kampagne live på under 10 minutter. Ingen kreditkort påkrævet.</p>
+    <a href="#demo" class="button">Start gratis nu</a>
+  </section>
+
+  <!-- Footer (UNCHANGED from landing.html) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -316,11 +674,8 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script></div>
-
+  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');

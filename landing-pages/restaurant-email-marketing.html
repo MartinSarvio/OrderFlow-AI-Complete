@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Restaurant Email Marketing Guide | Flow</title>
-  <meta name="description" content="Lær hvordan du bruger email marketing til at engagere kunder og øge salget i din restaurant. Automasering, segmentering og bedste praksis.">
+  <meta name="description" content="Lær hvordan du bruger email marketing til at engagere kunder og øge salget i din restaurant. Automatisering, segmentering og bedste praksis.">
+  <meta property="og:title" content="Restaurant Email Marketing Guide | Flow">
+  <meta property="og:description" content="Email marketing der konverterer. Automatisering, segmentering og smarte workflows.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -17,6 +19,7 @@
       --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -28,17 +31,39 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* Navigation (from landing.html) */
-    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    /* Scrollbars */
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+
+    /* Navigation from landing.html - UNCHANGED */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
     .nav-left { display: flex; align-items: center; gap: 1.2rem; }
@@ -53,6 +78,8 @@
     .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
+
+    /* Dropdown */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -64,7 +91,7 @@
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
@@ -82,55 +109,293 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Hero */
-    .hero { background: var(--color-beige); padding: 16rem 4rem 12rem; text-align: center; }
-    .hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 6.4rem; font-weight: 700; line-height: 1.1; color: var(--color-dark); margin-bottom: 2.4rem; letter-spacing: -0.02em; }
-    .hero p { font-size: 2rem; font-weight: 400; color: var(--color-gray-700); max-width: 68rem; margin: 0 auto; line-height: 1.6; }
+    /* === CONTENT SECTIONS === */
 
-    /* Image Section */
-    .image-section { background: var(--color-white); padding: 0; }
-    .image-full { width: 100%; max-width: 140rem; margin: 0 auto; }
-    .image-full img { width: 100%; height: 60rem; object-fit: cover; }
+    /* Hero - Black */
+    .hero {
+      background: var(--color-black);
+      padding: 16rem 4rem 12rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 9.6rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-white);
+      color: var(--color-black);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-white);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: transparent;
+      color: var(--color-white);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(255,255,255,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-white);
+      border: 3px solid var(--color-white);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+    }
 
-    /* Content Grid Section */
-    .content-grid-section { background: var(--color-beige); padding: 12rem 4rem; }
-    .content-grid { max-width: var(--container-max); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8rem; align-items: start; }
-    .content-sidebar { position: sticky; top: 12rem; }
-    .content-sidebar h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.2; }
-    .content-main { }
-    .content-block { margin-bottom: 6rem; }
-    .content-block:last-child { margin-bottom: 0; }
-    .content-block h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; }
-    .content-block p { font-size: 1.7rem; color: var(--color-gray-700); line-height: 1.7; margin-bottom: 1.6rem; }
-    .content-block ul { margin-bottom: 1.6rem; padding-left: 2rem; }
-    .content-block li { font-size: 1.7rem; color: var(--color-gray-700); line-height: 1.7; margin-bottom: 1.2rem; list-style: disc; }
+    /* Stats Bar - White */
+    .stats-bar {
+      background: var(--color-white);
+      padding: 6rem 4rem;
+      color: var(--color-black);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-black);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    /* Stats Bar */
-    .stats-bar { background: var(--color-white); padding: 8rem 4rem; }
-    .stats-bar-content { max-width: var(--container-max); margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6rem; text-align: center; }
-    .stat-big { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 1.2rem; line-height: 1; }
-    .stat-text { font-size: 1.8rem; font-weight: 500; color: var(--color-gray-600); }
+    /* Split Content - Beige */
+    .split-content {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .split-text {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .split-text h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .split-text p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
 
-    /* Tips Section */
-    .tips-section { background: var(--color-beige); padding: 12rem 4rem; }
-    .tips-container { max-width: var(--container-max); margin: 0 auto; }
-    .tips-header { text-align: center; margin-bottom: 8rem; }
-    .tips-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2rem; }
-    .tips-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
-    .tip-card { background: var(--color-white); padding: 4rem; border-radius: 2rem; }
-    .tip-number { font-family: 'Archivo Black', sans-serif; font-size: 1.54rem; font-weight: 400; color: var(--color-gray-500); margin-bottom: 2rem; letter-spacing: 0.1em; }
-    .tip-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; }
-    .tip-card p { font-size: 1.6rem; color: var(--color-gray-700); line-height: 1.7; }
+    /* Email Types - White */
+    .email-types {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .email-types-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .email-types-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .email-types-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .email-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4rem;
+    }
+    .email-type-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .email-type-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .email-type-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .email-type-card p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+      margin-bottom: 2.4rem;
+    }
+    .email-type-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .email-type-card li {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      color: var(--color-gray-700);
+      padding-left: 2.4rem;
+      position: relative;
+      margin-bottom: 1rem;
+    }
+    .email-type-card li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+    }
 
-    /* Image+Text Section */
-    .image-text-section { background: var(--color-white); padding: 12rem 4rem; }
-    .image-text-grid { max-width: var(--container-max); margin: 0 auto; display: grid; grid-template-columns: 1.2fr 1fr; gap: 6rem; align-items: center; }
-    .image-text-img { border-radius: 2rem; overflow: hidden; }
-    .image-text-img img { width: 100%; height: 50rem; object-fit: cover; }
-    .image-text-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.2; }
-    .image-text-content p { font-size: 1.8rem; color: var(--color-gray-700); line-height: 1.7; margin-bottom: 2rem; }
+    /* Big Quote - Black */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    /* Footer (from landing.html) */
+    /* CTA Final - Beige */
+    .cta-final {
+      background: var(--color-beige);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-black);
+      color: var(--color-white);
+      border-color: var(--color-black);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-black);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -144,27 +409,20 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    @media (max-width: 1024px) {
-      .content-grid { grid-template-columns: 1fr; gap: 4rem; }
-      .content-sidebar { position: static; }
-      .tips-grid { grid-template-columns: 1fr; }
-      .image-text-grid { grid-template-columns: 1fr; }
-    }
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero h1 { font-size: 4.4rem; }
-      .stats-bar-content { grid-template-columns: 1fr; gap: 4rem; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .split-grid { grid-template-columns: 1fr; }
+      .email-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 480px) {
-      .hero { padding: 12rem 2rem 8rem; }
-      .hero h1 { font-size: 3.6rem; }
-      .footer-content { grid-template-columns: 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation (exact copy from landing.html) -->
+  <!-- Navigation (UNCHANGED - keeping it identical) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -211,121 +469,122 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <!-- === REDESIGNED CONTENT === -->
 
-  <!-- Hero -->
+  <!-- Hero - Black -->
   <section class="hero">
-    <h1>Email marketing<br>der faktisk driver salg</h1>
-    <p>Lær hvordan du bruger email til at engagere dine kunder, øge genbestillinger og bygge loyalitet. Automatisering, segmentering og best practices.</p>
-  </section>
-
-  <!-- Full Image -->
-  <section class="image-section">
-    <div class="image-full">
-      <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1600&h=600&fit=crop" alt="Email marketing workspace">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Email der sælger</h1>
+        <p class="subtitle">Byg din email-liste, automatiser kampagner og konverter subscribers til loyale kunder. 42x ROI på email marketing.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Start gratis</a>
+          <a href="#examples" class="button is-secondary">Se eksempler</a>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Content Grid -->
-  <section class="content-grid-section">
-    <div class="content-grid">
-      <div class="content-sidebar">
-        <h2>Hvad er restaurant email marketing?</h2>
+  <!-- Stats Bar - White -->
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item">
+        <h3>42x</h3>
+        <p>ROI på email marketing</p>
       </div>
-      <div class="content-main">
-        <div class="content-block">
-          <h3>Det er mere end nyhedsbreve</h3>
-          <p>Email marketing for restauranter handler om at bygge en direkte linje til dine kunder. Det er billigere end sociale medier, mere personligt end reklamer, og 100% ejet af dig.</p>
-          <p>Du når dine kunder direkte i deres indbakke — uden at betale platforme, uden algoritmer der skjuler dine beskeder.</p>
-        </div>
-        <div class="content-block">
-          <h3>Hvorfor email virker</h3>
+      <div class="stat-item">
+        <h3>38%</h3>
+        <p>Gennemsnitlig åbningsrate</p>
+      </div>
+      <div class="stat-item">
+        <h3>4.2%</h3>
+        <p>Click-through rate</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Split Content - Beige -->
+  <section class="split-content">
+    <div class="split-grid">
+      <div class="split-text">
+        <h2>Automatiser hele din email marketing</h2>
+        <p>Velkomst-serier, win-back kampagner, fødselsdagstilbud og ordrebekræftelser. Alt kører på autopilot.</p>
+        <p>Flow's intelligente segmentering sender den rigtige besked til den rigtige person på det rigtige tidspunkt.</p>
+      </div>
+      <div class="split-img">
+        <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200&h=900&fit=crop" alt="Email Marketing">
+      </div>
+    </div>
+  </section>
+
+  <!-- Email Types - White -->
+  <section class="email-types">
+    <div class="email-types-container">
+      <div class="email-types-header">
+        <h2>Email workflows der konverterer</h2>
+      </div>
+      <div class="email-grid">
+        <div class="email-type-card">
+          <h3>Velkomst-serie</h3>
+          <p>Automatisk serie til nye subscribers. 3-5 emails over 2 uger der bygger relation og driver første ordre.</p>
           <ul>
-            <li>38x højere ROI end sociale medier</li>
-            <li>Direkte adgang uden at betale for reach</li>
-            <li>Personalisering i stor skala</li>
-            <li>Målbar resultat — åbningsrate, klik, konverteringer</li>
+            <li>Email 1: Velkomst + 15% rabat</li>
+            <li>Email 2: Fortæl din historie</li>
+            <li>Email 3: Best-sellers</li>
+            <li>Email 4: Social proof</li>
+            <li>Email 5: Last chance rabat</li>
+          </ul>
+        </div>
+        <div class="email-type-card">
+          <h3>Win-back kampagner</h3>
+          <p>Automatisk serie til inaktive kunder der ikke har bestilt i 30+ dage.</p>
+          <ul>
+            <li>Dag 30: "Vi savner dig" + 10% rabat</li>
+            <li>Dag 37: Nye menu items</li>
+            <li>Dag 45: 20% rabat (sidste chance)</li>
+            <li>Dag 60: "En sidste ting..."</li>
+          </ul>
+        </div>
+        <div class="email-type-card">
+          <h3>Fødselsdagskampagner</h3>
+          <p>Automatisk fødselsdagshilsen med personlig rabat.</p>
+          <ul>
+            <li>Sendes 7 dage før fødselsdag</li>
+            <li>Personlig besked med navn</li>
+            <li>Eksklusiv rabat (20-30%)</li>
+            <li>Gyldig i 14 dage</li>
+          </ul>
+        </div>
+        <div class="email-type-card">
+          <h3>Bestillings-bekræftelser</h3>
+          <p>Automatisk ordrebekræftelse med upsell muligheder.</p>
+          <ul>
+            <li>Instant ordrebekræftelse</li>
+            <li>"Tilføj til din ordre" upsell</li>
+            <li>Leveringstid-opdateringer</li>
+            <li>Anmeldelse-request efter levering</li>
           </ul>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Stats Bar -->
-  <section class="stats-bar">
-    <div class="stats-bar-content">
-      <div>
-        <div class="stat-big">€42</div>
-        <div class="stat-text">Gennemsnitlig ROI pr. €1 brugt</div>
-      </div>
-      <div>
-        <div class="stat-big">73%</div>
-        <div class="stat-text">Foretrækker email frem for SMS</div>
-      </div>
-      <div>
-        <div class="stat-big">4.3x</div>
-        <div class="stat-text">Flere ordrer fra email-kunder</div>
-      </div>
+  <!-- Big Quote - Black -->
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Email marketing driver 23% af vores samlede omsætning. Flow's automation gjorde det super nemt at komme i gang."</blockquote>
+      <div class="big-quote-author">Christian Nielsen — Taco Republic</div>
     </div>
   </section>
 
-  <!-- Tips Grid -->
-  <section class="tips-section">
-    <div class="tips-container">
-      <div class="tips-header">
-        <h2>6 typer emails du skal sende</h2>
-      </div>
-      <div class="tips-grid">
-        <div class="tip-card">
-          <div class="tip-number">01</div>
-          <h3>Velkomst-serie</h3>
-          <p>De første 3 emails en ny kunde modtager er kritiske. Velkommen dem, fortæl din historie, og giv dem en grund til at bestille hurtigt (f.eks. 15% rabat på første ordre).</p>
-        </div>
-        <div class="tip-card">
-          <div class="tip-number">02</div>
-          <h3>Ugentlige tilbud</h3>
-          <p>Hold din restaurant top-of-mind med ugentlige tilbud. Fremhæv nye menupunkter, sæsonretter eller weekendspecials. Send torsdag aften kl. 17-19.</p>
-        </div>
-        <div class="tip-card">
-          <div class="tip-number">03</div>
-          <h3>Genbestillings-påmindelse</h3>
-          <p>Automatiser emails til kunder der ikke har bestilt i 30 dage. "Vi savner dig! Her er 10% rabat på din næste ordre." Simpelt, men effektivt.</p>
-        </div>
-        <div class="tip-card">
-          <div class="tip-number">04</div>
-          <h3>Fødselsdags-kampagner</h3>
-          <p>Indsaml fødselsdage ved signup. Send en personlig besked med en gratis dessert eller 20% rabat. Folk elsker at føle sig specielle.</p>
-        </div>
-        <div class="tip-card">
-          <div class="tip-number">05</div>
-          <h3>Loyalitets-updates</h3>
-          <p>Hvis du har et loyalitetsprogram, send månedlige updates om point-balance, næste belønning, og eksklusiv adgang til nye retter.</p>
-        </div>
-        <div class="tip-card">
-          <div class="tip-number">06</div>
-          <h3>Events & catering</h3>
-          <p>Promover special events, private dining, eller catering-services. Segmenter til virksomheder og personer med store ordrer i historikken.</p>
-        </div>
-      </div>
-    </div>
+  <!-- CTA Final - Beige -->
+  <section class="cta-final">
+    <h2>Klar til at vokse din email-liste?</h2>
+    <p>Prøv Flow Email Marketing gratis i 14 dage. Ingen kreditkort påkrævet.</p>
+    <a href="#demo" class="button">Start gratis</a>
   </section>
 
-  <!-- Image + Text -->
-  <section class="image-text-section">
-    <div class="image-text-grid">
-      <div class="image-text-img">
-        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop" alt="Email analytics dashboard">
-      </div>
-      <div class="image-text-content">
-        <h2>Automatiser din email marketing med Flow</h2>
-        <p>Flow gør email marketing simpelt. Opsæt dine kampagner én gang, og lad systemet køre automatisk.</p>
-        <p>Segmenter efter ordrehistorik, præferencer og adfærd. Send målrettede beskeder der konverterer.</p>
-        <p>Se nøjagtig hvad der virker med detaljeret analytics — åbningsrate, klikrate, og direkte salg fra hver kampagne.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer (exact copy from landing.html) -->
+  <!-- Footer (UNCHANGED from landing.html) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -380,11 +639,8 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script>
-
+  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');

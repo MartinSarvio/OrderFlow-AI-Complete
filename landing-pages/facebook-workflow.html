@@ -3,23 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facebook Workflow | Flow</title>
+  <title>Facebook Workflow for Restauranter | Flow</title>
   <meta name="description" content="Automatiser din Facebook marketing. Auto-svar på Messenger, kommentarer og anmeldelser. Nå flere kunder.">
-  <meta property="og:title" content="Facebook Workflow | Flow">
+  <meta property="og:title" content="Facebook Workflow for Restauranter | Flow">
   <meta property="og:description" content="Automatiser din Facebook marketing og konverter følgere til kunder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
+      --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
       --color-green-accent: #22C55E;
-      --color-black: #000000;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -30,28 +30,39 @@
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
-      --color-facebook: #1877F2;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
+
+    /* Scrollbars */
     * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
     *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
-    a { color: inherit; text-decoration: none; }
-    img, video { max-width: 100%; height: auto; display: block; }
-    ul, ol { list-style: none; }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); }
-    .button.button-white:hover { background: var(--color-gray-100); }
-
+    /* Navigation from landing.html - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -68,18 +79,19 @@
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
+    /* Dropdown */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
     .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
     .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
@@ -97,25 +109,291 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .hero-section { padding: 16rem 4rem 10rem; background: var(--color-white); text-align: center; }
-    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.1; max-width: 90rem; margin-left: auto; margin-right: auto; text-transform: uppercase; }
-    .hero-section p { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 400; color: var(--color-gray-600); margin-bottom: 3.2rem; max-width: 68rem; margin-left: auto; margin-right: auto; }
+    /* === CONTENT SECTIONS === */
 
-    .content-section { padding: 10rem 4rem; }
-    .content-section.beige { background: var(--color-beige); }
-    .content-section.white { background: var(--color-white); }
-    .section-container { max-width: var(--container-max); margin: 0 auto; }
-    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .section-grid.reverse { direction: rtl; }
-    .section-grid.reverse > * { direction: ltr; }
-    .section-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 2rem; line-height: 1.2; }
-    .section-content p { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
-    .section-content ul { list-style: none; padding: 0; margin: 0 0 2.4rem 0; }
-    .section-content li { font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 500; color: var(--color-gray-700); padding: 1.2rem 0; padding-left: 3rem; position: relative; }
-    .section-content li:before { content: '✓'; position: absolute; left: 0; color: var(--color-green-accent); font-weight: 700; font-size: 1.8rem; }
-    .section-image { border-radius: 2rem; overflow: hidden; }
-    .section-image img { width: 100%; height: auto; object-fit: cover; }
+    /* Hero - White */
+    .hero {
+      background: var(--color-white);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
 
+    /* Two Column Features - Black */
+    .two-col-features {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+    }
+    .two-col-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .two-col-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .two-col-header h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-white);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+    }
+    .col-feature {
+      background: var(--color-white);
+      padding: 5rem;
+      border: 3px solid var(--color-white);
+    }
+    .col-feature h3 {
+      font-family: var(--font-body);
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      letter-spacing: -0.01em;
+    }
+    .col-feature p {
+      font-family: var(--font-body);
+      font-size: 1.9rem;
+      line-height: 1.7;
+      color: var(--color-gray-600);
+      font-weight: 400;
+      margin-bottom: 2.4rem;
+    }
+    .col-feature ul {
+      list-style: none;
+      padding: 0;
+    }
+    .col-feature li {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      color: var(--color-gray-700);
+      padding-left: 2.4rem;
+      position: relative;
+      margin-bottom: 1.2rem;
+    }
+    .col-feature li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+      color: var(--color-black);
+    }
+
+    /* Stats Bar - Beige */
+    .stats-bar {
+      background: var(--color-beige);
+      padding: 8rem 4rem;
+      color: var(--color-black);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 5.6rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-black);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Process Steps - White */
+    .process-steps {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 12rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Big Quote - Black */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* CTA Final - Beige */
+    .cta-final {
+      background: var(--color-beige);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -130,21 +408,20 @@
     .footer-legal a:hover { color: var(--color-white); }
 
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section h1 { font-size: 3.6rem; }
-      .section-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .section-grid.reverse { direction: ltr; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .two-col-grid { grid-template-columns: 1fr; }
+      .stats-container { grid-template-columns: 1fr 1fr; gap: 3rem; }
+      .process-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .footer-content { grid-template-columns: 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <nav class="nav-wrapper">
+  <!-- Navigation (UNCHANGED from landing.html) -->
+  <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
@@ -190,79 +467,117 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <!-- === REDESIGNED CONTENT === -->
 
-    <section class="hero-section">
-      <h1>Automatiser Din<br>Facebook Marketing</h1>
-      <p>Auto-svar på Messenger, kommentarer og anmeldelser. Konverter følgere til kunder mens du sover.</p>
-      <div class="hero-buttons">
-        <a href="#demo" class="button">Se hvordan det virker</a>
-        <a href="priser.html" class="button button-white">Se priser</a>
-      </div>
-    </section>
-
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=700&h=500&fit=crop" alt="Facebook messenger">
-          </div>
-          <div class="section-content">
-            <h2>Auto-svar på Messenger beskeder</h2>
-            <p>Når nogen skriver "Hvad er jeres åbningstider?" eller "Kan jeg bestille?" svar automatisk med relevante oplysninger og link til din menu.</p>
-            <ul>
-              <li>Svar på 95% af standard spørgsmål automatisk</li>
-              <li>Send direkte link til online bestilling</li>
-              <li>Konverter beskeder til bestillinger</li>
-              <li>24/7 kundeservice uden ekstra personale</li>
-            </ul>
-          </div>
+  <!-- Hero - White -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Facebook på autopilot</h1>
+        <p class="subtitle">Automatiser svar på Messenger, kommentarer og anmeldelser. Konverter Facebook-følgere til loyale kunder med intelligente workflows.</p>
+        <div class="hero-buttons">
+          <a href="#demo" class="button">Prøv gratis</a>
+          <a href="#features" class="button is-secondary">Se features</a>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="content-section white">
-      <div class="section-container">
-        <div class="section-grid reverse">
-          <div class="section-content">
-            <h2>Kommenter automatisk på posts</h2>
-            <p>Når folk skriver "Hvor ligger I?" eller "Kan man bestille bord?" på dine posts, svar automatisk med præcis information.</p>
-            <ul>
-              <li>AI forstår kontekst og intent</li>
-              <li>Personlig tone og stil</li>
-              <li>Reagerer på emojis og nøgleord</li>
-              <li>Eskalerer til menneske ved komplekse spørgsmål</li>
-            </ul>
-          </div>
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=700&h=500&fit=crop" alt="Social media engagement">
-          </div>
+  <!-- Two Column Features - Black -->
+  <section class="two-col-features">
+    <div class="two-col-container">
+      <div class="two-col-header">
+        <h2>Automatiser hele din Facebook marketing</h2>
+      </div>
+      <div class="two-col-grid">
+        <div class="col-feature">
+          <h3>Messenger Automation</h3>
+          <p>Besvar beskeder automatisk på Messenger med intelligente AI-svar der lærer af dine tidligere konversationer.</p>
+          <ul>
+            <li>Auto-svar inden for 60 sekunder</li>
+            <li>Personlige beskeder baseret på kundens historik</li>
+            <li>Booking/bestilling direkte i Messenger</li>
+            <li>Escalation til dig ved komplekse spørgsmål</li>
+          </ul>
+        </div>
+        <div class="col-feature">
+          <h3>Review Management</h3>
+          <p>Håndter anmeldelser automatisk med intelligente svar der matcher din brand voice.</p>
+          <ul>
+            <li>Auto-svar på 5-stjernede anmeldelser</li>
+            <li>Smart eskalering af negative reviews</li>
+            <li>Trend-analyse af feedback</li>
+            <li>Automatisk "tak for besøget" til alle anmeldere</li>
+          </ul>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="content-section beige">
-      <div class="section-container">
-        <div class="section-grid">
-          <div class="section-image">
-            <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=700&h=500&fit=crop" alt="Restaurant review">
-          </div>
-          <div class="section-content">
-            <h2>Håndter anmeldelser professionelt</h2>
-            <p>Få notifikationer om nye anmeldelser og svar automatisk med en skabelon der passer til rating.</p>
-            <ul>
-              <li>Forskellige skabeloner for 1-5 stjerner</li>
-              <li>Automatisk tak for positive anmeldelser</li>
-              <li>Hurtig respons på negative anmeldelser</li>
-              <li>Byg bedre online reputation</li>
-            </ul>
-          </div>
+  <!-- Stats Bar - Beige -->
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item">
+        <h3>2.9B</h3>
+        <p>Aktive Facebook brugere</p>
+      </div>
+      <div class="stat-item">
+        <h3>89%</h3>
+        <p>Svarer inden for 1 time</p>
+      </div>
+      <div class="stat-item">
+        <h3>4.2x</h3>
+        <p>Højere engagement rate</p>
+      </div>
+      <div class="stat-item">
+        <h3>24/7</h3>
+        <p>Altid online</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Process Steps - White -->
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Sådan virker det</h2>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
+          <h3>Connect</h3>
+          <p>Tilslut din Facebook side med ét klik</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">02</div>
+          <h3>Train</h3>
+          <p>AI lærer af dine tidligere svar og brand voice</p>
+        </div>
+        <div class="process-step">
+          <div class="process-number">03</div>
+          <h3>Automate</h3>
+          <p>Workflows kører automatisk 24/7</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    
+  <!-- Big Quote - Black -->
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Facebook Workflow automatiserede al vores Messenger-kommunikation. Vi sparer 15 timer om ugen og svarer hurtigere end nogensinde."</blockquote>
+      <div class="big-quote-author">Lise Andersen — Bistro 33</div>
+    </div>
+  </section>
 
+  <!-- CTA Final - Beige -->
+  <section class="cta-final">
+    <h2>Klar til at automatisere?</h2>
+    <p>Start din gratis 14-dages prøveperiode i dag. Ingen kreditkort påkrævet.</p>
+    <a href="#demo" class="button">Start gratis</a>
+  </section>
+
+  <!-- Footer (UNCHANGED from landing.html) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -317,11 +632,8 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script></div>
-
+  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');

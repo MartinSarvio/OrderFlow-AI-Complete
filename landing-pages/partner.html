@@ -3,341 +3,229 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Partner med Flow | Partnerprogram</title>
-  <meta name="description" content="Bliv partner med Flow og hjælp restauranter med at vokse. Agenturpartner, integrationspartner eller henvisningsprogram.">
-  <meta property="og:title" content="Partner med Flow | Partnerprogram">
-  <meta property="og:description" content="Bliv partner med Flow og hjælp restauranter med at vokse. Se vores partnermuligheder.">
+  <title>Partner med Flow | Voks sammen med os</title>
+  <meta name="description" content="Bliv partner med Flow og hjælp restauranter med at vokse. Vi tilbyder reseller-programmer, integrations-partnerskaber og white-label løsninger.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --color-primary: #1A1A1A;
-      --color-primary-hover: #000000;
-      --color-dark: #090a0b;
       --color-white: #ffffff;
-      --color-beige: #F5F0EB;
-      --color-beige-light: #FAF8F5;
-      --color-green-accent: #22C55E;
       --color-black: #000000;
-      --color-gray-50: #f9fafb;
-      --color-gray-100: #f2f0ed;
-      --color-gray-200: #e9ecef;
-      --color-gray-300: #dee2e6;
-      --color-gray-400: #787a7d;
-      --color-gray-500: #6B7280;
+      --color-beige: #F5F0EB;
       --color-gray-600: #6B7280;
-      --color-gray-700: #343a40;
-      --color-gray-800: #212529;
-      --color-gray-900: #9CA3AF;
       --container-max: 1200px;
-      --container-huge: 1400px;
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
-
+    body { font-family: var(--font-body); font-size: 1.6rem; line-height: 1.6; color: #090a0b; background: var(--color-white); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
     a { color: inherit; text-decoration: none; }
-    img, video { max-width: 100%; height: auto; display: block; }
-    ul, ol { list-style: none; }
+    img { max-width: 100%; height: auto; display: block; }
 
-    /* Navigation (exact copy from landing.html) */
-    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
-    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
-    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
-    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; }
     .nav-logo img { height: 2.816rem; width: auto; }
-    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
-    .nav-logo:hover .logo-f { transform: rotate(360deg); }
-    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
-    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
-    .nav-link:hover { background: var(--color-gray-100); }
-    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
-    .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
-    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
-    .nav-cta:hover { background: var(--color-gray-800); }
+    .nav-cta { background: var(--color-black); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; }
 
-    .nav-dropdown { position: relative; }
-    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
-    .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
-    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
-    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
-    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
-    .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
-    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
-    .dropdown-link:hover { background: var(--color-gray-100); }
-    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
-    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
-    .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
-    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
-    .dropdown-right { width: 32rem; flex-shrink: 0; }
-    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
-    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
-    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
-    .dropdown-card-title { font-size: 1.54rem; font-weight: 800; margin-bottom: 0.4rem; }
-    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
-    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
-    .dropdown-cards .dropdown-card { min-height: 11rem; }
-    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
-    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
+    .hero {
+      background: var(--color-black);
+      padding: 16rem 4rem 8rem;
+      color: var(--color-white);
+    }
+    .hero h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      text-transform: uppercase;
+      margin-bottom: 3.2rem;
+      text-align: center;
+      letter-spacing: -0.03em;
+    }
+    .hero p {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: rgba(255,255,255,0.7);
+      font-style: italic;
+      text-align: center;
+      max-width: 90rem;
+      margin: 0 auto;
+    }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
-    .button.button-secondary { background: var(--color-beige); color: var(--color-dark); }
-    .button.button-secondary:hover { background: var(--color-gray-100); }
+    .programs {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .programs-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .programs h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 6rem;
+      text-align: center;
+    }
+    .programs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4rem;
+    }
+    .program-card {
+      background: var(--color-white);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .program-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .program-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .program-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+    }
+    .program-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+    }
 
-    /* Hero section */
-    .hero-section { padding: 16rem 4rem 12rem; background: var(--color-white); text-align: center; }
-    .hero-container { max-width: 90rem; margin: 0 auto; }
-    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2.4rem; text-transform: uppercase; }
-    .hero-section p { font-size: 2rem; font-weight: 300; color: var(--color-gray-700); line-height: 1.6; max-width: 72rem; margin: 0 auto 3.2rem; }
+    .cta {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .cta h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+    }
+    .cta p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      max-width: 70rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .button {
+      display: inline-flex;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: var(--color-black);
+      color: var(--color-white);
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.3s ease;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+    }
 
-    /* Sections */
-    .section { padding: 10rem 4rem; }
-    .section.bg-beige { background: var(--color-beige); }
-    .section.bg-white { background: var(--color-white); }
-    .section-container { max-width: var(--container-max); margin: 0 auto; }
-    .section-header { text-align: center; margin-bottom: 6rem; }
-    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 600; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
-    .section-header p { font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.7; max-width: 68rem; margin: 0 auto; }
-
-    /* Partner cards grid */
-    .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; }
-    .partner-card { background: var(--color-white); padding: 4rem 3rem; border-radius: 2rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .partner-icon { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; margin-bottom: 2rem; color: var(--color-primary); }
-    .partner-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.5rem; }
-    .partner-card p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
-    .partner-card ul { list-style: none; text-align: left; }
-    .partner-card li { font-size: 1.5rem; font-weight: 400; color: var(--color-gray-700); padding: 1rem 0; padding-left: 2.4rem; position: relative; }
-    .partner-card li:before { content: '✓'; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; }
-
-    /* Benefits with image */
-    .benefits-content { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .benefits-image { border-radius: 2rem; overflow: hidden; }
-    .benefits-image img { width: 100%; height: 100%; object-fit: cover; }
-    .benefits-text h3 { font-family: 'Space Grotesk', sans-serif; font-size: 3.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2.4rem; }
-    .benefits-list { display: flex; flex-direction: column; gap: 2rem; }
-    .benefit-item { display: flex; gap: 1.6rem; align-items: flex-start; }
-    .benefit-icon { width: 4.8rem; height: 4.8rem; background: var(--color-beige); border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
-    .benefit-text h4 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
-    .benefit-text p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.6; }
-
-    /* CTA section with image background */
-    .cta-section { padding: 12rem 4rem; background: linear-gradient(to bottom, rgba(0,0,0,0.65), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1556740758-90de374c12ad?w=1600&h=800&fit=crop'); background-size: cover; background-position: center; text-align: center; color: var(--color-white); }
-    .cta-content { max-width: 80rem; margin: 0 auto; }
-    .cta-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.8rem; font-weight: 600; margin-bottom: 2rem; }
-    .cta-content p { font-size: 1.9rem; font-weight: 300; opacity: 0.9; margin-bottom: 3.2rem; line-height: 1.6; }
-    .cta-buttons { display: flex; justify-content: center; gap: 1.6rem; flex-wrap: wrap; }
-
-    /* Footer (exact copy from landing.html) */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
-    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column ul { list-style: none; padding: 0; }
     .footer-column li { margin-bottom: 1.2rem; }
-    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
-    .footer-column a:hover { opacity: 0.7; }
-    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
-    .footer-bottom p { font-size: 1.54rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-column a { color: var(--color-white); font-size: 1.5rem; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; }
+    .footer-bottom p { font-size: 1.54rem; color: rgba(255,255,255,0.5); }
     .footer-legal { display: flex; gap: 2.4rem; }
-    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
-    .footer-legal a:hover { color: var(--color-white); }
+    .footer-legal a { color: rgba(255,255,255,0.5); font-size: 1.54rem; }
 
-    @media (max-width: 1024px) {
-      .partner-grid { grid-template-columns: 1fr; }
-      .benefits-content { grid-template-columns: 1fr; }
-    }
     @media (max-width: 768px) {
-      html { font-size: 56.25%; }
-      .nav-links { display: none; }
-      .hero-section h1 { font-size: 4rem; }
+      .hero h1 { font-size: 5.6rem; }
+      .programs-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 480px) {
-      .nav-container { padding: 1.2rem 2rem; }
-      .footer-content { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <!-- Navigation (exact copy from landing.html) -->
-    <nav class="nav-wrapper">
-      <div class="nav-container">
-        <div class="nav-left">
-          <a href="landing.html" class="nav-logo">
-            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
-          </a>
-          <div class="nav-links">
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
-                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
-                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
-                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
-                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
-                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
-                <a href="sms-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">SMS Workflow</div><div class="dropdown-link-desc">Automatiser SMS-kampagner til dine gæster.</div></div></a>
-                <a href="instagram-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Instagram Workflow</div><div class="dropdown-link-desc">Automatiser din Instagram marketing.</div></div></a>
-                <a href="facebook-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Facebook Workflow</div><div class="dropdown-link-desc">Automatiser din Facebook marketing.</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
-            </div>
-            <a href="priser.html" class="nav-link">Priser</a>
-            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
-                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
-                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
-                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
-                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
-            </div>
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
-                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
-                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
-                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
-            </div>
-          </div>
+  <nav class="nav-wrapper">
+    <div class="nav-container">
+      <a href="landing.html" class="nav-logo">
+        <img src="/images/FLOW-logo-sort-4K.png" alt="Flow">
+      </a>
+      <a href="#demo" class="nav-cta">Få en gratis demo</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <h1>Partner med Flow</h1>
+    <p>Voks sammen med os. Bliv en del af vores partner-økosystem og hjælp restauranter med at tage kontrol over deres digitale fremtid.</p>
+  </section>
+
+  <section class="programs">
+    <div class="programs-container">
+      <h2>Partner-programmer</h2>
+      <div class="programs-grid">
+        <div class="program-card">
+          <div class="program-icon">🤝</div>
+          <h3>Reseller Program</h3>
+          <p>Sælg Flow til restauranter i dit netværk. Få op til 30% kommission på alle salg og recurring revenue.</p>
         </div>
-        <div class="nav-right">
-          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
-          <a href="#demo" class="nav-cta">Få en gratis demo</a>
+        <div class="program-card">
+          <div class="program-icon">🔌</div>
+          <h3>Integration Partner</h3>
+          <p>Byg integrationer mellem Flow og dit produkt. Vi hjælper med dokumentation og support.</p>
+        </div>
+        <div class="program-card">
+          <div class="program-icon">🏷️</div>
+          <h3>White-Label</h3>
+          <p>Sælg Flow under dit eget brand. Perfekt til agencies og marketing bureauer.</p>
         </div>
       </div>
-    </nav>
+    </div>
+  </section>
 
-    <!-- Hero Section with Video Background -->
+  <section class="cta">
+    <h2>Klar til at komme i gang?</h2>
+    <p>Kontakt vores partner-team og hør mere om mulighederne.</p>
+    <a href="mailto:partners@flow.dk" class="button">Kontakt partnere</a>
+  </section>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-container">
-        <h1>Partner med Flow</h1>
-        <p>Hjælp restauranter med at vokse og tjen samtidig. Tre forskellige partnerprogrammer til forskellige behov.</p>
-      </div>
-    </section>
-
-    <!-- Partner Types -->
-    <section class="section bg-beige">
-      <div class="section-container">
-        <div class="section-header">
-          <h2>Tre måder at samarbejde på</h2>
-          <p>Vælg den model der passer til din forretning. Alle priser og kommissioner er faste.</p>
-        </div>
-        <div class="partner-grid">
-          <div class="partner-card">
-            <div class="partner-icon">15%</div>
-            <h3>Bureau / Konsulent</h3>
-            <p>For webbureauer, marketingbureauer og rådgivere der hjælper restauranter med digitalisering.</p>
-            <ul>
-              <li>15% løbende kommission (livsvarig)</li>
-              <li>Du håndterer salg, vi håndterer alt andet</li>
-              <li>Direkte linje til partner manager</li>
-              <li>White-label tilgængelig (+5.000 kr/md)</li>
-            </ul>
-          </div>
-          <div class="partner-card">
-            <div class="partner-icon">API</div>
-            <h3>POS / Integration</h3>
-            <p>For kassesystemer, regnskabssoftware og andre systemer der vil integrere med Flow.</p>
-            <ul>
-              <li>Gratis API-adgang</li>
-              <li>Teknisk onboarding og dokumentation</li>
-              <li>Fælles kunder får rabat</li>
-              <li>Co-marketing ved lancering</li>
-            </ul>
-          </div>
-          <div class="partner-card">
-            <div class="partner-icon">2k</div>
-            <h3>Henvisning</h3>
-            <p>Kender du en restauratør der burde bruge Flow? Henvis dem og få en finders fee.</p>
-            <ul>
-              <li>2.000 kr. per lukket kunde</li>
-              <li>Udbetales når kunden har betalt første måned</li>
-              <li>Ingen minimumskrav</li>
-              <li>Du behøver ikke være involveret i salget</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Benefits with Image -->
-    <section class="section bg-white">
-      <div class="section-container">
-        <div class="benefits-content">
-          <div class="benefits-image">
-            <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=1000&fit=crop" alt="Partnership">
-          </div>
-          <div class="benefits-text">
-            <h3>Hvad du får som partner</h3>
-            <div class="benefits-list">
-              <div class="benefit-item">
-                <div class="benefit-icon">💰</div>
-                <div class="benefit-text">
-                  <h4>Gennemsigtig kompensation</h4>
-                  <p>Bureau: 15% af kundens månedlige betaling - for evigt. Henvisning: 2.000 kr. engangsbeløb per kunde. Udbetaling d. 15. hver måned.</p>
-                </div>
-              </div>
-              <div class="benefit-item">
-                <div class="benefit-icon">📊</div>
-                <div class="benefit-text">
-                  <h4>Komplet dashboard</h4>
-                  <p>Dashboard hvor du ser pipeline og indtjening. Ingen minimumskrav eller tidsbegrænsning.</p>
-                </div>
-              </div>
-              <div class="benefit-item">
-                <div class="benefit-icon">🤝</div>
-                <div class="benefit-text">
-                  <h4>Dedikeret support</h4>
-                  <p>Din egen partner manager med direkte nummer. Prioriteret support for dine kunders problemer.</p>
-                </div>
-              </div>
-              <div class="benefit-item">
-                <div class="benefit-icon">📚</div>
-                <div class="benefit-text">
-                  <h4>Salgsmaterialer</h4>
-                  <p>Pitch decks, case studies og salgsmaterialer klar til brug. Vi tager onboarding-opkald med dine kunder.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer (exact copy from landing.html) -->
-    <footer class="footer">
+  <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
         <h4>PRODUKTER</h4>
         <ul>
           <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
           <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
-        <ul>
-          <li><a href="blog.html">Blog</a></li>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
         </ul>
       </div>
       <div class="footer-column">
@@ -345,16 +233,18 @@
         <ul>
           <li><a href="om-os.html">Om os</a></li>
           <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>RESSOURCER</h4>
+        <ul>
+          <li><a href="blog.html">Blog</a></li>
         </ul>
       </div>
       <div class="footer-column">
         <h4>SUPPORT</h4>
         <ul>
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
         <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
       </div>
@@ -362,26 +252,15 @@
     <div class="footer-bottom">
       <p>2026 © Flow. All rights reserved.</p>
       <div class="footer-legal">
-        <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
         <a href="legal.html#privacy">Privacy</a>
-        <a href="legal.html#terms">Website Terms</a>
-        <a href="legal.html#disclaimer">Disclaimer</a>
       </div>
     </div>
   </footer>
-</div>
-
-<!-- JavaScript -->
-<script></div>
 
   <script>
-    window.addEventListener('scroll', function() {
-      const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) { nav.classList.add('scrolled'); }
-      else { nav.classList.remove('scrolled'); }
+    window.addEventListener('scroll', () => {
+      document.querySelector('.nav-wrapper').classList.toggle('scrolled', window.scrollY > 50);
     });
   </script>
-  <script src="/js/flow-cms-render.js"></script>
-  <script src="/js/privacy-modal.js"></script>
 </body>
 </html>
