@@ -420,6 +420,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED - keeping it identical) -->
@@ -475,7 +477,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Email der sælger</h1>
+        <h1 class="blur-reveal">Email der sælger</h1>
         <p class="subtitle">Byg din email-liste, automatiser kampagner og konverter subscribers til loyale kunder. 42x ROI på email marketing.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Start gratis</a>
@@ -489,15 +491,15 @@
   <section class="stats-bar">
     <div class="stats-container">
       <div class="stat-item">
-        <h3>42x</h3>
+        <h3 class="counter-value" data-count-to="42">42x</h3>
         <p>ROI på email marketing</p>
       </div>
       <div class="stat-item">
-        <h3>38%</h3>
+        <h3 class="counter-value" data-count-to="38">38%</h3>
         <p>Gennemsnitlig åbningsrate</p>
       </div>
       <div class="stat-item">
-        <h3>4.2%</h3>
+        <h3 class="counter-value" data-count-to="4.2">4.2%</h3>
         <p>Click-through rate</p>
       </div>
     </div>
@@ -507,11 +509,11 @@
   <section class="split-content">
     <div class="split-grid">
       <div class="split-text">
-        <h2>Automatiser hele din email marketing</h2>
+        <h2 class="reveal-left">Automatiser hele din email marketing</h2>
         <p>Velkomst-serier, win-back kampagner, fødselsdagstilbud og ordrebekræftelser. Alt kører på autopilot.</p>
         <p>Flow's intelligente segmentering sender den rigtige besked til den rigtige person på det rigtige tidspunkt.</p>
       </div>
-      <div class="split-img">
+      <div class="split-img tilt-card">
         <img src="https://images.unsplash.com/photo-1563986768609-322da13575f3?w=1200&h=900&fit=crop" alt="Email Marketing">
       </div>
     </div>
@@ -521,10 +523,10 @@
   <section class="email-types">
     <div class="email-types-container">
       <div class="email-types-header">
-        <h2>Email workflows der konverterer</h2>
+        <h2 class="reveal-right">Email workflows der konverterer</h2>
       </div>
       <div class="email-grid">
-        <div class="email-type-card">
+        <div class="email-type-card reveal">
           <h3>Velkomst-serie</h3>
           <p>Automatisk serie til nye subscribers. 3-5 emails over 2 uger der bygger relation og driver første ordre.</p>
           <ul>
@@ -535,7 +537,7 @@
             <li>Email 5: Last chance rabat</li>
           </ul>
         </div>
-        <div class="email-type-card">
+        <div class="email-type-card reveal">
           <h3>Win-back kampagner</h3>
           <p>Automatisk serie til inaktive kunder der ikke har bestilt i 30+ dage.</p>
           <ul>
@@ -545,7 +547,7 @@
             <li>Dag 60: "En sidste ting..."</li>
           </ul>
         </div>
-        <div class="email-type-card">
+        <div class="email-type-card reveal">
           <h3>Fødselsdagskampagner</h3>
           <p>Automatisk fødselsdagshilsen med personlig rabat.</p>
           <ul>
@@ -555,7 +557,7 @@
             <li>Gyldig i 14 dage</li>
           </ul>
         </div>
-        <div class="email-type-card">
+        <div class="email-type-card reveal">
           <h3>Bestillings-bekræftelser</h3>
           <p>Automatisk ordrebekræftelse med upsell muligheder.</p>
           <ul>

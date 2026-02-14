@@ -455,6 +455,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from landing.html) -->
@@ -510,11 +512,11 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>SMS der konverterer</h1>
+        <h1 class="blur-reveal">SMS der konverterer</h1>
         <p class="subtitle">98% åbningsrate. Automatiserede kampagner der bringer kunder tilbage. Win-back flows, fødselsdage og ordrebekræftelser — alt kører på autopilot.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Start gratis</a>
-          <a href="#how-it-works" class="button is-secondary">Se hvordan</a>
+          <a href="#demo" class="button magnetic-btn">Start gratis</a>
+          <a href="#how-it-works" class="button is-secondary magnetic-btn">Se hvordan</a>
         </div>
       </div>
       <div class="hero-image">
@@ -527,44 +529,44 @@
   <section class="stats-section">
     <div class="stats-grid">
       <div class="stat-item">
-        <h3>98%</h3>
+        <h3 class="counter-value" data-count-to="98">98%</h3>
         <p>Åbningsrate på SMS</p>
       </div>
       <div class="stat-item">
-        <h3>3.2x</h3>
+        <h3 class="counter-value" data-count-to="3.2">3.2x</h3>
         <p>Højere ROI end email</p>
       </div>
       <div class="stat-item">
-        <h3>24t</h3>
+        <h3 class="counter-value" data-count-to="24">24t</h3>
         <p>Setup tid fra start til live</p>
       </div>
     </div>
   </section>
 
   <!-- Features Grid - White -->
-  <section class="features-grid">
+  <section class="features-grid reveal-left">
     <div class="features-grid-container">
       <div class="features-grid-header">
         <h2>Automatisk. Effektivt. Profitabelt.</h2>
         <p>Alle SMS workflows du har brug for, built-in og klar til brug.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card reveal">
           <div class="feature-icon">🔄</div>
           <h3>Win-back Kampagner</h3>
           <p>Automatisk SMS til kunder der ikke har bestilt i 30 dage. "Vi savner dig! 20% rabat på din næste ordre."</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🎂</div>
           <h3>Fødselsdags-SMS</h3>
           <p>Send personlige fødselsdagshilsner med eksklusiv rabat. Konverteringsrate på 42%.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">📦</div>
           <h3>Ordrebekræftelser</h3>
           <p>Automatisk SMS når ordren modtages, er klar til afhentning eller er på vej.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">⏰</div>
           <h3>Timing Perfekt</h3>
           <p>Send SMS på det rigtige tidspunkt — frokost-tilbud kl. 11, aftensmad kl. 17.</p>
@@ -574,7 +576,7 @@
   </section>
 
   <!-- How It Works - Beige -->
-  <section class="how-it-works">
+  <section class="how-it-works reveal-right">
     <div class="how-it-works-container">
       <div class="how-it-works-header">
         <h2>Sådan virker SMS Workflow</h2>
@@ -616,7 +618,7 @@
   <section class="cta-final">
     <h2>Klar til at automatisere?</h2>
     <p>Få din første SMS-kampagne live på under 10 minutter. Ingen kreditkort påkrævet.</p>
-    <a href="#demo" class="button">Start gratis nu</a>
+    <a href="#demo" class="button magnetic-btn">Start gratis nu</a>
   </section>
 
   <!-- Footer (UNCHANGED from landing.html) -->

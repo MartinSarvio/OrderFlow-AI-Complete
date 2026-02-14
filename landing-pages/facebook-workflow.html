@@ -418,6 +418,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from landing.html) -->
@@ -473,7 +475,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Facebook på autopilot</h1>
+        <h1 class="wave-text">Facebook på autopilot</h1>
         <p class="subtitle">Automatiser svar på Messenger, kommentarer og anmeldelser. Konverter Facebook-følgere til loyale kunder med intelligente workflows.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Prøv gratis</a>
@@ -489,8 +491,8 @@
       <div class="two-col-header">
         <h2>Automatiser hele din Facebook marketing</h2>
       </div>
-      <div class="two-col-grid">
-        <div class="col-feature">
+      <div class="two-col-grid stagger-children">
+        <div class="col-feature reveal">
           <h3>Messenger Automation</h3>
           <p>Besvar beskeder automatisk på Messenger med intelligente AI-svar der lærer af dine tidligere konversationer.</p>
           <ul>
@@ -500,7 +502,7 @@
             <li>Escalation til dig ved komplekse spørgsmål</li>
           </ul>
         </div>
-        <div class="col-feature">
+        <div class="col-feature reveal">
           <h3>Review Management</h3>
           <p>Håndter anmeldelser automatisk med intelligente svar der matcher din brand voice.</p>
           <ul>
@@ -518,19 +520,19 @@
   <section class="stats-bar">
     <div class="stats-container">
       <div class="stat-item">
-        <h3>2.9B</h3>
+        <h3 data-count-to="2.9">2.9B</h3>
         <p>Aktive Facebook brugere</p>
       </div>
       <div class="stat-item">
-        <h3>89%</h3>
+        <h3 data-count-to="89">89%</h3>
         <p>Svarer inden for 1 time</p>
       </div>
       <div class="stat-item">
-        <h3>4.2x</h3>
+        <h3 data-count-to="4.2">4.2x</h3>
         <p>Højere engagement rate</p>
       </div>
       <div class="stat-item">
-        <h3>24/7</h3>
+        <h3 data-count-to="24">24/7</h3>
         <p>Altid online</p>
       </div>
     </div>
@@ -565,8 +567,8 @@
   <!-- Big Quote - Black -->
   <section class="big-quote">
     <div class="big-quote-container">
-      <blockquote>"Facebook Workflow automatiserede al vores Messenger-kommunikation. Vi sparer 15 timer om ugen og svarer hurtigere end nogensinde."</blockquote>
-      <div class="big-quote-author">Lise Andersen — Bistro 33</div>
+      <blockquote class="blur-reveal">"Facebook Workflow automatiserede al vores Messenger-kommunikation. Vi sparer 15 timer om ugen og svarer hurtigere end nogensinde."</blockquote>
+      <div class="big-quote-author blur-reveal">Lise Andersen — Bistro 33</div>
     </div>
   </section>
 
