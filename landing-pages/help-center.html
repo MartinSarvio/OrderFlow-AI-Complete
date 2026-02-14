@@ -3,598 +3,522 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flow Hjælp Center</title>
+  <title>Hjælp Center | Flow</title>
   <meta name="description" content="Flow Hjælp Center - Find svar på dine spørgsmål">
   <link rel="icon" href="/images/FLOW-logo-hvid-4K.png">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --body-bg: rgb(255, 255, 255);
-      --body-bg-rgb: 255, 255, 255;
-      --body-border: rgb(230, 230, 230);
-      --body-primary-color: #1a1a1a;
-      --body-secondary-color: #737373;
-      --card-bg: rgb(255, 255, 255);
-      --card-border-color: rgb(230, 230, 230);
-      --card-border-radius: 21px;
-      --card-border-inner-radius: 16px;
-      --card-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --header-color: hsl(173, 16%, 11%);
-      --primary-color: #2dd4bf;
-      --primary-color-alpha-10: rgba(45, 212, 191, 0.1);
-      --primary-color-alpha-60: rgba(45, 212, 191, 0.6);
-      --footer-bg: rgb(255, 255, 255);
-      --footer-border: rgb(230, 230, 230);
+      --color-primary: #1A1A1A;
+      --color-primary-hover: #000000;
+      --color-dark: #090a0b;
+      --color-white: #ffffff;
+      --color-beige: #F5F0EB;
+      --color-beige-light: #FAF8F5;
+      --color-green-accent: #22C55E;
+      --color-black: #000000;
+      --color-gray-50: #f9fafb;
+      --color-gray-100: #f2f0ed;
+      --color-gray-200: #e9ecef;
+      --color-gray-300: #dee2e6;
+      --color-gray-400: #787a7d;
+      --color-gray-500: #6B7280;
+      --color-gray-600: #6B7280;
+      --color-gray-700: #343a40;
+      --color-gray-800: #212529;
+      --container-max: 1200px;
     }
 
-    *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 62.5%; scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
 
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      color: var(--body-primary-color);
-      background: var(--body-bg);
-      -webkit-font-smoothing: antialiased;
-    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    /* Navigation - EXACT COPY FROM landing.html */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: transparent; border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-white); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: rgba(255,255,255,0.1); }
+    .nav-wrapper.scrolled .nav-link { color: var(--color-dark); }
+    .nav-wrapper.scrolled .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-white); }
+    .nav-wrapper.scrolled .nav-login { color: var(--color-dark); }
+    .nav-cta { background: var(--color-white); color: var(--color-dark); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-100); }
+    .nav-wrapper.scrolled .nav-cta { background: var(--color-dark); color: var(--color-white); }
 
-    img {
-      max-width: 100%;
-      height: auto;
-    }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-white); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
+    .nav-wrapper.scrolled .nav-dropdown-toggle { color: var(--color-dark); }
+    .nav-dropdown-toggle:hover { background: rgba(255,255,255,0.1); }
+    .nav-wrapper.scrolled .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
+    .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
+    .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
+    .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
+    .dropdown-left { flex: 2; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link:hover { background: var(--color-gray-100); }
+    .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
+    .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
+    .dropdown-link-content { flex: 1; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-right { width: 32rem; flex-shrink: 0; }
+    .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
+    .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
+    .dropdown-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 1.6rem; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); color: white; }
+    .dropdown-card-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
+    .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
+    .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Header with background image */
-    .header {
-      display: flex;
-      flex-direction: column;
-      color: var(--header-color);
-    }
-
-    .header-bg {
+    /* Hero with background image */
+    .hero-section {
       position: relative;
+      min-height: 56rem;
       display: flex;
-      flex-grow: 1;
-      flex-direction: column;
-      background: radial-gradient(333.38% 100% at 50% 0%,
-        rgba(var(--body-bg-rgb), 0) 0%,
-        rgba(var(--body-bg-rgb), 0.01) 11.67%,
-        rgba(var(--body-bg-rgb), 0.03) 21.17%,
-        rgba(var(--body-bg-rgb), 0.07) 28.85%,
-        rgba(var(--body-bg-rgb), 0.12) 35.03%,
-        rgba(var(--body-bg-rgb), 0.18) 40.05%,
-        rgba(var(--body-bg-rgb), 0.25) 44.25%,
-        rgba(var(--body-bg-rgb), 0.33) 47.96%,
-        rgba(var(--body-bg-rgb), 0.41) 51.51%,
-        rgba(var(--body-bg-rgb), 0.50) 55.23%,
-        rgba(var(--body-bg-rgb), 0.58) 59.47%,
-        rgba(var(--body-bg-rgb), 0.67) 64.55%,
-        rgba(var(--body-bg-rgb), 0.76) 70.81%,
-        rgba(var(--body-bg-rgb), 0.84) 78.58%,
-        rgba(var(--body-bg-rgb), 0.96) 88.2%,
-        rgba(var(--body-bg-rgb), 1) 100%
-      ),
-      url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=600&fit=crop');
-      background-size: cover;
-      background-position: center;
-      margin-bottom: -144px;
-      padding-bottom: 192px;
-      min-height: 560px;
-    }
-
-    /* Top bar with logo and login */
-    .header-top {
-      display: flex;
+      align-items: center;
       justify-content: center;
-      padding: 24px 40px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.3) 50%, rgba(255,255,255,0.95) 100%), url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1920&h=800&fit=crop') center/cover;
+      padding: 12rem 4rem 6rem;
     }
 
-    .header-top-inner {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      max-width: 960px;
+    .hero-content {
+      max-width: 96rem;
+      margin: 0 auto;
+      text-align: center;
     }
 
-    .header-logo {
-      flex: 1;
+    .hero-content h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 5.6rem;
+      font-weight: 700;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
     }
 
-    .header-logo a {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-      font-size: 24px;
-      color: var(--header-color);
-    }
-
-    .header-logo img {
-      height: 40px;
-      width: auto;
-    }
-
-    .header-nav {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .header-nav a {
-      color: #ffffff;
-      opacity: 0.9;
-      transition: opacity 0.2s;
-    }
-
-    .header-nav a:hover {
-      opacity: 1;
-    }
-
-    /* Main header content */
-    .header-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 0 40px;
-      flex: 1;
-      justify-content: flex-end;
-    }
-
-    .header-main {
-      width: 100%;
-      max-width: 960px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-    }
-
-    .header-title {
-      font-size: 40px;
-      font-weight: 500;
-      margin-bottom: 24px;
-      color: var(--header-color);
-    }
-
-    /* Search bar */
     .search-bar {
       position: relative;
-      width: 100%;
+      max-width: 68rem;
+      margin: 0 auto;
     }
 
     .search-input {
       width: 100%;
-      padding: 16px 16px 16px 48px;
-      font-size: 18px;
+      padding: 2rem 2rem 2rem 5.6rem;
+      font-size: 1.8rem;
       font-family: inherit;
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.2);
-      color: var(--header-color);
+      border: none;
+      border-radius: 1.2rem;
+      background: rgba(255, 255, 255, 0.95);
+      color: var(--color-dark);
       outline: none;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
       transition: all 0.2s ease;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .search-input::placeholder {
-      color: var(--header-color);
-      opacity: 0.7;
-    }
-
-    .search-input:hover {
-      background: rgba(255, 255, 255, 0.27);
     }
 
     .search-input:focus {
       background: white;
-      color: #1a1a1a;
-      border-color: transparent;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
     }
 
-    .search-input:focus::placeholder {
-      color: #737373;
+    .search-input::placeholder {
+      color: var(--color-gray-500);
     }
 
     .search-icon {
       position: absolute;
-      left: 20px;
+      left: 2rem;
       top: 50%;
       transform: translateY(-50%);
-      width: 22px;
-      height: 22px;
-      fill: var(--header-color);
-      pointer-events: none;
-      transition: fill 0.2s;
+      width: 2.4rem;
+      height: 2.4rem;
+      color: var(--color-gray-500);
     }
 
-    .search-input:focus ~ .search-icon {
-      fill: #737373;
-    }
-
-    /* Main content area */
-    .main-content {
-      display: flex;
-      justify-content: center;
-      padding: 0 40px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .content-wrapper {
-      width: 100%;
-      max-width: 960px;
-    }
-
-    /* Articles section */
-    .articles-section {
-      display: flex;
-      flex-direction: column;
-      border-radius: var(--card-border-radius);
-      border: 1px solid var(--card-border-color);
-      background: var(--card-bg);
-      padding: 8px 12px;
-      margin-bottom: 48px;
-    }
-
-    .articles-header {
-      font-size: 20px;
-      font-weight: 500;
-      padding: 8px 12px 16px;
-      color: var(--body-primary-color);
-    }
+    /* Content sections */
+    .section { padding: 10rem 4rem; }
+    .section-white { background: var(--color-white); }
+    .section-beige { background: var(--color-beige); }
+    .container { max-width: var(--container-max); margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 6rem; }
+    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; letter-spacing: -0.02em; }
+    .section-header p { font-size: 1.9rem; color: var(--color-gray-600); line-height: 1.6; }
 
     .articles-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px 24px;
+      gap: 2.4rem;
+      margin-bottom: 4rem;
     }
 
-    .article-link {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      border-radius: var(--card-border-inner-radius);
-      transition: all 0.25s ease;
+    .article-card {
+      background: var(--color-white);
+      padding: 2.4rem;
+      border-radius: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
     }
 
-    .article-link:hover {
-      background: var(--primary-color-alpha-10);
+    .article-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      transform: translateY(-2px);
     }
 
-    .article-link span {
-      font-size: 15px;
-      color: var(--body-primary-color);
-      transition: color 0.25s ease;
+    .article-card h3 {
+      font-size: 1.7rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
     }
 
-    .article-link:hover span {
-      color: var(--primary-color);
+    .article-card p {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.6;
     }
 
-    .article-link svg {
-      width: 16px;
-      height: 16px;
-      fill: var(--primary-color);
-      transform: rotate(-90deg);
-      flex-shrink: 0;
-    }
-
-    /* Collections grid */
     .collections-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 16px 24px;
-      margin-bottom: 96px;
+      gap: 2.4rem;
     }
 
     .collection-card {
+      background: var(--color-white);
+      padding: 3.2rem;
+      border-radius: 1.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 16px 24px;
-      border: 1px solid var(--card-border-color);
-      border-radius: var(--card-border-radius);
-      background: var(--card-bg);
-      box-shadow: var(--card-shadow);
-      transition: all 0.25s ease;
+      gap: 2rem;
     }
 
     .collection-card:hover {
-      border-color: var(--primary-color-alpha-60);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      transform: translateY(-4px);
     }
 
     .collection-icon {
-      width: 60px;
-      height: 60px;
+      width: 6rem;
+      height: 6rem;
+      background: var(--color-beige);
+      border-radius: 1.2rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f5f5f5;
-      border-radius: var(--card-border-radius);
       flex-shrink: 0;
     }
 
-    .collection-icon img {
-      width: 28px;
-      height: 28px;
+    .collection-icon svg {
+      width: 2.8rem;
+      height: 2.8rem;
+      color: var(--color-primary);
     }
 
-    .collection-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .collection-name {
-      font-size: 15px;
+    .collection-info h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.8rem;
       font-weight: 600;
-      color: var(--body-primary-color);
-      transition: color 0.25s ease;
+      color: var(--color-dark);
+      margin-bottom: 0.4rem;
     }
 
-    .collection-card:hover .collection-name {
-      color: var(--primary-color);
+    .collection-info p {
+      font-size: 1.4rem;
+      color: var(--color-gray-600);
     }
 
-    .collection-count {
-      font-size: 14px;
-      color: var(--body-secondary-color);
-    }
+    /* Footer - EXACT COPY FROM landing.html */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
+    .footer-column ul { list-style: none; padding: 0; margin: 0; }
+    .footer-column li { margin-bottom: 1.2rem; }
+    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
+    .footer-column a:hover { opacity: 0.7; }
+    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
+    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
+    .footer-legal { display: flex; gap: 2.4rem; }
+    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-white); }
 
-    /* Footer */
-    .footer {
-      margin-top: 96px;
-      padding: 48px 40px;
-      background: var(--footer-bg);
-      text-align: center;
+    @media (max-width: 1024px) {
+      .articles-grid { grid-template-columns: repeat(2, 1fr); }
+      .collections-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
-    .footer-logo {
-      margin-bottom: 12px;
-    }
-
-    .footer-logo img {
-      height: 32px;
-      display: inline-block;
-      filter: contrast(0.8);
-    }
-
-    .footer-contact {
-      font-size: 14px;
-      color: var(--body-primary-color);
-    }
-
-    .footer-contact a {
-      color: var(--primary-color);
-    }
-
-    /* Responsive */
     @media (max-width: 768px) {
-      .header-bg {
-        min-height: 480px;
-      }
-
-      .header-title {
-        font-size: 28px;
-      }
-
-      .articles-grid,
-      .collections-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .header-nav {
-        display: none;
-      }
-
-      .main-content {
-        padding: 0 20px;
-      }
-
-      .header-top,
-      .header-content {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
+      html { font-size: 56.25%; }
+      .nav-links { display: none; }
+      .articles-grid { grid-template-columns: 1fr; }
+      .collections-grid { grid-template-columns: 1fr; }
+      .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
-<link rel="stylesheet" href="../css/landing-enhancements.css">
 </head>
 <body>
-  <main>
-    <!-- Header -->
-    <header class="header">
-      <div class="header-bg">
-        <section class="header-top">
-          <div class="header-top-inner">
-            <div class="header-logo">
-              <a href="landing.html">
-                <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow Hjælp Center">
-              </a>
+  <div class="page-wrapper">
+    <!-- Navigation - EXACT COPY FROM landing.html -->
+    <nav class="nav-wrapper">
+      <div class="nav-container">
+        <div class="nav-left">
+          <a href="landing.html" class="nav-logo">
+            <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" class="logo-f">
+          </a>
+          <div class="nav-links">
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
+                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
+                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
+                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
+                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
+                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
+                <a href="sms-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">SMS Workflow</div><div class="dropdown-link-desc">Automatiser SMS-kampagner til dine gæster.</div></div></a>
+                <a href="instagram-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Instagram Workflow</div><div class="dropdown-link-desc">Automatiser din Instagram marketing.</div></div></a>
+                <a href="facebook-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Facebook Workflow</div><div class="dropdown-link-desc">Automatiser din Facebook marketing.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
             </div>
-            <nav class="header-nav">
-              <a href="/app">Login til Flow Dashboard</a>
-            </nav>
-          </div>
-        </section>
-
-        <section class="header-content">
-          <div class="header-main">
-            <h1 class="header-title">Hvordan kan vi hjælpe?</h1>
-            <div class="search-bar">
-              <input type="text" class="search-input" placeholder="Søg efter artikler..." id="searchInput">
-              <svg class="search-icon" viewBox="0 0 22 21" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.27485 8.7001C3.27485 5.42781 5.92757 2.7751 9.19985 2.7751C12.4721 2.7751 15.1249 5.42781 15.1249 8.7001C15.1249 11.9724 12.4721 14.6251 9.19985 14.6251C5.92757 14.6251 3.27485 11.9724 3.27485 8.7001ZM9.19985 0.225098C4.51924 0.225098 0.724854 4.01948 0.724854 8.7001C0.724854 13.3807 4.51924 17.1751 9.19985 17.1751C11.0802 17.1751 12.8176 16.5627 14.2234 15.5265L19.0981 20.4013C19.5961 20.8992 20.4033 20.8992 20.9013 20.4013C21.3992 19.9033 21.3992 19.0961 20.9013 18.5981L16.0264 13.7233C17.0625 12.3176 17.6749 10.5804 17.6749 8.7001C17.6749 4.01948 13.8805 0.225098 9.19985 0.225098Z"/>
-              </svg>
+            <a href="priser.html" class="nav-link">Priser</a>
+            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
+                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
+                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
+                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
+                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+            </div>
+            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
+                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
+                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
+                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
+                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
+              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
             </div>
           </div>
-        </section>
+        </div>
+        <div class="nav-right">
+          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
+          <a href="#demo" class="nav-cta">Få en gratis demo</a>
+        </div>
       </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <section class="content-wrapper">
-        <!-- Most viewed articles -->
-        <section class="articles-section">
-          <header class="articles-header">Mest sete artikler</header>
-          <div class="articles-grid">
-            <a href="#" class="article-link">
-              <span>Hvordan kontakter jeg Flow support?</span>
-              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-            </a>
-            <a href="#" class="article-link">
-              <span>Hvordan opretter jeg en rabatkode?</span>
-              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-            </a>
-            <a href="#" class="article-link">
-              <span>Hvordan importerer jeg min kundeliste?</span>
-              <svg viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-            </a>
-          </div>
-        </section>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1>Hvordan kan vi hjælpe?</h1>
+        <div class="search-bar">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <input type="text" class="search-input" placeholder="Søg efter artikler...">
+        </div>
+      </div>
+    </section>
 
-        <!-- Collections grid -->
+    <!-- Popular Articles Section (WHITE) -->
+    <section class="section section-white">
+      <div class="container">
+        <div class="section-header">
+          <h2>Mest sete artikler</h2>
+          <p>Svar på de mest almindelige spørgsmål.</p>
+        </div>
+        <div class="articles-grid">
+          <a href="#" class="article-card">
+            <h3>Hvordan kontakter jeg Flow support?</h3>
+            <p>Ring eller skriv til os - vi svarer inden for 2 timer.</p>
+          </a>
+          <a href="#" class="article-card">
+            <h3>Hvordan opretter jeg en rabatkode?</h3>
+            <p>Opret og administrer rabatkoder til dine kunder.</p>
+          </a>
+          <a href="#" class="article-card">
+            <h3>Hvordan importerer jeg min kundeliste?</h3>
+            <p>Importer eksisterende kunder til Flow med CSV upload.</p>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Collections Section (BEIGE) -->
+    <section class="section section-beige">
+      <div class="container">
+        <div class="section-header">
+          <h2>Alle hjælpeemner</h2>
+          <p>Gennemse efter kategori.</p>
+        </div>
         <div class="collections-grid">
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:other-home/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Generelt</div>
-              <div class="collection-count">3 artikler</div>
+              <h3>Generelt</h3>
+              <p>3 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-wallet/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Gavekort, Kuponer & Loyalitet</div>
-              <div class="collection-count">9 artikler</div>
+              <h3>Gavekort, Kuponer & Loyalitet</h3>
+              <p>9 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:content-book-open/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Menu & Åbningstider</div>
-              <div class="collection-count">24 artikler</div>
+              <h3>Menu & Åbningstider</h3>
+              <p>24 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:people-chat-gets-device-tablet/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Hardware & Fejlfinding</div>
-              <div class="collection-count">3 artikler</div>
+              <h3>Hardware & Fejlfinding</h3>
+              <p>3 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-window/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Hjemmeside</div>
-              <div class="collection-count">13 artikler</div>
+              <h3>Hjemmeside</h3>
+              <p>13 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-banknotes/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Økonomi / Fakturering / Rapporter</div>
-              <div class="collection-count">7 artikler</div>
+              <h3>Økonomi / Fakturering / Rapporter</h3>
+              <p>7 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:arr-sym-shopping-cart/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Ordrer / Levering</div>
-              <div class="collection-count">12 artikler</div>
+              <h3>Ordrer / Levering</h3>
+              <p>12 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:communication-paper-airplane/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Marketing</div>
-              <div class="collection-count">5 artikler</div>
+              <h3>Marketing</h3>
+              <p>5 artikler</p>
             </div>
           </a>
-
           <a href="#" class="collection-card">
             <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-window/000000" alt="">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
             </div>
             <div class="collection-info">
-              <div class="collection-name">Dashboard</div>
-              <div class="collection-count">12 artikler</div>
-            </div>
-          </a>
-
-          <a href="#" class="collection-card">
-            <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:other-devices-device-phone-mobile/000000" alt="">
-            </div>
-            <div class="collection-info">
-              <div class="collection-name">Mobile App</div>
-              <div class="collection-count">1 artikel</div>
-            </div>
-          </a>
-
-          <a href="#" class="collection-card">
-            <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:bizz-fin-building-storefront/000000" alt="">
-            </div>
-            <div class="collection-info">
-              <div class="collection-name">Flow App</div>
-              <div class="collection-count">6 artikler</div>
-            </div>
-          </a>
-
-          <a href="#" class="collection-card">
-            <div class="collection-icon">
-              <img src="https://intercom.help/owner-new-workspace/assets/svg/icon:sft-wifi/000000" alt="">
-            </div>
-            <div class="collection-info">
-              <div class="collection-name">Integrationer</div>
-              <div class="collection-count">2 artikler</div>
+              <h3>Mobile App</h3>
+              <p>6 artikler</p>
             </div>
           </a>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
 
-  </main>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
+    <!-- Footer - EXACT COPY FROM landing.html -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
+          <ul>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+          <a href="legal.html#privacy">Privacy</a>
+          <a href="legal.html#terms">Website Terms</a>
+          <a href="legal.html#disclaimer">Disclaimer</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) { nav.classList.add('scrolled'); }
+      else { nav.classList.remove('scrolled'); }
+    });
+  </script>
 </body>
 </html>

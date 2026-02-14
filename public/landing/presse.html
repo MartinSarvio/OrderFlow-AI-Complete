@@ -9,7 +9,7 @@
   <meta property="og:description" content="Presseinformation om Flow. Find pressemeddelelser og mediekontakt.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -30,128 +30,33 @@
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
       --container-max: 1200px;
-      --container-huge: 1400px;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
+    /* Navigation - EXACT COPY FROM landing.html */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
 
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== NAVIGATION ==================== */
-    .nav-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: var(--color-white);
-      border-bottom: none;
-      transition: background 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 3.2rem;
-      width: auto;
-    }
-
-    /* Logo F rotation on hover */
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1rem 1.8rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
-
-
-    /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -159,18 +64,17 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
     .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
-    .dropdown-link-desc { font-size: 1.3rem; font-weight: 400; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
     .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
@@ -179,77 +83,50 @@
     .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
     .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
     .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Produkt dropdown med to kolonner */
-    .nav-dropdown:first-of-type .dropdown-left {
-      flex: 1;
-      max-width: 100%;
-    }
-
-    .nav-dropdown:first-of-type .dropdown-links {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
-      column-gap: 2rem;
-    }
-
-
-
+    /* Content sections */
+    .section { padding: 10rem 4rem; }
+    .section-white { background: var(--color-white); }
+    .section-beige { background: var(--color-beige); }
+    .container { max-width: var(--container-max); margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 6rem; }
+    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; letter-spacing: -0.02em; }
+    .section-header p { font-size: 2rem; color: var(--color-gray-600); line-height: 1.6; }
 
     .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
     .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); border: none; }
-    .button.button-white:hover { background: var(--color-gray-100); }
-    .button.button-outline { background: transparent; color: var(--color-white); border: 2px solid var(--color-white); }
-    .button.button-outline:hover { background: rgba(255, 255, 255, 0.1); }
 
-    .content-section { background: var(--color-white); padding: 10rem 0; }
-    .content-container { max-width: 1000px; margin: 0 auto; padding: 0 4rem; }
-    .section-intro { text-align: center; margin-bottom: 6rem; }
-    .section-intro h2 { font-size: 4rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
-    .section-intro p { font-size: 1.8rem; color: var(--color-gray-600); line-height: 1.7; }
+    .press-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+    .press-card { background: var(--color-white); padding: 3.2rem; border-radius: 1.6rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .press-card img { width: 100%; height: 20rem; object-fit: cover; border-radius: 1rem; margin-bottom: 2rem; }
+    .press-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
+    .press-card p { font-size: 1.6rem; color: var(--color-gray-600); line-height: 1.7; margin-bottom: 2rem; }
+    .press-card a { color: var(--color-primary); font-weight: 600; font-size: 1.5rem; }
 
-    .press-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4rem; margin-bottom: 8rem; }
-    .press-card { background: var(--color-gray-50); padding: 3rem; border-radius: 2rem; }
-    .press-card h3 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1.5rem; }
-    .press-card p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2rem; }
-    .press-card a { color: var(--color-primary); font-weight: 500; text-decoration: none; }
-    .press-card a:hover { text-decoration: underline; }
+    .releases-list { display: flex; flex-direction: column; gap: 2.4rem; }
+    .release-card { background: var(--color-white); padding: 3.2rem; border-radius: 1.6rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .release-date { font-size: 1.4rem; color: var(--color-gray-500); font-weight: 600; margin-bottom: 1rem; }
+    .release-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
+    .release-card p { font-size: 1.7rem; color: var(--color-gray-700); line-height: 1.7; }
 
-    .press-release { background: var(--color-gray-50); border-radius: 2rem; padding: 3rem; margin-bottom: 2rem; }
-    .press-release .date { font-size: 1.4rem; color: var(--color-gray-500); margin-bottom: 1rem; }
-    .press-release h4 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1rem; }
-    .press-release p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3rem; margin-top: 4rem; }
+    .stat-card { text-align: center; padding: 3rem; background: var(--color-white); border-radius: 1.6rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .stat-card h4 { font-family: 'Archivo Black', sans-serif; font-size: 4.8rem; font-weight: 400; color: var(--color-primary); margin-bottom: 1rem; }
+    .stat-card p { font-size: 1.6rem; color: var(--color-gray-600); }
 
-    .contact-section { background: var(--color-gray-100); padding: 10rem 0; }
-    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4rem; }
-    .contact-card { background: var(--color-white); padding: 3rem; border-radius: 2rem; }
-    .contact-card h4 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
+    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+    .contact-card { background: var(--color-white); padding: 3.2rem; border-radius: 1.6rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .contact-card h4 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2rem; }
     .contact-item { margin-bottom: 2rem; }
     .contact-item:last-child { margin-bottom: 0; }
-    .contact-item h5 { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 0.5rem; }
-    .contact-item p { font-size: 1.5rem; color: var(--color-gray-600); }
-    .contact-item a { color: var(--color-primary); text-decoration: none; }
+    .contact-item h5 { font-size: 1.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.5rem; }
+    .contact-item p { font-size: 1.6rem; color: var(--color-gray-600); }
+    .contact-item a { color: var(--color-primary); font-weight: 600; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3rem; text-align: center; margin-top: 4rem; }
-    .stat-item h4 { font-size: 4rem; font-weight: 700; color: var(--color-primary); margin-bottom: 1rem; }
-    .stat-item p { font-size: 1.5rem; color: var(--color-gray-600); }
-
-    .cta-section { background: var(--color-dark); padding: 10rem 0; }
-    .cta-content { text-align: center; max-width: 80rem; margin: 0 auto; padding: 0 4rem; }
-    .cta-content h2 { font-size: 4.8rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-white); margin-bottom: 2rem; }
-    .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
-
-    .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-    .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-    .pre-footer-cards { display: flex; gap: 2rem; }
-    .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-    .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-    .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-    .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
-
-    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    /* Footer - EXACT COPY FROM landing.html */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -262,31 +139,18 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    @media (max-width: 1024px) {
-      .press-grid { grid-template-columns: 1fr; }
-      .contact-grid { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-    }
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .press-grid, .contact-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
-    @media (max-width: 480px) {
-      .nav-container { padding: 1.2rem 2rem; }
-      .content-container { padding: 0 2rem; }
-      .stats-grid { grid-template-columns: 1fr; }
-      .footer-content { grid-template-columns: 1fr; }
-      .pre-footer-content { flex-direction: column; }
-      .pre-footer-cards { flex-direction: column; width: 100%; }
-    }
   </style>
-<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Navigation -->
+    <!-- Navigation - EXACT COPY FROM landing.html -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -333,74 +197,78 @@
       </div>
     </nav>
 
-        <!-- Press Resources -->
-    <section class="content-section" id="kit">
-      <div class="content-container">
-        <div class="section-intro">
+    <!-- Pressekit Section (WHITE) -->
+    <section class="section section-white" style="padding-top: 15rem;">
+      <div class="container">
+        <div class="section-header">
           <h2>Pressekit</h2>
-          <p>Logoer, billeder og fakta - klar til brug.</p>
+          <p>Alt du behøver til at skrive om Flow.</p>
         </div>
         <div class="press-grid">
           <div class="press-card">
+            <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=400&fit=crop" alt="Pressebilleder">
             <h3>Pressebilleder</h3>
             <p>Billeder af grundlæggere, produkt-screenshots og kontor. PNG og JPG i høj opløsning.</p>
-            <a href="#">Download billeder (ZIP, 45 MB)</a>
+            <a href="#">Download billeder (ZIP, 45 MB) →</a>
           </div>
           <div class="press-card">
+            <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&h=400&fit=crop" alt="Logoer">
             <h3>Logoer</h3>
             <p>Flow logo i sort, hvid og blå. SVG, PNG og EPS format.</p>
-            <a href="#">Download logoer (ZIP, 2 MB)</a>
+            <a href="#">Download logoer (ZIP, 2 MB) →</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Press Releases -->
-    <section class="content-section" id="releases">
-      <div class="content-container">
-        <div class="section-intro">
-          <h2>Nyheder</h2>
-          <p>Seneste opdateringer fra Flow.</p>
+    <!-- Press Releases Section (BEIGE) -->
+    <section class="section section-beige">
+      <div class="container">
+        <div class="section-header">
+          <h2>Seneste nyheder</h2>
+          <p>Opdateringer fra Flow.</p>
         </div>
-        <div class="press-release">
-          <div class="date">8. januar 2026</div>
-          <h4>Flow passerer 340 danske restauranter</h4>
-          <p>Efter tre år har Flow nu 340 aktive restaurantkunder i Danmark. Den gennemsnitlige kunde sparer 12.500 kr. om måneden sammenlignet med tredjepartsplatforme.</p>
-        </div>
-        <div class="press-release">
-          <div class="date">15. november 2025</div>
-          <h4>Flow lancerer integreret leveringsløsning</h4>
-          <p>Flow tilbyder nu kommissionsfri levering gennem et netværk af lokale kurerer. Restauranter betaler en fast pris per levering i stedet for procentdel af ordreværdien.</p>
-        </div>
-        <div class="press-release">
-          <div class="date">3. september 2025</div>
-          <h4>Seed-runde på 8 mio. kr.</h4>
-          <p>Flow lukker en seed-runde på 8 mio. kr. fra Seed Capital og en række business angels med baggrund i restaurationsbranchen. Pengene bruges til produktudvikling og salg.</p>
+        <div class="releases-list">
+          <div class="release-card">
+            <div class="release-date">8. januar 2026</div>
+            <h4>Flow passerer 340 danske restauranter</h4>
+            <p>Efter tre år har Flow nu 340 aktive restaurantkunder i Danmark. Den gennemsnitlige kunde sparer 12.500 kr. om måneden sammenlignet med tredjepartsplatforme.</p>
+          </div>
+          <div class="release-card">
+            <div class="release-date">15. november 2025</div>
+            <h4>Flow lancerer integreret leveringsløsning</h4>
+            <p>Flow tilbyder nu kommissionsfri levering gennem et netværk af lokale kurerer. Restauranter betaler en fast pris per levering i stedet for procentdel af ordreværdien.</p>
+          </div>
+          <div class="release-card">
+            <div class="release-date">3. september 2025</div>
+            <h4>Seed-runde på 8 mio. kr.</h4>
+            <p>Flow lukker en seed-runde på 8 mio. kr. fra Seed Capital og en række business angels med baggrund i restaurationsbranchen. Pengene bruges til produktudvikling og salg.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Stats Section -->
-    <section class="content-section">
-      <div class="content-container">
-        <div class="section-intro">
+    <!-- Stats Section (WHITE) -->
+    <section class="section section-white">
+      <div class="container">
+        <div class="section-header">
           <h2>Fakta om Flow</h2>
           <p>Tal du kan citere.</p>
         </div>
         <div class="stats-grid">
-          <div class="stat-item">
+          <div class="stat-card">
             <h4>340+</h4>
             <p>Restauranter i DK</p>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <h4>18</h4>
             <p>Ansatte</p>
           </div>
-          <div class="stat-item">
-            <h4>2,1 mio</h4>
+          <div class="stat-card">
+            <h4>2,1M</h4>
             <p>Ordrer i 2024</p>
           </div>
-          <div class="stat-item">
+          <div class="stat-card">
             <h4>98%</h4>
             <p>Kundefastholdelse</p>
           </div>
@@ -408,10 +276,10 @@
       </div>
     </section>
 
-    <!-- Contact Section -->
-    <section class="contact-section" id="contact">
-      <div class="content-container">
-        <div class="section-intro">
+    <!-- Contact Section (BEIGE) -->
+    <section class="section section-beige">
+      <div class="container">
+        <div class="section-header">
           <h2>Kontakt</h2>
           <p>Skriv eller ring - vi svarer hurtigt.</p>
         </div>
@@ -458,76 +326,61 @@
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" id="demo">
-      <div class="cta-content">
-        <h2>Skriver du om restaurantteknologi?</h2>
-        <p>Vi kan sætte dig i kontakt med restauratører der bruger Flow - både tilfredse og dem der har haft udfordringer.</p>
-        <div class="hero-buttons">
-          <a href="mailto:presse@flow.dk" class="button button-white">Skriv til os</a>
-          <a href="case-studies.html" class="button button-outline">Læs cases</a>
+    <!-- Footer - EXACT COPY FROM landing.html -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
         </div>
-      </div>
-    </section>
-
-    <!-- Pre-Footer Section -->
-
-    <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h4>PRODUKTER</h4>
-        <ul>
-          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-          <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-        <ul>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-        </ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>VIRKSOMHED</h4>
-        <ul>
-          <li><a href="om-os.html">Om os</a></li>
-          <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+          <a href="legal.html#privacy">Privacy</a>
+          <a href="legal.html#terms">Website Terms</a>
+          <a href="legal.html#disclaimer">Disclaimer</a>
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>SUPPORT</h4>
-        <ul>
-          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-        </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>2026 © Flow. All rights reserved.</p>
-      <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
   </div>
 
   <script>
@@ -537,8 +390,5 @@
       else { nav.classList.remove('scrolled'); }
     });
   </script>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>
