@@ -136,12 +136,7 @@ function highlightActiveFile(path) {
 
 function markTemplateFileUnsaved() {
   templateEditorState.unsaved = true;
-  var statusEl = document.getElementById('te-save-status');
-  if (statusEl) {
-    statusEl.textContent = 'Ugemte ændringer';
-    statusEl.style.display = '';
-    statusEl.style.color = 'var(--warning)';
-  }
+  // Unsaved changes indicator removed per user request
 }
 
 function saveTemplateFile() {

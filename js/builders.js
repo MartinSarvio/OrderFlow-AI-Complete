@@ -834,11 +834,7 @@ function autoSaveAppBuilder() {
 function updateAppBuilderSaveStatus(status) {
   const statusEls = document.querySelectorAll('[id^="app-save-status"]');
   statusEls.forEach(el => {
-    if (status === 'unsaved') {
-      el.textContent = '● Ugemte ændringer';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saving') {
+    if (status === 'saving') {
       el.textContent = '⏳ Gemmer...';
       el.style.display = 'inline';
       el.style.color = 'var(--warning, #f59e0b)';
@@ -3032,11 +3028,7 @@ function autoSaveWebBuilder() {
 function updateWebBuilderSaveStatus(status) {
   const statusEls = document.querySelectorAll('.wb-save-status');
   statusEls.forEach(el => {
-    if (status === 'unsaved') {
-      el.textContent = '● Ugemte ændringer';
-      el.style.display = 'inline';
-      el.style.color = 'var(--warning, #f59e0b)';
-    } else if (status === 'saving') {
+    if (status === 'saving') {
       el.textContent = '⏳ Gemmer...';
       el.style.display = 'inline';
       el.style.color = 'var(--warning, #f59e0b)';
