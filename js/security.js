@@ -139,7 +139,10 @@
     /fetch/i, /network/i, /api\.openai/i, /supabase/i, /Failed to fetch/i,
     /Load failed/i, /NetworkError/i, /AbortError/i, /timeout/i,
     /CORS/i, /403/i, /401/i, /429/i, /ResizeObserver/i,
-    /Script error/i, /ChunkLoadError/i, /Loading chunk/i
+    /Script error/i, /ChunkLoadError/i, /Loading chunk/i,
+    /supabase/i, /AuthApiError/i, /AuthSessionMissing/i,
+    /auth.*error/i, /session.*expired/i, /refresh_token/i,
+    /invalid.*token/i, /JWT/i, /getSession/i
   ];
 
   function isSilentError(message) {
