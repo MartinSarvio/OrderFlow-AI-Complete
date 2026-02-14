@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automatiseret Marketing for Restauranter | Flow</title>
-  <meta name="description" content="Drive salg på autopilot med Flows marketing automation platform bygget til restauranter.">
-  <meta property="og:title" content="Automatiseret Marketing for Restauranter | Flow">
-  <meta property="og:description" content="Drive salg på autopilot med Flows marketing automation platform bygget til restauranter.">
+  <title>Automatiseret Marketing til Restauranter | Flow</title>
+  <meta name="description" content="Automatiser din marketing og få flere kunder uden at løfte en finger. SMS, email og push-notifikationer der virker.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -62,7 +60,7 @@
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    /* Navigation from landing.html - UNCHANGED */
+    /* Navigation - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -194,7 +192,7 @@
       max-width: var(--container-max);
       margin: 0 auto;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 6rem;
       text-align: center;
     }
@@ -360,126 +358,6 @@
       letter-spacing: 0.1em;
     }
 
-    /* Process Steps - Beige */
-    .process-steps {
-      background: var(--color-beige);
-      padding: 12rem 4rem;
-    }
-    .process-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-    .process-header {
-      text-align: center;
-      margin-bottom: 8rem;
-    }
-    .process-header h2 {
-      font-family: var(--font-accent);
-      font-size: 7.2rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      color: var(--color-black);
-      line-height: 1;
-      letter-spacing: -0.02em;
-    }
-    .process-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6rem;
-    }
-    .process-step {
-      text-align: center;
-    }
-    .process-number {
-      font-family: var(--font-accent);
-      font-size: 12rem;
-      font-weight: 900;
-      color: var(--color-black);
-      opacity: 0.15;
-      margin-bottom: 2rem;
-      line-height: 1;
-    }
-    .process-step h3 {
-      font-family: var(--font-body);
-      font-size: 2.8rem;
-      font-weight: 800;
-      color: var(--color-black);
-      margin-bottom: 1.6rem;
-      letter-spacing: -0.01em;
-    }
-    .process-step p {
-      font-family: var(--font-body);
-      font-size: 1.8rem;
-      line-height: 1.6;
-      color: var(--color-gray-600);
-      font-weight: 400;
-    }
-
-    /* Social Proof - White */
-    .social-proof {
-      background: var(--color-white);
-      padding: 12rem 4rem;
-    }
-    .social-proof-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-    .social-proof-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-    .social-proof-header h2 {
-      font-family: var(--font-display);
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-black);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-    }
-    .testimonial-card {
-      background: var(--color-beige);
-      padding: 4.8rem;
-      border: 3px solid var(--color-black);
-      position: relative;
-    }
-    .testimonial-quote {
-      font-family: var(--font-body);
-      font-size: 2rem;
-      font-weight: 500;
-      line-height: 1.5;
-      color: var(--color-black);
-      margin-bottom: 3.2rem;
-    }
-    .testimonial-author-info {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .testimonial-avatar {
-      width: 6.4rem;
-      height: 6.4rem;
-      border-radius: 50%;
-      border: 3px solid var(--color-black);
-    }
-    .testimonial-author-name {
-      font-family: var(--font-body);
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--color-black);
-    }
-    .testimonial-author-title {
-      font-family: var(--font-body);
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--color-gray-600);
-    }
-
     /* CTA Final - Black */
     .cta-final {
       background: var(--color-black);
@@ -535,17 +413,16 @@
       .nav-links { display: none; }
       .hero-content h1 { font-size: 5.6rem; }
       .hero-content .subtitle { font-size: 2.4rem; }
-      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .stats-container { grid-template-columns: 1fr 1fr; gap: 4rem; }
       .image-split-grid { grid-template-columns: 1fr; }
       .features-items { grid-template-columns: 1fr; }
-      .process-grid { grid-template-columns: 1fr; }
-      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
+  <!-- Navigation (UNCHANGED from reference) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -592,11 +469,14 @@
       </div>
     </nav>
 
+  <!-- === NEW REDESIGNED CONTENT === -->
+
+  <!-- Hero - Massive Typography -->
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Marketing der kører sig selv.</h1>
-        <p class="subtitle">Email, SMS og push-kampagner der sender de rigtige tilbud til de rigtige kunder på det rigtige tidspunkt. Automatisk.</p>
+        <h1>Marketing på autopilot</h1>
+        <p class="subtitle">Stop med at bruge timer på manuel marketing. Automatiser SMS, email og push-notifikationer — og få flere kunder på autopilot.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Få gratis demo</a>
           <a href="priser.html" class="button is-secondary">Se priser</a>
@@ -605,136 +485,114 @@
     </div>
   </section>
 
+  <!-- Stats Bar - Dark -->
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>47%</h3><p>åbningsrate</p></div>
-      <div class="stat-item"><h3>12x</h3><p>ROI på marketing</p></div>
-      <div class="stat-item"><h3>0</h3><p>timer manuelt arbejde</p></div>
+      <div class="stat-item">
+        <h3>50%</h3>
+        <p>Mere salg</p>
+      </div>
+      <div class="stat-item">
+        <h3>24/7</h3>
+        <p>Automation</p>
+      </div>
+      <div class="stat-item">
+        <h3>10x</h3>
+        <p>ROI</p>
+      </div>
+      <div class="stat-item">
+        <h3>0</h3>
+        <p>Manuel indsats</p>
+      </div>
     </div>
   </section>
 
+  <!-- Image Split - Beige -->
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=900&fit=crop" alt="Automatiseret Marketing for Restauranter | Flow">
+        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=900&fit=crop" alt="Marketing automation dashboard">
       </div>
       <div class="image-split-content">
-        <h2>Sæt det op én gang. Lad det køre for evigt.</h2>
-        <p>Automatiske kampagner baseret på kundeadfærd — fødselsdage, inaktivitet, første bestilling og mere.</p>
-        <p>Restauranter der bruger marketing automation ser 12x ROI vs. traditionel markedsføring.</p>
+        <h2>Automatiske win-back kampagner</h2>
+        <p>Send automatiske SMS eller email til kunder der ikke har bestilt på 30 dage. Ingen manuel opsætning — det kører bare.</p>
+        <p>Tilføj en rabatkode, et personligt budskab, eller bare en reminder. Du bestemmer.</p>
       </div>
     </div>
   </section>
 
+  <!-- Features Grid - White -->
   <section class="features-grid">
     <div class="features-grid-container">
       <div class="features-grid-header">
-        <h2>Hvad du får</h2>
-        <p>Drive salg på autopilot med Flows marketing automation platform bygget til restauranter.</p>
+        <h2>Automatiser alt</h2>
+        <p>Få flere kunder uden at løfte en finger. Automatiserede kampagner der kører 24/7.</p>
       </div>
       <div class="features-items">
         <div class="feature-card">
-          <div class="feature-icon">📧</div>
-          <h3>Email Automation</h3>
-          <p>Automatiske velkomst-serier, genaktivering og sæson-kampagner.</p>
-        </div>
-        <div class="feature-card">
           <div class="feature-icon">💬</div>
-          <h3>SMS Marketing</h3>
-          <p>Høj-konverterende SMS-beskeder med 98% åbningsrate.</p>
+          <h3>SMS-kampagner</h3>
+          <p>Automatiske SMS til kunder der ikke har bestilt på et stykke tid. Bring dem tilbage med personlige tilbud.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">🎂</div>
-          <h3>Fødselsdagstilbud</h3>
-          <p>Automatiske fødselsdagsrabatter der driver besøg.</p>
+          <div class="feature-icon">📧</div>
+          <h3>Email automation</h3>
+          <p>Automatiske velkomstmails, fødselsdagstilbud og genbestillings-påmindelser.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>A/B Testing</h3>
-          <p>Test forskellige budskaber og find dem der konverterer bedst.</p>
+          <div class="feature-icon">📱</div>
+          <h3>Push-beskeder</h3>
+          <p>Gratis push-notifikationer til kunder med din app. Send tilbud direkte til deres telefon.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🎯</div>
           <h3>Segmentering</h3>
-          <p>Målret kampagner baseret på købshistorik og præferencer.</p>
+          <p>Målret dine kampagner baseret på kunders købshistorik, præferencer og adfærd.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Trigger-baseret</h3>
-          <p>Send beskeder baseret på kundehandlinger i realtid.</p>
+          <div class="feature-icon">🔬</div>
+          <h3>A/B testing</h3>
+          <p>Test forskellige beskeder, tilbud og timings for at finde ud af hvad der virker bedst.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Analytics</h3>
+          <p>Se præcist hvilke kampagner der virker, og hvor mange ordrer de genererer.</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Big Quote - Dark -->
   <section class="big-quote">
     <div class="big-quote-container">
-      <blockquote>"Vi genererer 180.000 kr ekstra omsætning om måneden med automatiserede kampagner. Det tager bogstaveligt 0 timer."</blockquote>
-      <div class="big-quote-author">Jonas Holm — Street Food Market</div>
+      <blockquote>"Flow's automatiserede marketing har øget vores genbestillingsrate med 52%. Vi sender nu automatiske kampagner til kunder der ikke har bestilt i 3 uger — og det fungerer perfekt."</blockquote>
+      <div class="big-quote-author">Thomas Jensen — Sushi Express</div>
     </div>
   </section>
 
-  <section class="process-steps">
-    <div class="process-container">
-      <div class="process-header">
-        <h2>Sådan kommer du i gang</h2>
+  <!-- Image Split 2 - Beige (Reversed) -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-content">
+        <h2>Fødselsdagstilbud på autopilot</h2>
+        <p>Send automatiske fødselsdagstilbud til alle kunder. En simpel rabatkode eller gratis dessert får folk til at fejre med dig.</p>
+        <p>Kampagnen kører 100% automatisk. Du opsætter én gang, og så sender vi til alle nye fødselsdage hver dag.</p>
       </div>
-      <div class="process-grid">
-        <div class="process-step">
-          <div class="process-number">01</div>
-          <h3>Forbind dine kanaler</h3>
-          <p>Email, SMS, push — vi sætter det hele op for dig.</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">02</div>
-          <h3>Vælg dine flows</h3>
-          <p>Velkomst, genaktivering, fødselsdag — aktiver de flows der passer din restaurant.</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">03</div>
-          <h3>Automatisk salg</h3>
-          <p>Kampagnerne kører automatisk og du ser resultaterne i dashboardet.</p>
-        </div>
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=900&fit=crop" alt="Fødselsdag fest">
       </div>
     </div>
   </section>
 
-  <section class="social-proof">
-    <div class="social-proof-container">
-      <div class="social-proof-header">
-        <h2>Hvad vores kunder siger</h2>
-      </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"Jeg brugte at sende nyhedsbreve manuelt hver uge. Nu kører alt automatisk og resultaterne er 5x bedre."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=23" alt="Sara Madsen" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Sara Madsen</div>
-              <div class="testimonial-author-title">Café Central, Helsingør</div>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"Genaktiveringsflow'et alene bringer 40 gamle kunder tilbage hver måned. Det er gratis penge."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=11" alt="Rasmus Poulsen" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Rasmus Poulsen</div>
-              <div class="testimonial-author-title">Indian Flavors, Vejle</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  <!-- CTA Final - Black -->
   <section class="cta-final">
-    <h2>Sæt dit salg på autopilot</h2>
-    <p>Book en gratis demo og se marketing automation i aktion.</p>
+    <h2>Klar til at automatisere?</h2>
+    <p>Få en gratis demo og se hvordan automatiseret marketing kan drive mere salg uden manuel indsats.</p>
     <a href="#demo" class="button">Få gratis demo nu</a>
   </section>
 
+  <!-- Footer (UNCHANGED) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -790,6 +648,16 @@
     </div>
   </footer>
 
-<script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
+  <!-- JavaScript -->
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+  </script>
 </body>
 </html>

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zero-Commission Delivery | Flow</title>
-  <meta name="description" content="Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.">
-  <meta property="og:title" content="Zero-Commission Delivery | Flow">
-  <meta property="og:description" content="Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.">
+  <title>Kommissionsfri Levering | Flow</title>
+  <meta name="description" content="Slip for dyre leveringsplatforme. Med Flows kommissionsfri levering beholder du 100% af dit salg og ejer dine kunder.">
+  <meta property="og:title" content="Kommissionsfri Levering | Flow">
+  <meta property="og:description" content="Slip for dyre leveringsplatforme. Behold 100% af dit salg og ej dine kunder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -62,7 +62,7 @@
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    /* Navigation from landing.html - UNCHANGED */
+    /* Navigation - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -360,126 +360,6 @@
       letter-spacing: 0.1em;
     }
 
-    /* Process Steps - Beige */
-    .process-steps {
-      background: var(--color-beige);
-      padding: 12rem 4rem;
-    }
-    .process-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-    .process-header {
-      text-align: center;
-      margin-bottom: 8rem;
-    }
-    .process-header h2 {
-      font-family: var(--font-accent);
-      font-size: 7.2rem;
-      font-weight: 900;
-      text-transform: uppercase;
-      color: var(--color-black);
-      line-height: 1;
-      letter-spacing: -0.02em;
-    }
-    .process-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6rem;
-    }
-    .process-step {
-      text-align: center;
-    }
-    .process-number {
-      font-family: var(--font-accent);
-      font-size: 12rem;
-      font-weight: 900;
-      color: var(--color-black);
-      opacity: 0.15;
-      margin-bottom: 2rem;
-      line-height: 1;
-    }
-    .process-step h3 {
-      font-family: var(--font-body);
-      font-size: 2.8rem;
-      font-weight: 800;
-      color: var(--color-black);
-      margin-bottom: 1.6rem;
-      letter-spacing: -0.01em;
-    }
-    .process-step p {
-      font-family: var(--font-body);
-      font-size: 1.8rem;
-      line-height: 1.6;
-      color: var(--color-gray-600);
-      font-weight: 400;
-    }
-
-    /* Social Proof - White */
-    .social-proof {
-      background: var(--color-white);
-      padding: 12rem 4rem;
-    }
-    .social-proof-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-    .social-proof-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-    .social-proof-header h2 {
-      font-family: var(--font-display);
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-black);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-    }
-    .testimonial-card {
-      background: var(--color-beige);
-      padding: 4.8rem;
-      border: 3px solid var(--color-black);
-      position: relative;
-    }
-    .testimonial-quote {
-      font-family: var(--font-body);
-      font-size: 2rem;
-      font-weight: 500;
-      line-height: 1.5;
-      color: var(--color-black);
-      margin-bottom: 3.2rem;
-    }
-    .testimonial-author-info {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .testimonial-avatar {
-      width: 6.4rem;
-      height: 6.4rem;
-      border-radius: 50%;
-      border: 3px solid var(--color-black);
-    }
-    .testimonial-author-name {
-      font-family: var(--font-body);
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--color-black);
-    }
-    .testimonial-author-title {
-      font-family: var(--font-body);
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--color-gray-600);
-    }
-
     /* CTA Final - Black */
     .cta-final {
       background: var(--color-black);
@@ -538,14 +418,13 @@
       .stats-container { grid-template-columns: 1fr; gap: 4rem; }
       .image-split-grid { grid-template-columns: 1fr; }
       .features-items { grid-template-columns: 1fr; }
-      .process-grid { grid-template-columns: 1fr; }
-      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
+  <!-- Navigation (UNCHANGED from reference) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -592,149 +471,126 @@
       </div>
     </nav>
 
+  <!-- === NEW REDESIGNED CONTENT === -->
+
+  <!-- Hero - Massive Typography -->
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Levering. Nul provision.</h1>
-        <p class="subtitle">Stop med at betale 30% til Wolt og Just Eat. Med Flow beholder du hele din omsætning — og dine kunder.</p>
+        <h1>0% kommission. 100% dit salg.</h1>
+        <p class="subtitle">Slip for dyre leveringsplatforme. Med Flow beholder du 100% af dit salg og ejer dine kunder. Ingen provision til Wolt eller Just Eat.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få gratis demo</a>
+          <a href="#demo" class="button">Beregn besparelse</a>
           <a href="priser.html" class="button is-secondary">Se priser</a>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Stats Bar - Dark -->
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>0%</h3><p>provision</p></div>
-      <div class="stat-item"><h3>+30%</h3><p>højere margin</p></div>
-      <div class="stat-item"><h3>25min</h3><p>gns. leveringstid</p></div>
+      <div class="stat-item">
+        <h3>0%</h3>
+        <p>Kommission</p>
+      </div>
+      <div class="stat-item">
+        <h3>45 kr</h3>
+        <p>Pr. levering</p>
+      </div>
+      <div class="stat-item">
+        <h3>100%</h3>
+        <p>Dine kunder</p>
+      </div>
     </div>
   </section>
 
+  <!-- Image Split - Beige -->
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=1200&h=900&fit=crop" alt="Zero-Commission Delivery | Flow">
+        <img src="https://images.unsplash.com/photo-1526367790999-0150786686a2?w=1200&h=900&fit=crop" alt="Levering cyklist">
       </div>
       <div class="image-split-content">
-        <h2>Dine kunder. Din omsætning.</h2>
-        <p>Tredjepartsplatforme ejer dine kunder og tager 30% af hver ordre. Med Flow ejer du relationen.</p>
-        <p>En restaurant med 200.000 kr/md i delivery sparer 60.000 kr/md med zero-commission.</p>
+        <h2>Dine egne bude eller vores netværk</h2>
+        <p>Har du allerede en bud eller to? Perfekt. Vi giver dig rute-planlægning og live tracking. Ingen bude? Vi kobler dig på chauffører i dit område.</p>
+        <p>Du betaler en fast pris per levering — ikke procent af ordren. Simpelt og forudsigeligt.</p>
       </div>
     </div>
   </section>
 
+  <!-- Features Grid - White -->
   <section class="features-grid">
     <div class="features-grid-container">
       <div class="features-grid-header">
-        <h2>Hvad du får</h2>
-        <p>Levering uden provision. Behold 100% af din omsætning med Flows delivery-løsning.</p>
+        <h2>Sådan virker det</h2>
+        <p>Kommissionsfri levering betyder du beholder alt. Vores flade pris gør det forudsigeligt.</p>
       </div>
       <div class="features-items">
         <div class="feature-card">
           <div class="feature-icon">💰</div>
-          <h3>Ingen Provision</h3>
-          <p>Behold 100% af din omsætning. Ingen skjulte gebyrer.</p>
+          <h3>Fast pris per levering</h3>
+          <p>Betale den samme pris om ordren er på 100 kr eller 2.000 kr. Ingen procentbaseret kommission.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📍</div>
+          <h3>Real-time tracking</h3>
+          <p>Kunder kan følge deres ordre live på kortet. Push-notifikationer ved afhentning og levering.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🗺️</div>
-          <h3>Smart Routing</h3>
-          <p>Intelligent ruteoptimering der minimerer leveringstid og brændstof.</p>
+          <h3>Rute-optimering</h3>
+          <p>Vores system finder den hurtigste rute og minimerer ventetid for buden.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔗</div>
+          <h3>POS-integration</h3>
+          <p>Integrerer direkte med dit POS-system. Buddet bliver tilkaldt præcis når maden er klar.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📱</div>
-          <h3>Real-time Tracking</h3>
-          <p>Kunder kan følge deres levering live på et kort.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🚴</div>
-          <h3>Fleksible Chauffører</h3>
-          <p>Brug dine egne chauffører eller vores netværk af uafhængige.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📦</div>
-          <h3>Ordrehåndtering</h3>
-          <p>Automatisk ordretildeling og status-opdateringer til køkkenet.</p>
+          <h3>Bud-app</h3>
+          <p>Dine bude får en professionel app med GPS-navigation og ordre-håndtering.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Delivery Analytics</h3>
-          <p>Track leveringstider, kundetilfredshed og chauffør-performance.</p>
+          <h3>Analytics</h3>
+          <p>Se præcis hvor meget du sparer sammenlignet med Wolt/Just Eat. Gennemsnitlig leveringstid, ratings, mm.</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Big Quote - Dark -->
   <section class="big-quote">
     <div class="big-quote-container">
-      <blockquote>"Vi sparede 72.000 kr om måneden ved at skifte fra Wolt til Flows delivery. Vores kunder bemærkede ingen forskel."</blockquote>
-      <div class="big-quote-author">Frederik Lund — Dragon Wok</div>
+      <blockquote>"Vi sparede 38.000 kr/md ved at skifte fra Wolt til Flow. Vi har fuld kontrol, bedre margin og ejer vores kunde-data."</blockquote>
+      <div class="big-quote-author">Henrik Poulsen — Thai Street Food</div>
     </div>
   </section>
 
-  <section class="process-steps">
-    <div class="process-container">
-      <div class="process-header">
-        <h2>Sådan kommer du i gang</h2>
+  <!-- Image Split 2 - Beige (Reversed) -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-content">
+        <h2>100% af salget går til dig</h2>
+        <p>En pizza til 100 kr eller en catering-ordre til 2.000 kr — leveringsprisen er den samme. Ingen procentbaseret kommission betyder du beholder hele fortjenesten.</p>
+        <p>Start småt og skalér op. Ingen minimumskrav eller lange kontrakter.</p>
       </div>
-      <div class="process-grid">
-        <div class="process-step">
-          <div class="process-number">01</div>
-          <h3>Opsæt leveringszone</h3>
-          <p>Definer dit leveringsområde og minimum ordrebeløb.</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">02</div>
-          <h3>Tilslut chauffører</h3>
-          <p>Brug dine egne eller aktiver vores chauffør-netværk.</p>
-        </div>
-        <div class="process-step">
-          <div class="process-number">03</div>
-          <h3>Start levering</h3>
-          <p>Modtag ordrer direkte og lever med 0% provision.</p>
-        </div>
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=1200&h=900&fit=crop" alt="Restaurant mad">
       </div>
     </div>
   </section>
 
-  <section class="social-proof">
-    <div class="social-proof-container">
-      <div class="social-proof-header">
-        <h2>Hvad vores kunder siger</h2>
-      </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"30% provision til Wolt var en dræber. Med Flow beholder vi alt og vores kunder bestiller direkte hos os."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=7" alt="Henrik Andersen" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Henrik Andersen</div>
-              <div class="testimonial-author-title">Pizza Express, Roskilde</div>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"Real-time tracking gør at kunderne stoler på vores levering. Vi har 4.8 i kundetilfredshed."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=25" alt="Julie Thomsen" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Julie Thomsen</div>
-              <div class="testimonial-author-title">Sund & Go, Frederiksberg</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
+  <!-- CTA Final - Black -->
   <section class="cta-final">
-    <h2>Stop med at betale provision</h2>
-    <p>Skift til zero-commission delivery i dag og behold din omsætning.</p>
-    <a href="#demo" class="button">Få gratis demo nu</a>
+    <h2>Klar til at droppe kommissionen?</h2>
+    <p>Vi tager dine nuværende leveringstal og viser dig hvad du reelt kan spare. Ingen forpligtelser.</p>
+    <a href="#demo" class="button">Beregn din besparelse nu</a>
   </section>
 
+  <!-- Footer (UNCHANGED) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -790,6 +646,16 @@
     </div>
   </footer>
 
-<script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
+  <!-- JavaScript -->
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+  </script>
 </body>
 </html>

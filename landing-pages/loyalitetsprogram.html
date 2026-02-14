@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loyalitetsprogram for Restauranter | Flow</title>
-  <meta name="description" content="Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.">
-  <meta property="og:title" content="Loyalitetsprogram for Restauranter | Flow">
-  <meta property="og:description" content="Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.">
+  <title>Loyalitetsprogram til Restauranter | Flow</title>
+  <meta name="description" content="Byg kundeloyalitet med et automatiseret belønningssystem. Få flere tilbagevendende kunder og øg din omsætning.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -62,7 +60,7 @@
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    /* Navigation from landing.html - UNCHANGED */
+    /* Navigation - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -415,71 +413,6 @@
       font-weight: 400;
     }
 
-    /* Social Proof - White */
-    .social-proof {
-      background: var(--color-white);
-      padding: 12rem 4rem;
-    }
-    .social-proof-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-    .social-proof-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-    .social-proof-header h2 {
-      font-family: var(--font-display);
-      font-size: 5.6rem;
-      font-weight: 400;
-      color: var(--color-black);
-      margin-bottom: 2rem;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
-    }
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-    }
-    .testimonial-card {
-      background: var(--color-beige);
-      padding: 4.8rem;
-      border: 3px solid var(--color-black);
-      position: relative;
-    }
-    .testimonial-quote {
-      font-family: var(--font-body);
-      font-size: 2rem;
-      font-weight: 500;
-      line-height: 1.5;
-      color: var(--color-black);
-      margin-bottom: 3.2rem;
-    }
-    .testimonial-author-info {
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-    }
-    .testimonial-avatar {
-      width: 6.4rem;
-      height: 6.4rem;
-      border-radius: 50%;
-      border: 3px solid var(--color-black);
-    }
-    .testimonial-author-name {
-      font-family: var(--font-body);
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: var(--color-black);
-    }
-    .testimonial-author-title {
-      font-family: var(--font-body);
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--color-gray-600);
-    }
-
     /* CTA Final - Black */
     .cta-final {
       background: var(--color-black);
@@ -539,13 +472,13 @@
       .image-split-grid { grid-template-columns: 1fr; }
       .features-items { grid-template-columns: 1fr; }
       .process-grid { grid-template-columns: 1fr; }
-      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
+  <!-- Navigation (UNCHANGED) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -592,11 +525,14 @@
       </div>
     </nav>
 
+  <!-- === NEW REDESIGNED CONTENT === -->
+
+  <!-- Hero - Massive Typography -->
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Gæster der kommer igen. Og igen.</h1>
-        <p class="subtitle">Et intelligent loyalitetsprogram der belønner dine bedste kunder og driver genkøb. Ingen klippekort — bare resultater.</p>
+        <h1>Beløn loyalitet. Automatisk.</h1>
+        <p class="subtitle">Byg kundeloyalitet med et automatiseret belønningssystem der kører af sig selv. Point, belønninger og VIP-niveauer — alt indbygget.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Få gratis demo</a>
           <a href="priser.html" class="button is-secondary">Se priser</a>
@@ -605,136 +541,136 @@
     </div>
   </section>
 
+  <!-- Stats Bar - Dark -->
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>3.2x</h3><p>flere besøg per kunde</p></div>
-      <div class="stat-item"><h3>+42%</h3><p>højere ordreværdi</p></div>
-      <div class="stat-item"><h3>68%</h3><p>genkøbsrate</p></div>
+      <div class="stat-item">
+        <h3>67%</h3>
+        <p>Højere repeat rate</p>
+      </div>
+      <div class="stat-item">
+        <h3>3x</h3>
+        <p>Flere ordrer per kunde</p>
+      </div>
+      <div class="stat-item">
+        <h3>100%</h3>
+        <p>Automatiseret</p>
+      </div>
     </div>
   </section>
 
+  <!-- Image Split - Beige -->
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=900&fit=crop" alt="Loyalitetsprogram for Restauranter | Flow">
+        <img src="https://images.unsplash.com/photo-1559305616-3f99cd43e353?w=1200&h=900&fit=crop" alt="Restaurant gæster">
       </div>
       <div class="image-split-content">
-        <h2>Loyalitet bygget på data, ikke klippekort</h2>
-        <p>Automatisk points-optjening, personaliserede belønninger og real-time tracking for dine gæster.</p>
-        <p>Det koster 5x mere at skaffe en ny kunde end at beholde en eksisterende. Invester i loyalitet.</p>
+        <h2>Point ved hver ordre</h2>
+        <p>Kunder optjener automatisk point hver gang de bestiller. Jo mere de køber, desto mere får de tilbage.</p>
+        <p>Du bestemmer hvor mange point per krone, og hvad de kan indløses til. Alt styres fra dit dashboard.</p>
       </div>
     </div>
   </section>
 
+  <!-- Features Grid - White -->
   <section class="features-grid">
     <div class="features-grid-container">
       <div class="features-grid-header">
-        <h2>Hvad du får</h2>
-        <p>Beløn dine faste gæster og byg loyalitet med Flows intelligente loyalitetsprogram.</p>
+        <h2>Byg loyalitet</h2>
+        <p>Få flere tilbagevendende kunder med et automatiseret belønningssystem der virker.</p>
       </div>
       <div class="features-items">
         <div class="feature-card">
           <div class="feature-icon">⭐</div>
-          <h3>Points System</h3>
-          <p>Automatisk optjening ved hvert køb. Kunder kan indløse points til rabatter og gratis retter.</p>
+          <h3>Automatiske belønninger</h3>
+          <p>Kunder indløser point til rabatter, gratis retter eller andre belønninger du vælger.</p>
         </div>
         <div class="feature-card">
-          <div class="feature-icon">🎁</div>
-          <h3>Personlige Belønninger</h3>
-          <p>AI-drevne tilbud baseret på kundens historik og præferencer.</p>
+          <div class="feature-icon">🎯</div>
+          <h3>Tier-niveauer</h3>
+          <p>Bronze, Sølv, Guld medlemskaber med stigende fordele. Gør dine bedste kunder til VIP.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎂</div>
+          <h3>Fødselsdagsbelønninger</h3>
+          <p>Automatiske fødselsdags-tilbud til alle medlemmer. Få dem til at fejre med dig.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📱</div>
-          <h3>Digital Stempel</h3>
-          <p>Digitalt stempelkort i appen. Ingen fysiske kort der går tabt.</p>
+          <h3>Medlemskort i appen</h3>
+          <p>Kunder ser deres point-saldo direkte i din mobile app. Intet fysisk kort nødvendigt.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📧</div>
+          <h3>Email notifications</h3>
+          <p>Automatiske beskeder når kunder optjener point, når de er tæt på en belønning, eller når point udløber.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">📊</div>
-          <h3>Kundesegmentering</h3>
-          <p>Opdel kunder i VIP, regulære og sovende — og målret tilbud.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔔</div>
-          <h3>Auto-Påmindelser</h3>
-          <p>Automatiske beskeder til kunder der ikke har besøgt i 30 dage.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">💰</div>
-          <h3>ROI Tracking</h3>
-          <p>Se præcis hvor meget omsætning dit loyalitetsprogram genererer.</p>
+          <h3>Analytics</h3>
+          <p>Se hvordan dit loyalitetsprogram performer. Hvilke belønninger virker? Hvem er dine top-kunder?</p>
         </div>
       </div>
     </div>
   </section>
 
+  <!-- Big Quote - Dark -->
   <section class="big-quote">
     <div class="big-quote-container">
-      <blockquote>"Vi gik fra 20% til 68% genkøbsrate på 3 måneder. Vores faste gæster bestiller 3x oftere nu."</blockquote>
-      <div class="big-quote-author">Maria Skov — Pasta Fresca</div>
+      <blockquote>"Vores loyalitetsprogram har 4.500 medlemmer. De bestiller 3x oftere end ikke-medlemmer og bruger i gennemsnit 45% mere per ordre."</blockquote>
+      <div class="big-quote-author">Lars Nielsen — Burger Bar</div>
     </div>
   </section>
 
+  <!-- Process Steps - Beige -->
   <section class="process-steps">
     <div class="process-container">
       <div class="process-header">
-        <h2>Sådan kommer du i gang</h2>
+        <h2>Sådan virker det</h2>
       </div>
       <div class="process-grid">
         <div class="process-step">
           <div class="process-number">01</div>
-          <h3>Vælg din model</h3>
-          <p>Points, stempelkort eller tier-baseret. Vi hjælper dig med at vælge den rigtige.</p>
+          <h3>Kunden bestiller</h3>
+          <p>Hver gang en kunde bestiller gennem din hjemmeside eller app, optjener de automatisk point.</p>
         </div>
         <div class="process-step">
           <div class="process-number">02</div>
-          <h3>Sæt belønninger op</h3>
-          <p>Definer hvad kunder optjener og hvad de kan indløse.</p>
+          <h3>Point akkumuleres</h3>
+          <p>Point gemmes i kundens profil. De kan se deres saldo når som helst i appen eller på hjemmesiden.</p>
         </div>
         <div class="process-step">
           <div class="process-number">03</div>
-          <h3>Se resultater</h3>
-          <p>Track genkøb, kundeværdi og ROI i real-time dashboardet.</p>
+          <h3>Indløs belønninger</h3>
+          <p>Når kunden har nok point, kan de indløse til rabatter eller gratis retter ved næste ordre.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="social-proof">
-    <div class="social-proof-container">
-      <div class="social-proof-header">
-        <h2>Hvad vores kunder siger</h2>
+  <!-- Image Split 2 - White (Reversed) -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-content">
+        <h2>Gør dine bedste kunder til VIP</h2>
+        <p>Tier-niveauer med stigende fordele. Jo mere kunden køber, desto bedre bliver fordelene.</p>
+        <p>Bronze får 5% rabat. Sølv får 10%. Guld får 15% + gratis levering. Du bestemmer reglerne.</p>
       </div>
-      <div class="testimonials-grid">
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"Klippekort er fortid. Vores digitale loyalitetsprogram har 4x flere aktive brugere."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=8" alt="Peter Sørensen" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Peter Sørensen</div>
-              <div class="testimonial-author-title">Grill House, Odense</div>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial-card">
-          <p class="testimonial-quote">"De automatiske påmindelser bringer gæster tilbage. Vi ser en stigning på 42% i ordreværdi fra loyale kunder."</p>
-          <div class="testimonial-author-info">
-            <img src="https://i.pravatar.cc/128?img=20" alt="Amalie Berg" class="testimonial-avatar">
-            <div>
-              <div class="testimonial-author-name">Amalie Berg</div>
-              <div class="testimonial-author-title">Sushi Time, Aalborg</div>
-            </div>
-          </div>
-        </div>
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&h=900&fit=crop" alt="VIP restaurant oplevelse">
       </div>
     </div>
   </section>
 
+  <!-- CTA Final - Black -->
   <section class="cta-final">
-    <h2>Byg loyalitet der varer</h2>
-    <p>Start dit loyalitetsprogram i dag og se genkøbsraten stige.</p>
+    <h2>Klar til at bygge loyalitet?</h2>
+    <p>Få en gratis demo og se hvordan et loyalitetsprogram kan øge dine gentagne ordrer og kundeloyalitet.</p>
     <a href="#demo" class="button">Få gratis demo nu</a>
   </section>
 
+  <!-- Footer (UNCHANGED) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -790,6 +726,16 @@
     </div>
   </footer>
 
-<script>window.addEventListener('scroll',function(){const nav=document.querySelector('.nav-wrapper');if(window.scrollY>50){nav.classList.add('scrolled')}else{nav.classList.remove('scrolled')}});</script>
+  <!-- JavaScript -->
+  <script>
+    window.addEventListener('scroll', function() {
+      const nav = document.querySelector('.nav-wrapper');
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+  </script>
 </body>
 </html>
