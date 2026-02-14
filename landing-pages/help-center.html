@@ -196,6 +196,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -245,9 +247,9 @@
     </nav>
 
   <section class="hero">
-    <h1>Hvordan kan vi hjælpe?</h1>
+    <h1 class="blur-reveal">Hvordan kan vi hjælpe?</h1>
     <p>Søg i vores knowledge base eller kontakt support direkte.</p>
-    <div class="search-box">
+    <div class="search-box reveal-scale">
       <input type="text" class="search-input" placeholder="Søg efter hjælp...">
     </div>
   </section>
@@ -255,34 +257,34 @@
   <section class="topics">
     <div class="topics-container">
       <h2>Populære emner</h2>
-      <div class="topics-grid">
-        <div class="topic-card">
-          <div class="topic-icon">🚀</div>
+      <div class="topics-grid stagger-children">
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">🚀</div>
           <h3>Kom i gang</h3>
           <p>Lær hvordan du opsætter din restaurant på Flow og går live på 24 timer.</p>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon">📱</div>
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">📱</div>
           <h3>Mobile App</h3>
           <p>Sådan lancerer og konfigurerer du din custom mobile app til iOS og Android.</p>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon">💳</div>
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">💳</div>
           <h3>Betalinger</h3>
           <p>Opsæt betalingsmetoder, håndter refunds og forstå din udbetaling.</p>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon">📊</div>
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">📊</div>
           <h3>Analytics</h3>
           <p>Få mest muligt ud af Flow analytics og forstå dine kunder bedre.</p>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon">🎨</div>
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">🎨</div>
           <h3>Design & Branding</h3>
           <p>Tilpas design, farver og logo på din hjemmeside og app.</p>
         </div>
-        <div class="topic-card">
-          <div class="topic-icon">⚙️</div>
+        <div class="topic-card tilt-card reveal">
+          <div class="topic-icon float-slow">⚙️</div>
           <h3>Indstillinger</h3>
           <p>Konfigurer åbningstider, leveringsområder og menuindstillinger.</p>
         </div>

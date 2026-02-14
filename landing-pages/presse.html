@@ -134,6 +134,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -183,33 +185,33 @@
     </nav>
 
   <section class="hero">
-    <h1>Presse</h1>
+    <h1 class="shimmer-text">Presse</h1>
     <p>Pressemeddelelser, logos og kontaktoplysninger til journalister.</p>
   </section>
 
   <section class="press-kit">
     <div class="press-kit-container">
-      <h2>Press Kit</h2>
-      <div class="press-kit-grid">
-        <div class="press-item">
+      <h2 class="blur-reveal">Press Kit</h2>
+      <div class="press-kit-grid stagger-children">
+        <div class="press-item reveal">
           <h3>Logoer & Brand Assets</h3>
           <p>Download Flow logoer, farveprofiler og brand guidelines.</p>
-          <a href="mailto:press@flow.dk?subject=Request: Brand Assets" class="press-link">Anmod om assets</a>
+          <a href="mailto:press@flow.dk?subject=Request: Brand Assets" class="press-link underline-slide">Anmod om assets</a>
         </div>
-        <div class="press-item">
+        <div class="press-item reveal">
           <h3>Pressefotos</h3>
           <p>High-resolution fotos af teamet, produktet og kunder.</p>
-          <a href="mailto:press@flow.dk?subject=Request: Press Photos" class="press-link">Anmod om fotos</a>
+          <a href="mailto:press@flow.dk?subject=Request: Press Photos" class="press-link underline-slide">Anmod om fotos</a>
         </div>
-        <div class="press-item">
+        <div class="press-item reveal">
           <h3>Pressemeddelelser</h3>
           <p>Seneste nyheder fra Flow og vores partnere.</p>
-          <a href="mailto:press@flow.dk?subject=Request: Press Releases" class="press-link">Læs meddelelser</a>
+          <a href="mailto:press@flow.dk?subject=Request: Press Releases" class="press-link underline-slide">Læs meddelelser</a>
         </div>
-        <div class="press-item">
+        <div class="press-item reveal">
           <h3>Pressekontakt</h3>
           <p>Kontakt vores presseteam for interviews og spørgsmål.</p>
-          <a href="mailto:press@flow.dk" class="press-link">Kontakt presse</a>
+          <a href="mailto:press@flow.dk" class="press-link underline-slide">Kontakt presse</a>
         </div>
       </div>
     </div>

@@ -174,6 +174,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -223,25 +225,25 @@
     </nav>
 
   <section class="hero">
-    <h1>Partner med Flow</h1>
+    <h1 class="wave-text">Partner med Flow</h1>
     <p>Voks sammen med os. Bliv en del af vores partner-økosystem og hjælp restauranter med at tage kontrol over deres digitale fremtid.</p>
   </section>
 
   <section class="programs">
     <div class="programs-container">
       <h2>Partner-programmer</h2>
-      <div class="programs-grid">
-        <div class="program-card">
+      <div class="programs-grid stagger-children">
+        <div class="program-card reveal-left">
           <div class="program-icon">🤝</div>
           <h3>Reseller Program</h3>
           <p>Sælg Flow til restauranter i dit netværk. Få op til 30% kommission på alle salg og recurring revenue.</p>
         </div>
-        <div class="program-card">
+        <div class="program-card reveal-right">
           <div class="program-icon">🔌</div>
           <h3>Integration Partner</h3>
           <p>Byg integrationer mellem Flow og dit produkt. Vi hjælper med dokumentation og support.</p>
         </div>
-        <div class="program-card">
+        <div class="program-card reveal-left">
           <div class="program-icon">🏷️</div>
           <h3>White-Label</h3>
           <p>Sælg Flow under dit eget brand. Perfekt til agencies og marketing bureauer.</p>
@@ -253,7 +255,7 @@
   <section class="cta">
     <h2>Klar til at komme i gang?</h2>
     <p>Kontakt vores partner-team og hør mere om mulighederne.</p>
-    <a href="mailto:partners@flow.dk" class="button">Kontakt partnere</a>
+    <a href="mailto:partners@flow.dk" class="button magnetic-btn">Kontakt partnere</a>
   </section>
 
   <footer class="footer">
