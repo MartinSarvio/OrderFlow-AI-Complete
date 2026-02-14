@@ -544,6 +544,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -595,7 +597,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Det rigtige bestillings-system.</h1>
+        <h1 class="blur-reveal">Det rigtige bestillings-system.</h1>
         <p class="subtitle">En ærlig sammenligning af online bestillingssystemer. Fordi din restaurant fortjener mere end 70% af omsætningen.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Få gratis demo</a>
@@ -607,9 +609,9 @@
 
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>0%</h3><p>provision med Flow</p></div>
-      <div class="stat-item"><h3>30%</h3><p>provision hos andre</p></div>
-      <div class="stat-item"><h3>100%</h3><p>dine kunder</p></div>
+      <div class="stat-item"><h3 data-count-to="0">0%</h3><p>provision med Flow</p></div>
+      <div class="stat-item"><h3 data-count-to="30">30%</h3><p>provision hos andre</p></div>
+      <div class="stat-item"><h3 data-count-to="100">100%</h3><p>dine kunder</p></div>
     </div>
   </section>
 
@@ -629,36 +631,36 @@
   <section class="features-grid">
     <div class="features-grid-container">
       <div class="features-grid-header">
-        <h2>Hvad du får</h2>
+        <h2 class="reveal">Hvad du får</h2>
         <p>Sammenlign de bedste online bestillingssystemer. Find den rigtige løsning for din restaurant.</p>
       </div>
       <div class="features-items">
-        <div class="feature-card">
+        <div class="feature-card reveal-left">
           <div class="feature-icon">💰</div>
           <h3>Provisionssammenligning</h3>
           <p>Se hvad de forskellige platforme faktisk koster dig per ordre.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-right">
           <div class="feature-icon">👥</div>
           <h3>Kundeejerskab</h3>
           <p>Hvem ejer kunderelationen? Det gør en kæmpe forskel.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-left">
           <div class="feature-icon">🎨</div>
           <h3>Branding</h3>
           <p>Kan du tilpasse oplevelsen til dit brand — eller er det platformens?</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-right">
           <div class="feature-icon">📊</div>
           <h3>Data & Indsigt</h3>
           <p>Hvilke systemer giver dig adgang til kundedata og analytics?</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-left">
           <div class="feature-icon">🔗</div>
           <h3>Integrationer</h3>
           <p>POS, regnskab, marketing — hvad integrerer med hvad?</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-right">
           <div class="feature-icon">📱</div>
           <h3>Mobil Oplevelse</h3>
           <p>Hvordan er bestillingsoplevelsen på mobil for dine kunder?</p>
@@ -677,7 +679,7 @@
   <section class="process-steps">
     <div class="process-container">
       <div class="process-header">
-        <h2>Sådan kommer du i gang</h2>
+        <h2 class="reveal">Sådan kommer du i gang</h2>
       </div>
       <div class="process-grid">
         <div class="process-step">
@@ -702,10 +704,10 @@
   <section class="social-proof">
     <div class="social-proof-container">
       <div class="social-proof-header">
-        <h2>Hvad vores kunder siger</h2>
+        <h2 class="reveal">Hvad vores kunder siger</h2>
       </div>
       <div class="testimonials-grid">
-        <div class="testimonial-card">
+        <div class="testimonial-card tilt-card reveal">
           <p class="testimonial-quote">"Denne sammenligning åbnede vores øjne. Vi vidste ikke hvor meget vi tabte til Wolt."</p>
           <div class="testimonial-author-info">
             <img src="https://i.pravatar.cc/128?img=4" alt="Kasper Møller" class="testimonial-avatar">
@@ -715,7 +717,7 @@
             </div>
           </div>
         </div>
-        <div class="testimonial-card">
+        <div class="testimonial-card tilt-card reveal">
           <p class="testimonial-quote">"Med eget bestillingssystem har vi nu direkte kontakt til alle vores kunder. Det er uvurderligt."</p>
           <div class="testimonial-author-info">
             <img src="https://i.pravatar.cc/128?img=19" alt="Tina Lund" class="testimonial-avatar">

@@ -544,6 +544,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -595,7 +597,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Bliv fundet. Bliv valgt.</h1>
+        <h1 class="blur-reveal">Bliv fundet. Bliv valgt.</h1>
         <p class="subtitle">SEO-strategier der placerer din restaurant øverst i Google. Fordi 90% af dine næste kunder starter med en søgning.</p>
         <div class="hero-buttons">
           <a href="#demo" class="button">Få gratis demo</a>
@@ -607,9 +609,9 @@
 
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>90%</h3><p>starter med Google</p></div>
-      <div class="stat-item"><h3>Top 3</h3><p>inden for 90 dage</p></div>
-      <div class="stat-item"><h3>+156%</h3><p>mere organisk trafik</p></div>
+      <div class="stat-item"><h3 data-count-to="90">90%</h3><p>starter med Google</p></div>
+      <div class="stat-item"><h3 data-count-to="3">Top 3</h3><p>inden for 90 dage</p></div>
+      <div class="stat-item"><h3 data-count-to="156">+156%</h3><p>mere organisk trafik</p></div>
     </div>
   </section>
 
@@ -629,36 +631,36 @@
   <section class="features-grid">
     <div class="features-grid-container">
       <div class="features-grid-header">
-        <h2>Hvad du får</h2>
+        <h2 class="shimmer-text">Hvad du får</h2>
         <p>Bliv fundet på Google. SEO-strategier bygget specifikt til restauranter.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">📍</div>
           <h3>Google My Business</h3>
           <p>Optimering af din Google-profil for maksimal synlighed i lokale søgninger.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">🔍</div>
           <h3>Keyword Strategi</h3>
           <p>Target de søgeord dine potentielle gæster faktisk bruger.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">⚡</div>
           <h3>Teknisk SEO</h3>
           <p>Lynhurtig hjemmeside, mobil-optimering og struktureret data.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">📝</div>
           <h3>Content Strategi</h3>
           <p>Blog-indhold og sider der ranker og tiltrækker organisk trafik.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">⭐</div>
           <h3>Review Management</h3>
           <p>Strategier for at få flere anmeldelser og bedre rankings.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card reveal">
           <div class="feature-icon">📊</div>
           <h3>Rank Tracking</h3>
           <p>Overvåg dine positioner og se fremgang i realtid.</p>
@@ -705,7 +707,7 @@
         <h2>Hvad vores kunder siger</h2>
       </div>
       <div class="testimonials-grid">
-        <div class="testimonial-card">
+        <div class="testimonial-card reveal-right">
           <p class="testimonial-quote">"Vi betaler ikke længere for Google Ads. Organisk trafik dækker alt. Det sparer os 15.000 kr/md."</p>
           <div class="testimonial-author-info">
             <img src="https://i.pravatar.cc/128?img=21" alt="Anne Friis" class="testimonial-avatar">
@@ -715,7 +717,7 @@
             </div>
           </div>
         </div>
-        <div class="testimonial-card">
+        <div class="testimonial-card reveal-right">
           <p class="testimonial-quote">"Top 3 for "sushi aalborg" på 45 dage. Flow leverede præcis hvad de lovede."</p>
           <div class="testimonial-author-info">
             <img src="https://i.pravatar.cc/128?img=14" alt="Yuki Tanaka" class="testimonial-avatar">
