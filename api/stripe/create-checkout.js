@@ -18,7 +18,9 @@ export default async function handler(req, res) {
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeSecretKey) {
-      return res.status(500).json({ error: 'Stripe secret key not configured' });
+      return res.status(500).json({ 
+        error: 'Stripe er ikke konfigureret. Tilføj STRIPE_SECRET_KEY som Environment Variable i Vercel Dashboard → Settings → Environment Variables. Brug din Stripe Secret Key (starter med sk_live_ eller sk_test_).' 
+      });
     }
 
     const { businessName, returnUrl } = req.body;

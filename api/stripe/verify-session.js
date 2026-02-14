@@ -14,7 +14,7 @@ export default async function handler(req, res) {
 
   try {
     const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeSecretKey) return res.status(500).json({ error: 'Stripe not configured' });
+    if (!stripeSecretKey) return res.status(500).json({ error: 'Stripe er ikke konfigureret. Tilføj STRIPE_SECRET_KEY i Vercel Dashboard → Settings → Environment Variables.' });
 
     const response = await fetch(
       `https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(session_id)}`,

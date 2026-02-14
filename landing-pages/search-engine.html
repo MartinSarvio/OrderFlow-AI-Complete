@@ -388,8 +388,21 @@
       return response.json();
     };
 
-    // Stub: old client-side Serper calls removed – v3 backend handles everything server-side
-    const fetchSerperAPI = async () => ({ places: [], organic: [], images: [] });
+    // Client-side Serper API proxy — calls backend to avoid exposing keys
+    const fetchSerperAPI = async (endpoint, query) => {
+      try {
+        const resp = await fetch('/api/seo/serper-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: endpoint || 'search', query: query || '' })
+        });
+        if (!resp.ok) throw new Error('Serper proxy error: ' + resp.status);
+        return resp.json();
+      } catch (e) {
+        console.warn('fetchSerperAPI fallback:', e.message);
+        return { places: [], organic: [], images: [], reviews: [] };
+      }
+    };
 
     // Transform v3 API response to the display format expected by report components
     const transformV3ToDisplayFormat = (v3) => {
@@ -3065,7 +3078,7 @@
             // Simulate step progression while API processes
             for (let i = 0; i < analysisSteps.length; i++) {
               setCurrentStep(i);
-              await delay(10000 + Math.random() * 8000);
+              await delay(2000 + Math.random() * 2000);
               setCompletedSteps(prev => [...prev, analysisSteps[i].id]);
             }
 
