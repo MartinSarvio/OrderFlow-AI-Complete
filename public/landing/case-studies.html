@@ -9,7 +9,7 @@
   <meta property="og:description" content="Se hvordan restauranter bruger Flow til at vokse deres forretning med online bestilling, mobile apps og marketing.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -29,52 +29,61 @@
       --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
+      --color-gray-900: #9CA3AF;
       --container-max: 1200px;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* Navigation */
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
+    .button:hover { background: var(--color-primary-hover); }
+    .button.button-white { background: var(--color-white); color: var(--color-dark); }
+    .button.button-white:hover { background: var(--color-gray-100); }
+
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
-    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
     .nav-left { display: flex; align-items: center; gap: 1.2rem; }
     .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
-    .nav-logo img { height: 3.2rem; width: auto; }
+    .nav-logo img { height: 2.56rem; width: auto; }
     .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
     .nav-logo:hover .logo-f { transform: rotate(360deg); }
     .nav-links { display: flex; align-items: center; gap: 0.8rem; }
-    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
     .nav-link:hover { background: var(--color-gray-100); }
     .nav-right { display: flex; align-items: center; gap: 1.6rem; }
     .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
-    /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
     .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
     .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
@@ -87,59 +96,28 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); }
-    .button.button-white:hover { background: var(--color-gray-100); }
+    .hero-section { padding: 16rem 4rem 10rem; background: var(--color-white); text-align: center; }
+    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.1; max-width: 90rem; margin-left: auto; margin-right: auto; text-transform: uppercase; }
+    .hero-section p { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 400; color: var(--color-gray-600); margin-bottom: 3.2rem; max-width: 68rem; margin-left: auto; margin-right: auto; }
 
-    /* Case Studies Section */
-    .cases-section { background: var(--color-white); padding: 10rem 0; }
-    .cases-container { max-width: 120rem; margin: 0 auto; padding: 0 4rem; }
+    .case-section { padding: 10rem 4rem; }
+    .case-section.beige { background: var(--color-beige); }
+    .case-section.white { background: var(--color-white); }
+    .section-container { max-width: var(--container-max); margin: 0 auto; }
+    .case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; margin-bottom: 8rem; padding-bottom: 8rem; border-bottom: 1px solid var(--color-gray-300); }
+    .case-grid:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .case-grid.reverse { direction: rtl; }
+    .case-grid.reverse > * { direction: ltr; }
+    .case-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.6rem; line-height: 1.2; }
+    .case-content .case-category { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 600; color: var(--color-gray-600); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.2rem; }
+    .case-content p { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
+    .case-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4rem; margin-bottom: 2.4rem; }
+    .case-stat h3 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.4rem; }
+    .case-stat p { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-gray-600); }
+    .case-image { border-radius: 2rem; overflow: hidden; }
+    .case-image img { width: 100%; height: auto; object-fit: cover; }
 
-    .case-card { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; margin-bottom: 10rem; padding-bottom: 10rem; border-bottom: 1px solid var(--color-gray-200); }
-    .case-card:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-    .case-card:nth-child(even) { direction: rtl; }
-    .case-card:nth-child(even) > * { direction: ltr; }
-
-    .case-image { border-radius: 2rem; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
-    .case-image img { width: 100%; height: 35rem; object-fit: cover; }
-
-    .case-content { }
-    .case-logo { height: 4rem; margin-bottom: 2rem; }
-    .case-quote { font-size: 2.4rem; font-weight: 500; color: var(--color-dark); line-height: 1.4; margin-bottom: 2rem; font-style: italic; }
-    .case-quote::before { content: '"'; }
-    .case-quote::after { content: '"'; }
-    .case-author { font-size: 1.5rem; color: var(--color-gray-600); margin-bottom: 3rem; }
-    .case-author strong { color: var(--color-dark); }
-
-    .case-stats { display: flex; gap: 4rem; margin-bottom: 3rem; }
-    .case-stat { }
-    .case-stat-value { font-size: 3.6rem; font-weight: 700; color: var(--color-primary); }
-    .case-stat-label { font-size: 1.4rem; color: var(--color-gray-500); }
-
-    .case-highlights { margin-bottom: 3rem; }
-    .case-highlights li { font-size: 1.5rem; color: var(--color-gray-600); padding: 0.8rem 0; padding-left: 2.4rem; position: relative; }
-    .case-highlights li::before { content: '✓'; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; }
-
-    /* Results Section */
-    .results-section { background: var(--color-gray-50); padding: 8rem 0; }
-    .results-container { max-width: 100rem; margin: 0 auto; padding: 0 4rem; text-align: center; }
-    .results-header { margin-bottom: 6rem; }
-    .results-header h2 { font-size: 3.6rem; font-weight: 500; color: var(--color-dark); margin-bottom: 2rem; }
-    .results-header p { font-size: 1.8rem; color: var(--color-gray-600); }
-    .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; }
-    .result-item h3 { font-size: 4.8rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.8rem; }
-    .result-item p { font-size: 1.5rem; color: var(--color-gray-600); }
-
-    /* CTA Section */
-    .cta-section { background: var(--color-dark); padding: 10rem 0; }
-    .cta-content { text-align: center; max-width: 80rem; margin: 0 auto; padding: 0 4rem; }
-    .cta-content h2 { font-size: 4.8rem; font-weight: 500; color: var(--color-white); margin-bottom: 2rem; }
-    .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
-    .cta-buttons { display: flex; gap: 1.6rem; justify-content: center; flex-wrap: wrap; }
-
-    /* Footer */
-    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -152,33 +130,27 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    @media (max-width: 1024px) {
-      .case-card { grid-template-columns: 1fr; gap: 4rem; }
-      .case-card:nth-child(even) { direction: ltr; }
-      .results-grid { grid-template-columns: repeat(2, 1fr); }
-    }
     @media (max-width: 768px) {
-      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .case-stats { flex-direction: column; gap: 2rem; }
+      .hero-section h1 { font-size: 3.6rem; }
+      .case-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .case-grid.reverse { direction: ltr; }
+      .case-stats { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
+
     @media (max-width: 480px) {
-      .nav-container { padding: 1.2rem 2rem; }
-      .results-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr; }
     }
   </style>
-<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Navigation -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
-            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+            <img src="../../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
           </a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
@@ -214,136 +186,104 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
-          <a href="#cta" class="nav-cta">Få en gratis demo</a>
+          <a href="../../app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
+          <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
-        <!-- Case Studies Section -->
-    <section class="cases-section">
-      <div class="cases-container">
-        <!-- Case 1 -->
-        <div class="case-card">
+    <section class="hero-section">
+      <h1>Succeshistorier<br>Fra Restauranter</h1>
+      <p>Se hvordan restauranter bruger Flow til at vokse deres forretning med online bestilling, mobile apps og automatiseret marketing.</p>
+    </section>
+
+    <section class="case-section white">
+      <div class="section-container">
+        <div class="case-grid">
           <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=600&fit=crop" alt="Talkin Tacos restaurant">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&h=500&fit=crop" alt="Gourmet restaurant">
           </div>
           <div class="case-content">
-            <p class="case-quote">Flow har fuldstændig transformeret vores forretning. Vi gik fra at betale 30% i kommission til Wolt til at eje hele kunderejsen selv.</p>
-            <p class="case-author"><strong>Martin Jensen</strong>, Ejer af Talkin' Tacos</p>
+            <div class="case-category">Pizzeria</div>
+            <h2>Bella Pizza øgede online salg med 285%</h2>
+            <p>Bella Pizza implementerede Flow's online bestillingssystem og egen mobile app. Efter 6 måneder havde de tredoblet deres online salg.</p>
             <div class="case-stats">
               <div class="case-stat">
-                <div class="case-stat-value">120.000 kr</div>
-                <div class="case-stat-label">Månedligt salg via app</div>
+                <h3>285%</h3>
+                <p>Øgning i online ordrer</p>
               </div>
               <div class="case-stat">
-                <div class="case-stat-value">45%</div>
-                <div class="case-stat-label">Færre omkostninger</div>
+                <h3>45k kr</h3>
+                <p>Sparet i kommission/md</p>
+              </div>
+              <div class="case-stat">
+                <h3>4.8★</h3>
+                <p>App Store rating</p>
               </div>
             </div>
-            <ul class="case-highlights">
-              <li>Sparede 36.000 kr/md i platformsgebyrer</li>
-              <li>500+ app-downloads på første måned</li>
-              <li>35% stigning i genbestillinger</li>
-            </ul>
           </div>
         </div>
 
-        <!-- Case 2 -->
-        <div class="case-card">
-          <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&h=600&fit=crop" alt="Bella Italia restaurant">
-          </div>
+        <div class="case-grid reverse">
           <div class="case-content">
-            <p class="case-quote">Push-notifikationerne alene har sparet os over 15.000 kr om måneden i SMS-omkostninger. Og åbningsraten er faktisk højere!</p>
-            <p class="case-author"><strong>Sofia Rossi</strong>, Ejer af Bella Italia</p>
+            <div class="case-category">Sushi Restaurant</div>
+            <h2>Sushi House byggede 12.000 app downloads</h2>
+            <p>Med Flow's custom mobile app og loyalitetsprogram fik Sushi House 12.000 aktive app-brugere på 8 måneder.</p>
             <div class="case-stats">
               <div class="case-stat">
-                <div class="case-stat-value">15.000 kr</div>
-                <div class="case-stat-label">Sparet på SMS/md</div>
+                <h3>12k</h3>
+                <p>App downloads</p>
               </div>
               <div class="case-stat">
-                <div class="case-stat-value">4.2x</div>
-                <div class="case-stat-label">Højere åbningsrate</div>
+                <h3>65%</h3>
+                <p>Loyalitetsrate</p>
+              </div>
+              <div class="case-stat">
+                <h3>3.2x</h3>
+                <p>Højere ordreværdi</p>
               </div>
             </div>
-            <ul class="case-highlights">
-              <li>Fra 3.000 SMS/md til 0 kr i udgifter</li>
-              <li>Loyalitetsprogram med 1.200 aktive medlemmer</li>
-              <li>28% flere ordrer fra stamkunder</li>
-            </ul>
+          </div>
+          <div class="case-image">
+            <img src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=700&h=500&fit=crop" alt="Sushi restaurant">
           </div>
         </div>
 
-        <!-- Case 3 -->
-        <div class="case-card">
+        <div class="case-grid">
           <div class="case-image">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop" alt="Sushi Master restaurant">
+            <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=700&h=500&fit=crop" alt="Burger restaurant">
           </div>
           <div class="case-content">
-            <p class="case-quote">Vores hjemmeside konverterer nu 3x bedre end før. Flowshjemmeside-builder er simpel og effektiv - og vi ejer vores egne kundedata.</p>
-            <p class="case-author"><strong>Kenji Tanaka</strong>, Ejer af Sushi Master</p>
+            <div class="case-category">Burger Bar</div>
+            <h2>Burger Joint reducerede kundeemissionsomkostninger med 60%</h2>
+            <p>Ved at skifte fra tredjepartsplatforme til Flow's kommissionsfri levering sparede Burger Joint over 50.000 kr om måneden.</p>
             <div class="case-stats">
               <div class="case-stat">
-                <div class="case-stat-value">3x</div>
-                <div class="case-stat-label">Bedre konvertering</div>
+                <h3>60%</h3>
+                <p>Lavere delivery costs</p>
               </div>
               <div class="case-stat">
-                <div class="case-stat-value">2.400</div>
-                <div class="case-stat-label">Nye kunder på 6 mdr</div>
+                <h3>50k kr</h3>
+                <p>Sparet per måned</p>
+              </div>
+              <div class="case-stat">
+                <h3>100%</h3>
+                <p>Ejer kundedata</p>
               </div>
             </div>
-            <ul class="case-highlights">
-              <li>SEO-optimeret hjemmeside på top 3 i Google</li>
-              <li>Online bestilling integreret med POS</li>
-              <li>Automatiseret email-marketing</li>
-            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Results Section -->
-    <section class="results-section">
-      <div class="results-container">
-        <div class="results-header">
-          <h2>Resultater på tværs af alle kunder</h2>
-          <p>Gennemsnitlige resultater fra restauranter der bruger Flow</p>
-        </div>
-        <div class="results-grid">
-          <div class="result-item">
-            <h3>35%</h3>
-            <p>Flere genbestillinger</p>
-          </div>
-          <div class="result-item">
-            <h3>40%</h3>
-            <p>Lavere marketing-omkostninger</p>
-          </div>
-          <div class="result-item">
-            <h3>25%</h3>
-            <p>Højere gennemsnitlig ordre</p>
-          </div>
-          <div class="result-item">
-            <h3>100%</h3>
-            <p>Ejer deres kundedata</p>
-          </div>
-        </div>
+    <section class="case-section beige">
+      <div class="section-container" style="text-align: center; max-width: 80rem; margin: 0 auto;">
+        <h2 style="font-family: 'Archivo Black', sans-serif; font-size: 4.4rem; margin-bottom: 2.4rem; text-transform: uppercase;">Klar til at vokse?</h2>
+        <p style="font-size: 1.8rem; color: var(--color-gray-600); margin-bottom: 3.2rem;">Lad os vise dig hvordan Flow kan hjælpe din restaurant med at vokse. Få en personlig demo i dag.</p>
+        <a href="#demo" class="button" style="padding: 1.6rem 3.2rem; font-size: 1.6rem;">Book gratis demo</a>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" id="cta">
-      <div class="cta-content">
-        <h2>Vil du være den næste succeshistorie?</h2>
-        <p>Book en gratis demo og se hvordan Flow kan hjælpe din restaurant.</p>
-        <div class="cta-buttons">
-          <a href="tel:+4570123456" class="button button-white">Ring til os: 70 12 34 56</a>
-          <a href="mailto:kontakt@flow.dk" class="button" style="background: transparent; border: 2px solid white;">Send en email</a>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-column">
@@ -385,7 +325,7 @@
             <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
             <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
           </ul>
-          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+          <img src="../../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
         </div>
       </div>
       <div class="footer-bottom">
@@ -403,12 +343,12 @@
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) { nav.classList.add('scrolled'); }
-      else { nav.classList.remove('scrolled'); }
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
     });
   </script>
-  <script src="/js/flow-cms-render.js"></script>
-  <script src="/js/privacy-modal.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>

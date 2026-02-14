@@ -9,9 +9,8 @@
   <meta property="og:description" content="Automatiser din Instagram marketing og konverter følgere til kunder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ==================== CSS VARIABLES ==================== */
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
@@ -30,26 +29,14 @@
       --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
+      --color-gray-900: #9CA3AF;
       --color-instagram: #E1306C;
       --container-max: 1200px;
-      --container-huge: 1400px;
     }
 
-    /* ==================== RESET & BASE ==================== */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 1.6rem;
-      line-height: 1.6;
-      color: var(--color-dark);
-      background: var(--color-white);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overscroll-behavior: none;
-      overflow-x: hidden;
-    }
-
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
     * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
     *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -60,46 +47,13 @@
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* ==================== BUTTONS ==================== */
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.8rem;
-      padding: 1.4rem 2.8rem;
-      font-size: 1.5rem;
-      font-weight: 500;
-      border-radius: 0.8rem;
-      background: var(--color-primary);
-      color: var(--color-white);
-      transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1);
-      cursor: pointer;
-      border: none;
-    }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
     .button:hover { background: var(--color-primary-hover); }
-    .button.is-black { background: var(--color-dark); }
-    .button.is-black:hover { background: var(--color-gray-800); }
-    .button.is-secondary { background: transparent; color: var(--color-dark); border: 1px solid var(--color-gray-300); }
-    .button.is-secondary:hover { background: var(--color-gray-100); }
-    .button.is-instagram { background: var(--color-instagram); }
-    .button.is-instagram:hover { background: #c4275b; }
+    .button.button-white { background: var(--color-white); color: var(--color-dark); }
+    .button.button-white:hover { background: var(--color-gray-100); }
 
-    /* ==================== NAVIGATION ==================== */
-    .nav-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: var(--color-white);
-      border-bottom: none;
-      transition: background 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
     .nav-left { display: flex; align-items: center; gap: 1.2rem; }
     .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
@@ -107,31 +61,30 @@
     .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
     .nav-logo:hover .logo-f { transform: rotate(360deg); }
     .nav-links { display: flex; align-items: center; gap: 0.8rem; }
-    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
     .nav-link:hover { background: var(--color-gray-100); }
     .nav-right { display: flex; align-items: center; gap: 1.6rem; }
     .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
-    /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
     .nav-dropdown-toggle svg { width: 1.2rem; height: 1.2rem; transition: transform 0.2s ease; }
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
-    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
+    .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
     .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
@@ -144,321 +97,26 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* ==================== PAGE SPECIFIC STYLES ==================== */
-    .page-wrapper { overflow: hidden; }
+    .hero-section { padding: 16rem 4rem 10rem; background: var(--color-white); text-align: center; }
+    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; color: var(--color-dark); margin-bottom: 2.4rem; line-height: 1.1; max-width: 90rem; margin-left: auto; margin-right: auto; text-transform: uppercase; }
+    .hero-section p { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 400; color: var(--color-gray-600); margin-bottom: 3.2rem; max-width: 68rem; margin-left: auto; margin-right: auto; }
 
-    /* Before/After Intro Section */
-    .intro-section {
-      padding: 12rem 4rem 6rem;
-      background: var(--color-white);
-    }
-    .intro-container {
-      max-width: 100rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .intro-label {
-      display: inline-block;
-      font-size: 1.2rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-instagram);
-      background: rgba(225, 48, 108, 0.1);
-      padding: 0.6rem 1.2rem;
-      border-radius: 0.4rem;
-      margin-bottom: 2rem;
-    }
-    .intro-title {
-      font-size: 4.8rem;
-      font-weight: 500;
-      line-height: 1.1;
-      color: var(--color-dark);
-      margin-bottom: 2rem;
-    }
-    .intro-desc {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 64rem;
-      margin: 0 auto 4rem;
-    }
+    .content-section { padding: 11rem 4rem; }
+    .content-section.beige { background: var(--color-beige); }
+    .content-section.white { background: var(--color-white); }
+    .section-container { max-width: var(--container-max); margin: 0 auto; }
+    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+    .section-grid.reverse { direction: rtl; }
+    .section-grid.reverse > * { direction: ltr; }
+    .section-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; color: var(--color-dark); margin-bottom: 2rem; line-height: 1.2; }
+    .section-content p { font-family: 'Inter', sans-serif; font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
+    .section-content ul { list-style: none; padding: 0; margin: 0 0 2.4rem 0; }
+    .section-content li { font-family: 'Inter', sans-serif; font-size: 1.6rem; font-weight: 500; color: var(--color-gray-700); padding: 1.2rem 0; padding-left: 3rem; position: relative; }
+    .section-content li:before { content: '✓'; position: absolute; left: 0; color: var(--color-green-accent); font-weight: 700; font-size: 1.8rem; }
+    .section-image { border-radius: 2rem; overflow: hidden; }
+    .section-image img { width: 100%; height: auto; object-fit: cover; }
 
-    /* Before/After Comparison */
-    .comparison-section {
-      padding: 4rem 4rem 8rem;
-      background: var(--color-gray-50);
-    }
-    .comparison-container {
-      max-width: 120rem;
-      margin: 0 auto;
-    }
-    .comparison-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4rem;
-    }
-    .comparison-card {
-      background: var(--color-white);
-      border-radius: 2rem;
-      padding: 4rem;
-      position: relative;
-    }
-    .comparison-card.before {
-      border: 2px solid var(--color-gray-200);
-    }
-    .comparison-card.after {
-      border: 2px solid var(--color-instagram);
-      box-shadow: 0 20px 60px rgba(225, 48, 108, 0.15);
-    }
-    .comparison-badge {
-      position: absolute;
-      top: -1.4rem;
-      left: 3rem;
-      font-size: 1.2rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0.6rem 1.6rem;
-      border-radius: 0.4rem;
-    }
-    .comparison-card.before .comparison-badge {
-      background: var(--color-gray-200);
-      color: var(--color-gray-600);
-    }
-    .comparison-card.after .comparison-badge {
-      background: var(--color-instagram);
-      color: var(--color-white);
-    }
-    .comparison-title {
-      font-size: 2.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      margin-bottom: 2.4rem;
-    }
-    .comparison-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1.6rem;
-    }
-    .comparison-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 1.2rem;
-      font-size: 1.5rem;
-      line-height: 1.5;
-    }
-    .comparison-card.before .comparison-item {
-      color: var(--color-gray-600);
-    }
-    .comparison-card.after .comparison-item {
-      color: var(--color-dark);
-    }
-    .comparison-icon {
-      width: 2.4rem;
-      height: 2.4rem;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-top: 0.2rem;
-    }
-    .comparison-card.before .comparison-icon {
-      background: var(--color-gray-100);
-      color: var(--color-gray-500);
-    }
-    .comparison-card.after .comparison-icon {
-      background: rgba(225, 48, 108, 0.1);
-      color: var(--color-instagram);
-    }
-    .comparison-icon svg {
-      width: 1.4rem;
-      height: 1.4rem;
-    }
-    .comparison-result {
-      margin-top: 3rem;
-      padding-top: 2.4rem;
-      border-top: 1px solid var(--color-gray-200);
-    }
-    .comparison-result-label {
-      font-size: 1.2rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-gray-500);
-      margin-bottom: 0.8rem;
-    }
-    .comparison-result-value {
-      font-size: 3.6rem;
-      font-weight: 700;
-    }
-    .comparison-card.before .comparison-result-value {
-      color: var(--color-gray-400);
-    }
-    .comparison-card.after .comparison-result-value {
-      color: var(--color-instagram);
-    }
-
-    /* Workflow Steps Section */
-    .workflow-section {
-      padding: 8rem 4rem;
-      background: var(--color-white);
-    }
-    .workflow-container {
-      max-width: 120rem;
-      margin: 0 auto;
-    }
-    .workflow-header {
-      text-align: center;
-      margin-bottom: 6rem;
-    }
-    .workflow-title {
-      font-size: 4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      margin-bottom: 1.6rem;
-    }
-    .workflow-desc {
-      font-size: 1.8rem;
-      color: var(--color-gray-600);
-      max-width: 60rem;
-      margin: 0 auto;
-    }
-    .workflow-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2.4rem;
-    }
-    .workflow-step {
-      text-align: center;
-      padding: 2.4rem;
-    }
-    .workflow-step-number {
-      width: 4.8rem;
-      height: 4.8rem;
-      background: linear-gradient(135deg, var(--color-instagram) 0%, #833AB4 100%);
-      color: var(--color-white);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      font-weight: 700;
-      margin: 0 auto 1.6rem;
-    }
-    .workflow-step h3 {
-      font-size: 1.8rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      margin-bottom: 0.8rem;
-    }
-    .workflow-step p {
-      font-size: 1.4rem;
-      color: var(--color-gray-600);
-      line-height: 1.6;
-    }
-    .workflow-connector {
-      position: relative;
-    }
-    .workflow-connector::after {
-      content: '';
-      position: absolute;
-      top: 2.4rem;
-      right: -1.2rem;
-      width: 2.4rem;
-      height: 2px;
-      background: var(--color-gray-200);
-    }
-    .workflow-connector:last-child::after {
-      display: none;
-    }
-
-    /* Testimonial Section */
-    .testimonial-section {
-      padding: 8rem 4rem;
-      background: var(--color-gray-50);
-    }
-    .testimonial-container {
-      max-width: 80rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .testimonial-quote {
-      font-size: 2.8rem;
-      font-weight: 400;
-      color: var(--color-dark);
-      line-height: 1.5;
-      margin-bottom: 3.2rem;
-      font-style: italic;
-    }
-    .testimonial-author {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1.6rem;
-    }
-    .testimonial-avatar {
-      width: 6rem;
-      height: 6rem;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .testimonial-info {
-      text-align: left;
-    }
-    .testimonial-name {
-      font-size: 1.6rem;
-      font-weight: 600;
-      color: var(--color-dark);
-    }
-    .testimonial-role {
-      font-size: 1.4rem;
-      color: var(--color-gray-500);
-    }
-
-    /* CTA Section */
-    .cta-section {
-      padding: 8rem 4rem;
-      background: linear-gradient(135deg, var(--color-instagram) 0%, #833AB4 100%);
-    }
-    .cta-content {
-      max-width: 80rem;
-      margin: 0 auto;
-      text-align: center;
-    }
-    .cta-title {
-      font-size: 4rem;
-      font-weight: 500;
-      color: var(--color-white);
-      margin-bottom: 1.6rem;
-    }
-    .cta-desc {
-      font-size: 1.8rem;
-      color: rgba(255,255,255,0.85);
-      margin-bottom: 3.2rem;
-    }
-    .cta-buttons {
-      display: flex;
-      gap: 1.6rem;
-      justify-content: center;
-    }
-    .cta-buttons .button {
-      background: var(--color-white);
-      color: var(--color-instagram);
-    }
-    .cta-buttons .button:hover {
-      background: var(--color-gray-100);
-    }
-    .cta-buttons .button.is-outline {
-      background: transparent;
-      color: var(--color-white);
-      border: 2px solid var(--color-white);
-    }
-    .cta-buttons .button.is-outline:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
-    /* ==================== FOOTER ==================== */
-    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -471,35 +129,26 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    /* ==================== RESPONSIVE ==================== */
-    @media (max-width: 1024px) {
-      .comparison-grid { grid-template-columns: 1fr; gap: 3rem; }
-      .workflow-grid { grid-template-columns: repeat(2, 1fr); }
-      .workflow-connector::after { display: none; }
-    }
     @media (max-width: 768px) {
-      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .intro-section { padding: 10rem 2rem 4rem; }
-      .intro-title { font-size: 3.6rem; }
-      .workflow-grid { grid-template-columns: 1fr; }
+      .hero-section h1 { font-size: 3.6rem; }
+      .section-grid { grid-template-columns: 1fr; gap: 3rem; }
+      .section-grid.reverse { direction: ltr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
+
     @media (max-width: 480px) {
-      .cta-buttons { flex-direction: column; }
       .footer-content { grid-template-columns: 1fr; }
     }
   </style>
-<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Navigation -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
-            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+            <img src="../../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
           </a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
@@ -535,148 +184,89 @@
           </div>
         </div>
         <div class="nav-right">
-          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
+          <a href="../../app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
           <a href="#demo" class="nav-cta">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
-    <!-- Intro Section -->
-    <section class="intro-section">
-      <div class="intro-container">
-        <span class="intro-label">Instagram Workflow</span>
-        <h1 class="intro-title">Stop med at misse DMs. Start med at sælge.</h1>
-        <p class="intro-desc">Hver ubesvaret besked er en tabt kunde. Se forskellen mellem manuel og automatiseret Instagram-håndtering.</p>
+    <section class="hero-section">
+      <h1>Konverter Instagram<br>Følgere Til Kunder</h1>
+      <p>Auto-svar på DM, story mentions og kommentarer. Få flere bestillinger direkte fra Instagram.</p>
+      <div class="hero-buttons">
+        <a href="#demo" class="button">Se hvordan det virker</a>
+        <a href="priser.html" class="button button-white">Se priser</a>
       </div>
     </section>
 
-    <!-- Before/After Comparison -->
-    <section class="comparison-section">
-      <div class="comparison-container">
-        <div class="comparison-grid">
-          <div class="comparison-card before">
-            <span class="comparison-badge">Uden Flow</span>
-            <h2 class="comparison-title">Manuel Instagram</h2>
-            <div class="comparison-list">
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
-                <span>DMs besvares timer eller dage senere</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
-                <span>Kommentarer med spørgsmål ignoreres</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
-                <span>Story mentions opdages for sent</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
-                <span>Nye følgere får ingen velkomst</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></span>
-                <span>2-3 timer dagligt på Instagram</span>
-              </div>
-            </div>
-            <div class="comparison-result">
-              <div class="comparison-result-label">Gennemsnitlig konvertering</div>
-              <div class="comparison-result-value">2-4%</div>
-            </div>
+    <section class="content-section beige">
+      <div class="section-container">
+        <div class="section-grid">
+          <div class="section-image">
+            <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=700&h=500&fit=crop" alt="Instagram app">
           </div>
-          <div class="comparison-card after">
-            <span class="comparison-badge">Med Flow</span>
-            <h2 class="comparison-title">Automatiseret Instagram</h2>
-            <div class="comparison-list">
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-                <span>DMs besvares inden for sekunder</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-                <span>Automatisk svar med link til bestilling</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-                <span>Story mentions takkes automatisk</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-                <span>Nye følgere får rabatkode</span>
-              </div>
-              <div class="comparison-item">
-                <span class="comparison-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg></span>
-                <span>0 timer - systemet kører 24/7</span>
-              </div>
-            </div>
-            <div class="comparison-result">
-              <div class="comparison-result-label">Gennemsnitlig konvertering</div>
-              <div class="comparison-result-value">18-24%</div>
-            </div>
+          <div class="section-content">
+            <h2>Auto-svar på Instagram DM</h2>
+            <p>Når nogen skriver "Hvad koster en pizza?" eller "Er I åbne nu?" svar automatisk med præcis info og link til din menu.</p>
+            <ul>
+              <li>Intelligent AI forstår intent</li>
+              <li>Send link til online bestilling</li>
+              <li>24/7 kundeservice i DM</li>
+              <li>Konverter forespørgsler til ordrer</li>
+            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Workflow Steps -->
-    <section class="workflow-section">
-      <div class="workflow-container">
-        <div class="workflow-header">
-          <h2 class="workflow-title">Sådan fungerer det</h2>
-          <p class="workflow-desc">Fire automatiseringer der kører 24/7 og konverterer følgere til kunder.</p>
-        </div>
-        <div class="workflow-grid">
-          <div class="workflow-step workflow-connector">
-            <div class="workflow-step-number">1</div>
-            <h3>Ny følger</h3>
-            <p>Automatisk velkomst-DM med 10% rabatkode sendes inden for 60 sekunder.</p>
+    <section class="content-section white">
+      <div class="section-container">
+        <div class="section-grid reverse">
+          <div class="section-content">
+            <h2>Reagér automatisk på Story Mentions</h2>
+            <p>Når folk tagge dig i deres stories, svar automatisk med en tak-besked og et tilbud til deres næste besøg.</p>
+            <ul>
+              <li>Personlige tak-beskeder automatisk</li>
+              <li>Send rabatkoder til loyale kunder</li>
+              <li>Byg stærkere kunderelationer</li>
+              <li>Øg word-of-mouth marketing</li>
+            </ul>
           </div>
-          <div class="workflow-step workflow-connector">
-            <div class="workflow-step-number">2</div>
-            <h3>DM modtaget</h3>
-            <p>AI genkender spørgsmål om menu, priser og åbningstider og svarer med det samme.</p>
-          </div>
-          <div class="workflow-step workflow-connector">
-            <div class="workflow-step-number">3</div>
-            <h3>Story mention</h3>
-            <p>Kunde tagger dig? Automatisk tak-besked + anmodning om at reposte.</p>
-          </div>
-          <div class="workflow-step">
-            <div class="workflow-step-number">4</div>
-            <h3>Konvertering</h3>
-            <p>Alle beskeder inkluderer bestillingslink. Du ser salget i dit dashboard.</p>
+          <div class="section-image">
+            <img src="https://images.unsplash.com/photo-1598743400863-0201c7e1445b?w=700&h=500&fit=crop" alt="Phone social media">
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Testimonial -->
-    <section class="testimonial-section">
-      <div class="testimonial-container">
-        <p class="testimonial-quote">"Vi gik fra at bruge 3 timer dagligt på Instagram til næsten ingenting. Og vores salg fra Instagram steg med 340% på 2 måneder."</p>
-        <div class="testimonial-author">
-          <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop" alt="Restaurant ejer" class="testimonial-avatar">
-          <div class="testimonial-info">
-            <div class="testimonial-name">Marco Rossi</div>
-            <div class="testimonial-role">Ejer, Napoli Pizza, København</div>
+    <section class="content-section beige">
+      <div class="section-container">
+        <div class="section-grid">
+          <div class="section-image">
+            <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=700&h=500&fit=crop" alt="Restaurant social">
+          </div>
+          <div class="section-content">
+            <h2>Kommenter automatisk på posts</h2>
+            <p>Når folk skriver "Hvor ligger I?" eller "Kan man reservere bord?" på dine posts, svar automatisk.</p>
+            <ul>
+              <li>AI forstår kontekst og mening</li>
+              <li>Reagerer på nøgleord og emojis</li>
+              <li>Personlig tone der passer til dit brand</li>
+              <li>Højere engagement = bedre reach</li>
+            </ul>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" id="demo">
-      <div class="cta-content">
-        <h2 class="cta-title">Klar til at automatisere din Instagram?</h2>
-        <p class="cta-desc">Vi sætter det hele op for dig. Ingen teknisk viden krævet.</p>
-        <div class="cta-buttons">
-          <a href="#" class="button">Book en demo</a>
-          <a href="landing.html" class="button is-outline">Se alle funktioner</a>
-        </div>
+    <section class="content-section white">
+      <div class="section-container" style="text-align: center; max-width: 80rem; margin: 0 auto;">
+        <h2 style="font-family: 'Archivo Black', sans-serif; font-size: 4.4rem; margin-bottom: 2.4rem; text-transform: uppercase;">Klar til at automatisere?</h2>
+        <p style="font-size: 1.8rem; color: var(--color-gray-600); margin-bottom: 3.2rem;">Vi opsætter alt for dig på 15 minutter. Ingen teknisk viden påkrævet.</p>
+        <a href="#demo" class="button" style="padding: 1.6rem 3.2rem; font-size: 1.6rem;">Kom i gang nu</a>
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-column">
@@ -718,22 +308,21 @@
             <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
             <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
           </ul>
-          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+          <img src="../../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
         </div>
       </div>
       <div class="footer-bottom">
         <p>2026 © Flow. All rights reserved.</p>
         <div class="footer-legal">
-          <a href="#">Cookie Settings</a>
-          <a href="#">Privacy</a>
-          <a href="#">Website Terms</a>
-          <a href="#">Disclaimer</a>
+          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+          <a href="legal.html#privacy">Privacy</a>
+          <a href="legal.html#terms">Website Terms</a>
+          <a href="legal.html#disclaimer">Disclaimer</a>
         </div>
       </div>
     </footer>
   </div>
 
-  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
@@ -744,7 +333,5 @@
       }
     });
   </script>
-  <script src="/js/flow-cms-render.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>
