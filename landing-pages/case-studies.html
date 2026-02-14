@@ -544,6 +544,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -595,11 +597,11 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Rigtige resultater. Rigtige restauranter.</h1>
+        <h1 class="blur-reveal">Rigtige resultater. Rigtige restauranter.</h1>
         <p class="subtitle">Se hvordan restauranter over hele Danmark bruger Flow til at vækste deres online salg, bygge loyalitet og spare penge.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få gratis demo</a>
-          <a href="priser.html" class="button is-secondary">Se priser</a>
+          <a href="#demo" class="button magnetic-btn">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary magnetic-btn">Se priser</a>
         </div>
       </div>
     </div>
@@ -607,16 +609,16 @@
 
   <section class="stats-bar">
     <div class="stats-container">
-      <div class="stat-item"><h3>500+</h3><p>restauranter</p></div>
-      <div class="stat-item"><h3>+127%</h3><p>gns. vækst i salg</p></div>
-      <div class="stat-item"><h3>4.9★</h3><p>kundetilfredshed</p></div>
+      <div class="stat-item"><h3 data-count-to="500">500+</h3><p>restauranter</p></div>
+      <div class="stat-item"><h3 data-count-to="127">+127%</h3><p>gns. vækst i salg</p></div>
+      <div class="stat-item"><h3 data-count-to="4.9">4.9★</h3><p>kundetilfredshed</p></div>
     </div>
   </section>
 
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&h=900&fit=crop" alt="Case Studies — Succeshistorier | Flow">
+        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=1200&h=900&fit=crop" alt="Case Studies — Succeshistorier | Flow" class="reveal-scale">
       </div>
       <div class="image-split-content">
         <h2>Resultater der taler for sig selv</h2>
@@ -632,33 +634,33 @@
         <h2>Hvad du får</h2>
         <p>Se hvordan restauranter vokser med Flow. Rigtige resultater fra rigtige restauranter.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card reveal">
           <div class="feature-icon">🍕</div>
           <h3>Pizzeria Napoli</h3>
           <p>+127% online ordrer, 24t til live hjemmeside, 0% provision på delivery.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🍣</div>
           <h3>Sushi House CPH</h3>
           <p>2.400 app-brugere, 85% genkøbsrate, +42% i ordreværdi.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">☕</div>
           <h3>Café Hygge</h3>
           <p>68% genkøbsrate med loyalitetsprogram, +35% omsætning.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🍔</div>
           <h3>Burger Joint</h3>
           <p>Sparede 72.000 kr/md ved at droppe Wolt, +200% direkte ordrer.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🥗</div>
           <h3>Green Kitchen</h3>
           <p>Top 3 på Google for lokale søgninger, +156% organisk trafik.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🍜</div>
           <h3>Thai Kitchen</h3>
           <p>Marketing automation genererer 180.000 kr/md ekstra omsætning.</p>
@@ -732,7 +734,7 @@
   <section class="cta-final">
     <h2>Bliv den næste succeshistorie</h2>
     <p>Lad os vise dig hvad Flow kan gøre for din restaurant.</p>
-    <a href="#demo" class="button">Få gratis demo nu</a>
+    <a href="#demo" class="button magnetic-btn">Få gratis demo nu</a>
   </section>
 
   <footer class="footer">

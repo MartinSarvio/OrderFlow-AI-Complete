@@ -1619,6 +1619,8 @@
   <link rel="stylesheet" href="/css/cookie-consent.css?v=4905">
   <link rel="stylesheet" href="/css/privacy-modal.css">
 <link rel="stylesheet" href="/css/cookie-popup.css">
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <div class="page-wrapper">
@@ -1675,10 +1677,10 @@
         <video autoplay muted loop playsinline preload="auto" src="/images/hero-video.mp4" type="video/mp4"></video>
       </div>
       <div class="hero-content">
-        <h1><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["BYGGET", "DESIGNET", "UDVIKLET", "OPTIMERET"]'>BYGGET</span><span class="typed-cursor typed-cursor--blink" aria-hidden="true">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
+        <h1 class="blur-reveal"><span class="big">A</span>UTOM<span class="big">A</span>TION<br><span class="typed-text" data-typed-text='["BYGGET", "DESIGNET", "UDVIKLET", "OPTIMERET"]'>BYGGET</span><span class="typed-cursor typed-cursor--blink" aria-hidden="true">|</span> TIL<br><span class="big">A</span>T Ø<span class="big">G</span>E S<span class="big">A</span>L<span class="big">G</span></h1>
         <p>Flow giver dig de samme værktøjer som store restaurantkæder bruger.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button button-interactive-hover">
+          <a href="#demo" class="button button-interactive-hover magnetic-btn">
             <span class="btn-text">Få en gratis demo</span>
             <span class="btn-arrow-icon">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1686,7 +1688,7 @@
               </svg>
             </span>
           </a>
-          <a href="priser.html" class="button button-outline">Se priser</a>
+          <a href="priser.html" class="button button-outline magnetic-btn">Se priser</a>
         </div>
       </div>
       <!-- Hero Logo Cloud -->
@@ -1935,35 +1937,35 @@
       <div class="trusted-carousel-wrapper">
         <div class="trusted-carousel">
           <!-- Cards duplicated for infinite scroll - Editable via FLOW CMS -->
-          <div class="trusted-card" data-cms-field="trusted-card-1">
+          <div class="trusted-card tilt-card" data-cms-field="trusted-card-1">
             <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-1">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name" data-cms-field="trusted-name-1">Maria Jensen</div>
               <div class="trusted-card-role" data-cms-field="trusted-role-1">Café Hygge, København</div>
             </div>
           </div>
-          <div class="trusted-card" data-cms-field="trusted-card-2">
+          <div class="trusted-card tilt-card" data-cms-field="trusted-card-2">
             <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-2">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name" data-cms-field="trusted-name-2">Anders Nielsen</div>
               <div class="trusted-card-role" data-cms-field="trusted-role-2">Pizzeria Napoli, Aarhus</div>
             </div>
           </div>
-          <div class="trusted-card" data-cms-field="trusted-card-3">
+          <div class="trusted-card tilt-card" data-cms-field="trusted-card-3">
             <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-3">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name" data-cms-field="trusted-name-3">Sophie Larsen</div>
               <div class="trusted-card-role" data-cms-field="trusted-role-3">Sushi House, Odense</div>
             </div>
           </div>
-          <div class="trusted-card" data-cms-field="trusted-card-4">
+          <div class="trusted-card tilt-card" data-cms-field="trusted-card-4">
             <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-4">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name" data-cms-field="trusted-name-4">Thomas Møller</div>
               <div class="trusted-card-role" data-cms-field="trusted-role-4">Burger Joint, Aalborg</div>
             </div>
           </div>
-          <div class="trusted-card" data-cms-field="trusted-card-5">
+          <div class="trusted-card tilt-card" data-cms-field="trusted-card-5">
             <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=500&fit=crop" alt="Restaurant Owner" data-cms-field="trusted-image-5">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name" data-cms-field="trusted-name-5">Emma Christensen</div>
@@ -1971,35 +1973,35 @@
             </div>
           </div>
           <!-- Duplicate for seamless loop -->
-          <div class="trusted-card">
+          <div class="trusted-card tilt-card">
             <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=500&fit=crop" alt="Restaurant Owner">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Maria Jensen</div>
               <div class="trusted-card-role">Café Hygge, København</div>
             </div>
           </div>
-          <div class="trusted-card">
+          <div class="trusted-card tilt-card">
             <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=500&fit=crop" alt="Restaurant Owner">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Anders Nielsen</div>
               <div class="trusted-card-role">Pizzeria Napoli, Aarhus</div>
             </div>
           </div>
-          <div class="trusted-card">
+          <div class="trusted-card tilt-card">
             <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&h=500&fit=crop" alt="Restaurant Owner">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Sophie Larsen</div>
               <div class="trusted-card-role">Sushi House, Odense</div>
             </div>
           </div>
-          <div class="trusted-card">
+          <div class="trusted-card tilt-card">
             <img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=500&fit=crop" alt="Restaurant Owner">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Thomas Møller</div>
               <div class="trusted-card-role">Burger Joint, Aalborg</div>
             </div>
           </div>
-          <div class="trusted-card">
+          <div class="trusted-card tilt-card">
             <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=500&fit=crop" alt="Restaurant Owner">
             <div class="trusted-card-overlay">
               <div class="trusted-card-name">Emma Christensen</div>
@@ -2055,8 +2057,8 @@
         </div>
       </div>
       <!-- Feature cards -->
-      <div class="bento-grid">
-        <div class="bento-card">
+      <div class="bento-grid stagger-children">
+        <div class="bento-card reveal">
           <div class="bento-card-content">
             <div class="bento-card-label">Få højere Google rankings med din AI-powered</div>
             <div class="bento-card-title">restaurant hjemmeside.</div>
@@ -2065,7 +2067,7 @@
             <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop" alt="Restaurant website">
           </div>
         </div>
-        <div class="bento-card">
+        <div class="bento-card reveal">
           <div class="bento-card-content">
             <div class="bento-card-label">Vækst dit salg med et</div>
             <div class="bento-card-title">online bestillingssystem modelleret efter de store brands.</div>

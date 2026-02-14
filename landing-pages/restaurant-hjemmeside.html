@@ -544,6 +544,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from landing.html) -->
@@ -599,11 +601,11 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Din restaurant. Online. Nu.</h1>
+        <h1 class="wave-text">Din restaurant. Online. Nu.</h1>
         <p class="subtitle">En hjemmeside der konverterer besøgende til kunder. Mobiloptimeret, SEO-klar, og integreret med online bestilling. Live på 24 timer.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få gratis demo</a>
-          <a href="priser.html" class="button is-secondary">Se priser</a>
+          <a href="#demo" class="button magnetic-btn">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary magnetic-btn">Se priser</a>
         </div>
       </div>
     </div>
@@ -613,15 +615,15 @@
   <section class="stats-bar">
     <div class="stats-container">
       <div class="stat-item">
-        <h3>24t</h3>
+        <h3 class="counter-value" data-count-to="24">24t</h3>
         <p>Fra start til live</p>
       </div>
       <div class="stat-item">
-        <h3>+127%</h3>
+        <h3 class="counter-value" data-count-to="127">+127%</h3>
         <p>Flere online ordrer</p>
       </div>
       <div class="stat-item">
-        <h3>500+</h3>
+        <h3 class="counter-value" data-count-to="500">500+</h3>
         <p>Restauranter stoler på Flow</p>
       </div>
     </div>
@@ -630,7 +632,7 @@
   <!-- Image Split - Beige -->
   <section class="image-split">
     <div class="image-split-grid">
-      <div class="image-split-img">
+      <div class="image-split-img reveal-left">
         <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=900&fit=crop" alt="Restaurant interior">
       </div>
       <div class="image-split-content">
@@ -648,33 +650,33 @@
         <h2>Alt built-in</h2>
         <p>Ingen plugins. Ingen tredjepartsintegrationer. Alt du har brug for er indbygget fra start.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card reveal">
           <div class="feature-icon">🍕</div>
           <h3>Online Bestilling</h3>
           <p>Indbygget bestillingssystem der fungerer perfekt på mobil og desktop. Ingen provision til Wolt eller Just Eat.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">⚡</div>
           <h3>Lynhurtig Load-tid</h3>
           <p>Optimeret til under 1 sekund load-tid. Hurtigere hjemmeside = bedre Google rankings og flere ordrer.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">📱</div>
           <h3>Mobil-first Design</h3>
           <p>75% af dine besøgende kommer fra mobil. Vores hjemmesider er bygget mobile-first med intuitivt design.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">📊</div>
           <h3>Built-in Analytics</h3>
           <p>Se hvor dine besøgende kommer fra, hvad de klikker på, og hvor mange der bestiller. Alt i ét dashboard.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">🎨</div>
           <h3>Fuldt Tilpasset Design</h3>
           <p>Dit logo, dine farver, dine billeder. Vi laver en hjemmeside der matcher dit brand 100%.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
           <div class="feature-icon">📧</div>
           <h3>Email Marketing</h3>
           <p>Byg din email-liste direkte fra hjemmesiden. Send automatiske kampagner til gæster der har bestilt tidligere.</p>
@@ -686,7 +688,7 @@
   <!-- Big Quote - Dark -->
   <section class="big-quote">
     <div class="big-quote-container">
-      <blockquote>"Vi fik vores nye hjemmeside live på under 24 timer. Online bestillingssystemet fungerer perfekt, og vi har allerede fået 40% flere online ordrer."</blockquote>
+      <blockquote class="blur-reveal">"Vi fik vores nye hjemmeside live på under 24 timer. Online bestillingssystemet fungerer perfekt, og vi har allerede fået 40% flere online ordrer."</blockquote>
       <div class="big-quote-author">Anders Nielsen — Pizzeria Napoli</div>
     </div>
   </section>
@@ -752,7 +754,7 @@
   <section class="cta-final">
     <h2>Klar til at vækste dit salg?</h2>
     <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse online.</p>
-    <a href="#demo" class="button">Få gratis demo nu</a>
+    <a href="#demo" class="button magnetic-btn">Få gratis demo nu</a>
   </section>
 
   <!-- Footer (UNCHANGED from landing.html) -->

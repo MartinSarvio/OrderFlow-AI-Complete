@@ -357,6 +357,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (same as landing.html) -->
@@ -410,7 +412,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Vores historie</h1>
+        <h1 class="blur-reveal">Vores historie</h1>
         <p class="subtitle">Flow startede fordi vi så restauranter bløde penge til tredjepartsplatforme. Vi bygger værktøjer så restauranter kan eje deres egen digitale fremtid.</p>
       </div>
     </div>
@@ -420,12 +422,12 @@
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-content">
-        <h2>Fra frustreret restauratør til founder</h2>
+        <h2 class="reveal">Fra frustreret restauratør til founder</h2>
         <p>Martin åbnede sin første restaurant i 2018. Efter 6 måneder havde han mistet 30% af sit salg til provisioner på Wolt og Just Eat.</p>
         <p>Han byggede Flow fordi han var træt af at betale 25-35% i commission til platforme der ikke ejede kunderne — han gjorde.</p>
       </div>
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=900&fit=crop" alt="Restaurant founder">
+        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=900&fit=crop" alt="Restaurant founder" data-parallax="0.3">
       </div>
     </div>
   </section>
@@ -434,7 +436,7 @@
   <section class="timeline">
     <div class="timeline-container">
       <div class="timeline-header">
-        <h2>Vores rejse</h2>
+        <h2 class="reveal">Vores rejse</h2>
       </div>
       <div class="timeline-item">
         <div class="timeline-year">2020</div>
@@ -471,18 +473,18 @@
   <section class="values">
     <div class="values-container">
       <div class="values-header">
-        <h2>Hvad vi står for</h2>
+        <h2 class="reveal">Hvad vi står for</h2>
       </div>
       <div class="values-grid">
-        <div class="value-card">
+        <div class="value-card tilt-card reveal">
           <h3>Restauranter først</h3>
           <p>Vi bygger værktøjer til restauranter, ikke investorer. Hvis noget ikke hjælper restauranter med at vokse, bygger vi det ikke.</p>
         </div>
-        <div class="value-card">
+        <div class="value-card tilt-card reveal">
           <h3>Gennemsigtighed</h3>
           <p>Ingen skjulte gebyrer. Ingen lock-ins. Du ejer dine kunder og din data. Altid.</p>
         </div>
-        <div class="value-card">
+        <div class="value-card tilt-card reveal">
           <h3>Support der svarer</h3>
           <p>Vi svarer inden for 5 minutter. Hver gang. Fordi restauranter ikke har tid til at vente.</p>
         </div>
@@ -494,7 +496,7 @@
   <section class="cta-final">
     <h2>Bliv en del af Flow</h2>
     <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse.</p>
-    <a href="karriere.html" class="button">Se ledige stillinger</a>
+    <a href="karriere.html" class="button magnetic-btn">Se ledige stillinger</a>
   </section>
 
   <!-- Footer -->

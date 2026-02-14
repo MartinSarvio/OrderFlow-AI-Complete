@@ -333,6 +333,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (same structure as other pages - omitted for brevity) -->
@@ -386,7 +388,7 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Bliv en del af Flow</h1>
+        <h1 class="wave-text">Bliv en del af Flow</h1>
         <p class="subtitle">Vi bygger fremtidens restaurant-teknologi. Hjælp os med at give restauranter kontrol over deres digitale fremtid.</p>
       </div>
     </div>
@@ -396,22 +398,22 @@
   <section class="benefits">
     <div class="benefits-container">
       <div class="benefits-header">
-        <h2>Hvorfor arbejde hos Flow?</h2>
+        <h2 class="blur-reveal">Hvorfor arbejde hos Flow?</h2>
       </div>
       <div class="benefits-grid">
-        <div class="benefit-card">
+        <div class="benefit-card tilt-card">
           <h3>Arbejd der betyder noget</h3>
           <p>Hver feature du bygger hjælper små restauranter med at konkurrere mod Wolt og Just Eat. Dit arbejde skaber reel value.</p>
         </div>
-        <div class="benefit-card">
+        <div class="benefit-card tilt-card">
           <h3>Fri og fleksibel</h3>
           <p>Work from anywhere. Vi er et remote-first team med folk i hele Norden. Mød op hvis du vil, men du bestemmer selv.</p>
         </div>
-        <div class="benefit-card">
+        <div class="benefit-card tilt-card">
           <h3>Konkurrencedygtig løn</h3>
           <p>Vi betaler markedets bedste løn + equity i virksomheden. Du fortjener det bedste.</p>
         </div>
-        <div class="benefit-card">
+        <div class="benefit-card tilt-card">
           <h3>Lær og voks</h3>
           <p>Vi investerer i din udvikling. Kurser, konferencer, certificeringer — hvis det gør dig bedre, betaler vi.</p>
         </div>
@@ -423,11 +425,11 @@
   <section class="jobs">
     <div class="jobs-container">
       <div class="jobs-header">
-        <h2>Ledige stillinger</h2>
+        <h2 class="blur-reveal">Ledige stillinger</h2>
         <p>Vi ansætter de bedste folk indenfor tech, design og salg. Se vores åbne stillinger nedenfor.</p>
       </div>
-      <div class="jobs-list">
-        <div class="job-card">
+      <div class="jobs-list stagger-children">
+        <div class="job-card reveal">
           <div class="job-header">
             <div class="job-title">
               <h3>Senior Full-Stack Developer</h3>
@@ -439,7 +441,7 @@
             <p>Vi søger en erfaren full-stack developer til at bygge nye features i vores platform. React, Node.js, PostgreSQL. Du arbejder direkte med produktet og får stor indflydelse.</p>
           </div>
         </div>
-        <div class="job-card">
+        <div class="job-card reveal">
           <div class="job-header">
             <div class="job-title">
               <h3>Product Designer</h3>
@@ -451,7 +453,7 @@
             <p>Design brugervenlige interfaces for restauratører og deres kunder. Figma, user research, prototyping. Du former hvordan 500+ restauranter bruger vores platform.</p>
           </div>
         </div>
-        <div class="job-card">
+        <div class="job-card reveal">
           <div class="job-header">
             <div class="job-title">
               <h3>Customer Success Manager</h3>

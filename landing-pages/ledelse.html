@@ -138,6 +138,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <nav class="nav-wrapper">
@@ -181,33 +183,33 @@
         </div>
         <div class="nav-right">
           <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
-          <a href="#demo" class="nav-cta">Få en gratis demo</a>
+          <a href="#demo" class="nav-cta magnetic-btn">Få en gratis demo</a>
         </div>
       </div>
     </nav>
 
   <section class="hero">
-    <h1>Mød teamet</h1>
+    <h1 class="blur-reveal">Mød teamet</h1>
     <p>Vi er et lille, dedikeret team der bygger fremtidens restaurant-teknologi med passion og erfaring.</p>
   </section>
 
   <section class="team">
     <div class="team-container">
-      <div class="team-grid">
-        <div class="team-member">
-          <img src="https://i.pravatar.cc/400?img=12" alt="Martin Sarvio" class="team-photo">
+      <div class="team-grid stagger-children">
+        <div class="team-member tilt-card reveal">
+          <img src="https://i.pravatar.cc/400?img=12" alt="Martin Sarvio" class="team-photo" data-parallax="0.15">
           <div class="team-name">Martin Sarvio</div>
           <div class="team-title">Founder & CEO</div>
           <p class="team-bio">Tidligere restauratør der startede Flow efter at have mistet 30% i provision til tredjepartsplatforme.</p>
         </div>
-        <div class="team-member">
-          <img src="https://i.pravatar.cc/400?img=5" alt="Sophie Larsen" class="team-photo">
+        <div class="team-member tilt-card reveal">
+          <img src="https://i.pravatar.cc/400?img=5" alt="Sophie Larsen" class="team-photo" data-parallax="0.15">
           <div class="team-name">Sophie Larsen</div>
           <div class="team-title">Head of Product</div>
           <p class="team-bio">10+ års erfaring fra Uber Eats og Just Eat. Designer produkter restauranter elsker.</p>
         </div>
-        <div class="team-member">
-          <img src="https://i.pravatar.cc/400?img=33" alt="Anders Nielsen" class="team-photo">
+        <div class="team-member tilt-card reveal">
+          <img src="https://i.pravatar.cc/400?img=33" alt="Anders Nielsen" class="team-photo" data-parallax="0.15">
           <div class="team-name">Anders Nielsen</div>
           <div class="team-title">CTO</div>
           <p class="team-bio">Tech lead fra Wolt. Bygger skalerbar infrastruktur der håndterer millioner af ordrer.</p>

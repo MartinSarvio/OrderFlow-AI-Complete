@@ -263,6 +263,8 @@
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
     <nav class="nav-wrapper">
@@ -312,65 +314,65 @@
     </nav>
 
   <section class="hero">
-    <h1>Simple priser</h1>
+    <h1 class="blur-reveal">Simple priser</h1>
     <p>Ingen skjulte gebyrer. Ingen lock-ins. Betal kun for det du bruger.</p>
   </section>
 
   <section class="pricing">
     <div class="pricing-container">
-      <div class="pricing-grid">
+      <div class="pricing-grid stagger-children">
         <!-- Starter Plan -->
-        <div class="price-card">
+        <div class="price-card reveal-scale">
           <h3>Starter</h3>
           <div class="price">
-            <div class="price-amount">499,-</div>
+            <div class="price-amount counter-value" data-count-to="499">499,-</div>
             <div class="price-period">kr/måned</div>
           </div>
-          <div class="price-features">
-            <div class="price-feature">Restaurant hjemmeside</div>
-            <div class="price-feature">Online bestilling</div>
-            <div class="price-feature">Op til 100 ordrer/md</div>
-            <div class="price-feature">Email support</div>
-            <div class="price-feature">Gratis domæne 1. år</div>
+          <div class="price-features stagger-children">
+            <div class="price-feature reveal">Restaurant hjemmeside</div>
+            <div class="price-feature reveal">Online bestilling</div>
+            <div class="price-feature reveal">Op til 100 ordrer/md</div>
+            <div class="price-feature reveal">Email support</div>
+            <div class="price-feature reveal">Gratis domæne 1. år</div>
           </div>
-          <a href="#demo" class="price-button">Start nu</a>
+          <a href="#demo" class="price-button magnetic-btn">Start nu</a>
         </div>
 
         <!-- Pro Plan (Featured) -->
-        <div class="price-card featured">
+        <div class="price-card featured reveal-scale">
           <div class="price-badge">Mest populær</div>
           <h3>Pro</h3>
           <div class="price">
-            <div class="price-amount">999,-</div>
+            <div class="price-amount counter-value" data-count-to="999">999,-</div>
             <div class="price-period">kr/måned</div>
           </div>
-          <div class="price-features">
-            <div class="price-feature">Alt fra Starter</div>
-            <div class="price-feature">Custom mobile app</div>
-            <div class="price-feature">Ubegrænsede ordrer</div>
-            <div class="price-feature">Email marketing</div>
-            <div class="price-feature">Loyalitetsprogram</div>
-            <div class="price-feature">Priority support</div>
+          <div class="price-features stagger-children">
+            <div class="price-feature reveal">Alt fra Starter</div>
+            <div class="price-feature reveal">Custom mobile app</div>
+            <div class="price-feature reveal">Ubegrænsede ordrer</div>
+            <div class="price-feature reveal">Email marketing</div>
+            <div class="price-feature reveal">Loyalitetsprogram</div>
+            <div class="price-feature reveal">Priority support</div>
           </div>
-          <a href="#demo" class="price-button">Start nu</a>
+          <a href="#demo" class="price-button magnetic-btn">Start nu</a>
         </div>
 
         <!-- Enterprise Plan -->
-        <div class="price-card">
+        <div class="price-card reveal-scale">
           <h3>Enterprise</h3>
           <div class="price">
             <div class="price-amount">Custom</div>
             <div class="price-period">Kontakt os</div>
           </div>
-          <div class="price-features">
-            <div class="price-feature">Alt fra Pro</div>
-            <div class="price-feature">Dedikeret success manager</div>
-            <div class="price-feature">White-label muligheder</div>
-            <div class="price-feature">Custom integrationer</div>
-            <div class="price-feature">SLA garanti</div>
-            <div class="price-feature">24/7 support</div>
+          <div class="price-features stagger-children">
+            <div class="price-feature reveal">Alt fra Pro</div>
+            <div class="price-feature reveal">Dedikeret success manager</div>
+            <div class="price-feature reveal">White-label muligheder</div>
+            <div class="price-feature reveal">Custom integrationer</div>
+            <div class="price-feature reveal">SLA garanti</div>
+            <div class="price-feature reveal">24/7 support</div>
           </div>
-          <a href="mailto:sales@flow.dk" class="price-button">Kontakt salg</a>
+          <a href="mailto:sales@flow.dk" class="price-button magnetic-btn">Kontakt salg</a>
         </div>
       </div>
     </div>
@@ -405,7 +407,7 @@
   <section class="cta">
     <h2>Klar til at starte?</h2>
     <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse.</p>
-    <a href="#demo" class="button">Få gratis demo nu</a>
+    <a href="#demo" class="button magnetic-btn">Få gratis demo nu</a>
   </section>
 
   <footer class="footer">

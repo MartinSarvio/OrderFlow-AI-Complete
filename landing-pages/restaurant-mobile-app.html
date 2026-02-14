@@ -438,6 +438,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from landing.html) -->
@@ -493,15 +495,15 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Din egen app. Uden udviklere.</h1>
+        <h1 class="wave-text">Din egen app. Uden udviklere.</h1>
         <p class="subtitle">Byg en 5-stjernet mobil app til din restaurant på 48 timer. Loyalitetsprogram, push-notifikationer og online bestilling built-in.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Se demo</a>
-          <a href="#features" class="button is-secondary">Se features</a>
+          <a href="#demo" class="button magnetic-btn">Se demo</a>
+          <a href="#features" class="button is-secondary magnetic-btn">Se features</a>
         </div>
       </div>
       <div class="hero-image">
-        <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=1000&fit=crop" alt="Mobile App">
+        <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=1000&fit=crop" alt="Mobile App" class="float-slow">
       </div>
     </div>
   </section>
@@ -513,33 +515,33 @@
         <h2>Alt built-in</h2>
         <p>Loyalitet, push-notifikationer, online bestilling og meget mere. Alt uden at skrive en linje kode.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">⭐</div>
           <h3>Loyalitetsprogram</h3>
           <p>Built-in point system med automatiske belønninger. Kunder tjener points ved hver bestilling.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">🔔</div>
           <h3>Push Notifikationer</h3>
           <p>Send tilbud, nyheder og påmindelser direkte til kundens telefon. 8x højere engagement end email.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">🛒</div>
           <h3>Online Bestilling</h3>
           <p>Fuldt integreret bestillingssystem. Kunden bestiller, du modtager ordren i realtid.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">📱</div>
           <h3>Native App</h3>
           <p>Ægte native app til iOS og Android. Ikke en web-wrapper — ægte app performance.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">🎨</div>
           <h3>Branded Design</h3>
           <p>Dit logo, dine farver, dit brand. Appen matcher 100% din visuelle identitet.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">📊</div>
           <h3>Real-time Analytics</h3>
           <p>Se downloads, ordrer, engagement og ROI i real-time. Alt i ét dashboard.</p>
@@ -579,19 +581,19 @@
   <section class="stats-bar">
     <div class="stats-container">
       <div class="stat-item">
-        <h3>3.2x</h3>
+        <h3 data-count-to="3.2">3.2x</h3>
         <p>Flere ordrer fra app-brugere</p>
       </div>
       <div class="stat-item">
-        <h3>48t</h3>
+        <h3 data-count-to="48">48t</h3>
         <p>Fra start til App Store</p>
       </div>
       <div class="stat-item">
-        <h3>0%</h3>
+        <h3 data-count-to="0">0%</h3>
         <p>Provision til tredjeparter</p>
       </div>
       <div class="stat-item">
-        <h3>24/7</h3>
+        <h3 data-count-to="24">24/7</h3>
         <p>Altid åben for bestillinger</p>
       </div>
     </div>
@@ -609,7 +611,7 @@
   <section class="cta-final">
     <h2>Klar til din egen app?</h2>
     <p>Book en gratis demo og se hvordan din app kan se ud. Live på App Store på 48 timer.</p>
-    <a href="#demo" class="button">Book demo nu</a>
+    <a href="#demo" class="button magnetic-btn">Book demo nu</a>
   </section>
 
   <!-- Footer (UNCHANGED from landing.html) -->

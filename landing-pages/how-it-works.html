@@ -1956,6 +1956,8 @@
     }
   </style>
 
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
   <!-- Google Maps Places API -->
 </head>
 <body>
@@ -2009,7 +2011,7 @@
   <!-- Hero Section with Search -->
   <section class="hero" id="heroSection">
     <div class="hero-container">
-      <h1 class="hero-title">F<span class="big">Å</span> EN <span class="big">G</span>R<span class="big">A</span>TIS <span class="big">A</span>N<span class="big">A</span>LYSE <span class="big">A</span>F<br><span class="gradient">DIN REST<span class="big">A</span>UR<span class="big">A</span>NT</span></h1>
+      <h1 class="hero-title wave-text">F<span class="big">Å</span> EN <span class="big">G</span>R<span class="big">A</span>TIS <span class="big">A</span>N<span class="big">A</span>LYSE <span class="big">A</span>F<br><span class="gradient">DIN REST<span class="big">A</span>UR<span class="big">A</span>NT</span></h1>
 
       <div class="search-section">
         <div class="search-container">
@@ -2024,7 +2026,7 @@
               placeholder="Søg efter din restaurant..." 
               autocomplete="off"
             >
-            <button class="search-btn" id="searchBtn" disabled>
+            <button class="search-btn magnetic-btn" id="searchBtn" disabled>
               Start analyse
             </button>
           </div>
@@ -2215,8 +2217,8 @@
           <div class="timeline-vertical"></div>
           <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
-          <div class="how-step-content">
-            <div class="how-step-number">01.</div>
+          <div class="how-step-content reveal-left">
+            <div class="how-step-number reveal-scale">01.</div>
             <h3>Vis dig øverst på Google</h3>
             <p>Slå dine konkurrenter med en hjemmeside perfekt optimeret til Google. Få flere ordrer fra folk i dit område.</p>
             <a href="#" class="how-learn-more">
@@ -2226,7 +2228,7 @@
               </svg>
             </a>
           </div>
-          <div class="how-step-image">
+          <div class="how-step-image" data-parallax="0.2">
             <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80" alt="Restaurant mad">
             <!-- Google Search Mockup -->
             <div class="how-mockup center">
@@ -2255,8 +2257,8 @@
           <div class="timeline-vertical"></div>
           <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
-          <div class="how-step-content">
-            <div class="how-step-number">02.</div>
+          <div class="how-step-content reveal-right">
+            <div class="how-step-number reveal-scale">02.</div>
             <h3>Øg dit salg med den nemmeste online bestilling</h3>
             <p>Gæster bestiller mere fra dig når din online bestillingsoplevelse føles nem og bekendt at bruge.</p>
             <a href="#" class="how-learn-more">
@@ -2266,7 +2268,7 @@
               </svg>
             </a>
           </div>
-          <div class="how-step-image">
+          <div class="how-step-image" data-parallax="0.2">
             <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80" alt="Pizza mad">
             <!-- Menu Mockup -->
             <div class="how-mockup center" style="padding: 0; overflow: hidden; max-width: 85%;">
@@ -2302,8 +2304,8 @@
           <div class="timeline-vertical"></div>
           <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
-          <div class="how-step-content">
-            <div class="how-step-number">03.</div>
+          <div class="how-step-content reveal-left">
+            <div class="how-step-number reveal-scale">03.</div>
             <h3>Få flere genbestillinger med din mobil app og belønninger</h3>
             <p>Få flere genbestillinger med din egen 5-stjernet mobil app. Byg loyalitet med et belønningsprogram, ligesom Starbucks.</p>
             <a href="#" class="how-learn-more">
@@ -2313,7 +2315,7 @@
               </svg>
             </a>
           </div>
-          <div class="how-step-image">
+          <div class="how-step-image" data-parallax="0.2">
             <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80" alt="Sund mad">
             <!-- Mobile App Mockup -->
             <div class="how-mockup center" style="padding: 0; background: #1a1a1a; border-radius: 28px; width: 160px;">
@@ -2339,8 +2341,8 @@
           <div class="timeline-vertical"></div>
           <div class="timeline-horizontal"></div>
           <div class="timeline-down"></div>
-          <div class="how-step-content">
-            <div class="how-step-number">04.</div>
+          <div class="how-step-content reveal-right">
+            <div class="how-step-number reveal-scale">04.</div>
             <h3>Hold gæster engageret med automatisk marketing</h3>
             <p>Øg salget med beviste, automatiserede marketingkampagner. Send pengeskabende emails og SMS uden at skrive et ord.</p>
             <a href="#" class="how-learn-more">
@@ -2350,7 +2352,7 @@
               </svg>
             </a>
           </div>
-          <div class="how-step-image">
+          <div class="how-step-image" data-parallax="0.2">
             <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" alt="Restaurant stemning">
             <!-- Marketing Automation Mockup -->
             <div class="how-mockup center" style="max-width: 85%;">
@@ -2397,7 +2399,7 @@
           <!-- Row 1 - Forward -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
                   <div class="testimonial-info">
@@ -2407,7 +2409,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
                   <div class="testimonial-info">
@@ -2417,7 +2419,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
                   <div class="testimonial-info">
@@ -2429,7 +2431,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
                   <div class="testimonial-info">
@@ -2439,7 +2441,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
                   <div class="testimonial-info">
@@ -2449,7 +2451,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
                   <div class="testimonial-info">
@@ -2461,7 +2463,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
                   <div class="testimonial-info">
@@ -2471,7 +2473,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
                   <div class="testimonial-info">
@@ -2481,7 +2483,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
                   <div class="testimonial-info">
@@ -2497,7 +2499,7 @@
           <!-- Row 2 - Reverse -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
                   <div class="testimonial-info">
@@ -2507,7 +2509,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
                   <div class="testimonial-info">
@@ -2517,7 +2519,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
                   <div class="testimonial-info">
@@ -2529,7 +2531,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
                   <div class="testimonial-info">
@@ -2539,7 +2541,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
                   <div class="testimonial-info">
@@ -2549,7 +2551,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
                   <div class="testimonial-info">
@@ -2561,7 +2563,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
                   <div class="testimonial-info">
@@ -2571,7 +2573,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
                   <div class="testimonial-info">
@@ -2581,7 +2583,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
                   <div class="testimonial-info">
@@ -2597,7 +2599,7 @@
           <!-- Row 3 - Forward -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
                   <div class="testimonial-info">
@@ -2607,7 +2609,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
                   <div class="testimonial-info">
@@ -2617,7 +2619,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
                   <div class="testimonial-info">
@@ -2629,7 +2631,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
                   <div class="testimonial-info">
@@ -2639,7 +2641,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
                   <div class="testimonial-info">
@@ -2649,7 +2651,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
                   <div class="testimonial-info">
@@ -2661,7 +2663,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
                   <div class="testimonial-info">
@@ -2671,7 +2673,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
                   <div class="testimonial-info">
@@ -2681,7 +2683,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
                   <div class="testimonial-info">
@@ -2697,7 +2699,7 @@
           <!-- Row 4 - Reverse -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
                   <div class="testimonial-info">
@@ -2707,7 +2709,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
                   <div class="testimonial-info">
@@ -2717,7 +2719,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
                   <div class="testimonial-info">
@@ -2729,7 +2731,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
                   <div class="testimonial-info">
@@ -2739,7 +2741,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
                   <div class="testimonial-info">
@@ -2749,7 +2751,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
                   <div class="testimonial-info">
@@ -2761,7 +2763,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
                   <div class="testimonial-info">
@@ -2771,7 +2773,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
                   <div class="testimonial-info">
@@ -2781,7 +2783,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
                   <div class="testimonial-info">
@@ -2797,7 +2799,7 @@
           <!-- Row 5 - Forward -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
                   <div class="testimonial-info">
@@ -2807,7 +2809,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
                   <div class="testimonial-info">
@@ -2817,7 +2819,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
                   <div class="testimonial-info">
@@ -2829,7 +2831,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
                   <div class="testimonial-info">
@@ -2839,7 +2841,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
                   <div class="testimonial-info">
@@ -2849,7 +2851,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
                   <div class="testimonial-info">
@@ -2861,7 +2863,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
                   <div class="testimonial-info">
@@ -2871,7 +2873,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
                   <div class="testimonial-info">
@@ -2881,7 +2883,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
                   <div class="testimonial-info">
@@ -2897,7 +2899,7 @@
           <!-- Row 6 - Reverse -->
           <div class="testimonial-marquee-group">
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
                   <div class="testimonial-info">
@@ -2907,7 +2909,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
                   <div class="testimonial-info">
@@ -2917,7 +2919,7 @@
                 </div>
                 <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
                   <div class="testimonial-info">
@@ -2929,7 +2931,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
                   <div class="testimonial-info">
@@ -2939,7 +2941,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
                   <div class="testimonial-info">
@@ -2949,7 +2951,7 @@
                 </div>
                 <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
                   <div class="testimonial-info">
@@ -2961,7 +2963,7 @@
               </figure>
             </div>
             <div class="testimonial-marquee-row reverse">
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
                   <div class="testimonial-info">
@@ -2971,7 +2973,7 @@
                 </div>
                 <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
                   <div class="testimonial-info">
@@ -2981,7 +2983,7 @@
                 </div>
                 <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
               </figure>
-              <figure class="testimonial-card">
+              <figure class="testimonial-card tilt-card reveal">
                 <div class="testimonial-header">
                   <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
                   <div class="testimonial-info">
@@ -4236,7 +4238,7 @@
   // Generate testimonial card HTML
   function createCard(t) {
     return `
-      <figure class="testimonial-card">
+      <figure class="testimonial-card tilt-card reveal">
         <div class="testimonial-header">
           <img class="testimonial-avatar" src="https://avatar.vercel.sh/${encodeURIComponent(t.name)}" alt="">
           <div class="testimonial-info">

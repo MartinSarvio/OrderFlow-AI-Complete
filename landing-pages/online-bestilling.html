@@ -450,6 +450,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from landing.html) -->
@@ -505,11 +507,11 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>Stop kommission. Start profit.</h1>
+        <h1 class="shimmer-text">Stop kommission. Start profit.</h1>
         <p class="subtitle">Et online bestillingssystem uden den vanvittige 30% kommission til tredjepartsplatforme. Behold alle pengene. Ej dine kunder.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få gratis demo</a>
-          <a href="priser.html" class="button is-secondary">Se priser</a>
+          <a href="#demo" class="button magnetic-btn">Få gratis demo</a>
+          <a href="priser.html" class="button is-secondary magnetic-btn">Se priser</a>
         </div>
       </div>
     </div>
@@ -521,23 +523,23 @@
       <div class="process-header">
         <h2>Sådan virker det</h2>
       </div>
-      <div class="process-grid">
-        <div class="process-step">
+      <div class="process-grid stagger-children">
+        <div class="process-step reveal">
           <div class="process-number">01</div>
           <h3>Mobiloptimeret</h3>
           <p>Perfekt brugeroplevelse på alle enheder. 80% af ordrer kommer fra mobil.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step reveal">
           <div class="process-number">02</div>
           <h3>Alle betalinger</h3>
           <p>MobilePay, Apple Pay, Google Pay og alle kort. Hurtig checkout.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step reveal">
           <div class="process-number">03</div>
           <h3>Levering & afhentning</h3>
           <p>Kunder vælger selv. Automatisk beregning af leveringsomkostninger.</p>
         </div>
-        <div class="process-step">
+        <div class="process-step reveal">
           <div class="process-number">04</div>
           <h3>Tidsbestilling</h3>
           <p>Bestil nu eller senere. Du bestemmer hvor langt i forvejen.</p>
@@ -554,22 +556,22 @@
         <p>Intet bureaukrati. Intet setup-bøvl. Alt fungerer bare — fra dag 1.</p>
       </div>
       <div class="features-items">
-        <div class="feature-card">
+        <div class="feature-card tilt-card">
           <div class="feature-icon">📱</div>
           <h3>Menu Management</h3>
           <p>Opdater menu, priser og tilgængelighed i realtid. Skjul automatisk udsolgte produkter fra kunderne.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card">
           <div class="feature-icon">📊</div>
           <h3>Analytics & Rapporter</h3>
           <p>Se præcist hvor mange ordrer du får, hvad der sælger bedst, og hvor meget du tjener. Live data hele tiden.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card">
           <div class="feature-icon">💳</div>
           <h3>POS Integration</h3>
           <p>Flow integrerer direkte med de fleste POS-systemer. Ordrer synkroniseres automatisk — ingen manuel indtastning.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card tilt-card">
           <div class="feature-icon">📧</div>
           <h3>Email Marketing</h3>
           <p>Byg din email-liste direkte fra bestillingssiden. Send automatiske kampagner til kunder der har bestilt før.</p>
@@ -582,7 +584,7 @@
   <section class="image-split">
     <div class="image-split-grid">
       <div class="image-split-img">
-        <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=1200&h=900&fit=crop" alt="Restaurant online bestilling">
+        <img src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?w=1200&h=900&fit=crop" alt="Restaurant online bestilling" data-parallax="0.3">
       </div>
       <div class="image-split-content">
         <h2>Spar tusindvis om måneden</h2>
@@ -614,7 +616,7 @@
   <section class="cta-final">
     <h2>Klar til at vækste dit salg?</h2>
     <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse online — uden kommission.</p>
-    <a href="#demo" class="button">Få gratis demo nu</a>
+    <a href="#demo" class="button magnetic-btn">Få gratis demo nu</a>
   </section>
 
   <!-- Footer (UNCHANGED from landing.html) -->

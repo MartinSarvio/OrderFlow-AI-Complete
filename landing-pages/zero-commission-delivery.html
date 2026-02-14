@@ -422,6 +422,8 @@
       .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
+  <link rel="stylesheet" href="shared-animations.css">
+  <script src="shared-animations.js" defer></script>
 </head>
 <body>
   <!-- Navigation (UNCHANGED from reference) -->
@@ -477,11 +479,11 @@
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>0% kommission. 100% dit salg.</h1>
+        <h1 class="wave-text">0% kommission. 100% dit salg.</h1>
         <p class="subtitle">Slip for dyre leveringsplatforme. Med Flow beholder du 100% af dit salg og ejer dine kunder. Ingen provision til Wolt eller Just Eat.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Beregn besparelse</a>
-          <a href="priser.html" class="button is-secondary">Se priser</a>
+          <a href="#demo" class="button magnetic-btn">Beregn besparelse</a>
+          <a href="priser.html" class="button is-secondary magnetic-btn">Se priser</a>
         </div>
       </div>
     </div>
@@ -491,15 +493,15 @@
   <section class="stats-bar">
     <div class="stats-container">
       <div class="stat-item">
-        <h3>0%</h3>
+        <h3 class="counter-value" data-count-to="0">0%</h3>
         <p>Kommission</p>
       </div>
       <div class="stat-item">
-        <h3>45 kr</h3>
+        <h3 class="counter-value" data-count-to="45">45 kr</h3>
         <p>Pr. levering</p>
       </div>
       <div class="stat-item">
-        <h3>100%</h3>
+        <h3 class="counter-value" data-count-to="100">100%</h3>
         <p>Dine kunder</p>
       </div>
     </div>
@@ -526,33 +528,33 @@
         <h2>Sådan virker det</h2>
         <p>Kommissionsfri levering betyder du beholder alt. Vores flade pris gør det forudsigeligt.</p>
       </div>
-      <div class="features-items">
-        <div class="feature-card">
+      <div class="features-items stagger-children">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">💰</div>
           <h3>Fast pris per levering</h3>
           <p>Betale den samme pris om ordren er på 100 kr eller 2.000 kr. Ingen procentbaseret kommission.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">📍</div>
           <h3>Real-time tracking</h3>
           <p>Kunder kan følge deres ordre live på kortet. Push-notifikationer ved afhentning og levering.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">🗺️</div>
           <h3>Rute-optimering</h3>
           <p>Vores system finder den hurtigste rute og minimerer ventetid for buden.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">🔗</div>
           <h3>POS-integration</h3>
           <p>Integrerer direkte med dit POS-system. Buddet bliver tilkaldt præcis når maden er klar.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">📱</div>
           <h3>Bud-app</h3>
           <p>Dine bude får en professionel app med GPS-navigation og ordre-håndtering.</p>
         </div>
-        <div class="feature-card">
+        <div class="feature-card reveal-scale">
           <div class="feature-icon">📊</div>
           <h3>Analytics</h3>
           <p>Se præcis hvor meget du sparer sammenlignet med Wolt/Just Eat. Gennemsnitlig leveringstid, ratings, mm.</p>
@@ -562,7 +564,7 @@
   </section>
 
   <!-- Big Quote - Dark -->
-  <section class="big-quote">
+  <section class="big-quote tilt-card">
     <div class="big-quote-container">
       <blockquote>"Vi sparede 38.000 kr/md ved at skifte fra Wolt til Flow. Vi har fuld kontrol, bedre margin og ejer vores kunde-data."</blockquote>
       <div class="big-quote-author">Henrik Poulsen — Thai Street Food</div>
@@ -587,7 +589,7 @@
   <section class="cta-final">
     <h2>Klar til at droppe kommissionen?</h2>
     <p>Vi tager dine nuværende leveringstal og viser dig hvad du reelt kan spare. Ingen forpligtelser.</p>
-    <a href="#demo" class="button">Beregn din besparelse nu</a>
+    <a href="#demo" class="button magnetic-btn">Beregn din besparelse nu</a>
   </section>
 
   <!-- Footer (UNCHANGED) -->
