@@ -181,7 +181,7 @@ async function processMessagingEvent(supabase, pageId, event, objectType) {
   await markProcessed(supabase, channel, messageId, tenantId);
 
   // Step 8: Process with AI (async)
-  processWithAI(supabase, thread, message, customer, tenantId, channel, senderId).catch(err => {
+  processWithAI(supabase, thread, message, customer, tenantId, channel, senderId, pageId).catch(err => {
     console.error('[Meta Webhook] AI processing error:', err);
   });
 }
@@ -341,7 +341,7 @@ async function storeMessage(supabase, threadId, data) {
 /**
  * Process with AI agent
  */
-async function processWithAI(supabase, thread, message, customer, tenantId, channel, recipientId) {
+async function processWithAI(supabase, thread, message, customer, tenantId, channel, recipientId, pageId) {
   try {
     // Load conversation history
     const { data: history } = await supabase
@@ -391,7 +391,7 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
 
     // Send response via Meta API
     if (aiResponse.text) {
-      await sendMetaMessage(channel, recipientId, aiResponse.text);
+      await sendMetaMessage(channel, recipientId, aiResponse.text, supabase, pageId);
     }
 
     // Create order if detected
@@ -442,19 +442,42 @@ async function callOrderingAgent(conversation, menu, customer, channel) {
 }
 
 /**
+ * Get page access token from database
+ */
+async function getPageAccessToken(supabase, pageId, channel) {
+  // Try to find token by page_id
+  const { data } = await supabase
+    .from('social_integrations')
+    .select('access_token')
+    .eq('page_id', pageId)
+    .eq('platform', channel)
+    .eq('status', 'connected')
+    .limit(1);
+
+  if (data && data.length > 0) {
+    return data[0].access_token;
+  }
+
+  // Fallback to env var
+  return META_PAGE_ACCESS_TOKEN || null;
+}
+
+/**
  * Send message via Meta API
  */
-async function sendMetaMessage(channel, recipientId, text) {
+async function sendMetaMessage(channel, recipientId, text, supabase, pageId) {
   console.log(`[Meta] Sending ${channel} message to ${recipientId}: ${text}`);
 
-  if (!META_PAGE_ACCESS_TOKEN) {
-    console.log('[Meta] No access token configured, skipping send');
+  const accessToken = supabase && pageId
+    ? await getPageAccessToken(supabase, pageId, channel)
+    : META_PAGE_ACCESS_TOKEN;
+
+  if (!accessToken) {
+    console.log('[Meta] No access token available, skipping send');
     return;
   }
 
-  const apiUrl = channel === 'instagram'
-    ? 'https://graph.facebook.com/v18.0/me/messages'
-    : 'https://graph.facebook.com/v18.0/me/messages';
+  const apiUrl = 'https://graph.facebook.com/v21.0/me/messages';
 
   try {
     const response = await fetch(apiUrl, {
@@ -465,7 +488,7 @@ async function sendMetaMessage(channel, recipientId, text) {
       body: JSON.stringify({
         recipient: { id: recipientId },
         message: { text },
-        access_token: META_PAGE_ACCESS_TOKEN
+        access_token: accessToken
       })
     });
 

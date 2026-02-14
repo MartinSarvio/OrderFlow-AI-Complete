@@ -1128,7 +1128,7 @@ function disconnectAgent(provider) {
 // ============================================
 
 function initMetaOAuth(channel) {
-  var META_APP_ID = localStorage.getItem('meta_app_id') || '';
+  var META_APP_ID = localStorage.getItem('meta_app_id') || '905858048603012';
   if (!META_APP_ID) {
     toast('Meta App ID mangler. Tilføj den under API Nøgler først.', 'warning');
     return;
@@ -1137,8 +1137,9 @@ function initMetaOAuth(channel) {
   var scope = channel === 'instagram'
     ? 'instagram_basic,instagram_manage_messages,pages_show_list'
     : 'pages_manage_metadata,pages_messaging,pages_show_list';
-  var state = btoa(JSON.stringify({ channel: channel, ts: Date.now() }));
-  var authUrl = 'https://www.facebook.com/v18.0/dialog/oauth?client_id=' + META_APP_ID + '&redirect_uri=' + redirectUri + '&scope=' + scope + '&response_type=code&state=' + state;
+  var tenantId = window.currentRestaurant?.id || '';
+  var state = btoa(JSON.stringify({ channel: channel, ts: Date.now(), tenantId: tenantId }));
+  var authUrl = 'https://www.facebook.com/v21.0/dialog/oauth?client_id=' + META_APP_ID + '&redirect_uri=' + redirectUri + '&scope=' + scope + '&response_type=code&state=' + state;
   var popup = window.open(authUrl, 'meta_oauth', 'width=600,height=700,scrollbars=yes');
   window.addEventListener('message', function handler(event) {
     if (event.data && event.data.type === 'meta_oauth_callback') {
