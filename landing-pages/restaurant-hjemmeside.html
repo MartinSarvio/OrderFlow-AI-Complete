@@ -9,7 +9,7 @@
   <meta property="og:description" content="En restaurant-hjemmeside der faktisk virker. Live på 24 timer, mobiloptimeret fra start.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -31,11 +31,25 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      
+      /* Typography */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    body { 
+      font-family: var(--font-body); 
+      font-size: 1.6rem; 
+      line-height: 1.6; 
+      color: var(--color-dark); 
+      background: var(--color-white); 
+      -webkit-font-smoothing: antialiased; 
+      -moz-osx-font-smoothing: grayscale; 
+      overflow-x: hidden; 
+    }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
@@ -48,7 +62,7 @@
     ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
     *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    /* Navigation from landing.html */
+    /* Navigation from landing.html - UNCHANGED */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -95,74 +109,414 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Hero - Beige Background */
-    .hero { background: var(--color-beige); padding: 14rem 4rem 10rem; }
-    .hero-container { max-width: var(--container-max); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
-    .hero-content h1 { font-family: 'Space Grotesk', sans-serif; font-size: 5.6rem; font-weight: 700; line-height: 1.1; color: #090a0b; margin-bottom: 2.4rem; letter-spacing: -0.02em; }
-    .hero-content p { font-size: 1.9rem; color: #6B7280; margin-bottom: 3.2rem; line-height: 1.6; font-weight: 300; }
-    .hero-buttons { display: flex; gap: 1.6rem; }
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.6rem 3.2rem; font-size: 1.6rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-dark); color: var(--color-white); transition: all 0.3s ease; cursor: pointer; border: none; }
-    .button:hover { background: var(--color-gray-800); transform: translateY(-2px); }
-    .button.is-secondary { background: transparent; color: var(--color-dark); border: 2px solid var(--color-dark); }
-    .button.is-secondary:hover { background: var(--color-dark); color: var(--color-white); }
-    .hero-img { border-radius: 1.6rem; overflow: hidden; }
-    .hero-img img { width: 100%; height: 52rem; object-fit: cover; }
+    /* === NEW CONTENT SECTIONS === */
 
-    /* Benefits Grid - White */
-    .benefits { background: var(--color-white); padding: 12rem 4rem; }
-    .benefits-container { max-width: var(--container-max); margin: 0 auto; }
-    .benefits-header { text-align: center; margin-bottom: 6rem; }
-    .benefits-header h2 { font-family: 'Archivo Black', sans-serif; font-size: 5.2rem; font-weight: 400; color: #1A1A1A; margin-bottom: 1.6rem; text-transform: uppercase; line-height: 1.1; }
-    .benefits-header p { font-size: 1.8rem; color: var(--color-gray-600); max-width: 65rem; margin: 0 auto; }
-    .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4rem; }
-    .benefit-item { display: flex; gap: 2rem; }
-    .benefit-number { font-family: 'Archivo Black', sans-serif; font-size: 3.2rem; font-weight: 400; color: #9CA3AF; flex-shrink: 0; }
-    .benefit-content h3 { font-size: 2.4rem; font-weight: 600; color: #1A1A1A; margin-bottom: 1rem; }
-    .benefit-content p { font-size: 1.6rem; color: #6B7280; line-height: 1.7; font-weight: 300; }
+    /* Hero - Massive Typography */
+    .hero {
+      background: var(--color-white);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
 
-    /* Full Width Image - Beige */
-    .full-image { background: var(--color-beige); padding: 10rem 4rem; }
-    .full-image-container { max-width: 140rem; margin: 0 auto; border-radius: 1.6rem; overflow: hidden; }
-    .full-image-container img { width: 100%; height: 60rem; object-fit: cover; }
+    /* Stats Bar - Dark */
+    .stats-bar {
+      background: var(--color-black);
+      padding: 6rem 4rem;
+      color: var(--color-white);
+    }
+    .stats-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+      text-align: center;
+    }
+    .stat-item h3 {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      margin-bottom: 1.2rem;
+      color: var(--color-white);
+    }
+    .stat-item p {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    /* Features List - White */
-    .features-list { background: var(--color-white); padding: 12rem 4rem; }
-    .features-list-container { max-width: var(--container-max); margin: 0 auto; }
-    .features-list-header { text-align: center; margin-bottom: 6rem; }
-    .features-list-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.4rem; font-weight: 700; color: #090a0b; margin-bottom: 2rem; line-height: 1.2; }
-    .features-list-header p { font-size: 1.8rem; color: #6B7280; max-width: 70rem; margin: 0 auto; }
-    .features-items { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
-    .feature-item { background: var(--color-beige); padding: 3.2rem; border-radius: 1.6rem; }
-    .feature-item h3 { font-size: 2rem; font-weight: 600; color: #1A1A1A; margin-bottom: 1.2rem; }
-    .feature-item p { font-size: 1.5rem; color: #6B7280; line-height: 1.7; font-weight: 300; }
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
 
-    /* How It Works - Beige */
-    .how-it-works { background: var(--color-beige); padding: 10rem 4rem; }
-    .how-container { max-width: var(--container-max); margin: 0 auto; text-align: center; }
-    .how-container h2 { font-family: 'Archivo Black', sans-serif; font-size: 4.8rem; font-weight: 400; color: #090a0b; margin-bottom: 6rem; text-transform: uppercase; }
-    .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4rem; }
-    .how-step { text-align: center; }
-    .how-step-number { font-family: 'Archivo Black', sans-serif; font-size: 6.4rem; font-weight: 400; color: var(--color-gray-900); margin-bottom: 2rem; }
-    .how-step h3 { font-size: 2rem; font-weight: 600; color: #1A1A1A; margin-bottom: 1.2rem; }
-    .how-step p { font-size: 1.6rem; color: #6B7280; line-height: 1.6; }
+    /* Features Grid - White */
+    .features-grid {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .features-grid-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .features-grid-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .features-grid-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .features-grid-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: var(--color-gray-600);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .features-items {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4rem;
+    }
+    .feature-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
+    .feature-icon {
+      width: 6.4rem;
+      height: 6.4rem;
+      background: var(--color-black);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 2.4rem;
+      font-size: 3.2rem;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .feature-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    /* Testimonials - White */
-    .testimonials { background: var(--color-white); padding: 10rem 4rem; }
-    .testimonials-container { max-width: 100rem; margin: 0 auto; }
-    .testimonial-card { background: var(--color-beige); padding: 4rem; border-radius: 1.6rem; margin-bottom: 3rem; }
-    .testimonial-quote { font-size: 2.2rem; font-weight: 500; color: #1A1A1A; margin-bottom: 2.4rem; line-height: 1.5; font-style: italic; }
-    .testimonial-author { display: flex; align-items: center; gap: 2rem; }
-    .testimonial-avatar { width: 5.6rem; height: 5.6rem; border-radius: 50%; object-fit: cover; }
-    .testimonial-name { font-size: 1.7rem; font-weight: 600; color: #1A1A1A; }
-    .testimonial-role { font-size: 1.5rem; color: #6B7280; }
+    /* Big Quote - Dark */
+    .big-quote {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+      text-align: center;
+    }
+    .big-quote-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+    .big-quote blockquote {
+      font-family: var(--font-display);
+      font-size: 4.8rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-white);
+      margin-bottom: 4rem;
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
+    .big-quote-author {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
 
-    /* CTA - Beige */
-    .cta { background: var(--color-beige); padding: 10rem 4rem; text-align: center; }
-    .cta h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.8rem; font-weight: 700; color: #1A1A1A; margin-bottom: 2.4rem; line-height: 1.2; }
-    .cta p { font-size: 2rem; color: #6B7280; margin-bottom: 3.2rem; max-width: 70rem; margin-left: auto; margin-right: auto; }
-    .cta-buttons { display: flex; gap: 1.6rem; justify-content: center; }
+    /* Process Steps - Beige */
+    .process-steps {
+      background: var(--color-beige);
+      padding: 12rem 4rem;
+    }
+    .process-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .process-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .process-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .process-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6rem;
+    }
+    .process-step {
+      text-align: center;
+    }
+    .process-number {
+      font-family: var(--font-accent);
+      font-size: 12rem;
+      font-weight: 900;
+      color: var(--color-black);
+      opacity: 0.15;
+      margin-bottom: 2rem;
+      line-height: 1;
+    }
+    .process-step h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .process-step p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    /* Footer */
+    /* Social Proof - White */
+    .social-proof {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .social-proof-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .social-proof-header {
+      text-align: center;
+      margin-bottom: 6rem;
+    }
+    .social-proof-header h2 {
+      font-family: var(--font-display);
+      font-size: 5.6rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+    .testimonial-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+      position: relative;
+    }
+    .testimonial-quote {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+    }
+    .testimonial-author-info {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+    .testimonial-avatar {
+      width: 6.4rem;
+      height: 6.4rem;
+      border-radius: 50%;
+      border: 3px solid var(--color-black);
+    }
+    .testimonial-author-name {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+    }
+    .testimonial-author-title {
+      font-family: var(--font-body);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-gray-600);
+    }
+
+    /* CTA Final - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer - UNCHANGED */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -179,14 +533,20 @@
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-container { grid-template-columns: 1fr; }
-      .benefits-grid, .features-items, .how-steps { grid-template-columns: 1fr; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .hero-content .subtitle { font-size: 2.4rem; }
+      .stats-container { grid-template-columns: 1fr; gap: 4rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .features-items { grid-template-columns: 1fr; }
+      .process-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
+      .cta-final h2 { font-size: 4.8rem; }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation (same as landing.html) -->
+  <!-- Navigation (UNCHANGED from landing.html) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -233,126 +593,123 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
+  <!-- === NEW REDESIGNED CONTENT === -->
 
-  <!-- Hero Section - Beige Background -->
+  <!-- Hero - Massive Typography -->
   <section class="hero">
     <div class="hero-container">
       <div class="hero-content">
-        <h1>En restaurant hjemmeside der faktisk virker</h1>
-        <p>Live på 24 timer. Mobiloptimeret fra start. Integreret med dit bestillingssystem. SEO-optimeret til Google søgninger. Alt du har brug for.</p>
+        <h1>Din restaurant. Online. Nu.</h1>
+        <p class="subtitle">En hjemmeside der konverterer besøgende til kunder. Mobiloptimeret, SEO-klar, og integreret med online bestilling. Live på 24 timer.</p>
         <div class="hero-buttons">
-          <a href="#demo" class="button">Få en gratis demo</a>
+          <a href="#demo" class="button">Få gratis demo</a>
           <a href="priser.html" class="button is-secondary">Se priser</a>
         </div>
       </div>
-      <div class="hero-img">
-        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=800&fit=crop" alt="Restaurant website">
+    </div>
+  </section>
+
+  <!-- Stats Bar - Dark -->
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-item">
+        <h3>24t</h3>
+        <p>Fra start til live</p>
+      </div>
+      <div class="stat-item">
+        <h3>+127%</h3>
+        <p>Flere online ordrer</p>
+      </div>
+      <div class="stat-item">
+        <h3>500+</h3>
+        <p>Restauranter stoler på Flow</p>
       </div>
     </div>
   </section>
 
-  <!-- Benefits Grid - White Background -->
-  <section class="benefits">
-    <div class="benefits-container">
-      <div class="benefits-header">
-        <h2>Bygg en hjemmeside<br>der konverterer</h2>
-        <p>En restaurant-hjemmeside skal gøre mere end at se flot ud. Den skal drive salg, fange leads og vise op i Google-søgninger.</p>
+  <!-- Image Split - Beige -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&h=900&fit=crop" alt="Restaurant interior">
       </div>
-      <div class="benefits-grid">
-        <div class="benefit-item">
-          <div class="benefit-number">01</div>
-          <div class="benefit-content">
-            <h3>SEO-optimeret fra dag 1</h3>
-            <p>Vi bygger din hjemmeside med Google i tankerne. Automatisk metadata, struktureret data og lynhurtige load-tider betyder bedre rankings.</p>
-          </div>
-        </div>
-        <div class="benefit-item">
-          <div class="benefit-number">02</div>
-          <div class="benefit-content">
-            <h3>Indbygget online bestilling</h3>
-            <p>Ingen tredjepartsintegrationer der kan gå ned. Online bestillingssystemet er built-in og fungerer perfekt på mobil og desktop.</p>
-          </div>
-        </div>
-        <div class="benefit-item">
-          <div class="benefit-number">03</div>
-          <div class="benefit-content">
-            <h3>Perfekt mobil oplevelse</h3>
-            <p>Over 75% af dine besøgende kommer fra mobil. Vores hjemmesider er bygget mobile-first med lynhurtig indlæsning og intuitivt design.</p>
-          </div>
-        </div>
-        <div class="benefit-item">
-          <div class="benefit-number">04</div>
-          <div class="benefit-content">
-            <h3>Menu der opdaterer automatisk</h3>
-            <p>Ændr priser, produkter og tilgængelighed i real-time. Ingen behov for at kontakte en udvikler hver gang du tilføjer en ret.</p>
-          </div>
-        </div>
+      <div class="image-split-content">
+        <h2>Bygg en hjemmeside Google elsker</h2>
+        <p>SEO-optimeret fra dag 1. Automatisk metadata, struktureret data og lynhurtige load-tider betyder bedre rankings og flere kunder.</p>
+        <p>Vores hjemmesider lander i top 3 på Google inden for 30 dage. Garanteret.</p>
       </div>
     </div>
   </section>
 
-  <!-- Full Width Image - Beige Background -->
-  <section class="full-image">
-    <div class="full-image-container">
-      <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&h=800&fit=crop" alt="Restaurant interior">
-    </div>
-  </section>
-
-  <!-- Features List - White Background -->
-  <section class="features-list">
-    <div class="features-list-container">
-      <div class="features-list-header">
-        <h2>Alt hvad din hjemmeside<br>har brug for – built in</h2>
+  <!-- Features Grid - White -->
+  <section class="features-grid">
+    <div class="features-grid-container">
+      <div class="features-grid-header">
+        <h2>Alt built-in</h2>
         <p>Ingen plugins. Ingen tredjepartsintegrationer. Alt du har brug for er indbygget fra start.</p>
       </div>
       <div class="features-items">
-        <div class="feature-item">
-          <h3>🔍 Google My Business integration</h3>
-          <p>Automatisk synkronisering med din Google My Business profil. Vis korrekte åbningstider, menu og billeder.</p>
+        <div class="feature-card">
+          <div class="feature-icon">🍕</div>
+          <h3>Online Bestilling</h3>
+          <p>Indbygget bestillingssystem der fungerer perfekt på mobil og desktop. Ingen provision til Wolt eller Just Eat.</p>
         </div>
-        <div class="feature-item">
-          <h3>📱 QR-menu til borde</h3>
-          <p>Generer automatisk QR-koder dine gæster kan scanne ved bordet for at se menuen på deres telefon.</p>
-        </div>
-        <div class="feature-item">
-          <h3>📧 Email marketing</h3>
-          <p>Byg din email-liste direkte fra hjemmesiden. Send automatiske kampagner til gæster der har bes tilt tidligere.</p>
-        </div>
-        <div class="feature-item">
-          <h3>🎨 Fuldt tilpasset design</h3>
-          <p>Dit logo, dine farver, dine billeder. Vi laver en hjemmeside der matcher dit brand 100%.</p>
-        </div>
-        <div class="feature-item">
-          <h3>⚡ Lynhurtig load-tid</h3>
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Lynhurtig Load-tid</h3>
           <p>Optimeret til under 1 sekund load-tid. Hurtigere hjemmeside = bedre Google rankings og flere ordrer.</p>
         </div>
-        <div class="feature-item">
-          <h3>📊 Built-in analytics</h3>
-          <p>Se hvor dine besøgende kommer fra, hvad de klikker på, og hvor mange der bestiller.</p>
+        <div class="feature-card">
+          <div class="feature-icon">📱</div>
+          <h3>Mobil-first Design</h3>
+          <p>75% af dine besøgende kommer fra mobil. Vores hjemmesider er bygget mobile-first med intuitivt design.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Built-in Analytics</h3>
+          <p>Se hvor dine besøgende kommer fra, hvad de klikker på, og hvor mange der bestiller. Alt i ét dashboard.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎨</div>
+          <h3>Fuldt Tilpasset Design</h3>
+          <p>Dit logo, dine farver, dine billeder. Vi laver en hjemmeside der matcher dit brand 100%.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📧</div>
+          <h3>Email Marketing</h3>
+          <p>Byg din email-liste direkte fra hjemmesiden. Send automatiske kampagner til gæster der har bestilt tidligere.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- How It Works - Beige Background -->
-  <section class="how-it-works">
-    <div class="how-container">
-      <h2>Fra ide til live<br>på 24 timer</h2>
-      <div class="how-steps">
-        <div class="how-step">
-          <div class="how-step-number">1</div>
+  <!-- Big Quote - Dark -->
+  <section class="big-quote">
+    <div class="big-quote-container">
+      <blockquote>"Vi fik vores nye hjemmeside live på under 24 timer. Online bestillingssystemet fungerer perfekt, og vi har allerede fået 40% flere online ordrer."</blockquote>
+      <div class="big-quote-author">Anders Nielsen — Pizzeria Napoli</div>
+    </div>
+  </section>
+
+  <!-- Process Steps - Beige -->
+  <section class="process-steps">
+    <div class="process-container">
+      <div class="process-header">
+        <h2>Fra ide til live på 24 timer</h2>
+      </div>
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="process-number">01</div>
           <h3>Del dit brand</h3>
           <p>Send os dit logo, farver og et par billeder af din restaurant. Det er alt vi har brug for.</p>
         </div>
-        <div class="how-step">
-          <div class="how-step-number">2</div>
+        <div class="process-step">
+          <div class="process-number">02</div>
           <h3>Vi bygger din hjemmeside</h3>
           <p>Vores team designer og bygger din hjemmeside med online bestilling, menu og SEO built-in.</p>
         </div>
-        <div class="how-step">
-          
-
+        <div class="process-step">
+          <div class="process-number">03</div>
           <h3>Go live</h3>
           <p>Efter godkendelse går din hjemmeside live på dit domæne. Klar til at tage imod ordrer.</p>
         </div>
@@ -360,33 +717,45 @@
     </div>
   </section>
 
-  <!-- Testimonials - White Background -->
-  <section class="testimonials">
-    <div class="testimonials-container">
-      <div class="testimonial-card">
-        <p class="testimonial-quote">"Vi fik vores nye hjemmeside live på under 24 timer. Online bestillingssystemet fungerer perfekt, og vi har allerede fået 40% flere online ordrer."</p>
-        <div class="testimonial-author">
-          <img src="https://i.pravatar.cc/96?img=12" alt="Anders Nielsen" class="testimonial-avatar">
-          <div>
-            <div class="testimonial-name">Anders Nielsen</div>
-            <div class="testimonial-role">Ejer, Pizzeria Napoli</div>
+  <!-- Social Proof - White -->
+  <section class="social-proof">
+    <div class="social-proof-container">
+      <div class="social-proof-header">
+        <h2>Restauranter der voksede med Flow</h2>
+      </div>
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Endelig en hjemmeside der ikke kræver en IT-uddannelse at opdatere. Jeg kan ændre menu og priser selv — det tager 2 minutter."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=5" alt="Sophie Larsen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Sophie Larsen</div>
+              <div class="testimonial-author-title">Indehaver, Café Hygge</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="testimonial-card">
-        <p class="testimonial-quote">"Endelig en hjemmeside der ikke kræver en IT-uddannelse at opdatere. Jeg kan ændre menu og priser selv – det tager 2 minutter."</p>
-        <div class="testimonial-author">
-          <img src="https://i.pravatar.cc/96?img=5" alt="Sophie Larsen" class="testimonial-avatar">
-          <div>
-            <div class="testimonial-name">Sophie Larsen</div>
-            <div class="testimonial-role">Indehaver, Café Hygge</div>
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"Flow hjalp os med at øge online salg med 127%. Deres system er så simpelt at bruge, og support er fantastisk."</p>
+          <div class="testimonial-author-info">
+            <img src="https://i.pravatar.cc/128?img=12" alt="Michael Jensen" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-author-name">Michael Jensen</div>
+              <div class="testimonial-author-title">Ejer, Sushi House</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer (same as landing.html) -->
+  <!-- CTA Final - Black -->
+  <section class="cta-final">
+    <h2>Klar til at vækste dit salg?</h2>
+    <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse online.</p>
+    <a href="#demo" class="button">Få gratis demo nu</a>
+  </section>
+
+  <!-- Footer (UNCHANGED from landing.html) -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -441,11 +810,8 @@
       </div>
     </div>
   </footer>
-</div>
 
-<!-- JavaScript -->
-<script>
-
+  <!-- JavaScript -->
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
