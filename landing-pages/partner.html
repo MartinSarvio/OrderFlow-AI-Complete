@@ -9,7 +9,7 @@
   <meta property="og:description" content="Bliv partner med Flow og hjælp restauranter med at vokse. Se vores partnermuligheder.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -29,6 +29,7 @@
       --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
+      --color-gray-900: #9CA3AF;
       --container-max: 1200px;
       --container-huge: 1400px;
     }
@@ -37,121 +38,27 @@
     html { font-size: 62.5%; scroll-behavior: smooth; }
     body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
+    a { color: inherit; text-decoration: none; }
+    img, video { max-width: 100%; height: auto; display: block; }
+    ul, ol { list-style: none; }
 
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
+    /* Navigation (exact copy from landing.html) */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); border-bottom: none; transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.56rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
 
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== NAVIGATION ==================== */
-    .nav-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: var(--color-white);
-      border-bottom: none;
-      transition: background 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.2rem 4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 3.2rem;
-      width: auto;
-    }
-
-    /* Logo F rotation on hover */
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.4rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1rem 1.8rem;
-      border-radius: 0.8rem;
-      font-size: 1.4rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
-
-
-    /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -159,18 +66,17 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
-    .dropdown-link-desc { font-size: 1.3rem; font-weight: 400; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
     .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
@@ -179,68 +85,59 @@
     .dropdown-card-subtitle { font-size: 1.2rem; opacity: 0.8; }
     .dropdown-cards { display: flex; flex-direction: column; gap: 1.2rem; }
     .dropdown-cards .dropdown-card { min-height: 11rem; }
+    .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
+    .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* Produkt dropdown med to kolonner */
-    .nav-dropdown:first-of-type .dropdown-left {
-      flex: 1;
-      max-width: 100%;
-    }
-
-    .nav-dropdown:first-of-type .dropdown-links {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.2rem;
-      column-gap: 2rem;
-    }
-
-
-
-
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1); cursor: pointer; border: none; }
+    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
     .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); border: none; }
-    .button.button-white:hover { background: var(--color-gray-100); }
-    .button.button-outline { background: transparent; color: var(--color-white); border: 2px solid var(--color-white); }
-    .button.button-outline:hover { background: rgba(255, 255, 255, 0.1); }
+    .button.button-secondary { background: var(--color-beige); color: var(--color-dark); }
+    .button.button-secondary:hover { background: var(--color-gray-100); }
 
-    .content-section { background: var(--color-white); padding: 10rem 0; }
-    .content-container { max-width: 1000px; margin: 0 auto; padding: 0 4rem; }
-    .section-intro { text-align: center; margin-bottom: 6rem; }
-    .section-intro h2 { font-size: 4rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
-    .section-intro p { font-size: 1.8rem; color: var(--color-gray-600); line-height: 1.7; }
+    /* Hero section */
+    .hero-section { padding: 16rem 4rem 12rem; background: var(--color-white); text-align: center; }
+    .hero-container { max-width: 90rem; margin: 0 auto; }
+    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2.4rem; text-transform: uppercase; }
+    .hero-section p { font-size: 2rem; font-weight: 300; color: var(--color-gray-700); line-height: 1.6; max-width: 72rem; margin: 0 auto 3.2rem; }
 
-    .partner-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; margin-bottom: 8rem; }
-    .partner-card { background: var(--color-gray-50); padding: 4rem 3rem; border-radius: 2rem; text-align: center; }
-    .partner-icon { font-size: 4rem; margin-bottom: 2rem; }
-    .partner-card h3 { font-size: 2.2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1.5rem; }
-    .partner-card p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2rem; }
+    /* Sections */
+    .section { padding: 10rem 4rem; }
+    .section.bg-beige { background: var(--color-beige); }
+    .section.bg-white { background: var(--color-white); }
+    .section-container { max-width: var(--container-max); margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 6rem; }
+    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 600; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
+    .section-header p { font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.7; max-width: 68rem; margin: 0 auto; }
+
+    /* Partner cards grid */
+    .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; }
+    .partner-card { background: var(--color-white); padding: 4rem 3rem; border-radius: 2rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .partner-icon { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 700; margin-bottom: 2rem; color: var(--color-primary); }
+    .partner-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2.4rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.5rem; }
+    .partner-card p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.6; margin-bottom: 2.4rem; }
     .partner-card ul { list-style: none; text-align: left; }
-    .partner-card li { font-size: 1.4rem; color: var(--color-gray-600); padding: 0.8rem 0; padding-left: 2rem; position: relative; }
+    .partner-card li { font-size: 1.5rem; font-weight: 400; color: var(--color-gray-700); padding: 1rem 0; padding-left: 2.4rem; position: relative; }
     .partner-card li:before { content: '✓'; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; }
 
-    .benefits-section { background: var(--color-gray-100); padding: 10rem 0; }
-    .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4rem; }
-    .benefit-card { background: var(--color-white); padding: 3rem; border-radius: 2rem; }
-    .benefit-card h4 { font-size: 2.2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
-    .benefit-list { list-style: none; }
-    .benefit-list li { font-size: 1.6rem; color: var(--color-gray-600); padding: 1.2rem 0; padding-left: 3rem; position: relative; border-bottom: 1px solid var(--color-gray-100); }
-    .benefit-list li:before { content: '✓'; position: absolute; left: 0; color: var(--color-primary); font-weight: 700; font-size: 1.8rem; }
+    /* Benefits with image */
+    .benefits-content { display: grid; grid-template-columns: 1fr 1fr; gap: 6rem; align-items: center; }
+    .benefits-image { border-radius: 2rem; overflow: hidden; }
+    .benefits-image img { width: 100%; height: 100%; object-fit: cover; }
+    .benefits-text h3 { font-family: 'Space Grotesk', sans-serif; font-size: 3.2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 2.4rem; }
+    .benefits-list { display: flex; flex-direction: column; gap: 2rem; }
+    .benefit-item { display: flex; gap: 1.6rem; align-items: flex-start; }
+    .benefit-icon { width: 4.8rem; height: 4.8rem; background: var(--color-beige); border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+    .benefit-text h4 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
+    .benefit-text p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.6; }
 
-    .cta-section { background: var(--color-dark); padding: 10rem 0; }
-    .cta-content { text-align: center; max-width: 80rem; margin: 0 auto; padding: 0 4rem; }
-    .cta-content h2 { font-size: 4.8rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-white); margin-bottom: 2rem; }
-    .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
+    /* CTA section with image background */
+    .cta-section { padding: 12rem 4rem; background: linear-gradient(to bottom, rgba(0,0,0,0.65), rgba(0,0,0,0.45)), url('https://images.unsplash.com/photo-1556740758-90de374c12ad?w=1600&h=800&fit=crop'); background-size: cover; background-position: center; text-align: center; color: var(--color-white); }
+    .cta-content { max-width: 80rem; margin: 0 auto; }
+    .cta-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4.8rem; font-weight: 600; margin-bottom: 2rem; }
+    .cta-content p { font-size: 1.9rem; font-weight: 300; opacity: 0.9; margin-bottom: 3.2rem; line-height: 1.6; }
+    .cta-buttons { display: flex; justify-content: center; gap: 1.6rem; flex-wrap: wrap; }
 
-    .pre-footer { background: var(--color-white); padding: 6rem 4rem; border-top: 1px solid #e5e5e5; }
-    .pre-footer-content { max-width: 140rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 4rem; }
-    .pre-footer-cards { display: flex; gap: 2rem; }
-    .pre-footer-card { display: flex; align-items: center; justify-content: space-between; background: #f5f5f5; border-radius: 1.2rem; padding: 2.4rem 3.2rem; min-width: 28rem; text-decoration: none; color: var(--color-black); transition: all 0.3s ease; border: 1px solid transparent; }
-    .pre-footer-card:hover { background: #fff; border-color: #e5e5e5; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    .pre-footer-card-title { font-size: 1.8rem; font-weight: 500; }
-    .pre-footer-card-arrow { font-size: 2rem; opacity: 0.5; transition: all 0.3s ease; }
-    .pre-footer-card:hover .pre-footer-card-arrow { opacity: 1; transform: translate(4px, -4px); }
-
-    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    /* Footer (exact copy from landing.html) */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -254,27 +151,24 @@
     .footer-legal a:hover { color: var(--color-white); }
 
     @media (max-width: 1024px) {
-      .partner-types { grid-template-columns: 1fr; }
-      .benefits-grid { grid-template-columns: 1fr; }
+      .partner-grid { grid-template-columns: 1fr; }
+      .benefits-content { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
+      .hero-section h1 { font-size: 4rem; }
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 480px) {
       .nav-container { padding: 1.2rem 2rem; }
-      .content-container { padding: 0 2rem; }
       .footer-content { grid-template-columns: 1fr; }
-      .pre-footer-content { flex-direction: column; }
-      .pre-footer-cards { flex-direction: column; width: 100%; }
     }
   </style>
-<link rel="stylesheet" href="../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Navigation -->
+    <!-- Navigation (exact copy from landing.html) -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -302,7 +196,7 @@
                 <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
                 <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
                 <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></end></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
             </div>
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
               <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
@@ -321,16 +215,24 @@
       </div>
     </nav>
 
-        <!-- Partner Types -->
-    <section class="content-section" id="programs">
-      <div class="content-container">
-        <div class="section-intro">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-container">
+        <h1>Partner med Flow</h1>
+        <p>Hjælp restauranter med at vokse og tjen samtidig. Tre forskellige partnerprogrammer til forskellige behov.</p>
+      </div>
+    </section>
+
+    <!-- Partner Types -->
+    <section class="section bg-beige">
+      <div class="section-container">
+        <div class="section-header">
           <h2>Tre måder at samarbejde på</h2>
-          <p>Vælg den model der passer til din forretning. Alle priser og kommissioner er faste - ingen forhandling, ingen favorisering.</p>
+          <p>Vælg den model der passer til din forretning. Alle priser og kommissioner er faste.</p>
         </div>
-        <div class="partner-types">
+        <div class="partner-grid">
           <div class="partner-card">
-            <div class="partner-icon" style="font-size:2rem;font-weight:700;">15%</div>
+            <div class="partner-icon">15%</div>
             <h3>Bureau / Konsulent</h3>
             <p>For webbureauer, marketingbureauer og rådgivere der hjælper restauranter med digitalisering.</p>
             <ul>
@@ -341,7 +243,7 @@
             </ul>
           </div>
           <div class="partner-card">
-            <div class="partner-icon" style="font-size:2rem;font-weight:700;">API</div>
+            <div class="partner-icon">API</div>
             <h3>POS / Integration</h3>
             <p>For kassesystemer, regnskabssoftware og andre systemer der vil integrere med Flow.</p>
             <ul>
@@ -352,7 +254,7 @@
             </ul>
           </div>
           <div class="partner-card">
-            <div class="partner-icon" style="font-size:2rem;font-weight:700;">2k</div>
+            <div class="partner-icon">2k</div>
             <h3>Henvisning</h3>
             <p>Kender du en restauratør der burde bruge Flow? Henvis dem og få en finders fee.</p>
             <ul>
@@ -366,108 +268,117 @@
       </div>
     </section>
 
-    <!-- Benefits Section -->
-    <section class="benefits-section">
-      <div class="content-container">
-        <div class="section-intro">
-          <h2>Hvad du får som partner</h2>
-          <p>Ingen overraskelser, ingen skjulte betingelser. Her er hvad samarbejdet indebærer.</p>
-        </div>
-        <div class="benefits-grid">
-          <div class="benefit-card">
-            <h4>Penge</h4>
-            <ul class="benefit-list">
-              <li>Bureau: 15% af kundens månedlige betaling - for evigt</li>
-              <li>Henvisning: 2.000 kr. engangsbeløb per kunde</li>
-              <li>Udbetaling d. 15. hver måned</li>
-              <li>Dashboard hvor du ser pipeline og indtjening</li>
-              <li>Ingen minimumskrav eller tidsbegrænsning</li>
-            </ul>
+    <!-- Benefits with Image -->
+    <section class="section bg-white">
+      <div class="section-container">
+        <div class="benefits-content">
+          <div class="benefits-image">
+            <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&h=1000&fit=crop" alt="Partnership">
           </div>
-          <div class="benefit-card">
-            <h4>Support</h4>
-            <ul class="benefit-list">
-              <li>Din egen partner manager (du får et direkte nummer)</li>
-              <li>Salgsmaterialer og pitch decks</li>
-              <li>Vi tager onboarding-opkald med dine kunder</li>
-              <li>Prioriteret support for dine kunders problemer</li>
-              <li>Kvartalsvise partner-opdateringer</li>
-            </ul>
+          <div class="benefits-text">
+            <h3>Hvad du får som partner</h3>
+            <div class="benefits-list">
+              <div class="benefit-item">
+                <div class="benefit-icon">💰</div>
+                <div class="benefit-text">
+                  <h4>Gennemsigtig kompensation</h4>
+                  <p>Bureau: 15% af kundens månedlige betaling - for evigt. Henvisning: 2.000 kr. engangsbeløb per kunde. Udbetaling d. 15. hver måned.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">📊</div>
+                <div class="benefit-text">
+                  <h4>Komplet dashboard</h4>
+                  <p>Dashboard hvor du ser pipeline og indtjening. Ingen minimumskrav eller tidsbegrænsning.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">🤝</div>
+                <div class="benefit-text">
+                  <h4>Dedikeret support</h4>
+                  <p>Din egen partner manager med direkte nummer. Prioriteret support for dine kunders problemer.</p>
+                </div>
+              </div>
+              <div class="benefit-item">
+                <div class="benefit-icon">📚</div>
+                <div class="benefit-text">
+                  <h4>Salgsmaterialer</h4>
+                  <p>Pitch decks, case studies og salgsmaterialer klar til brug. Vi tager onboarding-opkald med dine kunder.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section" id="apply">
+    <!-- CTA Section with Image Background -->
+    <section class="cta-section">
       <div class="cta-content">
-        <h2>Interesseret?</h2>
+        <h2>Interesseret i at blive partner?</h2>
         <p>Skriv til os med hvem du er og hvilke restauranter du arbejder med. Vi svarer inden for 24 timer.</p>
-        <div class="hero-buttons">
-          <a href="mailto:partner@flow.dk" class="button button-white">Skriv til partner@flow.dk</a>
-          <a href="case-studies.html" class="button button-outline">Se hvem vi hjælper</a>
+        <div class="cta-buttons">
+          <a href="mailto:partner@flow.dk" class="button">Skriv til partner@flow.dk</a>
+          <a href="case-studies.html" class="button button-secondary">Se hvem vi hjælper</a>
         </div>
       </div>
     </section>
 
-    <!-- Pre-Footer Section -->
-
-    <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-column">
-        <h4>PRODUKTER</h4>
-        <ul>
-          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-          <li><a href="online-bestilling.html">Online Bestilling</a></li>
-          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
+    <!-- Footer (exact copy from landing.html) -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-column">
+          <h4>PRODUKTER</h4>
+          <ul>
+            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+            <li><a href="online-bestilling.html">Online Bestilling</a></li>
+            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-        <ul>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-        </ul>
+            <li><a href="case-studies.html">Case Studies</a></li>
+            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>VIRKSOMHED</h4>
+          <ul>
+            <li><a href="om-os.html">Om os</a></li>
+            <li><a href="karriere.html">Karriere</a></li>
+            <li><a href="ledelse.html">Ledelse</a></li>
+            <li><a href="presse.html">Presse</a></li>
+            <li><a href="partner.html">Partner med Flow</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h4>SUPPORT</h4>
+          <ul>
+            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+          </ul>
+          <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>VIRKSOMHED</h4>
-        <ul>
-          <li><a href="om-os.html">Om os</a></li>
-          <li><a href="karriere.html">Karriere</a></li>
-          <li><a href="ledelse.html">Ledelse</a></li>
-          <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
-        </ul>
+      <div class="footer-bottom">
+        <p>2026 © Flow. All rights reserved.</p>
+        <div class="footer-legal">
+          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
+          <a href="legal.html#privacy">Privacy</a>
+          <a href="legal.html#terms">Website Terms</a>
+          <a href="legal.html#disclaimer">Disclaimer</a>
+        </div>
       </div>
-      <div class="footer-column">
-        <h4>SUPPORT</h4>
-        <ul>
-          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-        </ul>
-        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>2026 © Flow. All rights reserved.</p>
-      <div class="footer-legal">
-        <a href="#">Cookie Settings</a>
-        <a href="#">Privacy</a>
-        <a href="#">Website Terms</a>
-        <a href="#">Disclaimer</a>
-      </div>
-    </div>
-  </footer>
+    </footer>
   </div>
 
   <script>
@@ -477,8 +388,7 @@
       else { nav.classList.remove('scrolled'); }
     });
   </script>
-<!-- Flow CMS Dynamic Content -->
-<script src="/js/flow-cms-render.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
+  <script src="/js/flow-cms-render.js"></script>
+  <script src="/js/privacy-modal.js"></script>
 </body>
 </html>
