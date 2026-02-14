@@ -9,7 +9,7 @@
   <meta property="og:description" content="Flow giver dig de samme værktøjer som store restaurantkæder bruger til at drive salg.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
   <style>
     /* ==================== CSS VARIABLES ==================== */
@@ -35,6 +35,11 @@
       --section-overlap: -2.4rem;
       --container-max: 1200px;
       --container-huge: 1400px;
+      
+      /* New Typography Fonts */
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     /* ==================== RESET & BASE ==================== */
@@ -439,21 +444,71 @@
     .bento { padding: 10rem 0; background: var(--color-beige); }
     .bento-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; }
     .bento-header { text-align: center; margin-bottom: 4rem; }
-    .bento-title { font-size: 4.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--color-dark); }
+    .bento-title { 
+      font-family: var(--font-accent); 
+      font-size: 4.4rem; 
+      font-weight: 900; 
+      line-height: 1.15; 
+      letter-spacing: -0.02em; 
+      color: var(--color-dark); 
+      text-transform: uppercase;
+    }
     /* Bento Hero */
-    .bento-hero { margin-bottom: 3rem; border-radius: 2rem; overflow: hidden; position: relative; }
+    .bento-hero { 
+      margin-bottom: 3rem; 
+      border-radius: 0; 
+      border: 3px solid var(--color-black);
+      overflow: hidden; 
+      position: relative; 
+    }
     .bento-hero img { width: 100%; height: auto; display: block; min-height: 40rem; object-fit: cover; }
-    .bento-hero-overlay { position: absolute; bottom: 0; right: 0; padding: 2.4rem 3.2rem; color: white; font-size: 1.8rem; text-align: right; max-width: 50%; line-height: 1.5; }
+    .bento-hero-overlay { 
+      position: absolute; 
+      bottom: 0; 
+      right: 0; 
+      padding: 2.4rem 3.2rem; 
+      color: white; 
+      font-family: var(--font-body);
+      font-size: 1.8rem; 
+      text-align: right; 
+      max-width: 50%; 
+      line-height: 1.5; 
+    }
     .bento-hero-overlay strong { font-weight: 600; }
     /* Bento Cards */
     .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
-    .bento-card { background: var(--color-gray-100); border-radius: 2rem; overflow: hidden; display: flex; flex-direction: column; }
+    .bento-card { 
+      background: var(--color-gray-100); 
+      border-radius: 0;
+      border: 3px solid var(--color-black);
+      overflow: hidden; 
+      display: flex; 
+      flex-direction: column;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .bento-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
+    }
     .bento-card-content { padding: 3.2rem; }
-    .bento-card-label { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 0.8rem; }
-    .bento-card-title { font-size: 2.4rem; font-weight: 700; color: var(--color-dark); line-height: 1.3; }
+    .bento-card-label { 
+      font-family: var(--font-body);
+      font-size: 1.6rem; 
+      color: var(--color-gray-600); 
+      margin-bottom: 0.8rem; 
+    }
+    .bento-card-title { 
+      font-family: var(--font-accent);
+      font-size: 2.4rem; 
+      font-weight: 900; 
+      color: var(--color-dark); 
+      line-height: 1.3;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
     .bento-card-image { margin-top: auto; padding: 0 2rem 2rem; }
-    .bento-card-image img { width: 100%; height: auto; object-fit: contain; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-    .bento-card > img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; border-radius: 0 0 2rem 2rem; }
+    .bento-card-image img { width: 100%; height: auto; object-fit: contain; border-radius: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .bento-card > img { width: 100%; height: 24rem; object-fit: cover; margin-top: auto; border-radius: 0; }
     @media (max-width: 768px) {
       .bento-grid { grid-template-columns: 1fr; }
       .bento-title { font-size: 3.2rem; }
@@ -463,18 +518,52 @@
     .beliefs { padding: 10rem 0; background: var(--color-white); }
     .beliefs-container { max-width: var(--container-max); margin: 0 auto; padding: 0 4rem; display: flex; gap: 6rem; }
     .beliefs-left { flex: 0 0 36rem; position: sticky; top: 12rem; height: fit-content; }
-    .beliefs-title { font-size: 3.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-dark); margin-bottom: 1.6rem; }
-    .beliefs-subtitle { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 3.2rem; }
+    .beliefs-title { 
+      font-family: var(--font-accent);
+      font-size: 3.6rem; 
+      font-weight: 900; 
+      line-height: 1.2; 
+      letter-spacing: -0.01em; 
+      color: var(--color-dark); 
+      margin-bottom: 1.6rem;
+      text-transform: uppercase;
+    }
+    .beliefs-subtitle { 
+      font-family: var(--font-body);
+      font-size: 1.6rem; 
+      color: var(--color-gray-600); 
+      margin-bottom: 3.2rem; 
+    }
     .beliefs-author { display: flex; align-items: center; gap: 1.2rem; }
     .beliefs-author img { width: 4.8rem; height: 4.8rem; border-radius: 50%; object-fit: cover; }
-    .beliefs-author-name { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); }
-    .beliefs-author-role { font-size: 1.3rem; color: var(--color-gray-500); }
+    .beliefs-author-name { 
+      font-family: var(--font-body);
+      font-size: 1.5rem; 
+      font-weight: 600; 
+      color: var(--color-dark); 
+    }
+    .beliefs-author-role { 
+      font-family: var(--font-body);
+      font-size: 1.3rem; 
+      color: var(--color-gray-500); 
+    }
     .beliefs-right { flex: 1; }
-    .belief-item { padding: 3.2rem 0; border-bottom: 1px solid var(--color-gray-300); }
+    .belief-item { padding: 3.2rem 0; border-bottom: 2px solid var(--color-gray-300); }
     .belief-item:first-child { padding-top: 0; }
     .belief-item:last-child { border-bottom: none; }
-    .belief-heading { font-size: 2rem; font-weight: 700; color: var(--color-dark); margin-bottom: 1.2rem; }
-    .belief-text { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.6; }
+    .belief-heading { 
+      font-family: var(--font-body);
+      font-size: 2rem; 
+      font-weight: 700; 
+      color: var(--color-dark); 
+      margin-bottom: 1.2rem; 
+    }
+    .belief-text { 
+      font-family: var(--font-body);
+      font-size: 1.5rem; 
+      color: var(--color-gray-600); 
+      line-height: 1.6; 
+    }
 
     /* ==================== LOGO CLOUD SECTION ==================== */
     .logo-cloud {
@@ -917,9 +1006,12 @@
     }
 
     .trusted-header h2 {
+      font-family: var(--font-accent);
       font-size: 3.6rem;
-      font-weight: 700;
+      font-weight: 900;
+      text-transform: uppercase;
       color: var(--color-dark);
+      letter-spacing: -0.01em;
     }
 
     .trusted-carousel-wrapper {
@@ -947,10 +1039,17 @@
       flex-shrink: 0;
       width: 32rem;
       height: 42rem;
-      border-radius: 1.6rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
       overflow: hidden;
       position: relative;
       background: var(--color-gray-200);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .trusted-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
     }
 
     .trusted-card img {
@@ -970,12 +1069,14 @@
     }
 
     .trusted-card-name {
+      font-family: var(--font-body);
       font-size: 1.8rem;
       font-weight: 600;
       margin-bottom: 0.4rem;
     }
 
     .trusted-card-role {
+      font-family: var(--font-body);
       font-size: 1.4rem;
       opacity: 0.8;
     }
@@ -994,21 +1095,30 @@
     }
 
     .creations-header h2 {
+      font-family: var(--font-accent);
       font-size: 3.6rem;
-      font-weight: 700;
+      font-weight: 900;
+      text-transform: uppercase;
       color: var(--color-dark);
       margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
     }
 
     .creations-header h2 span {
-      background: linear-gradient(to top, var(--color-green-accent) 0%, var(--color-dark) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      padding: 0.2rem;
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 400;
+      text-transform: none;
+      background: none;
+      -webkit-background-clip: unset;
+      -webkit-text-fill-color: unset;
+      background-clip: unset;
+      padding: 0;
+      color: var(--color-dark);
     }
 
     .creations-header p {
+      font-family: var(--font-body);
       font-size: 1.8rem;
       color: var(--color-gray-500);
       line-height: 1.6;
@@ -1028,13 +1138,16 @@
       position: relative;
       flex: 0 0 38rem;
       height: 100%;
-      border-radius: 1.6rem;
+      border-radius: 0;
+      border: 3px solid var(--color-black);
       overflow: hidden;
-      transition: flex 0.5s ease;
+      transition: flex 0.5s ease, transform 0.3s ease, box-shadow 0.3s ease;
     }
 
     .creations-card:hover {
       flex: 1 1 auto;
+      transform: translateY(-8px);
+      box-shadow: 12px 12px 0 var(--color-black);
     }
 
     .creations-card img {
@@ -1051,7 +1164,7 @@
       flex-direction: column;
       justify-content: flex-end;
       padding: 3rem;
-      background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+      background: rgba(0,0,0,0.85);
       color: var(--color-white);
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -1062,12 +1175,16 @@
     }
 
     .creations-card-title {
+      font-family: var(--font-accent);
       font-size: 2.8rem;
       font-weight: 700;
+      text-transform: uppercase;
       margin-bottom: 0.8rem;
+      letter-spacing: -0.01em;
     }
 
     .creations-card-desc {
+      font-family: var(--font-body);
       font-size: 1.4rem;
       line-height: 1.5;
       opacity: 0.9;
@@ -1211,8 +1328,10 @@
   .testimonials-content { max-width: 80rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
   .testimonial-quote-wrapper { min-height: 12rem; width: 100%; display: flex; align-items: center; justify-content: center; }
   .testimonial-quote {
+    font-family: var(--font-display);
     font-size: 2.4rem;
-    font-weight: 700;
+    font-weight: 400;
+    font-style: italic;
     text-align: center;
     color: var(--color-black);
     line-height: 1.4;
@@ -1245,8 +1364,18 @@
   }
   .testimonial-divider { width: 1px; height: 3.2rem; background: rgba(0,0,0,0.15); margin: 0 1rem; }
   .testimonial-info { text-align: left; }
-  .testimonial-name { font-size: 1.8rem; font-weight: 500; font-style: italic; color: var(--color-black); }
-  .testimonial-role { font-size: 1.4rem; color: rgba(0,0,0,0.6); margin-top: 0.2rem; }
+  .testimonial-name { 
+    font-family: var(--font-body);
+    font-size: 1.8rem; 
+    font-weight: 600; 
+    color: var(--color-black); 
+  }
+  .testimonial-role { 
+    font-family: var(--font-body);
+    font-size: 1.4rem; 
+    color: rgba(0,0,0,0.6); 
+    margin-top: 0.2rem; 
+  }
 
   .testimonial-indicators { display: flex; gap: 1.2rem; margin-top: 3.2rem; justify-content: center; }
   .testimonial-indicator {
