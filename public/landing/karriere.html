@@ -9,7 +9,7 @@
   <meta property="og:description" content="Vi bygger fremtidens restaurant-teknologi. Bliv en del af et passioneret team der hjælper restauranter med at vokse.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -29,6 +29,7 @@
       --color-gray-600: #6B7280;
       --color-gray-700: #343a40;
       --color-gray-800: #212529;
+      --color-gray-900: #9CA3AF;
       --container-max: 1200px;
     }
 
@@ -39,24 +40,23 @@
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* Navigation */
+    /* Navigation (exact copy from landing.html) */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
-    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 4rem; width: 100%; }
     .nav-left { display: flex; align-items: center; gap: 1.2rem; }
     .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
-    .nav-logo img { height: 3.2rem; width: auto; }
+    .nav-logo img { height: 2.56rem; width: auto; }
     .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
     .nav-logo:hover .logo-f { transform: rotate(360deg); }
     .nav-links { display: flex; align-items: center; gap: 0.8rem; }
-    .nav-link { font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
     .nav-link:hover { background: var(--color-gray-100); }
     .nav-right { display: flex; align-items: center; gap: 1.6rem; }
     .nav-login { font-size: 1.4rem; font-weight: 500; color: var(--color-dark); }
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1rem 1.8rem; border-radius: 0.8rem; font-size: 1.4rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
 
-    /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -64,18 +64,17 @@
     .nav-dropdown:hover .nav-dropdown-toggle svg { transform: rotate(180deg); }
     .nav-dropdown-menu { position: fixed; top: 6rem; left: 0; right: 0; width: 100%; background: var(--color-white); border-radius: 0 0 1.6rem 1.6rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); padding: 3.2rem 4rem; margin: 0; opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 1001; }
     .nav-dropdown:hover .nav-dropdown-menu { opacity: 1; visibility: visible; }
-    .nav-dropdown-menu.is-small { /* full width */ }
     .dropdown-content { display: flex; gap: 4rem; max-width: 140rem; margin: 0 auto; }
     .dropdown-left { flex: 2; }
-    .dropdown-label { font-size: 1.2rem; font-weight: 600; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
+    .dropdown-label { font-size: 1.2rem; font-weight: 700; color: var(--color-gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.6rem; }
     .dropdown-links { display: flex; flex-direction: column; gap: 0.4rem; }
-    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; text-decoration: none; }
+    .dropdown-link { display: flex; align-items: flex-start; gap: 1.2rem; padding: 1.2rem; border-radius: 1rem; transition: background 0.2s ease; }
     .dropdown-link:hover { background: var(--color-gray-100); }
     .dropdown-link-icon { width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--color-gray-100); border-radius: 0.6rem; flex-shrink: 0; }
     .dropdown-link-icon svg { width: 1.4rem; height: 1.4rem; color: var(--color-gray-600); }
     .dropdown-link-content { flex: 1; }
-    .dropdown-link-title { font-size: 1.5rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.2rem; }
-    .dropdown-link-desc { font-size: 1.3rem; font-weight: 400; color: var(--color-gray-500); line-height: 1.4; }
+    .dropdown-link-title { font-size: 1.5rem; font-weight: 700; color: var(--color-dark); margin-bottom: 0.2rem; }
+    .dropdown-link-desc { font-size: 1.3rem; font-weight: 600; color: var(--color-gray-500); line-height: 1.4; }
     .dropdown-right { width: 32rem; flex-shrink: 0; }
     .dropdown-card { position: relative; border-radius: 1.2rem; overflow: hidden; height: 100%; min-height: 18rem; }
     .dropdown-card img { width: 100%; height: 100%; object-fit: cover; }
@@ -87,65 +86,58 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-
     .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
     .button:hover { background: var(--color-primary-hover); }
-    .button.button-white { background: var(--color-white); color: var(--color-dark); }
-    .button.button-white:hover { background: var(--color-gray-100); }
 
-    /* Values Section */
-    .values-section { background: var(--color-white); padding: 10rem 0; }
-    .values-container { max-width: 120rem; margin: 0 auto; padding: 0 4rem; }
-    .values-header { text-align: center; margin-bottom: 6rem; }
-    .values-header h2 { font-size: 3.6rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2rem; }
-    .values-header p { font-size: 1.8rem; color: var(--color-gray-600); max-width: 60rem; margin: 0 auto; }
+    /* Hero */
+    .hero-section { padding: 16rem 4rem 12rem; background: linear-gradient(to bottom, var(--color-white), var(--color-beige-light)); text-align: center; }
+    .hero-container { max-width: 90rem; margin: 0 auto; }
+    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2.4rem; text-transform: uppercase; }
+    .hero-section p { font-size: 2rem; font-weight: 300; color: var(--color-gray-700); line-height: 1.6; max-width: 72rem; margin: 0 auto; }
 
-    .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4rem; }
-    .value-card { padding: 3rem; background: var(--color-gray-50); border-radius: 1.6rem; }
-    .value-icon { font-size: 4rem; margin-bottom: 2rem; }
-    .value-card h3 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1.2rem; }
-    .value-card p { font-size: 1.5rem; color: var(--color-gray-600); line-height: 1.7; }
+    /* Sections */
+    .section { padding: 10rem 4rem; }
+    .section.bg-white { background: var(--color-white); }
+    .section.bg-beige { background: var(--color-beige); }
+    .section-container { max-width: var(--container-max); margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 6rem; }
+    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; }
+    .section-header p { font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); max-width: 68rem; margin: 0 auto; }
 
-    /* Benefits Section */
-    .benefits-section { background: var(--color-gray-50); padding: 8rem 0; }
-    .benefits-container { max-width: 100rem; margin: 0 auto; padding: 0 4rem; }
-    .benefits-header { text-align: center; margin-bottom: 4rem; }
-    .benefits-header h2 { font-size: 3rem; font-weight: 600; color: var(--color-dark); }
-    .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
-    .benefit-item { display: flex; align-items: center; gap: 1.6rem; padding: 2rem; background: var(--color-white); border-radius: 1.2rem; }
-    .benefit-icon { width: 4.8rem; height: 4.8rem; background: var(--color-primary); border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .benefit-icon svg { width: 2.4rem; height: 2.4rem; color: var(--color-white); }
-    .benefit-text h4 { font-size: 1.6rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 0.4rem; }
-    .benefit-text p { font-size: 1.4rem; color: var(--color-gray-500); }
+    /* Values grid */
+    .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; }
+    .value-card { padding: 3rem; background: var(--color-white); border-radius: 1.6rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .value-icon { font-size: 3.6rem; margin-bottom: 2rem; }
+    .value-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
+    .value-card p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.7; }
 
-    /* Jobs Section */
-    .jobs-section { background: var(--color-white); padding: 10rem 0; }
-    .jobs-container { max-width: 90rem; margin: 0 auto; padding: 0 4rem; }
-    .jobs-header { text-align: center; margin-bottom: 4rem; }
-    .jobs-header h2 { font-size: 3.6rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1rem; }
-    .jobs-header p { font-size: 1.8rem; color: var(--color-gray-600); }
+    /* Benefits grid */
+    .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
+    .benefit-card { display: flex; align-items: flex-start; gap: 1.6rem; padding: 2.4rem; background: var(--color-beige-light); border-radius: 1.6rem; }
+    .benefit-icon-wrap { width: 5.6rem; height: 5.6rem; background: var(--color-primary); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .benefit-icon-wrap svg { width: 2.8rem; height: 2.8rem; color: var(--color-white); }
+    .benefit-text h4 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
+    .benefit-text p { font-size: 1.4rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; }
 
-    .job-card { display: flex; align-items: center; justify-content: space-between; padding: 2.4rem 3rem; background: var(--color-gray-50); border-radius: 1.2rem; margin-bottom: 1.6rem; transition: all 0.3s ease; }
-    .job-card:hover { background: var(--color-gray-100); transform: translateX(4px); }
-    .job-info h3 { font-size: 1.8rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 0.4rem; }
+    /* Jobs list */
+    .jobs-list { display: flex; flex-direction: column; gap: 1.6rem; max-width: 90rem; margin: 0 auto; }
+    .job-card { display: flex; align-items: center; justify-content: space-between; padding: 2.4rem 3rem; background: var(--color-beige-light); border-radius: 1.2rem; transition: all 0.3s ease; border: 1px solid transparent; }
+    .job-card:hover { background: var(--color-white); border-color: var(--color-gray-300); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .job-info h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
     .job-meta { display: flex; gap: 2rem; }
-    .job-meta span { font-size: 1.4rem; color: var(--color-gray-500); display: flex; align-items: center; gap: 0.6rem; }
-    .job-apply { font-size: 1.5rem; font-weight: 500; color: var(--color-primary); display: flex; align-items: center; gap: 0.6rem; }
-    .job-apply svg { width: 1.6rem; height: 1.6rem; transition: transform 0.2s; }
+    .job-meta span { font-size: 1.4rem; font-weight: 400; color: var(--color-gray-600); }
+    .job-apply { font-size: 1.6rem; font-weight: 600; color: var(--color-primary); display: flex; align-items: center; gap: 0.8rem; }
+    .job-apply svg { width: 1.8rem; height: 1.8rem; transition: transform 0.2s; }
     .job-card:hover .job-apply svg { transform: translateX(4px); }
 
-    .no-jobs { text-align: center; padding: 4rem; background: var(--color-gray-50); border-radius: 1.6rem; }
-    .no-jobs h3 { font-size: 2rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 1rem; }
-    .no-jobs p { font-size: 1.6rem; color: var(--color-gray-600); margin-bottom: 2rem; }
+    /* Image with overlay CTA */
+    .image-cta-section { padding: 12rem 4rem; background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&h=800&fit=crop'); background-size: cover; background-position: center; text-align: center; color: var(--color-white); }
+    .image-cta-content { max-width: 70rem; margin: 0 auto; }
+    .image-cta-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 600; margin-bottom: 1.6rem; }
+    .image-cta-content p { font-size: 1.8rem; font-weight: 300; opacity: 0.95; margin-bottom: 3.2rem; line-height: 1.6; }
 
-    /* CTA Section */
-    .cta-section { background: var(--color-dark); padding: 8rem 0; }
-    .cta-content { text-align: center; max-width: 70rem; margin: 0 auto; padding: 0 4rem; }
-    .cta-content h2 { font-size: 3.6rem; font-weight: 500; letter-spacing: -0.02em; color: var(--color-white); margin-bottom: 2rem; }
-    .cta-content p { font-size: 1.8rem; color: rgba(255,255,255,0.7); margin-bottom: 3rem; }
-
-    /* Footer */
-    .footer { background: var(--color-dark); color: var(--color-white); padding: 6rem 4rem 3rem; }
+    /* Footer (exact copy from landing.html) */
+    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
     .footer-column ul { list-style: none; padding: 0; margin: 0; }
@@ -160,12 +152,12 @@
 
     @media (max-width: 1024px) {
       .values-grid { grid-template-columns: repeat(2, 1fr); }
+      .benefits-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
       .values-grid { grid-template-columns: 1fr; }
-      .benefits-grid { grid-template-columns: 1fr; }
       .job-card { flex-direction: column; align-items: flex-start; gap: 1.6rem; }
       .footer-content { grid-template-columns: 1fr 1fr; }
     }
@@ -174,11 +166,10 @@
       .footer-content { grid-template-columns: 1fr; }
     }
   </style>
-<link rel="stylesheet" href="../../css/landing-enhancements.css">
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Navigation -->
+    <!-- Navigation (exact copy from landing.html) -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -206,7 +197,7 @@
                 <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
                 <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
                 <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
+              </end></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
             </div>
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
               <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
@@ -225,10 +216,18 @@
       </div>
     </nav>
 
-        <!-- Values Section -->
-    <section class="values-section">
-      <div class="values-container">
-        <div class="values-header">
+    <!-- Hero -->
+    <section class="hero-section">
+      <div class="hero-container">
+        <h1>Karriere hos Flow</h1>
+        <p>Vi bygger fremtidens restaurant-teknologi. Bliv en del af et passioneret team der hjælper restauranter med at vokse og tage kontrol over deres digitale fremtid.</p>
+      </div>
+    </section>
+
+    <!-- Values -->
+    <section class="section bg-beige">
+      <div class="section-container">
+        <div class="section-header">
           <h2>Vores værdier</h2>
           <p>Disse principper guider alt hvad vi gør hos Flow</p>
         </div>
@@ -267,15 +266,15 @@
       </div>
     </section>
 
-    <!-- Benefits Section -->
-    <section class="benefits-section">
-      <div class="benefits-container">
-        <div class="benefits-header">
+    <!-- Benefits -->
+    <section class="section bg-white">
+      <div class="section-container">
+        <div class="section-header">
           <h2>Fordele ved at arbejde hos Flow</h2>
         </div>
         <div class="benefits-grid">
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
             <div class="benefit-text">
@@ -283,8 +282,8 @@
               <p>Vi betaler godt og matcher markedet</p>
             </div>
           </div>
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             </div>
             <div class="benefit-text">
@@ -292,8 +291,8 @@
               <p>Arbejd hjemmefra eller fra kontoret</p>
             </div>
           </div>
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             </div>
             <div class="benefit-text">
@@ -301,8 +300,8 @@
               <p>Fuld sundhedsforsikring for alle ansatte</p>
             </div>
           </div>
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
             </div>
             <div class="benefit-text">
@@ -310,8 +309,8 @@
               <p>10.000 kr årligt til kurser og konferencer</p>
             </div>
           </div>
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             </div>
             <div class="benefit-text">
@@ -319,8 +318,8 @@
               <p>MacBook Pro og alt hvad du behøver</p>
             </div>
           </div>
-          <div class="benefit-item">
-            <div class="benefit-icon">
+          <div class="benefit-card">
+            <div class="benefit-icon-wrap">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
             </div>
             <div class="benefit-text">
@@ -332,86 +331,95 @@
       </div>
     </section>
 
-    <!-- Jobs Section -->
-    <section class="jobs-section" id="jobs">
-      <div class="jobs-container">
-        <div class="jobs-header">
+    <!-- Jobs -->
+    <section class="section bg-beige" id="jobs">
+      <div class="section-container">
+        <div class="section-header">
           <h2>Ledige stillinger</h2>
           <p>Find din næste mulighed hos Flow</p>
         </div>
-
-        <a href="mailto:karriere@flow.dk?subject=Ansøgning: Senior Frontend Developer" class="job-card">
-          <div class="job-info">
-            <h3>Senior Frontend Developer</h3>
-            <div class="job-meta">
-              <span>København</span>
-              <span>Fuldtid</span>
-              <span>Tech</span>
+        <div class="jobs-list">
+          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Senior Frontend Developer" class="job-card">
+            <div class="job-info">
+              <h3>Senior Frontend Developer</h3>
+              <div class="job-meta">
+                <span>København</span>
+                <span>•</span>
+                <span>Fuldtid</span>
+                <span>•</span>
+                <span>Tech</span>
+              </div>
             </div>
-          </div>
-          <div class="job-apply">
-            Ansøg nu
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </div>
-        </a>
-
-        <a href="mailto:karriere@flow.dk?subject=Ansøgning: Backend Developer" class="job-card">
-          <div class="job-info">
-            <h3>Backend Developer</h3>
-            <div class="job-meta">
-              <span>København / Remote</span>
-              <span>Fuldtid</span>
-              <span>Tech</span>
+            <div class="job-apply">
+              Ansøg nu
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
             </div>
-          </div>
-          <div class="job-apply">
-            Ansøg nu
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </div>
-        </a>
+          </a>
 
-        <a href="mailto:karriere@flow.dk?subject=Ansøgning: Customer Success Manager" class="job-card">
-          <div class="job-info">
-            <h3>Customer Success Manager</h3>
-            <div class="job-meta">
-              <span>København</span>
-              <span>Fuldtid</span>
-              <span>Customer Success</span>
+          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Backend Developer" class="job-card">
+            <div class="job-info">
+              <h3>Backend Developer</h3>
+              <div class="job-meta">
+                <span>København / Remote</span>
+                <span>•</span>
+                <span>Fuldtid</span>
+                <span>•</span>
+                <span>Tech</span>
+              </div>
             </div>
-          </div>
-          <div class="job-apply">
-            Ansøg nu
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </div>
-        </a>
+            <div class="job-apply">
+              Ansøg nu
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </div>
+          </a>
 
-        <a href="mailto:karriere@flow.dk?subject=Ansøgning: Sales Representative" class="job-card">
-          <div class="job-info">
-            <h3>Sales Representative</h3>
-            <div class="job-meta">
-              <span>København</span>
-              <span>Fuldtid</span>
-              <span>Sales</span>
+          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Customer Success Manager" class="job-card">
+            <div class="job-info">
+              <h3>Customer Success Manager</h3>
+              <div class="job-meta">
+                <span>København</span>
+                <span>•</span>
+                <span>Fuldtid</span>
+                <span>•</span>
+                <span>Customer Success</span>
+              </div>
             </div>
-          </div>
-          <div class="job-apply">
-            Ansøg nu
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-          </div>
-        </a>
+            <div class="job-apply">
+              Ansøg nu
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </div>
+          </a>
+
+          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Sales Representative" class="job-card">
+            <div class="job-info">
+              <h3>Sales Representative</h3>
+              <div class="job-meta">
+                <span>København</span>
+                <span>•</span>
+                <span>Fuldtid</span>
+                <span>•</span>
+                <span>Sales</span>
+              </div>
+            </div>
+            <div class="job-apply">
+              Ansøg nu
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </div>
+          </a>
+        </div>
       </div>
     </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <div class="cta-content">
+    <!-- CTA with Image -->
+    <section class="image-cta-section">
+      <div class="image-cta-content">
         <h2>Ser du ikke den rigtige stilling?</h2>
         <p>Send os en uopfordret ansøgning. Vi er altid interesserede i at høre fra talentfulde mennesker.</p>
-        <a href="mailto:karriere@flow.dk" class="button button-white">Send uopfordret ansøgning</a>
+        <a href="mailto:karriere@flow.dk" class="button">Send uopfordret ansøgning</a>
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- Footer (exact copy from landing.html) -->
     <footer class="footer">
       <div class="footer-content">
         <div class="footer-column">
@@ -477,6 +485,5 @@
   </script>
   <script src="/js/flow-cms-render.js"></script>
   <script src="/js/privacy-modal.js"></script>
-<script>document.addEventListener("DOMContentLoaded",function(){const o=new IntersectionObserver(function(e){e.forEach(function(i){if(i.isIntersecting){i.target.classList.add("is-visible");o.unobserve(i.target)}})},{threshold:0.1,rootMargin:"0px 0px -40px 0px"});document.querySelectorAll(".fade-in-up").forEach(function(el){o.observe(el)});document.querySelectorAll("section > div, .stats-grid > *, .values-grid > *, .features-grid > *, .benefits-grid > *, .case-card, .blog-card, .job-card, .partner-card, .guide-card, .team-card, .benefit-card, .feature-card, .stat-card, .value-card, .press-card, .faq-item, .step-card, .workflow-step").forEach(function(el){if(!el.classList.contains("fade-in-up")){el.classList.add("fade-in-up");o.observe(el)}})});</script>
 </body>
 </html>
