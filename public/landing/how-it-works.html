@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sådan virker det - Flow Restaurant Platform</title>
-  <meta name="description" content="Se hvordan Flow hjælper din restaurant med at vokse. Fire enkle trin til mere salg, flere kunder og bedre markedsføring.">
+  <title>Sådan virker det - Flow Restaurant Analyse</title>
+  <meta name="description" content="Få en gratis AI-drevet analyse af din restaurant. Se din score, konkurrentanalyse, og få anbefalinger til forbedringer.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ==================== CSS VARIABLES ==================== */
     :root {
@@ -32,6 +32,9 @@
       --section-overlap: -2.4rem;
       --container-max: 1200px;
       --container-huge: 1400px;
+      --color-success: #22C55E;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
     }
 
     /* ==================== RESET & BASE ==================== */
@@ -56,6 +59,21 @@
       -moz-osx-font-smoothing: grayscale;
       overscroll-behavior: none;
       overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img, video {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    ul, ol {
+      list-style: none;
     }
 
     /* Auto-hide Scrollbars */
@@ -89,139 +107,6 @@
 
     *:hover::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img, video {
-      max-width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    ul, ol {
-      list-style: none;
-    }
-
-    /* ==================== TYPOGRAPHY ==================== */
-    .h56 { font-size: 5.6rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-    .h52 { font-size: 5.2rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; }
-    .h48 { font-size: 4.8rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
-    .h44 { font-size: 4.4rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; }
-    .h36 { font-size: 3.6rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; }
-    .h28 { font-size: 2.8rem; font-weight: 700; line-height: 1.25; }
-    .h24 { font-size: 2.4rem; font-weight: 700; line-height: 1.3; }
-    .h20 { font-size: 2rem; font-weight: 600; line-height: 1.4; }
-    .h18 { font-size: 1.8rem; font-weight: 600; line-height: 1.4; }
-    .h16 { font-size: 1.6rem; font-weight: 500; line-height: 1.5; }
-    .h15 { font-size: 1.5rem; font-weight: 500; line-height: 1.5; }
-    .h14 { font-size: 1.4rem; font-weight: 400; line-height: 1.5; }
-    .h13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; }
-    .p15 { font-size: 1.5rem; font-weight: 400; line-height: 1.6; color: var(--color-gray-600); }
-    .p13 { font-size: 1.3rem; font-weight: 500; line-height: 1.5; text-transform: uppercase; letter-spacing: 0.05em; }
-    .p12 { font-size: 1.2rem; font-weight: 400; line-height: 1.5; }
-    .p32 { font-size: 3.2rem; font-weight: 700; line-height: 1.2; }
-
-    /* ==================== UTILITY CLASSES ==================== */
-    .text-color-content-secondary { color: var(--color-gray-600); }
-    .text-color-content-tertiary { color: var(--color-gray-500); }
-    .text-color-white { color: var(--color-white); }
-    .text-align-center { text-align: center; }
-    .max-width-460 { max-width: 46rem; }
-    .max-width-560 { max-width: 56rem; }
-    .max-width-580 { max-width: 58rem; }
-    .margin-bottom { margin-bottom: 0; }
-    .margin-bottom.margin-8 { margin-bottom: 0.8rem; }
-    .margin-bottom.margin-12 { margin-bottom: 1.2rem; }
-    .margin-bottom.margin-16 { margin-bottom: 1.6rem; }
-    .margin-bottom.margin-32 { margin-bottom: 3.2rem; }
-
-    /* ==================== LAYOUT ==================== */
-    .page-wrapper {
-      overflow: hidden;
-    }
-
-    .padding-global {
-      padding-left: 4rem;
-      padding-right: 4rem;
-    }
-
-    .container-large {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-
-    .container-huge {
-      max-width: var(--container-huge);
-      margin: 0 auto;
-    }
-
-    section {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* ==================== BUTTONS ==================== */
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.8rem;
-      padding: 1.4rem 2.8rem;
-      font-size: 1.5rem;
-      font-weight: 500;
-      border-radius: 0.8rem;
-      background: var(--color-primary);
-      color: var(--color-white);
-      transition: all 0.35s cubic-bezier(0.215, 0.61, 0.355, 1);
-      cursor: pointer;
-      border: none;
-    }
-
-    .button:hover {
-      background: var(--color-primary-hover);
-    }
-
-    .button.is-secondary {
-      background: transparent;
-      color: var(--color-dark);
-      border: 2px solid var(--color-dark);
-    }
-
-    .button.is-secondary:hover {
-      background: var(--color-dark);
-      color: var(--color-white);
-    }
-
-    .button.is-black {
-      background: var(--color-dark);
-    }
-
-    .button.is-black:hover {
-      background: var(--color-gray-800);
-    }
-
-    .button.button-white {
-      background: var(--color-white);
-      color: var(--color-dark);
-      border: none;
-    }
-
-    .button.button-white:hover {
-      background: var(--color-gray-100);
-    }
-
-    .button.button-outline {
-      background: transparent;
-      color: var(--color-white);
-      border: 2px solid var(--color-white);
-    }
-
-    .button.button-outline:hover {
-      background: rgba(255, 255, 255, 0.1);
     }
 
     /* ==================== NAVIGATION ==================== */
@@ -262,7 +147,7 @@
     }
 
     .nav-logo img {
-      height: 2.56rem;
+      height: 3.2rem;
       width: auto;
     }
 
@@ -283,14 +168,13 @@
     }
 
     .nav-link {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.4rem;
       font-weight: 500;
       color: var(--color-dark);
       padding: 0.8rem 1.2rem;
       border-radius: 0.6rem;
       transition: background 0.2s ease;
-      letter-spacing: -0.026em;
     }
 
     .nav-link:hover {
@@ -323,7 +207,6 @@
       background: var(--color-gray-800);
     }
 
-    
     /* DROPDOWN MEGA MENU */
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.4rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
@@ -366,198 +249,1644 @@
       column-gap: 2rem;
     }
 
-    /* ==================== HERO SECTION ==================== */
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.8rem;
+      color: var(--color-dark);
+    }
+
+    .mobile-menu-btn svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    /* Hero Section */
     .hero {
-      padding: 16rem 4rem 10rem;
-      background: var(--color-white);
-      text-align: center;
-    }
-
-    .hero h1 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 5.6rem;
-      font-weight: 700;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      margin-bottom: 2.4rem;
-      color: var(--color-dark);
-    }
-
-    .hero p {
-      font-size: 2rem;
-      font-weight: 300;
-      color: var(--color-gray-600);
-      max-width: 70rem;
-      margin: 0 auto 4rem;
-    }
-
-    /* ==================== STEPS SECTION ==================== */
-    .steps-section {
-      padding: 12rem 4rem;
-      background: var(--color-white);
-    }
-
-    .steps-container {
-      max-width: 120rem;
-      margin: 0 auto;
-    }
-
-    .step-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8rem;
+      padding: 20rem 2.4rem 10rem;
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+      min-height: 60vh;
+      display: flex;
       align-items: center;
-      margin-bottom: 12rem;
     }
 
-    .step-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .step-row:nth-child(even) {
-      direction: rtl;
-    }
-
-    .step-row:nth-child(even) > * {
-      direction: ltr;
-    }
-
-    .step-content {
-      padding: 4rem 0;
-    }
-
-    .step-number {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--color-gray-500);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 1.6rem;
-    }
-
-    .step-content h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 4.4rem;
-      font-weight: 600;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      margin-bottom: 2rem;
-      color: var(--color-dark);
-    }
-
-    .step-content p {
-      font-size: 1.8rem;
-      font-weight: 300;
-      color: var(--color-gray-600);
-      line-height: 1.7;
-      margin-bottom: 2.4rem;
-    }
-
-    .step-image {
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.12);
-    }
-
-    .step-image img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    /* ==================== CTA SECTION ==================== */
-    .cta-section {
-      padding: 10rem 4rem;
-      background: var(--color-beige);
+    .hero-container {
+      max-width: 80rem;
+      margin: 0 auto;
       text-align: center;
     }
 
-    .cta-section h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 4.8rem;
-      font-weight: 700;
-      line-height: 1.15;
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--color-green-accent);
+      padding: 0.8rem 1.6rem;
+      border-radius: 10rem;
+      font-size: 1.4rem;
+      font-weight: 600;
       margin-bottom: 2.4rem;
-      color: var(--color-dark);
     }
 
-    .cta-section p {
-      font-size: 1.8rem;
-      font-weight: 300;
+    .hero-badge-dot {
+      width: 0.8rem;
+      height: 0.8rem;
+      background: var(--color-primary);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .hero-title {
+      font-family: 'Inter', sans-serif;
+      font-size: 5.6rem;
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.4rem;
+      color: var(--color-dark);
+      text-transform: uppercase;
+    }
+
+    .hero-title .big {
+      font-size: 115%;
+      display: inline;
+    }
+
+    .hero-title .gradient {
+      background: linear-gradient(135deg, var(--color-green-accent) 0%, var(--color-primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 2rem;
       color: var(--color-gray-600);
       max-width: 60rem;
       margin: 0 auto 4rem;
+      line-height: 1.6;
     }
 
-    /* ==================== FOOTER ==================== */
-    .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
-    .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
-    .footer-column ul { list-style: none; padding: 0; margin: 0; }
-    .footer-column li { margin-bottom: 1.2rem; }
-    .footer-column a { color: var(--color-white); text-decoration: none; font-size: 1.5rem; transition: opacity 0.2s; }
-    .footer-column a:hover { opacity: 0.7; }
-    .footer-bottom { max-width: 140rem; margin: 0 auto; padding-top: 3rem; display: flex; justify-content: space-between; align-items: center; }
-    .footer-bottom p { font-size: 1.4rem; color: rgba(255,255,255,0.5); margin: 0; }
-    .footer-legal { display: flex; gap: 2.4rem; }
-    .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.4rem; transition: color 0.2s; }
-    .footer-legal a:hover { color: var(--color-white); }
+    /* Search Section */
+    .search-section {
+      max-width: 52rem;
+      margin: 0 auto;
+    }
 
-    /* ==================== RESPONSIVE ==================== */
-    @media (max-width: 1024px) {
-      .step-row {
-        gap: 6rem;
-        margin-bottom: 8rem;
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: white;
+      border: 2px solid var(--color-gray-200);
+      border-radius: 1.6rem;
+      padding: 0.8rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-input-wrapper:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 4px 30px rgba(1, 91, 248, 0.15);
+    }
+
+    .search-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      margin-left: 1.6rem;
+      color: var(--color-gray-400);
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 1.6rem;
+      padding: 1.4rem;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .search-input::placeholder {
+      color: var(--color-gray-400);
+    }
+
+    .search-btn {
+      background: var(--color-primary);
+      color: white;
+      border: none;
+      padding: 1.6rem 3.2rem;
+      border-radius: 1.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .search-btn:hover:not(:disabled) {
+      background: var(--color-primary-hover);
+    }
+
+    .search-btn:disabled {
+      background: var(--color-gray-400);
+      cursor: not-allowed;
+    }
+
+    /* Autocomplete Dropdown */
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid var(--color-gray-200);
+      border-radius: 1.2rem;
+      margin-top: 0.8rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+      display: none;
+      z-index: 100;
+      max-height: 40rem;
+      overflow-y: auto;
+    }
+
+    .autocomplete-dropdown.active {
+      display: block;
+    }
+
+    .autocomplete-item {
+      padding: 1.6rem 2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:hover {
+      background: var(--color-gray-100);
+    }
+
+    .autocomplete-icon {
+      width: 4rem;
+      height: 4rem;
+      background: var(--color-gray-100);
+      border-radius: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+    }
+
+    .autocomplete-icon svg {
+      width: 2rem;
+      height: 2rem;
+    }
+
+    .autocomplete-content {
+      flex: 1;
+    }
+
+    .autocomplete-name {
+      font-weight: 600;
+      color: var(--color-dark);
+      font-size: 1.5rem;
+    }
+
+    .autocomplete-address {
+      font-size: 1.3rem;
+      color: var(--color-gray-400);
+      margin-top: 0.2rem;
+    }
+
+    .autocomplete-type {
+      font-size: 1.2rem;
+      color: var(--color-green-accent);
+      background: rgba(34, 197, 94, 0.1);
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.4rem;
+    }
+
+    .autocomplete-no-results {
+      padding: 2rem;
+      text-align: center;
+      color: var(--color-gray-500);
+      font-size: 1.4rem;
+    }
+
+    /* Loading Section */
+    .loading-section {
+      display: none;
+      padding: 8rem 2.4rem;
+      text-align: center;
+    }
+
+    .loading-section.active {
+      display: block;
+    }
+
+    .loading-container {
+      max-width: 60rem;
+      margin: 0 auto;
+    }
+
+    .loading-animation {
+      width: 12rem;
+      height: 12rem;
+      margin: 0 auto 3.2rem;
+      position: relative;
+    }
+
+    .loading-circle {
+      width: 100%;
+      height: 100%;
+      border: 4px solid var(--color-gray-200);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 1.2rem;
+    }
+
+    .loading-subtext {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+    }
+
+    .loading-timer {
+      font-size: 4.8rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loading-steps {
+      margin-top: 4rem;
+      text-align: left;
+      max-width: 40rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .loading-step {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      padding: 1.2rem 0;
+      color: var(--color-gray-400);
+      transition: all 0.3s ease;
+    }
+
+    .loading-step.active {
+      color: var(--color-dark);
+    }
+
+    .loading-step.completed {
+      color: var(--color-success);
+    }
+
+    .loading-step-icon {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      background: var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .loading-step.active .loading-step-icon {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .loading-step.completed .loading-step-icon {
+      background: var(--color-success);
+      color: white;
+    }
+
+    .loading-step-icon svg {
+      width: 1.4rem;
+      height: 1.4rem;
+    }
+
+    /* ==================== SCANNING BEAM ANIMATIONS ==================== */
+    @keyframes scanVertical {
+      0% { top: 10%; }
+      50% { top: 80%; }
+      100% { top: 10%; }
+    }
+
+    @keyframes scanHorizontal {
+      0% { left: 5%; }
+      50% { left: 90%; }
+      100% { left: 5%; }
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 0.8;
+        transform: translateY(0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.5);
       }
     }
 
+    /* Scanning Container */
+    .scanning-container {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    /* Scan Lines */
+    .scan-line-vertical {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+      animation: scanVertical 3s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+
+    .scan-line-horizontal {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, transparent, #3b82f6, #60a5fa, #3b82f6, transparent);
+      animation: scanHorizontal 4s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Grid Pattern */
+    .scan-grid {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.1;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 39px, #3b82f6 39px, #3b82f6 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, #3b82f6 39px, #3b82f6 40px);
+    }
+
+    /* Data Particles */
+    .data-particle {
+      position: absolute;
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+      opacity: 0.8;
+      animation: floatUp 2s ease-out forwards;
+    }
+
+    /* Corner Brackets */
+    .corner-bracket {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      opacity: 0.6;
+    }
+
+    .corner-bracket.top-left {
+      top: 40px;
+      left: 40px;
+      border-top: 2px solid #3b82f6;
+      border-left: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.top-right {
+      top: 40px;
+      right: 40px;
+      border-top: 2px solid #3b82f6;
+      border-right: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.bottom-left {
+      bottom: 40px;
+      left: 40px;
+      border-bottom: 2px solid #3b82f6;
+      border-left: 2px solid #3b82f6;
+    }
+
+    .corner-bracket.bottom-right {
+      bottom: 40px;
+      right: 40px;
+      border-bottom: 2px solid #3b82f6;
+      border-right: 2px solid #3b82f6;
+    }
+
+    /* Status Indicator */
+    .scan-status {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.75);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: #4ade80;
+      z-index: 10;
+    }
+
+    .scan-status-label {
+      opacity: 0.6;
+      margin-bottom: 4px;
+    }
+
+    .scan-status-current {
+      color: #60a5fa;
+    }
+
+    /* Loading Container */
+    .loading-container {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .loading-progress-info {
+      text-align: center;
+      margin-top: 3rem;
+    }
+
+    .loading-steps-sidebar {
+      margin-top: 3rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==================== BROWSER WINDOW PREVIEW ==================== */
+    .browser-window {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.15), 0 10px 30px rgba(0,0,0,0.1);
+      overflow: hidden;
+      max-width: 600px;
+      margin: 0 auto;
+      animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .browser-header {
+      background: #f6f6f6;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .browser-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .browser-dot.red { background: #ff5f57; }
+    .browser-dot.yellow { background: #ffbd2e; }
+    .browser-dot.green { background: #28ca41; }
+
+    .browser-url {
+      flex: 1;
+      background: white;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #666;
+      margin-left: 8px;
+      border: 1px solid #e5e5e5;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .browser-content {
+      min-height: 280px;
+    }
+
+    /* ==================== PREVIEW COMPONENTS ==================== */
+    .preview-map {
+      height: 280px;
+      background: #f8f8f8;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .preview-google {
+      padding: 32px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-reviews {
+      padding: 28px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-images {
+      padding: 24px;
+      background: white;
+      min-height: 280px;
+    }
+
+    .preview-facebook {
+      background: #f0f2f5;
+      min-height: 280px;
+    }
+
+    .preview-mobile {
+      padding: 32px;
+      background: #f5f5f5;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+    }
+
+    .preview-website {
+      padding: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 280px;
+      color: white;
+    }
+
+    /* Mobile Device Mockup */
+    .mobile-device {
+      width: 140px;
+      height: 260px;
+      background: #1a1a1a;
+      border-radius: 24px;
+      padding: 5px;
+    }
+
+    .mobile-screen {
+      width: 100%;
+      height: 100%;
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* Score Circle */
+    .score-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(#34a853 0deg, #34a853 var(--score-deg), #e0e0e0 var(--score-deg));
+    }
+
+    .score-circle-inner {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    /* Report Section */
+    .report-section {
+      display: none;
+      padding: 4rem 2.4rem 8rem;
+    }
+
+    .report-section.active {
+      display: block;
+    }
+
+    .report-container {
+      max-width: 100rem;
+      margin: 0 auto;
+    }
+
+    .report-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .report-business-name {
+      font-size: 3.2rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 0.8rem;
+    }
+
+    .report-business-address {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+    }
+
+    /* Score Card */
+    .score-card {
+      background: linear-gradient(135deg, var(--color-primary) 0%, #0d9488 100%);
+      border-radius: 2.4rem;
+      padding: 4rem;
+      color: white;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .score-label {
+      font-size: 1.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+      margin-bottom: 1.6rem;
+    }
+
+    .score-value {
+      font-size: 9.6rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 1.6rem;
+    }
+
+    .score-max {
+      font-size: 2.4rem;
+      opacity: 0.6;
+    }
+
+    .score-description {
+      font-size: 1.8rem;
+      opacity: 0.9;
+      max-width: 50rem;
+      margin: 0 auto;
+    }
+
+    /* Report Grid */
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2.4rem;
+      margin-bottom: 4rem;
+    }
+
+    .report-card {
+      background: white;
+      border: 1px solid var(--color-gray-200);
+      border-radius: 1.6rem;
+      padding: 2.4rem;
+    }
+
+    .report-card-header {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .report-card-icon {
+      width: 4.8rem;
+      height: 4.8rem;
+      background: rgba(1, 91, 248, 0.1);
+      border-radius: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+    }
+
+    .report-card-icon svg {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+
+    .report-card-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--color-dark);
+    }
+
+    .report-card-content {
+      font-size: 1.5rem;
+      color: var(--color-gray-600);
+      line-height: 1.7;
+    }
+
+    .report-list {
+      list-style: none;
+    }
+
+    .report-list li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--color-gray-100);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .report-list li:last-child {
+      border-bottom: none;
+    }
+
+    .report-list-icon {
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+
+    .report-list-icon.success {
+      color: var(--color-success);
+    }
+
+    .report-list-icon.warning {
+      color: var(--color-warning);
+    }
+
+    .report-list-icon.danger {
+      color: var(--color-danger);
+    }
+
+    /* Recommendations */
+    .recommendations-section {
+      background: var(--color-gray-100);
+      border-radius: 1.6rem;
+      padding: 3.2rem;
+      margin-bottom: 4rem;
+    }
+
+    .recommendations-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--color-dark);
+      margin-bottom: 2.4rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .recommendations-title svg {
+      width: 3.2rem;
+      height: 3.2rem;
+      color: var(--color-primary);
+    }
+
+    .recommendation-item {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 2rem;
+      margin-bottom: 1.6rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 1.6rem;
+    }
+
+    .recommendation-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .recommendation-number {
+      width: 3.2rem;
+      height: 3.2rem;
+      background: var(--color-primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .recommendation-content h4 {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--color-dark);
+      margin-bottom: 0.4rem;
+    }
+
+    .recommendation-content p {
+      font-size: 1.4rem;
+      color: var(--color-gray-600);
+    }
+
+    /* CTA Section */
+    .report-cta {
+      background: var(--color-dark);
+      border-radius: 2.4rem;
+      padding: 4rem;
+      text-align: center;
+      color: white;
+    }
+
+    .report-cta h3 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 1.6rem;
+    }
+
+    .report-cta p {
+      font-size: 1.6rem;
+      opacity: 0.8;
+      margin-bottom: 2.4rem;
+      max-width: 50rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .report-cta .btn {
+      background: white;
+      color: var(--color-dark);
+      padding: 1.6rem 3.2rem;
+      border-radius: 1.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: all 0.2s ease;
+    }
+
+    .report-cta .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Footer - matches landing.html */
+    .footer {
+      background: var(--color-black);
+      color: var(--color-white);
+      padding: 6rem 4rem 3rem;
+    }
+
+    .footer-content {
+      max-width: 140rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4rem;
+      padding-bottom: 4rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-column h4 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      margin-bottom: 2rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .footer-column ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .footer-column li {
+      margin-bottom: 1.2rem;
+    }
+
+    .footer-column a {
+      color: var(--color-white);
+      text-decoration: none;
+      font-size: 1.5rem;
+      transition: opacity 0.2s;
+    }
+
+    .footer-column a:hover {
+      opacity: 0.7;
+    }
+
+    .footer-bottom {
+      max-width: 140rem;
+      margin: 0 auto;
+      padding-top: 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-bottom p {
+      font-size: 1.4rem;
+      color: rgba(255,255,255,0.5);
+      margin: 0;
+    }
+
+    .footer-legal {
+      display: flex;
+      gap: 2.4rem;
+    }
+
+    .footer-legal a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 1.4rem;
+      transition: color 0.2s;
+    }
+
+    .footer-legal a:hover {
+      color: var(--color-white);
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
-      html {
-        font-size: 56.25%;
-      }
-
       .nav-links {
         display: none;
       }
 
-      .hero h1 {
-        font-size: 4rem;
+      .mobile-menu-btn {
+        display: block;
       }
 
-      .step-row {
+      .nav-container {
+        padding: 1.2rem 2rem;
+      }
+
+      .hero {
+        padding: 12rem 2rem 6rem;
+      }
+
+      .hero-title {
+        font-size: 3.6rem;
+      }
+
+      .hero-subtitle {
+        font-size: 1.6rem;
+      }
+
+      .search-input-wrapper {
+        flex-direction: column;
+        padding: 1.2rem;
+      }
+
+      .search-input {
+        width: 100%;
+        text-align: center;
+      }
+
+      .search-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .report-grid {
         grid-template-columns: 1fr;
-        gap: 4rem;
-      }
-
-      .step-row:nth-child(even) {
-        direction: ltr;
       }
 
       .footer-content {
         grid-template-columns: 1fr 1fr;
+        gap: 3.2rem;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 1.6rem;
+        text-align: center;
+      }
+
+      .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
       }
     }
 
     @media (max-width: 480px) {
-      .padding-global {
-        padding-left: 2rem;
-        padding-right: 2rem;
-      }
-
       .footer-content {
         grid-template-columns: 1fr;
       }
     }
+
+    /* ==================== HOW IT WORKS SECTION ==================== */
+    /* ==================== HOW IT WORKS - OWNER.COM STYLE ==================== */
+    .how-section {
+      padding: 8rem 0;
+      background: white;
+      position: relative;
+    }
+
+    .how-container {
+      max-width: 120rem;
+      margin: 0 auto;
+      padding: 0 4rem;
+      position: relative;
+    }
+
+    /* Skjul gammel timeline */
+    .how-timeline {
+      display: none;
+    }
+
+    /* Steps Container */
+    .how-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+      padding-left: 4rem;
+      padding-right: 4rem;
+    }
+
+    /* Single Step Row - ALWAYS text left, image right */
+    .how-step-row {
+      display: grid;
+      grid-template-columns: 45% 55%;
+      gap: 6rem;
+      align-items: center;
+      padding: 6rem 0;
+      position: relative;
+    }
+
+    .how-step-row.reverse {
+      direction: rtl;
+    }
+
+    .how-step-row.reverse > * {
+      direction: ltr;
+    }
+
+    /* ==================== ZIGZAG TIMELINE (DASHED) ==================== */
+    /* Linjer går UDEN OM indholdet - aldrig gennem tekst eller billeder */
+    /* 2cm margin fra tekst og billeder */
+
+    /* Skjul alle timeline elementer */
+    .timeline-vertical,
+    .timeline-horizontal,
+    .timeline-down {
+      display: none;
+    }
+
+    /* Fjern global ::before på .how-steps */
+    .how-steps::before {
+      display: none;
+    }
+
+    /* Container til timeline */
+    .how-steps {
+      --timeline-color: #c4c4c4;
+      --timeline-offset: 2rem; /* 2cm afstand fra indhold */
+    }
+
+    /* Alle step rows skal have position relative */
+    .how-step-row {
+      position: relative;
+    }
+
+    /* Sektion 1: Vertikal linje NED i venstre side (mellem tekst og kant) */
+    .how-step-row:nth-child(1)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: calc(-4rem - var(--timeline-offset));
+      top: 50%;
+      bottom: 0;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+    /* Horisontal linje i bunden af sektion 1 - går fra venstre til højre */
+    .how-step-row:nth-child(1)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
+      height: 0;
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+
+    /* Sektion 2: Vertikal linje i højre side */
+    .how-step-row:nth-child(2)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      right: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+    /* Horisontal linje i bunden af sektion 2 - går fra højre til venstre */
+    .how-step-row:nth-child(2)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
+      height: 0;
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+
+    /* Sektion 3: Vertikal linje i venstre side */
+    .how-step-row:nth-child(3)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      left: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      bottom: 0;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+    /* Horisontal linje i bunden af sektion 3 - går fra venstre til højre */
+    .how-step-row:nth-child(3)::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: calc(-4rem - var(--timeline-offset));
+      bottom: 0;
+      height: 0;
+      width: calc(100% + 8rem + var(--timeline-offset) * 2);
+      border-top: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+
+    /* Sektion 4: Vertikal linje i højre side (kun ned til midten) */
+    .how-step-row:nth-child(4)::before {
+      content: '';
+      display: block;
+      position: absolute;
+      right: calc(-4rem - var(--timeline-offset));
+      top: 0;
+      height: 50%;
+      width: 0;
+      border-left: 2px dashed var(--timeline-color);
+      z-index: 1;
+    }
+    /* Ingen horisontal linje efter sektion 4 */
+    .how-step-row:nth-child(4)::after {
+      display: none;
+    }
+
+    /* Step Content Side */
+    .how-step-content {
+      padding: 0 2rem 0 0;
+    }
+
+    .how-step-number {
+      font-size: 4.2rem;
+      font-weight: 400;
+      color: #c4c4c4;
+      margin-bottom: 1.6rem;
+      line-height: 1;
+    }
+
+    .how-step-content h3 {
+      font-size: 3.6rem;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--color-dark);
+      margin-bottom: 1.6rem;
+    }
+
+    .how-step-content p {
+      font-size: 1.6rem;
+      color: var(--color-gray-600);
+      line-height: 1.7;
+      margin-bottom: 2.4rem;
+      max-width: 42rem;
+    }
+
+    /* Learn More Button */
+    .how-learn-more {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--color-dark);
+      text-decoration: none;
+      padding: 1.2rem 2rem;
+      background: #f5f5f5;
+      border-radius: 3rem;
+      transition: all 0.2s ease;
+    }
+
+    .how-learn-more:hover {
+      background: #e8e8e8;
+    }
+
+    .how-learn-more svg {
+      width: 1.6rem;
+      height: 1.6rem;
+      transition: transform 0.2s ease;
+    }
+
+    .how-learn-more:hover svg {
+      transform: translateX(4px);
+    }
+
+    /* Step Image Side */
+    .how-step-image {
+      position: relative;
+      border-radius: 1.6rem;
+      overflow: hidden;
+      background: #f8f8f8;
+      aspect-ratio: 16/11;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .how-step-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Floating UI Mockup over image */
+    .how-mockup {
+      position: absolute;
+      background: white;
+      border-radius: 1.2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 25px rgba(0, 0, 0, 0.1);
+      padding: 1.6rem;
+      max-width: 75%;
+    }
+
+    .how-mockup.center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .how-mockup.bottom-right {
+      bottom: 2rem;
+      right: 2rem;
+    }
+
+    /* CTA */
+    .how-cta {
+      text-align: center;
+      padding-top: 4rem;
+    }
+
+    /* Button */
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      padding: 1.6rem 3.2rem;
+      font-size: 1.6rem;
+      font-weight: 600;
+      border-radius: 1.2rem;
+      background: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(1, 91, 248, 0.3);
+    }
+
+    /* ==================== HOW IT WORKS RESPONSIVE ==================== */
+    @media (max-width: 1024px) {
+      .how-section {
+        padding: 6rem 0;
+      }
+
+      .how-step-row {
+        gap: 4rem;
+        padding: 4rem 0;
+      }
+
+      .how-step-content h3 {
+        font-size: 3rem;
+      }
+
+      .how-timeline,
+      .how-step-row::before,
+      .how-step-row::after,
+      .timeline-vertical,
+      .timeline-horizontal,
+      .timeline-down {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .how-step-row {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+      }
+
+      .how-step-content {
+        order: 1;
+        padding: 0;
+      }
+
+      .how-step-image {
+        order: 2;
+      }
+
+      .how-step-content h3 {
+        font-size: 2.8rem;
+      }
+
+      .how-container {
+        padding: 0 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .how-step-number {
+        font-size: 3.6rem;
+      }
+
+      .how-step-content h3 {
+        font-size: 2.4rem;
+      }
+    }
+
+    /* ==================== TESTIMONIAL MARQUEE ==================== */
+    .testimonial-section {
+      padding: 5.6rem 0;
+    }
+
+    .testimonial-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+      padding: 0 1.6rem;
+    }
+
+    .testimonial-box {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 2rem;
+      padding: 4rem;
+      padding-top: 5.6rem;
+    }
+
+    .testimonial-marquee-wrapper {
+      position: absolute;
+      transform: rotate(35deg);
+      width: 200%;
+      left: -50%;
+    }
+
+    .testimonial-marquee-group {
+      display: flex;
+      overflow: hidden;
+      padding: 0.8rem;
+      gap: 1rem;
+    }
+
+    .testimonial-marquee-row {
+      display: flex;
+      flex-shrink: 0;
+      justify-content: space-around;
+      gap: 1rem;
+      animation: marquee 20s linear infinite;
+    }
+
+    .testimonial-marquee-group:hover .testimonial-marquee-row {
+      animation-play-state: paused;
+    }
+
+    .testimonial-marquee-row.reverse {
+      animation-direction: reverse;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(calc(-100% - 1rem)); }
+    }
+
+    .testimonial-card {
+      position: relative;
+      width: 25.6rem;
+      cursor: pointer;
+      overflow: hidden;
+      border-radius: 2rem;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 1.6rem;
+      background: rgba(0, 0, 0, 0.01);
+      transition: background 0.2s ease;
+    }
+
+    .testimonial-card:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .testimonial-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .testimonial-avatar {
+      width: 3.2rem;
+      height: 3.2rem;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .testimonial-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .testimonial-name {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #111827;
+    }
+
+    .testimonial-handle {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.4);
+    }
+
+    .testimonial-quote {
+      margin-top: 0.8rem;
+      font-size: 1.4rem;
+      line-height: 1.5;
+      color: #374151;
+    }
+
+    .testimonial-center {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-top: 1.6rem;
+    }
+
+    .testimonial-icon {
+      width: 9.6rem;
+      height: 9.6rem;
+      border-radius: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 1.2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .testimonial-icon svg {
+      width: 6.4rem;
+      height: 6.4rem;
+      color: #111827;
+    }
+
+    .testimonial-headline {
+      font-family: 'Inter', sans-serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: #111827;
+      margin-top: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .testimonial-subheadline {
+      font-size: 1.6rem;
+      color: #6b7280;
+      margin-top: 0.8rem;
+    }
+
+    .testimonial-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      font-size: 1.4rem;
+      font-weight: 500;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: #fff;
+      height: 4.4rem;
+      margin-top: 1.6rem;
+      border-radius: 2rem;
+      padding: 0 2.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .testimonial-cta:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .testimonial-cta svg {
+      margin-left: 0.4rem;
+      width: 1.6rem;
+      height: 1.6rem;
+      transition: transform 0.3s ease;
+    }
+
+    .testimonial-cta:hover svg {
+      transform: translateX(4px);
+    }
+
+    .testimonial-gradient {
+      position: absolute;
+      inset: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, transparent 0%, #fff 70%);
+      pointer-events: none;
+    }
+
+    @media (max-width: 1024px) {
+      .testimonial-icon {
+        width: 8rem;
+        height: 8rem;
+      }
+
+      .testimonial-icon svg {
+        width: 4.8rem;
+        height: 4.8rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .testimonial-headline {
+        font-size: 2.4rem;
+      }
+
+      .testimonial-card {
+        width: 22rem;
+      }
+    }
   </style>
+
+  <!-- Google Maps Places API -->
 </head>
 <body>
-  <div class="page-wrapper">
-    <!-- Navigation -->
+  <!-- Navigation -->
     <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
           <a href="landing.html" class="nav-logo">
-            <img src="../../images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
           </a>
           <div class="nav-links">
             <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
@@ -599,144 +1928,2310 @@
       </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-      <h1>Sådan virker Flow</h1>
-      <p>Fire enkle trin til mere salg, flere kunder og bedre markedsføring. Se hvordan Flow hjælper din restaurant med at vokse.</p>
-    </section>
+  <!-- Hero Section with Search -->
+  <section class="hero" id="heroSection">
+    <div class="hero-container">
+      <h1 class="hero-title">F<span class="big">Å</span> EN <span class="big">G</span>R<span class="big">A</span>TIS <span class="big">A</span>N<span class="big">A</span>LYSE <span class="big">A</span>F<br><span class="gradient">DIN REST<span class="big">A</span>UR<span class="big">A</span>NT</span></h1>
 
-    <!-- Steps Section -->
-    <section class="steps-section">
-      <div class="steps-container">
-        <!-- Step 1 -->
-        <div class="step-row">
-          <div class="step-content">
-            <div class="step-number">Trin 1</div>
-            <h2>Tilmeld dig og opret din konto</h2>
-            <p>Det tager mindre end 5 minutter at komme i gang. Indtast dine restaurantoplysninger, upload dit logo og menu, og du er klar til at modtage ordrer.</p>
-            <a href="#demo" class="button is-black">Kom i gang gratis</a>
+      <div class="search-section">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input 
+              type="text" 
+              class="search-input" 
+              id="searchInput" 
+              placeholder="Søg efter din restaurant..." 
+              autocomplete="off"
+            >
+            <button class="search-btn" id="searchBtn" disabled>
+              Start analyse
+            </button>
           </div>
-          <div class="step-image">
-            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop" alt="Dashboard">
-          </div>
+          <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- Step 2 -->
-        <div class="step-row">
-          <div class="step-content">
-            <div class="step-number">Trin 2</div>
-            <h2>Byg din hjemmeside og mobil app</h2>
-            <p>Vælg mellem professionelle skabeloner, tilpas design, farver og indhold. Ingen kodning krævet – alt er drag-and-drop.</p>
-            <a href="restaurant-hjemmeside.html" class="button is-black">Se hjemmeside features</a>
-          </div>
-          <div class="step-image">
-            <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&h=600&fit=crop" alt="Website Builder">
-          </div>
+  <!-- Loading Section -->
+  <section class="loading-section" id="loadingSection">
+    <div class="loading-container">
+      <!-- Scanning Beam Container -->
+      <div class="scanning-container" id="scanningContainer">
+        <!-- Scan Lines -->
+        <div class="scan-line-vertical"></div>
+        <div class="scan-line-horizontal"></div>
+
+        <!-- Grid Pattern -->
+        <div class="scan-grid"></div>
+
+        <!-- Particles Container (populated by JS) -->
+        <div id="particlesContainer"></div>
+
+        <!-- Corner Brackets -->
+        <div class="corner-bracket top-left"></div>
+        <div class="corner-bracket top-right"></div>
+        <div class="corner-bracket bottom-left"></div>
+        <div class="corner-bracket bottom-right"></div>
+
+        <!-- Status Indicator -->
+        <div class="scan-status">
+          <div class="scan-status-label">SCANNING</div>
+          <div class="scan-status-current" id="scanCurrentEndpoint">Initialiserer...</div>
         </div>
+      </div>
 
-        <!-- Step 3 -->
-        <div class="step-row">
-          <div class="step-content">
-            <div class="step-number">Trin 3</div>
-            <h2>Automatiser din marketing</h2>
-            <p>Opsæt SMS-kampagner, email flows og loyalitetsprogram. Flow sender automatisk beskeder til dine kunder på de rigtige tidspunkter.</p>
-            <a href="automatiseret-marketing.html" class="button is-black">Lær om marketing</a>
+      <!-- Browser Window Preview -->
+      <div class="browser-window" id="browserPreview">
+        <div class="browser-header">
+          <div class="browser-dots">
+            <div class="browser-dot red"></div>
+            <div class="browser-dot yellow"></div>
+            <div class="browser-dot green"></div>
           </div>
-          <div class="step-image">
-            <img src="https://images.unsplash.com/photo-1557838923-2985c318be48?w=800&h=600&fit=crop" alt="Marketing Automation">
-          </div>
+          <div class="browser-url" id="browserUrl">google.com/maps</div>
         </div>
+        <div class="browser-content" id="browserContent">
+          <!-- Preview content injected by JS -->
+        </div>
+      </div>
 
-        <!-- Step 4 -->
-        <div class="step-row">
-          <div class="step-content">
-            <div class="step-number">Trin 4</div>
-            <h2>Modtag ordrer og voks dit salg</h2>
-            <p>Dine kunder bestiller gennem din hjemmeside og app. Du modtager ordrer direkte i Flow's dashboard, printer kvitteringer og tracker alt i realtid.</p>
-            <a href="online-bestilling.html" class="button is-black">Se online bestilling</a>
-          </div>
-          <div class="step-image">
-            <img src="https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&h=600&fit=crop" alt="Order Management">
+      <!-- Progress Info (bottom) -->
+      <div class="loading-progress-info">
+        <div class="loading-timer" id="loadingTimer">52</div>
+        <p class="loading-subtext">sekunder tilbage</p>
+      </div>
+
+      <!-- Steps Sidebar -->
+      <div class="loading-steps-sidebar">
+        <div class="loading-step" data-step="1">
+          <div class="loading-step-icon">•</div>
+          <span>Finder din restaurant</span>
+        </div>
+        <div class="loading-step" data-step="2">
+          <div class="loading-step-icon">•</div>
+          <span>Google Business profil</span>
+        </div>
+        <div class="loading-step" data-step="3">
+          <div class="loading-step-icon">•</div>
+          <span>Anmeldelser sentiment</span>
+        </div>
+        <div class="loading-step" data-step="4">
+          <div class="loading-step-icon">•</div>
+          <span>Billedkvalitet</span>
+        </div>
+        <div class="loading-step" data-step="5">
+          <div class="loading-step-icon">•</div>
+          <span>Facebook insights</span>
+        </div>
+        <div class="loading-step" data-step="6">
+          <div class="loading-step-icon">•</div>
+          <span>Mobil oplevelse</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Report Section -->
+  <section class="report-section" id="reportSection">
+    <div class="report-container">
+
+      <!-- PDF Box (shown first when scanner completes) -->
+      <div id="reportPDFBox" style="max-width:520px;margin:60px auto;text-align:center">
+        <div style="background:white;border-radius:16px;padding:48px 40px;box-shadow:0 4px 24px rgba(0,0,0,0.08);border:1px solid #e5e7eb">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" style="margin:0 auto 20px;display:block">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="14 2 14 8 20 8" stroke="#dc2626" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="12" y="17" text-anchor="middle" font-size="6" font-weight="700" fill="#dc2626">PDF</text>
+          </svg>
+          <h2 style="font-size:22px;font-weight:700;color:#1a1a1a;margin:0 0 8px" id="reportBusinessName">Din SEO Analyserapport</h2>
+          <p style="color:#6b7280;font-size:14px;margin:0 0 4px" id="reportBusinessAddress"></p>
+          <p style="color:#9ca3af;font-size:13px;margin:0 0 32px" id="reportDate"></p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <button onclick="document.getElementById('reportPDFBox').style.display='none';document.getElementById('reportPreview').style.display='block'" style="width:100%;padding:14px;background:#1a1a1a;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s" onmouseover="this.style.background='#333'" onmouseout="this.style.background='#1a1a1a'">Se Preview</button>
+            <button disabled style="width:100%;padding:14px;background:#f3f4f6;color:#9ca3af;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:not-allowed" title="Kræver betaling">Download Fuld Rapport (PDF)</button>
+            <p style="color:#9ca3af;font-size:12px;margin:4px 0 0">Den fulde rapport inkluderer detaljeret handlingsplan og prioriterede forbedringer</p>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- CTA Section -->
-    <section class="cta-section">
-      <h2>Klar til at komme i gang?</h2>
-      <p>Slut dig til tusindvis af restauranter der allerede bruger Flow til at vokse deres forretning.</p>
-      <a href="#demo" class="button is-black">Få en gratis demo</a>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-column">
-          <h4>PRODUKTER</h4>
-          <ul>
-            <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
-            <li><a href="online-bestilling.html">Online Bestilling</a></li>
-            <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-            <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-            <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-            <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-          </ul>
+      <!-- Report Preview (hidden until "Se Preview" clicked) -->
+      <div id="reportPreview" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:40px">
+          <div>
+            <h1 style="font-size:28px;font-weight:700;color:white;margin:0" id="reportPreviewName">Restaurant Navn</h1>
+            <p style="color:#9ca3af;font-size:14px;margin:4px 0 0" id="reportPreviewAddress">Adresse</p>
+          </div>
+          <button onclick="document.getElementById('reportPreview').style.display='none';document.getElementById('reportPDFBox').style.display='block'" style="padding:10px 20px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:14px;cursor:pointer">Tilbage</button>
         </div>
-        <div class="footer-column">
-          <h4>RESSOURCER</h4>
+
+        <!-- Score -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:32px;text-align:center;margin-bottom:32px">
+          <p style="color:#9ca3af;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px">Din Flow Score</p>
+          <div style="font-size:64px;font-weight:800;color:white;line-height:1" id="reportScore">72</div>
+          <p style="color:#6b7280;font-size:13px;margin:0">/100</p>
+          <p style="color:#9ca3af;font-size:14px;margin:16px 0 0;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6" id="scoreDescription"></p>
+        </div>
+
+        <!-- Google Business Profil -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Google Business Profil</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportListingsTable">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Anmeldelsesanalyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Anmeldelsesanalyse</h3>
+          <div id="reportReviewBars"></div>
+        </div>
+
+        <!-- Konkurrentanalyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Konkurrentanalyse</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportCompetitorTable">
+            <thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1)"><th style="text-align:left;padding:8px 0;color:#9ca3af;font-size:13px;font-weight:500">Virksomhed</th><th style="text-align:left;padding:8px 0;color:#9ca3af;font-size:13px;font-weight:500">Placering</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Website Analyse -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:20px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Website Analyse</h3>
+          <table style="width:100%;border-collapse:collapse" id="reportWebsiteTable">
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <!-- Handlingsplan -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px;margin-bottom:32px">
+          <h3 style="font-size:16px;font-weight:600;color:white;margin:0 0 16px">Handlingsplan</h3>
+          <ol style="margin:0;padding:0 0 0 20px;color:#d1d5db;font-size:14px;line-height:2" id="reportRecommendations"></ol>
+        </div>
+
+        <!-- CTA -->
+        <div style="text-align:center;padding:40px 0">
+          <h3 style="font-size:20px;font-weight:600;color:white;margin:0 0 8px">Klar til at forbedre din restaurant?</h3>
+          <p style="color:#9ca3af;font-size:14px;margin:0 0 24px">Flow kan hjælpe dig med at implementere alle disse forbedringer automatisk.</p>
+          <a href="/landing" style="display:inline-block;padding:14px 32px;background:white;color:#1a1a1a;border-radius:10px;font-size:15px;font-weight:600;text-decoration:none;transition:transform 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Start gratis nu</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-section" id="howItWorks">
+    <div class="how-container">
+      <!-- Timeline -->
+      <div class="how-timeline"></div>
+
+      <!-- Steps -->
+      <div class="how-steps">
+
+        <!-- Step 1: Rank højere på Google -->
+        <div class="how-step-row">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
+          <div class="timeline-down"></div>
+          <div class="how-step-content">
+            <div class="how-step-number">01.</div>
+            <h3>Vis dig øverst på Google</h3>
+            <p>Slå dine konkurrenter med en hjemmeside perfekt optimeret til Google. Få flere ordrer fra folk i dit område.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80" alt="Restaurant mad">
+            <!-- Google Search Mockup -->
+            <div class="how-mockup center">
+              <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #f8f9fa; border-radius: 24px; margin-bottom: 16px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <span style="color: #5f6368; font-size: 14px;">restauranter i nærheden</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px;"></div>
+                <div>
+                  <div style="font-weight: 600; font-size: 14px; color: #1a1a1a;">Din restaurant</div>
+                  <div style="display: flex; align-items: center; gap: 4px; margin-top: 2px;">
+                    <span style="color: #fbbc04; font-size: 12px;">4.4</span>
+                    <span style="color: #fbbc04;">★★★★</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Øg dit online salg -->
+        <div class="how-step-row reverse">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
+          <div class="timeline-down"></div>
+          <div class="how-step-content">
+            <div class="how-step-number">02.</div>
+            <h3>Øg dit salg med den nemmeste online bestilling</h3>
+            <p>Gæster bestiller mere fra dig når din online bestillingsoplevelse føles nem og bekendt at bruge.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80" alt="Pizza mad">
+            <!-- Menu Mockup -->
+            <div class="how-mockup center" style="padding: 0; overflow: hidden; max-width: 85%;">
+              <div style="background: white; padding: 12px 16px; border-bottom: 1px solid #eee;">
+                <div style="display: flex; gap: 16px; font-size: 12px;">
+                  <span style="font-weight: 600; color: #1a1a1a;">Italian</span>
+                  <span style="color: #888;">Home</span>
+                  <span style="padding: 4px 12px; background: #f5f5f5; border-radius: 16px; font-weight: 500;">Menu</span>
+                  <span style="color: #888;">Catering</span>
+                </div>
+              </div>
+              <div style="padding: 16px;">
+                <div style="font-weight: 600; font-size: 14px; margin-bottom: 12px;">Most Popular</div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                  <div style="background: #f8f8f8; border-radius: 8px; padding: 8px;">
+                    <div style="width: 100%; height: 50px; background: linear-gradient(135deg, #ff6b6b, #ffa502); border-radius: 6px; margin-bottom: 6px;"></div>
+                    <div style="font-size: 11px; font-weight: 500;">Pasta Bolognese</div>
+                    <div style="font-size: 10px; color: #888;">99 kr</div>
+                  </div>
+                  <div style="background: #f8f8f8; border-radius: 8px; padding: 8px;">
+                    <div style="width: 100%; height: 50px; background: linear-gradient(135deg, #ffa502, #ff6348); border-radius: 6px; margin-bottom: 6px;"></div>
+                    <div style="font-size: 11px; font-weight: 500;">Presto Pizza</div>
+                    <div style="font-size: 10px; color: #888;">119 kr</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Få flere genbestillinger -->
+        <div class="how-step-row">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
+          <div class="timeline-down"></div>
+          <div class="how-step-content">
+            <div class="how-step-number">03.</div>
+            <h3>Få flere genbestillinger med din mobil app og belønninger</h3>
+            <p>Få flere genbestillinger med din egen 5-stjernet mobil app. Byg loyalitet med et belønningsprogram, ligesom Starbucks.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80" alt="Sund mad">
+            <!-- Mobile App Mockup -->
+            <div class="how-mockup center" style="padding: 0; background: #1a1a1a; border-radius: 28px; width: 160px;">
+              <div style="padding: 8px;">
+                <div style="background: white; border-radius: 22px; overflow: hidden;">
+                  <div style="height: 14px; background: linear-gradient(135deg, #667eea, #764ba2);"></div>
+                  <div style="padding: 12px;">
+                    <div style="font-size: 11px; font-weight: 600; margin-bottom: 4px;">Manhattan Bistro</div>
+                    <div style="font-size: 9px; color: #888; margin-bottom: 8px;">Pickup at 11:35am</div>
+                    <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                      <div style="background: #34a853; color: white; font-size: 8px; padding: 3px 6px; border-radius: 4px;">★ 150</div>
+                    </div>
+                    <div style="background: #f97316; color: white; font-size: 10px; padding: 8px; border-radius: 8px; text-align: center; font-weight: 500;">Order now</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Hold gæster engageret -->
+        <div class="how-step-row reverse">
+          <div class="timeline-vertical"></div>
+          <div class="timeline-horizontal"></div>
+          <div class="timeline-down"></div>
+          <div class="how-step-content">
+            <div class="how-step-number">04.</div>
+            <h3>Hold gæster engageret med automatisk marketing</h3>
+            <p>Øg salget med beviste, automatiserede marketingkampagner. Send pengeskabende emails og SMS uden at skrive et ord.</p>
+            <a href="#" class="how-learn-more">
+              Læs mere
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </div>
+          <div class="how-step-image">
+            <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" alt="Restaurant stemning">
+            <!-- Marketing Automation Mockup -->
+            <div class="how-mockup center" style="max-width: 85%;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2">
+                  <path d="M15 18l-6-6 6-6"/>
+                </svg>
+                <span style="font-size: 12px; color: #888;">Back</span>
+                <span style="font-size: 13px; font-weight: 600; margin-left: 8px;">🏈 Superbowl</span>
+                <span style="font-size: 10px; color: #888; background: #f5f5f5; padding: 2px 8px; border-radius: 4px;">Automated</span>
+              </div>
+              <div style="font-size: 11px; color: #666; margin-bottom: 12px;">Vind gæster med uslåelige game-day tilbud garanteret at glæde.</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #fffbeb; border-radius: 8px;">
+                  <span style="font-size: 14px;">⚡</span>
+                  <div>
+                    <div style="font-size: 11px; font-weight: 500;">Every January 29</div>
+                    <div style="font-size: 9px; color: #888;">Trigger</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; background: #f5f5f5; border-radius: 8px;">
+                  <span style="font-size: 14px;">✉️</span>
+                  <div>
+                    <div style="font-size: 11px; font-weight: 500;">Superbowl Reminder</div>
+                    <div style="font-size: 9px; color: #888;">Sent on January 29</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Testimonial Marquee Section -->
+  <section class="testimonial-section">
+    <div class="testimonial-container">
+      <div class="testimonial-box">
+        <!-- Rotated Marquee Background -->
+        <div class="testimonial-marquee-wrapper" id="hiw-testimonials-wrapper">
+          <!-- Row 1 - Forward -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Martin</figcaption>
+                    <p class="testimonial-handle">@cafe_amalfi</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sarah</figcaption>
+                    <p class="testimonial-handle">@pasta_mia</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Jakob</figcaption>
+                    <p class="testimonial-handle">@sushi_house</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Martin</figcaption>
+                    <p class="testimonial-handle">@cafe_amalfi</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sarah</figcaption>
+                    <p class="testimonial-handle">@pasta_mia</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Jakob</figcaption>
+                    <p class="testimonial-handle">@sushi_house</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/martin" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Martin</figcaption>
+                    <p class="testimonial-handle">@cafe_amalfi</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sarah" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sarah</figcaption>
+                    <p class="testimonial-handle">@pasta_mia</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/jakob" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Jakob</figcaption>
+                    <p class="testimonial-handle">@sushi_house</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Endelig et system der bare virker. Ingen hovedpiner, bare resultater.</blockquote>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Row 2 - Reverse -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Louise</figcaption>
+                    <p class="testimonial-handle">@gronne_cafe</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Thomas</figcaption>
+                    <p class="testimonial-handle">@burger_joint</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anna</figcaption>
+                    <p class="testimonial-handle">@mikkels_pizza</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Louise</figcaption>
+                    <p class="testimonial-handle">@gronne_cafe</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Thomas</figcaption>
+                    <p class="testimonial-handle">@burger_joint</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anna</figcaption>
+                    <p class="testimonial-handle">@mikkels_pizza</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/louise" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Louise</figcaption>
+                    <p class="testimonial-handle">@gronne_cafe</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Loyalitetsprogrammet har givet os mange flere stamgæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/thomas" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Thomas</figcaption>
+                    <p class="testimonial-handle">@burger_joint</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Support-teamet er fantastisk. De hjalp os på under en time!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anna" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anna</figcaption>
+                    <p class="testimonial-handle">@mikkels_pizza</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores app ser professionel ud. Push-notifikationer øger salget!</blockquote>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Row 3 - Forward -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Peter</figcaption>
+                    <p class="testimonial-handle">@thai_garden</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Maria</figcaption>
+                    <p class="testimonial-handle">@cafe_hygge</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Henrik</figcaption>
+                    <p class="testimonial-handle">@bistro_nord</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Peter</figcaption>
+                    <p class="testimonial-handle">@thai_garden</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Maria</figcaption>
+                    <p class="testimonial-handle">@cafe_hygge</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Henrik</figcaption>
+                    <p class="testimonial-handle">@bistro_nord</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/peter" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Peter</figcaption>
+                    <p class="testimonial-handle">@thai_garden</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vi har sparet tusindvis i kommission. Flow betaler sig selv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/maria" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Maria</figcaption>
+                    <p class="testimonial-handle">@cafe_hygge</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Analytics giver os indsigt vi aldrig har haft før. Data-drevne beslutninger!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/henrik" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Henrik</figcaption>
+                    <p class="testimonial-handle">@bistro_nord</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Nemt at komme i gang. Vi var live på under 24 timer!</blockquote>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Row 4 - Reverse -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sofie</figcaption>
+                    <p class="testimonial-handle">@brasserie_syd</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Lars</figcaption>
+                    <p class="testimonial-handle">@pizza_palace</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mette</figcaption>
+                    <p class="testimonial-handle">@cafe_central</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sofie</figcaption>
+                    <p class="testimonial-handle">@brasserie_syd</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Lars</figcaption>
+                    <p class="testimonial-handle">@pizza_palace</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mette</figcaption>
+                    <p class="testimonial-handle">@cafe_central</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/sofie" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Sofie</figcaption>
+                    <p class="testimonial-handle">@brasserie_syd</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Kunderne elsker den nemme bestillingsproces. Færre fejl i ordrer!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/lars" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Lars</figcaption>
+                    <p class="testimonial-handle">@pizza_palace</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Marketing-automatiseringen er genial. Vi når flere kunder end nogensinde!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mette" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mette</figcaption>
+                    <p class="testimonial-handle">@cafe_central</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Integration med vores POS system var overraskende nemt!</blockquote>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Row 5 - Forward -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Kasper</figcaption>
+                    <p class="testimonial-handle">@wok_express</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Ida</figcaption>
+                    <p class="testimonial-handle">@bageren</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mikkel</figcaption>
+                    <p class="testimonial-handle">@steakhouse</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Kasper</figcaption>
+                    <p class="testimonial-handle">@wok_express</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Ida</figcaption>
+                    <p class="testimonial-handle">@bageren</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mikkel</figcaption>
+                    <p class="testimonial-handle">@steakhouse</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/kasper" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Kasper</figcaption>
+                    <p class="testimonial-handle">@wok_express</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Flow har gjort vores takeaway-forretning meget mere effektiv!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/ida" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Ida</figcaption>
+                    <p class="testimonial-handle">@bageren</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Perfekt til vores bageri. Kunderne forbestiller nu dagligt!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/mikkel" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Mikkel</figcaption>
+                    <p class="testimonial-handle">@steakhouse</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Bordreservationer og takeaway i ét system. Simpelt og effektivt!</blockquote>
+              </figure>
+            </div>
+          </div>
+
+          <!-- Row 6 - Reverse -->
+          <div class="testimonial-marquee-group">
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Line</figcaption>
+                    <p class="testimonial-handle">@juice_bar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anders</figcaption>
+                    <p class="testimonial-handle">@gastropub</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Camilla</figcaption>
+                    <p class="testimonial-handle">@isbar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Line</figcaption>
+                    <p class="testimonial-handle">@juice_bar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anders</figcaption>
+                    <p class="testimonial-handle">@gastropub</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Camilla</figcaption>
+                    <p class="testimonial-handle">@isbar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
+              </figure>
+            </div>
+            <div class="testimonial-marquee-row reverse">
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/line" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Line</figcaption>
+                    <p class="testimonial-handle">@juice_bar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Vores lille juice bar føles nu lige så professionel som de store!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/anders" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Anders</figcaption>
+                    <p class="testimonial-handle">@gastropub</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">SMS-marketing giver os direkte kontakt til vores loyale gæster!</blockquote>
+              </figure>
+              <figure class="testimonial-card">
+                <div class="testimonial-header">
+                  <img class="testimonial-avatar" src="https://avatar.vercel.sh/camilla" alt="">
+                  <div class="testimonial-info">
+                    <figcaption class="testimonial-name">Camilla</figcaption>
+                    <p class="testimonial-handle">@isbar</p>
+                  </div>
+                </div>
+                <blockquote class="testimonial-quote">Sommersæsonen blev reddet af Flow's online bestillingssystem!</blockquote>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Icon -->
+        <div class="testimonial-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+            <path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path>
+            <path d="m18 15-2-2"></path>
+            <path d="m15 18-2-2"></path>
+          </svg>
+        </div>
+
+        <!-- Center Content -->
+        <div class="testimonial-center">
+          <h1 class="testimonial-headline" id="hiw-headline">Elsket af restauranter i hele Danmark</h1>
+          <p class="testimonial-subheadline" id="hiw-subheadline">Start din gratis prøveperiode. Ingen kreditkort påkrævet.</p>
+        </div>
+
+        <!-- Gradient Overlay -->
+        <div class="testimonial-gradient"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-column">
+        <h4>PRODUKTER</h4>
+        <ul>
+          <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
+          <li><a href="online-bestilling.html">Online Bestilling</a></li>
+          <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
+          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
+          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
+          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>RESSOURCER</h4>
           <ul>
             <li><a href="blog.html">Blog</a></li>
-            <li><a href="case-studies.html">Case Studies</a></li>
-            <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-            <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-            <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-            <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-            <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
-          </ul>
-        </div>
-        <div class="footer-column">
-          <h4>VIRKSOMHED</h4>
-          <ul>
-            <li><a href="om-os.html">Om os</a></li>
-            <li><a href="karriere.html">Karriere</a></li>
-            <li><a href="ledelse.html">Ledelse</a></li>
-            <li><a href="presse.html">Presse</a></li>
-            <li><a href="partner.html">Partner med Flow</a></li>
-          </ul>
-        </div>
-        <div class="footer-column">
-          <h4>SUPPORT</h4>
-          <ul>
-            <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
-            <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
-          </ul>
-          <img src="../../images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
-        </div>
+        <ul>
+          <li><a href="case-studies.html">Case Studies</a></li>
+          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
+          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
+          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
+          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
+          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
+        </ul>
       </div>
-      <div class="footer-bottom">
-        <p>2026 © Flow. All rights reserved.</p>
-        <div class="footer-legal">
-          <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
-          <a href="legal.html#privacy">Privacy</a>
-          <a href="legal.html#terms">Website Terms</a>
-          <a href="legal.html#disclaimer">Disclaimer</a>
-        </div>
+      <div class="footer-column">
+        <h4>VIRKSOMHED</h4>
+        <ul>
+          <li><a href="om-os.html">Om os</a></li>
+          <li><a href="karriere.html">Karriere</a></li>
+          <li><a href="ledelse.html">Ledelse</a></li>
+          <li><a href="presse.html">Presse</a></li>
+          <li><a href="partner.html">Partner med Flow</a></li>
+        </ul>
       </div>
-    </footer>
-  </div>
+      <div class="footer-column">
+        <h4>SUPPORT</h4>
+        <ul>
+          <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
+          <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
+        </ul>
+        <img src="/images/FLOW-logo-hvid-4K.png" alt="Flow" style="height: 2.4rem; margin-top: 2rem;">
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>2026 © Flow. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Cookie Settings</a>
+        <a href="#">Privacy</a>
+        <a href="#">Website Terms</a>
+        <a href="#">Disclaimer</a>
+      </div>
+    </div>
+  </footer>
 
-  <!-- JavaScript -->
   <script>
-    // Header scroll effect
-    window.addEventListener('scroll', function() {
-      const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) {
-        nav.classList.add('scrolled');
-      } else {
-        nav.classList.remove('scrolled');
+    // State
+    let selectedPlace = null;
+    let searchTimeout = null;
+    let autocompleteService = null;
+    let placesService = null;
+    let googlePlacesInitAttempts = 0;
+    const MAX_GOOGLE_INIT_ATTEMPTS = 10;
+
+    // DOM Elements
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const autocompleteDropdown = document.getElementById('autocompleteDropdown');
+    const heroSection = document.getElementById('heroSection');
+    const loadingSection = document.getElementById('loadingSection');
+    const reportSection = document.getElementById('reportSection');
+
+    // Initialize Google Places services when API is loaded
+    function initGooglePlaces() {
+      if (autocompleteService) return true;
+
+      if (window.google && window.google.maps && window.google.maps.places) {
+        autocompleteService = new google.maps.places.AutocompleteService();
+        // Create a hidden div for PlacesService (required)
+        const placesDiv = document.createElement('div');
+        placesService = new google.maps.places.PlacesService(placesDiv);
+        return true;
       }
+
+      googlePlacesInitAttempts += 1;
+      if (googlePlacesInitAttempts < MAX_GOOGLE_INIT_ATTEMPTS) {
+        setTimeout(initGooglePlaces, 350);
+      } else {
+        console.warn('Google Places blev ikke initialiseret - bruger fallback søgning.');
+      }
+
+      return false;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Navbar scroll effect
+      const nav = document.querySelector('.nav-wrapper');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          nav.classList.add('scrolled');
+        } else {
+          nav.classList.remove('scrolled');
+        }
+      });
+
+      // Initialize Google Places if already loaded
+      initGooglePlaces();
+
+      // Search input handler
+      searchInput.addEventListener('input', handleSearchInput);
+      searchInput.addEventListener('keydown', handleSearchEnter);
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+          autocompleteDropdown.classList.remove('active');
+        }
+      });
+
+      // Search button handler - navigate to dedicated scanner page
+      searchBtn.addEventListener('click', startAnalysis);
     });
+
+    function showSearchSelectionRequired() {
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Vælg en virksomhed fra listen før du starter analysen.</div>';
+      autocompleteDropdown.classList.add('active');
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function mapSerperMapsPlaceToAutocomplete(place, index) {
+      return {
+        place_id: place.cid || place.placeId || `maps_${Date.now()}_${index}`,
+        name: place.title || place.name || 'Ukendt virksomhed',
+        address: place.address || '',
+        type: place.category || place.type || 'Virksomhed',
+        website: place.website || place.link || ''
+      };
+    }
+
+    function handleSearchEnter(e) {
+      if (e.key !== 'Enter') return;
+      if (selectedPlace) return;
+
+      const firstSuggestion = autocompleteDropdown.querySelector('.autocomplete-item[data-place-id]');
+      if (!firstSuggestion) return;
+
+      e.preventDefault();
+      selectPlace(firstSuggestion);
+    }
+
+    // Handle search input
+    function handleSearchInput(e) {
+      const query = e.target.value.trim();
+
+      selectedPlace = null;
+      searchBtn.disabled = true;
+
+      if (query.length < 2) {
+        autocompleteDropdown.classList.remove('active');
+        return;
+      }
+
+      // Debounce search
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchPlaces(query);
+      }, 300);
+    }
+
+    // Main search function - tries Google Places first, then Serper fallback
+    function searchPlaces(query) {
+      // Show loading state
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-item"><span>Søger...</span></div>';
+      autocompleteDropdown.classList.add('active');
+
+      // Try Google Places AutocompleteService first
+      if (autocompleteService) {
+        autocompleteService.getPlacePredictions({
+          input: query,
+          componentRestrictions: { country: 'dk' }
+        }, (predictions, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && predictions && predictions.length > 0) {
+            // Map Google predictions to our format
+            const results = predictions.map(prediction => ({
+              place_id: prediction.place_id,
+              name: prediction.structured_formatting.main_text,
+              address: prediction.structured_formatting.secondary_text || 'Danmark',
+              type: getPlaceType(prediction.types)
+            }));
+            renderAutocomplete(results);
+          } else {
+            // Google failed - fallback to Serper
+            searchWithSerper(query);
+          }
+        });
+      } else {
+        // Google not available - use Serper
+        searchWithSerper(query);
+      }
+    }
+
+    // Fallback search using Serper.dev API
+    async function searchWithSerper(query) {
+      try {
+        const response = await fetch(`/api/places/search?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          renderAutocomplete(data.results);
+        } else {
+          await searchWithSerperMapsFallback(query);
+        }
+      } catch (error) {
+        console.error('Serper search error:', error);
+        await searchWithSerperMapsFallback(query);
+      }
+    }
+
+    async function searchWithSerperMapsFallback(query) {
+      try {
+        const mapsData = await fetchSerperAPI('maps', query);
+        const mappedResults = (mapsData?.places || []).map(mapSerperMapsPlaceToAutocomplete);
+
+        if (mappedResults.length > 0) {
+          renderAutocomplete(mappedResults);
+        } else {
+          autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet. Prøv at søge efter din restaurants navn.</div>';
+        }
+      } catch (error) {
+        console.error('Serper maps fallback error:', error);
+        autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Der opstod en fejl ved søgning. Prøv igen.</div>';
+      }
+    }
+
+    // Get readable place type from Google types array
+    function getPlaceType(types) {
+      if (!types || types.length === 0) return 'Virksomhed';
+      const typeMap = {
+        'restaurant': 'Restaurant',
+        'food': 'Mad & Drikke',
+        'cafe': 'Cafe',
+        'bar': 'Bar',
+        'bakery': 'Bageri',
+        'meal_takeaway': 'Takeaway',
+        'meal_delivery': 'Levering',
+        'store': 'Butik',
+        'establishment': 'Virksomhed'
+      };
+      for (const type of types) {
+        if (typeMap[type]) return typeMap[type];
+      }
+      return 'Virksomhed';
+    }
+
+    // Render autocomplete results
+    function renderAutocomplete(results) {
+      if (!results || results.length === 0) {
+        autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">Ingen resultater fundet.</div>';
+        autocompleteDropdown.classList.add('active');
+        return;
+      }
+
+      autocompleteDropdown.innerHTML = results.map(place => `
+        <div class="autocomplete-item" data-place-id="${escapeHtml(place.place_id)}" data-name="${escapeHtml(place.name)}" data-address="${escapeHtml(place.address || '')}" data-website="${escapeHtml(place.website || '')}">
+          <div class="autocomplete-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div class="autocomplete-content">
+            <div class="autocomplete-name">${escapeHtml(place.name)}</div>
+            <div class="autocomplete-address">${escapeHtml(place.address || 'Danmark')}</div>
+          </div>
+          <span class="autocomplete-type">${escapeHtml(place.type || 'Virksomhed')}</span>
+        </div>
+      `).join('');
+
+      autocompleteDropdown.classList.add('active');
+
+      // Add click handlers
+      autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('click', () => selectPlace(item));
+      });
+    }
+
+    // Select a place
+    function selectPlace(item) {
+      const placeId = item.dataset.placeId;
+      if (!placeId || !item.dataset.name) return;
+
+      selectedPlace = {
+        place_id: placeId,
+        name: item.dataset.name,
+        address: item.dataset.address,
+        website: item.dataset.website || ''
+      };
+
+      searchInput.value = selectedPlace.name;
+      autocompleteDropdown.classList.remove('active');
+      searchBtn.disabled = false;
+    }
+
+    // Start analysis on dedicated public scanner page
+    function startAnalysis() {
+      if (!selectedPlace) {
+        searchBtn.disabled = true;
+        showSearchSelectionRequired();
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.set('name', selectedPlace.name || '');
+      if (selectedPlace.place_id) params.set('place_id', selectedPlace.place_id);
+      if (selectedPlace.address) params.set('address', selectedPlace.address);
+      if (selectedPlace.website) params.set('website', selectedPlace.website);
+
+      window.location.href = '/search-engine?' + params.toString();
+    }
+
+    // Build report data from scanner results
+    function buildReportData(results) {
+      const googleData = results[2] || {}; // endpoint 2 = google
+      const reviewData = results[3] || {}; // endpoint 3 = reviews
+      const imageData = results[4] || {}; // endpoint 4 = images
+      const facebookData = results[5] || {}; // endpoint 5 = facebook
+      const mobileData = results[6] || {}; // endpoint 6 = mobile
+      const websiteData = results[7] || {}; // endpoint 7 = website
+      const mapData = results[1] || {}; // endpoint 1 = map
+
+      // Calculate score
+      let score = 50;
+      if (googleData.rating) score += Math.min(20, googleData.rating * 4);
+      if (googleData.totalReviews > 50) score += 5;
+      if (imageData.totalPhotos > 20) score += 5;
+      if (facebookData.followers > 500) score += 5;
+      if (mobileData.scores?.mobile > 70) score += 5;
+      if (websiteData.metadata?.title) score += 5;
+      score = Math.min(100, Math.round(score));
+
+      const scoreDesc = score >= 80
+        ? 'Din restaurant har en stærk online tilstedeværelse med gode resultater på tværs af alle kanaler.'
+        : score >= 60
+        ? 'Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.'
+        : 'Der er betydeligt potentiale for at forbedre din restaurants online synlighed og kundeoplevelse.';
+
+      return {
+        business_name: selectedPlace?.name || 'Din Restaurant',
+        address: selectedPlace?.address || '',
+        score: score,
+        score_description: scoreDesc,
+        listings: [
+          { text: `Google Business Profil: ${googleData.claimed ? 'Verificeret' : 'Ikke verificeret'}`, status: googleData.claimed ? 'success' : 'error' },
+          { text: `Rating: ${googleData.rating || 'Ukendt'} (${googleData.totalReviews || 0} anmeldelser)`, status: (googleData.rating || 0) >= 4 ? 'success' : 'warning' },
+          { text: `${imageData.totalPhotos || 0} billeder tilgængelige`, status: (imageData.totalPhotos || 0) > 20 ? 'success' : 'warning' },
+          { text: `Åbningstider: ${googleData.openNow ? 'Opdaterede' : 'Mangler opdatering'}`, status: googleData.openNow ? 'success' : 'warning' },
+        ],
+        competitors: (mapData.competitors || []).map(c => ({
+          text: `${c.name} — ${c.distance || 'i nærheden'}`,
+          status: 'warning'
+        })),
+        reviews: [
+          { text: `Positiv sentiment: ${reviewData.sentiment?.positive || 0}%`, status: (reviewData.sentiment?.positive || 0) >= 70 ? 'success' : 'warning' },
+          { text: `Neutral: ${reviewData.sentiment?.neutral || 0}%`, status: 'warning' },
+          { text: `Negativ: ${reviewData.sentiment?.negative || 0}%`, status: (reviewData.sentiment?.negative || 0) <= 10 ? 'success' : 'error' },
+        ],
+        website: [
+          { text: `Mobil score: ${mobileData.scores?.mobile || 'Ukendt'}/100`, status: (mobileData.scores?.mobile || 0) >= 70 ? 'success' : 'warning' },
+          { text: `Desktop score: ${mobileData.scores?.desktop || 'Ukendt'}/100`, status: (mobileData.scores?.desktop || 0) >= 70 ? 'success' : 'warning' },
+          { text: websiteData.metadata?.title ? `Titel: ${websiteData.metadata.title}` : 'Ingen website data', status: websiteData.metadata?.title ? 'success' : 'error' },
+        ],
+        recommendations: [
+          score < 80 ? 'Optimer din Google Business profil med flere billeder og opdaterede åbningstider' : null,
+          (reviewData.sentiment?.negative || 0) > 10 ? 'Svar på negative anmeldelser for at forbedre din rating' : null,
+          (mobileData.scores?.mobile || 0) < 70 ? 'Forbedre din mobiloplevelse — over 60% af dine kunder bruger mobilen' : null,
+          !websiteData.metadata?.title ? 'Tilføj SEO metadata til din hjemmeside' : null,
+          (facebookData.followers || 0) < 500 ? 'Øg din tilstedeværelse på sociale medier' : null,
+          'Overvej at tilføje schema markup for bedre søgeresultater',
+        ].filter(Boolean)
+      };
+    }
+
+    // ============================================================================
+    // ENDPOINT SCANNER CONFIGURATION
+    // ============================================================================
+
+    // Endpoints configuration (matching endpoint-scanner-v4.jsx)
+    const SCAN_ENDPOINTS = [
+      {
+        id: 1,
+        name: 'Restaurant & konkurrenter',
+        duration: 8000,
+        preview: 'map',
+        step: 1,
+      },
+      {
+        id: 2,
+        name: 'Google Business profil',
+        duration: 7000,
+        preview: 'google',
+        step: 2,
+      },
+      {
+        id: 3,
+        name: 'Google anmeldelser sentiment',
+        duration: 10000,
+        preview: 'reviews',
+        step: 3,
+      },
+      {
+        id: 4,
+        name: 'Billedkvalitet og antal',
+        duration: 8000,
+        preview: 'images',
+        step: 4,
+      },
+      {
+        id: 5,
+        name: 'Facebook insights',
+        duration: 10000,
+        preview: 'facebook',
+        step: 5,
+      },
+      {
+        id: 6,
+        name: 'Mobil oplevelse',
+        duration: 9000,
+        preview: 'mobile',
+        step: 6,
+      },
+      {
+        id: 7,
+        name: 'Website indhold scanning',
+        duration: 9000,
+        preview: 'website',
+        step: 7,
+      },
+    ];
+
+    const TOTAL_SCAN_DURATION = SCAN_ENDPOINTS.reduce((sum, e) => sum + e.duration, 0);
+
+    // ============================================================================
+    // FIRECRAWL API INTEGRATION
+    // ============================================================================
+
+    const FIRECRAWL_API_KEY = 'fc-c12a209b1d6d44939e0b8faa393515e3';
+    const FIRECRAWL_API_URL = 'https://api.firecrawl.dev/v2/scrape';
+
+    // Scrape website using Firecrawl
+    async function scrapeWebsite(url) {
+      try {
+        const response = await fetch(FIRECRAWL_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ url: url })
+        });
+
+        if (!response.ok) throw new Error('Firecrawl API error');
+
+        const data = await response.json();
+        console.log('Firecrawl data:', data);
+        return data;
+      } catch (error) {
+        console.error('Firecrawl scraping failed:', error);
+        return null;
+      }
+    }
+
+    // ============================================================================
+    // PREVIEW TEMPLATES
+    // ============================================================================
+
+    const PreviewTemplates = {
+      map: (data) => `
+        <div class="preview-map">
+          <svg viewBox="0 0 400 280" style="width: 100%; height: 100%;">
+            <rect width="400" height="280" fill="#f0f0f0" />
+            <line x1="0" y1="100" x2="400" y2="100" stroke="#e0e0e0" stroke-width="12" />
+            <line x1="0" y1="180" x2="400" y2="180" stroke="#e0e0e0" stroke-width="8" />
+            <line x1="120" y1="0" x2="120" y2="280" stroke="#e0e0e0" stroke-width="8" />
+            <line x1="280" y1="0" x2="280" y2="280" stroke="#e0e0e0" stroke-width="8" />
+            <circle cx="200" cy="140" r="16" fill="#7c3aed" />
+            <circle cx="200" cy="140" r="6" fill="white" />
+            <circle cx="150" cy="100" r="10" fill="#f97316" opacity="0.8" />
+            <circle cx="260" cy="170" r="10" fill="#f97316" opacity="0.8" />
+            <circle cx="320" cy="120" r="10" fill="#f97316" opacity="0.8" />
+          </svg>
+          <div style="position: absolute; bottom: 8px; right: 8px; background: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #666; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            ${data?.competitors?.length || 3} konkurrenter fundet
+          </div>
+        </div>
+      `,
+
+      google: (data) => `
+        <div class="preview-google">
+          <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: 600;">
+              ${(data?.name || selectedPlace?.name || 'R')[0]}
+            </div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1a1a1a;">${data?.name || selectedPlace?.name || 'Indlæser...'}</h3>
+              <div style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+                <span style="color: #fbbc04; font-size: 14px;">${'★'.repeat(Math.floor(data?.rating || 4))}</span>
+                <span style="font-size: 13px; color: #666; margin-left: 4px;">${data?.rating || '4.2'} (${data?.totalReviews || '...'} anmeldelser)</span>
+              </div>
+              <p style="margin: 4px 0 0; font-size: 12px; color: #666;">${data?.formattedAddress || selectedPlace?.address || 'Indlæser...'}</p>
+            </div>
+          </div>
+        </div>
+      `,
+
+      reviews: (data) => `
+        <div class="preview-reviews">
+          <h4 style="margin: 0 0 16px; font-size: 14px; font-weight: 600;">Sentiment analyse</h4>
+          <div style="display: flex; gap: 4px; margin-bottom: 16px; height: 10px; border-radius: 5px; overflow: hidden;">
+            <div style="flex: ${data?.sentiment?.positive || 75}; background: #34a853;"></div>
+            <div style="flex: ${data?.sentiment?.neutral || 15}; background: #fbbc04;"></div>
+            <div style="flex: ${data?.sentiment?.negative || 10}; background: #ea4335;"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${[
+              { stars: 5, count: 525, percentage: 62 },
+              { stars: 4, count: 178, percentage: 21 },
+              { stars: 3, count: 85, percentage: 10 },
+              { stars: 2, count: 34, percentage: 4 },
+              { stars: 1, count: 25, percentage: 3 },
+            ].map(row => `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; color: #666; width: 12px;">${row.stars}</span>
+                <div style="flex: 1; height: 6px; background: #f0f0f0; border-radius: 3px;">
+                  <div style="width: ${row.percentage}%; height: 100%; background: #1a73e8; border-radius: 3px;"></div>
+                </div>
+                <span style="font-size: 11px; color: #666; width: 32px; text-align: right;">${row.percentage}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `,
+
+      images: (data) => `
+        <div class="preview-images">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+            <h4 style="margin: 0; font-size: 14px; font-weight: 600;">Billeder (${data?.totalPhotos || '124'})</h4>
+            <span style="font-size: 12px; color: #666;">Score: ${data?.qualityAnalysis?.overallScore || '72'}/100</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+            ${[...Array(8)].map((_, i) => `
+              <div style="aspect-ratio: 1; background: hsl(${200 + i * 20}, 30%, ${80 - i * 3}%); border-radius: 4px;"></div>
+            `).join('')}
+          </div>
+        </div>
+      `,
+
+      facebook: (data) => `
+        <div class="preview-facebook">
+          <div style="background: #1877f2; padding: 16px 20px; display: flex; justify-content: space-between;">
+            <span style="color: white; font-size: 20px; font-weight: 700;">facebook</span>
+            <div style="display: flex; gap: 16px;">
+              <div style="text-align: center;">
+                <div style="color: white; font-size: 16px; font-weight: 600;">${data?.followers?.toLocaleString() || '2,340'}</div>
+                <div style="color: rgba(255,255,255,0.7); font-size: 10px;">Følgere</div>
+              </div>
+            </div>
+          </div>
+          <div style="padding: 16px;">
+            <div style="background: white; border-radius: 8px; padding: 16px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 12px; color: #666;">Engagement</span>
+                <span style="font-size: 14px; font-weight: 600; color: #188038;">${data?.engagement?.rate || '3.2'}%</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-size: 12px; color: #666;">Svartid</span>
+                <span style="font-size: 14px; font-weight: 600;">${data?.responsiveness?.responseTime || '< 1 time'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `,
+
+      mobile: (data) => `
+        <div class="preview-mobile">
+          <div class="mobile-device">
+            <div class="mobile-screen">
+              <div style="height: 16px; background: #f0f0f0;"></div>
+              <div style="padding: 8px;">
+                <div style="height: 14px; background: #e0e0e0; border-radius: 3px; margin-bottom: 4px;"></div>
+                <div style="height: 40px; background: #f5f5f5; border-radius: 4px; margin-bottom: 4px;"></div>
+                <div style="height: 8px; background: #e8e8e8; border-radius: 2px; width: 80%;"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="score-circle" style="--score-deg: ${(data?.scores?.mobile || 67) * 3.6}deg; margin-bottom: 12px;">
+              <div class="score-circle-inner">
+                <span style="font-size: 20px; font-weight: 700;">${data?.scores?.mobile || '67'}</span>
+              </div>
+            </div>
+            <div style="font-size: 12px; color: #666;">Mobil Score</div>
+          </div>
+        </div>
+      `,
+
+      website: (data) => `
+        <div class="preview-website">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+              <svg width="24" height="24" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div>
+              <div style="font-weight: 600; font-size: 16px;">Website Analyse</div>
+              <div style="font-size: 12px; opacity: 0.8;">Firecrawl AI Scanning</div>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="font-size: 13px;">Indhold scannet og analyseret</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="font-size: 13px;">SEO metadata udtrukket</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="font-size: 13px;">Kontaktoplysninger fundet</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg width="16" height="16" fill="none" stroke="#4ade80" stroke-width="2" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+              <span style="font-size: 13px;">Menu og priser identificeret</span>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    // ============================================================================
+    // PARTICLE SYSTEM
+    // ============================================================================
+
+    class ParticleSystem {
+      constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.particles = [];
+        this.isActive = false;
+        this.intervalId = null;
+      }
+
+      start() {
+        this.isActive = true;
+        this.intervalId = setInterval(() => {
+          this.createParticle();
+          this.cleanupOldParticles();
+        }, 300);
+      }
+
+      stop() {
+        this.isActive = false;
+        if (this.intervalId) {
+          clearInterval(this.intervalId);
+          this.intervalId = null;
+        }
+        this.particles.forEach(p => p.element.remove());
+        this.particles = [];
+      }
+
+      createParticle() {
+        if (!this.isActive) return;
+
+        const particle = {
+          id: Date.now() + Math.random(),
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          size: Math.random() * 6 + 2,
+          speed: Math.random() * 2 + 1,
+        };
+
+        const element = document.createElement('div');
+        element.className = 'data-particle';
+        element.style.left = `${particle.x}%`;
+        element.style.top = `${particle.y}%`;
+        element.style.width = `${particle.size}px`;
+        element.style.height = `${particle.size}px`;
+        element.style.animationDuration = `${particle.speed}s`;
+
+        this.container.appendChild(element);
+
+        particle.element = element;
+        this.particles.push(particle);
+
+        // Remove after animation completes
+        setTimeout(() => {
+          element.remove();
+          this.particles = this.particles.filter(p => p.id !== particle.id);
+        }, particle.speed * 1000);
+      }
+
+      cleanupOldParticles() {
+        if (this.particles.length > 15) {
+          const toRemove = this.particles.splice(0, this.particles.length - 15);
+          toRemove.forEach(p => p.element.remove());
+        }
+      }
+    }
+
+    // ============================================================================
+    // SCANNER STATE MANAGEMENT
+    // ============================================================================
+
+    class ScannerState {
+      constructor() {
+        this.currentEndpointIndex = 0;
+        this.completedEndpoints = [];
+        this.progress = 0;
+        this.secondsRemaining = Math.ceil(TOTAL_SCAN_DURATION / 1000);
+        this.isComplete = false;
+        this.scanResults = {};
+        this.startTime = null;
+        this.particleSystem = null;
+      }
+
+      reset() {
+        this.currentEndpointIndex = 0;
+        this.completedEndpoints = [];
+        this.progress = 0;
+        this.secondsRemaining = Math.ceil(TOTAL_SCAN_DURATION / 1000);
+        this.isComplete = false;
+        this.scanResults = {};
+        this.startTime = null;
+      }
+
+      getCurrentEndpoint() {
+        return SCAN_ENDPOINTS[this.currentEndpointIndex];
+      }
+
+      markEndpointComplete(endpointId, data) {
+        this.completedEndpoints.push(endpointId);
+        this.scanResults[endpointId] = data;
+        this.currentEndpointIndex++;
+
+        if (this.currentEndpointIndex >= SCAN_ENDPOINTS.length) {
+          this.isComplete = true;
+        }
+      }
+    }
+
+    const scannerState = new ScannerState();
+
+    // ============================================================================
+    // UI UPDATE FUNCTIONS
+    // ============================================================================
+
+    function updateBrowserPreview(endpoint, data) {
+      const browserUrl = document.getElementById('browserUrl');
+      const browserContent = document.getElementById('browserContent');
+
+      // Update URL
+      const urls = {
+        map: 'maps.google.com',
+        google: 'business.google.com',
+        reviews: 'google.com/reviews',
+        images: 'photos.google.com',
+        facebook: 'facebook.com',
+        mobile: 'pagespeed.web.dev',
+      };
+      browserUrl.textContent = urls[endpoint.preview] || 'analyserer...';
+
+      // Update content with preview template
+      const template = PreviewTemplates[endpoint.preview];
+      if (template) {
+        browserContent.innerHTML = template(data);
+      }
+    }
+
+    function updateScanStatus(endpointName) {
+      const statusEl = document.getElementById('scanCurrentEndpoint');
+      if (statusEl) {
+        statusEl.textContent = endpointName;
+      }
+    }
+
+    function updateStepProgress(stepNumber, status) {
+      const stepEl = document.querySelector(`[data-step="${stepNumber}"]`);
+      if (!stepEl) return;
+
+      stepEl.classList.remove('active', 'completed');
+
+      if (status === 'active') {
+        stepEl.classList.add('active');
+        stepEl.querySelector('.loading-step-icon').textContent = '⋯';
+      } else if (status === 'completed') {
+        stepEl.classList.add('completed');
+        stepEl.querySelector('.loading-step-icon').textContent = '✓';
+      } else {
+        stepEl.querySelector('.loading-step-icon').textContent = '•';
+      }
+    }
+
+    function updateTimer(seconds) {
+      const timerEl = document.getElementById('loadingTimer');
+      if (timerEl) {
+        timerEl.textContent = Math.max(0, Math.ceil(seconds));
+      }
+    }
+
+    // ============================================================================
+    // MAIN SCANNER FUNCTION
+    // ============================================================================
+
+    async function runEndpointScanner() {
+      scannerState.reset();
+      scannerState.startTime = Date.now();
+
+      // Start particle system
+      if (!scannerState.particleSystem) {
+        scannerState.particleSystem = new ParticleSystem('particlesContainer');
+      }
+      scannerState.particleSystem.start();
+
+      // Start timer countdown
+      const timerInterval = setInterval(() => {
+        const elapsed = Date.now() - scannerState.startTime;
+        const remaining = (TOTAL_SCAN_DURATION - elapsed) / 1000;
+        scannerState.secondsRemaining = remaining;
+        updateTimer(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+        }
+      }, 100);
+
+      // Process each endpoint sequentially
+      for (let i = 0; i < SCAN_ENDPOINTS.length; i++) {
+        const endpoint = SCAN_ENDPOINTS[i];
+
+        // Update UI for current endpoint
+        updateScanStatus(endpoint.name);
+        updateStepProgress(endpoint.step, 'active');
+
+        // Simulate API call
+        const data = await simulateApiCall(endpoint);
+
+        // Update preview
+        updateBrowserPreview(endpoint, data);
+
+        // Wait for duration
+        await new Promise(resolve => setTimeout(resolve, endpoint.duration));
+
+        // Mark as complete
+        scannerState.markEndpointComplete(endpoint.id, data);
+        updateStepProgress(endpoint.step, 'completed');
+      }
+
+      // Stop particle system
+      scannerState.particleSystem.stop();
+
+      // Clear timer
+      clearInterval(timerInterval);
+
+      // Return scan results
+      return scannerState.scanResults;
+    }
+
+    // Serper API configuration
+    const SERPER_CONFIG = {
+      reviews: { url: 'https://google.serper.dev/reviews', apiKey: '' },
+      images: { url: 'https://google.serper.dev/images', apiKey: '' },
+      maps: { url: 'https://google.serper.dev/maps', apiKey: '' }
+    };
+
+    // Fetch from Serper API
+    async function fetchSerperAPI(endpoint, query, extraParams = {}) {
+      try {
+        const config = SERPER_CONFIG[endpoint];
+        if (!config || !config.apiKey) return null;
+        const res = await fetch(config.url, {
+          method: 'POST',
+          headers: { 'X-API-KEY': config.apiKey, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: query, gl: 'dk', hl: 'da', location: 'Denmark', num: 10, ...extraParams })
+        });
+        if (!res.ok) throw new Error(`Serper ${endpoint} error: ${res.status}`);
+        return await res.json();
+      } catch(e) {
+        console.warn(`Serper ${endpoint} failed:`, e);
+        return null;
+      }
+    }
+
+    // Fetch Google Place Details via serverless proxy
+    async function fetchGooglePlaceDetails(placeId) {
+      try {
+        const res = await fetch(`/api/google/place-details?place_id=${encodeURIComponent(placeId)}`);
+        if (!res.ok) throw new Error('Google API error');
+        return await res.json();
+      } catch(e) {
+        console.warn('Google Place Details failed:', e);
+        return null;
+      }
+    }
+
+    // Real API call per endpoint (with fallback to mock data)
+    async function simulateApiCall(endpoint) {
+      const businessName = selectedPlace?.name || '';
+      const businessAddress = selectedPlace?.address || '';
+
+      try {
+        switch(endpoint.preview) {
+          case 'map': {
+            const data = await fetchSerperAPI('maps', businessName + ' ' + businessAddress);
+            const places = data?.places || [];
+            return {
+              competitors: places.filter(p => p.title !== businessName).slice(0, 5).map(p => ({
+                name: p.title,
+                distance: p.address ? p.address.split(',')[0] : 'i nærheden',
+                rating: p.rating
+              }))
+            };
+          }
+          case 'google': {
+            // Try Google Places API first, fallback to Serper
+            const gData = selectedPlace?.place_id ? await fetchGooglePlaceDetails(selectedPlace.place_id) : null;
+            if (gData && gData.result) {
+              const r = gData.result;
+              return {
+                name: r.name || businessName,
+                rating: r.rating || 0,
+                totalReviews: r.user_ratings_total || 0,
+                formattedAddress: r.formatted_address || businessAddress,
+                claimed: true,
+                openNow: r.opening_hours?.open_now ?? false,
+                phone: r.formatted_phone_number || '',
+                website: r.website || ''
+              };
+            }
+            // Fallback: use Serper Maps data
+            const mapsData = await fetchSerperAPI('maps', businessName);
+            const match = (mapsData?.places || []).find(p => p.title === businessName) || (mapsData?.places || [])[0];
+            return {
+              name: match?.title || businessName,
+              rating: match?.rating || 4.0,
+              totalReviews: match?.ratingCount || 0,
+              formattedAddress: match?.address || businessAddress,
+              claimed: true,
+              openNow: true,
+              phone: match?.phoneNumber || '',
+              website: match?.website || ''
+            };
+          }
+          case 'reviews': {
+            const data = await fetchSerperAPI('reviews', businessName + ' ' + businessAddress);
+            const reviews = data?.reviews || [];
+            let pos = 0, neu = 0, neg = 0;
+            reviews.forEach(r => {
+              const rating = r.rating || 3;
+              if (rating >= 4) pos++;
+              else if (rating >= 3) neu++;
+              else neg++;
+            });
+            const total = Math.max(1, pos + neu + neg);
+            return {
+              sentiment: {
+                positive: Math.round(pos / total * 100),
+                neutral: Math.round(neu / total * 100),
+                negative: Math.round(neg / total * 100)
+              },
+              distribution: [
+                { stars: 5, percentage: Math.round(reviews.filter(r => r.rating === 5).length / total * 100) },
+                { stars: 4, percentage: Math.round(reviews.filter(r => r.rating === 4).length / total * 100) },
+                { stars: 3, percentage: Math.round(reviews.filter(r => r.rating === 3).length / total * 100) },
+                { stars: 2, percentage: Math.round(reviews.filter(r => r.rating === 2).length / total * 100) },
+                { stars: 1, percentage: Math.round(reviews.filter(r => r.rating === 1).length / total * 100) },
+              ],
+              reviewCount: reviews.length,
+              topReviews: reviews.slice(0, 3).map(r => ({ text: r.snippet || r.body || '', rating: r.rating }))
+            };
+          }
+          case 'images': {
+            const data = await fetchSerperAPI('images', businessName + ' restaurant');
+            const images = data?.images || [];
+            return {
+              totalPhotos: images.length || 0,
+              qualityAnalysis: { overallScore: Math.min(100, images.length * 3 + 40) },
+              sampleImages: images.slice(0, 6).map(i => i.imageUrl || i.thumbnailUrl)
+            };
+          }
+          case 'facebook': {
+            // Mock - no Facebook API available
+            return {
+              followers: Math.floor(Math.random() * 3000) + 500,
+              engagement: { rate: (Math.random() * 4 + 1).toFixed(1) },
+              responsiveness: { responseTime: '< 1 time' }
+            };
+          }
+          case 'mobile': {
+            // Mock - would need Lighthouse API
+            return {
+              scores: { mobile: Math.floor(Math.random() * 30) + 55, desktop: Math.floor(Math.random() * 25) + 65 }
+            };
+          }
+          case 'website': {
+            // Use Firecrawl to scrape the business website
+            const websiteUrl = selectedPlace?.website || '';
+            if (websiteUrl) {
+              const fcData = await scrapeWebsite(websiteUrl);
+              if (fcData && fcData.data) {
+                return {
+                  metadata: fcData.data.metadata || {},
+                  content: (fcData.data.markdown || '').substring(0, 500),
+                  links: fcData.data.links?.length || 0,
+                  scraped: true
+                };
+              }
+            }
+            // Fallback mock
+            return {
+              metadata: { title: businessName, description: 'Restaurant website' },
+              content: '',
+              links: 0,
+              scraped: false
+            };
+          }
+          default:
+            return {};
+        }
+      } catch(e) {
+        console.warn(`API call for ${endpoint.preview} failed:`, e);
+        return {};
+      }
+    }
+
+    // Show report - clean, professional design
+    function showReport(data) {
+      heroSection.style.display = 'none';
+      loadingSection.classList.remove('active');
+      reportSection.classList.add('active');
+
+      // PDF Box
+      document.getElementById('reportBusinessName').textContent = data.business_name + ' — SEO Analyserapport';
+      document.getElementById('reportBusinessAddress').textContent = data.address;
+      document.getElementById('reportDate').textContent = new Date().toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Preview header
+      document.getElementById('reportPreviewName').textContent = data.business_name;
+      document.getElementById('reportPreviewAddress').textContent = data.address;
+
+      // Score
+      document.getElementById('reportScore').textContent = data.score;
+      document.getElementById('scoreDescription').textContent = data.score_description;
+
+      // Listings table (clean rows, no icons)
+      const listingsBody = document.querySelector('#reportListingsTable tbody');
+      listingsBody.innerHTML = (data.listings || []).map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:${color};font-size:13px;width:8px">&#9679;</td>
+          <td style="padding:10px 8px;color:#d1d5db;font-size:14px">${item.text}</td>
+        </tr>`;
+      }).join('');
+
+      // Review bars (CSS only, no icons)
+      const reviewBars = document.getElementById('reportReviewBars');
+      const sentimentData = data.reviews || [];
+      reviewBars.innerHTML = sentimentData.map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+          <span style="color:#9ca3af;font-size:13px;min-width:180px">${item.text}</span>
+          <div style="flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">
+            <div style="width:${parseInt(item.text.match(/\d+/) || 0)}%;height:100%;background:${color};border-radius:3px"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Competitor table
+      const compBody = document.querySelector('#reportCompetitorTable tbody');
+      compBody.innerHTML = (data.competitors || []).map(item => {
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:#d1d5db;font-size:14px">${item.text}</td>
+          <td style="padding:10px 0;color:#9ca3af;font-size:13px">Fundet via analyse</td>
+        </tr>`;
+      }).join('');
+
+      // Website table
+      const webBody = document.querySelector('#reportWebsiteTable tbody');
+      webBody.innerHTML = (data.website || []).map(item => {
+        const color = item.status === 'success' ? '#34d399' : item.status === 'warning' ? '#fbbf24' : '#f87171';
+        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+          <td style="padding:10px 0;color:${color};font-size:13px;width:8px">&#9679;</td>
+          <td style="padding:10px 8px;color:#d1d5db;font-size:14px">${item.text}</td>
+        </tr>`;
+      }).join('');
+
+      // Recommendations (numbered list)
+      const recList = document.getElementById('reportRecommendations');
+      recList.innerHTML = (data.recommendations || []).map(rec => `<li style="margin-bottom:4px">${rec}</li>`).join('');
+
+      // Reset PDF box visibility
+      document.getElementById('reportPDFBox').style.display = 'block';
+      document.getElementById('reportPreview').style.display = 'none';
+
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Generate demo report (fallback)
+    function generateDemoReport(name, address) {
+      return {
+        business_name: name,
+        address: address || 'Danmark',
+        score: Math.floor(Math.random() * 30) + 55, // 55-85
+        score_description: 'Din restaurant har et godt fundament, men der er muligheder for forbedring inden for online tilstedeværelse og kundeengagement.',
+        listings: [
+          { text: 'Google My Business profil fundet', status: 'success' },
+          { text: 'Åbningstider mangler på nogle platforme', status: 'warning' },
+          { text: 'Billeder kunne opdateres (ældre end 6 måneder)', status: 'warning' },
+          { text: 'Kontaktinformation er konsistent', status: 'success' }
+        ],
+        competitors: [
+          { text: '3 konkurrenter inden for 500m radius', status: 'warning' },
+          { text: 'Din gennemsnitlige rating er over områdets gennemsnit', status: 'success' },
+          { text: 'Konkurrenter har flere online anmeldelser', status: 'danger' },
+          { text: 'Din menu har flere unikke retter', status: 'success' }
+        ],
+        reviews: [
+          { text: '4.2 gennemsnitlig rating på Google', status: 'success' },
+          { text: 'Positiv feedback på mad kvalitet', status: 'success' },
+          { text: 'Nogle klager over ventetid', status: 'warning' },
+          { text: 'Kun 23% af anmeldelser besvaret', status: 'danger' }
+        ],
+        website: [
+          { text: 'Website er mobilvenlig', status: 'success' },
+          { text: 'Mangler online bestillingssystem', status: 'danger' },
+          { text: 'Langsom indlæsningstid (4.2s)', status: 'warning' },
+          { text: 'Menu er tilgængelig online', status: 'success' }
+        ],
+        recommendations: [
+          {
+            title: 'Implementér online bestilling',
+            description: 'Tilføj et online bestillingssystem for at øge omsætningen med op til 30%. Flow kan hjælpe dig med dette.'
+          },
+          {
+            title: 'Besvar alle anmeldelser',
+            description: 'Svar på alle Google anmeldelser inden for 24 timer. Dette øger kundeloyalitet og forbedrer din synlighed.'
+          },
+          {
+            title: 'Opdater billeder månedligt',
+            description: 'Upload nye, professionelle billeder af dine retter hver måned for at holde din profil frisk og tiltalende.'
+          },
+          {
+            title: 'Optimer website hastighed',
+            description: 'Reducer indlæsningstiden til under 3 sekunder. Hurtigere websites konverterer bedre og rangerer højere på Google.'
+          },
+          {
+            title: 'Start SMS marketing',
+            description: 'Brug SMS til at sende tilbud og påmindelser. SMS har 98% åbningsrate sammenlignet med 20% for email.'
+          }
+        ]
+      };
+    }
   </script>
+<!-- Flow CMS Dynamic Content -->
+<script src="/js/flow-cms-render.js"></script>
+
+<!-- Dynamic HIW Testimonials -->
+<script>
+(function() {
+  // Default testimonials
+  const defaultTestimonials = {
+    headline: 'Elsket af restauranter i hele Danmark',
+    subheadline: 'Start din gratis prøveperiode. Ingen kreditkort påkrævet.',
+    testimonials: [
+      { name: 'Martin', handle: '@cafe_amalfi', quote: 'Flow har revolutioneret vores online bestillinger. Vi sparer timer hver uge!' },
+      { name: 'Sarah', handle: '@pasta_mia', quote: 'Vores omsætning er steget 40% siden vi startede med Flow. Fantastisk!' },
+      { name: 'Jakob', handle: '@sushi_house', quote: 'Endelig et system der bare virker. Ingen hovedpiner, bare resultater.' },
+      { name: 'Emma', handle: '@burger_joint', quote: 'Den bedste investering vi har gjort. ROI var positiv efter 2 uger.' },
+      { name: 'Anders', handle: '@pizza_palace', quote: 'Support teamet er fantastisk. De hjalp os med alt fra start til slut.' },
+      { name: 'Mette', handle: '@cafe_hygge', quote: 'Vi sparer 10 timer om ugen på administration. Det er uvurderligt.' },
+      { name: 'Thomas', handle: '@thai_garden', quote: 'Leveringsintegrationen er perfekt. Alt kører automatisk nu.' },
+      { name: 'Louise', handle: '@french_bistro', quote: 'Vores omsætning er steget 60% på 3 måneder. Utroligt resultat.' },
+      { name: 'Kasper', handle: '@grill_house', quote: 'Systemet er så intuitivt at selv min bedstemor kunne bruge det.' },
+      { name: 'Sofie', handle: '@salad_bar', quote: 'Push notifikationer har øget vores genbestillinger markant.' },
+      { name: 'Nikolaj', handle: '@taco_town', quote: 'Vi har fået 500+ nye kunder gennem appen på bare 2 måneder.' },
+      { name: 'Camilla', handle: '@dessert_heaven', quote: 'Analytics dashboardet giver os indsigt vi aldrig har haft før.' },
+      { name: 'Frederik', handle: '@seafood_shack', quote: 'Booking systemet har elimineret no-shows fuldstændigt.' },
+      { name: 'Ida', handle: '@vegan_vibes', quote: 'Flow integrerer perfekt med vores eksisterende systemer.' },
+      { name: 'Christian', handle: '@steakhouse_dk', quote: 'Kundeservice svarer altid inden for minutter. Imponerende.' },
+      { name: 'Julie', handle: '@breakfast_club', quote: 'Menuen er nem at opdatere og ændringerne vises med det samme.' },
+      { name: 'Mikkel', handle: '@wings_n_things', quote: 'QR-kode bestilling har reduceret ventetiden med 70%.' },
+      { name: 'Anna', handle: '@smoothie_spot', quote: 'Loyalitetsprogrammet har skabt en fast kundebase for os.' }
+    ]
+  };
+
+  // Load config from localStorage
+  function loadConfig() {
+    try {
+      const saved = localStorage.getItem('orderflow_hiw_testimonials');
+      return saved ? JSON.parse(saved) : defaultTestimonials;
+    } catch (e) {
+      return defaultTestimonials;
+    }
+  }
+
+  // Generate testimonial card HTML
+  function createCard(t) {
+    return `
+      <figure class="testimonial-card">
+        <div class="testimonial-header">
+          <img class="testimonial-avatar" src="https://avatar.vercel.sh/${encodeURIComponent(t.name)}" alt="">
+          <div class="testimonial-info">
+            <figcaption class="testimonial-name">${t.name}</figcaption>
+            <p class="testimonial-handle">${t.handle}</p>
+          </div>
+        </div>
+        <blockquote class="testimonial-quote">${t.quote}</blockquote>
+      </figure>
+    `;
+  }
+
+  // Generate row HTML (3 testimonials per row, duplicated for infinite scroll)
+  function createRow(testimonials, reverse = false) {
+    const cards = testimonials.map(createCard).join('');
+    return `
+      <div class="testimonial-marquee-group">
+        <div class="testimonial-marquee-row${reverse ? ' reverse' : ''}">${cards}</div>
+        <div class="testimonial-marquee-row${reverse ? ' reverse' : ''}">${cards}</div>
+      </div>
+    `;
+  }
+
+  // Render testimonials
+  function renderTestimonials() {
+    const config = loadConfig();
+    const testimonials = config.testimonials;
+
+    // Update headline and subheadline
+    const headlineEl = document.getElementById('hiw-headline');
+    const subheadlineEl = document.getElementById('hiw-subheadline');
+    if (headlineEl) headlineEl.textContent = config.headline;
+    if (subheadlineEl) subheadlineEl.textContent = config.subheadline;
+
+    // Split testimonials into groups for 6 rows
+    const wrapper = document.getElementById('hiw-testimonials-wrapper');
+    if (!wrapper) return;
+
+    // Need at least 3 testimonials per row for good scrolling
+    const testimonialsPerRow = 3;
+    const numRows = 6;
+    const totalNeeded = testimonialsPerRow * numRows;
+
+    // Duplicate testimonials if we don't have enough
+    let allTestimonials = [...testimonials];
+    while (allTestimonials.length < totalNeeded) {
+      allTestimonials = allTestimonials.concat(testimonials);
+    }
+
+    // Create rows
+    const rows = [];
+    for (let i = 0; i < numRows; i++) {
+      const start = (i * testimonialsPerRow) % allTestimonials.length;
+      const rowTestimonials = [];
+      for (let j = 0; j < testimonialsPerRow; j++) {
+        rowTestimonials.push(allTestimonials[(start + j) % allTestimonials.length]);
+      }
+      // Rows 3, 4, 5 (index 3-5) go in reverse
+      const reverse = i >= 3;
+      rows.push(createRow(rowTestimonials, reverse));
+    }
+
+    wrapper.innerHTML = rows.join('');
+  }
+
+  // Run on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderTestimonials);
+  } else {
+    renderTestimonials();
+  }
+})();
+</script>
 </body>
 </html>
