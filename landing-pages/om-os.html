@@ -7,7 +7,7 @@
   <meta name="description" content="Flow startede fordi vi så restauranter bløde penge til tredjepartsplatforme. Vi bygger værktøjer så restauranter kan eje deres egen digitale fremtid.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
@@ -28,113 +28,41 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font-body); font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* ==================== NAVIGATION (from landing.html) ==================== */
-    .nav-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 1000;
-      background: var(--color-white);
-      border-bottom: none;
-      transition: background 0.3s ease, backdrop-filter 0.3s ease;
-    }
-    .nav-wrapper.scrolled {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
 
-    .nav-container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.32rem 4.4rem;
-      width: 100%;
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-      gap: 1.2rem;
-    }
-
-    .nav-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .nav-logo img {
-      height: 2.816rem;
-      width: auto;
-    }
-
-    .logo-f {
-      display: inline-block;
-      transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .nav-logo:hover .logo-f {
-      transform: rotate(360deg);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-    }
-
-    .nav-link {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.54rem;
-      font-weight: 500;
-      color: var(--color-dark);
-      padding: 0.8rem 1.2rem;
-      border-radius: 0.6rem;
-      transition: background 0.2s ease;
-      letter-spacing: -0.026em;
-    }
-
-    .nav-link:hover {
-      background: var(--color-gray-100);
-    }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 1.6rem;
-    }
-
-    .nav-login {
-      font-size: 1.54rem;
-      font-weight: 500;
-      color: var(--color-dark);
-    }
-
-    .nav-cta {
-      background: var(--color-dark);
-      color: var(--color-white);
-      padding: 1.1rem 1.98rem;
-      border-radius: 0.8rem;
-      font-size: 1.54rem;
-      font-weight: 500;
-      transition: background 0.2s ease;
-    }
-
-    .nav-cta:hover {
-      background: var(--color-gray-800);
-    }
-
+    /* Navigation */
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
+    .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
+    .nav-left { display: flex; align-items: center; gap: 1.2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 0.4rem; }
+    .nav-logo img { height: 2.816rem; width: auto; }
+    .logo-f { display: inline-block; transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    .nav-logo:hover .logo-f { transform: rotate(360deg); }
+    .nav-links { display: flex; align-items: center; gap: 0.8rem; }
+    .nav-link { font-family: 'Space Grotesk', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; letter-spacing: -0.026em; }
+    .nav-link:hover { background: var(--color-gray-100); }
+    .nav-right { display: flex; align-items: center; gap: 1.6rem; }
+    .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
+    .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
+    .nav-cta:hover { background: var(--color-gray-800); }
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -164,243 +92,248 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    /* ==================== HERO SECTION ==================== */
-    .hero-section {
-      background: var(--color-white);
-      padding: 16rem 4rem 12rem;
-      text-align: center;
-    }
-
-    .hero-section h1 {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: 7.2rem;
-      font-weight: 400;
-      line-height: 0.95;
-      color: var(--color-dark);
-      margin-bottom: 2.4rem;
-      text-transform: uppercase;
-      letter-spacing: -0.02em;
-    }
-
-    .hero-section p {
-      font-size: 2.2rem;
-      font-weight: 300;
-      color: var(--color-gray-600);
-      max-width: 70rem;
-      margin: 0 auto 4rem;
-      line-height: 1.5;
-    }
-
-    /* ==================== STORY SECTION ==================== */
-    .story-section {
-      background: var(--color-beige);
-      padding: 12rem 4rem;
-    }
-
-    .story-grid {
-      max-width: var(--container-max);
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8rem;
+    /* Button */
+    .button {
+      display: inline-flex;
       align-items: center;
-    }
-
-    .story-image {
-      border-radius: 2.4rem;
-      overflow: hidden;
-    }
-
-    .story-image img {
-      width: 100%;
-      height: 60rem;
-      object-fit: cover;
-    }
-
-    .story-content h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 4.4rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 3.2rem;
-      line-height: 1.2;
-    }
-
-    .story-content p {
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
       font-size: 1.8rem;
-      color: var(--color-gray-700);
-      line-height: 1.8;
-      margin-bottom: 2.4rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-
-    .story-content p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* ==================== STATS SECTION ==================== */
-    .stats-section {
+    .button:hover {
       background: var(--color-white);
-      padding: 12rem 4rem;
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     }
 
-    .stats-container {
-      max-width: var(--container-max);
+    /* Hero - Alternating from restaurant-hjemmeside.html */
+    .hero {
+      background: var(--color-black);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+      color: var(--color-white);
+    }
+    .hero-container {
+      max-width: 140rem;
       margin: 0 auto;
     }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6rem;
+    .hero-content {
+      max-width: 95rem;
     }
-
-    .stat-card {
-      text-align: center;
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
     }
-
-    .stat-number {
-      font-family: 'Archivo Black', sans-serif;
-      font-size: 6.4rem;
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
       font-weight: 400;
-      color: var(--color-dark);
-      margin-bottom: 1.2rem;
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 1.6rem;
-      font-weight: 500;
-      color: var(--color-gray-600);
+      line-height: 1.3;
+      color: rgba(255,255,255,0.7);
+      font-style: italic;
       letter-spacing: -0.01em;
     }
 
-    /* ==================== VALUES SECTION ==================== */
-    .values-section {
+    /* Image Split - Beige */
+    .image-split {
+      background: var(--color-beige);
+      padding: 0;
+    }
+    .image-split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 70rem;
+    }
+    .image-split-img {
+      position: relative;
+      overflow: hidden;
+    }
+    .image-split-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-split-content {
+      padding: 10rem 8rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .image-split-content h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      line-height: 1.1;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.02em;
+    }
+    .image-split-content p {
+      font-family: var(--font-body);
+      font-size: 2rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      margin-bottom: 2.4rem;
+      font-weight: 400;
+    }
+
+    /* Timeline - White */
+    .timeline {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .timeline-container {
+      max-width: 90rem;
+      margin: 0 auto;
+    }
+    .timeline-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .timeline-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 2.4rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 12rem 1fr;
+      gap: 4rem;
+      margin-bottom: 6rem;
+      align-items: start;
+    }
+    .timeline-year {
+      font-family: var(--font-accent);
+      font-size: 6.4rem;
+      font-weight: 900;
+      color: var(--color-black);
+      line-height: 1;
+    }
+    .timeline-content h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .timeline-content p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
+
+    /* Values - Beige */
+    .values {
       background: var(--color-beige);
       padding: 12rem 4rem;
     }
-
     .values-container {
       max-width: var(--container-max);
       margin: 0 auto;
     }
-
     .values-header {
       text-align: center;
       margin-bottom: 8rem;
     }
-
     .values-header h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 4.8rem;
-      font-weight: 600;
-      color: var(--color-dark);
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-black);
       margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
     }
-
     .values-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 4rem;
     }
-
     .value-card {
       background: var(--color-white);
-      padding: 4.8rem 4rem;
-      border-radius: 2rem;
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
     }
-
-    .value-icon {
-      width: 6rem;
-      height: 6rem;
-      background: var(--color-beige);
-      border-radius: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 3.2rem;
-    }
-
-    .value-icon svg {
-      width: 3.2rem;
-      height: 3.2rem;
-      color: var(--color-dark);
-    }
-
     .value-card h3 {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: var(--font-body);
       font-size: 2.4rem;
-      font-weight: 600;
-      color: var(--color-dark);
+      font-weight: 800;
+      color: var(--color-black);
       margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
     }
-
     .value-card p {
-      font-size: 1.6rem;
-      color: var(--color-gray-700);
-      line-height: 1.7;
-    }
-
-    /* ==================== TEAM SECTION ==================== */
-    .team-section {
-      background: var(--color-white);
-      padding: 12rem 4rem;
-    }
-
-    .team-container {
-      max-width: var(--container-max);
-      margin: 0 auto;
-    }
-
-    .team-header {
-      text-align: center;
-      margin-bottom: 8rem;
-    }
-
-    .team-header h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 4.8rem;
-      font-weight: 600;
-      color: var(--color-dark);
-    }
-
-    .team-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4rem;
-    }
-
-    .team-member {
-      text-align: center;
-    }
-
-    .team-avatar {
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 2rem;
-      overflow: hidden;
-      margin-bottom: 2.4rem;
-    }
-
-    .team-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .team-name {
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: var(--color-dark);
-      margin-bottom: 0.8rem;
-    }
-
-    .team-role {
-      font-size: 1.6rem;
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
       color: var(--color-gray-600);
+      font-weight: 400;
     }
 
-    /* ==================== FOOTER (from landing.html) ==================== */
+    /* CTA - Black */
+    .cta-final {
+      background: var(--color-black);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .cta-final .button {
+      background: var(--color-white);
+      color: var(--color-black);
+      border-color: var(--color-white);
+    }
+    .cta-final .button:hover {
+      background: transparent;
+      color: var(--color-white);
+    }
+
+    /* Footer */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -414,31 +347,19 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    @media (max-width: 1024px) {
-      .story-grid { grid-template-columns: 1fr; gap: 4rem; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .values-grid { grid-template-columns: repeat(2, 1fr); }
-      .team-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
     @media (max-width: 768px) {
+      html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .hero-section h1 { font-size: 4.8rem; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
-      .values-grid, .team-grid { grid-template-columns: 1fr; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .image-split-grid { grid-template-columns: 1fr; }
+      .timeline-item { grid-template-columns: 1fr; gap: 2rem; }
+      .values-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (max-width: 480px) {
-      .hero-section { padding: 12rem 2rem 8rem; }
-      .hero-section h1 { font-size: 3.6rem; }
-      .stats-grid { grid-template-columns: 1fr; }
-      .footer-content { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation (exact copy from landing.html) -->
+  <!-- Navigation (same as landing.html) -->
   <nav class="nav-wrapper">
       <div class="nav-container">
         <div class="nav-left">
@@ -485,124 +406,98 @@
       </div>
     </nav>
 
-    <!-- Hero Section with Video Background -->
-
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <h1>FLOW er en<br>kærligheds<br>erklæring til<br>restauranter</h1>
-    <p>Vi startede Flow fordi vi så et problem. Restauranter betaler 25-30% i kommission til platforme der ejer kundedata. Det skal stoppe.</p>
-  </section>
-
-  <!-- Story Section -->
-  <section class="story-section">
-    <div class="story-grid">
-      <div class="story-image">
-        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=900&fit=crop" alt="Restaurant atmosphere">
-      </div>
-      <div class="story-content">
-        <h2>Hvorfor vi byggede Flow</h2>
-        <p>I 2022 så vi et mønster. Restauranter havde skabt fantastiske oplevelser, men blev tvunget til at betale tredjepartsplatforme for at nå deres egne kunder.</p>
-        <p>Vi troede ikke på det. Restauranter fortjener at eje deres egen digitale fremtid. De fortjener værktøjer der matcher deres ambitioner, ikke begrænser dem.</p>
-        <p>Så vi byggede Flow — en platform der giver restauranter de samme værktøjer som store kæder bruger, uden at tage deres kunder eller deres fortjeneste.</p>
+  <!-- Hero - Black -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Vores historie</h1>
+        <p class="subtitle">Flow startede fordi vi så restauranter bløde penge til tredjepartsplatforme. Vi bygger værktøjer så restauranter kan eje deres egen digitale fremtid.</p>
       </div>
     </div>
   </section>
 
-  <!-- Stats Section -->
-  <section class="stats-section">
-    <div class="stats-container">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number">2.847</div>
-          <div class="stat-label">Aktive restauranter</div>
+  <!-- Image Split - Beige -->
+  <section class="image-split">
+    <div class="image-split-grid">
+      <div class="image-split-content">
+        <h2>Fra frustreret restauratør til founder</h2>
+        <p>Martin åbnede sin første restaurant i 2018. Efter 6 måneder havde han mistet 30% af sit salg til provisioner på Wolt og Just Eat.</p>
+        <p>Han byggede Flow fordi han var træt af at betale 25-35% i commission til platforme der ikke ejede kunderne — han gjorde.</p>
+      </div>
+      <div class="image-split-img">
+        <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=900&fit=crop" alt="Restaurant founder">
+      </div>
+    </div>
+  </section>
+
+  <!-- Timeline - White -->
+  <section class="timeline">
+    <div class="timeline-container">
+      <div class="timeline-header">
+        <h2>Vores rejse</h2>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2020</div>
+        <div class="timeline-content">
+          <h3>Flow blev født</h3>
+          <p>Martin lancerede den første version af Flow — en simpel platform til at tage online ordrer uden provision.</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">€4.2M</div>
-          <div class="stat-label">Spart i kommission</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2022</div>
+        <div class="timeline-content">
+          <h3>50 restauranter</h3>
+          <p>Vi voksede til 50 restauranter i Danmark. Mange kom fra Wolt og Just Eat fordi de var trætte af høje provisioner.</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">127%</div>
-          <div class="stat-label">Gennemsnitlig salgsvækst</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2024</div>
+        <div class="timeline-content">
+          <h3>Custom mobile apps</h3>
+          <p>Vi lancerede custom mobile apps så restauranter kunne bygge loyalitet direkte med deres kunder.</p>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">0%</div>
-          <div class="stat-label">Kommission</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2026</div>
+        <div class="timeline-content">
+          <h3>500+ restauranter</h3>
+          <p>I dag driver Flow 500+ restauranter i Norden. Vi processer 2M+ ordrer om året og hjælper restauranter med at vokse deres salg med 127% i gennemsnit.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Values Section -->
-  <section class="values-section">
+  <!-- Values - Beige -->
+  <section class="values">
     <div class="values-container">
       <div class="values-header">
-        <h2>Vores værdier</h2>
+        <h2>Hvad vi står for</h2>
       </div>
       <div class="values-grid">
         <div class="value-card">
-          <div class="value-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-          </div>
-          <h3>Ejerskab</h3>
-          <p>Dine kunder er dine. Vi hjælper dig med at nå dem, men vi tager dem aldrig fra dig. Hvis du forlader Flow, får du alle dine kundedata med.</p>
+          <h3>Restauranter først</h3>
+          <p>Vi bygger værktøjer til restauranter, ikke investorer. Hvis noget ikke hjælper restauranter med at vokse, bygger vi det ikke.</p>
         </div>
         <div class="value-card">
-          <div class="value-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-            </svg>
-          </div>
           <h3>Gennemsigtighed</h3>
-          <p>Ingen skjulte gebyrer. Ingen uventede omkostninger. Vi tjener penge når du tjener penge — og det er sådan det skal være.</p>
+          <p>Ingen skjulte gebyrer. Ingen lock-ins. Du ejer dine kunder og din data. Altid.</p>
         </div>
         <div class="value-card">
-          <div class="value-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
-          </div>
-          <h3>Vækst</h3>
-          <p>Vi bygger værktøjer der driver reel vækst. Hver feature er designet til at øge dit salg, ikke vores kommission.</p>
+          <h3>Support der svarer</h3>
+          <p>Vi svarer inden for 5 minutter. Hver gang. Fordi restauranter ikke har tid til at vente.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Team Section -->
-  <section class="team-section">
-    <div class="team-container">
-      <div class="team-header">
-        <h2>Mød teamet</h2>
-      </div>
-      <div class="team-grid">
-        <div class="team-member">
-          <div class="team-avatar">
-            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop" alt="Adam Guild">
-          </div>
-          <div class="team-name">Adam Guild</div>
-          <div class="team-role">CEO & Co-Founder</div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar">
-            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop" alt="Sarah Jensen">
-          </div>
-          <div class="team-name">Sarah Jensen</div>
-          <div class="team-role">CTO & Co-Founder</div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar">
-            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400&h=400&fit=crop" alt="Michael Chen">
-          </div>
-          <div class="team-name">Michael Chen</div>
-          <div class="team-role">Head of Product</div>
-        </div>
-      </div>
-    </div>
+  <!-- CTA Final - Black -->
+  <section class="cta-final">
+    <h2>Bliv en del af Flow</h2>
+    <p>Få en gratis demo og se hvordan Flow kan hjælpe din restaurant med at vokse.</p>
+    <a href="karriere.html" class="button">Se ledige stillinger</a>
   </section>
 
-  <!-- Footer (exact copy from landing.html) -->
+  <!-- Footer -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
@@ -641,6 +536,7 @@
       <div class="footer-column">
         <h4>SUPPORT</h4>
         <ul>
+          <li><a href="help-center.html">Help Center</a></li>
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
           <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
@@ -657,10 +553,6 @@
       </div>
     </div>
   </footer>
-</div>
-
-<!-- JavaScript -->
-<script>
 
   <script>
     window.addEventListener('scroll', function() {

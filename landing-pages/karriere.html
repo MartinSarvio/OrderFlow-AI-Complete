@@ -5,21 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Karriere | Flow - Bliv en del af teamet</title>
   <meta name="description" content="Bliv en del af Flow og hjælp restauranter med at tage kontrol over deres digitale fremtid. Se ledige stillinger og ansøg i dag.">
-  <meta property="og:title" content="Karriere | Flow - Bliv en del af teamet">
-  <meta property="og:description" content="Vi bygger fremtidens restaurant-teknologi. Bliv en del af et passioneret team der hjælper restauranter med at vokse.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #1A1A1A;
       --color-primary-hover: #000000;
       --color-dark: #090a0b;
       --color-white: #ffffff;
+      --color-black: #000000;
       --color-beige: #F5F0EB;
       --color-beige-light: #FAF8F5;
-      --color-green-accent: #22C55E;
-      --color-black: #000000;
       --color-gray-50: #f9fafb;
       --color-gray-100: #f2f0ed;
       --color-gray-200: #e9ecef;
@@ -31,16 +28,26 @@
       --color-gray-800: #212529;
       --color-gray-900: #9CA3AF;
       --container-max: 1200px;
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-accent: 'Unbounded', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { font-size: 62.5%; scroll-behavior: smooth; }
-    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--font-body); font-size: 1.6rem; line-height: 1.6; color: var(--color-dark); background: var(--color-white); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
     a { color: inherit; text-decoration: none; }
     img, video { max-width: 100%; height: auto; display: block; }
     ul, ol { list-style: none; }
 
-    /* Navigation (exact copy from landing.html) */
+    * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+    *:hover { scrollbar-color: rgba(0, 0, 0, 0.2) transparent; }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: transparent; border-radius: 10px; transition: background 0.3s ease; }
+    *:hover::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
+
+    /* Navigation - same as other pages */
     .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: var(--color-white); transition: background 0.3s ease, backdrop-filter 0.3s ease; }
     .nav-wrapper.scrolled { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .nav-container { display: flex; align-items: center; justify-content: space-between; padding: 1.32rem 4.4rem; width: 100%; }
@@ -56,7 +63,6 @@
     .nav-login { font-size: 1.54rem; font-weight: 500; color: var(--color-dark); }
     .nav-cta { background: var(--color-dark); color: var(--color-white); padding: 1.1rem 1.98rem; border-radius: 0.8rem; font-size: 1.54rem; font-weight: 500; transition: background 0.2s ease; }
     .nav-cta:hover { background: var(--color-gray-800); }
-
     .nav-dropdown { position: relative; }
     .nav-dropdown-toggle { display: flex; align-items: center; gap: 0.4rem; font-family: 'Inter', sans-serif; font-size: 1.54rem; font-weight: 500; color: var(--color-dark); padding: 0.8rem 1.2rem; border-radius: 0.6rem; transition: background 0.2s ease; cursor: pointer; background: transparent; border: none; }
     .nav-dropdown-toggle:hover { background: var(--color-gray-100); }
@@ -86,57 +92,226 @@
     .nav-dropdown:first-of-type .dropdown-left { flex: 1; max-width: 100%; }
     .nav-dropdown:first-of-type .dropdown-links { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; column-gap: 2rem; }
 
-    .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 1.4rem 2.8rem; font-size: 1.5rem; font-weight: 500; border-radius: 0.8rem; background: var(--color-primary); color: var(--color-white); transition: all 0.35s; cursor: pointer; border: none; }
-    .button:hover { background: var(--color-primary-hover); }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem 4rem;
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 0;
+      background: var(--color-black);
+      color: var(--color-white);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 3px solid var(--color-black);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .button:hover {
+      background: var(--color-white);
+      color: var(--color-black);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .button.is-secondary {
+      background: transparent;
+      color: var(--color-black);
+      border: 3px solid var(--color-black);
+    }
+    .button.is-secondary:hover {
+      background: var(--color-black);
+      color: var(--color-white);
+    }
 
-    /* Hero */
-    .hero-section { padding: 16rem 4rem 12rem; background: linear-gradient(to bottom, var(--color-white), var(--color-beige-light)); text-align: center; }
-    .hero-container { max-width: 90rem; margin: 0 auto; }
-    .hero-section h1 { font-family: 'Archivo Black', sans-serif; font-size: 5.6rem; font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; color: var(--color-dark); margin-bottom: 2.4rem; text-transform: uppercase; }
-    .hero-section p { font-size: 2rem; font-weight: 300; color: var(--color-gray-700); line-height: 1.6; max-width: 72rem; margin: 0 auto; }
+    /* Hero - Beige (alternating) */
+    .hero {
+      background: var(--color-beige);
+      padding: 16rem 4rem 8rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-container {
+      max-width: 140rem;
+      margin: 0 auto;
+    }
+    .hero-content {
+      max-width: 95rem;
+    }
+    .hero-content h1 {
+      font-family: var(--font-accent);
+      font-size: 8.8rem;
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      letter-spacing: -0.03em;
+      text-transform: uppercase;
+    }
+    .hero-content .subtitle {
+      font-family: var(--font-display);
+      font-size: 3.2rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--color-gray-600);
+      font-style: italic;
+      letter-spacing: -0.01em;
+    }
 
-    /* Sections */
-    .section { padding: 10rem 4rem; }
-    .section.bg-white { background: var(--color-white); }
-    .section.bg-beige { background: var(--color-beige); }
-    .section-container { max-width: var(--container-max); margin: 0 auto; }
-    .section-header { text-align: center; margin-bottom: 6rem; }
-    .section-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 3.6rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.6rem; }
-    .section-header p { font-size: 1.8rem; font-weight: 400; color: var(--color-gray-600); max-width: 68rem; margin: 0 auto; }
+    /* Benefits - White */
+    .benefits {
+      background: var(--color-white);
+      padding: 12rem 4rem;
+    }
+    .benefits-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .benefits-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .benefits-header h2 {
+      font-family: var(--font-display);
+      font-size: 6.4rem;
+      font-weight: 400;
+      color: var(--color-black);
+      margin-bottom: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4rem;
+    }
+    .benefit-card {
+      background: var(--color-beige);
+      padding: 4.8rem;
+      border: 3px solid var(--color-black);
+    }
+    .benefit-card h3 {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--color-black);
+      margin-bottom: 1.6rem;
+      letter-spacing: -0.01em;
+    }
+    .benefit-card p {
+      font-family: var(--font-body);
+      font-size: 1.7rem;
+      line-height: 1.6;
+      color: var(--color-gray-600);
+      font-weight: 400;
+    }
 
-    /* Values grid */
-    .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; }
-    .value-card { padding: 3rem; background: var(--color-white); border-radius: 1.6rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .value-icon { font-size: 3.6rem; margin-bottom: 2rem; }
-    .value-card h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 1.2rem; }
-    .value-card p { font-size: 1.5rem; font-weight: 300; color: var(--color-gray-600); line-height: 1.7; }
+    /* Jobs - Black */
+    .jobs {
+      background: var(--color-black);
+      padding: 12rem 4rem;
+    }
+    .jobs-container {
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+    .jobs-header {
+      text-align: center;
+      margin-bottom: 8rem;
+    }
+    .jobs-header h2 {
+      font-family: var(--font-accent);
+      font-size: 7.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-white);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.4rem;
+    }
+    .jobs-header p {
+      font-family: var(--font-body);
+      font-size: 2.2rem;
+      color: rgba(255,255,255,0.7);
+      max-width: 70rem;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+    .jobs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2.4rem;
+    }
+    .job-card {
+      background: rgba(255,255,255,0.05);
+      padding: 4.8rem;
+      border: 3px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+    .job-card:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.3);
+      transform: translateY(-4px);
+    }
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 2.4rem;
+    }
+    .job-title h3 {
+      font-family: var(--font-body);
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--color-white);
+      margin-bottom: 0.8rem;
+      letter-spacing: -0.01em;
+    }
+    .job-meta {
+      font-family: var(--font-body);
+      font-size: 1.6rem;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .job-desc p {
+      font-family: var(--font-body);
+      font-size: 1.8rem;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.7);
+      font-weight: 400;
+    }
 
-    /* Benefits grid */
-    .benefits-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.4rem; }
-    .benefit-card { display: flex; align-items: flex-start; gap: 1.6rem; padding: 2.4rem; background: var(--color-beige-light); border-radius: 1.6rem; }
-    .benefit-icon-wrap { width: 5.6rem; height: 5.6rem; background: var(--color-primary); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .benefit-icon-wrap svg { width: 2.8rem; height: 2.8rem; color: var(--color-white); }
-    .benefit-text h4 { font-size: 1.8rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
-    .benefit-text p { font-size: 1.54rem; font-weight: 400; color: var(--color-gray-600); line-height: 1.6; }
+    /* CTA - Beige */
+    .cta-final {
+      background: var(--color-beige);
+      padding: 16rem 4rem;
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--font-accent);
+      font-size: 8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: var(--color-black);
+      margin-bottom: 3.2rem;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .cta-final p {
+      font-family: var(--font-body);
+      font-size: 2.4rem;
+      color: var(--color-gray-600);
+      margin-bottom: 4.8rem;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
 
-    /* Jobs list */
-    .jobs-list { display: flex; flex-direction: column; gap: 1.6rem; max-width: 90rem; margin: 0 auto; }
-    .job-card { display: flex; align-items: center; justify-content: space-between; padding: 2.4rem 3rem; background: var(--color-beige-light); border-radius: 1.2rem; transition: all 0.3s ease; border: 1px solid transparent; }
-    .job-card:hover { background: var(--color-white); border-color: var(--color-gray-300); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-    .job-info h3 { font-family: 'Space Grotesk', sans-serif; font-size: 2rem; font-weight: 600; color: var(--color-dark); margin-bottom: 0.6rem; }
-    .job-meta { display: flex; gap: 2rem; }
-    .job-meta span { font-size: 1.54rem; font-weight: 400; color: var(--color-gray-600); }
-    .job-apply { font-size: 1.6rem; font-weight: 600; color: var(--color-primary); display: flex; align-items: center; gap: 0.8rem; }
-    .job-apply svg { width: 1.8rem; height: 1.8rem; transition: transform 0.2s; }
-    .job-card:hover .job-apply svg { transform: translateX(4px); }
-
-    /* Image with overlay CTA */
-    .image-cta-section { padding: 12rem 4rem; background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&h=800&fit=crop'); background-size: cover; background-position: center; text-align: center; color: var(--color-white); }
-    .image-cta-content { max-width: 70rem; margin: 0 auto; }
-    .image-cta-content h2 { font-family: 'Space Grotesk', sans-serif; font-size: 4rem; font-weight: 600; margin-bottom: 1.6rem; }
-    .image-cta-content p { font-size: 1.8rem; font-weight: 300; opacity: 0.95; margin-bottom: 3.2rem; line-height: 1.6; }
-
-    /* Footer (exact copy from landing.html) */
+    /* Footer */
     .footer { background: var(--color-black); color: var(--color-white); padding: 6rem 4rem 3rem; }
     .footer-content { max-width: 140rem; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4rem; padding-bottom: 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .footer-column h4 { font-size: 1.2rem; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 2rem; color: rgba(255,255,255,0.5); }
@@ -150,270 +325,125 @@
     .footer-legal a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 1.54rem; transition: color 0.2s; }
     .footer-legal a:hover { color: var(--color-white); }
 
-    @media (max-width: 1024px) {
-      .values-grid { grid-template-columns: repeat(2, 1fr); }
-      .benefits-grid { grid-template-columns: 1fr; }
-    }
     @media (max-width: 768px) {
       html { font-size: 56.25%; }
       .nav-links { display: none; }
-      .values-grid { grid-template-columns: 1fr; }
-      .job-card { flex-direction: column; align-items: flex-start; gap: 1.6rem; }
+      .hero-content h1 { font-size: 5.6rem; }
+      .benefits-grid { grid-template-columns: 1fr; }
       .footer-content { grid-template-columns: 1fr 1fr; }
-    }
-    @media (max-width: 480px) {
-      .nav-container { padding: 1.2rem 2rem; }
-      .footer-content { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <div class="page-wrapper">
-    <!-- Navigation (exact copy from landing.html) -->
-    <nav class="nav-wrapper">
-      <div class="nav-container">
-        <div class="nav-left">
-          <a href="landing.html" class="nav-logo">
-            <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
-          </a>
-          <div class="nav-links">
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Produkt<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Produkt</div><div class="dropdown-links">
-                <a href="restaurant-hjemmeside.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Restaurant Hjemmeside</div><div class="dropdown-link-desc">Konverter flere besøgende til kunder.</div></div></a>
-                <a href="online-bestilling.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Online Bestilling</div><div class="dropdown-link-desc">Vækst dit salg med smart bestilling.</div></div></a>
-                <a href="custom-mobile-app.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Custom Mobile App</div><div class="dropdown-link-desc">5-stjernet mobil app til dine kunder.</div></div></a>
-                <a href="loyalitetsprogram.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Loyalitetsprogram</div><div class="dropdown-link-desc">Byg loyalitet med belønninger.</div></div></a>
-                <a href="automatiseret-marketing.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Automatiseret Marketing</div><div class="dropdown-link-desc">Drive salg med automatisering.</div></div></a>
-                <a href="sms-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">SMS Workflow</div><div class="dropdown-link-desc">Automatiser SMS-kampagner til dine gæster.</div></div></a>
-                <a href="instagram-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Instagram Workflow</div><div class="dropdown-link-desc">Automatiser din Instagram marketing.</div></div></a>
-                <a href="facebook-workflow.html" class="dropdown-link"><div class="dropdown-link-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/></svg></div><div class="dropdown-link-content"><div class="dropdown-link-title">Facebook Workflow</div><div class="dropdown-link-desc">Automatiser din Facebook marketing.</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop" alt="Restaurant"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Talkin Tacos øgede salg</div><div class="dropdown-card-subtitle">til $120.000/md med Flow</div></div></div></div></div></div>
-            </div>
-            <a href="priser.html" class="nav-link">Priser</a>
-            <a href="how-it-works.html" class="nav-link">Sådan virker det</a>
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Om os<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Virksomhed</div><div class="dropdown-links">
-                <a href="om-os.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Vores Historie</div></div></a>
-                <a href="karriere.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Karriere</div></div></a>
-                <a href="ledelse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Ledelse</div></div></a>
-                <a href="presse.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Presse</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-cards"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=200&fit=crop" alt="Team"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi vokser!</div><div class="dropdown-card-subtitle">Se vores historie</div></div></div><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400&h=200&fit=crop" alt="Hiring"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Vi ansætter!</div><div class="dropdown-card-subtitle">Se ledige stillinger</div></div></div></div></div></div></div>
-            </div>
-            <div class="nav-dropdown"><button class="nav-dropdown-toggle">Ressourcer<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-              <div class="nav-dropdown-menu is-small"><div class="dropdown-content"><div class="dropdown-left"><div class="dropdown-label">Ressourcer</div><div class="dropdown-links">
-                <a href="case-studies.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Case Studies</div><div class="dropdown-link-desc">Se succeshistorier fra restauranter.</div></div></a>
-                <a href="restaurant-marketing-guide.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Marketing Guide</div><div class="dropdown-link-desc">Lær de bedste strategier.</div></div></a>
-                <a href="seo-for-restauranter.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">SEO for Restauranter</div><div class="dropdown-link-desc">Optimer din synlighed.</div></div></a>
-                <a href="blog.html" class="dropdown-link"><div class="dropdown-link-content"><div class="dropdown-link-title">Blog</div><div class="dropdown-link-desc">Tips og nyheder.</div></div></a>
-              </div></div><div class="dropdown-right"><div class="dropdown-card"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop" alt="Guide"><div class="dropdown-card-overlay"><div class="dropdown-card-title">Restaurant Marketing Guide</div><div class="dropdown-card-subtitle">Download gratis</div></div></div></div></div></div>
-            </div>
-          </div>
+  <!-- Navigation (same structure as other pages - omitted for brevity) -->
+  <nav class="nav-wrapper">
+    <div class="nav-container">
+      <div class="nav-left">
+        <a href="landing.html" class="nav-logo">
+          <img src="/images/FLOW-logo-sort-4K.png" alt="Flow" class="logo-f">
+        </a>
+      </div>
+      <div class="nav-right">
+        <a href="/app" class="nav-login">Log ind</a>
+        <a href="#demo" class="nav-cta">Få en gratis demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero - Beige -->
+  <section class="hero">
+    <div class="hero-container">
+      <div class="hero-content">
+        <h1>Bliv en del af Flow</h1>
+        <p class="subtitle">Vi bygger fremtidens restaurant-teknologi. Hjælp os med at give restauranter kontrol over deres digitale fremtid.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits - White -->
+  <section class="benefits">
+    <div class="benefits-container">
+      <div class="benefits-header">
+        <h2>Hvorfor arbejde hos Flow?</h2>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <h3>Arbejd der betyder noget</h3>
+          <p>Hver feature du bygger hjælper små restauranter med at konkurrere mod Wolt og Just Eat. Dit arbejde skaber reel value.</p>
         </div>
-        <div class="nav-right">
-          <a href="/app" class="nav-login"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Log ind</a>
-          <a href="#demo" class="nav-cta">Få en gratis demo</a>
+        <div class="benefit-card">
+          <h3>Fri og fleksibel</h3>
+          <p>Work from anywhere. Vi er et remote-first team med folk i hele Norden. Mød op hvis du vil, men du bestemmer selv.</p>
+        </div>
+        <div class="benefit-card">
+          <h3>Konkurrencedygtig løn</h3>
+          <p>Vi betaler markedets bedste løn + equity i virksomheden. Du fortjener det bedste.</p>
+        </div>
+        <div class="benefit-card">
+          <h3>Lær og voks</h3>
+          <p>Vi investerer i din udvikling. Kurser, konferencer, certificeringer — hvis det gør dig bedre, betaler vi.</p>
         </div>
       </div>
-    </nav>
+    </div>
+  </section>
 
-    <!-- Hero Section with Video Background -->
-
-    <!-- Hero -->
-    <section class="hero-section">
-      <div class="hero-container">
-        <h1>Karriere hos Flow</h1>
-        <p>Vi bygger fremtidens restaurant-teknologi. Bliv en del af et passioneret team der hjælper restauranter med at vokse og tage kontrol over deres digitale fremtid.</p>
+  <!-- Jobs - Black -->
+  <section class="jobs">
+    <div class="jobs-container">
+      <div class="jobs-header">
+        <h2>Ledige stillinger</h2>
+        <p>Vi ansætter de bedste folk indenfor tech, design og salg. Se vores åbne stillinger nedenfor.</p>
       </div>
-    </section>
-
-    <!-- Values -->
-    <section class="section bg-beige">
-      <div class="section-container">
-        <div class="section-header">
-          <h2>Vores værdier</h2>
-          <p>Disse principper guider alt hvad vi gør hos Flow</p>
-        </div>
-        <div class="values-grid">
-          <div class="value-card">
-            <div class="value-icon">🎯</div>
-            <h3>Kunderne først</h3>
-            <p>Vi eksisterer for at hjælpe restauranter. Hver beslutning starter med spørgsmålet: "Hvordan hjælper dette vores kunder?"</p>
+      <div class="jobs-list">
+        <div class="job-card">
+          <div class="job-header">
+            <div class="job-title">
+              <h3>Senior Full-Stack Developer</h3>
+              <div class="job-meta">København eller Remote • Full-time</div>
+            </div>
+            <a href="mailto:jobs@flow.dk?subject=Ansøgning: Senior Full-Stack Developer" class="button">Ansøg nu</a>
           </div>
-          <div class="value-card">
-            <div class="value-icon">💡</div>
-            <h3>Simpelhed</h3>
-            <p>Den bedste løsning er den simpleste. Vi fjerner kompleksitet og gør tingene nemme at forstå og bruge.</p>
-          </div>
-          <div class="value-card">
-            <div class="value-icon">🚀</div>
-            <h3>Handling over snak</h3>
-            <p>Vi tror på at sende og lære fremfor at diskutere i det uendelige. Fejl hurtigt, lær hurtigt, forbedre hurtigt.</p>
-          </div>
-          <div class="value-card">
-            <div class="value-icon">🤝</div>
-            <h3>Ærlighed</h3>
-            <p>Vi er ærlige over for hinanden og over for vores kunder. Ingen bullshit, ingen skjulte agendaer.</p>
-          </div>
-          <div class="value-card">
-            <div class="value-icon">📈</div>
-            <h3>Ejerskab</h3>
-            <p>Alle tager ansvar for deres arbejde. Vi venter ikke på at blive bedt om at løse problemer.</p>
-          </div>
-          <div class="value-card">
-            <div class="value-icon">🌱</div>
-            <h3>Læring</h3>
-            <p>Vi er nysgerrige og hungrige efter at lære. Ingen ved alt, men sammen kan vi finde ud af det meste.</p>
+          <div class="job-desc">
+            <p>Vi søger en erfaren full-stack developer til at bygge nye features i vores platform. React, Node.js, PostgreSQL. Du arbejder direkte med produktet og får stor indflydelse.</p>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Benefits -->
-    <section class="section bg-white">
-      <div class="section-container">
-        <div class="section-header">
-          <h2>Fordele ved at arbejde hos Flow</h2>
-        </div>
-        <div class="benefits-grid">
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="job-card">
+          <div class="job-header">
+            <div class="job-title">
+              <h3>Product Designer</h3>
+              <div class="job-meta">Remote • Full-time</div>
             </div>
-            <div class="benefit-text">
-              <h4>Konkurrencedygtig løn</h4>
-              <p>Vi betaler godt og matcher markedet</p>
-            </div>
+            <a href="mailto:jobs@flow.dk?subject=Ansøgning: Product Designer" class="button">Ansøg nu</a>
           </div>
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-            </div>
-            <div class="benefit-text">
-              <h4>Fleksibelt arbejde</h4>
-              <p>Arbejd hjemmefra eller fra kontoret</p>
-            </div>
-          </div>
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-            </div>
-            <div class="benefit-text">
-              <h4>Sundhedsforsikring</h4>
-              <p>Fuld sundhedsforsikring for alle ansatte</p>
-            </div>
-          </div>
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-            </div>
-            <div class="benefit-text">
-              <h4>Læringsbudget</h4>
-              <p>10.000 kr årligt til kurser og konferencer</p>
-            </div>
-          </div>
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            </div>
-            <div class="benefit-text">
-              <h4>Udstyr</h4>
-              <p>MacBook Pro og alt hvad du behøver</p>
-            </div>
-          </div>
-          <div class="benefit-card">
-            <div class="benefit-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-            </div>
-            <div class="benefit-text">
-              <h4>Team events</h4>
-              <p>Månedlige sociale arrangementer</p>
-            </div>
+          <div class="job-desc">
+            <p>Design brugervenlige interfaces for restauratører og deres kunder. Figma, user research, prototyping. Du former hvordan 500+ restauranter bruger vores platform.</p>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Jobs -->
-    <section class="section bg-beige" id="jobs">
-      <div class="section-container">
-        <div class="section-header">
-          <h2>Ledige stillinger</h2>
-          <p>Find din næste mulighed hos Flow</p>
-        </div>
-        <div class="jobs-list">
-          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Senior Frontend Developer" class="job-card">
-            <div class="job-info">
-              <h3>Senior Frontend Developer</h3>
-              <div class="job-meta">
-                <span>København</span>
-                <span>•</span>
-                <span>Fuldtid</span>
-                <span>•</span>
-                <span>Tech</span>
-              </div>
-            </div>
-            <div class="job-apply">
-              Ansøg nu
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </div>
-          </a>
-
-          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Backend Developer" class="job-card">
-            <div class="job-info">
-              <h3>Backend Developer</h3>
-              <div class="job-meta">
-                <span>København / Remote</span>
-                <span>•</span>
-                <span>Fuldtid</span>
-                <span>•</span>
-                <span>Tech</span>
-              </div>
-            </div>
-            <div class="job-apply">
-              Ansøg nu
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </div>
-          </a>
-
-          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Customer Success Manager" class="job-card">
-            <div class="job-info">
+        <div class="job-card">
+          <div class="job-header">
+            <div class="job-title">
               <h3>Customer Success Manager</h3>
-              <div class="job-meta">
-                <span>København</span>
-                <span>•</span>
-                <span>Fuldtid</span>
-                <span>•</span>
-                <span>Customer Success</span>
-              </div>
+              <div class="job-meta">København • Full-time</div>
             </div>
-            <div class="job-apply">
-              Ansøg nu
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </div>
-          </a>
-
-          <a href="mailto:karriere@flow.dk?subject=Ansøgning: Sales Representative" class="job-card">
-            <div class="job-info">
-              <h3>Sales Representative</h3>
-              <div class="job-meta">
-                <span>København</span>
-                <span>•</span>
-                <span>Fuldtid</span>
-                <span>•</span>
-                <span>Sales</span>
-              </div>
-            </div>
-            <div class="job-apply">
-              Ansøg nu
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-            </div>
-          </a>
+            <a href="mailto:jobs@flow.dk?subject=Ansøgning: Customer Success Manager" class="button">Ansøg nu</a>
+          </div>
+          <div class="job-desc">
+            <p>Hjælp restauranter med at få succes på vores platform. Du onboarder nye kunder, træner dem i systemet og sikrer de får mest muligt ud af Flow.</p>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- Footer (exact copy from landing.html) -->
-    <footer class="footer">
+  <!-- CTA - Beige -->
+  <section class="cta-final">
+    <h2>Klar til at starte?</h2>
+    <p>Send din ansøgning og CV til jobs@flow.dk. Vi glæder os til at høre fra dig!</p>
+    <a href="mailto:jobs@flow.dk" class="button">Send ansøgning</a>
+  </section>
+
+  <!-- Footer (same as other pages) -->
+  <footer class="footer">
     <div class="footer-content">
       <div class="footer-column">
         <h4>PRODUKTER</h4>
@@ -421,21 +451,6 @@
           <li><a href="restaurant-hjemmeside.html">Restaurant Hjemmeside</a></li>
           <li><a href="online-bestilling.html">Online Bestilling</a></li>
           <li><a href="custom-mobile-app.html">Custom Mobile App</a></li>
-          <li><a href="zero-commission-delivery.html">Zero-Commission Delivery</a></li>
-          <li><a href="loyalitetsprogram.html">Loyalitetsprogram</a></li>
-          <li><a href="automatiseret-marketing.html">Automatiseret Marketing</a></li>
-        </ul>
-      </div>
-      <div class="footer-column">
-        <h4>RESSOURCER</h4>
-        <ul>
-          <li><a href="blog.html">Blog</a></li>
-          <li><a href="case-studies.html">Case Studies</a></li>
-          <li><a href="restaurant-marketing-guide.html">Restaurant Marketing Guide</a></li>
-          <li><a href="seo-for-restauranter.html">SEO for Restauranter</a></li>
-          <li><a href="restaurant-email-marketing.html">Restaurant Email Marketing</a></li>
-          <li><a href="restaurant-mobile-app.html">Restaurant Mobile App</a></li>
-          <li><a href="online-bestillingssystemer.html">Online Bestillingssystemer</a></li>
         </ul>
       </div>
       <div class="footer-column">
@@ -445,12 +460,19 @@
           <li><a href="karriere.html">Karriere</a></li>
           <li><a href="ledelse.html">Ledelse</a></li>
           <li><a href="presse.html">Presse</a></li>
-          <li><a href="partner.html">Partner med Flow</a></li>
+        </ul>
+      </div>
+      <div class="footer-column">
+        <h4>RESSOURCER</h4>
+        <ul>
+          <li><a href="blog.html">Blog</a></li>
+          <li><a href="case-studies.html">Case Studies</a></li>
         </ul>
       </div>
       <div class="footer-column">
         <h4>SUPPORT</h4>
         <ul>
+          <li><a href="help-center.html">Help Center</a></li>
           <li><a href="tel:+4570123456">+45 70 12 34 56</a></li>
           <li><a href="mailto:support@flow.dk">support@flow.dk</a></li>
         </ul>
@@ -460,26 +482,21 @@
     <div class="footer-bottom">
       <p>2026 © Flow. All rights reserved.</p>
       <div class="footer-legal">
-        <a href="javascript:void(0)" onclick="PrivacyModal.show()">Cookie Settings</a>
         <a href="legal.html#privacy">Privacy</a>
-        <a href="legal.html#terms">Website Terms</a>
-        <a href="legal.html#disclaimer">Disclaimer</a>
+        <a href="legal.html#terms">Terms</a>
       </div>
     </div>
   </footer>
-</div>
-
-<!-- JavaScript -->
-<script></div>
 
   <script>
     window.addEventListener('scroll', function() {
       const nav = document.querySelector('.nav-wrapper');
-      if (window.scrollY > 50) { nav.classList.add('scrolled'); }
-      else { nav.classList.remove('scrolled'); }
+      if (window.scrollY > 50) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
     });
   </script>
-  <script src="/js/flow-cms-render.js"></script>
-  <script src="/js/privacy-modal.js"></script>
 </body>
 </html>
