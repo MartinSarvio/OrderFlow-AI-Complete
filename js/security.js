@@ -158,11 +158,12 @@
   let _lastErrorToastTime = 0;
   const ERROR_TOAST_COOLDOWN_MS = 30000;
 
-  function showRateLimitedErrorToast() {
+  function showRateLimitedErrorToast(errorDetail) {
     const now = Date.now();
     if (now - _lastErrorToastTime < ERROR_TOAST_COOLDOWN_MS) return;
     _lastErrorToastTime = now;
-    showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    const detail = errorDetail ? ` (${errorDetail.substring(0, 80)})` : '';
+    showErrorToast('Der opstod en uventet fejl' + detail);
   }
 
   window.onerror = function(message, source, line, col, error) {
@@ -176,7 +177,9 @@
     });
     // Only show toast for genuine user-facing errors, not background/API failures
     if (!isSilentError(message) && !isSilentError(error?.message) && !isSilentError(error?.stack)) {
-      showRateLimitedErrorToast();
+      const detail = String(message || error?.message || '').substring(0, 120);
+      console.warn('[FLOW] Uventet fejl vises til bruger:', detail, 'source:', source, 'line:', line);
+      showRateLimitedErrorToast(detail);
     }
     return false; // Don't suppress default console error
   };
@@ -191,7 +194,9 @@
     });
     // Only show toast for genuine user-facing errors
     if (!isSilentError(reason?.message) && !isSilentError(String(reason)) && !isSilentError(reason?.stack)) {
-      showRateLimitedErrorToast();
+      const detail = String(reason?.message || reason || '').substring(0, 120);
+      console.warn('[FLOW] Unhandled rejection vises til bruger:', detail);
+      showRateLimitedErrorToast(detail);
     }
   });
 

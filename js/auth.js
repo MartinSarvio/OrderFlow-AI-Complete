@@ -960,7 +960,7 @@ async function finishLogin(user, isAdmin) {
   });
 
   // Register device for trusted devices tracking
-  registerDevice();
+  registerDevice().catch(e => console.warn('registerDevice:', e));
 }
 
 // =====================================================
@@ -1674,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Refresh dashboard if visible
           if (typeof loadDashboard === 'function') {
-            loadDashboard();
+            loadDashboard().catch(e => console.warn('loadDashboard restore:', e));
           }
         } catch (err) {
           console.warn('⚠️ Could not load restaurants:', err);

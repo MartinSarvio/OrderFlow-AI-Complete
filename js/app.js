@@ -2205,7 +2205,7 @@ function showApp() {
     // VIGTIGT: Kun load admin dashboard for admin/employee - ikke for demo/kunde
     const isCustomerOrDemo = currentUser?.role && [ROLES.DEMO, ROLES.CUSTOMER].includes(currentUser.role);
     if (!isCustomerOrDemo) {
-      try { loadDashboard(); } catch(e) { console.error('loadDashboard:', e); }
+      loadDashboard().catch(e => console.error('loadDashboard:', e));
     }
     try { loadRestaurants(); } catch(e) { console.error('loadRestaurants:', e); }
     try { renderWorkflowNodes(); } catch(e) { console.error('renderWorkflowNodes:', e); }
