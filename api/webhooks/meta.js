@@ -435,11 +435,15 @@ async function callGPT(systemPrompt, messages, maxTokens = 500, jsonMode = false
       temperature: 0.7,
     };
     if (jsonMode) body.response_format = { type: 'json_object' };
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!response.ok) { 
       const errBody = await response.text().catch(() => '');
       console.error('[AI] GPT error:', response.status, errBody); 
@@ -494,7 +498,9 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
     content: m.content
   }));
   const systemPrompt = buildSystemPrompt(state, cart, fulfillment, contact, menu, null);
+  console.log('[AI] Calling GPT with state:', state, 'messages:', gptMessages.length);
   const gptResponse = await callGPT(systemPrompt, gptMessages, 500, true);
+  console.log('[AI] GPT returned:', gptResponse ? gptResponse.substring(0, 200) : 'NULL');
 
   let response = '';
   let newState = state;
