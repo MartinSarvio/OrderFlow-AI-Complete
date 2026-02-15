@@ -8239,6 +8239,7 @@ function loadConfig() {
   // OpenAI
   const openaiKey = localStorage.getItem('openai_key') || CONFIG.OPENAI_API_KEY;
   if (openaiKey) {
+    CONFIG.OPENAI_API_KEY = openaiKey;
     localStorage.setItem('openai_key', openaiKey);
   }
 
@@ -8280,7 +8281,10 @@ function loadSmsConfig() {
 
 function saveOpenAIConfig() {
   const key = document.getElementById('openai-key').value.trim();
-  if (key) localStorage.setItem('openai_key', key);
+  if (key) {
+    localStorage.setItem('openai_key', key);
+    CONFIG.OPENAI_API_KEY = key;
+  }
   closeModal('openai-config');
   updateApiStatus();
 }
@@ -8301,6 +8305,7 @@ function saveOpenAIKey() {
   }
 
   localStorage.setItem('openai_key', key);
+  CONFIG.OPENAI_API_KEY = key;
   if (status) {
     status.style.color = 'var(--success)';
     status.textContent = 'API key gemt!';
