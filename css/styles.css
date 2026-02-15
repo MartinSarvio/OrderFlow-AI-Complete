@@ -14,16 +14,16 @@
       --n11: #F8FAFC;  /* Maximum contrast */
       --n12: #FFFFFF;  /* Pure white */
 
-      /* Background Colors - Apple Liquid Glass (WWDC 2025) */
-      --bg:#0c0c1a;           /* Body base - dark navy (not pure black) */
-      --bg1:#0c0c1a;          /* Same as body */
+      /* Background Colors - Apple Liquid Glass (Snipzy + WWDC 2025) */
+      --bg:#0a0a18;           /* Body base with gradient blobs behind */
+      --bg1:#0a0a18;          /* Same as body */
       --bg2:#13131F;          /* Navy dark */
       --bg3:#1E1E30;          /* Elevated surface */
-      --nav-bg:rgba(12,12,28,0.4);      /* Liquid glass panel (transparent) */
-      --sidebar-bg:rgba(12,12,28,0.4);  /* Glass sidebar */
-      --topbar-bg:rgba(12,12,28,0.4);   /* Glass topbar (identical to sidebar) */
-      --content-bg:#0f0f1e;   /* Content area - slightly lighter than body */
-      --glass-bg:rgba(12,12,28,0.4);    /* Reusable glass background */
+      --nav-bg:rgba(0,0,0,0.25);        /* Liquid glass (Snipzy dark mode) */
+      --sidebar-bg:rgba(0,0,0,0.25);    /* Glass sidebar */
+      --topbar-bg:rgba(0,0,0,0.25);     /* Glass topbar (identical) */
+      --content-bg:#0f0f1e;   /* Content area */
+      --glass-bg:rgba(0,0,0,0.25);      /* Reusable glass background */
 
       /* Surface Colors */
       --surface:#1E1E30;      /* Navy surface */
