@@ -1696,7 +1696,7 @@
     .notif-empty{padding:12px 0;color:var(--muted);font-size:12px;text-align:center}
     .notif-mark-read{background:transparent;border:none;cursor:pointer;width:100%}
     
-    .page{flex:1;padding:var(--space-6);display:none;background:var(--content-bg);overflow-y:auto;overflow-x:hidden;position:relative;z-index:1}
+    .page{flex:1;padding:0;display:none;background:var(--content-bg);overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;border-top-left-radius:var(--content-radius)}
     .page:not(.active){visibility:hidden;height:0;overflow:hidden;pointer-events:none;position:absolute;left:-9999px}
     .page.active{display:flex;flex-direction:column;animation:fadeIn .3s;visibility:visible;height:auto;z-index:10;position:relative;left:0}
 
