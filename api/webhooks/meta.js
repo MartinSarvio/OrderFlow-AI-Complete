@@ -497,25 +497,20 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   let fulfillment = threadState?.fulfillment || null;
   let contact = threadState?.contact || {};
 
-  // Detect greeting loop: if all assistant messages are identical, reset to just last user msg
+  // Detect greeting loop: if most assistant messages start with "Hej", conversation is stuck
   const assistantMsgs = conversation.filter(m => m.role === 'assistant');
-  const uniqueAssistant = new Set(assistantMsgs.map(m => m.content));
+  const greetingCount = assistantMsgs.filter(m => m.content && m.content.startsWith('Hej')).length;
+  const isStuck = assistantMsgs.length >= 2 && greetingCount >= assistantMsgs.length - 1;
+
   let gptMessages;
-  if (assistantMsgs.length >= 3 && uniqueAssistant.size <= 1) {
-    // Greeting loop detected — send ONLY last user message to break the cycle
-    console.log('[AI] Greeting loop detected, resetting history');
-    state = 'menu'; // Force out of greeting
+  if (isStuck) {
+    // Greeting loop — nuke history, force state to support, send only last user message
+    console.log('[AI] STUCK in greeting loop (' + greetingCount + '/' + assistantMsgs.length + ' greetings). Resetting.');
+    state = 'support';
     gptMessages = [{ role: 'user', content: lastMessage }];
   } else {
-    // Normal: dedup and use last 10
-    const dedupedConvo = [];
-    let lastAssistantContent = '';
-    for (const m of conversation) {
-      if (m.role === 'assistant' && m.content === lastAssistantContent) continue;
-      if (m.role === 'assistant') lastAssistantContent = m.content;
-      dedupedConvo.push(m);
-    }
-    gptMessages = dedupedConvo.slice(-10).map(m => ({
+    // Normal flow: use last 6 messages (keep it focused)
+    gptMessages = conversation.slice(-6).map(m => ({
       role: m.role === 'user' ? 'user' : 'assistant',
       content: m.content
     }));
