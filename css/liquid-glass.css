@@ -17,20 +17,16 @@ body {
   background-attachment: fixed !important;
 }
 
-/* ── Sidebar & Topbar: Liquid Glass panels ───────────────
-   Dark mode values from Snipzy:
-   --bg-color: rgba(0, 0, 0, 0.25)
-   --highlight: rgba(255, 255, 255, 0.15)
-   backdrop-filter: blur + saturate + brightness       */
+/* ── Sidebar & Topbar: ONE seamless Liquid Glass surface ──
+   No borders between them - they flow together as one panel.
+   Specular highlight only on outer edges via inset shadow. */
 .sidebar,
 .topbar {
   background: rgba(0, 0, 0, 0.25) !important;
   backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   -webkit-backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
-  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 0.1),
-    0 4px 24px rgba(0, 0, 0, 0.2) !important;
+  border: none !important;
+  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Sidebar header - transparent, inherits sidebar glass */
@@ -40,11 +36,12 @@ body {
   -webkit-backdrop-filter: none !important;
 }
 
-/* ── Main layout ─────────────────────────────────────────── */
-
-/* No border-radius - eliminates black corner artifact */
+/* ── Content area: subtle glass treatment ────────────────── */
 .main-content-wrapper {
   border-radius: 0 !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) saturate(110%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
 }
 
 /* Main container transparent so topbar sees same body gradient as sidebar */
@@ -101,10 +98,14 @@ body {
   background: rgba(0, 0, 0, 0.25) !important;
   backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   -webkit-backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
-  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow:
-    inset 1px 1px 1px rgba(255, 255, 255, 0.1),
-    0 4px 24px rgba(0, 0, 0, 0.2) !important;
+  border: none !important;
+  box-shadow: inset 0 0.5px 0 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .main-content-wrapper {
+  background: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) saturate(110%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
 }
 
 /* Main stays transparent in dark mode */
