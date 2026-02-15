@@ -1380,7 +1380,7 @@
     #page-dashboard>.page-title{display:none}
     
     /* Sidebar Search */
-    .sidebar-search{position:relative;margin-top:8px;margin-bottom:12px;height:38px;display:flex;align-items:center}
+    .sidebar-search{position:relative;margin-top:8px;margin-bottom:12px}
     #command-search{margin-left:0;margin-top:16px}
     #sidebar > nav.sidebar-nav > div.nav-section > button.nav-btn:nth-child(1){margin-top:-9px}
     /* Enable dragging in Edit Mode */
@@ -1388,11 +1388,11 @@
     /* Disable pointer events on search decorations but keep input functional */
     body.edit-mode .sidebar-search svg{pointer-events:none}
     body.edit-mode .sidebar-search-shortcut{pointer-events:none}
-    .sidebar-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;z-index:1}
+    .sidebar-search svg{position:absolute;left:12px;top:12px;color:var(--muted);pointer-events:none;z-index:1;height:14px;width:14px}
     .sidebar-search-input{width:100%;padding:10px 40px 10px 36px;background:rgba(255,255,255,0.05);border:none;border-radius:var(--radius-md);font-size:13px;color:rgba(255,255,255,0.8);transition:background .15s}
     .sidebar-search-input:focus{outline:none;background:rgba(255,255,255,0.08)}
     .sidebar-search-input::placeholder{color:rgba(255,255,255,0.35)}
-    .sidebar-search-shortcut{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted);background:var(--bg2);padding:2px 5px;border-radius:3px;font-family:'SF Mono',monospace}
+    .sidebar-search-shortcut{position:absolute;right:10px;top:10px;font-size:9px;color:var(--muted);background:var(--bg2);padding:2px 5px;border-radius:3px;font-family:'SF Mono',monospace;line-height:1.4}
     .sidebar-search .command-results{position:absolute;top:100%;left:0;right:0;background:var(--card);border:none;border-radius:var(--radius-md);margin-top:4px;display:none;max-height:320px;overflow-y:auto;z-index:200}
     .sidebar-search .command-results.active{display:block}
     .command-group{padding:6px 0}
