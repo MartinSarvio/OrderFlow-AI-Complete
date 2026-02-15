@@ -2232,24 +2232,23 @@
     .workflow-page {
       display: none;
       position: fixed;
-      top: 62px; /* Under topbar (matches .topbar height) */
-      left: 260px; /* Ved siden af sidebar */
+      top: 0;
+      left: 0;
       right: 0;
       bottom: 0;
       flex-direction: column;
       overflow: hidden;
-      z-index: 40;
+      z-index: 300; /* Above sidebar + topbar */
       background: var(--content-bg);
-      border-top-left-radius: var(--content-radius);
-      transition: left 0.3s ease-in-out;
+      border-top-left-radius: 0;
+      transition: none;
     }
     .workflow-page.active {
       display: flex;
     }
-    /* Workflow page responsiv til sidebar collapsed */
+    /* Workflow page — always fullscreen regardless of sidebar */
     .workflow-page.sidebar-collapsed {
-      left: 72px;
-      transition: left 0.3s ease-in-out;
+      left: 0;
     }
 
     /* Toolbar - STICKY top */
