@@ -221,6 +221,7 @@ const NotificationSystem = {
         if (element && !element.querySelector('.nav-notification-badge')) {
             const badge = document.createElement('span');
             badge.className = 'nav-notification-badge';
+            badge.textContent = 'Ny';
             badge.setAttribute('data-path', fullPath);
             badge.setAttribute('title', 'Ny opdatering');
 
