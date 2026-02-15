@@ -1,39 +1,40 @@
 /* ============================================
-   APPLE LIQUID GLASS DESIGN SYSTEM
-   Glassmorphism styling matching Mission Kontrol
+   MISSION KONTROL DESIGN SYSTEM
+   Minimal dark glassmorphism matching Mission Kontrol
    ============================================ */
 
-/* Body gradient background */
+/* Body - Deep dark background */
 body {
-  background: linear-gradient(135deg, #0a0a0f 0%, #0f0f17 100%) !important;
+  background: #0a0a0f !important;
   background-attachment: fixed !important;
 }
 
-/* Sidebar - Glass effect */
+/* Sidebar & Topbar - IDENTICAL glass effect */
+.sidebar,
+.topbar {
+  background: rgba(13, 13, 25, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+}
+
+/* Remove borders for cleaner look */
 .sidebar {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(40px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
+}
+
+.topbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
 }
 
 .sidebar-header {
   background: transparent !important;
-  backdrop-filter: blur(40px) !important;
-  -webkit-backdrop-filter: blur(40px) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 
-/* Topbar - Glass effect (matches sidebar) */
-.topbar {
-  background: var(--glass-bg) !important;
-  backdrop-filter: blur(40px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
-}
-
-/* Main content area - slightly different tone */
+/* Main content area - slightly lighter than sidebar */
 .main {
-  background: var(--content-bg) !important;
+  background: #13131f !important;
 }
 
 .content {
@@ -42,44 +43,47 @@ body {
 
 /* Search field glass styling */
 .sidebar-search-input {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
 }
 
 .sidebar-search-input:focus {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
 /* Brighter icons and shortcut badge */
 .sidebar-search-icon svg,
 .sidebar-search-shortcut {
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .sidebar-search-input:focus ~ .sidebar-search-icon svg,
 .sidebar-search-input:focus ~ .sidebar-search-shortcut {
-  opacity: 1;
+  opacity: 0.9;
 }
 
 .sidebar-search-shortcut {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Remove any conflicting backgrounds */
-[data-theme="dark"] .topbar,
-[data-theme="dark"] .main {
-  background: var(--glass-bg) !important;
+/* Override any conflicting backgrounds */
+[data-theme="dark"] .topbar {
+  background: rgba(13, 13, 25, 0.85) !important;
 }
 
 [data-theme="dark"] .sidebar {
-  background: var(--glass-bg) !important;
+  background: rgba(13, 13, 25, 0.85) !important;
+}
+
+[data-theme="dark"] .main {
+  background: #13131f !important;
 }
 
 /* Ensure content area has different background */
 .page {
-  background: var(--content-bg) !important;
+  background: #13131f !important;
 }
