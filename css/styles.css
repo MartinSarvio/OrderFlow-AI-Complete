@@ -121,7 +121,7 @@
       --shadow-glow:0 0 20px var(--accent-glow);
       --shadow-1:0 1px 3px rgba(0,0,0,0.15);
       --shadow-2:0 8px 24px rgba(0,0,0,0.25);
-      --content-radius:14px;
+      --content-radius:8px;
 
       /* Focus & Selection - Indigo */
       --focus-ring:0 0 0 3px rgba(99,102,241,0.45);
@@ -230,7 +230,7 @@
       --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.10);
 
       /* Content radius */
-      --content-radius: 14px;
+      --content-radius: 8px;
     }
 
     /* Light mode dropdown overrides */
