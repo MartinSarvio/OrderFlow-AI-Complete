@@ -497,18 +497,29 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   let fulfillment = threadState?.fulfillment || null;
   let contact = threadState?.contact || {};
 
-  // Filter out repeated identical assistant messages to break greeting loops
-  const dedupedConvo = [];
-  let lastAssistantMsg = '';
-  for (const m of conversation) {
-    if (m.role === 'assistant' && m.content === lastAssistantMsg) continue; // skip duplicate
-    if (m.role === 'assistant') lastAssistantMsg = m.content;
-    dedupedConvo.push(m);
+  // Detect greeting loop: if all assistant messages are identical, reset to just last user msg
+  const assistantMsgs = conversation.filter(m => m.role === 'assistant');
+  const uniqueAssistant = new Set(assistantMsgs.map(m => m.content));
+  let gptMessages;
+  if (assistantMsgs.length >= 3 && uniqueAssistant.size <= 1) {
+    // Greeting loop detected — send ONLY last user message to break the cycle
+    console.log('[AI] Greeting loop detected, resetting history');
+    state = 'menu'; // Force out of greeting
+    gptMessages = [{ role: 'user', content: lastMessage }];
+  } else {
+    // Normal: dedup and use last 10
+    const dedupedConvo = [];
+    let lastAssistantContent = '';
+    for (const m of conversation) {
+      if (m.role === 'assistant' && m.content === lastAssistantContent) continue;
+      if (m.role === 'assistant') lastAssistantContent = m.content;
+      dedupedConvo.push(m);
+    }
+    gptMessages = dedupedConvo.slice(-10).map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content
+    }));
   }
-  const gptMessages = dedupedConvo.slice(-10).map(m => ({
-    role: m.role === 'user' ? 'user' : 'assistant',
-    content: m.content
-  }));
   const systemPrompt = buildSystemPrompt(state, cart, fulfillment, contact, menu, null);
   console.log('[AI] Calling GPT with state:', state, 'messages:', gptMessages.length);
   const gptResponse = await callGPT(systemPrompt, gptMessages, 500, true);
