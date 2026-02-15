@@ -1079,11 +1079,11 @@
     .sidebar.collapsed{width:72px}
 
     /* Logo centralt i toppen - FIXED position, forbliver på plads ved scroll og collapse */
-    .sidebar-logo{position:fixed;top:0;left:36px;width:auto;height:40px;display:flex;align-items:center;z-index:220;pointer-events:none;margin-top:1px;margin-left:14px}
+    .sidebar-logo{position:fixed;top:0;left:57px;width:auto;height:40px;display:flex;align-items:center;z-index:220;pointer-events:none;margin-top:1px}
     /* Enable pointer events in Edit Mode so logo can be dragged */
     body.edit-mode .sidebar-logo{pointer-events:auto;cursor:move}
     .sidebar-logo img{height:22px;width:auto;margin-top:18px}
-    .sidebar.collapsed .sidebar-logo{left:20px;top:0;margin-left:14px}
+    .sidebar.collapsed .sidebar-logo{left:57px;top:0}
     .sidebar.collapsed .sidebar-logo img{height:22px}
 
     /* Header zone - søgefelt under logo, over navigation */
