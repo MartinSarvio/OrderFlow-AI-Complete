@@ -19,11 +19,11 @@
       --bg1:#1a1a24;          /* Glass navigation (sidebar + topbar) */
       --bg2:#13131F;          /* Navy dark */
       --bg3:#1E1E30;          /* Elevated surface */
-      --nav-bg:rgba(26,26,36,0.7);       /* Glass sidebar/topbar with transparency */
-      --sidebar-bg:rgba(26,26,36,0.7);   /* Glass sidebar with transparency */
-      --topbar-bg:rgba(26,26,36,0.7);    /* Glass topbar (same as sidebar) */
+      --nav-bg:rgba(30,30,40,0.7);       /* Glass sidebar/topbar with transparency */
+      --sidebar-bg:rgba(30,30,40,0.7);   /* Glass sidebar with transparency */
+      --topbar-bg:rgba(30,30,40,0.7);    /* Glass topbar (same as sidebar) */
       --content-bg:#0f0f17;   /* Slightly different than nav - content area */
-      --glass-bg:rgba(26,26,36,0.7);     /* Reusable glass background */
+      --glass-bg:rgba(30,30,40,0.7);     /* Reusable glass background */
 
       /* Surface Colors */
       --surface:#1E1E30;      /* Navy surface */
