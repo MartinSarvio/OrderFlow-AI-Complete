@@ -440,8 +440,13 @@ async function callGPT(systemPrompt, messages, maxTokens = 500, jsonMode = false
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify(body),
     });
-    if (!response.ok) { console.error('[AI] GPT error:', response.status); return null; }
+    if (!response.ok) { 
+      const errBody = await response.text().catch(() => '');
+      console.error('[AI] GPT error:', response.status, errBody); 
+      return null; 
+    }
     const data = await response.json();
+    console.log('[AI] GPT response received, length:', data.choices?.[0]?.message?.content?.length || 0);
     return data.choices?.[0]?.message?.content || null;
   } catch (err) {
     console.error('[AI] GPT call failed:', err.message);
