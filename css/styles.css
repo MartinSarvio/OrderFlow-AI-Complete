@@ -3901,6 +3901,11 @@
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
 
+    /* Save Actions - consistent layout for all save buttons */
+    .save-actions{display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-5);padding-top:var(--space-4)}
+    .save-actions .save-status{font-size:13px;color:var(--success);opacity:0;transition:opacity .3s ease}
+    .save-actions .save-status.visible{opacity:1}
+
 /* ========================================
    SUPPORT/DOKUMENTATION STYLES
    OrderFlow v133

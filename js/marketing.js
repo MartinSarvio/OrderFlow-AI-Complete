@@ -2533,6 +2533,7 @@ function saveMarketingData() {
   marketingHasChanges = false;
   updateMarketingUnsavedBadge();
   toast('Marketing data gemt', 'success');
+  if (typeof showSaveStatus === 'function') showSaveStatus('marketing-save-status');
 }
 
 // Mark marketing as changed

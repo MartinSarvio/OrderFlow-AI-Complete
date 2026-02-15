@@ -3353,6 +3353,7 @@ function saveBillingSettings() {
     window.SupabaseDB.saveUserSetting('billing_settings', settings)
       .catch(err => console.warn('Supabase sync fejl (billing):', err));
   }
+  showSaveStatus('billing-save-status');
 }
 
 function savePlatformBillingInfo() {
@@ -5274,9 +5275,11 @@ async function saveProductLibrary() {
     });
 
     toast('Produktbibliotek gemt', 'success');
+    showSaveStatus('products-save-status');
   } catch (err) {
     console.error('Error saving product library:', err);
     toast('Fejl ved gem af produktbibliotek', 'error');
+    showSaveStatus('products-save-status', 'error');
   }
 }
 
@@ -5297,9 +5300,11 @@ async function saveCategoriesChanges() {
     });
 
     toast('Kategorier gemt', 'success');
+    showSaveStatus('categories-save-status');
   } catch (err) {
     console.error('Error saving categories:', err);
     toast('Fejl ved gem af kategorier', 'error');
+    showSaveStatus('categories-save-status', 'error');
   }
 }
 
@@ -6044,23 +6049,21 @@ function clearWorkflowDirty() {
  *   3. Call showSaveStatus('unique-id', 'error') to display error message
  */
 function showSaveStatus(elementId, status = 'saved') {
-  const statusEl = document.getElementById(elementId);
-  if (!statusEl) return;
+  const el = document.getElementById(elementId);
+  if (!el) return;
 
   if (status === 'saved') {
-    statusEl.textContent = '✓ Gemt';
-    statusEl.style.color = 'var(--green)';
-    setTimeout(() => {
-      statusEl.textContent = '';
-    }, 3000);
+    el.textContent = '✓ Gemt';
+    el.style.color = 'var(--success)';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 3000);
   } else if (status === 'error') {
-    statusEl.textContent = '✗ Fejl ved gemning';
-    statusEl.style.color = 'var(--red)';
-    setTimeout(() => {
-      statusEl.textContent = '';
-    }, 5000);
+    el.textContent = '✗ Fejl ved gemning';
+    el.style.color = 'var(--danger)';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 5000);
   } else {
-    statusEl.textContent = '';
+    el.classList.remove('visible');
   }
 }
 

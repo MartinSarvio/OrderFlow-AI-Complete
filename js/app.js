@@ -10290,6 +10290,7 @@ function saveSEOAnalysis() {
     if (history.length > 10) history = history.slice(0, 10);
     localStorage.setItem('flow_seo_analysis_history', JSON.stringify(history));
     toast('Analyse gemt!', 'success');
+    if (typeof showSaveStatus === 'function') showSaveStatus('seo-analyse-save-status');
   } catch (e) {
     toast('Kunne ikke gemme: ' + e.message, 'error');
   }

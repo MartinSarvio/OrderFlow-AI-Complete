@@ -1236,6 +1236,7 @@ function toggleDayClosed(day) {
 // Save App Builder Hours
 function saveAppBuilderHours() {
   toast('Åbningstider gemt!', 'success');
+  if (typeof showSaveStatus === 'function') showSaveStatus('hours-save-status');
 }
 
 // Update App Contact (Kontakt page)
@@ -1267,6 +1268,7 @@ function saveAppBuilderContact() {
   const config = loadAppBuilderConfig();
   saveAppBuilderConfig(config);
   toast('Kontaktoplysninger gemt!', 'success');
+  if (typeof showSaveStatus === 'function') showSaveStatus('contact-save-status');
 }
 
 // Update App Delivery (Levering page)
@@ -1286,6 +1288,7 @@ function saveAppBuilderDelivery() {
   const config = loadAppBuilderConfig();
   saveAppBuilderConfig(config);
   toast('Leveringsindstillinger gemt!', 'success');
+  if (typeof showSaveStatus === 'function') showSaveStatus('delivery-save-status');
 }
 
 // =====================================================
