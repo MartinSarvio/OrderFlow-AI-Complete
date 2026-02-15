@@ -1,0 +1,85 @@
+/* ============================================
+   APPLE LIQUID GLASS DESIGN SYSTEM
+   Glassmorphism styling matching Mission Kontrol
+   ============================================ */
+
+/* Body gradient background */
+body {
+  background: linear-gradient(135deg, #0a0a0f 0%, #0f0f17 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* Sidebar - Glass effect */
+.sidebar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.sidebar-header {
+  background: transparent !important;
+  backdrop-filter: blur(40px) !important;
+  -webkit-backdrop-filter: blur(40px) !important;
+}
+
+/* Topbar - Glass effect (matches sidebar) */
+.topbar {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Main content area - slightly different tone */
+.main {
+  background: var(--content-bg) !important;
+}
+
+.content {
+  background: transparent !important;
+}
+
+/* Search field glass styling */
+.sidebar-search-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.sidebar-search-input:focus {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Brighter icons and shortcut badge */
+.sidebar-search-icon svg,
+.sidebar-search-shortcut {
+  opacity: 0.7;
+}
+
+.sidebar-search-input:focus ~ .sidebar-search-icon svg,
+.sidebar-search-input:focus ~ .sidebar-search-shortcut {
+  opacity: 1;
+}
+
+.sidebar-search-shortcut {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Remove any conflicting backgrounds */
+[data-theme="dark"] .topbar,
+[data-theme="dark"] .main {
+  background: var(--glass-bg) !important;
+}
+
+[data-theme="dark"] .sidebar {
+  background: var(--glass-bg) !important;
+}
+
+/* Ensure content area has different background */
+.page {
+  background: var(--content-bg) !important;
+}
