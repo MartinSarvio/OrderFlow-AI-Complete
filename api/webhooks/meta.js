@@ -290,12 +290,25 @@ async function getOrCreateThread(supabase, tenantId, customerId, channel, extern
     .limit(1);
 
   if (existing && existing.length > 0) {
-    await supabase
-      .from('conversation_threads')
-      .update({ last_message_at: new Date().toISOString() })
-      .eq('id', existing[0].id);
+    const lastMsg = new Date(existing[0].last_message_at || existing[0].created_at);
+    const hoursSinceLastMsg = (Date.now() - lastMsg.getTime()) / (1000 * 60 * 60);
 
-    return existing[0];
+    // Auto-close stale threads (2+ hours of inactivity) → fresh conversation
+    if (hoursSinceLastMsg >= 2) {
+      console.log(`[Meta] Closing stale thread ${existing[0].id} (${hoursSinceLastMsg.toFixed(1)}h inactive)`);
+      await supabase
+        .from('conversation_threads')
+        .update({ status: 'closed' })
+        .eq('id', existing[0].id);
+      // Fall through to create new thread
+    } else {
+      await supabase
+        .from('conversation_threads')
+        .update({ last_message_at: new Date().toISOString() })
+        .eq('id', existing[0].id);
+
+      return existing[0];
+    }
   }
 
   // Create new thread
@@ -497,20 +510,29 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   let fulfillment = threadState?.fulfillment || null;
   let contact = threadState?.contact || {};
 
-  // Detect greeting loop: if most assistant messages start with "Hej", conversation is stuck
-  const assistantMsgs = conversation.filter(m => m.role === 'assistant');
-  const greetingCount = assistantMsgs.filter(m => m.content && m.content.startsWith('Hej')).length;
-  const isStuck = assistantMsgs.length >= 2 && greetingCount >= assistantMsgs.length - 1;
+  // Step 1: Deduplicate consecutive identical messages (prevents GPT from seeing loop pattern)
+  const deduped = [];
+  for (const msg of conversation) {
+    const prev = deduped[deduped.length - 1];
+    if (prev && prev.role === msg.role && prev.content === msg.content) continue;
+    deduped.push(msg);
+  }
+
+  // Step 2: Detect greeting loop — if 2+ of last 3 assistant replies are greetings, reset
+  const assistantMsgs = deduped.filter(m => m.role === 'assistant');
+  const recentAssistant = assistantMsgs.slice(-3);
+  const greetingCount = recentAssistant.filter(m => m.content && m.content.startsWith('Hej')).length;
+  const isStuck = recentAssistant.length >= 2 && greetingCount >= recentAssistant.length;
 
   let gptMessages;
   if (isStuck) {
-    // Greeting loop — nuke history, force state to support, send only last user message
-    console.log('[AI] STUCK in greeting loop (' + greetingCount + '/' + assistantMsgs.length + ' greetings). Resetting.');
-    state = 'support';
+    // Greeting loop: nuke history, only send last user message for a clean start
+    console.log('[AI] STUCK in greeting loop (' + greetingCount + ' greetings). Resetting.');
+    state = 'greeting';
     gptMessages = [{ role: 'user', content: lastMessage }];
   } else {
-    // Normal flow: use last 6 messages (keep it focused)
-    gptMessages = conversation.slice(-6).map(m => ({
+    // Normal flow: use last 6 deduped messages (focused context)
+    gptMessages = deduped.slice(-6).map(m => ({
       role: m.role === 'user' ? 'user' : 'assistant',
       content: m.content
     }));
