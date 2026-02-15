@@ -22,7 +22,7 @@ body {
    Specular highlight only on outer edges via inset shadow. */
 .sidebar,
 .topbar {
-  background: rgba(0, 0, 0, 0.25) !important;
+  background: rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   -webkit-backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   border: none !important;
@@ -112,7 +112,7 @@ body {
 /* ── Dark theme overrides (wins over styles.css) ─────────── */
 [data-theme="dark"] .topbar,
 [data-theme="dark"] .sidebar {
-  background: rgba(0, 0, 0, 0.25) !important;
+  background: rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   -webkit-backdrop-filter: blur(16px) saturate(120%) brightness(1.15) !important;
   border: none !important;
