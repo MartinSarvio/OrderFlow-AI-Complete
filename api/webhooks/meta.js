@@ -536,7 +536,7 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   }
 
   if (!response) {
-    response = 'Hej! 😊 Hvordan kan jeg hjælpe dig?';
+    response = 'Hej! 😊 Hvordan kan jeg hjælpe dig? [DEBUG: GPT=' + (gptResponse ? 'got_response' : 'NULL') + ' state=' + state + ']';
   }
 
   return { text: response, intent: 'ai', confidence, orderData, newState: { state: newState, cart, fulfillment, contact } };
