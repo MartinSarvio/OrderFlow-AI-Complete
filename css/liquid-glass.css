@@ -45,22 +45,6 @@ body {
   margin-top: 2px !important;
 }
 
-/* ── Logo: locked to position from CSS Editor ────────────── */
-.sidebar-logo {
-  left: 14px !important;
-}
-.sidebar-logo img {
-  width: 120px !important;
-  height: auto !important;
-}
-.sidebar.collapsed .sidebar-logo {
-  left: 14px !important;
-}
-.sidebar.collapsed .sidebar-logo img {
-  width: 120px !important;
-  height: auto !important;
-}
-
 /* ── Content area: glass with rounded top-left corner ────── */
 .main-content-wrapper {
   border-top-left-radius: 10px !important;
