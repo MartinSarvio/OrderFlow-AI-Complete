@@ -36,9 +36,38 @@ body {
   -webkit-backdrop-filter: none !important;
 }
 
+/* ── Sidebar search & logo position overrides ────────────── */
+#sidebar-search {
+  margin-top: 19px !important;
+}
+
+#command-search {
+  margin-top: 2px !important;
+}
+
+#sidebar-logo,
+.sidebar-logo {
+  width: 120px !important;
+  margin-left: 14px !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 220 !important;
+  transition: none !important;
+}
+
+/* Lock logo — do NOT move when sidebar collapses */
+.sidebar.collapsed #sidebar-logo,
+.sidebar.collapsed .sidebar-logo {
+  left: 0 !important;
+  margin-left: 14px !important;
+  width: 120px !important;
+  transform: none !important;
+}
+
 /* ── Content area: glass with rounded top-left corner ────── */
 .main-content-wrapper {
-  border-top-left-radius: 20px !important;
+  border-top-left-radius: 10px !important;
   background: rgba(0, 0, 0, 0.15) !important;
   backdrop-filter: blur(12px) saturate(110%) !important;
   -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
@@ -49,7 +78,7 @@ body {
   background: rgba(0, 0, 0, 0.15) !important;
   backdrop-filter: blur(12px) saturate(110%) !important;
   -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
-  border-top-left-radius: 20px !important;
+  border-top-left-radius: 10px !important;
 }
 
 /* Main container transparent so topbar sees same body gradient as sidebar */
