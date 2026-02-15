@@ -5621,22 +5621,26 @@ function showCrmProfileView(id) {
     demoBanner.style.display = 'none';
   }
   
-  // Populate STAMDATA form
-  document.getElementById('stamdata-name').value = restaurant.name || '';
-  document.getElementById('stamdata-cvr').value = restaurant.cvr || '';
-  document.getElementById('stamdata-owner').value = restaurant.owner || '';
-  document.getElementById('stamdata-contact').value = restaurant.contactPerson || '';
-  document.getElementById('stamdata-email').value = restaurant.email || '';
-  document.getElementById('stamdata-phone').value = restaurant.phone || '';
-  document.getElementById('stamdata-industry').value = restaurant.industry || restaurant.metadata?.industry || '';
-  document.getElementById('stamdata-address').value = restaurant.address || '';
-  document.getElementById('stamdata-country').value = restaurant.country || 'DK';
-  document.getElementById('stamdata-website').value = restaurant.website || '';
-  document.getElementById('stamdata-created').value = restaurant.createdAt || restaurant.created_at || '-';
+  // Populate STAMDATA form (use safe setter - elements may not exist yet)
+  const setStamdataVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val || '';
+  };
+  setStamdataVal('stamdata-name', restaurant.name);
+  setStamdataVal('stamdata-cvr', restaurant.cvr);
+  setStamdataVal('stamdata-owner', restaurant.owner);
+  setStamdataVal('stamdata-contact', restaurant.contactPerson);
+  setStamdataVal('stamdata-email', restaurant.email);
+  setStamdataVal('stamdata-phone', restaurant.phone);
+  setStamdataVal('stamdata-industry', restaurant.industry || restaurant.metadata?.industry);
+  setStamdataVal('stamdata-address', restaurant.address);
+  setStamdataVal('stamdata-country', restaurant.country || 'DK');
+  setStamdataVal('stamdata-website', restaurant.website);
+  setStamdataVal('stamdata-created', restaurant.createdAt || restaurant.created_at || '-');
 
   // Populate BETALINGSINTEGRATION
-  document.getElementById('stamdata-mobilepay-merchant').value = restaurant.mobilepayMerchantId || '';
-  document.getElementById('stamdata-mobilepay-api-key').value = restaurant.mobilepayApiKey || '';
+  setStamdataVal('stamdata-mobilepay-merchant', restaurant.mobilepayMerchantId);
+  setStamdataVal('stamdata-mobilepay-api-key', restaurant.mobilepayApiKey);
   // Generate callback URL
   const callbackEl = document.getElementById('stamdata-payment-callback');
   if (callbackEl) {
