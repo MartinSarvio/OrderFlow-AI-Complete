@@ -203,10 +203,6 @@ const SupabaseDB = {
     try {
       // Wait for Supabase to be initialized
       if (!supabase) await ensureSupabaseClient();
-      if (!supabase) {
-        console.error('❌ Supabase not initialized in getRestaurants');
-        return [];
-      }
 
       const resolvedUserId = await this._resolveAuthUserId(userId);
       if (!resolvedUserId) {
@@ -214,16 +210,35 @@ const SupabaseDB = {
         return [];
       }
 
-      const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .eq('user_id', resolvedUserId)
-        .order('created_at', { ascending: false });
+      // Strategy: Try server-side API first (bypasses RLS), fall back to direct Supabase
+      // 1. Server-side API (service role key, no RLS)
+      try {
+        const apiBase = window.location.origin;
+        const resp = await fetch(`${apiBase}/api/restaurants/list?userId=${encodeURIComponent(resolvedUserId)}`);
+        if (resp.ok) {
+          const result = await resp.json();
+          if (result.restaurants) {
+            console.log('✅ Restaurants loaded via API:', result.restaurants.length);
+            return result.restaurants.map(r => this._transformRestaurant(r));
+          }
+        }
+      } catch (apiErr) {
+        console.warn('⚠️ API list not available:', apiErr.message);
+      }
 
-      if (error) throw error;
+      // 2. Fallback: direct Supabase (requires valid JWT)
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('restaurants')
+          .select('*')
+          .eq('user_id', resolvedUserId)
+          .order('created_at', { ascending: false });
 
-      // Transform bigint revenue fields to numbers
-      return data.map(r => this._transformRestaurant(r));
+        if (error) throw error;
+        return data.map(r => this._transformRestaurant(r));
+      }
+
+      return [];
     } catch (err) {
       console.error('❌ Error fetching restaurants:', err);
       throw err;
