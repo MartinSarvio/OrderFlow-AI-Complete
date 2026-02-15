@@ -1088,7 +1088,7 @@
 
     /* Header zone - søgefelt under logo, over navigation */
     .sidebar-header{padding:2px 20px 6px;transition:all 0.3s ease-in-out;position:fixed;top:40px;left:0;width:260px;z-index:210;background:var(--nav-bg);border-top-left-radius:10px}
-    .sidebar.collapsed .sidebar-header{padding:2px 12px;width:72px;top:40px}
+    .sidebar.collapsed .sidebar-header{padding:2px 12px;width:72px;top:40px;display:none}
 
     /* Sidebar Toggle Button - LEFT-ALIGNED at bottom */
     .sidebar-toggle{position:absolute;bottom:24px;left:20px;width:32px;height:32px;background:transparent;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.3s ease-in-out;z-index:250}
@@ -1125,7 +1125,7 @@
     .sidebar.collapsed .nav-customer-context{display:none}
     
     /* Sidebar search - FORBLIVER SYNLIGT når collapsed */
-    .sidebar.collapsed .sidebar-search{display:block !important}
+    .sidebar.collapsed .sidebar-search{display:none !important}
     .sidebar.collapsed .sidebar-search-input{width:48px;padding:10px 8px;text-align:center}
     .sidebar.collapsed .sidebar-search svg{left:50%;transform:translateX(-50%) translateY(-50%)}
     .sidebar.collapsed .sidebar-search-shortcut{display:none}
