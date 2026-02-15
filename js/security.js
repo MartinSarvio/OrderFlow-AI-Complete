@@ -121,15 +121,14 @@
     // Always log to console
     console.error('[FLOW Error Monitor]', logEntry);
 
-    // Try to log to Supabase
+    // Try to log to Supabase (only use actual client, not the library)
     try {
-      const client = window.supabaseClient || window.supabase;
-      if (client) {
+      const client = window.supabaseClient;
+      if (client && typeof client.from === 'function') {
         await client.from('error_logs').insert(logEntry);
       }
     } catch (e) {
       // Don't log logging failures to avoid infinite loops
-      console.warn('[Error Monitor] Could not log to Supabase:', e.message);
     }
   }
 
@@ -142,12 +141,28 @@
     /Script error/i, /ChunkLoadError/i, /Loading chunk/i,
     /supabase/i, /AuthApiError/i, /AuthSessionMissing/i,
     /auth.*error/i, /session.*expired/i, /refresh_token/i,
-    /invalid.*token/i, /JWT/i, /getSession/i
+    /invalid.*token/i, /JWT/i, /getSession/i,
+    /realtime/i, /websocket/i, /channel/i, /subscribe/i,
+    /row-level security/i, /RLS/i, /policy/i,
+    /Cannot read properties of null/i, /Cannot read properties of undefined/i,
+    /is not defined/i, /is not a function/i,
+    /ERR_CONNECTION/i, /ERR_NAME/i, /ERR_INTERNET/i, /DNS/i
   ];
 
   function isSilentError(message) {
     const msg = String(message || '');
     return SILENT_ERROR_PATTERNS.some(p => p.test(msg));
+  }
+
+  // Rate-limit error toasts — max 1 per 30 seconds to avoid spamming the user
+  let _lastErrorToastTime = 0;
+  const ERROR_TOAST_COOLDOWN_MS = 30000;
+
+  function showRateLimitedErrorToast() {
+    const now = Date.now();
+    if (now - _lastErrorToastTime < ERROR_TOAST_COOLDOWN_MS) return;
+    _lastErrorToastTime = now;
+    showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
   }
 
   window.onerror = function(message, source, line, col, error) {
@@ -160,8 +175,8 @@
       col: col
     });
     // Only show toast for genuine user-facing errors, not background/API failures
-    if (!isSilentError(message) && !isSilentError(error?.message)) {
-      showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    if (!isSilentError(message) && !isSilentError(error?.message) && !isSilentError(error?.stack)) {
+      showRateLimitedErrorToast();
     }
     return false; // Don't suppress default console error
   };
@@ -175,8 +190,8 @@
       stack: reason?.stack
     });
     // Only show toast for genuine user-facing errors
-    if (!isSilentError(reason?.message) && !isSilentError(String(reason))) {
-      showErrorToast('Der opstod en uventet fejl. Prøv igen eller genindlæs siden.');
+    if (!isSilentError(reason?.message) && !isSilentError(String(reason)) && !isSilentError(reason?.stack)) {
+      showRateLimitedErrorToast();
     }
   });
 

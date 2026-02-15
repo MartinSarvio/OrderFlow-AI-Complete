@@ -1634,9 +1634,33 @@ document.addEventListener('DOMContentLoaded', () => {
     showApp();
     applyRoleBasedSidebar();
 
-    // Load restaurants in background
+    // VIGTIGT: Validate Supabase session BEFORE making DB calls.
+    // Den lokale session (orderflow_session) kan stadig være gyldig
+    // mens Supabase JWT er udløbet → auth.uid() = NULL → RLS fejl.
     (async () => {
-      if (typeof SupabaseDB !== 'undefined') {
+      // Wait for Supabase client to initialize
+      if (typeof window.waitForSupabase === 'function') {
+        try { await window.waitForSupabase(); } catch (e) { /* ok */ }
+      }
+
+      // Check if Supabase auth session is still valid
+      const client = window.supabaseClient;
+      let supabaseSessionValid = false;
+      if (client?.auth?.getSession) {
+        try {
+          const { data } = await client.auth.getSession();
+          supabaseSessionValid = !!data?.session?.access_token;
+          if (!supabaseSessionValid) {
+            console.warn('⚠️ Supabase session expired — local session still valid, re-login needed for DB operations');
+          } else {
+            console.log('✅ Supabase session still valid');
+          }
+        } catch (e) {
+          console.warn('⚠️ Could not validate Supabase session:', e?.message);
+        }
+      }
+
+      if (typeof SupabaseDB !== 'undefined' && supabaseSessionValid) {
         try {
           const dbRestaurants = await SupabaseDB.getRestaurants(currentUser.id);
           restaurants = dbRestaurants || [];
@@ -1661,11 +1685,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       console.log('✅ App restored from saved session');
     })();
-  } else {
-    // Kun init Supabase auth listener hvis INGEN lokal session
-    // Dette forhindrer at Supabase sletter vores session
-    initAuthStateListener();
   }
+
+  // ALTID init auth state listener — sikrer at Supabase refresher JWT,
+  // håndterer SIGNED_OUT events, og opretholder session-synkronisering.
+  // attemptAutoLoginFromSupabaseSession() vil IKKE override en eksisterende lokal session.
+  initAuthStateListener();
 });
 
 // ============================================================================

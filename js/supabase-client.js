@@ -274,6 +274,15 @@ const SupabaseDB = {
       if (!supabase) await ensureSupabaseClient();
       if (!supabase) throw new Error('Supabase not initialized in createRestaurant');
 
+      // VIGTIGT: Verify Supabase auth session BEFORE insert.
+      // RLS kræver user_id = auth.uid(). Hvis JWT er udløbet, er auth.uid() NULL
+      // og insert vil ALTID fejle med "violates row-level security policy".
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !sessionData?.session?.access_token) {
+        console.error('❌ No valid Supabase session for createRestaurant. User must re-login.');
+        throw new Error('Din session er udløbet. Log venligst ind igen for at oprette en restaurant.');
+      }
+
       // Transform revenue fields to bigint (øre/cents)
       const dbData = this._prepareRestaurantForDB(restaurantData);
       delete dbData.id; // Let database default uuid_generate_v4() handle id
@@ -290,13 +299,27 @@ const SupabaseDB = {
       }
       dbData.user_id = resolvedUserId;
 
+      // Double-check: resolvedUserId MUST match the JWT's sub (auth.uid())
+      const jwtUserId = sessionData.session.user?.id;
+      if (jwtUserId && resolvedUserId !== jwtUserId) {
+        console.warn('⚠️ user_id mismatch! resolved:', resolvedUserId, 'jwt:', jwtUserId, '— using JWT user_id');
+        dbData.user_id = jwtUserId;
+      }
+
       const { data, error } = await supabase
         .from('restaurants')
         .insert([dbData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Provide user-friendly RLS error message
+        if (error.message?.includes('row-level security')) {
+          console.error('❌ RLS violation. JWT user:', jwtUserId, 'row user_id:', dbData.user_id);
+          throw new Error('Adgang nægtet: Din session tillader ikke denne handling. Prøv at logge ud og ind igen.');
+        }
+        throw error;
+      }
 
       console.log('✅ Restaurant created:', data.id);
       return this._transformRestaurant(data);
