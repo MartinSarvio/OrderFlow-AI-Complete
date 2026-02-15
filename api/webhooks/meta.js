@@ -180,10 +180,8 @@ async function processMessagingEvent(supabase, pageId, event, objectType) {
   // Step 7: Mark processed
   await markProcessed(supabase, channel, messageId, tenantId);
 
-  // Step 8: Process with AI (async)
-  processWithAI(supabase, thread, message, customer, tenantId, channel, senderId, pageId).catch(err => {
-    console.error('[Meta Webhook] AI processing error:', err);
-  });
+  // Step 8: Process with AI (MUST await — Vercel kills process after return)
+  await processWithAI(supabase, thread, message, customer, tenantId, channel, senderId, pageId);
 }
 
 /**
