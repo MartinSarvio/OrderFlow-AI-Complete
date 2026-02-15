@@ -364,8 +364,12 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
       .order('created_at', { ascending: true })
       .limit(20);
 
-    // Load menu
-    const { data: menu } = await supabase.rpc('get_site_menu', { p_tenant_id: tenantId });
+    // Load menu + restaurant name in parallel
+    const [{ data: menu }, { data: restaurant }] = await Promise.all([
+      supabase.rpc('get_site_menu', { p_tenant_id: tenantId }),
+      supabase.from('restaurants').select('name').eq('id', tenantId).single()
+    ]);
+    const restaurantName = restaurant?.name || null;
 
     // Format for AI
     const conversation = (history || []).map(msg => ({
@@ -376,8 +380,8 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
     // Get thread state from last AI message metadata (reliable — thread_messages.metadata works)
     const lastAiMsg = (history || []).filter(m => m.direction === 'outbound' && m.metadata?.threadState).pop();
     const threadState = lastAiMsg?.metadata?.threadState || {};
-    console.log('[Meta] Thread ID:', thread.id, 'State:', JSON.stringify(threadState), 'History:', (history||[]).length);
-    const aiResponse = await callOrderingAgent(conversation, menu, customer, channel, threadState);
+    console.log('[Meta] Thread ID:', thread.id, 'Restaurant:', restaurantName, 'Menu items:', menu?.length || 0, 'State:', JSON.stringify(threadState), 'History:', (history||[]).length);
+    const aiResponse = await callOrderingAgent(conversation, menu, customer, channel, threadState, restaurantName);
     console.log('[Meta] AI response:', aiResponse.text?.substring(0, 100), 'New state:', aiResponse.newState?.state);
 
     // Calculate confidence
@@ -474,9 +478,23 @@ async function callGPT(systemPrompt, messages, maxTokens = 500, jsonMode = false
 }
 
 function buildSystemPrompt(state, cart, fulfillment, contact, menu, restaurantName) {
-  const menuText = menu && Array.isArray(menu) && menu.length > 0
-    ? menu.slice(0, 30).map(i => `${i.name}${i.price ? ' (' + i.price + ' DKK)' : ''}${i.category ? ' [' + i.category + ']' : ''}`).join('\n')
-    : 'Menuen er ikke tilgængelig digitalt endnu.';
+  // Menu can be flat items or nested categories from get_site_menu RPC
+  let menuText = 'Menuen er ikke tilgængelig digitalt endnu.';
+  if (menu && Array.isArray(menu) && menu.length > 0) {
+    // Check if nested format (categories with items array)
+    if (menu[0].items && Array.isArray(menu[0].items)) {
+      menuText = menu.map(cat =>
+        `[${cat.name}]\n` + (cat.items || []).map(i =>
+          `  ${i.name} (${i.price} DKK)${i.description ? ' — ' + i.description : ''}`
+        ).join('\n')
+      ).join('\n');
+    } else {
+      // Flat format
+      menuText = menu.slice(0, 30).map(i =>
+        `${i.name}${i.price ? ' (' + i.price + ' DKK)' : ''}${i.category ? ' [' + i.category + ']' : ''}`
+      ).join('\n');
+    }
+  }
   const cartText = cart.length > 0
     ? cart.map(i => `${i.quantity}x ${i.name} (${i.price * i.quantity} DKK)`).join(', ') + ` — Total: ${cart.reduce((s, i) => s + i.price * i.quantity, 0)} DKK`
     : 'Tom';
@@ -503,7 +521,7 @@ MENU:\n${menuText}`;
 /**
  * Call AI agent with GPT
  */
-async function callOrderingAgent(conversation, menu, customer, channel, threadState) {
+async function callOrderingAgent(conversation, menu, customer, channel, threadState, restaurantName) {
   const lastMessage = conversation[conversation.length - 1]?.content || '';
   let state = threadState?.state || 'greeting';
   let cart = threadState?.cart || [];
@@ -537,7 +555,7 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
       content: m.content
     }));
   }
-  const systemPrompt = buildSystemPrompt(state, cart, fulfillment, contact, menu, null);
+  const systemPrompt = buildSystemPrompt(state, cart, fulfillment, contact, menu, restaurantName);
   console.log('[AI] Calling GPT with state:', state, 'messages:', gptMessages.length);
   const gptResponse = await callGPT(systemPrompt, gptMessages, 500, true);
   console.log('[AI] GPT returned:', gptResponse ? gptResponse.substring(0, 200) : 'NULL');
