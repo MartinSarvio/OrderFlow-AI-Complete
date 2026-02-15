@@ -11427,3 +11427,136 @@ document.addEventListener('DOMContentLoaded', () => {
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
 });
 
+// ═══════════════════════════════════════════════════════════
+// ICON EDITOR — Edit sidebar nav icons in Edit Mode
+// ═══════════════════════════════════════════════════════════
+
+const ICON_EDITS_KEY = 'orderflow_icon_edits';
+const ICON_LIBRARY = [
+  { name: 'Dashboard', svg: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>' },
+  { name: 'Workflow', svg: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>' },
+  { name: 'CMS', svg: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
+  { name: 'Brugere', svg: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+  { name: 'Butik', svg: '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
+  { name: 'Indstillinger', svg: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' },
+  { name: 'Salg', svg: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>' },
+  { name: 'Rapport', svg: '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>' },
+  { name: 'Kalender', svg: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
+  { name: 'Besked', svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>' },
+  { name: 'Klokke', svg: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>' },
+  { name: 'Søg', svg: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' },
+  { name: 'Hjerte', svg: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>' },
+  { name: 'Stjerne', svg: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
+  { name: 'Globus', svg: '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>' },
+  { name: 'Kode', svg: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>' },
+  { name: 'Diagram', svg: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+  { name: 'Mappe', svg: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>' },
+  { name: 'Link', svg: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>' },
+  { name: 'Billede', svg: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>' },
+  { name: 'Video', svg: '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>' },
+  { name: 'Telefon', svg: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>' },
+  { name: 'Mail', svg: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>' },
+  { name: 'Lås', svg: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' },
+  { name: 'Kurv', svg: '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>' },
+  { name: 'Pil op', svg: '<line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>' },
+  { name: 'Check', svg: '<polyline points="20 6 9 17 4 12"/>' },
+  { name: 'Plus', svg: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>' },
+  { name: 'Magnet', svg: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
+];
+
+function _getIconEdits() {
+  try { return JSON.parse(localStorage.getItem(ICON_EDITS_KEY) || '{}'); } catch { return {}; }
+}
+function _saveIconEdits(edits) {
+  localStorage.setItem(ICON_EDITS_KEY, JSON.stringify(edits));
+}
+
+function restoreIconEdits() {
+  const edits = _getIconEdits();
+  Object.entries(edits).forEach(([id, svgInner]) => {
+    const btn = document.querySelector(`[data-editable-text="${id}"]`);
+    if (btn) {
+      const svg = btn.closest('.nav-btn')?.querySelector('svg');
+      if (svg) svg.innerHTML = svgInner;
+    }
+  });
+}
+
+function showIconPicker(navBtn) {
+  // Remove existing picker
+  document.querySelectorAll('.icon-picker-popup').forEach(el => el.remove());
+
+  const id = navBtn.querySelector('[data-editable-text]')?.dataset.editableText;
+  if (!id) return;
+
+  const popup = document.createElement('div');
+  popup.className = 'icon-picker-popup';
+  popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card-elevated, #1a1a2e);border:1px solid var(--border, rgba(255,255,255,0.1));border-radius:12px;padding:20px;z-index:10000;width:360px;max-height:400px;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);';
+
+  let html = '<div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;">Vælg ikon</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;">';
+  ICON_LIBRARY.forEach((icon, i) => {
+    html += `<button onclick="applyIconEdit('${id}', ${i})" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;cursor:pointer;transition:all .15s;" title="${icon.name}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">${icon.svg}</svg></button>`;
+  });
+  html += '</div><button onclick="this.parentElement.remove()" style="margin-top:12px;width:100%;padding:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:var(--text);cursor:pointer;font-size:13px;">Annuller</button>';
+  popup.innerHTML = html;
+
+  // Backdrop
+  const backdrop = document.createElement('div');
+  backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;';
+  backdrop.onclick = () => { backdrop.remove(); popup.remove(); };
+  document.body.appendChild(backdrop);
+  document.body.appendChild(popup);
+}
+
+function applyIconEdit(id, iconIndex) {
+  const icon = ICON_LIBRARY[iconIndex];
+  if (!icon) return;
+  const btn = document.querySelector(`[data-editable-text="${id}"]`);
+  if (btn) {
+    const svg = btn.closest('.nav-btn')?.querySelector('svg');
+    if (svg) svg.innerHTML = icon.svg;
+  }
+  const edits = _getIconEdits();
+  edits[id] = icon.svg;
+  _saveIconEdits(edits);
+  document.querySelectorAll('.icon-picker-popup, .icon-picker-popup + div').forEach(el => el.remove());
+  // Remove backdrop
+  document.querySelectorAll('[style*="inset:0"]').forEach(el => { if (el.onclick) el.remove(); });
+}
+
+// Hook into edit mode — make nav-btn SVGs clickable
+function enableIconEditing() {
+  document.querySelectorAll('.sidebar .nav-btn svg, .sidebar .nav-dropdown-toggle svg:first-child').forEach(svg => {
+    svg.style.cursor = 'pointer';
+    svg.style.pointerEvents = 'all';
+    svg.onclick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const navBtn = svg.closest('.nav-btn') || svg.closest('.nav-dropdown-toggle');
+      if (navBtn) showIconPicker(navBtn);
+    };
+  });
+}
+
+function disableIconEditing() {
+  document.querySelectorAll('.sidebar .nav-btn svg, .sidebar .nav-dropdown-toggle svg:first-child').forEach(svg => {
+    svg.style.cursor = '';
+    svg.style.pointerEvents = '';
+    svg.onclick = null;
+  });
+}
+
+// Patch toggleEditMode to include icon editing
+const _origToggleEditModeForIcons = window.toggleEditMode;
+window.toggleEditMode = function() {
+  _origToggleEditModeForIcons.apply(this, arguments);
+  if (document.body.classList.contains('edit-mode')) {
+    enableIconEditing();
+  } else {
+    disableIconEditing();
+  }
+};
+
+// Restore icons on load
+document.addEventListener('DOMContentLoaded', restoreIconEdits);
+
