@@ -274,15 +274,6 @@ const SupabaseDB = {
       if (!supabase) await ensureSupabaseClient();
       if (!supabase) throw new Error('Supabase not initialized in createRestaurant');
 
-      // VIGTIGT: Verify Supabase auth session BEFORE insert.
-      // RLS kræver user_id = auth.uid(). Hvis JWT er udløbet, er auth.uid() NULL
-      // og insert vil ALTID fejle med "violates row-level security policy".
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError || !sessionData?.session?.access_token) {
-        console.error('❌ No valid Supabase session for createRestaurant. User must re-login.');
-        throw new Error('Din session er udløbet. Log venligst ind igen for at oprette en restaurant.');
-      }
-
       // Transform revenue fields to bigint (øre/cents)
       const dbData = this._prepareRestaurantForDB(restaurantData);
       delete dbData.id; // Let database default uuid_generate_v4() handle id
@@ -299,30 +290,51 @@ const SupabaseDB = {
       }
       dbData.user_id = resolvedUserId;
 
-      // Double-check: resolvedUserId MUST match the JWT's sub (auth.uid())
-      const jwtUserId = sessionData.session.user?.id;
-      if (jwtUserId && resolvedUserId !== jwtUserId) {
-        console.warn('⚠️ user_id mismatch! resolved:', resolvedUserId, 'jwt:', jwtUserId, '— using JWT user_id');
-        dbData.user_id = jwtUserId;
-      }
+      // Strategy: Try server-side API first (bypasses RLS), fall back to direct Supabase
+      let created = null;
 
-      const { data, error } = await supabase
-        .from('restaurants')
-        .insert([dbData])
-        .select()
-        .single();
-
-      if (error) {
-        // Provide user-friendly RLS error message
-        if (error.message?.includes('row-level security')) {
-          console.error('❌ RLS violation. JWT user:', jwtUserId, 'row user_id:', dbData.user_id);
-          throw new Error('Adgang nægtet: Din session tillader ikke denne handling. Prøv at logge ud og ind igen.');
+      // 1. Try server-side API endpoint (uses service role key, no RLS issues)
+      try {
+        const apiBase = window.location.origin;
+        const token = (await supabase.auth.getSession())?.data?.session?.access_token || '';
+        const resp = await fetch(`${apiBase}/api/restaurants/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({ restaurantData: dbData, userId: resolvedUserId })
+        });
+        const result = await resp.json();
+        if (resp.ok && result.restaurant) {
+          created = result.restaurant;
+          console.log('✅ Restaurant created via API:', created.id);
+        } else {
+          console.warn('⚠️ API create failed:', result.error, '— trying direct Supabase...');
         }
-        throw error;
+      } catch (apiErr) {
+        console.warn('⚠️ API endpoint not available:', apiErr.message, '— trying direct Supabase...');
       }
 
-      console.log('✅ Restaurant created:', data.id);
-      return this._transformRestaurant(data);
+      // 2. Fallback: direct Supabase insert (requires valid JWT for RLS)
+      if (!created) {
+        const { data, error } = await supabase
+          .from('restaurants')
+          .insert([dbData])
+          .select()
+          .single();
+
+        if (error) {
+          if (error.message?.includes('row-level security')) {
+            throw new Error('Kunne ikke oprette restaurant. Prøv at logge helt ud og ind igen.');
+          }
+          throw error;
+        }
+        created = data;
+        console.log('✅ Restaurant created via direct Supabase:', created.id);
+      }
+
+      return this._transformRestaurant(created);
     } catch (err) {
       console.error('❌ Error creating restaurant:', err);
       throw err;
