@@ -536,9 +536,11 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   }
 
   if (!response) {
-    response = 'Hej! 😊 Hvordan kan jeg hjælpe dig? [DEBUG: GPT=' + (gptResponse ? 'got_response' : 'NULL') + ' state=' + state + ']';
+    response = '[DEBUG] GPT=' + (gptResponse ? 'got_response' : 'NULL') + ' state=' + state;
   }
 
+  // TEMP DEBUG: append state info to every response
+  response = response + ' [s:' + newState + ' h:' + gptMessages.length + ' gpt:' + (gptResponse ? 'ok' : 'null') + ']';
   return { text: response, intent: 'ai', confidence, orderData, newState: { state: newState, cart, fulfillment, contact } };
 }
 
