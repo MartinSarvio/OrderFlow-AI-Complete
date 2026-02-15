@@ -25,10 +25,12 @@ body {
 }
 
 /* Main content area - rounded corner inward */
+.main-content-wrapper {
+  border-radius: 20px 0 0 0 !important; /* Rounded top-left corner INWARD */
+}
+
 .main {
-  background: #0d0d15 !important;
-  border-radius: 16px 0 0 0 !important; /* Rounded top-left corner INWARD */
-  overflow: hidden;
+  background: transparent !important;
 }
 
 .content {
