@@ -1,60 +1,55 @@
 /* ============================================
    APPLE LIQUID GLASS DESIGN SYSTEM
-   Authentic glassmorphism with transparency
+   Authentic macOS-style glassmorphism
    ============================================ */
 
 /* Body - Deep dark background */
 body {
-  background: #0a0a0f !important;
+  background: #000000 !important;
   background-attachment: fixed !important;
 }
 
-/* Sidebar & Topbar - IDENTICAL liquid glass effect */
+/* Sidebar & Topbar - IDENTICAL Apple Liquid Glass */
 .sidebar,
 .topbar {
-  background: rgba(13, 13, 25, 0.6) !important;
-  backdrop-filter: blur(40px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(150%) !important;
-}
-
-/* Remove ALL borders between sidebar and topbar */
-.sidebar {
-  border-right: none !important;
+  background: rgba(30, 30, 40, 0.7) !important;
+  backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
   border: none !important;
-}
-
-.topbar {
-  border-bottom: none !important;
-  border: none !important;
-  border-radius: 0 0 0 12px !important; /* Rounded corner where it meets sidebar */
 }
 
 .sidebar-header {
   background: transparent !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
 }
 
-/* Main content area - slightly lighter than sidebar */
+/* Main content area - rounded corner inward */
 .main {
-  background: #13131f !important;
+  background: #0d0d15 !important;
+  border-radius: 16px 0 0 0 !important; /* Rounded top-left corner INWARD */
+  overflow: hidden;
 }
 
 .content {
   background: transparent !important;
 }
 
-/* Search field glass styling */
+.page {
+  background: transparent !important;
+}
+
+/* Search field - Apple style */
 .sidebar-search-input {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid rgba(255, 255, 255, 0.06) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
 }
 
 .sidebar-search-input:focus {
-  background: rgba(255, 255, 255, 0.06) !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Align search icons vertically centered */
@@ -67,36 +62,29 @@ body {
 
 .sidebar-search-icon svg,
 .sidebar-search-shortcut {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 .sidebar-search-input:focus ~ .sidebar-search-icon svg,
 .sidebar-search-input:focus ~ .sidebar-search-shortcut {
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .sidebar-search-shortcut {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Override any conflicting backgrounds */
-[data-theme="dark"] .topbar {
-  background: rgba(13, 13, 25, 0.6) !important;
-  border: none !important;
-  border-radius: 0 0 0 12px !important;
-}
-
+/* Dark theme overrides */
+[data-theme="dark"] .topbar,
 [data-theme="dark"] .sidebar {
-  background: rgba(13, 13, 25, 0.6) !important;
+  background: rgba(30, 30, 40, 0.7) !important;
+  backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
+  -webkit-backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
   border: none !important;
 }
 
 [data-theme="dark"] .main {
-  background: #13131f !important;
-}
-
-/* Ensure content area has different background */
-.page {
-  background: #13131f !important;
+  background: #0d0d15 !important;
+  border-radius: 16px 0 0 0 !important;
 }
