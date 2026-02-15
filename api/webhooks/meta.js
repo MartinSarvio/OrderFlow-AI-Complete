@@ -360,18 +360,20 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
       content: msg.content
     }));
 
-    // Call AI
-    const aiResponse = await callOrderingAgent(conversation, menu, customer, channel);
+    // Call AI with thread state
+    const threadState = thread.metadata || {};
+    const aiResponse = await callOrderingAgent(conversation, menu, customer, channel, threadState);
 
     // Calculate confidence
     const confidence = aiResponse.confidence || 0.85;
 
-    // Update thread
+    // Update thread with AI state
     await supabase
       .from('conversation_threads')
       .update({
         ai_confidence: confidence,
-        requires_attention: confidence < 0.7
+        requires_attention: confidence < 0.7,
+        metadata: aiResponse.newState || {}
       })
       .eq('id', thread.id);
 
@@ -413,32 +415,114 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
 }
 
 /**
- * Call AI agent
+ * Call GPT
  */
-async function callOrderingAgent(conversation, menu, customer, channel) {
-  const lastMessage = conversation[conversation.length - 1]?.content || '';
-
-  // Simple intent detection for demo
-  const orderKeywords = ['bestil', 'ordre', 'pizza', 'burger', 'levering', 'køb', 'menu'];
-  const isOrderIntent = orderKeywords.some(k => lastMessage.toLowerCase().includes(k));
-
-  const greeting = channel === 'instagram' ? 'Hej! 👋' : 'Hej!';
-
-  if (isOrderIntent) {
-    return {
-      text: `${greeting} Tak for din besked! Jeg kan hjælpe dig med at bestille. Hvad vil du gerne have?`,
-      intent: 'order_inquiry',
-      confidence: 0.85,
-      orderData: null
+async function callGPT(systemPrompt, messages, maxTokens = 500, jsonMode = false) {
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  if (!OPENAI_API_KEY) {
+    console.log('[AI] No OpenAI API key, using fallback');
+    return null;
+  }
+  try {
+    const body = {
+      model: 'gpt-4o-mini',
+      messages: [{ role: 'system', content: systemPrompt }, ...messages],
+      max_tokens: maxTokens,
+      temperature: 0.7,
     };
+    if (jsonMode) body.response_format = { type: 'json_object' };
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) { console.error('[AI] GPT error:', response.status); return null; }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || null;
+  } catch (err) {
+    console.error('[AI] GPT call failed:', err.message);
+    return null;
+  }
+}
+
+function buildSystemPrompt(state, cart, fulfillment, contact, menu, restaurantName) {
+  const menuText = menu && Array.isArray(menu) && menu.length > 0
+    ? menu.slice(0, 30).map(i => `${i.name}${i.price ? ' (' + i.price + ' DKK)' : ''}${i.category ? ' [' + i.category + ']' : ''}`).join('\n')
+    : 'Menuen er ikke tilgængelig digitalt endnu.';
+  const cartText = cart.length > 0
+    ? cart.map(i => `${i.quantity}x ${i.name} (${i.price * i.quantity} DKK)`).join(', ') + ` — Total: ${cart.reduce((s, i) => s + i.price * i.quantity, 0)} DKK`
+    : 'Tom';
+  return `Du er en venlig kundeservice-assistent for ${restaurantName || 'virksomheden'}. Du svarer på DANSK.
+
+Du SKAL svare med valid JSON:
+{"reply":"Din besked til kunden (kort, venlig, max 2-3 sætninger)","state":"greeting|menu|cart|fulfillment|contact|confirm|completed|support","cart":[{"name":"Varenavn","price":89,"quantity":1}],"fulfillment":"delivery|pickup|null","contact":{"name":"...","phone":"...","address":"..."},"orderReady":false}
+
+REGLER:
+- Hold svar korte (max 2-3 sætninger). Brug emoji sparsomt.
+- Nævn ALDRIG at du er en AI/bot.
+- Lyt til hvad kunden FAKTISK siger — svar på det.
+- Hvis kunden bare siger "hej" — svar med en venlig hilsen og spørg hvad du kan hjælpe med. NÆVN IKKE mad eller bestilling medmindre de selv bringer det op.
+- Gentag ALDRIG det samme spørgsmål.
+- "orderReady" skal KUN være true når kunden har bekræftet ordren.
+- Bevar eksisterende cart/contact/fulfillment data.
+
+STATE: ${state} | KURV: ${cartText} | LEVERING: ${fulfillment || 'ikke valgt'} | KONTAKT: ${JSON.stringify(contact || {})}
+MENU:\n${menuText}`;
+}
+
+/**
+ * Call AI agent with GPT
+ */
+async function callOrderingAgent(conversation, menu, customer, channel, threadState) {
+  const lastMessage = conversation[conversation.length - 1]?.content || '';
+  let state = threadState?.state || 'greeting';
+  let cart = threadState?.cart || [];
+  let fulfillment = threadState?.fulfillment || null;
+  let contact = threadState?.contact || {};
+
+  const gptMessages = conversation.slice(-10).map(m => ({
+    role: m.role === 'user' ? 'user' : 'assistant',
+    content: m.content
+  }));
+  const systemPrompt = buildSystemPrompt(state, cart, fulfillment, contact, menu, null);
+  const gptResponse = await callGPT(systemPrompt, gptMessages, 500, true);
+
+  let response = '';
+  let newState = state;
+  let orderData = null;
+  let confidence = 0.85;
+
+  if (gptResponse) {
+    try {
+      const parsed = JSON.parse(gptResponse);
+      response = parsed.reply || '';
+      newState = parsed.state || state;
+      confidence = 0.9;
+      if (Array.isArray(parsed.cart) && parsed.cart.length > 0) {
+        cart = parsed.cart.map(item => ({ name: item.name || 'Ukendt', price: Number(item.price) || 0, quantity: Number(item.quantity) || 1 }));
+      }
+      if (parsed.fulfillment && parsed.fulfillment !== 'null') fulfillment = parsed.fulfillment;
+      if (parsed.contact && typeof parsed.contact === 'object') {
+        if (parsed.contact.name) contact.name = parsed.contact.name;
+        if (parsed.contact.phone) contact.phone = parsed.contact.phone;
+        if (parsed.contact.address) contact.address = parsed.contact.address;
+      }
+      if (parsed.orderReady === true || newState === 'completed') {
+        const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
+        const fee = fulfillment === 'delivery' ? 39 : 0;
+        orderData = { items: cart, subtotal: total, deliveryFee: fee, total: total + fee, fulfillmentType: fulfillment || 'pickup', customerName: contact.name, customerPhone: contact.phone, deliveryAddress: contact.address };
+      }
+    } catch (parseErr) {
+      console.error('[AI] JSON parse failed, using raw:', parseErr.message);
+      response = gptResponse;
+    }
   }
 
-  return {
-    text: `${greeting} Tak for din henvendelse. Hvordan kan jeg hjælpe dig i dag?`,
-    intent: 'general',
-    confidence: 0.75,
-    orderData: null
-  };
+  if (!response) {
+    response = 'Hej! 😊 Hvordan kan jeg hjælpe dig?';
+  }
+
+  return { text: response, intent: 'ai', confidence, orderData, newState: { state: newState, cart, fulfillment, contact } };
 }
 
 /**
