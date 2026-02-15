@@ -319,7 +319,7 @@ async function getOrCreateThread(supabase, tenantId, customerId, channel, extern
  * Store message
  */
 async function storeMessage(supabase, threadId, data) {
-  const { data: message } = await supabase
+  const { data: message, error } = await supabase
     .from('thread_messages')
     .insert({
       thread_id: threadId,
@@ -333,6 +333,8 @@ async function storeMessage(supabase, threadId, data) {
     .select()
     .single();
 
+  if (error) console.error('[Meta] storeMessage FAILED:', error.message, 'thread:', threadId);
+  else console.log('[Meta] Message stored:', data.direction, threadId);
   return message;
 }
 
