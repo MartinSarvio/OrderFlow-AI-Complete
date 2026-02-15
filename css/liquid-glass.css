@@ -1,6 +1,6 @@
 /* ============================================
-   MISSION KONTROL DESIGN SYSTEM
-   Minimal dark glassmorphism matching Mission Kontrol
+   APPLE LIQUID GLASS DESIGN SYSTEM
+   Authentic glassmorphism with transparency
    ============================================ */
 
 /* Body - Deep dark background */
@@ -9,21 +9,24 @@ body {
   background-attachment: fixed !important;
 }
 
-/* Sidebar & Topbar - IDENTICAL glass effect */
+/* Sidebar & Topbar - IDENTICAL liquid glass effect */
 .sidebar,
 .topbar {
-  background: rgba(13, 13, 25, 0.85) !important;
-  backdrop-filter: blur(20px) saturate(120%) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
+  background: rgba(13, 13, 25, 0.6) !important;
+  backdrop-filter: blur(40px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(150%) !important;
 }
 
-/* Remove borders for cleaner look */
+/* Remove ALL borders between sidebar and topbar */
 .sidebar {
-  border-right: 1px solid rgba(255, 255, 255, 0.03) !important;
+  border-right: none !important;
+  border: none !important;
 }
 
 .topbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+  border-bottom: none !important;
+  border: none !important;
+  border-radius: 0 0 0 12px !important; /* Rounded corner where it meets sidebar */
 }
 
 .sidebar-header {
@@ -54,7 +57,14 @@ body {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Brighter icons and shortcut badge */
+/* Align search icons vertically centered */
+.sidebar-search-icon,
+.sidebar-search-shortcut {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 .sidebar-search-icon svg,
 .sidebar-search-shortcut {
   opacity: 0.6;
@@ -72,11 +82,14 @@ body {
 
 /* Override any conflicting backgrounds */
 [data-theme="dark"] .topbar {
-  background: rgba(13, 13, 25, 0.85) !important;
+  background: rgba(13, 13, 25, 0.6) !important;
+  border: none !important;
+  border-radius: 0 0 0 12px !important;
 }
 
 [data-theme="dark"] .sidebar {
-  background: rgba(13, 13, 25, 0.85) !important;
+  background: rgba(13, 13, 25, 0.6) !important;
+  border: none !important;
 }
 
 [data-theme="dark"] .main {
