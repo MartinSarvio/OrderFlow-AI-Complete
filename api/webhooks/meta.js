@@ -360,13 +360,16 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
 
     // Call AI with thread state
     const threadState = thread.metadata || {};
+    console.log('[Meta] Thread ID:', thread.id, 'State:', JSON.stringify(threadState));
+    console.log('[Meta] Conversation length:', conversation.length);
     const aiResponse = await callOrderingAgent(conversation, menu, customer, channel, threadState);
+    console.log('[Meta] AI response:', aiResponse.text?.substring(0, 100), 'New state:', aiResponse.newState?.state);
 
     // Calculate confidence
     const confidence = aiResponse.confidence || 0.85;
 
     // Update thread with AI state
-    await supabase
+    const { error: updateErr } = await supabase
       .from('conversation_threads')
       .update({
         ai_confidence: confidence,
@@ -374,6 +377,8 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
         metadata: aiResponse.newState || {}
       })
       .eq('id', thread.id);
+    if (updateErr) console.error('[Meta] Thread update error:', updateErr);
+    else console.log('[Meta] Thread state saved:', JSON.stringify(aiResponse.newState));
 
     // Store AI response
     await storeMessage(supabase, thread.id, {
