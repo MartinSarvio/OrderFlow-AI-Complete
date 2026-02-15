@@ -358,10 +358,10 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
       content: msg.content
     }));
 
-    // Call AI with thread state
-    const threadState = thread.metadata || {};
-    console.log('[Meta] Thread ID:', thread.id, 'State:', JSON.stringify(threadState));
-    console.log('[Meta] Conversation length:', conversation.length);
+    // Get thread state from last AI message metadata (reliable — thread_messages.metadata works)
+    const lastAiMsg = (history || []).filter(m => m.direction === 'outbound' && m.metadata?.threadState).pop();
+    const threadState = lastAiMsg?.metadata?.threadState || {};
+    console.log('[Meta] Thread ID:', thread.id, 'State:', JSON.stringify(threadState), 'History:', (history||[]).length);
     const aiResponse = await callOrderingAgent(conversation, menu, customer, channel, threadState);
     console.log('[Meta] AI response:', aiResponse.text?.substring(0, 100), 'New state:', aiResponse.newState?.state);
 
@@ -380,7 +380,7 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
     if (updateErr) console.error('[Meta] Thread update error:', updateErr);
     else console.log('[Meta] Thread state saved:', JSON.stringify(aiResponse.newState));
 
-    // Store AI response
+    // Store AI response (with threadState for persistence)
     await storeMessage(supabase, thread.id, {
       direction: 'outbound',
       senderType: 'ai',
@@ -390,7 +390,8 @@ async function processWithAI(supabase, thread, message, customer, tenantId, chan
       metadata: {
         confidence,
         intent: aiResponse.intent,
-        orderData: aiResponse.orderData
+        orderData: aiResponse.orderData,
+        threadState: aiResponse.newState || {}
       }
     });
 
