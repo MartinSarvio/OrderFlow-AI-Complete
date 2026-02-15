@@ -3901,12 +3901,12 @@ async function importMenuFromUrl() {
       return;
     }
 
-    // Step 1: Scrape website content via Supabase Edge Function
+    // Step 1: Fetch website content
     let websiteContent = '';
-    try {
-      statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser hjemmeside indhold...</span>';
+    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser hjemmeside indhold...</span>';
 
-      // Get Supabase config safely
+    // Try Supabase Edge Function first
+    try {
       if (typeof SupabaseDB !== 'undefined' && SupabaseDB.getConfig) {
         const config = SupabaseDB.getConfig();
         const scrapeResponse = await fetch(`${config.url}/functions/v1/scrape-menu`, {
@@ -3924,15 +3924,53 @@ async function importMenuFromUrl() {
         }
       }
     } catch (scrapeErr) {
-      console.warn('Scrape fallback - using URL directly:', scrapeErr);
+      console.warn('Supabase scrape failed, trying CORS proxies:', scrapeErr);
     }
 
-    // Step 2: Parse with AI
+    // Fallback: CORS proxy services
+    if (!websiteContent) {
+      const CORS_PROXIES = [
+        (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+        (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`
+      ];
+      for (const proxyFn of CORS_PROXIES) {
+        if (websiteContent) break;
+        try {
+          const proxyUrl = proxyFn(url);
+          console.log('🌐 Trying CORS proxy:', proxyUrl);
+          const proxyResponse = await fetch(proxyUrl);
+          if (proxyResponse.ok) {
+            websiteContent = await proxyResponse.text();
+            console.log('✅ Fetched via CORS proxy:', websiteContent.length, 'chars');
+          }
+        } catch (err) {
+          console.warn('Proxy failed, trying next...', err);
+        }
+      }
+    }
+
+    if (!websiteContent) {
+      statusEl.innerHTML = '<span style="color:var(--warn)">⚠️ Kunne ikke læse hjemmesiden. Prøv "Import fra tekst" i stedet.</span>';
+      return;
+    }
+
+    // Step 2: Strip HTML to plain text
+    let cleanText = websiteContent;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(websiteContent, 'text/html');
+      doc.querySelectorAll('script, style, noscript, svg, link, meta').forEach(el => el.remove());
+      cleanText = doc.body ? doc.body.textContent : doc.documentElement.textContent;
+      cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+      console.log('📄 Stripped HTML to text:', cleanText.length, 'chars');
+    } catch (e) {
+      console.warn('HTML stripping failed, using raw content:', e);
+    }
+
+    // Step 3: Parse with AI
     statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Analyserer menu med AI...</span>';
 
-    const aiPrompt = websiteContent
-      ? `Udtræk ALLE produkter med priser fra dette menukort:\n\n${websiteContent.substring(0, 8000)}`
-      : `Hent menukort fra denne hjemmeside og udtræk alle produkter: ${url}\nHvis du ikke kan tilgå URL'en, generer et realistisk eksempel-menukort baseret på restaurantens navn.`;
+    const aiPrompt = `Udtræk ALLE produkter med priser fra dette menukort:\n\n${cleanText.substring(0, 15000)}`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -4067,8 +4105,23 @@ async function importMenuFromWebsite(websiteUrl, restaurantId, autoMode = false)
       return [];
     }
 
-    // Step 2: Parse with AI
-    console.log('🤖 Sending to OpenAI for parsing...', websiteContent.substring(0, 500));
+    // Step 2: Strip HTML to plain text for better AI parsing
+    let cleanText = websiteContent;
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(websiteContent, 'text/html');
+      // Remove script and style elements
+      doc.querySelectorAll('script, style, noscript, svg, link, meta').forEach(el => el.remove());
+      cleanText = doc.body ? doc.body.textContent : doc.documentElement.textContent;
+      // Clean up whitespace
+      cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+      console.log('📄 Stripped HTML to text:', cleanText.length, 'chars (from', websiteContent.length, 'chars HTML)');
+    } catch (e) {
+      console.warn('HTML stripping failed, using raw content:', e);
+    }
+
+    // Step 3: Parse with AI
+    console.log('🤖 Sending to OpenAI for parsing...', cleanText.substring(0, 500));
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -4086,7 +4139,7 @@ Gæt kategori baseret på produktnavn. Priser skal være tal uden "kr".`
           },
           {
             role: 'user',
-            content: websiteContent.substring(0, 10000)
+            content: cleanText.substring(0, 15000)
           }
         ],
         max_tokens: 4000
