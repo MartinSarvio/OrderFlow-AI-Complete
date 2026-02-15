@@ -476,10 +476,12 @@ REGLER:
 - Hold svar korte (max 2-3 sætninger). Brug emoji sparsomt.
 - Nævn ALDRIG at du er en AI/bot.
 - Lyt til hvad kunden FAKTISK siger — svar på det.
-- Hvis kunden bare siger "hej" — svar med en venlig hilsen og spørg hvad du kan hjælpe med. NÆVN IKKE mad eller bestilling medmindre de selv bringer det op.
-- Gentag ALDRIG det samme spørgsmål.
+- Hvis kunden siger "hej" eller hilser — svar med en venlig hilsen og spørg hvad du kan hjælpe med. Skift state til "menu" efter hilsen.
+- GENTAG ALDRIG det samme svar. Hvis du allerede har sagt hej, gå videre til næste trin.
+- Kig på samtalehistorikken — hvis du allerede har hilst, SKAL du skifte til næste state (menu/support).
 - "orderReady" skal KUN være true når kunden har bekræftet ordren.
 - Bevar eksisterende cart/contact/fulfillment data.
+- Hvis kunden nævner mad/bestilling, skift straks til "menu" state.
 
 STATE: ${state} | KURV: ${cartText} | LEVERING: ${fulfillment || 'ikke valgt'} | KONTAKT: ${JSON.stringify(contact || {})}
 MENU:\n${menuText}`;
@@ -495,7 +497,15 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   let fulfillment = threadState?.fulfillment || null;
   let contact = threadState?.contact || {};
 
-  const gptMessages = conversation.slice(-10).map(m => ({
+  // Filter out repeated identical assistant messages to break greeting loops
+  const dedupedConvo = [];
+  let lastAssistantMsg = '';
+  for (const m of conversation) {
+    if (m.role === 'assistant' && m.content === lastAssistantMsg) continue; // skip duplicate
+    if (m.role === 'assistant') lastAssistantMsg = m.content;
+    dedupedConvo.push(m);
+  }
+  const gptMessages = dedupedConvo.slice(-10).map(m => ({
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.content
   }));
@@ -536,11 +546,9 @@ async function callOrderingAgent(conversation, menu, customer, channel, threadSt
   }
 
   if (!response) {
-    response = '[DEBUG] GPT=' + (gptResponse ? 'got_response' : 'NULL') + ' state=' + state;
+    response = 'Hej! 😊 Hvordan kan jeg hjælpe dig?';
   }
 
-  // TEMP DEBUG: append state info to every response
-  response = response + ' [s:' + newState + ' h:' + gptMessages.length + ' gpt:' + (gptResponse ? 'ok' : 'null') + ']';
   return { text: response, intent: 'ai', confidence, orderData, newState: { state: newState, cart, fulfillment, contact } };
 }
 
