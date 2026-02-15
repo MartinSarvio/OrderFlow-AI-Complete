@@ -136,23 +136,28 @@ const SupabaseDB = {
   // Try to resolve a valid UUID for auth.users.id
   async _resolveAuthUserId(preferredUserId) {
     const preferred = String(preferredUserId || '').trim();
-    if (this._isUuid(preferred)) {
-      return preferred;
-    }
 
     if (!supabase) await ensureSupabaseClient();
 
-    // Preferred source: active Supabase auth user
+    // ALWAYS try Supabase auth first — RLS requires user_id = auth.uid()
     if (supabase?.auth?.getUser) {
       try {
         const { data, error } = await supabase.auth.getUser();
         const authUserId = data?.user?.id;
         if (!error && this._isUuid(authUserId)) {
+          if (preferred && preferred !== authUserId) {
+            console.warn('⚠️ Overriding preferred userId with auth.uid() for RLS compatibility:', preferred, '→', authUserId);
+          }
           return authUserId;
         }
       } catch (err) {
         console.warn('⚠️ Could not resolve auth user from Supabase session:', err?.message || err);
       }
+    }
+
+    // Fallback: use preferred UUID if Supabase auth unavailable
+    if (this._isUuid(preferred)) {
+      return preferred;
     }
 
     // Secondary source: local user id key (if set)
