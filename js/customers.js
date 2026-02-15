@@ -4970,6 +4970,8 @@ window.showProductSortingModal = showProductSortingModal;
 window.addBulkProductRow = addBulkProductRow;
 window.saveBulkProducts = saveBulkProducts;
 window.moveProduct = moveProduct;
+window.handleMenuFileImport = handleMenuFileImport;
+window.importFromStamdataWebsite = importFromStamdataWebsite;
 
 // Show Add Category Modal
 function showAddCategoryModal() {
