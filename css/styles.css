@@ -2232,7 +2232,7 @@
     .workflow-page {
       display: none;
       position: fixed;
-      top: 56px; /* Under topbar */
+      top: 62px; /* Under topbar (matches .topbar height) */
       left: 260px; /* Ved siden af sidebar */
       right: 0;
       bottom: 0;

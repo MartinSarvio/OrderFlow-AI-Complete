@@ -36,12 +36,20 @@ body {
   -webkit-backdrop-filter: none !important;
 }
 
-/* ── Content area: subtle glass treatment ────────────────── */
+/* ── Content area: glass with rounded top-left corner ────── */
 .main-content-wrapper {
-  border-radius: 0 !important;
+  border-top-left-radius: 20px !important;
   background: rgba(0, 0, 0, 0.15) !important;
   backdrop-filter: blur(12px) saturate(110%) !important;
   -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
+}
+
+/* Workflow page: same glass + rounded corner */
+.workflow-page {
+  background: rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) saturate(110%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(110%) !important;
+  border-top-left-radius: 20px !important;
 }
 
 /* Main container transparent so topbar sees same body gradient as sidebar */
