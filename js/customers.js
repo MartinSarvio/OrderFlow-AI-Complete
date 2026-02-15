@@ -3892,7 +3892,7 @@ async function importMenuFromUrl() {
 
   const statusEl = document.getElementById('import-status');
   statusEl.style.display = 'block';
-  statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Henter menu fra hjemmeside...</span>';
+  statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Henter menu fra hjemmeside...</span>';
 
   try {
     // Check API key
@@ -3903,7 +3903,7 @@ async function importMenuFromUrl() {
 
     // Step 1: Fetch website content
     let websiteContent = '';
-    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser hjemmeside indhold...</span>';
+    statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Læser hjemmeside indhold...</span>';
 
     // Try Supabase Edge Function first
     try {
@@ -3968,7 +3968,7 @@ async function importMenuFromUrl() {
     }
 
     // Step 3: Parse with AI
-    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Analyserer menu med AI...</span>';
+    statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Analyserer menu med AI...</span>';
 
     const aiPrompt = `Udtræk ALLE produkter med priser fra dette menukort:\n\n${cleanText.substring(0, 15000)}`;
 
@@ -4068,91 +4068,172 @@ async function importMenuFromWebsite(websiteUrl, restaurantId, autoMode = false)
   const restaurant = restaurants.find(r => r.id === restaurantId);
   if (!restaurant) return [];
 
+  // Normalize URL
+  let normalizedUrl = websiteUrl.trim();
+  if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+    normalizedUrl = 'https://' + normalizedUrl;
+  }
+
   try {
-    // Check API key
-    if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
-      if (!autoMode) toast('OpenAI API key mangler', 'error');
-      return [];
+    // Step 1: Fetch website content (server-side first, then CORS proxy fallback)
+    let cleanText = '';
+    const statusEl = document.getElementById('import-status');
+
+    // Method A: Server-side fetch via Supabase edge function (no CORS issues)
+    try {
+      const token = (typeof supabase !== 'undefined' && supabase.auth)
+        ? (await supabase.auth.getSession())?.data?.session?.access_token
+        : null;
+
+      if (token) {
+        console.log('🌐 Fetching website via edge function:', normalizedUrl);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        const edgeResp = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/fetch-website`, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ url: normalizedUrl })
+        });
+        clearTimeout(timeoutId);
+
+        if (edgeResp.ok) {
+          const data = await edgeResp.json();
+          if (data.text) {
+            cleanText = data.text;
+            console.log('✅ Edge function returned', cleanText.length, 'chars');
+          }
+        } else {
+          const errData = await edgeResp.json().catch(() => ({}));
+          console.warn('Edge function failed:', edgeResp.status, errData.error || '');
+        }
+      }
+    } catch (edgeErr) {
+      console.warn('Edge function unavailable, trying CORS proxies:', edgeErr.message);
     }
 
-    // Step 1: Fetch website using CORS proxy
-    let websiteContent = '';
+    // Method B: CORS proxy fallback
+    if (!cleanText) {
+      const CORS_PROXIES = [
+        (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
+      ];
 
-    // CORS proxy services (fallback chain)
-    const CORS_PROXIES = [
-      (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`
-    ];
-
-    // Try each proxy until one works
-    for (const proxyFn of CORS_PROXIES) {
-      if (websiteContent) break;
-      try {
-        const proxyUrl = proxyFn(websiteUrl);
-        console.log('🌐 Trying CORS proxy:', proxyUrl);
-        const response = await fetch(proxyUrl);
-        if (response.ok) {
-          websiteContent = await response.text();
-          console.log('✅ Successfully fetched website content:', websiteContent.length, 'chars');
+      for (const proxyFn of CORS_PROXIES) {
+        if (cleanText) break;
+        try {
+          const proxyUrl = proxyFn(normalizedUrl);
+          console.log('🌐 Trying CORS proxy:', proxyUrl);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const response = await fetch(proxyUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (response.ok) {
+            const html = await response.text();
+            // Strip HTML client-side
+            try {
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, 'text/html');
+              doc.querySelectorAll('script, style, noscript, svg, link, meta').forEach(el => el.remove());
+              cleanText = doc.body ? doc.body.textContent : doc.documentElement.textContent;
+              cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
+            } catch (e) {
+              cleanText = html;
+            }
+            console.log('✅ CORS proxy returned', cleanText.length, 'chars');
+          }
+        } catch (err) {
+          console.warn('Proxy failed, trying next...', err.message);
         }
-      } catch (err) {
-        console.warn('Proxy failed, trying next...', err);
       }
     }
 
-    if (!websiteContent) {
+    if (!cleanText) {
       if (!autoMode) toast('Kunne ikke læse hjemmesiden. Prøv igen eller brug "Import fra tekst".', 'warning');
       return [];
     }
 
-    // Step 2: Strip HTML to plain text for better AI parsing
-    let cleanText = websiteContent;
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(websiteContent, 'text/html');
-      // Remove script and style elements
-      doc.querySelectorAll('script, style, noscript, svg, link, meta').forEach(el => el.remove());
-      cleanText = doc.body ? doc.body.textContent : doc.documentElement.textContent;
-      // Clean up whitespace
-      cleanText = cleanText.replace(/[ \t]+/g, ' ').replace(/\n\s*\n/g, '\n').trim();
-      console.log('📄 Stripped HTML to text:', cleanText.length, 'chars (from', websiteContent.length, 'chars HTML)');
-    } catch (e) {
-      console.warn('HTML stripping failed, using raw content:', e);
+    // Step 2: Parse with AI via api-proxy edge function (preferred) or direct
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Analyserer menu med AI...</span>';
     }
 
-    // Step 3: Parse with AI
-    console.log('🤖 Sending to OpenAI for parsing...', cleanText.substring(0, 500));
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `Du er en menu-parser. Udtræk ALLE produkter med priser fra teksten.
-Returner KUN et JSON array: [{"number": "1", "name": "Produkt", "price": 99, "category": "Kategori"}]
-Gæt kategori baseret på produktnavn. Priser skal være tal uden "kr".`
-          },
-          {
-            role: 'user',
-            content: cleanText.substring(0, 15000)
-          }
-        ],
-        max_tokens: 4000
-      })
-    });
+    console.log('🤖 Sending to AI for parsing...', cleanText.substring(0, 300));
+    let aiResult = null;
 
-    const aiResult = await response.json();
-    console.log('🤖 OpenAI response:', aiResult);
+    // Try api-proxy edge function first (keeps API key server-side)
+    try {
+      const token = (typeof supabase !== 'undefined' && supabase.auth)
+        ? (await supabase.auth.getSession())?.data?.session?.access_token
+        : null;
+
+      if (token) {
+        const proxyResp = await fetch(`${CONFIG.SUPABASE_URL}/functions/v1/api-proxy`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            service: 'openai',
+            endpoint: '/chat/completions',
+            payload: {
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'Du er en menu-parser. Udtræk ALLE produkter med priser fra teksten.\nReturner KUN et JSON array: [{"number": "1", "name": "Produkt", "price": 99, "category": "Kategori"}]\nGæt kategori baseret på produktnavn. Priser skal være tal uden "kr".'
+                },
+                { role: 'user', content: cleanText.substring(0, 15000) }
+              ],
+              max_tokens: 4000
+            }
+          })
+        });
+        if (proxyResp.ok) {
+          aiResult = await proxyResp.json();
+          console.log('✅ AI response via api-proxy');
+        }
+      }
+    } catch (proxyErr) {
+      console.warn('api-proxy failed, trying direct OpenAI:', proxyErr.message);
+    }
+
+    // Fallback: direct OpenAI call
+    if (!aiResult) {
+      if (!CONFIG.OPENAI_API_KEY || CONFIG.OPENAI_API_KEY.includes('YOUR_')) {
+        if (!autoMode) toast('OpenAI API key mangler. Tilføj den under Indstillinger → API Adgang.', 'error');
+        return [];
+      }
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${CONFIG.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'Du er en menu-parser. Udtræk ALLE produkter med priser fra teksten.\nReturner KUN et JSON array: [{"number": "1", "name": "Produkt", "price": 99, "category": "Kategori"}]\nGæt kategori baseret på produktnavn. Priser skal være tal uden "kr".'
+            },
+            { role: 'user', content: cleanText.substring(0, 15000) }
+          ],
+          max_tokens: 4000
+        })
+      });
+      aiResult = await response.json();
+    }
+
+    console.log('🤖 AI response:', aiResult);
     let products = [];
 
     try {
       let content = aiResult.choices[0].message.content;
-      console.log('🤖 AI content:', content);
       content = content.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
       products = JSON.parse(content);
       console.log('✅ Parsed products:', products.length, 'items');
@@ -4171,7 +4252,6 @@ Gæt kategori baseret på produktnavn. Priser skal være tal uden "kr".`
       if (!restaurant.products) restaurant.products = [];
       restaurant.products.push(...products);
 
-      // Save to Supabase
       if (typeof SupabaseDB !== 'undefined') {
         await SupabaseDB.saveMenu(restaurant.id, restaurant.products);
       }
@@ -4207,7 +4287,7 @@ async function importFromStamdataWebsite() {
   const statusEl = document.getElementById('import-status');
   if (statusEl) {
     statusEl.style.display = 'block';
-    statusEl.innerHTML = `<span style="color:var(--accent)">⏳ Henter menu fra ${escapeHtml(websiteUrl)}...</span>`;
+    statusEl.innerHTML = `<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Henter menu fra ${escapeHtml(websiteUrl)}...</span>`;
   }
 
   const products = await importMenuFromWebsite(websiteUrl, restaurant.id, false);
@@ -4242,7 +4322,7 @@ async function importMenuFromFile(file) {
   const statusEl = document.getElementById('import-status');
   if (statusEl) {
     statusEl.style.display = 'block';
-    statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Læser fil...</span>';
+    statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Læser fil...</span>';
   }
 
   try {
@@ -4447,7 +4527,7 @@ async function parseMenuFromText() {
   
   const statusEl = document.getElementById('import-status');
   statusEl.style.display = 'block';
-  statusEl.innerHTML = '<span style="color:var(--accent)">⏳ Parser menu tekst...</span>';
+  statusEl.innerHTML = '<span class="spinner" style="display:inline-block;width:16px;height:16px;vertical-align:middle;margin-right:8px"></span> <span style="color:var(--accent)">Parser menu tekst...</span>';
   
   try {
     // Try AI parsing first
