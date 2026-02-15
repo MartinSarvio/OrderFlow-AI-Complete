@@ -121,7 +121,7 @@
       --shadow-glow:0 0 20px var(--accent-glow);
       --shadow-1:0 1px 3px rgba(0,0,0,0.15);
       --shadow-2:0 8px 24px rgba(0,0,0,0.25);
-      --content-radius:20px;
+      --content-radius:14px;
 
       /* Focus & Selection - Indigo */
       --focus-ring:0 0 0 3px rgba(99,102,241,0.45);
@@ -230,7 +230,7 @@
       --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.10);
 
       /* Content radius */
-      --content-radius: 20px;
+      --content-radius: 14px;
     }
 
     /* Light mode dropdown overrides */
@@ -1367,7 +1367,7 @@
     
     /* Main content area */
     .main{flex:1;margin-left:260px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
-    .main-content-wrapper{flex:1;background:var(--content-bg);position:relative;overflow:hidden;display:flex;flex-direction:column;border-top-left-radius:var(--radius-md)}
+    .main-content-wrapper{flex:1;background:var(--content-bg);position:relative;overflow:hidden;display:flex;flex-direction:column;border-top-left-radius:var(--content-radius)}
     
     /* Topbar - på linje med sidebar logo */
     .topbar{height:62px;padding:0 24px;background:var(--nav-bg);display:flex;align-items:center;justify-content:flex-end;flex-shrink:0;z-index:50}
