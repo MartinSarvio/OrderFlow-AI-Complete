@@ -2092,7 +2092,7 @@ window.showInstagramIntegrationModal = showInstagramIntegrationModal;
 window.showFacebookIntegrationModal = showFacebookIntegrationModal;
 window.showInstagramConfig = showInstagramConfig;
 window.showFacebookConfig = showFacebookConfig;
-window.editCustomerApiKey = editCustomerApiKey;
+
 window.renderCustomerIntegrations = renderCustomerIntegrations;
 window.openIntegrationConfig = openIntegrationConfig;
 window.saveIntegrationConfig = saveIntegrationConfig;
