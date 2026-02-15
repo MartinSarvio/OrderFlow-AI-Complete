@@ -5447,7 +5447,8 @@ function renderCustomerHeatmap(heatmapData) {
   }).join('');
 }
 
-// Show profile view
+// Show profile view (openCrmProfile is an alias used after customer creation)
+const openCrmProfile = (id) => showCrmProfileView(id);
 function showCrmProfileView(id) {
   let restaurant = restaurants.find(r => r.id === id);
   // Also check demo customers if enabled
@@ -5484,11 +5485,15 @@ function showCrmProfileView(id) {
   // Update breadcrumb with restaurant name
   updateBreadcrumb('kunder', restaurant.name);
   
-  // Populate header
-  document.getElementById('profile-logo').innerHTML = getRestaurantLogoSvg(restaurant.logo);
-  document.getElementById('profile-name').textContent = restaurant.name;
-  document.getElementById('profile-cvr').textContent = restaurant.cvr || '-';
-  document.getElementById('profile-userid').textContent = userId;
+  // Populate header (safe null checks)
+  const profLogoEl = document.getElementById('profile-logo');
+  const profNameEl = document.getElementById('profile-name');
+  const profCvrEl = document.getElementById('profile-cvr');
+  const profUserIdEl = document.getElementById('profile-userid');
+  if (profLogoEl) profLogoEl.innerHTML = getRestaurantLogoSvg(restaurant.logo);
+  if (profNameEl) profNameEl.textContent = restaurant.name;
+  if (profCvrEl) profCvrEl.textContent = restaurant.cvr || '-';
+  if (profUserIdEl) profUserIdEl.textContent = userId;
   
   const statusEl = document.getElementById('profile-status');
   
@@ -5854,10 +5859,14 @@ function saveStamdata() {
   restaurant.stamdataUpdatedAt = new Date().toISOString();
   
   // Update header displays
-  document.getElementById('profile-name').textContent = restaurant.name || '-';
-  document.getElementById('profile-cvr').textContent = restaurant.cvr || '-';
-  document.getElementById('nav-customer-name').textContent = restaurant.name || 'Kunde';
-  document.getElementById('nav-customer-avatar').textContent = (restaurant.name || '?').charAt(0).toUpperCase();
+  const profileNameEl = document.getElementById('profile-name');
+  const profileCvrEl = document.getElementById('profile-cvr');
+  const navCustNameEl = document.getElementById('nav-customer-name');
+  const navCustAvatarEl = document.getElementById('nav-customer-avatar');
+  if (profileNameEl) profileNameEl.textContent = restaurant.name || '-';
+  if (profileCvrEl) profileCvrEl.textContent = restaurant.cvr || '-';
+  if (navCustNameEl) navCustNameEl.textContent = restaurant.name || 'Kunde';
+  if (navCustAvatarEl) navCustAvatarEl.textContent = (restaurant.name || '?').charAt(0).toUpperCase();
   
   // Update CRM table if visible
   updateCrmTableRow(restaurant);
@@ -5898,8 +5907,11 @@ function updateCrmTableRow(restaurant) {
 
 // Toggle delivery settings visibility
 function toggleDeliverySettings() {
-  const enabled = document.getElementById('wf-delivery-enabled').checked;
-  document.getElementById('delivery-settings').style.display = enabled ? 'block' : 'none';
+  const enabledEl = document.getElementById('wf-delivery-enabled');
+  const settingsEl = document.getElementById('delivery-settings');
+  if (enabledEl && settingsEl) {
+    settingsEl.style.display = enabledEl.checked ? 'block' : 'none';
+  }
 }
 
 // ============================================================================
