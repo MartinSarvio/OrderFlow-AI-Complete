@@ -18,17 +18,20 @@ body {
   border: none !important;
 }
 
+/* Sidebar header - transparent, no extra backdrop (sidebar itself provides glass) */
 .sidebar-header {
   background: transparent !important;
-  backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
-  -webkit-backdrop-filter: blur(60px) saturate(180%) brightness(1.1) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Main content area - rounded corner inward */
 .main-content-wrapper {
-  border-radius: 20px 0 0 0 !important; /* Rounded top-left corner INWARD */
+  border-radius: 16px 0 0 0 !important;
 }
 
+/* Main container MUST be transparent so topbar backdrop-filter
+   sees the same body background as the sidebar */
 .main {
   background: transparent !important;
 }
@@ -77,7 +80,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Dark theme overrides */
+/* Dark theme overrides - ensure liquid glass wins over styles.css */
 [data-theme="dark"] .topbar,
 [data-theme="dark"] .sidebar {
   background: rgba(30, 30, 40, 0.7) !important;
@@ -86,7 +89,7 @@ body {
   border: none !important;
 }
 
+/* Main must stay transparent in dark mode so topbar sees same backdrop as sidebar */
 [data-theme="dark"] .main {
-  background: #0d0d15 !important;
-  border-radius: 16px 0 0 0 !important;
+  background: transparent !important;
 }
